@@ -73,8 +73,8 @@ jobs:
       - name: Run Graphical test
         run:  |
           $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true);'
-          $TESTCMD -e 'using Pkg; Pkg.activate(tmpdir()); Pkg.develop(path="."); Pkg.add("StatsPlots"); Pkg.test("StatsPlots");'
-          $TESTCMD -e 'using Pkg; Pkg.activate(tmpdir()); Pkg.develop(path="."); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes");'
+          $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots");'
+          $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes");'
 
       - name: Codecov
         uses: julia-actions/julia-uploadcodecov@latest
