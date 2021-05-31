@@ -1530,7 +1530,6 @@ convertLegendValue(val::Nothing) = :none
 convertLegendValue(v::Union{Tuple, NamedTuple}) = convertLegendValue.(v)
 convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
 convertLegendValue(v::Tuple{<:Real,Symbol}) = v
-convertLegendValue(v::Real) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------
