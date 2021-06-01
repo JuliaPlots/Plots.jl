@@ -585,6 +585,7 @@ add_aliases(:legend_postion, :legend)
 add_aliases(:legend_background_color, :background_color_legend)
 add_aliases(:legend_foreground_color, :foreground_color_legend)
 add_aliases(:legend_font_pointsize, :legendfontsize)
+add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
 
 # margin
 add_aliases(:left_margin, :leftmargin)
