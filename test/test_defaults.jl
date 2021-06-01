@@ -54,8 +54,7 @@ end # testset
     @test p[1][:legend_font_halign] == :left
     @test p[1][:legend_font_valign] == :top
     @test p[1][:legend_font_rotation] == 1.0
-    # This propagates :red
-    @test_broken p[1][:legend_font_color] == RGB{Colors.N0f8}(1.0,0.0,0.0)
+    @test p[1][:legend_font_color] == :red
     @test p[1][:legend_position] == :outertopleft
     @test p[1][:legend_title] == "The legend"
     @test p[1][:legend_title_font_family] == "helvetica"
@@ -63,8 +62,7 @@ end # testset
     @test p[1][:legend_title_font_halign] == :right
     @test p[1][:legend_title_font_valign] == :bottom
     @test p[1][:legend_title_font_rotation] == -5.2
-    # This currently propagates "blue"
-    @test_broken p[1][:legend_title_font_color] == RGB{Colors.N0f8}(0.0,0.0,1.0)
+    @test p[1][:legend_title_font_color] == :blue
     @test p[1][:legend_background_color] == RGBA{Float64}(0.0,1.0,1.0,1.0)
     @test p[1][:legend_foreground_color] == RGBA{Float64}(0.0,0.5019607843137255,0.0,1.0)
 end # testset
