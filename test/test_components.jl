@@ -84,7 +84,7 @@ end
 
 @testset "Fonts" begin
     @testset "Scaling" begin
-        sizesToCheck = [:titlefontsize, :legendfontsize, :legend_title_font_pointsize,
+        sizesToCheck = [:titlefontsize, :legendfontsize, :legendtitlefontsize,
             :xtickfontsize, :ytickfontsize, :ztickfontsize,
             :xguidefontsize, :yguidefontsize, :zguidefontsize,]
         # get inital font sizes
