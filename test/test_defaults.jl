@@ -60,8 +60,7 @@ end # testset
     # FIXME: this doesn't get set
     @test_broken p[1][:legend_title] == "The legend"
     @test p[1][:legend_title_font_family] == "helvetica"
-    # FIXME: this doesn't get set
-    @test_broken p[1][:legend_title_font_pointsize] == 3
+    @test p[1][:legend_title_font_pointsize] == 3
     @test p[1][:legend_title_font_halign] == :right
     @test p[1][:legend_title_font_valign] == :bottom
     @test p[1][:legend_title_font_rotation] == -5.2
