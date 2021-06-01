@@ -56,11 +56,10 @@ end # testset
     @test p[1][:legend_font_halign] == :left
     @test p[1][:legend_font_valign] == :top
     @test p[1][:legend_font_rotation] == 1.0
+    # This propagates :red
     @test_broken p[1][:legend_font_color] == RGB{Colors.N0f8}(1.0,0.0,0.0)
-    # FIXME: this doesn't get set
-    @test_broken p[1][:legend_position] == :outertopleft
-    # FIXME: this doesn't get set
-    @test_broken p[1][:legend_title] == "The legend"
+    @test p[1][:legend_position] == :outertopleft
+    @test p[1][:legend_title] == "The legend"
     @test p[1][:legend_title_font_family] == "helvetica"
     @test p[1][:legend_title_font_pointsize] == 3
     @test p[1][:legend_title_font_halign] == :right
