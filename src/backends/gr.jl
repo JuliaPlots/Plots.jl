@@ -1300,9 +1300,9 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
         yaxis[:guide_position] == :right ||
         (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
 
-    if s isa Tuple{<:Real,Symbol}
-        if s[2] === :outer
-            (x, y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
+    if sp[:legend_position] isa Tuple{<:Real,Symbol}
+        if sp[:legend_position][2] === :outer
+            (x,y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
             if x < viewport_plotarea[1]
                 viewport_plotarea[1] +=
                     leg.leftw +
@@ -1321,7 +1321,6 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
             end
         end
     end
-    leg_str = string(s)
     if occursin("outer", leg_str)
         if occursin("right", leg_str)
             viewport_plotarea[2] -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
