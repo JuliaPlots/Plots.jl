@@ -784,27 +784,27 @@ function pgfx_get_legend_pos(v::Tuple{S,Symbol}) where S <: Real
 end
 
 function pgfx_get_legend_style(sp)
-    cstr = plot_color(sp[:background_color_legend])
+    cstr = plot_color(sp[:legend_background_color])
     a = alpha(cstr)
-    fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
+    fg_alpha = alpha(plot_color(sp[:legend_foreground_color]))
     legfont = legendfont(sp)
     PGFPlotsX.Options(
         pgfx_linestyle(
             pgfx_thickness_scaling(sp),
-            sp[:foreground_color_legend],
+            sp[:legend_foreground_color],
             fg_alpha,
             "solid",
         ) => nothing,
         "fill" => cstr,
         "fill opacity" => a,
-        "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
+        "text opacity" => alpha(plot_color(sp[:legend_font_color])),
         "font" => pgfx_font(
-            sp[:legendfontsize],
+            sp[:legend_font_pointsize],
             pgfx_thickness_scaling(sp),
         ),
-        "text" => plot_color(sp[:legendfontcolor]),
+        "text" => plot_color(sp[:legend_font_color]),
         "cells" => PGFPlotsX.Options("anchor" => get((left = "west", right = "east", hcenter = "center"), legfont.halign, "west")),
-        pgfx_get_legend_pos(sp[:legend])...,
+        pgfx_get_legend_pos(sp[:legend_position])...,
     )
 end
 

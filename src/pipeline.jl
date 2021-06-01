@@ -23,7 +23,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
                 else
                     throw(ArgumentError("Invalid recipe type `$recipe_type`"))
                 end
-                @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $signature_string. To ensure expected behavior it is recommended to use the default attribute `$dk`."
+                # @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $signature_string. To ensure expected behavior it is recommended to use the default attribute `$dk`."
             end
             plotattributes[dk] = RecipesPipeline.pop_kw!(plotattributes, k)
         end

@@ -379,7 +379,25 @@ const _subplot_defaults = KW(
     :color_palette            => :auto,
     :colorbar                 => :legend,
     :clims                    => :auto,
+    :colorbar_fontfamily        => :match,
+    :colorbar_ticks             => :auto,
+    :colorbar_tickfontfamily    => :match,
+    :colorbar_tickfontsize      => 8,
+    :colorbar_tickfonthalign    => :hcenter,
+    :colorbar_tickfontvalign    => :vcenter,
+    :colorbar_tickfontrotation  => 0.0,
+    :colorbar_tickfontcolor     => :match,
+    :colorbar_scale             => :identity,
+    :colorbar_formatter         => :auto,
+    :colorbar_discrete_values   => [],
+    :colorbar_continuous_values   => zeros(0),
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
+    :annotationfontfamily       => :match,
+    :annotationfontsize         => 14,
+    :annotationhalign           => :hcenter,
+    :annotationvalign           => :vcenter,
+    :annotationrotation         => 0.0,
+    :annotationcolor            => :match,
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :auto,             # choose from :none or :equal
     :margin                   => 1mm,
@@ -506,14 +524,18 @@ end
 
 # -----------------------------------------------------------------------------
 # legend
-add_aliases(:legend_postion, :legend)
-add_aliases(:legend_background_color, :background_color_legend)
+add_aliases(:legend_position, :legend, :leg, :key, :legends)
+add_aliases(:legend_background_color, :bg_legend, :bglegend, :bgcolor_legend, :bg_color_legend, :background_legend,
+                              :background_colour_legend, :bgcolour_legend, :bg_colour_legend, :background_color_legend)
+add_aliases(:legend_foreground_color, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
+                            :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend, :foreground_color_legend)
 add_aliases(:legend_foreground_color, :foreground_color_legend)
 add_aliases(:legend_font_pointsize, :legendfontsize)
+add_aliases(:legend_title, :key_title, :keytitle, :label_title, :labeltitle, :leg_title, :legtitle)
 add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
-
 # margin
 add_aliases(:left_margin , :leftmargin )
+
 add_aliases(:top_margin , :topmargin)
 add_aliases(:bottom_margin , :bottommargin)
 add_aliases(:right_margin ,:rightmargin)
@@ -529,8 +551,6 @@ add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
 
 add_aliases(:background_color, :bg, :bgcolor, :bg_color, :background,
                               :background_colour, :bgcolour, :bg_colour)
-add_aliases(:legend_background_color, :bg_legend, :bglegend, :bgcolor_legend, :bg_color_legend, :background_legend,
-                              :background_colour_legend, :bgcolour_legend, :bg_colour_legend)
 add_aliases(:background_color_subplot, :bg_subplot, :bgsubplot, :bgcolor_subplot, :bg_color_subplot, :background_subplot,
                               :background_colour_subplot, :bgcolour_subplot, :bg_colour_subplot)
 add_aliases(:background_color_inside, :bg_inside, :bginside, :bgcolor_inside, :bg_color_inside, :background_inside,
@@ -539,10 +559,11 @@ add_aliases(:background_color_outside, :bg_outside, :bgoutside, :bgcolor_outside
                               :background_colour_outside, :bgcolour_outside, :bg_colour_outside)
 add_aliases(:foreground_color, :fg, :fgcolor, :fg_color, :foreground,
                             :foreground_colour, :fgcolour, :fg_colour)
-add_aliases(:legend_foreground_color, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
-                            :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend)
+
 add_aliases(:foreground_color_subplot, :fg_subplot, :fgsubplot, :fgcolor_subplot, :fg_color_subplot, :foreground_subplot,
                             :foreground_colour_subplot, :fgcolour_subplot, :fg_colour_subplot)
+add_aliases(:legend_foreground_color, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
+                            :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend)
 add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_grid, :foreground_grid,
                             :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid, :gridcolor)
 add_aliases(:foreground_color_minor_grid, :fg_minor_grid, :fgminorgrid, :fgcolor_minorgrid, :fg_color_minorgrid, :foreground_minorgrid,
@@ -597,8 +618,6 @@ add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
 add_aliases(:guidefontsize, :labelfontsize)
 add_aliases(:fill_z, :fillz, :fz, :surfacecolor, :surfacecolour, :sc, :surfcolor, :surfcolour)
-add_aliases(:legend, :leg, :key)
-add_aliases(:legendtitle, :legend_title, :labeltitle, :label_title, :leg_title, :key_title)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
 add_aliases(:colorbar_title, :colorbartitle, :cb_title, :cbtitle, :cbartitle, :cbar_title, :colorkeytitle, :colorkey_title)
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
