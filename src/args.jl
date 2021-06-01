@@ -529,7 +529,6 @@ add_aliases(:legend_background_color, :bg_legend, :bglegend, :bgcolor_legend, :b
                               :background_colour_legend, :bgcolour_legend, :bg_colour_legend, :background_color_legend)
 add_aliases(:legend_foreground_color, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
                             :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend, :foreground_color_legend)
-add_aliases(:legend_foreground_color, :foreground_color_legend)
 add_aliases(:legend_font_pointsize, :legendfontsize)
 add_aliases(:legend_title, :key_title, :keytitle, :label_title, :labeltitle, :leg_title, :legtitle)
 add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
@@ -562,8 +561,6 @@ add_aliases(:foreground_color, :fg, :fgcolor, :fg_color, :foreground,
 
 add_aliases(:foreground_color_subplot, :fg_subplot, :fgsubplot, :fgcolor_subplot, :fg_color_subplot, :foreground_subplot,
                             :foreground_colour_subplot, :fgcolour_subplot, :fg_colour_subplot)
-add_aliases(:legend_foreground_color, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
-                            :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend)
 add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_grid, :foreground_grid,
                             :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid, :gridcolor)
 add_aliases(:foreground_color_minor_grid, :fg_minor_grid, :fgminorgrid, :fgcolor_minorgrid, :fg_color_minorgrid, :foreground_minorgrid,
