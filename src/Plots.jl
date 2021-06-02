@@ -43,6 +43,7 @@ export
     default,
     with,
     twinx,
+    twiny,
 
     pie,
     pie!,
