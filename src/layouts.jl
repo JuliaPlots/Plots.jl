@@ -785,3 +785,16 @@ function twinx(sp::Subplot)
 end
 
 twinx(plt::Plot = current()) = twinx(plt[1])
+
+function twiny(sp::Subplot)
+    sp[:top_margin] = max(sp[:top_margin], 20px)
+    plot!(sp.plt, inset = (sp[:subplot_index], bbox(0,0,1,1)))
+    twinsp = sp.plt.subplots[end]
+    twinsp[:xaxis][:mirror] = true
+    twinsp[:background_color_inside] = Plots.RGBA{Float64}(0,0,0,0)
+    link_axes!(sp[:yaxis], twinsp[:yaxis])
+    twinsp
+end
+
+twiny(plt::Plot = current()) = twiny(plt[1])
+                                                                                                    
