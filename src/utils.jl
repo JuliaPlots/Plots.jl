@@ -57,7 +57,7 @@ struct SeriesSegment
     # indexes of this segement in series data vectors
     range::UnitRange
     # index into vector-valued attributes corresponding to this segment
-    attr_index::Int 
+    attr_index::Int
 end
 
 # -----------------------------------------------------
@@ -88,11 +88,11 @@ function series_segments(series::Series, seriestype::Symbol = :path)
                 (SeriesSegment(i:i, i) for i in r)
             else
                 (SeriesSegment(i:i+1, i) for i in first(r):last(r)-1)
-            end 
+            end
         end)
     else
         (SeriesSegment(r, 1) for r in nan_segments)
-    end 
+    end
 
     warn_on_attr_dim_mismatch(series, x, y, z, segments)
     return segments
@@ -109,7 +109,7 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
             if any(v -> !isnothing(v) && any(isnan, v), (x,y,z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
                     If you intend elements of `$attr` to apply to individual NaN-separated segements in the data,
-                    pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries 
+                    pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
                     may be suppressed by passing an empty label.
                     For example,
                         plot([1:2,1:3], [[4,5],[3,4,5]], label=["y" ""], $attr=[1 2])
@@ -270,7 +270,7 @@ function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size:
                 or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
     end
     x, y = heatmap_edges(x, xscale, isedges),
-           heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots 
+           heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
     return x, y
 end
 
@@ -939,67 +939,67 @@ ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 # ---------------------------------------------------------------
 # get fonts from objects:
 
-plottitlefont(p::Plot) = font(
-    p[:plot_titlefontfamily],
-    p[:plot_titlefontsize],
-    p[:plot_titlefontvalign],
-    p[:plot_titlefonthalign],
-    p[:plot_titlefontrotation],
-    p[:plot_titlefontcolor],
+plottitlefont(p::Plot) = font(;
+    family = p[:plot_titlefontfamily],
+    pointsize = p[:plot_titlefontsize],
+    valign = p[:plot_titlefontvalign],
+    halign = p[:plot_titlefonthalign],
+    rotation = p[:plot_titlefontrotation],
+    color = p[:plot_titlefontcolor],
 )
 
-colorbartitlefont(sp::Subplot) = font(
-    sp[:colorbar_titlefontfamily],
-    sp[:colorbar_titlefontsize],
-    sp[:colorbar_titlefontvalign],
-    sp[:colorbar_titlefonthalign],
-    sp[:colorbar_titlefontrotation],
-    sp[:colorbar_titlefontcolor],
+colorbartitlefont(sp::Subplot) = font(;
+    family = sp[:colorbar_titlefontfamily],
+    pointsize = sp[:colorbar_titlefontsize],
+    valign = sp[:colorbar_titlefontvalign],
+    halign = sp[:colorbar_titlefonthalign],
+    rotation = sp[:colorbar_titlefontrotation],
+    color = sp[:colorbar_titlefontcolor],
 )
 
-titlefont(sp::Subplot) = font(
-    sp[:titlefontfamily],
-    sp[:titlefontsize],
-    sp[:titlefontvalign],
-    sp[:titlefonthalign],
-    sp[:titlefontrotation],
-    sp[:titlefontcolor],
+titlefont(sp::Subplot) = font(;
+    family = sp[:titlefontfamily],
+    pointsize = sp[:titlefontsize],
+    valign = sp[:titlefontvalign],
+    halign = sp[:titlefonthalign],
+    rotation = sp[:titlefontrotation],
+    color = sp[:titlefontcolor],
 )
 
-legendfont(sp::Subplot) = font(
-    sp[:legendfontfamily],
-    sp[:legendfontsize],
-    sp[:legendfontvalign],
-    sp[:legendfonthalign],
-    sp[:legendfontrotation],
-    sp[:legendfontcolor],
+legendfont(sp::Subplot) = font(;
+    family = sp[:legendfontfamily],
+    pointsize = sp[:legendfontsize],
+    valign = sp[:legendfontvalign],
+    halign = sp[:legendfonthalign],
+    rotation = sp[:legendfontrotation],
+    color = sp[:legendfontcolor],
 )
 
-legendtitlefont(sp::Subplot) = font(
-    sp[:legendtitlefontfamily],
-    sp[:legendtitlefontsize],
-    sp[:legendtitlefontvalign],
-    sp[:legendtitlefonthalign],
-    sp[:legendtitlefontrotation],
-    sp[:legendtitlefontcolor],
+legendtitlefont(sp::Subplot) = font(;
+    family = sp[:legendtitlefontfamily],
+    pointsize = sp[:legendtitlefontsize],
+    valign = sp[:legendtitlefontvalign],
+    halign = sp[:legendtitlefonthalign],
+    rotation = sp[:legendtitlefontrotation],
+    color = sp[:legendtitlefontcolor],
 )
 
-tickfont(ax::Axis) = font(
-    ax[:tickfontfamily],
-    ax[:tickfontsize],
-    ax[:tickfontvalign],
-    ax[:tickfonthalign],
-    ax[:tickfontrotation],
-    ax[:tickfontcolor],
+tickfont(ax::Axis) = font(;
+    family = ax[:tickfontfamily],
+    pointsize = ax[:tickfontsize],
+    valign = ax[:tickfontvalign],
+    halign = ax[:tickfonthalign],
+    rotation = ax[:tickfontrotation],
+    color = ax[:tickfontcolor],
 )
 
-guidefont(ax::Axis) = font(
-    ax[:guidefontfamily],
-    ax[:guidefontsize],
-    ax[:guidefontvalign],
-    ax[:guidefonthalign],
-    ax[:guidefontrotation],
-    ax[:guidefontcolor],
+guidefont(ax::Axis) = font(;
+    family = ax[:guidefontfamily],
+    pointsize = ax[:guidefontsize],
+    valign = ax[:guidefontvalign],
+    halign = ax[:guidefonthalign],
+    rotation = ax[:guidefontrotation],
+    color = ax[:guidefontcolor],
 )
 
 # ---------------------------------------------------------------
