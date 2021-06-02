@@ -941,7 +941,7 @@ ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 
 plottitlefont(p::Plot) = font(;
     family = p[:plot_titlefontfamily],
-    fontsize = p[:plot_titlefontsize],
+    pointsize = p[:plot_titlefontsize],
     valign = p[:plot_titlefontvalign],
     halign = p[:plot_titlefonthalign],
     rotation = p[:plot_titlefontrotation],
@@ -950,7 +950,7 @@ plottitlefont(p::Plot) = font(;
 
 colorbartitlefont(sp::Subplot) = font(;
     family = sp[:colorbar_titlefontfamily],
-    fontsize = sp[:colorbar_titlefontsize],
+    pointsize = sp[:colorbar_titlefontsize],
     valign = sp[:colorbar_titlefontvalign],
     halign = sp[:colorbar_titlefonthalign],
     rotation = sp[:colorbar_titlefontrotation],
@@ -959,7 +959,7 @@ colorbartitlefont(sp::Subplot) = font(;
 
 titlefont(sp::Subplot) = font(;
     family = sp[:titlefontfamily],
-    fontsize = sp[:titlefontsize],
+    pointsize = sp[:titlefontsize],
     valign = sp[:titlefontvalign],
     halign = sp[:titlefonthalign],
     rotation = sp[:titlefontrotation],
@@ -968,7 +968,7 @@ titlefont(sp::Subplot) = font(;
 
 legendfont(sp::Subplot) = font(;
     family = sp[:legendfontfamily],
-    fontsize = sp[:legendfontsize],
+    pointsize = sp[:legendfontsize],
     valign = sp[:legendfontvalign],
     halign = sp[:legendfonthalign],
     rotation = sp[:legendfontrotation],
@@ -977,7 +977,7 @@ legendfont(sp::Subplot) = font(;
 
 legendtitlefont(sp::Subplot) = font(;
     family = sp[:legendtitlefontfamily],
-    fontsize = sp[:legendtitlefontsize],
+    pointsize = sp[:legendtitlefontsize],
     valign = sp[:legendtitlefontvalign],
     halign = sp[:legendtitlefonthalign],
     rotation = sp[:legendtitlefontrotation],
@@ -986,7 +986,7 @@ legendtitlefont(sp::Subplot) = font(;
 
 tickfont(ax::Axis) = font(;
     family = ax[:tickfontfamily],
-    fontsize = ax[:tickfontsize],
+    pointsize = ax[:tickfontsize],
     valign = ax[:tickfontvalign],
     halign = ax[:tickfonthalign],
     rotation = ax[:tickfontrotation],
@@ -995,7 +995,7 @@ tickfont(ax::Axis) = font(;
 
 guidefont(ax::Axis) = font(;
     family = ax[:guidefontfamily],
-    fontsize = ax[:guidefontsize],
+    pointsize = ax[:guidefontsize],
     valign = ax[:guidefontvalign],
     halign = ax[:guidefonthalign],
     rotation = ax[:guidefontrotation],
