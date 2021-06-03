@@ -1510,8 +1510,10 @@ function gr_label_axis(sp, letter, viewport_plotarea)
         GR.savestate()
         gr_set_font(guidefont(axis), sp)
         guide_position = axis[:guide_position]
+        angle = float(axis[:guidefontrotation])  # github.com/JuliaPlots/Plots.jl/issues/3089
         if letter === :y
-            GR.setcharup(-1, 0)
+            angle += 180.  # default angle = 0. should yield GR.setcharup(-1, 0) i.e. 180°
+            GR.setcharup(cosd(angle), sind(angle))
             ypos = gr_view_yposition(viewport_plotarea, position(axis[:guidefontvalign]))
             yalign = alignment(axis[:guidefontvalign])
             if guide_position === :right || (guide_position == :auto && mirror)
@@ -1522,6 +1524,8 @@ function gr_label_axis(sp, letter, viewport_plotarea)
                 xpos = viewport_plotarea[1] - 0.03 - !mirror * gr_axis_width(sp, axis)
             end
         else
+            angle += 90.  # default angle = 0. should yield GR.setcharup(0, 1) i.e. 90°
+            GR.setcharup(cosd(angle), sind(angle))
             xpos = gr_view_xposition(viewport_plotarea, position(axis[:guidefonthalign]))
             xalign = alignment(axis[:guidefonthalign])
             if guide_position === :top || (guide_position == :auto && mirror)
