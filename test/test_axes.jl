@@ -31,3 +31,8 @@ end
     @test xticks(p) == yticks(p) == zticks(p) == [ticks1, ticks2]
     @test xticks(p[1]) == yticks(p[1]) == zticks(p[1]) == ticks1
 end
+
+@testset "Axis limits" begin
+    pl = plot(1:5, xlims=:symmetric, widen = false)
+    @test Plots.xlims(pl) == (-5, 5)
+end
