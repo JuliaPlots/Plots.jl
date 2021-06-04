@@ -252,10 +252,18 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 push!(axis, extra_sp...)
             end
             if sp[:legend_title] !== nothing
+                legtfont = legendtitlefont(sp)
                 push!(axis, PGFPlotsX.Options("\\addlegendimage{empty legend}" => nothing))
                 push!(
                     axis,
                     PGFPlotsX.LegendEntry(
+                        PGFPlotsX.Options(
+                            "font" => pgfx_font(
+                                legtfont.pointsize,
+                                pgfx_thickness_scaling(sp),
+                            ),
+                            "text" => legtfont.color
+                        ),
                         string("\\hspace{-.6cm}{\\textbf{", sp[:legend_title], "}}"),
                         false,
                     ),
