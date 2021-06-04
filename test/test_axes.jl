@@ -36,3 +36,8 @@ end
     pl = plot(1:5, xlims=:symmetric, widen = false)
     @test Plots.xlims(pl) == (-5, 5)
 end
+
+@testset "3D Axis" begin
+    ql = quiver(x, y, z, quiver = (u, v, w), camera = (80,10))
+    @test ql[1][:projection] == "3d"
+end
