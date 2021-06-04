@@ -288,7 +288,7 @@ function font(args...;kw...)
 
   for symbol in keys(kw)
     if symbol == :family
-      family = kw[:family]
+      family = string(kw[:family])
     elseif symbol == :pointsize
       pointsize = kw[:pointsize]
     elseif symbol == :halign
