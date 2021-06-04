@@ -38,6 +38,6 @@ end
 end
 
 @testset "3D Axis" begin
-    ql = quiver(x, y, z, quiver = (u, v, w), camera = (80,10))
+    ql = quiver([1, 2], [2, 1], [3, 4], quiver = ([1, -1], [0, 0], [1, -0.5]), arrow=true)
     @test ql[1][:projection] == "3d"
 end
