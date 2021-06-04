@@ -28,5 +28,5 @@ inspectdr    |     |     |
 ### Versions
 
 Plots.jl version:
-Backend  version (`]st -m`):
+Backend  version (`]st -m <backend(s)>`):
 Output of `versioninfo()`:
