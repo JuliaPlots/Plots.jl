@@ -136,6 +136,23 @@ const _label_func_tex = Dict{Symbol,Function}(
 )
 labelfunc_tex(scale::Symbol) = get(_label_func_tex, scale, convert_sci_unicode)
 
+function scaled_log_ticks(amin, amax, scale, max_ticks=8, strict=true)
+  base = _logScaleBases[scale]
+  log_amin = log(amin) / log(base)
+  log_amax = log(amax) / log(base)
+
+  # number of decades
+  num_decs = floor(Int, log_amax) - ceil(Int, log_amin)
+  step = max(1, min(round(Int, num_decs / max_ticks), num_decs))
+
+  start = (strict ? ceil : floor)(Int, log_amin)
+  stop = (strict ? floor : ceil)(Int, log_amax)
+  exponents = range(start, stop, step=step) |> collect
+
+  # majorticks = base .^ exponents
+  # return exponents, majorticks
+  return exponents
+end
 
 function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     amin, amax = alims
@@ -169,12 +186,16 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
 
     # get a list of well-laid-out ticks
     if ticks === nothing
-        scaled_ticks = optimize_ticks(
-            sf(amin),
-            sf(amax);
-            k_min = 4, # minimum number of ticks
-            k_max = 8, # maximum number of ticks
-        )[1]
+        if scale in _logScales
+            scaled_ticks = scaled_log_ticks(amin, amax, scale)
+        else
+            scaled_ticks = optimize_ticks(
+                sf(amin),
+                sf(amax);
+                k_min = 4, # minimum number of ticks
+                k_max = 8, # maximum number of ticks
+            )[1]
+        end
     elseif typeof(ticks) <: Int
         scaled_ticks, viewmin, viewmax = optimize_ticks(
             sf(amin),
@@ -335,11 +356,12 @@ function get_minor_ticks(sp, axis, ticks)
     ticks = ticks[1]
     length(ticks) < 2 && return nothing
 
+    scale = axis[:scale]
     amin, amax = axis_limits(sp, axis[:letter])
-    #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
+    # Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
     if length(ticks) > 2
         ratio = (ticks[3] - ticks[2])/(ticks[2] - ticks[1])
-    elseif axis[:scale] in (:none, :identity)
+    elseif scale in (:none, :identity)
         ratio = 1
     else
         return nothing
@@ -348,13 +370,33 @@ function get_minor_ticks(sp, axis, ticks)
     last_step = ticks[end] - ticks[end-1]
     ticks =  [ticks[1] - first_step/ratio; ticks; ticks[end] + last_step*ratio]
 
-    #Default to 5 intervals between major ticks
-    n = typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 ? axis[:minorticks] : 5
+    # Default to 5 intervals between major ticks on a linear scale,
+    # base - 1 for integral based log scale and 0 for ℯ based log scale
+    integral_log = scale in (:log2, :log10)
+    base = scale in _logScales ? _logScaleBases[scale] : nothing
+    n_default = integral_log ? base - 1 : (scale == :ln ? 0 : 5)
+    n = typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 ? axis[:minorticks] : n_default
     minorticks = typeof(ticks[1])[]
-    for (i,hi) in enumerate(ticks[2:end])
-        lo = ticks[i]
-        if isfinite(lo) && isfinite(hi) && hi > lo
-            append!(minorticks,collect(lo + (hi-lo)/n :(hi-lo)/n: hi - (hi-lo)/2n))
+
+    if n > 0
+        sub = integral_log ? round(Int, log(ratio) / log(base)) : nothing
+        for (i,hi) in enumerate(ticks[2:end])
+            lo = ticks[i]
+            if isfinite(lo) && isfinite(hi) && hi > lo
+                if integral_log
+                    for j in 1:sub
+                        lo_ = lo * base^(j - 1)
+                        hi_ = lo_ * base
+                        step = (hi_ - lo_) / n
+                        append!(minorticks, collect(
+                            lo_ + (j > 1 ? 0 : step) : step : hi_ - (j < sub ? 0 : step / 2)
+                        ))
+                    end
+                else
+                    step = (hi - lo) / n
+                    append!(minorticks, collect(lo + step : step : hi - step / 2))
+                end
+            end
         end
     end
     minorticks[amin .<= minorticks .<= amax]
@@ -701,7 +743,7 @@ function axis_drawing_info(sp, letter)
                 )
             end
         end
-        if !(ax[:ticks] in (:none, nothing, false))
+        if ax[:ticks] ∉ (:none, nothing, false)
             f = RecipesPipeline.scale_func(oax[:scale])
             invf = RecipesPipeline.inverse_scale_func(oax[:scale])
             if ax[:tick_direction] !== :none
@@ -732,7 +774,10 @@ function axis_drawing_info(sp, letter)
                 end
             end
 
-            if !(ax[:minorticks] in (:none, nothing, false)) || ax[:minorgrid]
+            if (
+                (ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]) &&
+                minor_ticks !== nothing
+            )
                 tick_start, tick_stop = if sp[:framestyle] == :origin
                     t = invf(f(0) + 0.006 * (f(oamax) - f(oamin)))
                     (-t, t)
@@ -877,7 +922,10 @@ function axis_drawing_info_3d(sp, letter)
                 end
             end
 
-            if !(ax[:minorticks] in (:none, nothing, false)) || ax[:minorgrid]
+            if (
+                (ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]) &&
+                minor_ticks !== nothing
+            )
                 tick_start, tick_stop = if sp[:framestyle] == :origin
                     t = invf(f(0) + 0.006 * (f(namax) - f(namin)))
                     (-t, t)
