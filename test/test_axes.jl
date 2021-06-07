@@ -39,7 +39,7 @@ end
     pl = plot(1:3)
     @test Plots.xlims(pl) == Plots.widen(1,3)
     
-    pl = plot(1:3, xlims=:round)
+    pl = plot(0.5:0.5:2.5, xlims=:round)
     @test Plots.xlims(pl) == (1, 3)
     
     pl = plot(1:3, xlims=(1,5))
