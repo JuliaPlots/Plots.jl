@@ -1139,7 +1139,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     RecipesPipeline.reset_kw!(plotattributes, :marker)
     if haskey(plotattributes, :markershape)
         plotattributes[:markershape] = _replace_markershape(plotattributes[:markershape])
-        if plotattributes[:markershape] == :none && plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
+        if plotattributes[:markershape] == :none && get(plotattributes, :seriestype, :path) in (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
             plotattributes[:markershape] = :circle
         end
     elseif anymarker
