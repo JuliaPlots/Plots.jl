@@ -476,7 +476,7 @@ const _axis_defaults = KW(
     :minorticks                  => false,
     :minorgrid                   => false,
     :showaxis                    => true,
-    :widen                       => true,
+    :widen                       => :auto,
     :draw_arrow                  => false,
 )
 

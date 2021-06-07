@@ -35,6 +35,18 @@ end
 @testset "Axis limits" begin
     pl = plot(1:5, xlims=:symmetric, widen = false)
     @test Plots.xlims(pl) == (-5, 5)
+    
+    pl = plot(1:3)
+    @test Plots.xlims(pl) == Plots.widen(1,3)
+    
+    pl = plot(1:3, xlims=:round)
+    @test Plots.xlims(pl) == (1, 3)
+    
+    pl = plot(1:3, xlims=(1,5))
+    @test Plots.xlims(pl) == (1, 5)
+
+    pl = plot(1:3, xlims=(1,5), widen=true)
+    @test Plots.xlims(pl) == Plots.widen(1, 5)
 end
 
 @testset "3D Axis" begin

@@ -178,6 +178,9 @@ const _arg_desc = KW(
 :minorgridlinewidth          => "Number. Width of the minor grid lines (in pixels)",
 :tick_direction              => "Symbol.  Direction of the ticks. `:in`, `:out` or `:none`",
 :showaxis                    => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`",
-:widen                       => "Bool. Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders. Defaults to `true`.",
+:widen                       => """
+                                Bool or :auto. Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
+                                Defaults to `:auto`, which widens unless limits were manually set.
+                                """,
 :draw_arrow                  => "Bool. Draw arrow at the end of the axis.",
 )
