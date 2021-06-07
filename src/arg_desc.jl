@@ -141,7 +141,7 @@ const _arg_desc = KW(
                                 NTuple{2,Number} or Symbol. Force axis limits. Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example).
                                 `:round` widens the limit to the nearest round number ie. [0.1,3.6]=>[0.0,4.0]
                                 `:symmetric` sets the limits to be symmetric around zero.
-                                Additionally pass `widen=false` to use the specified limits exactly. 
+                                Set widen=true to widen the specified limits (as occurs when lims are not specified).
                                 """,
 :ticks                       => "Vector of numbers (set the tick values), Tuple of (tickvalues, ticklabels), or `:auto`",
 :scale                       => "Symbol. Scale of the axis: `:none`, `:ln`, `:log2`, `:log10`",
