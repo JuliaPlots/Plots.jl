@@ -504,17 +504,19 @@ end
 const _widen_seriestypes = (:line, :path, :steppre, :stepmid, :steppost, :sticks, :scatter, :barbins, :barhist, :histogram, :scatterbins, :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :bar, :shape, :path3d, :scatter3d)
 
 function default_should_widen(axis::Axis)
-    should_widen = false
-    if !(is_2tuple(axis[:lims]) || axis[:lims] == :round)
-        for sp in axis.sps
-            for series in series_list(sp)
-                if series.plotattributes[:seriestype] in _widen_seriestypes
-                    should_widen = true
-                end
+    if axis[:widen] isa Bool
+        return axis[:widen]
+    end
+    # automatic behavior: widen if limits aren't specified and series type is appropriate
+    (is_2tuple(axis[:lims]) || axis[:lims] == :round) && return false
+    for sp in axis.sps
+        for series in series_list(sp)
+            if series.plotattributes[:seriestype] in _widen_seriestypes
+                return true
             end
         end
     end
-    should_widen
+    false
 end
 
 function round_limits(amin,amax)
@@ -562,7 +564,7 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
         else
             amin, amax
         end
-    elseif should_widen && axis[:widen]
+    elseif should_widen
         widen(amin, amax, axis[:scale])
     elseif lims == :round
         round_limits(amin,amax)
