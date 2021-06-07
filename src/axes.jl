@@ -504,17 +504,14 @@ end
 const _widen_seriestypes = (:line, :path, :steppre, :stepmid, :steppost, :sticks, :scatter, :barbins, :barhist, :histogram, :scatterbins, :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :bar, :shape, :path3d, :scatter3d)
 
 function default_should_widen(axis::Axis)
-    should_widen = false
-    if !(is_2tuple(axis[:lims]) || axis[:lims] == :round)
-        for sp in axis.sps
-            for series in series_list(sp)
-                if series.plotattributes[:seriestype] in _widen_seriestypes
-                    should_widen = true
-                end
+    for sp in axis.sps
+        for series in series_list(sp)
+            if series.plotattributes[:seriestype] in _widen_seriestypes
+                return true
             end
         end
     end
-    should_widen
+    false
 end
 
 function round_limits(amin,amax)
