@@ -34,7 +34,7 @@ _show(io::IO, mime::MIME"application/vnd.plotly.v1+json", plt::Plot{PlotlyJSBack
 html_head(plt::Plot{PlotlyJSBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyJSBackend}) = plotly_html_body(plt)
 
-_show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) = write(io, standalone_html(plt))
+_show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) = write(io, embeddable_html(plt))
 
 _display(plt::Plot{PlotlyJSBackend}) = display(plotlyjs_syncplot(plt))
 

@@ -986,7 +986,7 @@ end
 
 
 function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
-    write(io, standalone_html(plt))
+    write(io, embeddable_html(plt))
 end
 
 
