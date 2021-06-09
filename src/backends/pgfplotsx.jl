@@ -1081,7 +1081,7 @@ end
 function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
     fillrange_opt = PGFPlotsX.Options("line width" => "0", "draw opacity" => "0")
     fillrange_opt = merge(fillrange_opt, pgfx_fillstyle(series, i))
-    push!(fillrange_opt, "markers" => "none") # no markers on fillranges
+    push!(fillrange_opt, "mark" => "none") # no markers on fillranges
     push!(fillrange_opt, "forget plot" => nothing)
     opt = series.plotattributes
     args = RecipesPipeline.is3d(series) ? (opt[:x][rng], opt[:y][rng], opt[:z][rng]) :
