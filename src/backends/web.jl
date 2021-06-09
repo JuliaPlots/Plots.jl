@@ -19,6 +19,10 @@ function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.attr
     """
 end
 
+function embeddable_html(plt::AbstractPlot)
+    html_head(plt) * html_body(plt)
+end
+
 function open_browser_window(filename::AbstractString)
     @static if Sys.isapple()
         return run(`open $(filename)`)
