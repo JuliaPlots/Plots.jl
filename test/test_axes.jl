@@ -35,13 +35,13 @@ end
 @testset "Axis limits" begin
     pl = plot(1:5, xlims=:symmetric, widen = false)
     @test Plots.xlims(pl) == (-5, 5)
-    
+
     pl = plot(1:3)
     @test Plots.xlims(pl) == Plots.widen(1,3)
-    
+
     pl = plot([1.05,2.0,2.95], ylims=:round)
     @test Plots.ylims(pl) == (1, 3)
-    
+
     pl = plot(1:3, xlims=(1,5))
     @test Plots.xlims(pl) == (1, 5)
 
@@ -52,4 +52,14 @@ end
 @testset "3D Axis" begin
     ql = quiver([1, 2], [2, 1], [3, 4], quiver = ([1, -1], [0, 0], [1, -0.5]), arrow=true)
     @test ql[1][:projection] == "3d"
+end
+
+@testset "twinx" begin
+    pl = plot(1:10, margin = 2Plots.cm)
+    twpl = twinx(pl)
+    pl! = plot!(twinx(), -(1:10))
+    @test twpl[:right_margin] == 2Plots.cm
+    @test twpl[:left_margin] == 2Plots.cm
+    @test twpl[:top_margin] == 2Plots.cm
+    @test twpl[:bottom_margin] == 2Plots.cm
 end
