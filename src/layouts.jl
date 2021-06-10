@@ -775,8 +775,13 @@ end
 
 "Adds a new, empty subplot overlayed on top of `sp`, with a mirrored y-axis and linked x-axis."
 function twinx(sp::Subplot)
-    sp[:right_margin] = max(sp[:right_margin], 30px)
-    plot!(sp.plt, inset = (sp[:subplot_index], bbox(0,0,1,1)))
+    plot!(sp.plt,
+        inset = (sp[:subplot_index], bbox(0,0,1,1)),
+        right_margin = sp[:right_margin],
+        left_margin = sp[:left_margin],
+        top_margin = sp[:top_margin],
+        bottom_margin = sp[:bottom_margin],
+    )
     twinsp = sp.plt.subplots[end]
     twinsp[:yaxis][:mirror] = true
     twinsp[:background_color_inside] = RGBA{Float64}(0,0,0,0)
