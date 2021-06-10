@@ -783,6 +783,9 @@ function twinx(sp::Subplot)
         bottom_margin = sp[:bottom_margin],
     )
     twinsp = sp.plt.subplots[end]
+    twinsp[:xaxis][:grid] = false
+    twinsp[:yaxis][:grid] = false
+    twinsp[:xaxis][:showaxis] = false
     twinsp[:yaxis][:mirror] = true
     twinsp[:background_color_inside] = RGBA{Float64}(0,0,0,0)
     link_axes!(sp[:xaxis], twinsp[:xaxis])
