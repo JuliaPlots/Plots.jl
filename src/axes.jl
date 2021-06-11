@@ -174,6 +174,11 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             sf(amax);
             k_min = 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
+            Q = if scale in _logScales
+                [(1.0,1.0), (5.0, 0.9), (2.0, 0.7)]
+            else
+                [(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)]
+            end,
         )[1]
     elseif typeof(ticks) <: Int
         scaled_ticks, viewmin, viewmax = optimize_ticks(
@@ -185,6 +190,11 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # `strict_span = false` rewards cases where the span of the
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
+            Q = if scale in _logScales
+                [(1.0,1.0), (5.0, 0.9), (2.0, 0.7)]
+            else
+                [(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)]
+            end,
         )
         # axis[:lims] = map(RecipesPipeline.inverse_scale_func(scale), (viewmin, viewmax))
     else
