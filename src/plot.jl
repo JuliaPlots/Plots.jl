@@ -99,9 +99,9 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     # build our plot vector from the args
     n = length(plts_tail) + 1
     plts = Array{Plot}(undef, n)
-    plts[1] = plt1
+    plts[1] = deepcopy(plt1)
     for (i,plt) in enumerate(plts_tail)
-        plts[i+1] = plt
+        plts[i+1] = deepcopy(plt)
     end
 
     # compute the layout
