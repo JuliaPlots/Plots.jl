@@ -91,7 +91,8 @@ end
 
 # build a new plot from existing plots
 # note: we split into plt1 and plts_tail so we can dispatch correctly
-function plot(plt1::Plot, plts_tail::Plot...; kw...)
+plot(plt1::Plot, plts_tail::Plot...; kw...) = plot!(deepcopy(plt1), deepcopy.(plts_tail)...; kw...)
+function plot!(plt1::Plot, plts_tail::Plot...; kw...)
     @nospecialize
     plotattributes = KW(kw)
     RecipesPipeline.preprocess_attributes!(plotattributes)
@@ -99,9 +100,9 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     # build our plot vector from the args
     n = length(plts_tail) + 1
     plts = Array{Plot}(undef, n)
-    plts[1] = deepcopy(plt1)
+    plts[1] = plt1
     for (i,plt) in enumerate(plts_tail)
-        plts[i+1] = deepcopy(plt)
+        plts[i+1] = plt
     end
 
     # compute the layout
