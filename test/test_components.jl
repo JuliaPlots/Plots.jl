@@ -141,11 +141,11 @@ end
         layout = (5, 1),
         ylims = (-1.1, 1.1),
         xlims = (0, 5),
-        series_annotations = ["1/1" "1/2" "1/3" "1/4" "1/5"],
+        series_annotations = permutedims([["1/1"],["1/2"],["1/3"],["1/4"],["1/5"]]),
     )
-    @test spl.series_list[1].plotattrubtes[:series_annotations].strs == ["1/1"]
-    @test spl.series_list[2].plotattrubtes[:series_annotations].strs == ["1/2"]
-    @test spl.series_list[3].plotattrubtes[:series_annotations].strs == ["1/3"]
-    @test spl.series_list[4].plotattrubtes[:series_annotations].strs == ["1/4"]
-    @test spl.series_list[5].plotattrubtes[:series_annotations].strs == ["1/5"]
+    @test spl.series_list[1].plotattributes[:series_annotations].strs == ["1/1"]
+    @test spl.series_list[2].plotattributes[:series_annotations].strs == ["1/2"]
+    @test spl.series_list[3].plotattributes[:series_annotations].strs == ["1/3"]
+    @test spl.series_list[4].plotattributes[:series_annotations].strs == ["1/4"]
+    @test spl.series_list[5].plotattributes[:series_annotations].strs == ["1/5"]
 end
