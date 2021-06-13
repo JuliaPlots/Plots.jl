@@ -517,8 +517,7 @@ end
     primary := false
     seriestype := :scatter
     markersize := 0
-    markeralpha := 0
-    fillrange := nothing
+    msrkeralpha := 0
     x := x
     y := y
     ()
