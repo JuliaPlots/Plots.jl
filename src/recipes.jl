@@ -505,11 +505,11 @@ end
 
     # draw the bar shapes
     @series begin
-	seriestype := shape
+	seriestype := :shape
 	series_annotations := nothing
 	primary := true
-	x := xsegs.pts
-	y := ysegs.pts
+	x := xseg.pts
+	y := yseg.pts
 	()
     end
 
