@@ -168,22 +168,27 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     end
 
     # get a list of well-laid-out ticks
+    smin, smax = sf(amin), sf(amax)
     if ticks === nothing
         scaled_ticks = optimize_ticks(
-            sf(amin),
-            sf(amax);
+            smin,
+            smax;
             k_min = 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
             Q = if scale in _logScales
-                [(1.0,1.0), (5.0, 0.9), (2.0, 0.7)]
+                if scale === :log10 && smax - smin > 6
+                    [(1.0,1.0), (3.0, 0.9)]
+                else
+                    [(1.0, 1.0), (5.0, 0.9), (2.0, 0.7)]
+                end
             else
                 [(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)]
             end,
         )[1]
     elseif typeof(ticks) <: Int
         scaled_ticks, viewmin, viewmax = optimize_ticks(
-            sf(amin),
-            sf(amax);
+            smin,
+            smax;
             k_min = ticks, # minimum number of ticks
             k_max = ticks, # maximum number of ticks
             k_ideal = ticks,
@@ -191,7 +196,11 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
             Q = if scale in _logScales
-                [(1.0,1.0), (5.0, 0.9), (2.0, 0.7)]
+                if scale === :log10 && smax - smin > 6
+                    [(1.0,1.0), (3.0, 0.9)]
+                else
+                    [(1.0, 1.0), (5.0, 0.9), (2.0, 0.7)]
+                end
             else
                 [(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)]
             end,
