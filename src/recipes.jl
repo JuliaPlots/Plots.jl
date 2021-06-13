@@ -497,7 +497,7 @@ end
     # switch back
     if !isvertical(plotattributes)
         xseg, yseg = yseg, xseg
-	x, y = y, x
+	    x, y = y, x
     end
 
     # reset orientation
@@ -505,19 +505,20 @@ end
 
     # draw the bar shapes
     @series begin
-	seriestype := :shape
-	series_annotations := nothing
-	primary := true
-	x := xseg.pts
-	y := yseg.pts
-	()
+        seriestype := :shape
+        series_annotations := nothing
+        primary := true
+        x := xseg.pts
+        y := yseg.pts
+        ()
     end
 
     # add empty series
     primary := false
     seriestype := :scatter
     markersize := 0
-    msrkeralpha := 0
+    markeralpha := 0
+    fillrange := nothing
     x := x
     y := y
     ()
