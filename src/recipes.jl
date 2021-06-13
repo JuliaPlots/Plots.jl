@@ -472,16 +472,6 @@ end
         fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
     end
 
-    if !isnothing(plotattributes[:series_annotations])
-        if isvertical(plotattributes)
-            annotations := (x,y,plotattributes[:series_annotations].strs,:bottom)
-        else
-            annotations := (y,x,plotattributes[:series_annotations].strs,:left)
-        end
-        series_annotations := nothing
-    end
-
-    # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i = 1:ny
         yi = procy[i]
@@ -507,15 +497,29 @@ end
     # switch back
     if !isvertical(plotattributes)
         xseg, yseg = yseg, xseg
+	x, y = y, x
     end
-
 
     # reset orientation
     orientation := default(:orientation)
 
-    x := xseg.pts
-    y := yseg.pts
-    seriestype := :shape
+    # draw the bar shapes
+    @series begin
+	seriestype := shape
+	series_annotations := nothing
+	primary := true
+	x := xsegs.pts
+	y := ysegs.pts
+	()
+    end
+
+    # add empty series
+    primary := false
+    seriestype := :scatter
+    markersize := 0
+    msrkeralpha := 0
+    x := x
+    y := y
     ()
 end
 @deps bar shape
