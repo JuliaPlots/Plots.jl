@@ -474,6 +474,11 @@ mutable struct SeriesAnnotations
     baseshape::Union{Shape, AbstractVector{Shape}, Nothing}
     scalefactor::Tuple
 end
+
+series_annotations(scalar) = series_annotations([scalar])
+function series_annotations(anns::AMat)
+  map(series_annotations, anns)
+end
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
     shp = nothing
@@ -570,6 +575,7 @@ end
 
 annotations(::Nothing) = []
 annotations(anns::AVec) = anns
+annotations(anns::AMat) = map(annotations, anns)
 annotations(anns) = Any[anns]
 annotations(sa::SeriesAnnotations) = sa
 

@@ -1,4 +1,4 @@
-using Plots: guidefont
+using Plots: guidefont, series_annotations
 import ImageMagick
 using VisualRegressionTests
 using Plots

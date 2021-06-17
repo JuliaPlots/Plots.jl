@@ -91,7 +91,8 @@ end
 
 # build a new plot from existing plots
 # note: we split into plt1 and plts_tail so we can dispatch correctly
-function plot(plt1::Plot, plts_tail::Plot...; kw...)
+plot(plt1::Plot, plts_tail::Plot...; kw...) = plot!(deepcopy(plt1), deepcopy.(plts_tail)...; kw...)
+function plot!(plt1::Plot, plts_tail::Plot...; kw...)
     @nospecialize
     plotattributes = KW(kw)
     RecipesPipeline.preprocess_attributes!(plotattributes)
