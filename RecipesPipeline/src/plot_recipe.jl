@@ -40,7 +40,7 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
             push!(still_to_process, data.plotattributes)
         end
     catch err
-        if isa(err, MethodError)
+        if err isa MethodError && occursin("plot recipe", err.args)
             push!(kw_list, kw)
         else
             rethrow()
