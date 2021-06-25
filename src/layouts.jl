@@ -406,7 +406,7 @@ end
 
 # ----------------------------------------------------------------------
 
-calc_num_subplots(layout::AbstractLayout) = 1
+calc_num_subplots(layout::AbstractLayout) = get(layout.attr, :blank, false) ? 0 : 1
 function calc_num_subplots(layout::GridLayout)
     tot = 0
     for l in layout.grid

@@ -703,61 +703,46 @@ function axis_drawing_info(sp, letter)
                 )
             end
         end
-        if !(ax[:ticks] in (:none, nothing, false))
+        if ax[:ticks] ∉ (:none, nothing, false)
             f = RecipesPipeline.scale_func(oax[:scale])
             invf = RecipesPipeline.inverse_scale_func(oax[:scale])
-            if ax[:tick_direction] !== :none
-                tick_start, tick_stop = if sp[:framestyle] == :origin
-                    t = invf(f(0) + 0.012 * (f(oamax) - f(oamin)))
-                    (-t, t)
-                else
-                    ticks_in = ax[:tick_direction] == :out ? -1 : 1
-                    t = invf(f(oa1) + 0.012 * (f(oa2) - f(oa1)) * ticks_in)
-                    (oa1, t)
-                end
-            end
 
-            for tick in ticks[1]
-                if ax[:showaxis] && ax[:tick_direction] !== :none
-                    push!(
-                        tick_segments,
-                        reverse_if((tick, tick_start), isy),
-                        reverse_if((tick, tick_stop), isy),
-                    )
+            add_major_or_minor_segments(ticks, grid, segments, factor, cond) = begin
+                if cond
+                    tick_start, tick_stop = if sp[:framestyle] == :origin
+                        t = invf(f(0) + factor * (f(oamax) - f(oamin)))
+                        (-t, t)
+                    else
+                        ticks_in = ax[:tick_direction] == :out ? -1 : 1
+                        t = invf(f(oa1) + factor * (f(oa2) - f(oa1)) * ticks_in)
+                        (oa1, t)
+                    end
                 end
-                if ax[:grid]
-                    push!(
-                        grid_segments,
-                        reverse_if((tick, oamin), isy),
-                        reverse_if((tick, oamax), isy),
-                    )
-                end
-            end
 
-            if !(ax[:minorticks] in (:none, nothing, false)) || ax[:minorgrid]
-                tick_start, tick_stop = if sp[:framestyle] == :origin
-                    t = invf(f(0) + 0.006 * (f(oamax) - f(oamin)))
-                    (-t, t)
-                else
-                    t = invf(f(oa1) + 0.006 * (f(oa2) - f(oa1)) * ticks_in)
-                    (oa1, t)
-                end
-                for tick in minor_ticks
-                    if ax[:showaxis]
+                for tick in ticks
+                    if ax[:showaxis] && cond
                         push!(
                             tick_segments,
                             reverse_if((tick, tick_start), isy),
                             reverse_if((tick, tick_stop), isy),
                         )
                     end
-                    if ax[:minorgrid] 
+                    if grid
                         push!(
-                            minorgrid_segments,
+                            segments,
                             reverse_if((tick, oamin), isy),
                             reverse_if((tick, oamax), isy),
                         )
                     end
                 end
+            end
+
+            # add major grid segments
+            add_major_or_minor_segments(ticks[1], ax[:grid], grid_segments, 0.012, ax[:tick_direction] !== :none)
+
+            # add minor grid segments
+            if ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]
+                add_major_or_minor_segments(minor_ticks, ax[:minorgrid], minorgrid_segments, 0.006, true)
             end
         end
     end
@@ -841,73 +826,53 @@ function axis_drawing_info_3d(sp, letter)
                 )
             end
         end
-        # TODO this can be simplified, we do almost the same thing twice for grid and minorgrid
-        if !(ax[:ticks] in (:none, nothing, false))
+
+        if ax[:ticks] ∉ (:none, nothing, false)
             f = RecipesPipeline.scale_func(nax[:scale])
             invf = RecipesPipeline.inverse_scale_func(nax[:scale])
-            if ax[:tick_direction] !== :none
-                tick_start, tick_stop = if sp[:framestyle] == :origin
-                    t = invf(f(0) + 0.012 * (f(namax) - f(namin)))
-                    (-t, t)
-                else
-                    ticks_in = ax[:tick_direction] == :out ? -1 : 1
-                    t = invf(f(na0) + 0.012 * (f(na1) - f(na0)) * ticks_in)
-                    (na0, t)
-                end
-            end
-
             ga0, ga1 = sp[:framestyle] in (:origin, :zerolines) ? (namin, namax) : (na0, na1)
-            for tick in ticks[1]
-                if ax[:showaxis] && ax[:tick_direction] !== :none
-                    push!(
-                        tick_segments,
-                        sort_3d_axes(tick, tick_start, fa0, letter),
-                        sort_3d_axes(tick, tick_stop, fa0, letter),
-                    )
-                end
-                if ax[:grid]
-                    push!(
-                        grid_segments,
-                        sort_3d_axes(tick, ga0, fa0, letter),
-                        sort_3d_axes(tick, ga1, fa0, letter),
-                    )
-                    push!(
-                        grid_segments,
-                        sort_3d_axes(tick, ga1, fa0, letter),
-                        sort_3d_axes(tick, ga1, fa1, letter),
-                    )
-                end
-            end
 
-            if !(ax[:minorticks] in (:none, nothing, false)) || ax[:minorgrid]
-                tick_start, tick_stop = if sp[:framestyle] == :origin
-                    t = invf(f(0) + 0.006 * (f(namax) - f(namin)))
-                    (-t, t)
-                else
-                    t = invf(f(na0) + 0.006 * (f(na1) - f(na0)) * ticks_in)
-                    (na0, t)
+            add_major_or_minor_segments(ticks, grid, segments, factor, cond) = begin
+                if cond
+                    tick_start, tick_stop = if sp[:framestyle] == :origin
+                        t = invf(f(0) + factor * (f(namax) - f(namin)))
+                        (-t, t)
+                    else
+                        ticks_in = ax[:tick_direction] == :out ? -1 : 1
+                        t = invf(f(na0) + factor * (f(na1) - f(na0)) * ticks_in)
+                        (na0, t)
+                    end
                 end
-                for tick in minor_ticks
-                    if ax[:showaxis] && ax[:tick_direction] !== :none
+
+                for tick in ticks
+                    if ax[:showaxis] && cond
                         push!(
                             tick_segments,
                             sort_3d_axes(tick, tick_start, fa0, letter),
                             sort_3d_axes(tick, tick_stop, fa0, letter),
                         )
                     end
-                    if ax[:minorgrid]
+                    if grid
                         push!(
-                            minorgrid_segments,
+                            segments,
                             sort_3d_axes(tick, ga0, fa0, letter),
                             sort_3d_axes(tick, ga1, fa0, letter),
                         )
                         push!(
-                            minorgrid_segments,
+                            segments,
                             sort_3d_axes(tick, ga1, fa0, letter),
                             sort_3d_axes(tick, ga1, fa1, letter),
                         )
                     end
                 end
+            end
+
+            # add major grid segments
+            add_major_or_minor_segments(ticks[1], ax[:grid], grid_segments, 0.012, ax[:tick_direction] !== :none)
+
+            # add minor grid segments
+            if ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]
+                add_major_or_minor_segments(minor_ticks, ax[:minorgrid], minorgrid_segments, 0.006, true)
             end
         end
     end
