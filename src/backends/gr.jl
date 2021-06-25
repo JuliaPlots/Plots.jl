@@ -1282,8 +1282,8 @@ function gr_set_window(sp, viewport_plotarea)
         gr_set_viewport_polar(viewport_plotarea)
     else
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
-        is3d = RecipesPipeline.is3d(sp)
-        if is3d
+        needs_3d = needs_any_3d_axes(sp)
+        if needs_3d
             zmin, zmax = gr_z_axislims(sp)
             zok = zmax > zmin
         else
@@ -1292,12 +1292,12 @@ function gr_set_window(sp, viewport_plotarea)
 
         scaleop = 0
         if xmax > xmin && ymax > ymin && zok
-            sp[:xaxis][:scale] == :log10         && (scaleop |= GR.OPTION_X_LOG)
-            sp[:yaxis][:scale] == :log10         && (scaleop |= GR.OPTION_Y_LOG)
-            is3d && sp[:zaxis][:scale] == :log10 && (scaleop |= GR.OPTION_Z_LOG)
-            sp[:xaxis][:flip]                    && (scaleop |= GR.OPTION_FLIP_X)
-            sp[:yaxis][:flip]                    && (scaleop |= GR.OPTION_FLIP_Y)
-            is3d && sp[:zaxis][:flip]            && (scaleop |= GR.OPTION_FLIP_Z)
+            sp[:xaxis][:scale] == :log10             && (scaleop |= GR.OPTION_X_LOG)
+            sp[:yaxis][:scale] == :log10             && (scaleop |= GR.OPTION_Y_LOG)
+            needs_3d && sp[:zaxis][:scale] == :log10 && (scaleop |= GR.OPTION_Z_LOG)
+            sp[:xaxis][:flip]                        && (scaleop |= GR.OPTION_FLIP_X)
+            sp[:yaxis][:flip]                        && (scaleop |= GR.OPTION_FLIP_Y)
+            needs_3d && sp[:zaxis][:flip]            && (scaleop |= GR.OPTION_FLIP_Z)
             # NOTE: setwindow sets the "data coordinate" limits of the current "viewport"
             GR.setwindow(xmin, xmax, ymin, ymax)
             GR.setscale(scaleop)
