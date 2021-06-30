@@ -651,12 +651,17 @@ end
 
 function gr_set_tickfont(sp, letter)
     axis = sp[Symbol(letter, :axis)]
+
+    # invalidate alignment changes for small rotations (|θ| < 45°)
+    trigger(rot) = abs(sind(rot)) < abs(cosd(rot)) ? 0 : sign(rot)
+
+    rot = axis[:rotation]
     if letter === :x || (RecipesPipeline.is3d(sp) && letter === :y)
-        halign = (:left, :hcenter, :right)[sign(axis[:rotation]) + 2]
-        valign = (axis[:mirror] ? :bottom : :top)
+        halign = (:left, :hcenter, :right)[trigger(rot) + 2]
+        valign = (axis[:mirror] ? :bottom : :top, :vcenter)[trigger(abs(rot)) + 1]
     else
-        halign = (axis[:mirror] ? :left : :right)
-        valign = (:top, :vcenter, :bottom)[sign(axis[:rotation]) + 2]
+        halign = (axis[:mirror] ? :left : :right, :hcenter)[trigger(abs(rot)) + 1]
+        valign = (:top, :vcenter, :bottom)[trigger(rot) + 2]
     end
     gr_set_font(
         tickfont(axis),
