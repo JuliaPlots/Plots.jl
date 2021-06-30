@@ -853,15 +853,17 @@ function axis_drawing_info_3d(sp, letter)
                         )
                     end
                     if grid
+                        fa0_, fa1_ = reverse_if((fa0, fa1), ax[:mirror])
+                        ga0_, ga1_ = reverse_if((ga0, ga1), ax[:mirror])
                         push!(
                             segments,
-                            sort_3d_axes(tick, ga0, fa0, letter),
-                            sort_3d_axes(tick, ga1, fa0, letter),
+                            sort_3d_axes(tick, ga0_, fa0_, letter),
+                            sort_3d_axes(tick, ga1_, fa0_, letter),
                         )
                         push!(
                             segments,
-                            sort_3d_axes(tick, ga1, fa0, letter),
-                            sort_3d_axes(tick, ga1, fa1, letter),
+                            sort_3d_axes(tick, ga1_, fa0_, letter),
+                            sort_3d_axes(tick, ga1_, fa1_, letter),
                         )
                     end
                 end

@@ -1163,6 +1163,56 @@ const _examples = PlotExample[
             ),
         ],
     ),
+    PlotExample( # 55
+        "3D axis flip / mirror",
+        "",
+        [
+            :(
+              begin
+                meshgrid(x, y) = (ones(eltype(y), length(y)) * x', y * ones(eltype(x), length(x))')
+                scalefontsizes(.5)
+
+                x, y = meshgrid(-6:0.5:10, -8:0.5:8)
+                r = sqrt.(x .^ 2 + y .^ 2) .+ eps()
+                z = sin.(r) ./ r
+
+                args = x[1, :], y[:, 1], z[:]
+                kwargs = Dict(
+                    :xlabel => "x", :ylabel => "y", :zlabel => "z",
+                    :grid => true, :minorgrid => true, :dpi => 200
+                )
+
+                plots = [wireframe(args..., title = "wire"; kwargs...)]
+
+                for ax ∈ (:x, :y, :z)
+                    push!(plots, wireframe(
+                        args...,
+                        title = "wire-flip-$ax",
+                        xflip = ax == :x,
+                        yflip = ax == :y,
+                        zflip = ax == :z;
+                        kwargs...,
+                    ))
+                end
+
+                for ax ∈ (:x, :y, :z)
+                    push!(plots, wireframe(
+                        args...,
+                        title = "wire-mirror-$ax",
+                        xmirror = ax == :x,
+                        ymirror = ax == :y,
+                        zmirror = ax == :z;
+                        kwargs...,
+                    ))
+                end
+
+                plot(plots..., layout=(@layout [_ ° _; ° ° °; ° ° °]), margin=2Plots.mm)
+
+                scalefontsizes()
+              end
+            ),
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
