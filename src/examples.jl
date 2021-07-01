@@ -1169,15 +1169,17 @@ const _examples = PlotExample[
         [
             :(
               begin
-                meshgrid(x, y) = (ones(eltype(y), length(y)) * x', y * ones(eltype(x), length(x))')
+		using LinearAlgebra
 		scalefontsizes()
                 scalefontsizes(.5)
 
-                x, y = meshgrid(-6:0.5:10, -8:0.5:8)
-                r = sqrt.(x .^ 2 + y .^ 2) .+ eps()
-                z = sin.(r) ./ r
+                x, y = -6:0.5:10, -8:0.5:8
+		function f(x,y)
+		  r = norm([x,y])
+		  sin(r) / (r + eps())
+		end
 
-                args = x[1, :], y[:, 1], z[:]
+                args = (x, y, f)
                 kwargs = Dict(
                     :xlabel => "x", :ylabel => "y", :zlabel => "z",
                     :grid => true, :minorgrid => true, :dpi => 200
