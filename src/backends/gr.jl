@@ -1841,22 +1841,23 @@ function gr_draw_contour(series, x, y, z, clims)
 end
 
 function gr_draw_surface(series, x, y, z, clims)
-
+    e_kwargs = series[:extra_kwargs]
     if series[:seriestype] === :surface
         fillalpha = get_fillalpha(series)
         fillcolor = get_fillcolor(series)
         if length(x) == length(y) == length(z)
             x, y, z = GR.gridit(x, y, z, 200, 200)
         end
+        d_opt = get(e_kwargs, :display_option, GR.OPTION_COLORED_MESH)
         if (!isnothing(fillalpha) && fillalpha < 1) || alpha(first(fillcolor)) < 1
             gr_set_transparency(fillcolor, fillalpha)
-            GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
+            GR.surface(x, y, z, d_opt)
         else
-            GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+            GR.gr3.surface(x, y, z, d_opt)
         end
-    else # wireframe
+    else  # wireframe
         GR.setfillcolorind(0)
-        GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
+        GR.surface(x, y, z, get(e_kwargs, :display_option, GR.OPTION_FILLED_MESH))
     end
 end
 
