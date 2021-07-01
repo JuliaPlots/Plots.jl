@@ -1170,6 +1170,7 @@ const _examples = PlotExample[
             :(
               begin
                 meshgrid(x, y) = (ones(eltype(y), length(y)) * x', y * ones(eltype(x), length(x))')
+		scalefontsizes()
                 scalefontsizes(.5)
 
                 x, y = meshgrid(-6:0.5:10, -8:0.5:8)
@@ -1207,8 +1208,6 @@ const _examples = PlotExample[
                 end
 
                 plot(plots..., layout=(@layout [_ ° _; ° ° °; ° ° °]), margin=2Plots.mm)
-
-                scalefontsizes()
               end
             ),
         ],
