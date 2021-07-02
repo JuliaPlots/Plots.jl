@@ -1169,21 +1169,13 @@ const _examples = PlotExample[
         [
             :(
               begin
-		using LinearAlgebra
-		scalefontsizes()
-                scalefontsizes(.5)
+                using LinearAlgebra
+                scalefontsizes(.4)
 
-                x, y = -6:0.5:10, -8:0.5:8
-		function f(x,y)
-		  r = norm([x,y])
-		  sinc(r / pi)
-		end
+                x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
-                args = (x, y, f)
-                kwargs = Dict(
-                    :xlabel => "x", :ylabel => "y", :zlabel => "z",
-                    :grid => true, :minorgrid => true, :dpi => 200
-                )
+                args = x, y, (x, y) -> sinc(norm([x, y]) / π)
+                kwargs = Dict(:xlabel=>"x", :ylabel=>"y", :zlabel=>"z", :grid=>true, :minorgrid=>true)
 
                 plots = [wireframe(args..., title = "wire"; kwargs...)]
 
@@ -1209,7 +1201,10 @@ const _examples = PlotExample[
                     ))
                 end
 
-                plot(plots..., layout=(@layout [_ ° _; ° ° °; ° ° °]), margin=2Plots.mm)
+                plt = plot(plots..., layout=(@layout [_ ° _; ° ° °; ° ° °]), margin=0Plots.px)
+
+                resetfontsizes()
+                plt
               end
             ),
         ],
