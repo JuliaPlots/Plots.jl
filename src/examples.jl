@@ -1176,7 +1176,7 @@ const _examples = PlotExample[
                 x, y = -6:0.5:10, -8:0.5:8
 		function f(x,y)
 		  r = norm([x,y])
-		  sin(r) / (r + eps())
+		  sinc(r / pi)
 		end
 
                 args = (x, y, f)
