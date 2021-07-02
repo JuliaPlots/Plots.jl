@@ -1162,25 +1162,25 @@ function gr_legend_pos(theta::Real, leg, viewport_plotarea; axisclearance=nothin
 end
 
 function gr_get_legend_geometry(viewport_plotarea, sp)
-    legendn = 0
-    legendw = 0
+    legendn = legendw = 0; dy = 0.
     if sp[:legend] != :none
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
         if sp[:legendtitle] !== nothing
             gr_set_font(legendtitlefont(sp), sp)
+            legendn += 1
             tbx, tby = gr_inqtext(0, 0, string(sp[:legendtitle]))
             legendw = tbx[3] - tbx[1]
-            legendn += 1
+            dy = tby[3] - tby[1]
         end
         gr_set_font(legendfont(sp), sp)
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             legendn += 1
-            lab = series[:label]
-            tbx, tby = gr_inqtext(0, 0, string(lab))
+            tbx, tby = gr_inqtext(0, 0, string(series[:label]))
             legendw = max(legendw, tbx[3] - tbx[1]) # Holds text width right now
+            dy = max(dy, tby[3] - tby[1])
         end
 
         GR.setscale(1)
@@ -1197,7 +1197,6 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
     x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
     y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 30
 
-    dy = gr_point_mult(sp) * sp[:legendfontsize] * 1.75
     legendh = dy * legendn
 
     return (
