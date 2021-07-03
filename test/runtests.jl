@@ -30,6 +30,7 @@ end
 end # testset
 
 include("test_defaults.jl")
+include("test_pipeline.jl")
 include("test_axes.jl")
 include("test_axis_letter.jl")
 include("test_components.jl")
