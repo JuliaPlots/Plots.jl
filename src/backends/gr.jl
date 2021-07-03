@@ -1162,7 +1162,7 @@ function gr_legend_pos(theta::Real, leg, viewport_plotarea; axisclearance=nothin
 end
 
 function gr_get_legend_geometry(viewport_plotarea, sp)
-    legendn = legendw = 0; dy = 0.
+    legendn = legendw = dy = 0
     if sp[:legend] != :none
         GR.savestate()
         GR.selntran(0)
@@ -1196,6 +1196,8 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
 
     x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
     y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 30
+
+    dy *= get(sp[:extra_kwargs], :legend_hfactor, 1)
 
     legendh = dy * legendn
 
