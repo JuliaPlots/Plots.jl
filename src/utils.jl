@@ -82,6 +82,20 @@ function series_segments(series::Series, seriestype::Symbol = :path)
     args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
     nan_segments = collect(iter_segments(args...))
 
+    scales = :xscale, :yscale, :zscale
+    for (n, s) ∈ enumerate(args)
+        scale = get(series, scales[n], :identity)
+        if scale ∈ _logScales
+            for (i, v) ∈ enumerate(s)
+                if v <= 0
+                    msg = "Invalid negative or zero value $v found at serie index $i for $(scale) based $(scales[n])"
+                    @warn msg
+                    @debug msg exception=(DomainError(v), stacktrace())
+                end
+            end
+        end
+    end
+
     segments = if has_attribute_segments(series)
         Iterators.flatten(map(nan_segments) do r
             if seriestype in (:scatter, :scatter3d)
