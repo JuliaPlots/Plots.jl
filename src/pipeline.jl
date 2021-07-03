@@ -286,14 +286,14 @@ function _add_plot_title!(plt)
     plot_title = plt[:plot_title]
     if plot_title != ""
         the_layout = plt.layout
-        plt.layout = grid(2,1, heights = [0.0,1.0])
-        plt.layout.grid[2,1] = the_layout
-        subplot = Subplot(backend(), parent = plt.layout[1,1])
+        plt.layout = grid(2, 1, heights=(.01, .99))
+        plt.layout.grid[2, 1] = the_layout
+        subplot = Subplot(backend(), parent = plt.layout[1, 1])
         subplot.plt = plt
         subplot[:title] = plot_title
         subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
         subplot[:framestyle] = :none
-        plt.layout.grid[1,1] = subplot
+        plt.layout.grid[1, 1] = subplot
         push!(plt.subplots, subplot)
     end
     return nothing
