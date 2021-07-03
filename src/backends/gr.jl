@@ -1607,7 +1607,6 @@ end
 function gr_add_title(sp, viewport_plotarea, viewport_subplot)
     if sp[:title] != ""
         GR.savestate()
-        gr_set_font(titlefont(sp), sp)
         loc = sp[:titlelocation]
         if loc == :left
             xpos = viewport_plotarea[1]
@@ -1619,7 +1618,7 @@ function gr_add_title(sp, viewport_plotarea, viewport_subplot)
             xpos = gr_view_xcenter(viewport_plotarea)
             halign = GR.TEXT_HALIGN_CENTER
         end
-        GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
+        gr_set_font(titlefont(sp), sp; halign=halign)
         gr_text(xpos, viewport_subplot[4], sp[:title])
         GR.restorestate()
     end
