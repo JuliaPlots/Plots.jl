@@ -291,6 +291,17 @@ function _add_plot_title!(plt)
         subplot = Subplot(backend(), parent = plt.layout[1, 1])
         subplot.plt = plt
         subplot[:title] = plot_title
+        for sym ∈ (
+            :titlefontsize,
+            :title_location,
+            :titlefontfamily,
+            :titlefonthalign,
+            :titlefontvalign,
+            :titlefontrotation,
+            :titlefontcolor,
+        )
+            subplot[sym] = plt[Symbol("plot_" * string(sym))]
+        end
         subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
         subplot[:framestyle] = :none
         plt.layout.grid[1, 1] = subplot
