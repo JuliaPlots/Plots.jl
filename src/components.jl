@@ -1,7 +1,5 @@
-
-
-const P2 = GeometryTypes.Point2{Float64}
-const P3 = GeometryTypes.Point3{Float64}
+const P2 = GeometryBasics.Point2{Float64}
+const P3 = GeometryBasics.Point3{Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -11,9 +9,9 @@ compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angl
 
 # -------------------------------------------------------------
 
-struct Shape
-    x::Vector{Float64}
-    y::Vector{Float64}
+struct Shape{X<:Number, Y<:Number}
+    x::Vector{X}
+    y::Vector{Y}
     # function Shape(x::AVec, y::AVec)
     #     # if x[1] != x[end] || y[1] != y[end]
     #     #     new(vcat(x, x[1]), vcat(y, y[1]))
@@ -44,21 +42,17 @@ function coords(shape::Shape)
     shape.x, shape.y
 end
 
-function coords(shapes::AVec{Shape})
-    length(shapes) == 0 && return zeros(0), zeros(0)
-    xs = map(get_xs, shapes)
-    ys = map(get_ys, shapes)
-    x, y = map(copy, coords(shapes[1]))
-    for shape in shapes[2:end]
-        nanappend!(x, shape.x)
-        nanappend!(y, shape.y)
-    end
+#coords(shapes::AVec{Shape}) = unzip(map(coords, shapes))
+function coords(shapes::AVec{<:Shape})
+    c = map(coords, shapes)
+    x = [q[1] for q in c]
+    y = [q[2] for q in c]
     x, y
 end
 
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r=1)
-    Tuple{Float64,Float64}[(r*cos(u),r*sin(u)) for u in range(start_θ, stop=end_θ, length=n)]
+    [(r*cos(u), r*sin(u)) for u in range(start_θ, stop=end_θ, length=n)]
 end
 
 "interleave 2 vectors into each other (like a zipper's teeth)"
@@ -77,7 +71,6 @@ function weave(x,y; ordering = Vector[x,y])
   ret
 end
 
-
 "create a star by weaving together points from an outer and inner circle.  `n` is the number of arms"
 function makestar(n; offset = -0.5, radius = 1.0)
     z1 = offset * π
@@ -93,7 +86,6 @@ function makeshape(n; offset = -0.5, radius = 1.0)
     Shape(partialcircle(z, z + 2π, n+1, radius))
 end
 
-
 function makecross(; offset = -0.5, radius = 1.0)
     z2 = offset * π
     z1 = z2 - π/8
@@ -103,7 +95,6 @@ function makecross(; offset = -0.5, radius = 1.0)
                 ordering=Vector[outercircle,innercircle,outercircle]))
 end
 
-
 from_polar(angle, dist) = P2(dist*cos(angle), dist*sin(angle))
 
 function makearrowhead(angle; h = 2.0, w = 0.4)
@@ -111,31 +102,6 @@ function makearrowhead(angle; h = 2.0, w = 0.4)
     Shape(P2[(0,0), from_polar(angle - 0.5π, w) - tip,
         from_polar(angle + 0.5π, w) - tip, (0,0)])
 end
-
-const _shape_keys = Symbol[
-  :circle,
-  :rect,
-  :star5,
-  :diamond,
-  :hexagon,
-  :cross,
-  :xcross,
-  :utriangle,
-  :dtriangle,
-  :rtriangle,
-  :ltriangle,
-  :pentagon,
-  :heptagon,
-  :octagon,
-  :star4,
-  :star6,
-  :star7,
-  :star8,
-  :vline,
-  :hline,
-  :+,
-  :x,
-]
 
 const _shapes = KW(
     :circle    => makeshape(20),
@@ -239,9 +205,12 @@ function rotate!(shape::Shape, Θ::Real, c = center(shape))
 end
 
 "rotate an object in space"
-function rotate(shape::Shape, Θ::Real, c = center(shape))
-    shapecopy = deepcopy(shape)
-    rotate!(shapecopy, Θ, c)
+function rotate(shape::Shape, θ::Real, c = center(shape))
+    x, y = coords(shape)
+    cx, cy = c
+    x_new = rotate_x.(x, y, θ, cx, cy)
+    y_new = rotate_y.(x, y, θ, cx, cy)
+    Shape(x_new, y_new)
 end
 
 # -----------------------------------------------------------------------
@@ -319,7 +288,7 @@ function font(args...;kw...)
 
   for symbol in keys(kw)
     if symbol == :family
-      family = kw[:family]
+      family = string(kw[:family])
     elseif symbol == :pointsize
       pointsize = kw[:pointsize]
     elseif symbol == :halign
@@ -358,8 +327,14 @@ end
 Scales all **current** font sizes by `factor`. For example `scalefontsizes(1.1)` increases all current font sizes by 10%. To reset to initial sizes, use `scalefontsizes()`
 """
 function scalefontsizes(factor::Number)
-    for k in (:titlefontsize, :guidefontsize, :tickfontsize, :legendfontsize)
+    for k in (:titlefontsize, :legendfontsize, :legendtitlefontsize)
         scalefontsize(k, factor)
+    end
+
+    for letter in (:x,:y,:z)
+        for k in (:guidefontsize, :tickfontsize)
+            scalefontsize(Symbol(letter, k), factor)
+        end
     end
 end
 
@@ -369,14 +344,26 @@ end
 Resets font sizes to initial default values.
 """
 function scalefontsizes()
-  for k in (:titlefontsize, :guidefontsize, :tickfontsize, :legendfontsize)
-      f = default(k)
-      if k in keys(_initial_fontsizes)
-        factor = f / _initial_fontsizes[k]
-        scalefontsize(k, 1.0/factor)
-      end
-  end
+    for k in (:titlefontsize, :legendfontsize, :legendtitlefontsize)
+        f = default(k)
+        if k in keys(_initial_fontsizes)
+            factor = f / _initial_fontsizes[k]
+            scalefontsize(k, 1.0/factor)
+        end
+    end
+
+    for letter in (:x,:y,:z)
+        for k in (:guidefontsize, :tickfontsize)
+            if k in keys(_initial_fontsizes)
+                f = default(Symbol(letter, k))
+                factor = f / _initial_fontsizes[k]
+                scalefontsize(Symbol(letter, k), 1.0/factor)
+            end
+        end
+    end
 end
+
+resetfontsizes() = scalefontsizes()
 
 "Wrap a string with font info"
 struct PlotText
@@ -487,6 +474,11 @@ mutable struct SeriesAnnotations
     baseshape::Union{Shape, AbstractVector{Shape}, Nothing}
     scalefactor::Tuple
 end
+
+series_annotations(scalar) = series_annotations([scalar])
+function series_annotations(anns::AMat)
+  map(series_annotations, anns)
+end
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
     shp = nothing
@@ -583,16 +575,27 @@ end
 
 annotations(::Nothing) = []
 annotations(anns::AVec) = anns
+annotations(anns::AMat) = map(annotations, anns)
 annotations(anns) = Any[anns]
 annotations(sa::SeriesAnnotations) = sa
 
 # Expand arrays of coordinates, positions and labels into induvidual annotations
 # and make sure labels are of type PlotText
-function process_annotation(sp::Subplot, xs, ys, labs, font = font())
+function process_annotation(sp::Subplot, xs, ys, labs, font = nothing)
     anns = []
     labs = makevec(labs)
     xlength = length(methods(length, (typeof(xs),))) == 0 ? 1 : length(xs)
     ylength = length(methods(length, (typeof(ys),))) == 0 ? 1 : length(ys)
+    if isnothing(font)
+        font = Plots.font(;
+                    family=sp[:annotationfontfamily],
+                    pointsize=sp[:annotationfontsize],
+                    halign=sp[:annotationhalign],
+                    valign=sp[:annotationvalign],
+                    rotation=sp[:annotationrotation],
+                    color=sp[:annotationcolor],
+                         )
+    end
     for i in 1:max(xlength, ylength, length(labs))
       x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
         x = typeof(x) <: TimeType ? Dates.value(x) : x
@@ -601,14 +604,24 @@ function process_annotation(sp::Subplot, xs, ys, labs, font = font())
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (x, y, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
         else
-            push!(anns, (x, y, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab...) : text(lab, font)))
+            push!(anns, (x, y, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab[1], font, lab[2:end]...) : text(lab, font)))
         end
     end
     anns
 end
-function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, labs, font = font())
+function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, labs, font = nothing)
     anns = []
     positions, labs = makevec(positions), makevec(labs)
+    if isnothing(font)
+        font = Plots.font(;
+                          family=sp[:annotationfontfamily],
+                          pointsize=sp[:annotationfontsize],
+                          halign=sp[:annotationhalign],
+                          valign=sp[:annotationvalign],
+                          rotation=sp[:annotationrotation],
+                          color=sp[:annotationcolor],
+                         )
+    end
     for i in 1:max(length(positions), length(labs))
         pos, lab = _cycle(positions, i), _cycle(labs, i)
         pos = get(_positionAliases, pos, pos)
@@ -616,12 +629,15 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, 
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (pos, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
         else
-            push!(anns, (pos, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab...) : text(lab, font)))
+            push!(anns, (pos, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab[1], font, lab[2:end]...) : text(lab, font)))
         end
     end
     anns
 end
 
+function process_any_label(lab, font=Font())
+    lab isa Tuple ? text(lab...) : text( lab, font )
+end
 # Give each annotation coordinates based on specified position
 function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
     position_multiplier = Dict{Symbol, Tuple{Float64,Float64}}(
@@ -638,6 +654,7 @@ function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
     (x, y, lab)
 end
 locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
+locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
 # -----------------------------------------------------------------------
 
 "type which represents z-values for colors and sizes (and anything else that might come up)"
@@ -737,7 +754,7 @@ end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-mutable struct BezierCurve{T <: GeometryTypes.Point}
+mutable struct BezierCurve{T <: GeometryBasics.Point}
     control_points::Vector{T}
 end
 

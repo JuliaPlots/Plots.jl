@@ -1,5 +1,3 @@
-using Pkg
-
 struct NoBackend <: AbstractBackend end
 
 const _backendType = Dict{Symbol, DataType}(:none => NoBackend)
@@ -190,11 +188,15 @@ function backend(sym::Symbol)
     end
 end
 
-const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize]
+const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize, :pgfplots]
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
-        @warn("Backend $bsym has been deprecated.")
+        if bsym == :pgfplots
+            @warn("Backend $bsym has been deprecated. Use pgfplotsx instead.")
+        else
+            @warn("Backend $bsym has been deprecated.")
+        end
     end
 end
 
@@ -314,7 +316,6 @@ const _gr_attr = merge_with_base_supported([
     :layout,
     :title, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
-    :match_dimensions,
     :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
     :titlefontrotation, :titlefontcolor,
     :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
@@ -365,10 +366,10 @@ is_marker_supported(::GRBackend, shape::Shape) = true
 function _initialize_backend(pkg::PlotlyBackend)
     try
         @eval Main begin
-            import ORCA
+            import PlotlyBase
         end
     catch
-        @info "For saving to png with the Plotly backend ORCA has to be installed."
+        @info "For saving to png with the Plotly backend PlotlyBase has to be installed."
     end
 end
 
@@ -427,6 +428,7 @@ const _plotly_seriestype = [
     :shape,
     :scattergl,
     :straightline,
+    :mesh3d
 ]
 const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _plotly_marker = [
@@ -469,7 +471,6 @@ const _pgfplots_attr = merge_with_base_supported([
     :polar,
     # :normalize, :weights, :contours,
     :aspect_ratio,
-    # :match_dimensions,
     :tick_direction,
     :framestyle,
     :camera,
@@ -485,7 +486,7 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 function _initialize_backend(pkg::PlotlyJSBackend)
     @eval Main begin
-        import PlotlyJS, ORCA
+        import PlotlyJS
         export PlotlyJS
     end
 end
@@ -530,6 +531,10 @@ const _pyplot_attr = merge_with_base_supported([
     :guidefontfamily, :guidefontsize, :guidefontcolor,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
     :legend, :legendtitle, :colorbar, :colorbar_title, :colorbar_entry,
+    :colorbar_ticks, :colorbar_tickfontfamily, :colorbar_tickfontsize,
+    :colorbar_tickfonthalign, :colorbar_tickfontvalign,
+    :colorbar_tickfontrotation, :colorbar_tickfontcolor,
+    :colorbar_scale,
     :marker_z, :line_z, :fill_z,
     :levels,
     :ribbon, :quiver, :arrow,
@@ -538,7 +543,6 @@ const _pyplot_attr = merge_with_base_supported([
     :polar,
     :normalize, :weights,
     :contours, :aspect_ratio,
-    :match_dimensions,
     :clims,
     :inset_subplots,
     :dpi,
@@ -551,6 +555,7 @@ const _pyplot_attr = merge_with_base_supported([
 const _pyplot_seriestype = [
     :path,
     :steppre,
+    :stepmid,
     :steppost,
     :shape,
     :straightline,
@@ -624,7 +629,6 @@ const _hdf5_attr = merge_with_base_supported([
     :polar,
     :normalize, :weights,
     :contours, :aspect_ratio,
-    :match_dimensions,
     :clims,
     :inset_subplots,
     :dpi,
@@ -633,6 +637,7 @@ const _hdf5_attr = merge_with_base_supported([
 const _hdf5_seriestype = [
     :path,
     :steppre,
+    :stepmid,
     :steppost,
     :shape,
     :straightline,
@@ -662,11 +667,6 @@ mutable struct HDF5Plot_PlotRef
 end
 const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
 
-#Simple sub-structures that can just be written out using _hdf5plot_gwritefields:
-const HDF5PLOT_SIMPLESUBSTRUCT = Union{Font, BoundingBox,
-	GridLayout, RootLayout, ColorGradient, SeriesAnnotations, PlotText,
-	Shape,
-}
 
 # ------------------------------------------------------------------------------
 # inspectdr
@@ -702,7 +702,6 @@ const _inspectdr_attr = merge_with_base_supported([
     :polar,
 #    :normalize, :weights,
 #    :contours, :aspect_ratio,
-    :match_dimensions,
 #    :clims,
 #    :inset_subplots,
     :dpi,
@@ -710,7 +709,7 @@ const _inspectdr_attr = merge_with_base_supported([
   ])
 const _inspectdr_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _inspectdr_seriestype = [
-        :path, :scatter, :shape, :straightline, #, :steppre, :steppost
+        :path, :scatter, :shape, :straightline, #, :steppre, :stepmid, :steppost
     ]
 #see: _allMarkers, _shape_keys
 const _inspectdr_marker = Symbol[
@@ -763,7 +762,6 @@ const _pgfplotsx_attr = merge_with_base_supported([
     :ticks,
     :scale,
     :flip,
-    :match_dimensions,
     :titlefontfamily,
     :titlefontsize,
     :titlefonthalign,
@@ -826,6 +824,7 @@ const _pgfplotsx_seriestype = [
     :surface,
     :wireframe,
     :heatmap,
+    :mesh3d,
     :contour,
     :contour3d,
     :quiver,
@@ -849,6 +848,7 @@ const _pgfplotsx_marker = [
     :rtriangle,
     :cross,
     :xcross,
+    :x,
     :star5,
     :pentagon,
     :hline,

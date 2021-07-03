@@ -17,9 +17,6 @@ Add in functionality to Plots.jl:
 
 is_marker_supported(::InspectDRBackend, shape::Shape) = true
 
-_inspectdr_to_pixels(bb::BoundingBox) =
-    InspectDR.BoundingBox(to_pixels(left(bb)), to_pixels(right(bb)), to_pixels(top(bb)), to_pixels(bottom(bb)))
-
 #Do we avoid Map to avoid possible pre-comile issues?
 function _inspectdr_mapglyph(s::Symbol)
     s == :rect && return :square
@@ -75,6 +72,58 @@ function _inspectdr_add_annotations(plot, x, y, val::PlotText)
     )
     InspectDR.add(plot, ann)
     return
+end
+
+# ---------------------------------------------------------------------------
+
+function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
+    TickCustom = InspectDR.TickCustom
+    _xfrm(coord) = InspectDR.axis2aloc(Float64(coord), xfrm.spec) #Ensure Float64 - in case
+
+    ttype = ticksType(ticks)
+    if ticks == :native
+        #keep current
+    elseif ttype == :ticks_and_labels
+        pos = ticks[1]; labels = ticks[2]; nticks = length(ticks[1])
+        newticks = TickCustom[TickCustom(_xfrm(pos[i]), labels[i]) for i in 1:nticks]
+        gridlines = InspectDR.GridLinesCustom(gridlines)
+        gridlines.major = newticks
+        gridlines.minor = []
+        gridlines.displayminor = false
+    elseif ttype == :ticks
+        nticks = length(ticks)
+        gridlines.major = Float64[_xfrm(t) for t in ticks]
+        gridlines.minor = []
+        gridlines.displayminor = false
+    elseif isnothing(ticks)
+        gridlines.major = []
+        gridlines.minor = []
+    else #Assume ticks == :native
+        #keep current
+    end
+
+    return gridlines #keep current
+end
+
+function _inspectdr_setticks(sp::Subplot, plot, strip, xaxis, yaxis)
+    InputXfrm1D = InspectDR.InputXfrm1D
+    _get_ticks(axis) = :native == axis[:ticks] ? (:native) : get_ticks(sp, axis)
+    wantnative(ticks) = (:native == ticks)
+
+    xticks = _get_ticks(xaxis)
+    yticks = _get_ticks(yaxis)
+
+    if wantnative(xticks) && wantnative(yticks)
+        #Don't "eval" tick values
+        return
+    end
+
+    #TODO: Allow InspectDR to independently "eval" x or y ticks
+    ext = InspectDR.getextents_aloc(plot, 1)
+    grid = InspectDR._eval(strip.grid, plot.xscale, strip.yscale, ext)
+    grid.xlines = _inspectdr_getaxisticks(xticks, grid.xlines, InputXfrm1D(plot.xscale))
+    grid.ylines = _inspectdr_getaxisticks(yticks, grid.ylines, InputXfrm1D(strip.yscale))
+    strip.grid = grid
 end
 
 # ---------------------------------------------------------------------------
@@ -167,6 +216,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     st = series[:seriestype]
     sp = series[:subplot]
     plot = sp.o
+    clims = get_clims(sp, series)
 
     #Don't do anything without a "subplot" object:  Will process later.
     if nothing == plot; return; end
@@ -237,7 +287,7 @@ For st in :shape:
                 color = linecolor, fillcolor = fillcolor
             )
         end
-   elseif st in (:path, :scatter, :straightline) #, :steppre, :steppost)
+   elseif st in (:path, :scatter, :straightline) #, :steppre, :stepmid, :steppost)
         #NOTE: In Plots.jl, :scatter plots have 0-linewidths (I think).
         linewidth = series[:linewidth]
         #More efficient & allows some support for markerstrokewidth:
@@ -256,8 +306,8 @@ For st in :shape:
         wfrm.glyph = InspectDR.glyph(
             shape = _inspectdr_mapglyph(series[:markershape]),
             size = _inspectdr_mapglyphsize(series[:markersize]),
-            color = _inspectdr_mapcolor(plot_color(series[:markerstrokecolor], series[:markerstrokealpha])),
-            fillcolor = _inspectdr_mapcolor(plot_color(series[:markercolor], series[:markeralpha])),
+            color = _inspectdr_mapcolor(plot_color(get_markerstrokecolor(series), get_markerstrokealpha(series))),
+            fillcolor = _inspectdr_mapcolor(plot_color(get_markercolor(series, clims), get_markeralpha(series))),
         )
     end
 
@@ -288,8 +338,8 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
     ygrid_show = yaxis[:grid]
 
     strip.grid = InspectDR.GridRect(
-    	vmajor=xgrid_show, # vminor=xgrid_show,
-    	hmajor=ygrid_show, # hminor=ygrid_show,
+        vmajor=xgrid_show, # vminor=xgrid_show,
+        hmajor=ygrid_show, # hminor=ygrid_show,
     )
 
         plot.xscale = _inspectdr_getscale(xaxis[:scale], false)
@@ -302,38 +352,48 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
             xmin, xmax = -rmax, rmax
             ymin, ymax = -rmax, rmax
         end
-        plot.xext = InspectDR.PExtents1D() #reset
-        strip.yext = InspectDR.PExtents1D() #reset
         plot.xext_full = InspectDR.PExtents1D(xmin, xmax)
         strip.yext_full = InspectDR.PExtents1D(ymin, ymax)
+        #Set current extents = full extents (needed for _eval(strip.grid,...))
+        plot.xext = plot.xext_full
+        strip.yext = strip.yext_full
+        _inspectdr_setticks(sp, plot, strip, xaxis, yaxis)
+
     a = plot.annotation
         a.title = sp[:title]
         a.xlabel = xaxis[:guide]; a.ylabels = [yaxis[:guide]]
 
-    l = plot.layout
-        l[:frame_canvas].fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
-        l[:frame_data].fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
-        l[:frame_data].line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
-        l[:font_title] = InspectDR.Font(sp[:titlefontfamily],
+    #Modify base layout of new object:
+    l = plot.layout.defaults = deepcopy(InspectDR.defaults.plotlayout)
+        #IMPORTANT: Must deepcopy to ensure we don't change layouts of other plots.
+        #Works because plot uses defaults (not user-overwritten `layout.values`)
+        l.frame_canvas.fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
+        l.frame_data.fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
+        l.frame_data.line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
+        l.font_title = InspectDR.Font(sp[:titlefontfamily],
             _inspectdr_mapptsize(sp[:titlefontsize]),
             color = _inspectdr_mapcolor(sp[:titlefontcolor])
         )
         #Cannot independently control fonts of axes with InspectDR:
-        l[:font_axislabel] = InspectDR.Font(xaxis[:guidefontfamily],
+        l.font_axislabel = InspectDR.Font(xaxis[:guidefontfamily],
             _inspectdr_mapptsize(xaxis[:guidefontsize]),
             color = _inspectdr_mapcolor(xaxis[:guidefontcolor])
         )
-        l[:font_ticklabel] = InspectDR.Font(xaxis[:tickfontfamily],
+        l.font_ticklabel = InspectDR.Font(xaxis[:tickfontfamily],
             _inspectdr_mapptsize(xaxis[:tickfontsize]),
             color = _inspectdr_mapcolor(xaxis[:tickfontcolor])
         )
-        l[:enable_legend] = (sp[:legend] != :none)
-        #l[:halloc_legend] = 150 #TODO: compute???
-        l[:font_legend] = InspectDR.Font(sp[:legendfontfamily],
+        l.enable_legend = (sp[:legend] != :none)
+        #l.halloc_legend = 150 #TODO: compute???
+        l.font_legend = InspectDR.Font(sp[:legendfontfamily],
             _inspectdr_mapptsize(sp[:legendfontsize]),
             color = _inspectdr_mapcolor(sp[:legendfontcolor])
         )
-        l[:frame_legend].fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
+        l.frame_legend.fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
+
+        #_round!() ensures values use integer spacings (looks better on screen):
+        InspectDR._round!(InspectDR.autofit2font!(l, legend_width=10.0)) #10 "em"s wide
+    return
 end
 
 # called just before updating layout bounding boxes... in case you need to prep
@@ -347,8 +407,9 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
         #Don't use window_title... probably not what you want.
         #mplot.title = plt[:window_title]
     end
-    mplot.layout[:frame].fillcolor = _inspectdr_mapcolor(plt[:background_color_outside])
 
+    mplot.layout[:frame].fillcolor = _inspectdr_mapcolor(plt[:background_color_outside])
+        mplot.layout[:frame] = mplot.layout[:frame] #register changes
     resize!(mplot.subplots, length(plt.subplots))
     nsubplots = length(plt.subplots)
     for (i, sp) in enumerate(plt.subplots)
@@ -412,11 +473,16 @@ end
 function _update_plot_object(plt::Plot{InspectDRBackend})
     mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
+    mplot.bblist = InspectDR.BoundingBox[]
 
     for (i, sp) in enumerate(plt.subplots)
-        graphbb = _inspectdr_to_pixels(plotarea(sp))
-        plot = mplot.subplots[i]
-        plot.plotbb = InspectDR.plotbounds(plot.layout.values, graphbb)
+        figw, figh = sp.plt[:size]
+        pcts = bbox_to_pcts(sp.bbox, figw*px, figh*px)
+        _left, _bottom, _width, _height = pcts
+        ymax = 1.0-_bottom
+        ymin = ymax - _height
+        bb = InspectDR.BoundingBox(_left, _left+_width, ymin, ymax)
+        push!(mplot.bblist, bb)
     end
 
     gplot = _inspectdr_getgui(plt.o)

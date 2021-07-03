@@ -90,15 +90,15 @@ function buildanimation(anim::Animation, fn::AbstractString,
         if variable_palette
             # generate a colorpalette for each frame for highest quality, but larger filesize
             palette="palettegen=stats_mode=single[pal],[0:v][pal]paletteuse=new=1"
-            ffmpeg_exe(`-v $verbose_level -framerate $framerate -loop $loop -i $(animdir)/%06d.png -lavfi "$palette" -y $fn`)
+            ffmpeg_exe(`-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -lavfi "$palette" -loop $loop -y $fn`)
         else
             # generate a colorpalette first so ffmpeg does not have to guess it
             ffmpeg_exe(`-v $verbose_level -i $(animdir)/%06d.png -vf "palettegen=stats_mode=diff" -y "$(animdir)/palette.bmp"`)
             # then apply the palette to get better results
-            ffmpeg_exe(`-v $verbose_level -framerate $framerate -loop $loop -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -y $fn`)
+            ffmpeg_exe(`-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn`)
         end
     else
-        ffmpeg_exe(`-v $verbose_level -framerate $framerate -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
+        ffmpeg_exe(`-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -vf format=yuv420p -loop $loop -y $fn`)
     end
 
     show_msg && @info("Saved animation to ", fn)
@@ -137,8 +137,8 @@ end
 # -----------------------------------------------
 
 function _animate(forloop::Expr, args...; callgif = false)
-  if forloop.head != :for
-    error("@animate macro expects a for-block. got: $(forloop.head)")
+  if forloop.head ∉ (:for, :while)
+    error("@animate macro expects a for- or while-block. got: $(forloop.head)")
   end
 
   # add the call to frame to the end of each iteration

@@ -4,43 +4,31 @@
 
 function RecipesPipeline.warn_on_recipe_aliases!(
     plt::Plot,
-    plotattributes,
-    recipe_type,
-    args...,
+    plotattributes::AKW,
+    recipe_type::Symbol,
+    @nospecialize(args)
 )
     for k in keys(plotattributes)
         if !is_default_attribute(k)
             dk = get(_keyAliases, k, k)
             if k !== dk
-                @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $(_signature_string(Val{recipe_type}, args...)). To ensure expected behavior it is recommended to use the default attribute `$dk`."
+                if recipe_type == :user
+                    signature_string = RecipesPipeline.userrecipe_signature_string(args)
+                elseif recipe_type == :type
+                    signature_string = RecipesPipeline.typerecipe_signature_string(args)
+                elseif recipe_type == :plot
+                    signature_string = RecipesPipeline.plotrecipe_signature_string(args)
+                elseif recipe_type == :series
+                    signature_string = RecipesPipeline.seriesrecipe_signature_string(args)
+                else
+                    throw(ArgumentError("Invalid recipe type `$recipe_type`"))
+                end
+                @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $signature_string. To ensure expected behavior it is recommended to use the default attribute `$dk`."
             end
             plotattributes[dk] = RecipesPipeline.pop_kw!(plotattributes, k)
         end
     end
 end
-function RecipesPipeline.warn_on_recipe_aliases!(
-    plt::Plot,
-    v::AbstractVector,
-    recipe_type,
-    args...,
-)
-    foreach(x -> RecipesPipeline.warn_on_recipe_aliases!(plt, x, recipe_type, args...), v)
-end
-function RecipesPipeline.warn_on_recipe_aliases!(
-    plt::Plot,
-    rd::RecipeData,
-    recipe_type,
-    args...,
-)
-    RecipesPipeline.warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args...)
-end
-
-function _signature_string(::Type{Val{:user}}, args...)
-    return string("(::", join(string.(typeof.(args)), ", ::"), ")")
-end
-_signature_string(::Type{Val{:type}}, T) = "(::Type{$T}, ::$T)"
-_signature_string(::Type{Val{:plot}}, st) = "(::Type{Val{:$st}}, ::AbstractPlot)"
-_signature_string(::Type{Val{:series}}, st) = "(::Type{Val{:$st}}, x, y, z)"
 
 
 ## Grouping
@@ -49,12 +37,23 @@ RecipesPipeline.splittable_attribute(plt::Plot, key, val::SeriesAnnotations, len
     RecipesPipeline.splittable_attribute(plt, key, val.strs, len)
 
 function RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
-    split_strs = _RecipesPipeline.split_attribute(key, val.strs, indices)
+    split_strs = RecipesPipeline.split_attribute(plt, key, val.strs, indices)
     return SeriesAnnotations(split_strs, val.font, val.baseshape, val.scalefactor)
 end
 
 
 ## Preprocessing attributes
+function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
+    # Fix letter for seriestypes that are x only but data gets passed as y
+    if treats_y_as_x(get(plotattributes, :seriestype, :path))
+        if get(plotattributes, :orientation, :vertical) == :vertical
+            letter = :x
+        end
+    end
+
+    plotattributes[:letter] = letter
+    RecipesPipeline.preprocess_axis_args!(plt, plotattributes)
+end
 
 RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes) =
     RecipesPipeline.preprocess_attributes!(plotattributes) # in src/args.jl
@@ -142,7 +141,7 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
 end
 
 
-RecipesPipeline.get_axis_limits(plt::Plot, f, letter) = axis_limits(plt[1], letter)
+RecipesPipeline.get_axis_limits(plt::Plot, letter) = axis_limits(plt[1], letter)
 
 
 ## Plot recipes
@@ -155,7 +154,22 @@ RecipesPipeline.type_alias(plt::Plot) = get(_typeAliases, st, st)
 function RecipesPipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
     _plot_setup(plt, plotattributes, kw_list)
     _subplot_setup(plt, plotattributes, kw_list)
+    return nothing
 end
+
+function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_list)
+    # swap errors
+    err_inds = findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
+    for ind in err_inds
+        if get(kw_list[ind-1],:seriestype,:path) == :scatter
+            tmp = copy(kw_list[ind])
+            kw_list[ind] = copy(kw_list[ind-1])
+            kw_list[ind-1] = tmp
+        end
+    end
+    return nothing
+end
+
 
 # TODO: Should some of this logic be moved to RecipesPipeline?
 function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
@@ -292,6 +306,7 @@ function RecipesPipeline.slice_series_attributes!(plt::Plot, kw_list, kw)
     # in series attributes given as vector with one element per series,
     # select the value for current series
     _slice_series_args!(kw, plt, sp, series_idx(kw_list, kw))
+    return nothing
 end
 
 RecipesPipeline.series_defaults(plt::Plot) = _series_defaults # in args.jl
@@ -316,7 +331,7 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st = _override_seriestype_check(plotattributes, st)
 
     # change to a 3d projection for this subplot?
-    if RecipesPipeline.needs_3d_axes(st)
+    if RecipesPipeline.needs_3d_axes(st) || (st == :quiver && plotattributes[:z] !== nothing)
         sp.attr[:projection] = "3d"
     end
 
@@ -330,15 +345,23 @@ end
 
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
-    if !RecipesPipeline.is3d(st) && !(st in (:contour, :contour3d))
+    if !RecipesPipeline.is3d(st) && !(st in (:contour, :contour3d, :quiver))
         z = plotattributes[:z]
-        if !isa(z, Nothing) &&
+        if z !== nothing &&
            (size(plotattributes[:x]) == size(plotattributes[:y]) == size(z))
             st = (st == :scatter ? :scatter3d : :path3d)
             plotattributes[:seriestype] = st
         end
     end
     st
+end
+
+function needs_any_3d_axes(sp::Subplot)
+    any(
+        RecipesPipeline.needs_3d_axes(
+            _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype])
+        ) for s in series_list(sp)
+    )
 end
 
 function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)

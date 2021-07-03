@@ -1,4 +1,6 @@
-
+function treats_y_as_x(seriestype)
+    return seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
+end
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
     colors = palette(vec(z))
@@ -51,10 +53,16 @@ function Base.push!(segments::Segments{T}, vs::AVec) where T
 end
 
 
+struct SeriesSegment
+    # indexes of this segement in series data vectors
+    range::UnitRange
+    # index into vector-valued attributes corresponding to this segment
+    attr_index::Int
+end
+
 # -----------------------------------------------------
 # helper to manage NaN-separated segments
-
-mutable struct SegmentsIterator
+struct NaNSegmentsIterator
     args::Tuple
     n1::Int
     n2::Int
@@ -64,30 +72,50 @@ function iter_segments(args...)
     tup = Plots.wraptuple(args)
     n1 = minimum(map(firstindex, tup))
     n2 = maximum(map(lastindex, tup))
-    SegmentsIterator(tup, n1, n2)
+    NaNSegmentsIterator(tup, n1, n2)
 end
 
-function iter_segments(series::Series)
+function series_segments(series::Series, seriestype::Symbol = :path)
     x, y, z = series[:x], series[:y], series[:z]
-    if x === nothing
-        return UnitRange{Int}[]
-    elseif has_attribute_segments(series)
-        if series[:seriestype] in (:scatter, :scatter3d)
-            return [[i] for i in eachindex(y)]
-        else
-            if any(isnan,y)
-                return [iter_segments(y)...]
+    (x === nothing || isempty(x)) && return UnitRange{Int}[]
+
+    args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
+    nan_segments = collect(iter_segments(args...))
+
+    segments = if has_attribute_segments(series)
+        Iterators.flatten(map(nan_segments) do r
+            if seriestype in (:scatter, :scatter3d)
+                (SeriesSegment(i:i, i) for i in r)
             else
-                return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
+                (SeriesSegment(i:i+1, i) for i in first(r):last(r)-1)
+            end
+        end)
+    else
+        (SeriesSegment(r, 1) for r in nan_segments)
+    end
+
+    warn_on_attr_dim_mismatch(series, x, y, z, segments)
+    return segments
+end
+
+function warn_on_attr_dim_mismatch(series, x, y, z, segments)
+    isempty(segments) && return
+    seg_range = UnitRange(minimum(first(seg.range) for seg in segments),
+                          maximum(last(seg.range) for seg in segments))
+    for attr in _segmenting_vector_attributes
+        v = get(series, attr, nothing)
+        if v isa AVec && eachindex(v) != seg_range
+            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
+            if any(v -> !isnothing(v) && any(isnan, v), (x,y,z))
+                @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
+                    If you intend elements of `$attr` to apply to individual NaN-separated segements in the data,
+                    pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
+                    may be suppressed by passing an empty label.
+                    For example,
+                        plot([1:2,1:3], [[4,5],[3,4,5]], label=["y" ""], $attr=[1 2])
+                    """
             end
         end
-    else
-        segs = UnitRange{Int}[]
-        args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
-        for seg in iter_segments(args...)
-            push!(segs, seg)
-        end
-        return segs
     end
 end
 
@@ -97,7 +125,7 @@ anynan(args::Tuple) = i -> anynan(i,args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
-function Base.iterate(itr::SegmentsIterator, nextidx::Int = itr.n1)
+function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
     i = findfirst(!anynan(itr.args), nextidx:itr.n2)
     i === nothing && return nothing
     nextval = nextidx + i - 1
@@ -107,6 +135,7 @@ function Base.iterate(itr::SegmentsIterator, nextidx::Int = itr.n1)
 
     nextval:nextnan-1, nextnan
 end
+Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()
 
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
@@ -126,8 +155,8 @@ isnothing(x) = false
 _cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
 _cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
-_cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
-_cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
+_cycle(v::AVec, idx::Int) = v[mod(idx, axes(v,1))]
+_cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[end, mod(idx, axes(v,2))] : v[:, mod(idx, axes(v,2))]
 _cycle(v, idx::Int)       = v
 
 _cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
@@ -151,15 +180,18 @@ maketuple(x::Tuple{T,S}) where {T,S} = x
 
 for i in 2:4
     @eval begin
-        RecipesPipeline.unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
-                   AVec{<:GeometryTypes.Point{$i}}}) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
+        RecipesPipeline.unzip(
+            v::Union{AVec{<:Tuple{Vararg{T,$i} where T}}, AVec{<:GeometryBasics.Point{$i}}},
+        ) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
     end
 end
 
-RecipesPipeline.unzip(v::Union{AVec{<:GeometryTypes.Point{N}},
-               AVec{<:Tuple{Vararg{T,N} where T}}}) where N = error("$N-dimensional unzip not implemented.")
-RecipesPipeline.unzip(v::Union{AVec{<:GeometryTypes.Point},
-               AVec{<:Tuple}}) = error("Can't unzip points of different dimensions.")
+RecipesPipeline.unzip(
+    ::Union{AVec{<:GeometryBasics.Point{N}}, AVec{<:Tuple{Vararg{T,N} where T}}}
+) where N = error("$N-dimensional unzip not implemented.")
+RecipesPipeline.unzip(::Union{AVec{<:GeometryBasics.Point}, AVec{<:Tuple}}) = error(
+    "Can't unzip points of different dimensions."
+)
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
@@ -206,30 +238,27 @@ end
 
 createSegments(z) = collect(repeat(reshape(z,1,:),2,1))[2:end]
 
-Base.first(c::Colorant) = c
-Base.first(x::Symbol) = x
-
 
 sortedkeys(plotattributes::Dict) = sort(collect(keys(plotattributes)))
 
-function _heatmap_edges(v::AVec, isedges::Bool = false)
-    length(v) == 1 && return v[1] .+ [-0.5, 0.5]
+function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
+    length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
     if isedges return v end
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
-    extra_min = (v[2] - v[1]) / 2
+    extra_min = ispolar ? min(v[1], (v[2] - v[1]) / 2) : (v[2] - v[1]) / 2
     extra_max = (v[end] - v[end - 1]) / 2
     vcat(vmin-extra_min, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra_max)
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false)
+function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false, ispolar::Bool = false)
     f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
-    map(invf, _heatmap_edges(map(f,v), isedges))
+    map(invf, _heatmap_edges(map(f,v), isedges, ispolar))
 end
 
-function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int})
+function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int}, ispolar::Bool = false)
     nx, ny = length(x), length(y)
     # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
     # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
@@ -241,7 +270,7 @@ function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size:
                 or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
     end
     x, y = heatmap_edges(x, xscale, isedges),
-           heatmap_edges(y, yscale, isedges)
+           heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
     return x, y
 end
 
@@ -294,13 +323,11 @@ limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real}    = :limits
 limsType(lims::Symbol)                                  = lims == :auto ? :auto : :invalid
 limsType(lims)                                          = :invalid
 
-# axis_Symbol(letter, postfix) = Symbol(letter * postfix)
-# axis_symbols(letter, postfix...) = map(s -> axis_Symbol(letter, s), postfix)
 
-Base.convert(::Type{Vector{T}}, rng::AbstractRange{T}) where {T<:Real}         = T[x for x in rng]
-Base.convert(::Type{Vector{T}}, rng::AbstractRange{S}) where {T<:Real,S<:Real} = T[x for x in rng]
-
-Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
+# recursively merge kw-dicts, e.g. for merging extra_kwargs / extra_plot_kwargs in plotly)
+recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)
+# if values are not AbstractDicts, take the last definition (as does merge)
+recursive_merge(x...) = x[end]
 
 nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
 nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
@@ -338,17 +365,8 @@ function indices_and_unique_values(z::AbstractArray)
     newz, vals
 end
 
-# this is a helper function to determine whether we need to transpose a surface matrix.
-# it depends on whether the backend matches rows to x (transpose_on_match == true) or vice versa
-# for example: PyPlot sends rows to y, so transpose_on_match should be true
-function transpose_z(plotattributes, z, transpose_on_match::Bool = true)
-    if plotattributes[:match_dimensions] == transpose_on_match
-        # z'
-        permutedims(z, [2,1])
-    else
-        z
-    end
-end
+handle_surface(z) = z
+handle_surface(z::Surface) = permutedims(z.surf)
 
 function ok(x::Number, y::Number, z::Number = 0)
     isfinite(x) && isfinite(y) && isfinite(z)
@@ -356,10 +374,10 @@ end
 ok(tup::Tuple) = ok(tup...)
 
 # compute one side of a fill range from a ribbon
-function make_fillrange_side(y, rib)
-    frs = zeros(length(y))
-    for (i, (yi, ri)) in enumerate(zip(y, Base.Iterators.cycle(rib)))
-        frs[i] = yi + ri
+function make_fillrange_side(y::AVec, rib)
+    frs = zeros(axes(y))
+    for (i, yi) in pairs(y)
+        frs[i] = yi + _cycle(rib,i)
     end
     frs
 end
@@ -414,80 +432,7 @@ xlims(sp_idx::Int = 1) = xlims(current(), sp_idx)
 ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
-# These functions return an operator for use in `get_clims(::Seres, op)`
-process_clims(lims::NTuple{2,<:Number}) = (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
-process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
-# don't specialize on ::Function otherwise python functions won't work
-process_clims(f) = f
-
-function get_clims(sp::Subplot, op=process_clims(sp[:clims]))
-    zmin, zmax = Inf, -Inf
-    for series in series_list(sp)
-        if series[:colorbar_entry]
-            zmin, zmax = _update_clims(zmin, zmax, get_clims(series, op)...)
-        end
-    end
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-function get_clims(sp::Subplot, series::Series, op=process_clims(sp[:clims]))
-    zmin, zmax = if series[:colorbar_entry]
-        get_clims(sp, op)
-    else
-        get_clims(series, op)
-    end
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-"""
-    get_clims(::Series, op=Plots.ignorenan_extrema)
-
-Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
-which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite
-values of the input.
-"""
-function get_clims(series::Series, op=ignorenan_extrema)
-    zmin, zmax = Inf, -Inf
-    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
-    for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
-        if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
-            zmin, zmax = _update_clims(zmin, zmax, op(vals.surf)...)
-        elseif (vals !== nothing) && (eltype(vals) <: Union{Missing, Real})
-            zmin, zmax = _update_clims(zmin, zmax, op(vals)...)
-        end
-    end
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-_update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
-
-@enum ColorbarStyle cbar_gradient cbar_fill cbar_lines
-
-function colorbar_style(series::Series)
-    colorbar_entry = series[:colorbar_entry]
-    if !(colorbar_entry isa Bool)
-        @warn "Non-boolean colorbar_entry ignored."
-        colorbar_entry = true
-    end
-
-    if !colorbar_entry
-        nothing
-    elseif isfilledcontour(series)
-        cbar_fill
-    elseif iscontour(series)
-        cbar_lines
-    elseif series[:seriestype] ∈ (:heatmap,:surface) ||
-            any(series[z] !== nothing for z ∈ [:marker_z,:line_z,:fill_z])
-        cbar_gradient
-    else
-        nothing
-    end
-end
-
-hascolorbar(series::Series) = colorbar_style(series) !== nothing
-hascolorbar(sp::Subplot) = sp[:colorbar] != :none && any(hascolorbar(s) for s in series_list(sp))
-
-iscontour(series::Series) = series[:seriestype] == :contour
+iscontour(series::Series) = series[:seriestype] in (:contour, :contour3d)
 isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
 
 function contour_levels(series::Series, clims)
@@ -583,38 +528,34 @@ function get_markerstrokewidth(series, i::Int = 1)
     _cycle(series[:markerstrokewidth], i)
 end
 
+const _segmenting_vector_attributes = (
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linealpha,
+    :linewidth,
+    :linestyle,
+    :fillcolor,
+    :fillalpha,
+    :markercolor,
+    :markeralpha,
+    :markersize,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :markerstrokewidth,
+    :markershape,
+)
+
+const _segmenting_array_attributes = (:line_z, :fill_z, :marker_z)
+
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
     # of its attributes
-    for letter in (:x, :y, :z)
-        # If we have NaNs in the data they define the segments and
-        # SegmentsIterator is used
-        series[letter] !== nothing && NaN in collect(series[letter]) && return false
-    end
     series[:seriestype] == :shape && return false
-    # ... else we check relevant attributes if they have multiple inputs
-    return any(
-        (typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1)
-        for
-        attr in [
-            :seriescolor,
-            :seriesalpha,
-            :linecolor,
-            :linealpha,
-            :linewidth,
-            :linestyle,
-            :fillcolor,
-            :fillalpha,
-            :markercolor,
-            :markeralpha,
-            :markersize,
-            :markerstrokecolor,
-            :markerstrokealpha,
-            :markerstrokewidth,
-        ]
-    ) || any(
-        typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z)
-    )
+    # check relevant attributes if they have multiple inputs
+    return any(series[attr] isa AbstractVector && length(series[attr]) > 1
+                for attr in _segmenting_vector_attributes
+        ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
 end
 
 function get_aspect_ratio(sp)
@@ -983,7 +924,7 @@ px2inch(px::Real)       = float(px / PX_PER_INCH)
 inch2mm(inches::Real)   = float(inches * MM_PER_INCH)
 mm2inch(mm::Real)       = float(mm / MM_PER_INCH)
 px2mm(px::Real)         = float(px * MM_PER_PX)
-mm2px(mm::Real)         = float(px / MM_PER_PX)
+mm2px(mm::Real)         = float(mm / MM_PER_PX)
 
 
 "Smallest x in plot"
@@ -998,54 +939,72 @@ ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 # ---------------------------------------------------------------
 # get fonts from objects:
 
-titlefont(sp::Subplot) = font(
-    sp[:titlefontfamily],
-    sp[:titlefontsize],
-    sp[:titlefontvalign],
-    sp[:titlefonthalign],
-    sp[:titlefontrotation],
-    sp[:titlefontcolor],
+plottitlefont(p::Plot) = font(;
+    family = p[:plot_titlefontfamily],
+    pointsize = p[:plot_titlefontsize],
+    valign = p[:plot_titlefontvalign],
+    halign = p[:plot_titlefonthalign],
+    rotation = p[:plot_titlefontrotation],
+    color = p[:plot_titlefontcolor],
 )
 
-legendfont(sp::Subplot) = font(
-    sp[:legendfontfamily],
-    sp[:legendfontsize],
-    sp[:legendfontvalign],
-    sp[:legendfonthalign],
-    sp[:legendfontrotation],
-    sp[:legendfontcolor],
+colorbartitlefont(sp::Subplot) = font(;
+    family = sp[:colorbar_titlefontfamily],
+    pointsize = sp[:colorbar_titlefontsize],
+    valign = sp[:colorbar_titlefontvalign],
+    halign = sp[:colorbar_titlefonthalign],
+    rotation = sp[:colorbar_titlefontrotation],
+    color = sp[:colorbar_titlefontcolor],
 )
 
-legendtitlefont(sp::Subplot) = font(
-    sp[:legendtitlefontfamily],
-    sp[:legendtitlefontsize],
-    sp[:legendtitlefontvalign],
-    sp[:legendtitlefonthalign],
-    sp[:legendtitlefontrotation],
-    sp[:legendtitlefontcolor],
+titlefont(sp::Subplot) = font(;
+    family = sp[:titlefontfamily],
+    pointsize = sp[:titlefontsize],
+    valign = sp[:titlefontvalign],
+    halign = sp[:titlefonthalign],
+    rotation = sp[:titlefontrotation],
+    color = sp[:titlefontcolor],
 )
 
-tickfont(ax::Axis) = font(
-    ax[:tickfontfamily],
-    ax[:tickfontsize],
-    ax[:tickfontvalign],
-    ax[:tickfonthalign],
-    ax[:tickfontrotation],
-    ax[:tickfontcolor],
+legendfont(sp::Subplot) = font(;
+    family = sp[:legendfontfamily],
+    pointsize = sp[:legendfontsize],
+    valign = sp[:legendfontvalign],
+    halign = sp[:legendfonthalign],
+    rotation = sp[:legendfontrotation],
+    color = sp[:legendfontcolor],
 )
 
-guidefont(ax::Axis) = font(
-    ax[:guidefontfamily],
-    ax[:guidefontsize],
-    ax[:guidefontvalign],
-    ax[:guidefonthalign],
-    ax[:guidefontrotation],
-    ax[:guidefontcolor],
+legendtitlefont(sp::Subplot) = font(;
+    family = sp[:legendtitlefontfamily],
+    pointsize = sp[:legendtitlefontsize],
+    valign = sp[:legendtitlefontvalign],
+    halign = sp[:legendtitlefonthalign],
+    rotation = sp[:legendtitlefontrotation],
+    color = sp[:legendtitlefontcolor],
+)
+
+tickfont(ax::Axis) = font(;
+    family = ax[:tickfontfamily],
+    pointsize = ax[:tickfontsize],
+    valign = ax[:tickfontvalign],
+    halign = ax[:tickfonthalign],
+    rotation = ax[:tickfontrotation],
+    color = ax[:tickfontcolor],
+)
+
+guidefont(ax::Axis) = font(;
+    family = ax[:guidefontfamily],
+    pointsize = ax[:guidefontsize],
+    valign = ax[:guidefontvalign],
+    halign = ax[:guidefonthalign],
+    rotation = ax[:guidefontrotation],
+    color = ax[:guidefontcolor],
 )
 
 # ---------------------------------------------------------------
-# converts unicode scientific notation unsupported by pgfplots and gr
-# into a format that works
+# converts unicode scientific notation, as returned by Showoff,
+# to a tex-like format (supported by gr, pyplot, and pgfplots).
 
 function convert_sci_unicode(label::AbstractString)
     unicode_dict = Dict(
@@ -1074,10 +1033,21 @@ end
 function straightline_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
-    x, y = series[:x], series[:y]
+
+    # handle axes scales
+    xscale = sp[:xaxis][:scale]
+    xf = RecipesPipeline.scale_func(xscale)
+    xinvf = RecipesPipeline.inverse_scale_func(xscale)
+    yscale = sp[:yaxis][:scale]
+    yf = RecipesPipeline.scale_func(yscale)
+    yinvf = RecipesPipeline.inverse_scale_func(yscale)
+
+    xl, yl = xf.(xl), yf.(yl)
+    x, y = xf.(series[:x]), yf.(series[:y])
     n = length(x)
-    if n == 2
-        return straightline_data(xl, yl, x, y, expansion_factor)
+
+    xdata, ydata = if n == 2
+        straightline_data(xl, yl, x, y, expansion_factor)
     else
         k, r = divrem(n, 3)
         if r == 0
@@ -1086,11 +1056,13 @@ function straightline_data(series, expansion_factor = 1)
                 inds = (3 * i - 2):(3 * i - 1)
                 xdata[inds], ydata[inds] = straightline_data(xl, yl, x[inds], y[inds], expansion_factor)
             end
-            return xdata, ydata
+            xdata, ydata
         else
             error("Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n")
         end
     end
+
+    return xinvf.(xdata), yinvf.(ydata)
 end
 
 function straightline_data(xl, yl, x, y, expansion_factor = 1)
@@ -1122,20 +1094,28 @@ end
 function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+
+    # handle axes scales
+    xscale = sp[:xaxis][:scale]
+    xf = RecipesPipeline.scale_func(xscale)
+    xinvf = RecipesPipeline.inverse_scale_func(xscale)
+    yscale = sp[:yaxis][:scale]
+    yf = RecipesPipeline.scale_func(yscale)
+    yinvf = RecipesPipeline.inverse_scale_func(yscale)
+
     x, y = copy(series[:x]), copy(series[:y])
-    factor = 100
     for i in eachindex(x)
         if x[i] == -Inf
-            x[i] = xl[1] - expansion_factor * (xl[2] - xl[1])
+            x[i] = xinvf(xf(xl[1]) - expansion_factor * (xf(xl[2]) - xf(xl[1])))
         elseif x[i] == Inf
-            x[i] = xl[2] + expansion_factor * (xl[2] - xl[1])
+            x[i] = xinvf(xf(xl[2]) + expansion_factor * (xf(xl[2]) - xf(xl[1])))
         end
     end
     for i in eachindex(y)
         if y[i] == -Inf
-            y[i] = yl[1] - expansion_factor * (yl[2] - yl[1])
+            y[i] = yinvf(yf(yl[1]) - expansion_factor * (yf(yl[2]) - yf(yl[1])))
         elseif y[i] == Inf
-            y[i] = yl[2] + expansion_factor * (yl[2] - yl[1])
+            y[i] = yinvf(yf(yl[2]) + expansion_factor * (yf(yl[2]) - yf(yl[1])))
         end
     end
     return x, y

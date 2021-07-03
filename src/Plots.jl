@@ -8,9 +8,9 @@ const _current_plots_version = VersionNumber(split(first(filter(line -> occursin
 
 using Reexport
 
-import GeometryTypes
+import GeometryBasics
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
-import SparseArrays: findnz
+using SparseArrays
 
 using FFMPEG
 
@@ -24,17 +24,6 @@ import StatsBase
 import JSON
 
 using Requires
-
-if isfile(joinpath(@__DIR__, "..", "deps", "deps.jl"))
-    include(joinpath(@__DIR__, "..", "deps", "deps.jl"))
-else
-    # This is a bit dirty, but I don't really see why anyone should be forced
-    # to build Plots, while it will just include exactly the below line
-    # as long as `ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] = "true"` is not set.
-    # If the above env is set + `plotly_local_file_path == ""``,
-    # it will warn in the __init__ function to run build
-    const plotly_local_file_path = ""
-end
 
 export
     grid,
@@ -124,7 +113,11 @@ export
     center,
     BezierCurve,
 
-    plotattr
+    plotattr,
+    scalefontsize,
+    scalefontsizes,
+    resetfontsizes
+
 
 # ---------------------------------------------------------
 
@@ -161,6 +154,12 @@ const BBox = Measures.Absolute2DBox
 # allow pixels and percentages
 const px = AbsoluteLength(0.254)
 const pct = Length{:pct, Float64}(1.0)
+
+Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
+Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
+Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
+Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
+
 export BBox, BoundingBox, mm, cm, inch, px, pct, pt, w, h
 end
 
@@ -188,11 +187,16 @@ import RecipesPipeline: SliceIt,
     datetimeformatter,
     timeformatter
 
+# Use fixed version of Plotly instead of the latest one for stable dependency
+# Ref: https://github.com/JuliaPlots/Plots.jl/pull/2779
+const _plotly_min_js_filename = "plotly-1.57.1.min.js"
+
 include("types.jl")
 include("utils.jl")
-include("components.jl")
+include("colorbars.jl")
 include("axes.jl")
 include("args.jl")
+include("components.jl")
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
@@ -208,6 +212,7 @@ include("output.jl")
 include("ijulia.jl")
 include("fileio.jl")
 include("init.jl")
+include("legend.jl")
 
 include("backends/plotly.jl")
 include("backends/gr.jl")
@@ -225,8 +230,8 @@ let PlotOrSubplot = Union{Plot, Subplot}
     global xlims!(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...)             = plot!(plt; xlims = (xmin,xmax), kw...)
     global ylims!(plt::PlotOrSubplot, ymin::Real, ymax::Real; kw...)             = plot!(plt; ylims = (ymin,ymax), kw...)
     global zlims!(plt::PlotOrSubplot, zmin::Real, zmax::Real; kw...)             = plot!(plt; zlims = (zmin,zmax), kw...)
-    global xticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...) where {T<:Real}           = plot!(plt; xticks = ticks, kw...)
-    global yticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...) where {T<:Real}           = plot!(plt; yticks = ticks, kw...)
+    global xticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...)             = plot!(plt; xticks = ticks, kw...)
+    global yticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...)             = plot!(plt; yticks = ticks, kw...)
     global xticks!(plt::PlotOrSubplot,
    ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(plt; xticks = (ticks,labels), kw...)
     global yticks!(plt::PlotOrSubplot,
@@ -246,7 +251,6 @@ end
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-include("precompile.jl")
-_precompile_()
+include("precompile_includer.jl")
 
 end # module

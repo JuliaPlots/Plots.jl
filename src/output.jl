@@ -112,7 +112,7 @@ function savefig(plt::Plot, fn::AbstractString)
     fn = abspath(expanduser(fn))
 
     # get the extension
-    fn, ext = splitext(fn)
+    _, ext = splitext(fn)
     ext = chop(ext, head = 1, tail = 0)
     if isempty(ext)
         ext = defaultOutputFormat(plt)
@@ -194,9 +194,9 @@ function _display(plt::Plot)
     @warn("_display is not defined for this backend.")
 end
 
+Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback
 for mime in (
-    "text/plain",
     "text/html",
     "image/png",
     "image/eps",
@@ -220,9 +220,6 @@ end
 
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)
-
-# default text/plain for all backends
-_show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
 
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())
@@ -249,25 +246,17 @@ closeall() = closeall(backend())
 # Atom PlotPane
 # ---------------------------------------------------------
 function showjuno(io::IO, m, plt)
-    sz = collect(plt[:size])
     dpi = plt[:dpi]
-    thickness_scaling = plt[:thickness_scaling]
 
-    jsize = get(io, :juno_plotsize, [400, 500])
     jratio = get(io, :juno_dpi_ratio, 1)
 
-    scale = minimum(jsize[i] / sz[i] for i in 1:2)
-    plt[:size] = [s * scale for s in sz]
     plt[:dpi] = jratio * Plots.DPI
-    plt[:thickness_scaling] *= scale
 
     prepare_output(plt)
     try
         _showjuno(io, m, plt)
     finally
-        plt[:size] = sz
         plt[:dpi] = dpi
-        plt[:thickness_scaling] = thickness_scaling
     end
 end
 

@@ -4,7 +4,7 @@ const use_local_plotlyjs = Ref(false)
 
 function _init_ijulia_plotting()
     # IJulia is more stable with local file
-    use_local_plotlyjs[] = isfile(plotly_local_file_path)
+    use_local_plotlyjs[] = plotly_local_file_path[] === nothing ? false : isfile(plotly_local_file_path[])
 
     ENV["MPLBACKEND"] = "Agg"
 end
@@ -54,9 +54,9 @@ function _ijulia_display_dict(plt::Plot)
     elseif output_type == :html
         mime = "text/html"
         out[mime] = sprint(show, MIME(mime), plt)
+        _ijulia__extra_mime_info!(plt, out)
     else
         error("Unsupported output type $output_type")
     end
-    _ijulia__extra_mime_info!(plt, out)
     out
 end

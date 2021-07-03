@@ -4,34 +4,6 @@
 to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
-
-#Base.broadcast(::typeof(Base.:.*), m::Measure, n::Number) = m * n
-#Base.broadcast(::typeof(Base.:.*), m::Number, n::Measure) = m * n
-Base.:-(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
-Base.:-(a::AbstractArray, m::Measure) = map(ai -> ai - m, a)
-Base.zero(::Type{typeof(mm)}) = 0mm
-Base.one(::Type{typeof(mm)}) = 1mm
-Base.typemin(::typeof(mm)) = -Inf*mm
-Base.typemax(::typeof(mm)) = Inf*mm
-Base.convert(::Type{F}, l::AbsoluteLength) where {F<:AbstractFloat} = convert(F, l.value)
-
-# TODO: these are unintuitive and may cause tricky bugs
-# Base.:+(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
-# Base.:+(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
-# Base.:-(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 - m2.value))
-# Base.:-(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (m1.value - 1))
-
-Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
-Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
-Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
-Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
-
-
-Base.zero(::Type{typeof(pct)}) = 0pct
-Base.one(::Type{typeof(pct)}) = 1pct
-Base.typemin(::typeof(pct)) = 0pct
-Base.typemax(::typeof(pct)) = 1pct
-
 const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
 
 left(bbox::BoundingBox) = bbox.x0[1]
@@ -258,7 +230,7 @@ end
     grid(args...; kw...)
 
 Create a grid layout for subplots. `args` specify the dimensions, e.g.
-`grid(3,2, widths = (0.6,04))` creates a grid with three rows and two
+`grid(3,2, widths = (0.6,0.4))` creates a grid with three rows and two
 columns of different width.
 """
 grid(args...; kw...) = GridLayout(args...; kw...)
@@ -345,10 +317,8 @@ end
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
 function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0mm,0mm])
     nr, nc = size(layout)
-
     # # create a matrix for each minimum padding direction
     # _update_min_padding!(layout)
-
     minpad_left   = map(leftpad,   layout.grid)
     minpad_top    = map(toppad,    layout.grid)
     minpad_right  = map(rightpad,  layout.grid)
@@ -407,10 +377,10 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
         # this is the minimum perimeter as decided by this child's parent, so that
         # all children on this border have the same value
         min_child_perimeter = [
-            c == 1  ? layout.minpad[1] : 0mm,
-            r == 1  ? layout.minpad[2] : 0mm,
-            c == nc ? layout.minpad[3] : 0mm,
-            r == nr ? layout.minpad[4] : 0mm
+            c == 1  ? layout.minpad[1] : pad_left[c],
+            r == 1  ? layout.minpad[2] : pad_top[r],
+            c == nc ? layout.minpad[3] : pad_right[c],
+            r == nr ? layout.minpad[4] : pad_bottom[r]
         ]
 
         # recursively update the child's children
@@ -436,7 +406,7 @@ end
 
 # ----------------------------------------------------------------------
 
-calc_num_subplots(layout::AbstractLayout) = 1
+calc_num_subplots(layout::AbstractLayout) = get(layout.attr, :blank, false) ? 0 : 1
 function calc_num_subplots(layout::GridLayout)
     tot = 0
     for l in layout.grid
@@ -805,9 +775,17 @@ end
 
 "Adds a new, empty subplot overlayed on top of `sp`, with a mirrored y-axis and linked x-axis."
 function twinx(sp::Subplot)
-    sp[:right_margin] = max(sp[:right_margin], 30px)
-    plot!(sp.plt, inset = (sp[:subplot_index], bbox(0,0,1,1)))
+    plot!(sp.plt,
+        inset = (sp[:subplot_index], bbox(0,0,1,1)),
+        right_margin = sp[:right_margin],
+        left_margin = sp[:left_margin],
+        top_margin = sp[:top_margin],
+        bottom_margin = sp[:bottom_margin],
+    )
     twinsp = sp.plt.subplots[end]
+    twinsp[:xaxis][:grid] = false
+    twinsp[:yaxis][:grid] = false
+    twinsp[:xaxis][:showaxis] = false
     twinsp[:yaxis][:mirror] = true
     twinsp[:background_color_inside] = RGBA{Float64}(0,0,0,0)
     link_axes!(sp[:xaxis], twinsp[:xaxis])

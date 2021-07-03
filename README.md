@@ -1,10 +1,7 @@
 # Plots
 
-[travis-img]: https://img.shields.io/travis/JuliaPlots/Plots.jl?logo=travis
-[travis-url]: https://travis-ci.org/JuliaPlots/Plots.jl
-
-[appveyor-img]: https://ci.appveyor.com/api/projects/status/github/juliaplots/plots.jl?branch=master&svg=true
-[appveyor-url]: https://ci.appveyor.com/project/mkborregaard/plots-jl
+[gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/workflows/ci/badge.svg?branch=master
+[gh-ci-url]: https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
 
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
@@ -15,12 +12,15 @@
 [docs-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-url]: http://docs.juliaplots.org/latest/
 
-[![][travis-img]][travis-url]
-[![][appveyor-img]][appveyor-url]
+[![][gh-ci-img]][gh-ci-url]
 [![][pkgeval-img]][pkgeval-url]
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 [![][docs-img]][docs-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725317.svg)](https://doi.org/10.5281/zenodo.4725317)
+This is the DOI for all Versions, please follow the link to get the DOI for a specific version.
+
 
 #### Created by Tom Breloff (@tbreloff)
 
