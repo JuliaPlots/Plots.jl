@@ -442,7 +442,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             #     end
             #     push!(handles, handle)
             # else
-            for (k, segment) in enumerate(series_segments(series, st))
+            for (k, segment) in enumerate(series_segments(series, st; check=true))
                 i, rng = segment.attr_index, segment.range
                 handle = ax."plot"((arg[rng] for arg in xyargs)...;
                                    label = k == 1 ? series[:label] : "",

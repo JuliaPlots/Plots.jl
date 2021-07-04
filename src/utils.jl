@@ -75,22 +75,23 @@ function iter_segments(args...)
     NaNSegmentsIterator(tup, n1, n2)
 end
 
-function series_segments(series::Series, seriestype::Symbol = :path)
+function series_segments(series::Series, seriestype::Symbol=:path; check=false)
     x, y, z = series[:x], series[:y], series[:z]
     (x === nothing || isempty(x)) && return UnitRange{Int}[]
 
     args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
     nan_segments = collect(iter_segments(args...))
 
-    scales = :xscale, :yscale, :zscale
-    for (n, s) ∈ enumerate(args)
-        scale = get(series, scales[n], :identity)
-        if scale ∈ _logScales
-            for (i, v) ∈ enumerate(s)
-                if v <= 0
-                    msg = "Invalid negative or zero value $v found at serie index $i for $(scale) based $(scales[n])"
-                    @warn msg
-                    @debug msg exception=(DomainError(v), stacktrace())
+    if check
+        scales = :xscale, :yscale, :zscale
+        for (n, s) ∈ enumerate(args)
+            scale = get(series, scales[n], :identity)
+            if scale ∈ _logScales
+                for (i, v) ∈ enumerate(s)
+                    if v <= 0
+                        @warn "Invalid negative or zero value $v found at series index $i for $(scale) based $(scales[n])"
+                        @debug "" exception=(DomainError(v), stacktrace())
+                    end
                 end
             end
         end
