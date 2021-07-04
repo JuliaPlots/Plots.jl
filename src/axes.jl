@@ -172,8 +172,9 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
         scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
-            k_min = 4, # minimum number of ticks
+            k_min = scale in _logScales ? 2 : 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
+            scale = scale,
         )[1]
     elseif typeof(ticks) <: Int
         scaled_ticks, viewmin, viewmax = optimize_ticks(
@@ -185,6 +186,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # `strict_span = false` rewards cases where the span of the
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
+            scale = scale,
         )
         # axis[:lims] = map(RecipesPipeline.inverse_scale_func(scale), (viewmin, viewmax))
     else
@@ -336,10 +338,11 @@ function get_minor_ticks(sp, axis, ticks)
     length(ticks) < 2 && return nothing
 
     amin, amax = axis_limits(sp, axis[:letter])
-    #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
+    scale = axis[:scale]
+    # Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
     if length(ticks) > 2
         ratio = (ticks[3] - ticks[2])/(ticks[2] - ticks[1])
-    elseif axis[:scale] in (:none, :identity)
+    elseif scale ∈ (:none, :identity)
         ratio = 1
     else
         return nothing
@@ -348,13 +351,30 @@ function get_minor_ticks(sp, axis, ticks)
     last_step = ticks[end] - ticks[end-1]
     ticks =  [ticks[1] - first_step/ratio; ticks; ticks[end] + last_step*ratio]
 
-    #Default to 5 intervals between major ticks
-    n = typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 ? axis[:minorticks] : 5
+    # Default to 9 intervals between major ticks for log10 scale and 5 intervals otherwise.
+    n_default = (scale === :log10) ? 9 : 5
+    n = typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 ? axis[:minorticks] : n_default
+    is_log_scale = scale in _logScales
+    base = is_log_scale ? _logScaleBases[scale] : nothing
+    sub = is_log_scale ? round(Int, log(ratio) / log(base)) : nothing
+
     minorticks = typeof(ticks[1])[]
-    for (i,hi) in enumerate(ticks[2:end])
+    for (i, hi) in enumerate(ticks[2:end])
         lo = ticks[i]
         if isfinite(lo) && isfinite(hi) && hi > lo
-            append!(minorticks,collect(lo + (hi-lo)/n :(hi-lo)/n: hi - (hi-lo)/2n))
+            if is_log_scale
+                for j in 1:sub
+                    lo_ = lo * base^(j - 1)
+                    hi_ = lo_ * base
+                    step = (hi_ - lo_) / n
+                    append!(minorticks, collect(
+                        lo_ + (j > 1 ? 0 : step) : step : hi_ - (j < sub ? 0 : step / 2)
+                    ))
+                end
+            else
+                step = (hi - lo) / n
+                append!(minorticks, collect(lo + step : step : hi - step / 2))
+            end
         end
     end
     minorticks[amin .<= minorticks .<= amax]
