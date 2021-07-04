@@ -181,6 +181,7 @@ for st in (
     :surface,
     :volume,
     :wireframe,
+    :mesh3d
 )
     @eval needs_3d_axes(::Type{Val{Symbol($(string(st)))}}) = true
 end
