@@ -125,8 +125,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             if sp[:subplot_index] == plt[:plot_titleindex]
                 x = dx + sp_width / 2 - 10mm # FIXME: get rid of magic constant
                 y = dy + sp_height / 2
-                @show width(bbox(plt.layout.grid[2]))
-                @show sp_width
                 pgfx_add_annotation!(the_plot, x, y, PlotText(plt[:plot_title], plottitlefont(plt)), pgfx_thickness_scaling(plt);
                     cs = "",
                     options = PGFPlotsX.Options("anchor" => "center")
