@@ -1,4 +1,5 @@
 using Plots, Test
+using RecipesPipeline
 
 @testset "plot" begin
     pl = plot(1:5)
