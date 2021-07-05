@@ -256,6 +256,7 @@ end
 @init_backend PGFPlotsX
 @init_backend InspectDR
 @init_backend HDF5
+@init_backend Gaston
 
 # ---------------------------------------------------------
 
@@ -573,6 +574,92 @@ const _pyplot_seriestype = [
 const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _pyplot_marker = vcat(_allMarkers, :pixel)
 const _pyplot_scale = [:identity, :ln, :log2, :log10]
+
+# ------------------------------------------------------------------------------
+# Gaston
+
+function _initialize_backend(::GastonBackend)
+    @eval Main begin
+        import Gaston
+        export Gaston
+    end
+end
+
+const _gaston_attr = merge_with_base_supported([
+    # :annotations,
+    # :background_color_legend,
+    # :background_color_inside,
+    # :background_color_outside,
+    # :foreground_color_legend,
+    # :foreground_color_grid, :foreground_color_axis,
+    # :foreground_color_text, :foreground_color_border,
+    :label,
+    # :seriescolor, :seriesalpha,
+    :linecolor, :linestyle, :linewidth, :linealpha,
+    :markershape, :markercolor, :markersize, :markeralpha,
+    # :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
+    # :fillrange, :fillcolor, :fillalpha,
+    # :bins,
+    # :bar_width, :bar_edges,
+    # :title,
+    # :window_title,
+    :guide,
+    # :guide_position,
+    :lims, :ticks, :scale, # :flip, :rotation,
+    :tickfont, :guidefont,
+    # :legendfont,
+    # :grid, :legend,
+    # :colorbar, :colorbar_title,
+    # :fill_z, :line_z, :marker_z, :levels,
+    # :ribbon, :quiver, :arrow,
+    # :orientation,
+    # :overwrite_figure,
+    # :polar,
+    # :normalize, :weights, :contours,
+    # :aspect_ratio,
+    :tick_direction,
+    # :framestyle,
+    # :camera,
+    # :contour_labels,
+  ])
+const _gaston_seriestype = [:path,
+                            # :path3d,
+                            :scatter,
+                            :steppre,
+                            # :stepmid,
+                            :steppost,
+                            # :histogram2d,
+                            # :ysticks, :xsticks,
+                            # :contour,
+                            :shape,
+                            # :straightline,
+                            ]
+
+const _gaston_style = [:auto,
+                       :solid,
+                       :dash,
+                       :dot,
+                       :dashdot,
+                       :dashdotdot
+                       ]
+
+const _gaston_marker = [:none,
+                        # :auto,
+                        :circle,
+                        :rect,
+                        :diamond,
+                        :utriangle,
+                        :dtriangle,
+                        :pentagon,
+                        :x,
+                        :+
+                        ] #vcat(_allMarkers, Shape)
+
+const _gaston_scale = [:identity,
+                       # :ln,
+                       # :log2,
+                       :log10,
+                       ]
 
 # ------------------------------------------------------------------------------
 # unicodeplots
