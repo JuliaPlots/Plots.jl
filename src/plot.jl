@@ -98,11 +98,12 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
     RecipesPipeline.preprocess_attributes!(plotattributes)
 
     # build our plot vector from the args
-    n = length(plts_tail) + 1
+    n = length(plts_tail) + 2
     plts = Array{Plot}(undef, n)
     plts[1] = plt1
+    plts[2] = plt2
     for (i,plt) in enumerate(plts_tail)
-        plts[i+1] = plt
+        plts[i+2] = plt
     end
 
     # compute the layout
