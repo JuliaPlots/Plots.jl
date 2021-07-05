@@ -51,7 +51,6 @@ Requires = "1"
 Scratch = "1"
 Showoff = "0.3.1, 1.0"
 StatsBase = "0.32, 0.33"
-Distributions = "< 0.25.7, ≥ 0.25.9"
 julia = "1.5"
 
 [extras]
