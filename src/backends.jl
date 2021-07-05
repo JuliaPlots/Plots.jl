@@ -352,6 +352,7 @@ const _gr_seriestype = [
     :scatter3d,
     :surface,
     :wireframe,
+    :mesh3d,
     :volume,
     :shape,
 ]

@@ -1676,7 +1676,7 @@ function gr_add_series(sp, series)
         end
     elseif st === :contour
         gr_draw_contour(series, x, y, z, clims)
-    elseif st in (:surface, :wireframe)
+    elseif st in (:surface, :wireframe, :mesh3d)
         gr_draw_surface(series, x, y, z, clims)
     elseif st === :volume
         sp[:legend] = :none
@@ -1843,7 +1843,8 @@ end
 
 function gr_draw_surface(series, x, y, z, clims)
     e_kwargs = series[:extra_kwargs]
-    if series[:seriestype] === :surface
+    st = series[:seriestype]
+    if st === :surface
         fillalpha = get_fillalpha(series)
         fillcolor = get_fillcolor(series)
         # NOTE: setting nx = 0 or ny = 0 disables GR.gridit interpolation
@@ -1858,9 +1859,40 @@ function gr_draw_surface(series, x, y, z, clims)
         else
             GR.gr3.surface(x, y, z, d_opt)
         end
-    else  # wireframe
+    elseif st === :wireframe
         GR.setfillcolorind(0)
         GR.surface(x, y, z, get(e_kwargs, :display_option, GR.OPTION_FILLED_MESH))
+    elseif st === :mesh3d
+        conn = series[:connections]
+        if typeof(conn) <: Tuple{Array, Array, Array}
+            ci, cj, ck = conn
+            if !(length(ci) == length(cj) == length(ck))
+                throw(ArgumentError("Argument connections must consist of equally sized arrays."))
+            end
+        else
+            throw(ArgumentError("Argument connections has to be a tuple of three arrays."))
+        end
+        xx = zeros(eltype(x), 4length(ci))
+        yy = zeros(eltype(y), 4length(cj))
+        zz = zeros(eltype(z), 4length(ck))
+        @inbounds for I ∈ 1:length(ci)
+            i = ci[I] + 1  # connections are 0-based
+            j = cj[I] + 1
+            k = ck[I] + 1
+            m = 4(I - 1) + 1; n = m + 1; o = m + 2; p = m + 3
+            xx[m] = xx[p] = x[i]
+            yy[m] = yy[p] = y[i]
+            zz[m] = zz[p] = z[i]
+            xx[n] = x[j]
+            yy[n] = y[j]
+            zz[n] = z[j]
+            xx[o] = x[k]
+            yy[o] = y[k]
+            zz[o] = z[k]
+        end
+        GR.polyline3d(xx, yy, zz)
+    else
+        throw(ArgumentError("Not handled !"))    
     end
 end
 
