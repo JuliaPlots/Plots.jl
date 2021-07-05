@@ -331,6 +331,7 @@ const _series_defaults = KW(
 
 const _plot_defaults = KW(
     :plot_title                  => "",
+    :plot_titleindex             => 0,
     :plot_titlefontsize          => 16,
     :plot_titlelocation          => :center,           # also :left or :right
     :plot_titlefontfamily        => :match,
@@ -1365,6 +1366,7 @@ const _match_map = KW(
     :colorbar_tickfontcolor   => :foreground_color_subplot,
     :plot_titlefontfamily     => :fontfamily,
     :plot_titlefontcolor      => :foreground_color,
+    :plot_titleindex             => 0,
     :tickfontcolor            => :foreground_color_text,
     :guidefontcolor           => :foreground_color_guide,
     :annotationfontfamily     => :fontfamily_subplot,

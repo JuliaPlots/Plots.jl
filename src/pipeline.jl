@@ -287,11 +287,6 @@ function _add_plot_title!(plt)
     if plot_title != ""
         the_layout = plt.layout
         vspan = plt[:plot_titlevspan]
-        if plt.backend isa PGFPlotsXBackend
-            # FIXME: we hit a 45pt height limit:
-            # https://github.com/pgf-tikz/pgfplots/blob/3bc2f42258fbfac9fe50b2978459da7e76fc046c/tex/generic/pgfplots/pgfplots.scaling.code.tex#L153
-            vspan = max(vspan, .16)
-        end
         plt.layout = grid(2, 1, heights=(vspan, 1 - vspan))
         plt.layout.grid[1, 1] = subplot = Subplot(plt.backend, parent=plt.layout[1, 1])
         plt.layout.grid[2, 1] = the_layout
@@ -302,6 +297,7 @@ function _add_plot_title!(plt)
         end
         plt[:force_minpad] = nothing, 0px, nothing, 0px
         subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
+        plt[:plot_titleindex] = subplot[:subplot_index]
         subplot[:framestyle] = :none
         subplot[:margin] = 0px
         push!(plt.subplots, subplot)
