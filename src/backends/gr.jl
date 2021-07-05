@@ -524,7 +524,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
         levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         # GR implicitly uses the maximal z value as the highest level
         if levels[end] < clims[2]
-            @warn("GR: highest contour level less than maximal z value is not supported.")
+            @warn "GR: highest contour level less than maximal z value is not supported."
             # replace levels, rather than assign to levels[end], to ensure type
             # promotion in case levels is an integer array
             levels = [levels[1:end-1]; clims[2]]
@@ -1832,7 +1832,7 @@ function gr_draw_contour(series, x, y, z, clims)
     h = gr_contour_levels(series, clims)
     if series[:fillrange] !== nothing
         if series[:fillcolor] != series[:linecolor] && !is_lc_black
-            @warn("GR: filled contour only supported with black contour lines")
+            @warn "GR: filled contour only supported with black contour lines"
         end
         GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
     else
@@ -1863,6 +1863,7 @@ function gr_draw_surface(series, x, y, z, clims)
         GR.setfillcolorind(0)
         GR.surface(x, y, z, get(e_kwargs, :display_option, GR.OPTION_FILLED_MESH))
     elseif st === :mesh3d
+        @warn "GR: mesh3d is experimental (no face colors)"
         conn = series[:connections]
         if typeof(conn) <: Tuple{Array, Array, Array}
             ci, cj, ck = conn
@@ -1872,25 +1873,25 @@ function gr_draw_surface(series, x, y, z, clims)
         else
             throw(ArgumentError("Argument connections has to be a tuple of three arrays."))
         end
-        xx = zeros(eltype(x), 4length(ci))
-        yy = zeros(eltype(y), 4length(cj))
-        zz = zeros(eltype(z), 4length(ck))
+        X = zeros(eltype(x), 4length(ci))
+        Y = zeros(eltype(y), 4length(cj))
+        Z = zeros(eltype(z), 4length(ck))
         @inbounds for I ∈ 1:length(ci)
             i = ci[I] + 1  # connections are 0-based
             j = cj[I] + 1
             k = ck[I] + 1
             m = 4(I - 1) + 1; n = m + 1; o = m + 2; p = m + 3
-            xx[m] = xx[p] = x[i]
-            yy[m] = yy[p] = y[i]
-            zz[m] = zz[p] = z[i]
-            xx[n] = x[j]
-            yy[n] = y[j]
-            zz[n] = z[j]
-            xx[o] = x[k]
-            yy[o] = y[k]
-            zz[o] = z[k]
+            X[m] = X[p] = x[i]
+            Y[m] = Y[p] = y[i]
+            Z[m] = Z[p] = z[i]
+            X[n] = x[j]
+            Y[n] = y[j]
+            Z[n] = z[j]
+            X[o] = x[k]
+            Y[o] = y[k]
+            Z[o] = z[k]
         end
-        GR.polyline3d(xx, yy, zz)
+        GR.polyline3d(X, Y, Z)
     else
         throw(ArgumentError("Not handled !"))    
     end
