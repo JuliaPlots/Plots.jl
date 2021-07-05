@@ -1366,7 +1366,6 @@ const _match_map = KW(
     :colorbar_tickfontcolor   => :foreground_color_subplot,
     :plot_titlefontfamily     => :fontfamily,
     :plot_titlefontcolor      => :foreground_color,
-    :plot_titleindex             => 0,
     :tickfontcolor            => :foreground_color_text,
     :guidefontcolor           => :foreground_color_guide,
     :annotationfontfamily     => :fontfamily_subplot,
