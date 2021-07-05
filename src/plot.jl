@@ -224,6 +224,16 @@ function prepare_output(plt::Plot)
         _update_min_padding!(sp)
     end
 
+    # spedific to :plot_title see _add_plot_title!
+    force_minpad = get(plt, :force_minpad, ())
+    if !isempty(force_minpad)
+        for i ∈ eachindex(plt.layout.grid)
+            plt.layout.grid[i].minpad = Tuple(
+                i === nothing ? j : i for (i, j) ∈ zip(force_minpad, plt.layout.grid[i].minpad)
+            )
+        end
+    end
+
     # now another pass down, to update the bounding boxes
     update_child_bboxes!(plt.layout)
 

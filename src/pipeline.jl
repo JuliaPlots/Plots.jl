@@ -286,14 +286,24 @@ function _add_plot_title!(plt)
     plot_title = plt[:plot_title]
     if plot_title != ""
         the_layout = plt.layout
-        plt.layout = grid(2, 1, heights=(.01, .99))
+        vspan = plt[:plot_titlevspan]
+        if plt.backend isa PGFPlotsXBackend
+            # FIXME: we hit a 45pt height limit:
+            # https://github.com/pgf-tikz/pgfplots/blob/3bc2f42258fbfac9fe50b2978459da7e76fc046c/tex/generic/pgfplots/pgfplots.scaling.code.tex#L153
+            vspan = max(vspan, .16)
+        end
+        plt.layout = grid(2, 1, heights=(vspan, 1 - vspan))
+        plt.layout.grid[1, 1] = subplot = Subplot(plt.backend, parent=plt.layout[1, 1])
         plt.layout.grid[2, 1] = the_layout
-        subplot = Subplot(backend(), parent = plt.layout[1, 1])
         subplot.plt = plt
-        subplot[:title] = plot_title
+        # propagate arguments plt[:plot_titleXXX] --> subplot[:titleXXX]
+        for sym ∈ filter(x -> startswith(string(x), "plot_title"), keys(_plot_defaults))
+            subplot[Symbol(string(sym)[length("plot_") + 1:end])] = plt[sym]
+        end
+        plt[:force_minpad] = nothing, 0px, nothing, 0px
         subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
         subplot[:framestyle] = :none
-        plt.layout.grid[1, 1] = subplot
+        subplot[:margin] = 0px
         push!(plt.subplots, subplot)
     end
     return nothing
