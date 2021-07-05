@@ -355,9 +355,9 @@ end
 
 # draw ONE symbol marker
 function gr_draw_marker(series, xi, yi, clims, i, msize, strokewidth, shape::Symbol)
-    GR.setborderwidth(strokewidth);
-    gr_set_bordercolor(get_markerstrokecolor(series, i));
-    gr_set_markercolor(get_markercolor(series, clims, i));
+    GR.setborderwidth(strokewidth)
+    gr_set_bordercolor(get_markerstrokecolor(series, i))
+    gr_set_markercolor(get_markercolor(series, clims, i))
     gr_set_transparency(get_markeralpha(series, i))
     GR.setmarkertype(gr_markertype(shape))
     GR.setmarkersize(0.3msize / gr_nominal_size(series))
@@ -1718,7 +1718,7 @@ end
 function gr_draw_segments(series, x, y, fillrange, clims)
     st = series[:seriestype]
     if x !== nothing && length(x) > 1
-        segments = series_segments(series, st)
+        segments = series_segments(series, st; check=true)
         # do area fill
         if fillrange !== nothing
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
@@ -1755,7 +1755,7 @@ end
 function gr_draw_segments_3d(series, x, y, z, clims)
     if series[:seriestype] === :path3d && length(x) > 1
         lz = series[:line_z]
-        segments = series_segments(series, :path3d)
+        segments = series_segments(series, :path3d; check=true)
         for segment in segments
             i, rng = segment.attr_index, segment.range
             lc = get_linecolor(series, clims, i)

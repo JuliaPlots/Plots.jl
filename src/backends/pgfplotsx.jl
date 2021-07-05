@@ -327,7 +327,7 @@ end
 
 function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, opt)
     # treat segments
-    segments = collect(series_segments(series, series[:seriestype]))
+    segments = collect(series_segments(series, series[:seriestype]; check=true))
     sf = opt[:fillrange]
     for (k, segment) in enumerate(segments)
         i, rng = segment.attr_index, segment.range

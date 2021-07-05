@@ -663,7 +663,7 @@ function plotly_series(plt::Plot, series::Series)
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
-    segments = series_segments(series)
+    segments = series_segments(series; check=true)
     plotattributes_outs = Vector{KW}(undef, length(segments))
 
     # TODO: create a plotattributes_out for each polygon
