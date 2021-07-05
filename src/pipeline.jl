@@ -141,7 +141,7 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
 end
 
 
-RecipesPipeline.get_axis_limits(plt::Plot, letter) = axis_limits(plt[1], letter)
+RecipesPipeline.get_axis_limits(plt::Plot, letter) = axis_limits(plt[1], letter, false)
 
 
 ## Plot recipes
