@@ -1327,7 +1327,13 @@ function gr_draw_axes(sp, viewport_plotarea)
         # set space
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         zmin, zmax = gr_z_axislims(sp)
-        GR.setspace(zmin, zmax, round.(Int, sp[:camera])...)
+
+        camera = round.(Int, sp[:camera])
+
+        warn_invalid(val) = if val < 0 || val > 90 @warn "camera: $(val)° ∉ [0°, 90°]" end
+        warn_invalid.(camera)
+
+        GR.setspace(zmin, zmax, camera...)
 
         # fill the plot area
         gr_set_fill(plot_color(sp[:background_color_inside]))
