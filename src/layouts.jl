@@ -494,34 +494,42 @@ layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 
 function build_layout(args...)
     layout, n = layout_args(args...)
-    build_layout(layout, n)
+    build_layout(layout, n, Array{Plot}(undef, 0))
 end
 
-# # just a single subplot
-# function build_layout(sp::Subplot, n::Integer)
-#     sp, Subplot[sp], SubplotMap(gensym() => sp)
-# end
 
-# n is the number of subplots... build a grid and initialize the inner subplots recursively
-function build_layout(layout::GridLayout, n::Integer)
+# n is the number of subplots...
+function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
     nr, nc = size(layout)
     subplots = Subplot[]
     spmap = SubplotMap()
+    empty = isempty(plts)
     i = 0
-    for r=1:nr, c=1:nc
-        l = layout[r,c]
+    for r = 1:nr, c = 1:nc
+        l = layout[r, c]
         if isa(l, EmptyLayout) && !get(l.attr, :blank, false)
-            sp = Subplot(backend(), parent=layout)
-            layout[r,c] = sp
-            push!(subplots, sp)
-            spmap[attr(l,:label,gensym())] = sp
+            if empty
+                # initialize the inner subplots recursively
+                sp = Subplot(backend(), parent=layout)
+                layout[r, c] = sp
+                push!(subplots, sp)
+                spmap[attr(l,:label,gensym())] = sp
+                inc = 1
+            else
+                # build a layout from a list of existing Plot objects
+                plt = popfirst!(plts)  # grab the first plot out of the list
+                layout[r, c] = plt.layout
+                append!(subplots, plt.subplots)
+                merge!(spmap, plt.spmap)
+                inc = length(plt.subplots)
+            end
             if get(l.attr, :width, :auto) != :auto
                 layout.widths[c] = attr(l,:width)
             end
             if get(l.attr, :height, :auto) != :auto
                 layout.heights[r] = attr(l,:height)
             end
-            i += 1
+            i += inc
         elseif isa(l, GridLayout)
             # sub-grid
             if get(l.attr, :width, :auto) != :auto
@@ -530,55 +538,16 @@ function build_layout(layout::GridLayout, n::Integer)
             if get(l.attr, :height, :auto) != :auto
                 layout.heights[r] = attr(l,:height)
             end
-            l, sps, m = build_layout(l, n-i)
+            l, sps, m = build_layout(l, n - i, plts)
             append!(subplots, sps)
             merge!(spmap, m)
             i += length(sps)
-        elseif isa(l, Subplot)
+        elseif isa(l, Subplot) && empty
             error("Subplot exists. Cannot re-use existing layout.  Please make a new one.")
         end
         i >= n && break  # only add n subplots
     end
 
-    layout, subplots, spmap
-end
-
-# build a layout from a list of existing Plot objects
-# TODO... much of the logic overlaps with the method above... can we merge?
-function build_layout(layout::GridLayout, numsp::Integer, plts::AVec{Plot})
-    nr, nc = size(layout)
-    subplots = Subplot[]
-    spmap = SubplotMap()
-    i = 0
-    for r=1:nr, c=1:nc
-        l = layout[r,c]
-        if isa(l, EmptyLayout) && !get(l.attr, :blank, false)
-            plt = popfirst!(plts)  # grab the first plot out of the list
-            layout[r,c] = plt.layout
-            append!(subplots, plt.subplots)
-            merge!(spmap, plt.spmap)
-            if get(l.attr, :width, :auto) != :auto
-                layout.widths[c] = attr(l,:width)
-            end
-            if get(l.attr, :height, :auto) != :auto
-                layout.heights[r] = attr(l,:height)
-            end
-            i += length(plt.subplots)
-        elseif isa(l, GridLayout)
-            # sub-grid
-            if get(l.attr, :width, :auto) != :auto
-                layout.widths[c] = attr(l,:width)
-            end
-            if get(l.attr, :height, :auto) != :auto
-                layout.heights[r] = attr(l,:height)
-            end
-            l, sps, m = build_layout(l, numsp-i, plts)
-            append!(subplots, sps)
-            merge!(spmap, m)
-            i += length(sps)
-        end
-        i >= numsp && break  # only add n subplots
-    end
     layout, subplots, spmap
 end
 
