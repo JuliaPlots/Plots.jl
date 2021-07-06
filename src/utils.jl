@@ -476,17 +476,24 @@ for comp in (:line, :fill, :marker)
 
     @eval begin
 
-        function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
+        function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1, scale::Symbol = :identity)
             c = series[$Symbol($compcolor)]
             z = series[$Symbol($comp_z)]
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
-                get(get_gradient(c), z[i], (cmin, cmax))
+                if scale === :identity
+                    return get(get_gradient(c), z[i], (cmin, cmax))
+                elseif scale == :log10
+                    return get(get_gradient(c), log10(z[i]), (log10(cmin), log10(cmax)))
+                else
+                    @warn("Undefined colorbar scale")
+                end
             end
         end
 
         $get_compcolor(series, clims, i::Int = 1) = $get_compcolor(series, clims[1], clims[2], i)
+        $get_compcolor(series, clims, i::Int = 1, scale=:identity) = $get_compcolor(series, clims[1], clims[2], i, scale)
 
         function $get_compcolor(series, i::Int = 1)
             if series[$Symbol($comp_z)] === nothing
