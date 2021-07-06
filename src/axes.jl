@@ -172,8 +172,9 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
         scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
-            k_min = 4, # minimum number of ticks
+            k_min = scale ∈ _logScales ? 2 : 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
+            scale = scale,
         )[1]
     elseif typeof(ticks) <: Int
         scaled_ticks, viewmin, viewmax = optimize_ticks(
@@ -185,6 +186,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # `strict_span = false` rewards cases where the span of the
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
+            scale = scale,
         )
         # axis[:lims] = map(RecipesPipeline.inverse_scale_func(scale), (viewmin, viewmax))
     else
@@ -331,30 +333,48 @@ _transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.valu
 _transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
 function get_minor_ticks(sp, axis, ticks)
-    axis[:minorticks] in (:none, nothing, false) && !axis[:minorgrid] && return nothing
+    axis[:minorticks] ∈ (:none, nothing, false) && !axis[:minorgrid] && return nothing
     ticks = ticks[1]
     length(ticks) < 2 && return nothing
 
     amin, amax = axis_limits(sp, axis[:letter])
-    #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
-    if length(ticks) > 2
-        ratio = (ticks[3] - ticks[2])/(ticks[2] - ticks[1])
-    elseif axis[:scale] in (:none, :identity)
-        ratio = 1
-    else
-        return nothing
-    end
-    first_step = ticks[2] - ticks[1]
-    last_step = ticks[end] - ticks[end-1]
-    ticks =  [ticks[1] - first_step/ratio; ticks; ticks[end] + last_step*ratio]
+    scale = axis[:scale]
+    log_scaled = scale ∈ _logScales
+    base = get(_logScaleBases, scale, nothing)
 
-    #Default to 5 intervals between major ticks
-    n = typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 ? axis[:minorticks] : 5
+    # add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
+    if log_scaled
+        sub = round(Int, log(base, ticks[2] / ticks[1]))
+        ticks = [ticks[1] / base; ticks; ticks[end] * base]
+    else
+        sub = 1  # unused
+        ratio = length(ticks) > 2 ? (ticks[3] - ticks[2]) / (ticks[2] - ticks[1]) : 1
+        first_step = ticks[2] - ticks[1]
+        last_step = ticks[end] - ticks[end-1]
+        ticks = [ticks[1] - first_step / ratio; ticks; ticks[end] + last_step * ratio]
+    end
+
+    # default to 9 intervals between major ticks for log10 scale and 5 intervals otherwise
+    n_default = (scale == :log10) ? 9 : 5
+    n = typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 ? axis[:minorticks] : n_default
+
     minorticks = typeof(ticks[1])[]
-    for (i,hi) in enumerate(ticks[2:end])
+    for (i, hi) ∈ enumerate(ticks[2:end])
         lo = ticks[i]
         if isfinite(lo) && isfinite(hi) && hi > lo
-            append!(minorticks,collect(lo + (hi-lo)/n :(hi-lo)/n: hi - (hi-lo)/2n))
+            if log_scaled
+                for e ∈ 1:sub
+                    lo_ = lo * base^(e - 1)
+                    hi_ = lo_ * base
+                    step = (hi_ - lo_) / n
+                    append!(minorticks, collect(
+                        lo_ + (e > 1 ? 0 : step) : step : hi_ - (e < sub ? 0 : step / 2)
+                    ))
+                end
+            else
+                step = (hi - lo) / n
+                append!(minorticks, collect(lo + step : step : hi - step / 2))
+            end
         end
     end
     minorticks[amin .<= minorticks .<= amax]
@@ -492,12 +512,12 @@ end
 # -------------------------------------------------------------------------
 
 # push the limits out slightly
-function widen(lmin, lmax, scale = :identity)
+function widen(lmin, lmax, scale=:identity)
     f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
     span = f(lmax) - f(lmin)
     # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
     eps = NaNMath.max(1e-16, 0.03span)
-    invf(f(lmin)-eps), invf(f(lmax)+eps)
+    invf(f(lmin) - eps), invf(f(lmax) + eps)
 end
 
 # figure out if widening is a good idea.
@@ -519,10 +539,11 @@ function default_should_widen(axis::Axis)
     false
 end
 
-function round_limits(amin,amax)
-    scale = 10^(1-round(log10(amax - amin)))
-    amin = floor(amin*scale)/scale
-    amax = ceil(amax*scale)/scale
+function round_limits(amin, amax, scale)
+    base = get(_logScaleBases, scale, 10.)
+    factor = base^(1 - round(log(base, amax - amin)))
+    amin = floor(amin * factor) / factor
+    amax = ceil(amax * factor) / factor
     amin, amax
 end
 
@@ -559,7 +580,7 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
         if axis[:letter] == :x
             amin, amax = 0, 2pi
         elseif lims == :auto
-            #widen max radius so ticks dont overlap with theta axis
+            # widen max radius so ticks dont overlap with theta axis
             0, amax + 0.1 * abs(amax - amin)
         else
             amin, amax
@@ -567,12 +588,15 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
     elseif should_widen
         widen(amin, amax, axis[:scale])
     elseif lims == :round
-        round_limits(amin,amax)
+        round_limits(amin, amax, axis[:scale])
     else
         amin, amax
     end
 
-    if !has_user_lims && consider_aspect && letter in (:x, :y) && !(sp[:aspect_ratio] in (:none, :auto) || RecipesPipeline.is3d(:sp))
+    if (
+        !has_user_lims && consider_aspect && letter in (:x, :y) &&
+        !(sp[:aspect_ratio] in (:none, :auto) || RecipesPipeline.is3d(:sp))
+    )
         aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
         plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
         dist = amax - amin
@@ -708,6 +732,7 @@ function axis_drawing_info(sp, letter)
             invf = RecipesPipeline.inverse_scale_func(oax[:scale])
 
             add_major_or_minor_segments(ticks, grid, segments, factor, cond) = begin
+                ticks === nothing && return
                 if cond
                     tick_start, tick_stop = if sp[:framestyle] == :origin
                         t = invf(f(0) + factor * (f(oamax) - f(oamin)))
@@ -833,6 +858,7 @@ function axis_drawing_info_3d(sp, letter)
             ga0, ga1 = sp[:framestyle] in (:origin, :zerolines) ? (namin, namax) : (na0, na1)
 
             add_major_or_minor_segments(ticks, grid, segments, factor, cond) = begin
+                ticks === nothing && return
                 if cond
                     tick_start, tick_stop = if sp[:framestyle] == :origin
                         t = invf(f(0) + factor * (f(namax) - f(namin)))

@@ -115,7 +115,7 @@ const _examples = PlotExample[
                     )
                     vline!([5, 10])
                     title!("TITLE")
-                    yaxis!("YLABEL", :log10)
+                    yaxis!("YLABEL", :log10, minorgrid = true)
                 end
             ),
         ],
