@@ -937,7 +937,16 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 kw[:boundaries] = vcat(0, kw[:values] + 0.5)
             elseif any(colorbar_series[attr] !== nothing for attr in (:line_z, :fill_z, :marker_z))
                 cmin, cmax = get_clims(sp)
-                norm = pycolors."Normalize"(vmin = cmin, vmax = cmax)
+                norm = if sp[:colorbar_scale] === :identity
+                    pycolors."Normalize"(vmin = cmin, vmax = cmax)
+                elseif sp[:colorbar_scale] === :log10
+                    pycolors."LogNorm"(vmin=cmin, vmax=cmax)
+                else
+                    @warn("Undefined colorbarscale")
+                end
+
+
+
                 f = if colorbar_series[:line_z] !== nothing
                     py_linecolormap
                 elseif colorbar_series[:fill_z] !== nothing
@@ -993,7 +1002,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             cb."set_label"(sp[:colorbar_title],size=py_thickness_scale(plt, sp[:colorbar_titlefontsize]),family=sp[:colorbar_titlefontfamily], color = py_color(sp[:colorbar_titlefontcolor]))
 
             # cb."formatter".set_useOffset(false)   # This for some reason does not work, must be a pyplot bug, instead this is a workaround:
-            cb."formatter".set_powerlimits((-Inf, Inf))
+            sp[:colorbar_scale] === :identity ? cb."formatter".set_powerlimits((-Inf, Inf)) : nothing
             cb."update_ticks"()
 
             env = "\\mathregular"  # matches the outer fonts https://matplotlib.org/tutorials/text/mathtext.html
