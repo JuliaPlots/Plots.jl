@@ -91,6 +91,7 @@ function series_segments(series::Series, seriestype::Symbol=:path; check=false)
                     if v <= 0
                         @warn "Invalid negative or zero value $v found at series index $i for $(scale) based $(scales[n])"
                         @debug "" exception=(DomainError(v), stacktrace())
+                        break
                     end
                 end
             end
