@@ -493,7 +493,7 @@ for comp in (:line, :fill, :marker)
         end
 
         $get_compcolor(series, clims, i::Int = 1) = $get_compcolor(series, clims[1], clims[2], i)
-        $get_compcolor(series, clims, i::Int = 1, scale=:identity) = $get_compcolor(series, clims[1], clims[2], i, scale)
+        $get_compcolor(series, clims, i::Int = 1, scale::Symbol=:identity) = $get_compcolor(series, clims[1], clims[2], i, scale)
 
         function $get_compcolor(series, i::Int = 1)
             if series[$Symbol($comp_z)] === nothing
