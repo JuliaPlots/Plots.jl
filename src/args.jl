@@ -577,7 +577,8 @@ end
 
 
 # margin
-add_aliases(:left_margin , :leftmargin )
+add_aliases(:margins)
+add_aliases(:left_margin , :leftmargin)
 add_aliases(:top_margin , :topmargin)
 add_aliases(:bottom_margin , :bottommargin)
 add_aliases(:right_margin ,:rightmargin)
