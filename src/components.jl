@@ -588,13 +588,13 @@ function process_annotation(sp::Subplot, xs, ys, labs, font = nothing)
     ylength = length(methods(length, (typeof(ys),))) == 0 ? 1 : length(ys)
     if isnothing(font)
         font = Plots.font(;
-                    family=sp[:annotationfontfamily],
-                    pointsize=sp[:annotationfontsize],
-                    halign=sp[:annotationhalign],
-                    valign=sp[:annotationvalign],
-                    rotation=sp[:annotationrotation],
-                    color=sp[:annotationcolor],
-                         )
+          family=sp[:annotationfontfamily],
+          pointsize=sp[:annotationfontsize],
+          halign=sp[:annotationhalign],
+          valign=sp[:annotationvalign],
+          rotation=sp[:annotationrotation],
+          color=sp[:annotationcolor],
+        )
     end
     for i in 1:max(xlength, ylength, length(labs))
       x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
@@ -614,13 +614,13 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, 
     positions, labs = makevec(positions), makevec(labs)
     if isnothing(font)
         font = Plots.font(;
-                          family=sp[:annotationfontfamily],
-                          pointsize=sp[:annotationfontsize],
-                          halign=sp[:annotationhalign],
-                          valign=sp[:annotationvalign],
-                          rotation=sp[:annotationrotation],
-                          color=sp[:annotationcolor],
-                         )
+          family=sp[:annotationfontfamily],
+          pointsize=sp[:annotationfontsize],
+          halign=sp[:annotationhalign],
+          valign=sp[:annotationvalign],
+          rotation=sp[:annotationrotation],
+          color=sp[:annotationcolor],
+        )
     end
     for i in 1:max(length(positions), length(labs))
         pos, lab = _cycle(positions, i), _cycle(labs, i)
@@ -635,26 +635,43 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, 
     anns
 end
 
-function process_any_label(lab, font=Font())
-    lab isa Tuple ? text(lab...) : text( lab, font )
-end
+process_any_label(lab, font=Font()) = lab isa Tuple ? text(lab...) : text(lab, font)
+
+_relative_position(xmin, xmax, pos::Length{:pct}) = xmin + pos.value * (xmax - xmin)
+
 # Give each annotation coordinates based on specified position
-function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
-    position_multiplier = Dict{Symbol, Tuple{Float64,Float64}}(
-        :topleft       => (0.1, 0.9),
-        :topcenter     => (0.5, 0.9),
-        :topright      => (0.9, 0.9),
-        :bottomleft    => (0.1, 0.1),
-        :bottomcenter  => (0.5, 0.1),
-        :bottomright   => (0.9, 0.1),
+locate_annotation(
+  sp::Subplot, pos::Symbol, label::PlotText;
+  position_multiplier=Dict{Symbol, Tuple{Float64,Float64}}(
+    :topleft       => (0.1pct, 0.9pct),
+    :topcenter     => (0.5pct, 0.9pct),
+    :topright      => (0.9pct, 0.9pct),
+    :bottomleft    => (0.1pct, 0.1pct),
+    :bottomcenter  => (0.5pct, 0.1pct),
+    :bottomright   => (0.9pct, 0.1pct),
+  )
+) = begin
+    x, y = position_multiplier[pos]
+    (
+      _relative_position(axis_limits(sp, :x)..., x),
+      _relative_position(axis_limits(sp, :y)..., y),
+      label
     )
-    xmin, xmax = ignorenan_extrema(sp[:xaxis])
-    ymin, ymax = ignorenan_extrema(sp[:yaxis])
-    x, y = (xmin, ymin).+ position_multiplier[pos].* (xmax - xmin, ymax - ymin)
-    (x, y, lab)
 end
 locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
 locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
+
+locate_annotation(sp::Subplot, x::Length{:pct}, y::Length{:pct}, label::PlotText) = (
+  _relative_position(axis_limits(sp, :x)..., x),
+  _relative_position(axis_limits(sp, :y)..., y),
+  label
+)
+locate_annotation(sp::Subplot, x::Length{:pct}, y::Length{:pct}, z::Length{:pct}, label::PlotText) = (
+  _relative_position(axis_limits(sp, :x)..., x),
+  _relative_position(axis_limits(sp, :y)..., y),
+  _relative_position(axis_limits(sp, :z)..., z),
+  label
+)
 # -----------------------------------------------------------------------
 
 "type which represents z-values for colors and sizes (and anything else that might come up)"
