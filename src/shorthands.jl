@@ -453,12 +453,14 @@ Add annotations to an existing plot.
 # Arguments
 
 - `anns`: An `AbstractVector` of tuples of the form `(x,y,text)`. The `text` object
-          can be a `String` or `PlotText`.
+          can be a `String`, `PlotText` PlotText (created with `text(args...)`),
+          or a tuple of arguments to `text` (e.g., `("Label", 8, :red, :top)`).
 
 # Example
 ```julia-repl
 julia> plot(1:10)
 julia> annotate!([(7,3,"(7,3)"),(3,7,text("hey", 14, :left, :top, :green))])
+julia> annotate!([(4, 4, ("More text", 8, 45.0, :bottom, :red))])
 ```
 """
 annotate!(anns...; kw...)             = plot!(; annotation = anns, kw...)
