@@ -1237,6 +1237,8 @@ _backend_skips = Dict(
         49, # polar heatmap
         51, # image with custom axes
     ],
+    :inspectdr => [6, 10, 22, 28, 38, 43, 45, 47, 49, 50, 51, 55],
+    :unicodeplots => [6, 22, 28, 43, 45, 47, 49, 50, 51, 55],
 )
 
 
