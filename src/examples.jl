@@ -1007,33 +1007,37 @@ const _examples = PlotExample[
         end]
     ),
     PlotExample( # 47
-	"Mesh3d",
-	"""
-	Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
-	You can also specify the connections using the connections keyword.
-    The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
-	such that elements at the same position of these vectors form a triangle.
-	""",
-	[
-		:(
-		  begin
-			# specify the vertices
-			x=[0, 1, 2, 0]
-			y=[0, 0, 1, 2]
-			z=[0, 2, 0, 1]
+        "Mesh3d",
+        """
+        Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
+        You can also specify the connections using the connections keyword.
+        The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
+        such that elements at the same position of these vectors form a triangle.
+        """,
+        [
+            :(
+                begin
+                    # specify the vertices
+                    x=[0, 1, 2, 0]
+                    y=[0, 0, 1, 2]
+                    z=[0, 2, 0, 1]
 
-			# specify the triangles
-			# every column is one triangle,
-			# where the values denote the indices of the vertices of the triangle
-			i=[0, 0, 0, 1]
-			j=[1, 2, 3, 2]
-			k=[2, 3, 1, 3]
+                    # specify the triangles
+                    # every column is one triangle,
+                    # where the values denote the indices of the vertices of the triangle
+                    i=[0, 0, 0, 1]
+                    j=[1, 2, 3, 2]
+                    k=[2, 3, 1, 3]
 
-			# the four triangles gives above give a tetrahedron
-			mesh3d(x,y,z;connections=(i,j,k))
-		  end
-		),
-	],
+                    # the four triangles gives above give a tetrahedron
+                    mesh3d(
+                        x, y, z; connections=(i, j, k),
+                        title="triangles", xlabel="x", ylabel="y", zlabel="z",
+                        legend=:none, margin=2Plots.mm
+                    )
+                end
+            ),
+        ],
     ),
     PlotExample( # 48
         "Vectors of markershapes and segments",
@@ -1223,7 +1227,7 @@ const _examples = PlotExample[
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [2, 31]
 _backend_skips = Dict(
-    :gr => [25, 30, 47],
+    :gr => [25, 30],
     :pyplot => [2, 25, 30, 31, 47, 49, 55],
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51, 55],
     :plotly => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55],
