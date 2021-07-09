@@ -889,7 +889,7 @@ function pgfx_framestyle(style::Symbol)
         return style
     else
         default_style = get((semi = :box,), style, :axes)
-        @warn( "Framestyle :$style is not (yet) supported by the PGFPlotsX backend. :$default_style was cosen instead.",)
+        @warn "Framestyle :$style is not (yet) supported by the PGFPlotsX backend. :$default_style was chosen instead."
         default_style
     end
 end
