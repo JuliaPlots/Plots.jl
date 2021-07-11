@@ -1897,6 +1897,7 @@ function gr_draw_surface(series, x, y, z, clims)
             Y[o] = y[k]
             Z[o] = z[k]
         end
+        gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
         GR.polyline3d(X, Y, Z)
     else
         throw(ArgumentError("Not handled !"))    
