@@ -295,7 +295,9 @@ function _add_plot_title!(plt)
         for sym ∈ filter(x -> startswith(string(x), "plot_title"), keys(_plot_defaults))
             subplot[Symbol(string(sym)[length("plot_") + 1:end])] = plt[sym]
         end
-        plt[:force_minpad] = nothing, 0px, nothing, 0px
+        top = plt.backend isa PyPlotBackend ? nothing : 0mm
+        bot = 0mm
+        plt[:force_minpad] = nothing, top, nothing, bot
         subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
         plt[:plot_titleindex] = subplot[:subplot_index]
         subplot[:framestyle] = :none
