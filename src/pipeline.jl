@@ -262,6 +262,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         sp_attrs[sp] = attr
     end
 
+    _add_plot_title!(plt)
     # override subplot/axis args.  `sp_attrs` take precendence
     for (idx, sp) in enumerate(plt.subplots)
         attr = if !haskey(plotattributes, :subplot) || plotattributes[:subplot] == idx
@@ -274,12 +275,35 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
 
     # do we need to link any axes together?
     link_axes!(plt.layout, plt[:link])
+    return nothing
 end
 
 function series_idx(kw_list::AVec{KW}, kw::AKW)
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
 end
 
+function _add_plot_title!(plt)
+    plot_title = plt[:plot_title]
+    if plot_title != ""
+        the_layout = plt.layout
+        vspan = plt[:plot_titlevspan]
+        plt.layout = grid(2, 1, heights=(vspan, 1 - vspan))
+        plt.layout.grid[1, 1] = subplot = Subplot(plt.backend, parent=plt.layout[1, 1])
+        plt.layout.grid[2, 1] = the_layout
+        subplot.plt = plt
+        # propagate arguments plt[:plot_titleXXX] --> subplot[:titleXXX]
+        for sym ∈ filter(x -> startswith(string(x), "plot_title"), keys(_plot_defaults))
+            subplot[Symbol(string(sym)[length("plot_") + 1:end])] = plt[sym]
+        end
+        plt[:force_minpad] = nothing, 0px, nothing, 0px
+        subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
+        plt[:plot_titleindex] = subplot[:subplot_index]
+        subplot[:framestyle] = :none
+        subplot[:margin] = 0px
+        push!(plt.subplots, subplot)
+    end
+    return nothing
+end
 
 ## Series recipes
 

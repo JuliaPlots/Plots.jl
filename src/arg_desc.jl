@@ -53,7 +53,8 @@ const _arg_desc = KW(
 :colorbar_entry              => "Bool.  Include this series in the color bar?  Set to `false` to exclude.",
 
 # plot args
-:plot_title                  => "String. Title for the whole plot (not the subplots) (Note: Not currently implemented)",
+:plot_title                  => "String. Title for the whole plot (not the subplots)",
+:plot_titlevspan             => "Number in [0,1]. Vertical span of the whole plot title (fraction of the plot height)",
 :background_color            => "Color Type.  Base color for all backgrounds.",
 :background_color_outside    => "Color Type or `:match` (matches `:background_color`).  Color outside the plot area(s)",
 :foreground_color            => "Color Type.  Base color for all foregrounds.",

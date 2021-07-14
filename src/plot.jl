@@ -160,6 +160,7 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
             cmdidx += 1
         end
     end
+    _add_plot_title!(plt)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
@@ -223,6 +224,16 @@ function prepare_output(plt::Plot)
     _update_min_padding!(plt.layout)
     for sp in plt.inset_subplots
         _update_min_padding!(sp)
+    end
+
+    # spedific to :plot_title see _add_plot_title!
+    force_minpad = get(plt, :force_minpad, ())
+    if !isempty(force_minpad)
+        for i ∈ eachindex(plt.layout.grid)
+            plt.layout.grid[i].minpad = Tuple(
+                i === nothing ? j : i for (i, j) ∈ zip(force_minpad, plt.layout.grid[i].minpad)
+            )
+        end
     end
 
     # now another pass down, to update the bounding boxes

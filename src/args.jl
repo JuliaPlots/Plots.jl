@@ -331,13 +331,15 @@ const _series_defaults = KW(
 
 const _plot_defaults = KW(
     :plot_title                  => "",
+    :plot_titleindex             => 0,
     :plot_titlefontsize          => 16,
-    :plot_title_location         => :center,           # also :left or :right
+    :plot_titlelocation          => :center,           # also :left or :right
     :plot_titlefontfamily        => :match,
     :plot_titlefonthalign        => :hcenter,
     :plot_titlefontvalign        => :vcenter,
     :plot_titlefontrotation      => 0.0,
     :plot_titlefontcolor         => :match,
+    :plot_titlevspan             => 0.05,              # vertical span of the plot title, here 5%
     :background_color            => colorant"white",   # default for all backgrounds,
     :background_color_outside    => :match,            # background outside grid,
     :foreground_color            => :auto,             # default for all foregrounds, and title color,

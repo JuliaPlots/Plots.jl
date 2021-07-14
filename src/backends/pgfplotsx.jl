@@ -118,11 +118,22 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         for sp in plt.subplots
-            bb1 = sp.plotarea
             bb2 = bbox(sp)
+            dx, dy = bb2.x0
             sp_width = width(bb2)
             sp_height = height(bb2)
-            dx, dy = bb2.x0
+            if sp[:subplot_index] == plt[:plot_titleindex]
+                x = dx + sp_width / 2 - 10mm # FIXME: get rid of magic constant
+                y = dy + sp_height / 2
+                pgfx_add_annotation!(the_plot, x, y, PlotText(plt[:plot_title], plottitlefont(plt)), pgfx_thickness_scaling(plt);
+                    cs = "",
+                    options = PGFPlotsX.Options("anchor" => "center")
+                )
+                continue
+            end
+
+            sp_width = width(bb2)
+            sp_height = height(bb2)
             lpad = leftpad(sp) + sp[:left_margin]
             rpad = rightpad(sp) + sp[:right_margin]
             tpad = toppad(sp) + sp[:top_margin]
@@ -131,7 +142,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             dy += tpad
             axis_height = sp_height - (tpad + bpad)
             axis_width = sp_width - (rpad + lpad)
-
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
             title_loc = sp[:titlelocation]
@@ -999,24 +1009,27 @@ function pgfx_marker(plotattributes, i = 1)
     )
 end
 
-function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
+function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1; cs = "axis cs:", options = PGFPlotsX.Options())
     # Construct the style string.
     cstr = val.font.color
     a = alpha(cstr)
     push!(
         o,
-        [
+        join([
             "\\node",
-            PGFPlotsX.Options(
-                get((center = "", left = "right", right = "left"), val.font.halign, "") =>
-                    nothing,
-                "color" => cstr,
-                "draw opacity" => convert(Float16, a),
-                "rotate" => val.font.rotation,
-                "font" => pgfx_font(val.font.pointsize, thickness_scaling),
-            ),
-            " at (axis cs:$x, $y) {$(val.str)};",
-        ],
+            sprint(PGFPlotsX.print_tex, merge(
+                PGFPlotsX.Options(
+                    get((hcenter = "", left = "right", right = "left"), val.font.halign, "") =>
+                        nothing,
+                    "color" => cstr,
+                    "draw opacity" => convert(Float16, a),
+                    "rotate" => val.font.rotation,
+                    "font" => pgfx_font(val.font.pointsize, thickness_scaling),
+                ),
+                options
+            )),
+            string(" at (", cs, x, ",", y, ") {", val.str, "};"),
+        ]),
     )
 end
 
