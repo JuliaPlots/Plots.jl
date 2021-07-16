@@ -612,7 +612,7 @@ end
 function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
-    dpi_factor = plt[:dpi] / Plots.DPI
+    dpi_factor = fmt == "png" ? plt[:dpi] / Plots.DPI : 1
 
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px = GR.inqdspsize()
