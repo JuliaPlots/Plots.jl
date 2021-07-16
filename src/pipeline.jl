@@ -243,10 +243,17 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         attr = KW()
         for (k, v) in collect(kw)
             if is_subplot_attr(k) || is_axis_attr(k)
-                attr[k] = pop!(kw, k)
+                v = pop!(kw, k)
+                if sps isa AbstractArray && v isa AbstractArray && length(v) == length(sps)
+                    v = v[series_idx(kw_list, kw)]
+                end
+                attr[k] = v
             end
             if is_axis_attr_noletter(k)
                 v = pop!(kw, k)
+                if sps isa AbstractArray && v isa AbstractArray && length(v) == length(sps)
+                    v = v[series_idx(kw_list, kw)]
+                end
                 for letter in (:x, :y, :z)
                     attr[Symbol(letter, k)] = v
                 end
