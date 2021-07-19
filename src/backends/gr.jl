@@ -1832,6 +1832,7 @@ end
 function gr_draw_contour(series, x, y, z, clims)
     GR.setspace(clims[1], clims[2], 0, 90)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
+    gr_set_transparency(get_fillalpha(series))
     is_lc_black = let black=plot_color(:black)
         plot_color(series[:linecolor]) in (black,[black])
     end
