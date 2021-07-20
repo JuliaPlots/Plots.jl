@@ -51,12 +51,12 @@ const _axesAliases = Dict{Symbol,Symbol}(
 )
 
 const _3dTypes = [
-    :path3d, :scatter3d, :surface, :wireframe, :contour3d, :volume, :mesh3d
+    :path3d, :scatter3d, :surface, :wireframe, :contour3d, :volume, :mesh3d, :histogram3d
 ]
 const _allTypes = vcat([
     :none, :line, :path, :steppre, :stepmid, :steppost, :sticks, :scatter,
     :heatmap, :hexbin, :barbins, :barhist, :histogram, :scatterbins,
-    :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :histogram3d,
+    :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d,
     :density, :bar, :hline, :vline,
     :contour, :pie, :shape, :image
 ], _3dTypes)
@@ -94,13 +94,15 @@ const _typeAliases = Dict{Symbol,Symbol}(
     :imagesc       => :image,
     :hist          => :histogram,
     :hist2d        => :histogram2d,
+    :hist3d        => :histogram3d,
+    :lego          => :histogram3d,
     :bezier        => :curves,
     :bezier_curves => :curves,
 )
 
 add_non_underscore_aliases!(_typeAliases)
 
-const _histogram_like = [:histogram, :barhist, :barbins]
+const _histogram_like = [:histogram, :barhist, :barbins, :histogram3d]
 const _line_like = [:line, :path, :steppre, :stepmid, :steppost]
 const _surface_like = [:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image]
 
