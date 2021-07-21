@@ -108,24 +108,6 @@ julia> histogram2d(randn(10_000),randn(10_000))
 @shorthands histogram2d
 
 """
-    density(x)
-    density!(x)
-
-Make a line plot of a kernel density estimate of x.
-
-# Arguments
-
-- `x`: AbstractVector of samples for probability density estimation
-
-# Example
-```julia-repl
-julia> using StatsPlots
-julia> density(randn(100_000))
-```
-"""
-@shorthands density
-
-"""
     heatmap(x,y,z)
     heatmap!(x,y,z)
 
@@ -341,40 +323,6 @@ plot(x,y,z,seriestype=:mesh3d;connections=(i,j,k))
 ```
 """
 @shorthands mesh3d
-
-"""
-    boxplot(x, y)
-    boxplot!(x, y)
-
-Make a box and whisker plot.
-
-# Keyword arguments
-- `notch`: Bool. Notch the box plot? (false)
-- `range`: Real. Values more than range*IQR below the first quartile
-           or above the third quartile are shown as outliers (1.5)
-- `outliers`: Bool. Show outliers? (true)
-- `whisker_width`: Real or Symbol. Length of whiskers (:match)
-
-# Example
-```julia-repl
-julia> using StatsPlots
-julia> boxplot(repeat([1,2,3],outer=100),randn(300))
-```
-"""
-@shorthands boxplot
-
-"""
-    violin(x,y,z)
-    violin!(x,y,z)
-
-Make a violin plot.
-
-# Example
-```julia-repl
-julia> violin(repeat([1,2,3],outer=100),randn(300))
-```
-"""
-@shorthands violin
 
 """
     quiver(x,y,quiver=(u,v))
