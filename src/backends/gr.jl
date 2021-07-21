@@ -326,13 +326,15 @@ end
 # draw ONE Shape
 function gr_draw_marker(series, xi, yi, clims, i, msize, strokewidth, shape::Shape)
     sx, sy = coords(shape)
-    # convert to ndc coords (percentages of window)
-    GR.selntran(0)
+    # convert to ndc coords (percentages of window) ...
     w, h = get_size(series)
     f = msize / (w + h)
+
     xi, yi = GR.wctondc(xi, yi)
-    xs = xi .+ sx .* f
-    ys = yi .+ sy .* f
+
+    # ... convert back to world coordinates
+    xs_ys = GR.ndctowc.(xi .+ sx .* f, yi .+ sy .* f)
+    xs, ys = getindex.(xs_ys, 1), getindex.(xs_ys, 2)
 
     # draw the interior
     mc = get_markercolor(series, clims, i)
@@ -345,7 +347,6 @@ function gr_draw_marker(series, xi, yi, clims, i, msize, strokewidth, shape::Sha
     gr_set_line(strokewidth, :solid, msc, series)
     gr_set_transparency(msc, get_markerstrokealpha(series, i))
     GR.polyline(xs, ys)
-    GR.selntran(1)
 end
 
 function gr_nominal_size(s)
