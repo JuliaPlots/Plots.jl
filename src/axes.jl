@@ -771,7 +771,7 @@ function axis_drawing_info(sp, letter)
 
             # add minor grid segments
             if ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]
-                add_major_or_minor_segments(minor_ticks, ax[:minorgrid], minorgrid_segments, 0.06 * tick_factor, true)
+                add_major_or_minor_segments(minor_ticks, ax[:minorgrid], minorgrid_segments, 0.006 * tick_factor, true)
             end
         end
     end
