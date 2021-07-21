@@ -731,6 +731,10 @@ function axis_drawing_info(sp, letter)
             f = RecipesPipeline.scale_func(oax[:scale])
             invf = RecipesPipeline.inverse_scale_func(oax[:scale])
 
+            w = width(sp.plotarea).value
+            h = height(sp.plotarea).value
+            tick_factor = (letter === :x ? w : h) / min(w, h)
+
             add_major_or_minor_segments(ticks, grid, segments, factor, cond) = begin
                 ticks === nothing && return
                 if cond
@@ -763,11 +767,11 @@ function axis_drawing_info(sp, letter)
             end
 
             # add major grid segments
-            add_major_or_minor_segments(ticks[1], ax[:grid], grid_segments, 0.012, ax[:tick_direction] !== :none)
+            add_major_or_minor_segments(ticks[1], ax[:grid], grid_segments, 0.012 * tick_factor, ax[:tick_direction] !== :none)
 
             # add minor grid segments
             if ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]
-                add_major_or_minor_segments(minor_ticks, ax[:minorgrid], minorgrid_segments, 0.006, true)
+                add_major_or_minor_segments(minor_ticks, ax[:minorgrid], minorgrid_segments, 0.06 * tick_factor, true)
             end
         end
     end
