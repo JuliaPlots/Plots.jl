@@ -38,7 +38,8 @@ jobs:
             texlive-latex-extra \
             texlive-luatex \
             ghostscript-x \
-            libgconf2-4
+            libgconf2-4 \
+            gnuplot
           sudo fc-cache -vr
             
       - name: build documentation
