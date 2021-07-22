@@ -13,7 +13,7 @@ function replace_rand!(ex::Expr)
 end
 function fix_rand!(ex)
     replace_rand!(ex)
-    pushfirst!(ex.args[1].args, :(rng = StableRNG(1234)))
+    pushfirst!(ex.args[1].args, :(rng = StableRNG(PLOTS_SEED)))
 end
 
 function image_comparison_tests(

@@ -11,6 +11,7 @@ using Reexport
 import GeometryBasics
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
 using SparseArrays
+using StableRNGs
 
 using FFMPEG
 
@@ -117,7 +118,6 @@ export
     scalefontsize,
     scalefontsizes,
     resetfontsizes
-
 
 # ---------------------------------------------------------
 
@@ -250,6 +250,7 @@ end
 # ---------------------------------------------------------
 
 const CURRENT_BACKEND = CurrentBackend(:none)
+const PLOTS_SEED = 1234
 
 include("precompile_includer.jl")
 

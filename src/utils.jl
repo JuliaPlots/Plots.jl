@@ -303,10 +303,10 @@ function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     x, y
 end
 
-function fakedata(sz...)
+function fakedata(sz...; rng=StableRNG(PLOTS_SEED))
     y = zeros(sz...)
     for r in 2:size(y,1)
-        y[r,:] = 0.95 * vec(y[r-1,:]) + randn(size(y,2))
+        y[r,:] = 0.95 * vec(y[r-1,:]) + randn(rng, size(y,2))
     end
     y
 end

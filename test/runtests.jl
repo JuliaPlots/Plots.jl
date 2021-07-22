@@ -1,9 +1,8 @@
-using Plots: guidefont, series_annotations
+using Plots: guidefont, series_annotations, PLOTS_SEED
 import ImageMagick
 using VisualRegressionTests
 using Plots
 using Random
-using StableRNGs
 using Test
 using TestImages
 using FileIO
@@ -12,7 +11,7 @@ using LibGit2
 import GeometryBasics
 using Dates
 using RecipesBase
-
+using StableRNGs
 
 @testset "Plotly standalone" begin
     @test_nowarn Plots._init_ijulia_plotting()
@@ -68,7 +67,7 @@ end
 
 include("imgcomp.jl")
 # don't actually show the plots
-Random.seed!(1234)
+Random.seed!(PLOTS_SEED)
 default(show=false, reuse=true)
 is_ci() = get(ENV, "CI", "false") == "true"
 const PLOTS_IMG_TOL = parse(
