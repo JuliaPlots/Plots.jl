@@ -71,12 +71,7 @@ include("imgcomp.jl")
 Random.seed!(1234)
 default(show=false, reuse=true)
 is_ci() = get(ENV, "CI", "false") == "true"
-const PLOTS_IMG_TOL = parse(
-    Float64, get(
-        ENV, "PLOTS_IMG_TOL",
-        VERSION < v"1.4" && Sys.iswindows() ? "1e-1" : is_ci() ? "1e-2" : "1e-3"
-    )
-)
+const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-3" : "1e-4"))
 
 ## Uncomment the following lines to update reference images for different backends
 
