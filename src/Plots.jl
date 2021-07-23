@@ -118,7 +118,6 @@ export
     scalefontsizes,
     resetfontsizes
 
-
 # ---------------------------------------------------------
 
 import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
@@ -250,6 +249,7 @@ end
 # ---------------------------------------------------------
 
 const CURRENT_BACKEND = CurrentBackend(:none)
+const PLOTS_SEED = 1234
 
 include("precompile_includer.jl")
 
