@@ -303,7 +303,9 @@ function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     x, y
 end
 
-function fakedata(sz...; rng=Random.GLOBAL_RNG(PLOTS_SEED))
+fakedata(sz::Int...) = fakedata(Random.seed!(PLOTS_SEED), sz...)
+
+function fakedata(rng::AbstractRNG, sz...)
     y = zeros(sz...)
     for r in 2:size(y,1)
         y[r,:] = 0.95 * vec(y[r-1,:]) + randn(rng, size(y,2))

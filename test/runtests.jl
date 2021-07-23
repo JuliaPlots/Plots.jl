@@ -3,6 +3,7 @@ import ImageMagick
 using VisualRegressionTests
 using Plots
 using Random
+using StableRNGs
 using Test
 using TestImages
 using FileIO
@@ -11,7 +12,6 @@ using LibGit2
 import GeometryBasics
 using Dates
 using RecipesBase
-using StableRNGs
 
 @testset "Plotly standalone" begin
     @test_nowarn Plots._init_ijulia_plotting()
