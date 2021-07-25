@@ -22,18 +22,11 @@ end
 function _before_layout_calcs(plt::Plot{GastonBackend})
     # Initialize all the subplots first
     plt.o.subplots = G.SubPlot[]
-    nr, nc = plt.o.layout = size(plt.layout)
 
-    n = 0
-    sps = Array{Any}(undef, nr, nc)
-    for r ∈ 1:nr, c ∈ 1:nc  # NOTE: row major
-        l = plt.layout.grid[r, c]
-        sps[r, c] = get(l.attr, :blank, false) ? nothing : plt.subplots[n += 1]
-    end
+    n, sps = gaston_get_subplots(plt, 0, plt.layout)
+    @assert n == length(plt.subplots)
 
-    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: col major
-        gaston_init_subplot(plt, sps[r, c])
-    end
+    plt.o.layout = gaston_init_subplots(plt, sps)
 
     # Then add the series (curves in gaston)
     for series in plt.series_list
@@ -59,8 +52,7 @@ for (mime, term) in (
     "text/plain"              => "dumb",       # NEED fixing TODO
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
-        xsize = plt.attr[:size][1]
-        ysize = plt.attr[:size][2]
+        xsize, ysize = plt.attr[:size]
         termopts="""size $xsize,$ysize"""
 
         tmpfile = G.tempname() * "." * $term
@@ -79,11 +71,9 @@ for (mime, term) in (
     end
 end
 
-function _show(io::IO, mime::MIME{Symbol("image/png")},
-               plt::Plot{GastonBackend},)
+function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend})
     scaling = plt.attr[:dpi] / GNUPLOT_DPI
-    xsize = plt.attr[:size][1] * scaling
-    ysize = plt.attr[:size][2] * scaling
+    xsize, ysize = plt.attr[:size] .* scaling
 
     # Scale all plot elements to match Plots.jl DPI standard
     termopts="""size $xsize,$ysize fontscale $scaling lw $scaling dl $scaling ps $scaling"""
@@ -111,14 +101,44 @@ end
 # These functions are gaston specific
 # --------------------------------------------
 
+gaston_get_subplots(plt, n, layout, level) = begin
+    nr, nc = size(layout)
+    sps = Array{Any}(undef, nr, nc)
+    for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
+        l = layout[r, c]
+        if l isa GridLayout
+            n, sub = gaston_get_subplots(plt, n, l)
+            sps[r, c] = size(sub) == (1, 1) ? only(sub) : sub
+        else
+            sps[r, c] = get(l.attr, :blank, false) ? nothing : plt.subplots[n += 1]
+        end
+    end
+    n, sps
+end
+
+gaston_init_subplots(plt, sps, level) = begin
+    sz = nr, nc = size(sps)
+    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
+        sp = sps[r, c]
+        if sp isa Subplot || sp === nothing
+            gaston_init_subplot(plt, sp)
+        else
+            gaston_init_subplots(plt, sp, level + 1)
+            sz = max.(sz, size(sp))
+        end
+    end
+    sz
+end
+
 function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend})
     if sp === nothing
         push!(plt.o.subplots, sp)
     else
-        dims = RecipesPipeline.is3d(sp) ? 3 : 2
-
-        axesconf = gaston_parse_axes_args(plt, sp)  # Gnuplot string
-        sp.o = GastonSubplot(dims=dims, axesconf=axesconf, curves=[])
+        sp.o = GastonSubplot(
+            dims=RecipesPipeline.is3d(sp) ? 3 : 2,
+            axesconf=gaston_parse_axes_args(plt, sp),  # Gnuplot string
+            curves=[]
+        )
 
         push!(plt.o.subplots, sp.o)
     end
@@ -129,45 +149,91 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     sp = series[:subplot]
     g_sp = sp.o  # Gaston subplot object
 
-    seriesconf = gaston_parse_series_args(series)  # Gnuplot string
-    c = G.Curve(series[:x], series[:y], nothing, nothing, seriesconf )
+    if series[:seriestype] ∈ (:heatmap, :contour) && g_sp.dims == 2
+        g_sp.dims = 3  # FIXME: this is ugly, we need heatmap to use splot, not plot
+    end
+
+    x = series[:x]
+    y = series[:y]
+    z = g_sp.dims == 2 ? nothing : series[:z]
+    if z isa Surface
+        z = z.surf
+    end
+
+    seriesconf = gaston_seriesconf!(sp, series)  # Gnuplot string
+    c = G.Curve(x, y, z, nothing, seriesconf)
 
     isfirst = length(g_sp.curves) == 0 ? true : false
     push!(g_sp.curves, c)
     G.write_data(c, g_sp.dims, g_sp.datafile, append = isfirst ? false : true)
 end
 
-function gaston_parse_series_args(series::Series)
+gaston_lc_ls_lw(series::Series) = (
+    gaston_color(series[:linecolor], series[:linealpha]),
+    gaston_linestyle(series[:linestyle]),
+    series[:linewidth],
+)
+
+gaston_mk_ms_mc(series::Series) = (
+    gaston_marker(series[:markershape]),
+    series[:markersize] * GASTON_MARKER_SCALING,
+    gaston_color(series[:markercolor], series[:markeralpha]),
+)
+
+gaston_palette(gradient) = begin
+    palette = String[]
+    n = -1
+    for rgba ∈ gradient  # FIXME: naive conversion, inefficient ?
+        push!(palette, "$(n += 1) $(rgba.r) $(rgba.g) $(rgba.b)")
+    end
+    '(' * join(palette, ", ") * ')'
+end
+
+function gaston_seriesconf!(sp, series::Series)
+    gsp = sp.o
     curveconf = String[]
     st = series[:seriestype]
 
-    if st == :scatter
-        pt = gaston_marker(series[:markershape])
-        ps = series[:markersize] * GASTON_MARKER_SCALING
-        lc = gaston_color(series[:markercolor])
-        # alpha = series[:markeralpha] # TODO merge alpha with rgb color
+    clims = get_clims(sp, series)
+    if st ∈ (:scatter, :scatter3d)
+        pt, ps, lc = gaston_mk_ms_mc(series)
         push!(curveconf, """with points pt $pt ps $ps lc $lc""")
-    elseif st == :path
-        lc = gaston_color(series[:linecolor])
-        dt = gaston_linestyle(series[:linestyle])
-        lw = series[:linewidth]
-        # alpha = series[:linealpha] # TODO merge alpha with rgb color
+    elseif st ∈ (:path, :straightline, :path3d)
+        lc, dt, lw = gaston_lc_ls_lw(series)
         if series[:markershape] == :none # simplepath
             push!(curveconf, """with lines lc $lc dt $dt lw $lw""")
         else
-            pt = gaston_marker(series[:markershape])
-            ps = series[:markersize] * GASTON_MARKER_SCALING
+            pt, ps = gaston_mk_ms_mc(series)
             push!(curveconf, """with lp lc $lc dt $dt lw $lw pt $pt ps $ps""")
         end
     elseif st == :shape
-        fc = gaston_color(series[:fillcolor])
+        fc = gaston_color(series[:fillcolor], series[:fillalpha])
         fs = "solid"
-        lc = gaston_color(series[:linecolor])
+        lc, _ = gaston_lc_ls_lw(series)
         push!(curveconf, """with filledcurves fc $fc fs $fs border lc $lc""")
     elseif st == :steppre
         push!(curveconf, """with steps""")
     elseif st == :steppost
         push!(curveconf, """with fsteps""")  # Not sure if not the other way
+    elseif st ∈ (:contour, :contour3d)
+        push!(curveconf, """with lines""")
+        if st == :contour
+            gsp.axesconf *= """\nset view map\nunset surface"""
+        end
+        levels = join(map(string, collect(contour_levels(series, clims))), ", ")
+        gsp.axesconf *= """\nset contour base\nset cntrparam levels discrete $levels """
+    elseif st ∈ (:surface, :heatmap)
+        palette = gaston_palette(series[:seriescolor])
+        gsp.axesconf *= """\nset palette model RGB defined $palette"""
+        if st == :heatmap
+            gsp.axesconf *= """\nset view map"""
+        end
+        push!(curveconf, """with pm3d""")
+    elseif st == :wireframe
+        lc, dt, lw = gaston_lc_ls_lw(series)
+        push!(curveconf, """with lines lc $lc dt $dt lw $lw""")
+    else
+        @warn "Gaston: $st is not implemented yet"
     end
 
     # label
@@ -197,7 +263,7 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
         push!(axesconf, """set $(letter)tics  $(axis_attr[:tick_direction])""")
 
         mirror = axis_attr[:mirror] ? "mirror" : "nomirror"
-        push!(axesconf, """set $(letter)tics  $(mirror) """)
+        push!(axesconf, """set $(letter)tics $(mirror) """)
 
         logscale = if axis_attr[:scale] == :identity
             "nologscale"
@@ -215,7 +281,14 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
             ticks = get_ticks(sp, axis_attr)
             gaston_set_ticks!(axesconf, ticks, letter)
         end
-        # set title {"<title-text>"} {offset <offset>} {font "<font>{,<size>}"}{{textcolor | tc} {<colorspec> | default}} {{no}enhanced}1
+
+        ratio = get_aspect_ratio(sp)
+        if ratio != :none
+            if ratio == :equal
+                ratio = -1
+            end
+            push!(axesconf, """set size ratio $ratio""")
+        end
     end
     gaston_set_legend!(axesconf, sp) # Set legend params
 
@@ -317,7 +390,11 @@ function gaston_marker(marker)
     return 1
 end
 
-gaston_color(color) = """rgb "#$(hex(color, :rrggbb))"  """
+gaston_color(color, alpha=0.) = begin
+    col = single_color(color)  # in case of gradients
+    col = alphacolor(col, alpha == nothing ? 0. : alpha)  # add a default alpha if non existent
+    """rgb "#$(hex(col, :aarrggbb))" """
+end
 
 function gaston_linestyle(style)
     style == :solid && return "1"

@@ -623,44 +623,55 @@ const _gaston_attr = merge_with_base_supported([
     # :camera,
     # :contour_labels,
   ])
-const _gaston_seriestype = [:path,
-                            # :path3d,
-                            :scatter,
-                            :steppre,
-                            # :stepmid,
-                            :steppost,
-                            # :histogram2d,
-                            # :ysticks, :xsticks,
-                            # :contour,
-                            :shape,
-                            # :straightline,
-                            ]
 
-const _gaston_style = [:auto,
-                       :solid,
-                       :dash,
-                       :dot,
-                       :dashdot,
-                       :dashdotdot
-                       ]
+const _gaston_seriestype = [
+    :path,
+    :path3d,
+    :scatter,
+    :steppre,
+    :stepmid,
+    :steppost,
+    :histogram2d,
+    :ysticks, :xsticks,
+    :contour,
+    :shape,
+    :straightline,
+    :scatter3d,
+    :contour3d,
+    :wireframe,
+    :heatmap,
+    :surface,
+    :mesh3d,
+]
 
-const _gaston_marker = [:none,
-                        # :auto,
-                        :circle,
-                        :rect,
-                        :diamond,
-                        :utriangle,
-                        :dtriangle,
-                        :pentagon,
-                        :x,
-                        :+
-                        ] #vcat(_allMarkers, Shape)
+const _gaston_style = [
+    :auto,
+   :solid,
+   :dash,
+   :dot,
+   :dashdot,
+   :dashdotdot
+]
 
-const _gaston_scale = [:identity,
-                       # :ln,
-                       # :log2,
-                       :log10,
-                       ]
+const _gaston_marker = [
+    :none,
+    # :auto,
+    :circle,
+    :rect,
+    :diamond,
+    :utriangle,
+    :dtriangle,
+    :pentagon,
+    :x,
+    :+
+] #vcat(_allMarkers, Shape)
+
+const _gaston_scale = [
+    :identity,
+    # :ln,
+    # :log2,
+    :log10,
+]
 
 # ------------------------------------------------------------------------------
 # unicodeplots
