@@ -762,12 +762,14 @@ function axis_drawing_info(sp, letter)
                 end
             end
 
+            ax_length = letter === :x ? height(sp.plotarea).value : width(sp.plotarea).value
+
             # add major grid segments
-            add_major_or_minor_segments(ticks[1], ax[:grid], grid_segments, 0.012, ax[:tick_direction] !== :none)
+            add_major_or_minor_segments(ticks[1], ax[:grid], grid_segments, 1.2 / ax_length, ax[:tick_direction] !== :none)
 
             # add minor grid segments
             if ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]
-                add_major_or_minor_segments(minor_ticks, ax[:minorgrid], minorgrid_segments, 0.006, true)
+                add_major_or_minor_segments(minor_ticks, ax[:minorgrid], minorgrid_segments, 0.6 / ax_length, true)
             end
         end
     end
