@@ -11,8 +11,7 @@ const GNUPLOT_DPI = 72  # Compensate for DPI with increased resolution
 #
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
-    xsize = plt.attr[:size][1]
-    ysize = plt.attr[:size][2]
+    xsize, ysize = plt.attr[:size]
     G.set(termopts="""size $xsize,$ysize""")
 
     state_handle = G.nexthandle() # for now all the figures will be kept
@@ -23,12 +22,17 @@ end
 function _before_layout_calcs(plt::Plot{GastonBackend})
     # Initialize all the subplots first
     plt.o.subplots = G.SubPlot[]
-    grid = size(plt.layout)
-    plt.o.layout = grid
+    nr, nc = plt.o.layout = size(plt.layout)
 
+    n = 0
+    sps = Array{Any}(undef, nr, nc)
+    for r ∈ 1:nr, c ∈ 1:nc  # NOTE: row major
+        l = plt.layout.grid[r, c]
+        sps[r, c] = get(l.attr, :blank, false) ? nothing : plt.subplots[n += 1]
+    end
 
-    for sp in plt.subplots
-        gaston_init_subplot(plt, sp)
+    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: col major
+        gaston_init_subplot(plt, sps[r, c])
     end
 
     # Then add the series (curves in gaston)
@@ -102,18 +106,22 @@ end
 function _display(plt::Plot{GastonBackend})
     display(plt.o)
 end
-#
+
 # --------------------------------------------
 # These functions are gaston specific
 # --------------------------------------------
-#
+
 function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend})
-    dims = RecipesPipeline.is3d(sp) ? 3 : 2
+    if sp === nothing
+        push!(plt.o.subplots, sp)
+    else
+        dims = RecipesPipeline.is3d(sp) ? 3 : 2
 
-    axesconf = gaston_parse_axes_args(plt, sp)  # Gnuplot string
-    sp.o = GastonSubplot(dims=dims, axesconf = axesconf, curves = [])
-    push!(plt.o.subplots,  sp.o)
+        axesconf = gaston_parse_axes_args(plt, sp)  # Gnuplot string
+        sp.o = GastonSubplot(dims=dims, axesconf=axesconf, curves=[])
 
+        push!(plt.o.subplots, sp.o)
+    end
 end
 
 function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
@@ -261,7 +269,7 @@ end
 
 function gaston_set_legend!(axesconf, sp)
     leg = sp[:legend]
-    if !(sp[:legend] in(:none, :inline))
+    if sp[:legend] ∉ (:none, :inline)
         if leg == :best
             leg = :topright
         end
@@ -305,7 +313,7 @@ function gaston_marker(marker)
     marker == :pentagon && return 15
     marker == :pixel && return 0
 
-    @warn("Unsupported marker $marker")
+    @warn "Unsupported marker $marker"
     return 1
 end
 
@@ -323,7 +331,6 @@ function gaston_enclose_tick_string(tick_string)
     if findfirst("^", tick_string) == nothing
         return tick_string
     end
-
 
     base, power = split(tick_string, "^")
     power = string("{", power, "}")
