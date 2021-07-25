@@ -49,5 +49,5 @@ jobs:
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: |
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()'
-          LD_LIBRARY_PATH="$(julia -e 'using FFMPEG; println(FFMPEG.FFMPEG_jll.LIBPATH[])')" \
+          LD_LIBRARY_PATH="$(julia -e 'using Plots; println(Plots.FFMPEG.FFMPEG_jll.LIBPATH[])')" \
           xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl") do; include("docs/make.jl"); end' 
