@@ -48,7 +48,8 @@ jobs:
           JULIA_DEBUG: "Documenter"
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: |
-          export PLOTDOCS_ANSICOLOR=true JULIA_GR_PROVIDER=GR
+          export PLOTDOCS_ANSICOLOR=true
+          # export JULIA_GR_PROVIDER=GR
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()'
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"add Documenter#master"'
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"add GR@0.57.5"'
