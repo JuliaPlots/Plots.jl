@@ -1243,12 +1243,19 @@ _backend_skips = Dict(
     :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55],
     :unicodeplots => [6, 10, 22, 24, 28, 38, 43, 45, 47, 49, 50, 51, 55],
     :gaston => [
-        2, 4, 6,
+        2,  # animations
+        4,  # colors/palette issues
+        6,  # TODO: support embedded images
         16,  # TODO: support nested layouts
         27,  # TODO: support polar
-        30, 31, 47, 48,
+        30,  # uses StatsPlots, deprecated ?
+        31,  # animations
+        47,  # TODO: support mesh3d
+        48,  # TODO: vector of shapes, ...
         49,  # TODO: support polar
-        50, 51, 55
+        50,  # TODO: 1D data not supported for pm3d
+        51,  # TODO: support embedded images
+        55,  # TODO: scaling is ugly
     ],
 )
 

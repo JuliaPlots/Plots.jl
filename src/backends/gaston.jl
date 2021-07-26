@@ -4,11 +4,11 @@ const GastonSubplot = G.Plot
 const GASTON_MARKER_SCALING = 1.3 / 5.0
 const GNUPLOT_DPI = 72  # Compensate for DPI with increased resolution
 
-#
+
 # --------------------------------------------
 # These functions are called by Plots
 # --------------------------------------------
-#
+
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
     xsize, ysize = plt.attr[:size]
@@ -26,20 +26,23 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     n, sps = gaston_get_subplots(plt, 0, plt.layout)
     @assert n == length(plt.subplots)
 
+    # FIXME: find a way to support nested layouts
+    # e.g. figures spanning multiple rows/cols
     plt.o.layout = gaston_init_subplots(plt, sps)
 
     # Then add the series (curves in gaston)
     for series in plt.series_list
         gaston_add_series(plt, series)
     end
+    nothing
 end
 
 function _update_min_padding!(sp::Subplot{GastonBackend})
+    # FIXME: make this more flexible
     sp.minpad = (20mm, 5mm, 2mm, 10mm)
 end
 
-function _update_plot_object(plt::Plot{GastonBackend})
-end
+_update_plot_object(plt::Plot{GastonBackend}) = nothing
 
 for (mime, term) in (
     "application/eps"         => "epscairo",   # NEED fixing TODO
@@ -53,21 +56,19 @@ for (mime, term) in (
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         xsize, ysize = plt.attr[:size]
-        termopts="""size $xsize,$ysize"""
+        termopts = """size $xsize,$ysize"""
 
         tmpfile = G.tempname() * "." * $term
-
         G.save(
-            term = $term,
-            output = tmpfile,
-            handle = plt.o.handle,
-            saveopts = termopts
+            term=$term,
+            output=tmpfile,
+            handle=plt.o.handle,
+            saveopts=termopts
         )
         while !isfile(tmpfile) end  # avoid race condition with read in next line
         write(io, read(tmpfile))
         rm(tmpfile, force=true)
         nothing
-
     end
 end
 
@@ -76,15 +77,14 @@ function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend}
     xsize, ysize = plt.attr[:size] .* scaling
 
     # Scale all plot elements to match Plots.jl DPI standard
-    termopts="""size $xsize,$ysize fontscale $scaling lw $scaling dl $scaling ps $scaling"""
+    termopts = """size $xsize,$ysize fontscale $scaling lw $scaling dl $scaling ps $scaling"""
 
     tmpfile = G.tempname()
-
     G.save(
-        term = "pngcairo",
-        output = tmpfile,
-        handle = plt.o.handle,
-        saveopts = termopts
+        term="pngcairo",
+        output=tmpfile,
+        handle=plt.o.handle,
+        saveopts=termopts
     )
     while !isfile(tmpfile) end  # avoid race condition with read in next line
     write(io, read(tmpfile))
@@ -92,16 +92,13 @@ function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend}
     nothing
 end
 
-
-function _display(plt::Plot{GastonBackend})
-    display(plt.o)
-end
+_display(plt::Plot{GastonBackend}) = display(plt.o)
 
 # --------------------------------------------
 # These functions are gaston specific
 # --------------------------------------------
 
-gaston_get_subplots(plt, n, layout, level) = begin
+function gaston_get_subplots(plt, n, layout, level)
     nr, nc = size(layout)
     sps = Array{Any}(undef, nr, nc)
     for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
@@ -113,10 +110,10 @@ gaston_get_subplots(plt, n, layout, level) = begin
             sps[r, c] = get(l.attr, :blank, false) ? nothing : plt.subplots[n += 1]
         end
     end
-    n, sps
+    return n, sps
 end
 
-gaston_init_subplots(plt, sps, level) = begin
+function gaston_init_subplots(plt, sps, level)
     sz = nr, nc = size(sps)
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         sp = sps[r, c]
@@ -127,7 +124,7 @@ gaston_init_subplots(plt, sps, level) = begin
             sz = max.(sz, size(sp))
         end
     end
-    sz
+    return sz
 end
 
 function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend})
@@ -139,9 +136,9 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend
             axesconf=gaston_parse_axes_args(plt, sp),  # Gnuplot string
             curves=[]
         )
-
         push!(plt.o.subplots, sp.o)
     end
+    nothing
 end
 
 function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
@@ -150,7 +147,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     g_sp = sp.o  # Gaston subplot object
 
     if series[:seriestype] ∈ (:heatmap, :contour) && g_sp.dims == 2
-        g_sp.dims = 3  # FIXME: this is ugly, we need heatmap to use splot, not plot
+        g_sp.dims = 3  # FIXME: this is ugly, we need heatmap/contour to use splot, not plot
     end
 
     x = series[:x]
@@ -166,27 +163,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     isfirst = length(g_sp.curves) == 0 ? true : false
     push!(g_sp.curves, c)
     G.write_data(c, g_sp.dims, g_sp.datafile, append = isfirst ? false : true)
-end
-
-gaston_lc_ls_lw(series::Series) = (
-    gaston_color(series[:linecolor], series[:linealpha]),
-    gaston_linestyle(series[:linestyle]),
-    series[:linewidth],
-)
-
-gaston_mk_ms_mc(series::Series) = (
-    gaston_marker(series[:markershape]),
-    series[:markersize] * GASTON_MARKER_SCALING,
-    gaston_color(series[:markercolor], series[:markeralpha]),
-)
-
-gaston_palette(gradient) = begin
-    palette = String[]
-    n = -1
-    for rgba ∈ gradient  # FIXME: naive conversion, inefficient ?
-        push!(palette, "$(n += 1) $(rgba.r) $(rgba.g) $(rgba.b)")
-    end
-    '(' * join(palette, ", ") * ')'
+    nothing
 end
 
 function gaston_seriesconf!(sp, series::Series)
@@ -238,7 +215,6 @@ function gaston_seriesconf!(sp, series::Series)
 
     # label
     push!(curveconf, """title "$(series[:label])" """)
-
     return join(curveconf, " ")
 end
 
@@ -246,8 +222,7 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
     axesconf = String[]
     # Standard 2d axis
     if !ispolar(sp) && !RecipesPipeline.is3d(sp)
-        # TODO
-        # configure grid, axis spines, thickness
+        # TODO: configure grid, axis spines, thickness
     end
 
     for letter in (:x, :y, :z)
@@ -301,9 +276,8 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
 end
 
 function gaston_set_ticks!(axesconf, ticks, letter)
-
     ticks == :auto && return
-    if ticks == :none || ticks === nothing || ticks == false
+    if ticks ∈ (:none, nothing, false)
         push!(axesconf, """unset $(letter)tics """)
         return
     end
@@ -320,7 +294,6 @@ function gaston_set_ticks!(axesconf, ticks, letter)
             axesconf,
             "set $(letter)tics (" * join(gaston_tick_string, ", ") * ")"
         )
-
     elseif ttype == :ticks_and_labels
         tick_locations = @view ticks[1][:]
         tick_labels = @view ticks[2][:]
@@ -334,10 +307,10 @@ function gaston_set_ticks!(axesconf, ticks, letter)
             axesconf,
             "set $(letter)tics (" * join(gaston_tick_string, ", ") * ")"
         )
-
     else
         error("Invalid input for $(letter)ticks: $ticks")
     end
+    nothing
 end
 
 function gaston_set_legend!(axesconf, sp)
@@ -370,7 +343,32 @@ function gaston_set_legend!(axesconf, sp)
         push!(axesconf, "set key off")
 
     end
+    nothing
+end
 
+# --------------------------------------------
+# Helpers
+# --------------------------------------------
+
+gaston_lc_ls_lw(series::Series) = (
+    gaston_color(series[:linecolor], series[:linealpha]),
+    gaston_linestyle(series[:linestyle]),
+    series[:linewidth],
+)
+
+gaston_mk_ms_mc(series::Series) = (
+    gaston_marker(series[:markershape]),
+    series[:markersize] * GASTON_MARKER_SCALING,
+    gaston_color(series[:markercolor], series[:markeralpha]),
+)
+
+function gaston_palette(gradient)
+    palette = String[]
+    n = -1
+    for rgba ∈ gradient  # FIXME: naive conversion, inefficient ?
+        push!(palette, "$(n += 1) $(rgba.r) $(rgba.g) $(rgba.b)")
+    end
+    return '(' * join(palette, ", ") * ')'
 end
 
 function gaston_marker(marker)
@@ -390,10 +388,10 @@ function gaston_marker(marker)
     return 1
 end
 
-gaston_color(color, alpha=0.) = begin
+function gaston_color(color, alpha=0.)
     col = single_color(color)  # in case of gradients
     col = alphacolor(col, alpha == nothing ? 0. : alpha)  # add a default alpha if non existent
-    """rgb "#$(hex(col, :aarrggbb))" """
+    return """rgb "#$(hex(col, :aarrggbb))" """
 end
 
 function gaston_linestyle(style)
