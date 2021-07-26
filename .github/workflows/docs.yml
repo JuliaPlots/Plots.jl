@@ -54,4 +54,5 @@ jobs:
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"add GR@0.57.5"'
           # export LD_LIBRARY_PATH="$(julia --project=docs/ -e 'using Plots; println(Plots.FFMPEG.FFMPEG_jll.LIBPATH[])')"
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.build("Plots")'
+          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"st -m"'
           xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl") do; include("docs/make.jl"); end' 
