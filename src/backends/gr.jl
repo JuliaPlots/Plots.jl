@@ -559,10 +559,10 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
     gr_set_line(1, :solid, plot_color(:black), sp)
     GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
 
-    if isa(sp[:colorbar_title],PlotText)
-        title = sp[:colorbar_title]
+    title = if isa(sp[:colorbar_title], PlotText)
+        sp[:colorbar_title]
     else
-        title = text(sp[:colorbar_title], colorbartitlefont(sp))
+        text(sp[:colorbar_title], colorbartitlefont(sp))
     end
     gr_set_font(title.font, sp)
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
