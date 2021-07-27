@@ -559,11 +559,16 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
     gr_set_line(1, :solid, plot_color(:black), sp)
     GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
 
-    gr_set_font(guidefont(sp[:yaxis]), sp)
+    if isa(sp[:colorbar_title],PlotText)
+        title = sp[:colorbar_title]
+    else
+        title = text(sp[:colorbar_title], colorbartitlefont(sp))
+    end
+    gr_set_font(title.font, sp)
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
     gr_text(
-        viewport_plotarea[2] + 0.1, gr_view_ycenter(viewport_plotarea), sp[:colorbar_title]
+        viewport_plotarea[2] + 0.1, gr_view_ycenter(viewport_plotarea), title.str
     )
 
     GR.restorestate()
@@ -1902,7 +1907,7 @@ function gr_draw_surface(series, x, y, z, clims)
         gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
         GR.polyline3d(X, Y, Z)
     else
-        throw(ArgumentError("Not handled !"))    
+        throw(ArgumentError("Not handled !"))
     end
 end
 
