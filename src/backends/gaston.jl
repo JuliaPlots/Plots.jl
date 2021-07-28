@@ -23,7 +23,12 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     # Initialize all the subplots first
     plt.o.subplots = G.SubPlot[]
 
-    n, sps = gaston_get_subplots(plt, 0, plt.layout)
+    n1, sps = gaston_get_subplots(plt, 0, plt.layout, :inset_subplots)
+    gaston_init_subplots(plt, sps)
+
+    n2, sps = gaston_get_subplots(plt, 0, plt.layout, :subplots)
+
+    n = n1 + n2
     if n != length(plt.subplots)
         @error "Gaston: $n != $(length(plt.subplots))"
     end

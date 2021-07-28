@@ -1252,7 +1252,6 @@ _backend_skips = Dict(
         30,  # uses StatsPlots, deprecated ?
         31,  # animations
         38, # TODO: support histogram2d
-        40, # layout issue
         47,  # TODO: support mesh3d
         48,  # TODO: vector of shapes, ...
         49,  # TODO: support polar
