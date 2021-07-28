@@ -1246,10 +1246,13 @@ _backend_skips = Dict(
         2,  # animations
         4,  # colors/palette issues
         6,  # TODO: support embedded images
+        10, # TODO: support histogram2d
         16,  # TODO: support nested layouts
         27,  # TODO: support polar
         30,  # uses StatsPlots, deprecated ?
         31,  # animations
+        38, # TODO: support histogram2d
+        40, # layout issue
         47,  # TODO: support mesh3d
         48,  # TODO: vector of shapes, ...
         49,  # TODO: support polar
