@@ -76,7 +76,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update precompile_*.jl file [skip ci]
-          title: "[AUTO] Update precompiles"
+          title: "[AUTO] Update precompiles [skip ci]"
           labels: SnoopCompile
           branch: "Test_SnoopCompile_AutoPR_${{ github.ref }}"
 
