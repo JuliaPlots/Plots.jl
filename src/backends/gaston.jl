@@ -98,7 +98,7 @@ _display(plt::Plot{GastonBackend}) = display(plt.o)
 # These functions are gaston specific
 # --------------------------------------------
 
-function gaston_get_subplots(plt, n, layout, level)
+function gaston_get_subplots(plt, n, layout)
     nr, nc = size(layout)
     sps = Array{Any}(undef, nr, nc)
     for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
@@ -113,14 +113,14 @@ function gaston_get_subplots(plt, n, layout, level)
     return n, sps
 end
 
-function gaston_init_subplots(plt, sps, level)
+function gaston_init_subplots(plt, sps)
     sz = nr, nc = size(sps)
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         sp = sps[r, c]
         if sp isa Subplot || sp === nothing
             gaston_init_subplot(plt, sp)
         else
-            gaston_init_subplots(plt, sp, level + 1)
+            gaston_init_subplots(plt, sp)
             sz = max.(sz, size(sp))
         end
     end
