@@ -23,10 +23,15 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     # Initialize all the subplots first
     plt.o.subplots = G.SubPlot[]
 
-    n1, sps = gaston_get_subplots(plt, 0, plt.layout, :inset_subplots)
-    gaston_init_subplots(plt, sps)
+    n1 = n2 = 0
+    if length(plt.inset_subplots) > 0
+        n1, sps = gaston_get_subplots(0, plt.inset_subplots, plt.layout)
+        gaston_init_subplots(plt, sps)
+    end
 
-    n2, sps = gaston_get_subplots(plt, 0, plt.layout, :subplots)
+    if length(plt.subplots) > 0
+        n2, sps = gaston_get_subplots(0, plt.subplots, plt.layout)
+    end
 
     n = n1 + n2
     if n != length(plt.subplots)
@@ -105,16 +110,16 @@ _display(plt::Plot{GastonBackend}) = display(plt.o)
 # These functions are gaston specific
 # --------------------------------------------
 
-function gaston_get_subplots(plt, n, layout)
+function gaston_get_subplots(n, plt_subplots, layout)
     nr, nc = size(layout)
     sps = Array{Any}(undef, nr, nc)
     for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
         l = layout[r, c]
         if l isa GridLayout
-            n, sub = gaston_get_subplots(plt, n, l)
+            n, sub = gaston_get_subplots(n, plt_subplots, l)
             sps[r, c] = size(sub) == (1, 1) ? only(sub) : sub
         else
-            sps[r, c] = get(l.attr, :blank, false) ? nothing : plt.subplots[n += 1]
+            sps[r, c] = get(l.attr, :blank, false) ? nothing : plt_subplots[n += 1]
         end
     end
     return n, sps
