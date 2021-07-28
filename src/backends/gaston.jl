@@ -24,7 +24,9 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     plt.o.subplots = G.SubPlot[]
 
     n, sps = gaston_get_subplots(plt, 0, plt.layout)
-    @assert n == length(plt.subplots)
+    if n != length(plt.subplots)
+        @error "Gaston: $n != $(length(plt.subplots))"
+    end
 
     # FIXME: find a way to support nested layouts
     # e.g. figures spanning multiple rows/cols
