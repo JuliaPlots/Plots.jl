@@ -85,8 +85,8 @@ function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend}
     nr, nc = size(sps); n = 0
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         sp = plt.o.subplots[n += 1]
-        w = plt.layout.widths[r]
-        h = plt.layout.widths[c]
+        w = plt.layout.widths[c]
+        h = plt.layout.heights[r]
         sp.axesconf = "set size $(w.value),$(h.value)\n" * sp.axesconf
     end
 
