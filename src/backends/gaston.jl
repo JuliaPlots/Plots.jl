@@ -12,7 +12,7 @@ const GNUPLOT_DPI = 72  # Compensate for DPI with increased resolution
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
     xsize, ysize = plt.attr[:size]
-    G.set(termopts="""size $xsize,$ysize""")
+    # G.set(termopts="size $xsize,$ysize")
 
     state_handle = G.nexthandle() # for now all the figures will be kept
     plt.o = G.newfigure(state_handle)
@@ -89,14 +89,14 @@ function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend}
     xsize, ysize = plt.attr[:size] .* scaling
 
     # Scale all plot elements to match Plots.jl DPI standard
-    termopts = """size $xsize,$ysize fontscale $scaling lw $scaling dl $scaling ps $scaling"""
+    termopts = "size $xsize,$ysize fontscale $scaling lw $scaling dl $scaling ps $scaling"
 
     tmpfile = G.tempname()
     G.save(
         term="pngcairo",
         output=tmpfile,
         handle=plt.o.handle,
-        saveopts=termopts
+        # saveopts=termopts
     )
     while !isfile(tmpfile) end  # avoid race condition with read in next line
     write(io, read(tmpfile))
