@@ -50,7 +50,11 @@ function _update_min_padding!(sp::Subplot{GastonBackend})
     sp.minpad = (20mm, 5mm, 2mm, 10mm)
 end
 
-_update_plot_object(plt::Plot{GastonBackend}) = nothing
+function _update_plot_object(plt::Plot{GastonBackend})
+    # respect the layout ratio
+    w_h = gaston_widths_heights(plt.layout, 1, 1)
+    gaston_widths_heights!(0, plt, w_h)
+end
 
 for (mime, term) in (
     "application/eps"         => "epscairo",   # NEED fixing TODO
@@ -78,10 +82,6 @@ end
 
 function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend})
     scaling = plt.attr[:dpi] / Plots.DPI
-
-    # try to respect the layout ratio
-    w_h = gaston_widths_heights(plt.layout, 1, 1)
-    gaston_widths_heights!(0, plt, w_h)
 
     # Scale all plot elements to match Plots.jl DPI standard
     saveopts = "fontscale $scaling lw $scaling dl $scaling ps $scaling"
