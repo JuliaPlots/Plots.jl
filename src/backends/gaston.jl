@@ -80,15 +80,8 @@ function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend}
     scaling = plt.attr[:dpi] / Plots.DPI
 
     # try to respect the layout ratio
-    _, sps = gaston_get_subplots(0, plt.subplots, plt.layout)
-
-    nr, nc = size(sps); n = 0
-    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
-        sp = plt.o.subplots[n += 1]
-        w = plt.layout.widths[c]
-        h = plt.layout.heights[r]
-        sp.axesconf = "set size $(w.value),$(h.value)\n" * sp.axesconf
-    end
+    w_h = gaston_widths_heights(plt.layout, 1, 1)
+    gaston_widths_heights!(0, plt, w_h)
 
     # Scale all plot elements to match Plots.jl DPI standard
     saveopts = "fontscale $scaling lw $scaling dl $scaling ps $scaling"
@@ -153,6 +146,42 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend
         push!(plt.o.subplots, sp.o)
     end
     nothing
+end
+
+function gaston_widths_heights(layout, pw, ph)
+    nr, nc = size(layout)
+    w_h = Array{Any}(undef, nr, nc)
+    for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
+        l = layout[r, c]
+        # nested layout: multiply with parent width and height (pct)
+        w = layout.widths[c].value * pw
+        h = layout.heights[r].value * ph
+        if l isa GridLayout
+            w_h[r, c] = gaston_widths_heights(l, w, h)
+        else
+            w_h[r, c] = get(l.attr, :blank, false) ? (nothing, nothing) : (w, h)
+        end
+    end
+    return w_h
+end
+
+function gaston_widths_heights!(n::Int, plt, widths_heights)
+    nr, nc = size(widths_heights)
+    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
+        w_h = widths_heights[r, c]
+        if w_h isa Tuple
+            w, h = w_h
+            if w === nothing || h === nothing
+                continue
+            else
+                gsp = plt.o.subplots[n += 1]
+                gsp.axesconf = "set size $w,$h\n" * gsp.axesconf
+            end
+        else
+            n = gaston_widths_heights!(n, plt, w_h)
+        end
+    end
+    return n
 end
 
 function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
