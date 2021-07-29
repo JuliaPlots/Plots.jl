@@ -36,8 +36,6 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
         @error "Gaston: $n != $(length(plt.subplots))"
     end
 
-    # FIXME: find a way to support nested layouts
-    # e.g. figures spanning multiple rows/cols
     plt.o.layout = gaston_init_subplots(plt, sps)
 
     # Then add the series (curves in gaston)
@@ -80,6 +78,17 @@ end
 
 function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend})
     scaling = plt.attr[:dpi] / Plots.DPI
+
+    # try to respect the layout ratio
+    _, sps = gaston_get_subplots(0, plt.subplots, plt.layout)
+
+    nr, nc = size(sps); n = 0
+    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
+        sp = plt.o.subplots[n += 1]
+        w = plt.layout.widths[r]
+        h = plt.layout.widths[c]
+        sp.axesconf = "set size $(w.value),$(h.value)\n" * sp.axesconf
+    end
 
     # Scale all plot elements to match Plots.jl DPI standard
     saveopts = "fontscale $scaling lw $scaling dl $scaling ps $scaling"
@@ -235,7 +244,7 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
     for letter in (:x, :y, :z)
         axis_attr = sp.attr[Symbol(letter, :axis)]
         # label names
-        push!(axesconf, "set $(letter)label \"$(axis_attr[:guide])\" ")
+        push!(axesconf, "set $(letter)label \"$(axis_attr[:guide])\"")
         push!(axesconf, "set $(letter)label font \"$(axis_attr[:guidefontfamily]), $(axis_attr[:guidefontsize])\"")
 
         # Handle ticks
