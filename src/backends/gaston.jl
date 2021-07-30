@@ -52,8 +52,8 @@ end
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
-    w_h = gaston_widths_heights(plt.layout, 1, 1)
-    gaston_widths_heights!(0, plt, w_h)
+    xy_wh = gaston_multiplot_size_pos(plt.layout, (0, 0, 1, 1))
+    gaston_multiplot_size_pos!(0, plt, xy_wh)
 end
 
 for (mime, term) in (
@@ -148,37 +148,44 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot
     nothing
 end
 
-function gaston_widths_heights(layout, pw, ph)
+function gaston_multiplot_size_pos(layout, parent_xy_wh)
     nr, nc = size(layout)
-    w_h = Array{Any}(undef, nr, nc)
+    xy_wh = Array{Any}(undef, nr, nc)
     for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
         l = layout[r, c]
-        # nested layout: multiply with parent width and height (pct)
-        w = layout.widths[c].value * pw
-        h = layout.heights[r].value * ph
-        if l isa GridLayout
-            w_h[r, c] = gaston_widths_heights(l, w, h)
-        else
-            w_h[r, c] = get(l.attr, :blank, false) ? (nothing, nothing) : (w, h)
+        if !isa(l, EmptyLayout)
+            # previous position (origin)
+            prev_r = r > 1 ? xy_wh[r - 1, c] : undef
+            prev_c = c > 1 ? xy_wh[r, c - 1] : undef
+            prev_r isa Array{Any} && (prev_r = prev_r[end, end])
+            prev_c isa Array{Any} && (prev_c = prev_c[end, end])
+            x = prev_c !== undef ? prev_c[1] + prev_c[3] : parent_xy_wh[1]
+            y = prev_r !== undef ? prev_r[2] + prev_r[4] : parent_xy_wh[2]
+            # width and height (pct) are multiplicative (parent)
+            w = layout.widths[c].value * parent_xy_wh[3]
+            h = layout.heights[r].value * parent_xy_wh[4]
+            if l isa GridLayout
+                xy_wh[r, c] = gaston_multiplot_size_pos(l, (x, y, w, h))
+            else
+                xy_wh[r, c] = x, y, w, h
+            end
         end
     end
-    return w_h
+    return xy_wh
 end
 
-function gaston_widths_heights!(n::Int, plt, widths_heights)
-    nr, nc = size(widths_heights)
+function gaston_multiplot_size_pos!(n::Int, plt, origin_size)
+    nr, nc = size(origin_size)
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
-        w_h = widths_heights[r, c]
-        if w_h isa Tuple
-            w, h = w_h
-            if w === nothing || h === nothing
-                continue
-            else
-                gsp = plt.o.subplots[n += 1]
-                gsp.axesconf = "set size $w,$h\n" * gsp.axesconf
-            end
+        xy_wh = origin_size[r, c]
+        if xy_wh === undef
+            continue
+        elseif xy_wh isa Tuple
+            x, y, w, h = xy_wh
+            gsp = plt.o.subplots[n += 1]
+            gsp.axesconf = "set origin $x,$y\nset size $w,$h\n" * gsp.axesconf
         else
-            n = gaston_widths_heights!(n, plt, w_h)
+            n = gaston_multiplot_size_pos!(n, plt, xy_wh)
         end
     end
     return n
