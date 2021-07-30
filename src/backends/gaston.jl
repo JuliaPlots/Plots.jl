@@ -134,7 +134,7 @@ function gaston_init_subplots(plt, sps)
     return sz
 end
 
-function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend})
+function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot{GastonBackend}})
     if sp === nothing
         push!(plt.o.subplots, sp)
     else
