@@ -52,8 +52,8 @@ end
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
-    xy_wh = gaston_multiplot_size_pos(plt.layout, (0, 0, 1, 1))
-    gaston_multiplot_size_pos!(0, plt, xy_wh)
+    xy_wh = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1))
+    gaston_multiplot_pos_size!(0, plt, xy_wh)
 end
 
 for (mime, term) in (
@@ -148,7 +148,7 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot
     nothing
 end
 
-function gaston_multiplot_size_pos(layout, parent_xy_wh)
+function gaston_multiplot_pos_size(layout, parent_xy_wh)
     nr, nc = size(layout)
     xy_wh = Array{Any}(undef, nr, nc)
     for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
@@ -165,7 +165,7 @@ function gaston_multiplot_size_pos(layout, parent_xy_wh)
             w = layout.widths[c].value * parent_xy_wh[3]
             h = layout.heights[r].value * parent_xy_wh[4]
             if l isa GridLayout
-                xy_wh[r, c] = gaston_multiplot_size_pos(l, (x, y, w, h))
+                xy_wh[r, c] = gaston_multiplot_pos_size(l, (x, y, w, h))
             else
                 xy_wh[r, c] = x, y, w, h
             end
@@ -174,7 +174,7 @@ function gaston_multiplot_size_pos(layout, parent_xy_wh)
     return xy_wh
 end
 
-function gaston_multiplot_size_pos!(n::Int, plt, origin_size)
+function gaston_multiplot_pos_size!(n::Int, plt, origin_size)
     nr, nc = size(origin_size)
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         xy_wh = origin_size[r, c]
@@ -185,7 +185,7 @@ function gaston_multiplot_size_pos!(n::Int, plt, origin_size)
             gsp = plt.o.subplots[n += 1]
             gsp.axesconf = "set origin $x,$y\nset size $w,$h\n" * gsp.axesconf
         else
-            n = gaston_multiplot_size_pos!(n, plt, xy_wh)
+            n = gaston_multiplot_pos_size!(n, plt, xy_wh)
         end
     end
     return n
