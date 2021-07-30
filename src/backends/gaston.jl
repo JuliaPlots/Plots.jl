@@ -434,9 +434,13 @@ function gaston_marker(marker)
 end
 
 function gaston_color(color, alpha=0.)
-    col = single_color(color)  # in case of gradients
-    col = alphacolor(col, alpha == nothing ? 0. : alpha)  # add a default alpha if non existent
-    return "rgb \"#$(hex(col, :aarrggbb))\""
+    if isvector(color)
+        return gaston_color.(color)
+    else
+        col = single_color(color)  # in case of gradients
+        col = alphacolor(col, alpha == nothing ? 0. : alpha)  # add a default alpha if non existent
+        return "rgb \"#$(hex(col, :aarrggbb))\""
+    end
 end
 
 function gaston_linestyle(style)
