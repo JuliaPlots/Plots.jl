@@ -428,7 +428,7 @@ function gaston_set_legend!(axesconf, sp, any_label)
             occursin(position, string(leg)) && push!(axesconf, "set key $position")
         end
         if sp[:legendtitle] !== nothing
-            push!(axesconf, "set key title '$(sp[:legendtitle])' $(gaston_font(legendfont(sp)))")
+            push!(axesconf, "set key title '$(sp[:legendtitle])'")  #  $(gaston_font(legendfont(sp)))
         end
         push!(axesconf, "set key box lw 1 opaque")
         # push!(axesconf, "set key $(gaston_font(legendtitlefont(sp), rot=false, align=false))")
