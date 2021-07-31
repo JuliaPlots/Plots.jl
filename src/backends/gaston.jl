@@ -230,7 +230,11 @@ function gaston_seriesconf!(sp, series::Series)
     st = series[:seriestype]
 
     clims = get_clims(sp, series)
-    label = "title \"$(series[:label])\""
+    label = if should_add_to_legend(series)
+        "title \"$(series[:label])\""
+    else
+        "notitle"
+    end
     if st ∈ (:scatter, :scatter3d)
         pt, ps, lc = gaston_mk_ms_mc(series)
         push!(curveconf, "with points pt $pt ps $ps lc $lc")
@@ -251,7 +255,6 @@ function gaston_seriesconf!(sp, series::Series)
     elseif st == :steppost
         push!(curveconf, "with fsteps")  # Not sure if not the other way
     elseif st ∈ (:contour, :contour3d)
-        label = "notitle"
         push!(curveconf, "with lines")
         if st == :contour
             gsp.axesconf *= "\nset view map\nunset surface"  # 2D
