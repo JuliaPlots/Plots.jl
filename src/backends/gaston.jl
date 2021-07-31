@@ -435,7 +435,7 @@ function gaston_marker(marker, alpha)
     marker == :pixel && return 0
     marker ∈ (:+, :cross) && return 1
     marker ∈ (:x, :xcross) && return 2
-    marker == :star5 && 3
+    marker == :star5 && return 3
     marker == :rect && return filled ? 5 : 4
     marker == :circle && return filled ? 7 : 6
     marker == :utriangle && return filled ? 9 : 8
