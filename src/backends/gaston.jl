@@ -460,6 +460,7 @@ function gaston_marker(marker, alpha)
     marker == :dtriangle && return filled ? 11 : 10
     marker == :diamond && return filled ? 13 : 12
     marker == :pentagon && return filled ? 15 : 14
+    marker ∈ (:vline, :hline) && return marker
 
     @warn "Gaston: unsupported marker $marker"
     return 1
