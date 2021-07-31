@@ -66,15 +66,15 @@ for (mime, term) ∈ (
     "image/eps"              => "epslatex",
     "application/pdf"        => "pdfcairo",
     "application/postscript" => "postscript",
-    "image/png"              => "pngcairo",
+    "image/png"              => "png",
     "image/svg+xml"          => "svg",
     "text/latex"             => "tikz",
     "application/x-tex"      => "epslatex",
     "text/plain"             => "dumb",
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
-        tmpfile = "$(Gaston.tempname()).$term"
-        Gaston.save(term=$term, output=tmpfile, handle=plt.o.handle, saveopts=gaston_saveopts(plt))
+        term = String($term); tmpfile = "$(Gaston.tempname()).$term"
+        Gaston.save(term=term, output=tmpfile, handle=plt.o.handle, saveopts=gaston_saveopts(plt))
         while !isfile(tmpfile) end  # avoid race condition with read in next line
         write(io, read(tmpfile))
         rm(tmpfile, force=true)
@@ -95,6 +95,8 @@ function gaston_saveopts(plt::Plot{GastonBackend})
     # Scale all plot elements to match Plots.jl DPI standard
     scaling = plt.attr[:dpi] / Plots.DPI
     saveopts *= "fontscale $scaling lw $scaling dl $scaling ps $scaling"
+    
+    return saveopts
 end
 
 function gaston_get_subplots(n, plt_subplots, layout)
