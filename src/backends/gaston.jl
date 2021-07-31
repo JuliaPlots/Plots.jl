@@ -214,7 +214,24 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     nothing
 end
 
-function gaston_seriesconf!(sp, series::Series)
+function gaston_hvline!(sp, series, curveconf, pt, dt, lw, lc, command)
+    if pt == :hline
+        lo, hi = axis_limits(sp, :x)
+        for y ∈ series[:y]
+            sp.o.axesconf *= "\nset arrow from graph  $lo,$y to $hi,$y nohead lc $lc lw $lw dt $dt"
+        end
+    elseif pt == :vline
+        lo, hi = axis_limits(sp, :y)
+        for x ∈ series[:x]
+            sp.o.axesconf *= "\nset arrow from $x,$lo to $x,$hi nohead lc $lc lw $lw dt $dt"
+        end
+    else
+        push!(curveconf, command)
+    end
+    nothing
+end
+
+function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series)
     #=
     gnuplot abbreviations (see gnuplot/src/set.c)
     ---------------------------------------------
@@ -238,15 +255,16 @@ function gaston_seriesconf!(sp, series::Series)
 
     clims = get_clims(sp, series)
     if st ∈ (:scatter, :scatter3d)
-        pt, ps, lc = gaston_mk_ms_mc(series)
-        push!(curveconf, "with points pt $pt ps $ps lc $lc")
+        lc, dt, lw = gaston_lc_ls_lw(series)
+        pt, ps, mc = gaston_mk_ms_mc(series)
+        gaston_hvline!(sp, series, curveconf, pt, dt, lw, mc, "with points pt $pt ps $ps lc $mc")
     elseif st ∈ (:path, :straightline, :path3d)
         lc, dt, lw = gaston_lc_ls_lw(series)
         if series[:markershape] == :none # simplepath
             push!(curveconf, "with lines lc $lc dt $dt lw $lw")
         else
-            pt, ps = gaston_mk_ms_mc(series)
-            push!(curveconf, "with lp lc $lc dt $dt lw $lw pt $pt ps $ps")
+            pt, ps, mc = gaston_mk_ms_mc(series)
+            gaston_hvline!(sp, series, curveconf, x, y, pt, dt, lw, mc, "with lp lc $mc dt $dt lw $lw pt $pt ps $ps")
         end
     elseif st == :shape
         fc = gaston_color(series[:fillcolor], series[:fillalpha])
