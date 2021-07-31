@@ -671,6 +671,8 @@ const _gaston_marker = [
     :dtriangle,
     :diamond,
     :pentagon,
+    :hline,
+    :vline,
 ]
 
 const _gaston_scale = [
