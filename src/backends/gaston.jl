@@ -288,9 +288,11 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
         lc, _ = gaston_lc_ls_lw(series, clims, i)
         push!(curveconf, "w filledcurves fc $fc fs solid border lc $lc")
     elseif st == :steppre
-        push!(curveconf, "w steps")
+        push!(curveconf, "w fsteps")
+    elseif st == :stepmid
+        push!(curveconf, "w histeps")
     elseif st == :steppost
-        push!(curveconf, "w fsteps")  # Not sure if not the other way
+        push!(curveconf, "w steps")
     elseif st == :image
         palette = gaston_palette(series[:seriescolor])
         gsp.axesconf *= "\nset palette model RGB defined $palette"
