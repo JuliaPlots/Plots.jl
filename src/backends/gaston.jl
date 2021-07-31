@@ -36,6 +36,7 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     end
     
     for (sp, gsp) ∈ mapping
+        (sp === nothing || gsp === nothing) && continue
         for ann in sp[:annotations]
             x, y, val = locate_annotation(sp, ann...); ft = val.font
             gsp.axesconf *= (
@@ -113,7 +114,7 @@ end
 
 function gaston_init_subplots(plt, sps)
     sz = nr, nc = size(sps)
-    mapping = Dict{Subplot{GastonBackend}, Gaston.SubPlot}()
+    mapping = Dict{Union{Nothing,Subplot{GastonBackend}}, Gaston.SubPlot}()
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         sp = sps[r, c]
         if sp isa Subplot || sp === nothing
@@ -294,9 +295,7 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
     end
 
     for letter ∈ (:x, :y, :z)
-        if letter == :z && dims == 2
-            continue
-        end
+        (letter == :z && dims == 2) && continue
         axis = sp.attr[Symbol(letter, :axis)]
         # label names
         push!(axesconf, "set $(letter)label \"$(axis[:guide])\"")
