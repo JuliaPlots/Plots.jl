@@ -41,9 +41,13 @@ get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplot
 
 series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)
 
-function should_add_to_legend(series::Series)
+should_add_to_legend(series::Series) = (
     series.plotattributes[:primary] &&
     series.plotattributes[:label] != "" &&
+    !(
+        length(series_list(series[:subplot])) == 1 &&
+        series.plotattributes[:label] == label_auto(series.plotattributes[:series_plotindex])
+    ) &&
     !(
         series.plotattributes[:seriestype] in (
             :hexbin,
@@ -60,6 +64,6 @@ function should_add_to_legend(series::Series)
             :image,
         )
     )
-end
+)
 
 # ----------------------------------------------------------------------

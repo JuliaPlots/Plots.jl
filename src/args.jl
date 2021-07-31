@@ -1656,12 +1656,13 @@ function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, comman
     return plotattributes
 end
 
+label_auto(series_plotindex) = string("y", series_plotindex)
 label_to_string(label::Bool, series_plotindex) = label ? label_to_string(:auto, series_plotindex) : ""
 label_to_string(label::Nothing, series_plotindex) = ""
 label_to_string(label::Missing, series_plotindex) = ""
 function label_to_string(label::Symbol, series_plotindex)
     if label==:auto
-        return string("y", series_plotindex)
+        return label_auto(series_plotindex)
     elseif label==:none
         return ""
     else
