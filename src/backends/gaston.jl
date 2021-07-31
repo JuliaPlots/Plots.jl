@@ -124,9 +124,18 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot
     if sp === nothing
         push!(plt.o.subplots, sp)
     else
+        dims = RecipesPipeline.is3d(sp) ? 3 : 2
+        if dims == 2
+            for series ∈ plt.series_list
+                if series[:seriestype] ∈ (:heatmap, :contour)
+                    dims = 3  # we need heatmap/contour to use splot, not plot
+                    break
+                end
+            end
+        end
         sp.o = Gaston.Plot(
-            dims=RecipesPipeline.is3d(sp) ? 3 : 2,
-            axesconf=gaston_parse_axes_args(plt, sp),  # Gnuplot string
+            dims=dims,
+            axesconf=gaston_parse_axes_args(plt, sp, dims),  # Gnuplot string
             curves=[]
         )
         push!(plt.o.subplots, sp.o)
@@ -181,10 +190,6 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     # Gaston.Curve = Plots.Series
     sp = series[:subplot]
     gsp = sp.o  # Gaston subplot object
-
-    if gsp.dims == 2 && series[:seriestype] ∈ (:heatmap, :contour)
-        gsp.dims = 3  # FIXME: this is ugly, we need heatmap/contour to use splot, not plot
-    end
 
     x = series[:x]
     y = series[:y]
@@ -272,7 +277,7 @@ function gaston_seriesconf!(sp, series::Series)
     return join(curveconf, " ")
 end
 
-function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend})
+function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend}, dims::Int)
     axesconf = String[]
     # Standard 2d axis
     if !ispolar(sp) && !RecipesPipeline.is3d(sp)
@@ -280,34 +285,42 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
     end
 
     for letter ∈ (:x, :y, :z)
-        axis_attr = sp.attr[Symbol(letter, :axis)]
+        if letter == :z && dims == 2
+            continue
+        end
+        axis = sp.attr[Symbol(letter, :axis)]
         # label names
-        push!(axesconf, "set $(letter)label \"$(axis_attr[:guide])\"")
-        push!(axesconf, "set $(letter)label font \"$(axis_attr[:guidefontfamily]), $(axis_attr[:guidefontsize])\"")
+        push!(axesconf, "set $(letter)label \"$(axis[:guide])\"")
+        push!(axesconf, "set $(letter)label font \"$(axis[:guidefontfamily]), $(axis[:guidefontsize])\"")
 
         # Handle ticks
         # ticksyle
-        push!(axesconf, "set $(letter)tics font \"$(axis_attr[:tickfontfamily]), $(axis_attr[:tickfontsize])\"")
-        push!(axesconf, "set $(letter)tics textcolor rgb \"#$(hex(axis_attr[:tickfontcolor], :rrggbb))\"")
-        push!(axesconf, "set $(letter)tics  $(axis_attr[:tick_direction])")
+        push!(axesconf, "set $(letter)tics font \"$(axis[:tickfontfamily]), $(axis[:tickfontsize])\"")
+        push!(axesconf, "set $(letter)tics textcolor rgb \"#$(hex(axis[:tickfontcolor], :rrggbb))\"")
+        push!(axesconf, "set $(letter)tics  $(axis[:tick_direction])")
 
-        mirror = axis_attr[:mirror] ? "mirror" : "nomirror"
+        mirror = axis[:mirror] ? "mirror" : "nomirror"
         push!(axesconf, "set $(letter)tics $(mirror)")
 
-        logscale = if axis_attr[:scale] == :identity
+        logscale = if axis[:scale] == :identity
             "nologscale"
-        elseif axis_attr[:scale] == :log10
+        elseif axis[:scale] == :log10
             "logscale"
         end
         push!(axesconf, "set $logscale $(letter)")
 
-        # tick locations
-        if axis_attr[:ticks] != :native
+        # major tick locations
+        if axis[:ticks] != :native
             from, to = axis_limits(sp, letter)  # axis limits
             push!(axesconf, "set $(letter)range [$from:$to]")
 
-            ticks = get_ticks(sp, axis_attr)
-            gaston_set_ticks!(axesconf, ticks, letter)
+            ticks = get_ticks(sp, axis)
+            gaston_set_ticks!(axesconf, ticks, letter, "", "")
+
+            if axis[:minorticks] != :native
+                minor_ticks = get_minor_ticks(sp, axis, ticks)
+                gaston_set_ticks!(axesconf, minor_ticks, letter, "m", "add")
+            end
         end
 
         ratio = get_aspect_ratio(sp)
@@ -326,35 +339,37 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
     return join(axesconf, "\n")
 end
 
-function gaston_set_ticks!(axesconf, ticks, letter)
+function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
     ticks == :auto && return
     if ticks ∈ (:none, nothing, false)
-        push!(axesconf, "unset $(letter)tics")
+        push!(axesconf, "unset $(maj_min)$(letter)tics")
         return
     end
 
     ttype = ticksType(ticks)
+    gaston_ticks = String[]
     if ttype == :ticks
-        tick_locations = @view ticks[:]
-        gaston_ticks = String[]
-        for i ∈ eachindex(tick_locations)
-            lac = tick_locations[i]
-            push!(gaston_ticks, "$loc")
+        tick_locs = @view ticks[:]
+        for i ∈ eachindex(tick_locs)
+            tick = if maj_min == "m"
+                "'' $(tick_locs[i]) 1"  # see gnuplot manual 'Mxtics'
+            else
+                "$(tick_locs[i])"
+            end
+            push!(gaston_ticks, tick)
         end
-        push!(axesconf, "set $(letter)tics (" * join(gaston_ticks, ", ") * ")")
     elseif ttype == :ticks_and_labels
-        tick_locations = @view ticks[1][:]
+        tick_locs = @view ticks[1][:]
         tick_labels = @view ticks[2][:]
-        gaston_ticks = String[]
-        for i ∈ eachindex(tick_locations)
-            loc = tick_locations[i]
+        for i ∈ eachindex(tick_locs)
             lab = gaston_enclose_tick_string(tick_labels[i])
-            push!(gaston_ticks, "'$lab' $loc")
+            push!(gaston_ticks, "'$lab' $(tick_locs[i])")
         end
-        push!(axesconf, "set $(letter)tics (" * join(gaston_ticks, ", ") * ")")
     else
-        @error "Gaston: invalid input for $(letter)ticks: $ticks"
+        gaston_ticks = nothing
+        @error "Gaston: invalid input for $(maj_min)$(letter)ticks: $ticks"
     end
+    gaston_ticks !== nothing && push!(axesconf, "set $(letter)tics $add (" * join(gaston_ticks, ", ") * ")")
     nothing
 end
 
