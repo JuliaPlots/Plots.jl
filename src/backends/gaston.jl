@@ -31,11 +31,21 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
         @error "Gaston: $n != $(length(plt.subplots))"
     end
 
-    plt.o.layout = gaston_init_subplots(plt, sps)
+    mapping, plt.o.layout = gaston_init_subplots(plt, sps)
 
     # Then add the series (curves in gaston)
     for series ∈ plt.series_list
         gaston_add_series(plt, series)
+    end
+    
+    for (sp, gsp) ∈ mapping
+        for ann in sp[:annotations]
+            x, y, val = locate_annotation(sp, ann...); ft = val.font
+            gsp.axesconf *= (
+                "\nset label \"$(val.str)\" at $x,$y $(ft.halign) rotate by $(ft.rotation) " *
+                "font \"$(ft.family),$(ft.pointsize)\" front textcolor $(gaston_color(ft.color))"
+            )
+        end
     end
     nothing
 end
@@ -108,16 +118,17 @@ end
 
 function gaston_init_subplots(plt, sps)
     sz = nr, nc = size(sps)
+    mapping = Dict{Subplot{GastonBackend}, Gaston.SubPlot}()
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         sp = sps[r, c]
         if sp isa Subplot || sp === nothing
-            gaston_init_subplot(plt, sp)
+            mapping[sp] = gaston_init_subplot(plt, sp)
         else
             gaston_init_subplots(plt, sp)
             sz = max.(sz, size(sp))
         end
     end
-    return sz
+    return mapping, sz
 end
 
 function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot{GastonBackend}})
