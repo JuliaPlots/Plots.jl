@@ -658,16 +658,20 @@ const _gaston_style = [
 
 const _gaston_marker = [
     :none,
-    # :auto,
-    :circle,
+    :auto,
+    :pixel,
+    :cross,
+    :xcross,
+    :+,
+    :x,
+    :star5,
     :rect,
-    :diamond,
+    :circle,
     :utriangle,
     :dtriangle,
+    :diamond,
     :pentagon,
-    :x,
-    :+
-] #vcat(_allMarkers, Shape)
+]
 
 const _gaston_scale = [
     :identity,
@@ -765,7 +769,7 @@ const HDF5PLOT_MAP_TELEM2STR = Dict{Type, String}()
 
 #Don't really like this global variable... Very hacky
 mutable struct HDF5Plot_PlotRef
-	ref::Union{Plot, Nothing}
+    ref::Union{Plot, Nothing}
 end
 const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
 
