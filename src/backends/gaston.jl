@@ -215,15 +215,18 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
 end
 
 function gaston_hvline!(sp, series, curveconf, pt, dt, lw, lc, command)
-    if pt == :hline
-        lo, hi = axis_limits(sp, :x)
-        for y ∈ series[:y]
-            sp.o.axesconf *= "\nset arrow from graph  $lo,$y to $hi,$y nohead lc $lc lw $lw dt $dt"
-        end
-    elseif pt == :vline
-        lo, hi = axis_limits(sp, :y)
-        for x ∈ series[:x]
-            sp.o.axesconf *= "\nset arrow from $x,$lo to $x,$hi nohead lc $lc lw $lw dt $dt"
+    if pt ∈ (:hline, :vline)
+        xs, ys = straightline_data(series)
+        if pt == :hline
+            lo, hi = axis_limits(sp, :x)
+            for y ∈ ys
+                sp.o.axesconf *= "\nset arrow from $lo,$y to $hi,$y nohead lc $lc lw $lw dt $dt"
+            end
+        elseif pt == :vline
+            lo, hi = axis_limits(sp, :y)
+            for x ∈ xs
+                sp.o.axesconf *= "\nset arrow from $x,$lo to $x,$hi nohead lc $lc lw $lw dt $dt"
+            end
         end
     else
         push!(curveconf, command)
