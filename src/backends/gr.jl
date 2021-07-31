@@ -990,7 +990,7 @@ end
 ## Legend
 
 function gr_add_legend(sp, leg, viewport_plotarea)
-    if !(sp[:legend] in(:none, :inline))
+    if sp[:legend] ∉ (:none, :inline)
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
