@@ -62,18 +62,19 @@ function _update_plot_object(plt::Plot{GastonBackend})
 end
 
 for (mime, term) ∈ (
-    "application/eps"        => "epscairo",   # NEED fixing TODO
-    "image/eps"              => "epslatex",   # NEED fixing TODO
-    "application/pdf"        => "pdfcairo",   # NEED fixing TODO
-    "application/postscript" => "postscript", # NEED fixing TODO
+    "application/eps"        => "epscairo",
+    "image/eps"              => "epslatex",
+    "application/pdf"        => "pdfcairo",
+    "application/postscript" => "postscript",
+    "image/png"              => "pngcairo",
     "image/svg+xml"          => "svg",
-    "text/latex"             => "tikz",       # NEED fixing TODO
-    "application/x-tex"      => "epslatex",   # NEED fixing TODO
-    "text/plain"             => "dumb",       # NEED fixing TODO
+    "text/latex"             => "tikz",
+    "application/x-tex"      => "epslatex",
+    "text/plain"             => "dumb",
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         tmpfile = "$(Gaston.tempname()).$term"
-        Gaston.save(term=$term, output=tmpfile, handle=plt.o.handle)
+        Gaston.save(term=$term, output=tmpfile, handle=plt.o.handle, saveopts=gaston_saveopts(plt))
         while !isfile(tmpfile) end  # avoid race condition with read in next line
         write(io, read(tmpfile))
         rm(tmpfile, force=true)
@@ -81,25 +82,20 @@ for (mime, term) ∈ (
     end
 end
 
-function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend})
-    scaling = plt.attr[:dpi] / Plots.DPI
-
-    # Scale all plot elements to match Plots.jl DPI standard
-    saveopts = "fontscale $scaling lw $scaling dl $scaling ps $scaling"
-
-    tmpfile = Gaston.tempname()
-    Gaston.save(term="pngcairo", output=tmpfile, handle=plt.o.handle, saveopts=saveopts)
-    while !isfile(tmpfile) end  # avoid race condition with read in next line
-    write(io, read(tmpfile))
-    rm(tmpfile, force=true)
-    nothing
-end
-
 _display(plt::Plot{GastonBackend}) = display(plt.o)
 
 # --------------------------------------------
 # These functions are gaston specific
 # --------------------------------------------
+
+function gaston_saveopts(plt::Plot{GastonBackend})
+    xsize, ysize = plt.attr[:size]
+    saveopts = "size $xsize,$ysize background $(gaston_color(plt.attr[:background_color]))"
+
+    # Scale all plot elements to match Plots.jl DPI standard
+    scaling = plt.attr[:dpi] / Plots.DPI
+    saveopts *= "fontscale $scaling lw $scaling dl $scaling ps $scaling"
+end
 
 function gaston_get_subplots(n, plt_subplots, layout)
     nr, nc = size(layout)
@@ -310,7 +306,7 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
         # Handle ticks
         # ticksyle
         push!(axesconf, "set $(letter)tics font \"$(axis[:tickfontfamily]), $(axis[:tickfontsize])\"")
-        push!(axesconf, "set $(letter)tics textcolor rgb \"#$(hex(axis[:tickfontcolor], :rrggbb))\"")
+        push!(axesconf, "set $(letter)tics textcolor $(gaston_color(axis[:tickfontcolor]))")
         push!(axesconf, "set $(letter)tics  $(axis[:tick_direction])")
 
         mirror = axis[:mirror] ? "mirror" : "nomirror"
