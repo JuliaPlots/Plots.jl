@@ -400,14 +400,6 @@ function gr_set_font(f::Font, s; halign = f.halign, valign = f.valign,
     GR.settextalign(gr_halign(halign), gr_valign(valign))
 end
 
-function gr_nans_to_infs!(z)
-    for (i,zi) in enumerate(z)
-        if isnan(zi)
-            z[i] = Inf
-        end
-    end
-end
-
 function gr_w3tondc(x, y, z)
     xw, yw, zw = GR.wc3towc(x, y, z)
     x, y = GR.wctondc(xw, yw)
