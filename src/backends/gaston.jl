@@ -322,6 +322,11 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
                 gaston_set_ticks!(axesconf, minor_ticks, letter, "m", "add")
             end
         end
+        
+        if axis[:grid]
+            push!(axesconf, "set grid $(letter)tics")
+            axis[:minorgrid] && push!(axesconf, "set grid m$(letter)tics")
+        end
 
         ratio = get_aspect_ratio(sp)
         if ratio != :none
