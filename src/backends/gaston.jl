@@ -177,15 +177,13 @@ function gaston_multiplot_pos_size!(n::Int, plt, origin_size)
     nr, nc = size(origin_size)
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         xy_wh = origin_size[r, c]
-        if xy_wh === nothing
-            continue
+        if xy_wh isa Array
+            n = gaston_multiplot_pos_size!(n, plt, xy_wh)
         elseif xy_wh isa Tuple
             x, y, w, h = xy_wh
             if (gsp = plt.o.subplots[n += 1]) !== nothing
                 gsp.axesconf = "set origin $x,$y\nset size $w,$h\n" * gsp.axesconf
             end
-        else
-            n = gaston_multiplot_pos_size!(n, plt, xy_wh)
         end
     end
     return n
