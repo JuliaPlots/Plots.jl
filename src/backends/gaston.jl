@@ -200,8 +200,9 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     if gsp.dims == 2 && z === nothing
         for seg ∈ series_segments(series, st; check=true)
             i, rng = seg.attr_index, seg.range
-            seriesconf = gaston_seriesconf!(sp, series, i)
-            push!(curves, Gaston.Curve(x[rng], y[rng], nothing, nothing, seriesconf))
+            for sc ∈ gaston_seriesconf!(sp, series, i)
+                push!(curves, Gaston.Curve(x[rng], y[rng], nothing, nothing, sc))
+            end
         end
     else
         seriesconf = gaston_seriesconf!(sp, series, 1)
@@ -220,7 +221,9 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
                 end
             end
         end
-        push!(curves, Gaston.Curve(x, y, z, nothing, seriesconf))
+        for sc ∈ gaston_seriesconf!(sp, series, 1)
+            push!(curves, Gaston.Curve(x, y, z, nothing, sc))
+        end
     end
 
     for c ∈ curves
@@ -267,8 +270,8 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
     tc: textcolor
     w: with 
     =#
-    gsp = sp.o; curveconf = String[]
-    st = series[:seriestype]
+    gsp = sp.o; st = series[:seriestype]; extra = []
+    curveconf = String[should_add_to_legend(series) ? "title '$(series[:label])'" : "notitle"]
 
     clims = get_clims(sp, series)
     if st ∈ (:scatter, :scatter3d)
@@ -287,12 +290,17 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
         lc, _ = gaston_lc_ls_lw(series, clims, i)
         push!(curveconf, "w filledcurves fc $fc fs solid border lc $lc")
-    elseif st == :steppre
-        push!(curveconf, "w fsteps")
-    elseif st == :stepmid
-        push!(curveconf, "w histeps")
-    elseif st == :steppost
-        push!(curveconf, "w steps")
+    elseif st ∈ (:steppre, :stepmid, :steppost)
+        step = if st == :steppre
+            "fsteps"
+        elseif st == :stepmid
+            "histeps"
+        elseif st == :steppost
+            "steps"
+        end
+        push!(curveconf, "w $step")
+        lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
+        push!(extra, "w points lc $lc dt $dt lw $lw notitle")
     elseif st == :image
         palette = gaston_palette(series[:seriescolor])
         gsp.axesconf *= "\nset palette model RGB defined $palette"
@@ -315,8 +323,7 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
         @warn "Gaston: $st is not implemented yet"
     end
 
-    push!(curveconf, should_add_to_legend(series) ? "title '$(series[:label])'" : "notitle")
-    return join(curveconf, " ")
+    return [join(curveconf, " "), extra...]
 end
 
 function gaston_parse_axes_args(
