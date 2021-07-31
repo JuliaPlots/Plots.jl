@@ -590,7 +590,7 @@ function _initialize_backend(::GastonBackend)
 end
 
 const _gaston_attr = merge_with_base_supported([
-    # :annotations,
+    :annotations,
     # :background_color_legend,
     # :background_color_inside,
     # :background_color_outside,
@@ -620,7 +620,7 @@ const _gaston_attr = merge_with_base_supported([
     # :overwrite_figure,
     # :polar,
     # :normalize, :weights, :contours,
-    # :aspect_ratio,
+    :aspect_ratio,
     :tick_direction,
     # :framestyle,
     # :camera,
@@ -645,6 +645,7 @@ const _gaston_seriestype = [
     :heatmap,
     :surface,
     :mesh3d,
+    :image,
 ]
 
 const _gaston_style = [
