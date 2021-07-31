@@ -237,11 +237,6 @@ function gaston_seriesconf!(sp, series::Series)
     st = series[:seriestype]
 
     clims = get_clims(sp, series)
-    label = if should_add_to_legend(series)
-        "title \"$(series[:label])\""
-    else
-        "notitle"
-    end
     if st ∈ (:scatter, :scatter3d)
         pt, ps, lc = gaston_mk_ms_mc(series)
         push!(curveconf, "with points pt $pt ps $ps lc $lc")
@@ -263,19 +258,15 @@ function gaston_seriesconf!(sp, series::Series)
         push!(curveconf, "with fsteps")  # Not sure if not the other way
     elseif st ∈ (:contour, :contour3d)
         push!(curveconf, "with lines")
-        if st == :contour
-            gsp.axesconf *= "\nset view map\nunset surface"  # 2D
-        end
+        st == :contour && (gsp.axesconf *= "\nset view map\nunset surface")  # 2D
         gsp.axesconf *= "\nunset key"  # FIXME: too many legend (key) entries
         levels = join(map(string, collect(contour_levels(series, clims))), ", ")
         gsp.axesconf *= "\nset contour base\nset cntrparam levels discrete $levels"
     elseif st ∈ (:surface, :heatmap)
+        push!(curveconf, "with pm3d")
         palette = gaston_palette(series[:seriescolor])
         gsp.axesconf *= "\nset palette model RGB defined $palette"
-        if st == :heatmap
-            gsp.axesconf *= "\nset view map"
-        end
-        push!(curveconf, "with pm3d")
+        st == :heatmap && (gsp.axesconf *= "\nset view map")
     elseif st == :wireframe
         lc, dt, lw = gaston_lc_ls_lw(series)
         push!(curveconf, "with lines lc $lc dt $dt lw $lw")
@@ -283,7 +274,7 @@ function gaston_seriesconf!(sp, series::Series)
         @warn "Gaston: $st is not implemented yet"
     end
 
-    push!(curveconf, label)
+    push!(curveconf, should_add_to_legend(series) ? "title \"$(series[:label])\"" : "notitle")
     return join(curveconf, " ")
 end
 
@@ -456,11 +447,11 @@ function gaston_marker(marker, alpha)
     return 1
 end
 
-function gaston_color(color, alpha=0)
-    if isvector(color)
-        return gaston_color.(color)
+function gaston_color(col, alpha=0)
+    if isvector(col)
+        return gaston_color.(col)
     else
-        col = single_color(color)  # in case of gradients
+        col = single_color(col)  # in case of gradients
         col = alphacolor(col, gaston_alpha(alpha))  # add a default alpha if non existent
         return "rgb \"#$(hex(col, :aarrggbb))\""
     end
