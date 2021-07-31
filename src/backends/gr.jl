@@ -1412,7 +1412,7 @@ function gr_draw_grid(sp, axis, segments, func = gr_polyline)
 end
 
 function gr_draw_minorgrid(sp, axis, segments, func = gr_polyline)
-    if axis[:grid]
+    if axis[:minorgrid]
         gr_set_line(
             axis[:minorgridlinewidth],
             axis[:minorgridstyle],
