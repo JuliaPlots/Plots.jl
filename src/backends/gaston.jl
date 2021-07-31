@@ -6,9 +6,6 @@
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
-    xsize, ysize = plt.attr[:size]
-    Gaston.set(termopts="size $xsize,$ysize")
-
     state_handle = Gaston.nexthandle() # for now all the figures will be kept
     plt.o = Gaston.newfigure(state_handle)
 end
