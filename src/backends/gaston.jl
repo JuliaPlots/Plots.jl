@@ -1,7 +1,4 @@
 # https://github.com/mbaz/Gaston.
-const G = Gaston
-const GastonSubplot = G.Plot
-const GASTON_MARKER_SCALING = 1.3 / 5.0
 
 # --------------------------------------------
 # These functions are called by Plots
@@ -10,16 +7,15 @@ const GASTON_MARKER_SCALING = 1.3 / 5.0
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
     xsize, ysize = plt.attr[:size]
-    G.set(termopts="size $xsize,$ysize")
+    Gaston.set(termopts="size $xsize,$ysize")
 
-    state_handle = G.nexthandle() # for now all the figures will be kept
-    plt.o = G.newfigure(state_handle)
+    state_handle = Gaston.nexthandle() # for now all the figures will be kept
+    plt.o = Gaston.newfigure(state_handle)
 end
-
 
 function _before_layout_calcs(plt::Plot{GastonBackend})
     # Initialize all the subplots first
-    plt.o.subplots = G.SubPlot[]
+    plt.o.subplots = Gaston.SubPlot[]
 
     n1 = n2 = 0
     if length(plt.inset_subplots) > 0
@@ -31,15 +27,14 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
         n2, sps = gaston_get_subplots(0, plt.subplots, plt.layout)
     end
 
-    n = n1 + n2
-    if n != length(plt.subplots)
+    if (n = n1 + n2) != length(plt.subplots)
         @error "Gaston: $n != $(length(plt.subplots))"
     end
 
     plt.o.layout = gaston_init_subplots(plt, sps)
 
     # Then add the series (curves in gaston)
-    for series in plt.series_list
+    for series ∈ plt.series_list
         gaston_add_series(plt, series)
     end
     nothing
@@ -56,23 +51,19 @@ function _update_plot_object(plt::Plot{GastonBackend})
     gaston_multiplot_pos_size!(0, plt, xy_wh)
 end
 
-for (mime, term) in (
-    "application/eps"         => "epscairo",   # NEED fixing TODO
-    "image/eps"               => "epslatex",   # NEED fixing TODO
-    "application/pdf"         => "pdfcairo",   # NEED fixing TODO
-    "application/postscript"  => "postscript", # NEED fixing TODO
-    "image/svg+xml"           => "svg",
-    "text/latex"              => "tikz",       # NEED fixing TODO
-    "application/x-tex"       => "epslatex",   # NEED fixing TODO
-    "text/plain"              => "dumb",       # NEED fixing TODO
+for (mime, term) ∈ (
+    "application/eps"        => "epscairo",   # NEED fixing TODO
+    "image/eps"              => "epslatex",   # NEED fixing TODO
+    "application/pdf"        => "pdfcairo",   # NEED fixing TODO
+    "application/postscript" => "postscript", # NEED fixing TODO
+    "image/svg+xml"          => "svg",
+    "text/latex"             => "tikz",       # NEED fixing TODO
+    "application/x-tex"      => "epslatex",   # NEED fixing TODO
+    "text/plain"             => "dumb",       # NEED fixing TODO
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
-        tmpfile = G.tempname() * "." * $term
-        G.save(
-            term=$term,
-            output=tmpfile,
-            handle=plt.o.handle,
-        )
+        tmpfile = "$(Gaston.tempname()).$term"
+        Gaston.save(term=$term, output=tmpfile, handle=plt.o.handle)
         while !isfile(tmpfile) end  # avoid race condition with read in next line
         write(io, read(tmpfile))
         rm(tmpfile, force=true)
@@ -86,13 +77,8 @@ function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{GastonBackend}
     # Scale all plot elements to match Plots.jl DPI standard
     saveopts = "fontscale $scaling lw $scaling dl $scaling ps $scaling"
 
-    tmpfile = G.tempname()
-    G.save(
-        term="pngcairo",
-        output=tmpfile,
-        handle=plt.o.handle,
-        saveopts=saveopts
-    )
+    tmpfile = Gaston.tempname()
+    Gaston.save(term="pngcairo", output=tmpfile, handle=plt.o.handle, saveopts=saveopts)
     while !isfile(tmpfile) end  # avoid race condition with read in next line
     write(io, read(tmpfile))
     rm(tmpfile, force=true)
@@ -138,7 +124,7 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot
     if sp === nothing
         push!(plt.o.subplots, sp)
     else
-        sp.o = GastonSubplot(
+        sp.o = Gaston.Plot(
             dims=RecipesPipeline.is3d(sp) ? 3 : 2,
             axesconf=gaston_parse_axes_args(plt, sp),  # Gnuplot string
             curves=[]
@@ -194,31 +180,48 @@ end
 function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     # Gaston.Curve = Plots.Series
     sp = series[:subplot]
-    g_sp = sp.o  # Gaston subplot object
+    gsp = sp.o  # Gaston subplot object
 
-    if series[:seriestype] ∈ (:heatmap, :contour) && g_sp.dims == 2
-        g_sp.dims = 3  # FIXME: this is ugly, we need heatmap/contour to use splot, not plot
+    if gsp.dims == 2 && series[:seriestype] ∈ (:heatmap, :contour)
+        gsp.dims = 3  # FIXME: this is ugly, we need heatmap/contour to use splot, not plot
     end
 
     x = series[:x]
     y = series[:y]
-    z = g_sp.dims == 2 ? nothing : series[:z]
+    z = gsp.dims == 2 ? nothing : series[:z]
     if z isa Surface
         z = z.surf
     end
 
     seriesconf = gaston_seriesconf!(sp, series)  # Gnuplot string
-    c = G.Curve(x, y, z, nothing, seriesconf)
+    c = Gaston.Curve(x, y, z, nothing, seriesconf)
 
-    isfirst = length(g_sp.curves) == 0 ? true : false
-    push!(g_sp.curves, c)
-    G.write_data(c, g_sp.dims, g_sp.datafile, append = isfirst ? false : true)
+    isfirst = length(gsp.curves) == 0 ? true : false
+    push!(gsp.curves, c)
+    Gaston.write_data(c, gsp.dims, gsp.datafile, append = isfirst ? false : true)
     nothing
 end
 
 function gaston_seriesconf!(sp, series::Series)
-    gsp = sp.o
-    curveconf = String[]
+    #=
+    gnuplot abbreviations (see gnuplot/src/set.c)
+    ---------------------------------------------
+    dl: dashlength
+    dt: dashtype
+    fc: fillcolor
+    fs: fillstyle
+    lc: linecolor
+    lp: linespoints
+    ls: linestyle
+    lt: linetype
+    lw: linewidth
+    pi: pointinterval
+    pn: pointnumber
+    ps: pointscale
+    pt: pointtype
+    tc: textcolor 
+    =#
+    gsp = sp.o; curveconf = String[]
     st = series[:seriestype]
 
     clims = get_clims(sp, series)
@@ -236,9 +239,8 @@ function gaston_seriesconf!(sp, series::Series)
         end
     elseif st == :shape
         fc = gaston_color(series[:fillcolor], series[:fillalpha])
-        fs = "solid"
         lc, _ = gaston_lc_ls_lw(series)
-        push!(curveconf, "with filledcurves fc $fc fs $fs border lc $lc")
+        push!(curveconf, "with filledcurves fc $fc fs solid border lc $lc")
     elseif st == :steppre
         push!(curveconf, "with steps")
     elseif st == :steppost
@@ -247,9 +249,9 @@ function gaston_seriesconf!(sp, series::Series)
         label = "notitle"
         push!(curveconf, "with lines")
         if st == :contour
-            gsp.axesconf *= "\nset view map\nunset surface"
+            gsp.axesconf *= "\nset view map\nunset surface"  # 2D
         end
-        gsp.axesconf *= "\nunset key"
+        gsp.axesconf *= "\nunset key"  # FIXME: too many legend (key) entries
         levels = join(map(string, collect(contour_levels(series, clims))), ", ")
         gsp.axesconf *= "\nset contour base\nset cntrparam levels discrete $levels"
     elseif st ∈ (:surface, :heatmap)
@@ -277,7 +279,7 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
         # TODO: configure grid, axis spines, thickness
     end
 
-    for letter in (:x, :y, :z)
+    for letter ∈ (:x, :y, :z)
         axis_attr = sp.attr[Symbol(letter, :axis)]
         # label names
         push!(axesconf, "set $(letter)label \"$(axis_attr[:guide])\"")
@@ -301,8 +303,7 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
 
         # tick locations
         if axis_attr[:ticks] != :native
-            # axis limits
-            from, to = axis_limits(sp, letter)
+            from, to = axis_limits(sp, letter)  # axis limits
             push!(axesconf, "set $(letter)range [$from:$to]")
 
             ticks = get_ticks(sp, axis_attr)
@@ -311,9 +312,7 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
 
         ratio = get_aspect_ratio(sp)
         if ratio != :none
-            if ratio == :equal
-                ratio = -1
-            end
+            ratio == :equal && (ratio = -1)
             push!(axesconf, "set size ratio $ratio")
         end
     end
@@ -337,30 +336,24 @@ function gaston_set_ticks!(axesconf, ticks, letter)
     ttype = ticksType(ticks)
     if ttype == :ticks
         tick_locations = @view ticks[:]
-        gaston_tick_string = []
-        for i in eachindex(tick_locations)
+        gaston_ticks = String[]
+        for i ∈ eachindex(tick_locations)
             lac = tick_locations[i]
-            push!(gaston_tick_string, "$loc")
+            push!(gaston_ticks, "$loc")
         end
-        push!(
-            axesconf,
-            "set $(letter)tics (" * join(gaston_tick_string, ", ") * ")"
-        )
+        push!(axesconf, "set $(letter)tics (" * join(gaston_ticks, ", ") * ")")
     elseif ttype == :ticks_and_labels
         tick_locations = @view ticks[1][:]
         tick_labels = @view ticks[2][:]
-        gaston_tick_string = []
-        for i in eachindex(tick_locations)
+        gaston_ticks = String[]
+        for i ∈ eachindex(tick_locations)
             loc = tick_locations[i]
             lab = gaston_enclose_tick_string(tick_labels[i])
-            push!(gaston_tick_string, "'$lab' $loc")
+            push!(gaston_ticks, "'$lab' $loc")
         end
-        push!(
-            axesconf,
-            "set $(letter)tics (" * join(gaston_tick_string, ", ") * ")"
-        )
+        push!(axesconf, "set $(letter)tics (" * join(gaston_ticks, ", ") * ")")
     else
-        error("Invalid input for $(letter)ticks: $ticks")
+        @error "Gaston: invalid input for $(letter)ticks: $ticks"
     end
     nothing
 end
@@ -368,25 +361,16 @@ end
 function gaston_set_legend!(axesconf, sp)
     leg = sp[:legend]
     if sp[:legend] ∉ (:none, :inline)
-        if leg == :best
-            leg = :topright
-        end
+        leg == :best && (leg = :topright)
 
-        if occursin("outer", string(leg))
-            push!(axesconf, "set key outside")
-        else
-            push!(axesconf, "set key inside")
-        end
-        positions = ["top", "bottom", "left", "right"]
-        for position in positions
-            if occursin(position, string(leg))
-                push!(axesconf, "set key $position")
-            end
+        push!(axesconf, "set key " * (occursin("outer", string(leg)) ? "outside" : "inside"))
+        for position ∈ ("top", "bottom", "left", "right")
+            occursin(position, string(leg)) && push!(axesconf, "set key $position")
         end
         if sp[:legendtitle] != nothing
             push!(axesconf, "set key title '$(sp[:legendtitle])'")
         end
-        push!(axesconf, "set key box linewidth 1")
+        push!(axesconf, "set key box lw 1")
         push!(axesconf, "set key opaque")
 
         push!(axesconf, "set border back")
@@ -402,6 +386,8 @@ end
 # Helpers
 # --------------------------------------------
 
+gaston_alpha(alpha) = alpha === nothing ? 0 : alpha
+
 gaston_lc_ls_lw(series::Series) = (
     gaston_color(series[:linecolor], series[:linealpha]),
     gaston_linestyle(series[:linestyle]),
@@ -409,8 +395,8 @@ gaston_lc_ls_lw(series::Series) = (
 )
 
 gaston_mk_ms_mc(series::Series) = (
-    gaston_marker(series[:markershape]),
-    series[:markersize] * GASTON_MARKER_SCALING,
+    gaston_marker(series[:markershape], series[:markeralpha]),
+    series[:markersize] * 1.3 / 5.,
     gaston_color(series[:markercolor], series[:markeralpha]),
 )
 
@@ -423,29 +409,31 @@ function gaston_palette(gradient)
     return '(' * join(palette, ", ") * ')'
 end
 
-function gaston_marker(marker)
+function gaston_marker(marker, alpha)
+    # NOTE: :rtriangle, :ltriangle, :hexagon, :heptagon, :octagon seems unsupported by gnuplot
+    filled = gaston_alpha(alpha) == 0
     marker == :none && return -1
-    marker == :circle && return 7
-    marker == :rect && return 5
-    marker == :diamond && return 28
-    marker == :utriangle && return 9
-    marker == :dtriangle && return 11
-    marker == :+ && return 1
-    marker == :x && return 2
-    marker == :star5 && return 3
-    marker == :pentagon && return 15
     marker == :pixel && return 0
+    marker ∈ (:+, :cross) && return 1
+    marker ∈ (:x, :xcross) && return 2
+    marker == :star5 && 3
+    marker == :rect && return filled ? 5 : 4
+    marker == :circle && return filled ? 7 : 6
+    marker == :utriangle && return filled ? 9 : 8
+    marker == :dtriangle && return filled ? 11 : 10
+    marker == :diamond && return filled ? 13 : 12
+    marker == :pentagon && return filled ? 15 : 14
 
-    @warn "Unsupported marker $marker"
+    @warn "Gaston: unsupported marker $marker"
     return 1
 end
 
-function gaston_color(color, alpha=0.)
+function gaston_color(color, alpha=0)
     if isvector(color)
         return gaston_color.(color)
     else
         col = single_color(color)  # in case of gradients
-        col = alphacolor(col, alpha == nothing ? 0. : alpha)  # add a default alpha if non existent
+        col = alphacolor(col, gaston_alpha(alpha))  # add a default alpha if non existent
         return "rgb \"#$(hex(col, :aarrggbb))\""
     end
 end
@@ -459,11 +447,7 @@ function gaston_linestyle(style)
 end
 
 function gaston_enclose_tick_string(tick_string)
-    if findfirst("^", tick_string) == nothing
-        return tick_string
-    end
-
+    findfirst("^", tick_string) == nothing && return tick_string
     base, power = split(tick_string, "^")
-    power = string("{", power, "}")
-    return string(base, "^", power)
+    return "$base^{$power}"
 end
