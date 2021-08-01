@@ -31,7 +31,7 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     plt.o.layout = gaston_init_subplots(plt, sps)
 
     # Then add the series (curves in gaston)
-    for series ∈ plt.series_list
+    for (s, series) ∈ enumerate(plt.series_list)
         gaston_add_series(plt, series)
     end
     
@@ -89,6 +89,8 @@ function gaston_saveopts(plt::Plot{GastonBackend})
     push!(saveopts, gaston_font(plottitlefont(plt), rot=false, align=false, color=false, scale=1))
 
     push!(saveopts, "background $(gaston_color(plt.attr[:background_color]))")
+
+    # push!(saveopts, "title '$(plt.attr[:window_title])'")
 
     # Scale all plot elements to match Plots.jl DPI standard
     scaling = plt.attr[:dpi] / Plots.DPI
@@ -219,6 +221,9 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
                 if ly == 2 && ly != nc
                     y = collect(range(y[1], y[2], length=nc))
                 end
+            elseif st == :heatmap
+                length(x) == size(z, 2) + 1 && (x = @view x[1:end-1])
+                length(y) == size(z, 1) + 1 && (y = @view y[1:end-1])
             end
         end
         for sc ∈ gaston_seriesconf!(sp, series, 1, true)
@@ -315,15 +320,14 @@ function gaston_parse_axes_args(
     # axesconf = String["set margins 2, 2, 2, 2"]  # left, right, bottom, top
     axesconf = String[]
 
+    polar = ispolar(sp) && dims == 2  # cannot splot in polar coordinates
+
     for letter ∈ (:x, :y, :z)
         (letter == :z && dims == 2) && continue
         axis = sp.attr[Symbol(letter, :axis)]
         # label names
         push!(axesconf, "set $(letter)label '$(axis[:guide])' $(gaston_font(guidefont(axis)))")
         mirror = axis[:mirror] ? "mirror" : "nomirror"
-
-        # handle ticks
-        push!(axesconf, "set $(letter)tics $(mirror) $(axis[:tick_direction]) $(gaston_font(tickfont(axis)))")
 
         if axis[:scale] == :identity
             logscale, base = "nologscale", ""
@@ -336,27 +340,34 @@ function gaston_parse_axes_args(
         end
         push!(axesconf, "set $logscale $letter $base")
 
-        # major tick locations
-        if axis[:ticks] != :native
-            if axis[:flip]
-                hi, lo = axis_limits(sp, letter)
-            else
-                lo, hi = axis_limits(sp, letter)
-            end
-            push!(axesconf, "set $(letter)range [$lo:$hi]")
+        # handle ticks
+        if polar
+            push!(axesconf, "set size square\nunset $(letter)tics")
+        else
+            push!(axesconf, "set $(letter)tics $(mirror) $(axis[:tick_direction]) $(gaston_font(tickfont(axis)))")
 
-            ticks = get_ticks(sp, axis)
-            gaston_set_ticks!(axesconf, ticks, letter, "", "")
+            # major tick locations
+            if axis[:ticks] != :native
+                if axis[:flip]
+                    hi, lo = axis_limits(sp, letter)
+                else
+                    lo, hi = axis_limits(sp, letter)
+                end
+                push!(axesconf, "set $(letter)range [$lo:$hi]")
 
-            if axis[:minorticks] != :native
-                minor_ticks = get_minor_ticks(sp, axis, ticks)
-                gaston_set_ticks!(axesconf, minor_ticks, letter, "m", "add")
+                ticks = get_ticks(sp, axis)
+                gaston_set_ticks!(axesconf, ticks, letter, "", "")
+
+                if axis[:minorticks] != :native
+                    minor_ticks = get_minor_ticks(sp, axis, ticks)
+                    gaston_set_ticks!(axesconf, minor_ticks, letter, "m", "add")
+                end
             end
         end
-        
+
         if axis[:grid]
-            push!(axesconf, "set grid $(letter)tics")
-            axis[:minorgrid] && push!(axesconf, "set grid m$(letter)tics")
+            push!(axesconf, "set grid " * (polar ? "polar" : "$(letter)tics"))
+            axis[:minorgrid] && push!(axesconf, "set grid " * (polar ? "polar" : "m$(letter)tics"))
         end
 
         ratio = get_aspect_ratio(sp)
@@ -375,6 +386,23 @@ function gaston_parse_axes_args(
         push!(axesconf, "set title '$(sp[:title])' $(gaston_font(titlefont(sp)))")
     end
 
+    if polar
+        push!(axesconf, "unset border\nset polar\nset border polar")
+        tmin, tmax = axis_limits(sp, :x, false, false)
+        rmin, rmax = axis_limits(sp, :y, false, false)
+        rticks = get_ticks(sp, :y)
+        if (ttype = ticksType(rticks)) == :ticks
+            gaston_ticks = String[string(t) for (t, l) ∈ zip(rticks...)]
+        elseif ttype == :ticks_and_labels
+            gaston_ticks = String["'$l' $t" for (t, l) ∈ zip(rticks...)]
+        end
+        push!(axesconf, "set rtics ( " * join(gaston_ticks, ", ") * " ) $(gaston_font(tickfont(sp.attr[:yaxis])))")
+        push!(axesconf, "set trange [$(min(0, tmin)):$(max(2π, tmax))]")
+        push!(axesconf, "set rrange [$rmin:$rmax]")
+        push!(axesconf, "set ttics 0,30 format \"%g\".GPVAL_DEGREE_SIGN $(gaston_font(tickfont(sp.attr[:xaxis])))")
+        push!(axesconf, "set mttics 3")
+    end
+
     return join(axesconf, "\n")
 end
 
@@ -385,9 +413,8 @@ function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
         return
     end
 
-    ttype = ticksType(ticks)
     gaston_ticks = String[]
-    if ttype == :ticks
+    if (ttype = ticksType(ticks)) == :ticks
         tick_locs = @view ticks[:]
         for i ∈ eachindex(tick_locs)
             tick = if maj_min == "m"
@@ -487,6 +514,7 @@ function gaston_marker(marker, alpha)
     marker == :dtriangle && return filled ? 11 : 10
     marker == :diamond && return filled ? 13 : 12
     marker == :pentagon && return filled ? 15 : 14
+    marker ∈ (:vline, :hline) && return marker
 
     @warn "Gaston: unsupported marker $marker"
     return 1
