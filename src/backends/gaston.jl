@@ -196,12 +196,13 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     sp = series[:subplot]; gsp = sp.o
     x, y, z = series[:x], series[:y], series[:z]
     st = series[:seriestype]
+    @show st series[:ribbon]
 
     curves = []
     if gsp.dims == 2 && z === nothing
-        for seg ∈ series_segments(series, st; check=true)
+        for (n, seg) ∈ enumerate(series_segments(series, st; check=true))
             i, rng = seg.attr_index, seg.range
-            for sc ∈ gaston_seriesconf!(sp, series, i)
+            for sc ∈ gaston_seriesconf!(sp, series, i, n == 1)
                 push!(curves, Gaston.Curve(x[rng], y[rng], nothing, nothing, sc))
             end
         end
@@ -221,7 +222,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
                 end
             end
         end
-        for sc ∈ gaston_seriesconf!(sp, series, 1)
+        for sc ∈ gaston_seriesconf!(sp, series, 1, true)
             push!(curves, Gaston.Curve(x, y, z, nothing, sc))
         end
     end
@@ -250,7 +251,7 @@ function gaston_hvline!(sp, series, curveconf, pt, dt, lw, lc, command)
     nothing
 end
 
-function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
+function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int, add_to_legend::Bool)
     #=
     gnuplot abbreviations (see gnuplot/src/set.c)
     ---------------------------------------------
@@ -271,7 +272,7 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
     w: with 
     =#
     gsp = sp.o; st = series[:seriestype]; extra = []
-    add_to_legend = should_add_to_legend(series) && i == 1
+    add_to_legend &= should_add_to_legend(series)
     curveconf = String[add_to_legend ? "title '$(series[:label])'" : "notitle"]
 
     clims = get_clims(sp, series)
