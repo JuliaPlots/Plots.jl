@@ -309,7 +309,6 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
     elseif st ∈ (:contour, :contour3d)
         push!(curveconf, "w lines")
         st == :contour && (gsp.axesconf *= "\nset view map\nunset surface")  # 2D
-        gsp.axesconf *= "\nunset key"  # FIXME: too many legend (key) entries
         levels = join(map(string, collect(contour_levels(series, clims))), ", ")
         gsp.axesconf *= "\nset contour base\nset cntrparam levels discrete $levels"
     elseif st ∈ (:surface, :heatmap)
