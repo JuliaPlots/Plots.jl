@@ -52,8 +52,8 @@ end
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
-    xy_wh = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1))
-    gaston_multiplot_pos_size!(0, plt, xy_wh)
+    xy_wh = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1), 0)
+    gaston_multiplot_pos_size!(0, xy_wh)
 end
 
 for (mime, term) ∈ (
@@ -147,43 +147,44 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot
     nothing
 end
 
-function gaston_multiplot_pos_size(layout, parent_xy_wh)
+function gaston_multiplot_pos_size(layout, parent_xy_wh, level)
     nr, nc = size(layout)
-    xy_wh = Array{Any}(nothing, nr, nc)
+    xy_wh_sp = Array{Any}(nothing, nr, nc)
     for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
         l = layout[r, c]
         if !isa(l, EmptyLayout)
             # previous position (origin)
-            prev_r = r > 1 ? xy_wh[r - 1, c] : nothing
-            prev_c = c > 1 ? xy_wh[r, c - 1] : nothing
-            prev_r isa Array{Any} && (prev_r = prev_r[end, end])
-            prev_c isa Array{Any} && (prev_c = prev_c[end, end])
+            prev_r = r > 1 ? xy_wh_sp[r - 1, c] : nothing
+            prev_c = c > 1 ? xy_wh_sp[r, c - 1] : nothing
+            prev_r isa Array && (prev_r = prev_r[end, end])
+            prev_c isa Array && (prev_c = prev_c[end, end])
             x = prev_c !== nothing ? prev_c[1] + prev_c[3] : parent_xy_wh[1]
             y = prev_r !== nothing ? prev_r[2] + prev_r[4] : parent_xy_wh[2]
             # width and height (pct) are multiplicative (parent)
             w = layout.widths[c].value * parent_xy_wh[3]
             h = layout.heights[r].value * parent_xy_wh[4]
             if l isa GridLayout
-                xy_wh[r, c] = gaston_multiplot_pos_size(l, (x, y, w, h))
+                sub = gaston_multiplot_pos_size(l, (x, y, w, h), level + 1)
+                xy_wh_sp[r, c] = size(sub) == (1, 1) ? only(sub) : sub
             else
-                xy_wh[r, c] = x, y, w, h
+                xy_wh_sp[r, c] = x, y, w, h, l
             end
         end
     end
-    return xy_wh
+    return xy_wh_sp
 end
 
-function gaston_multiplot_pos_size!(n::Int, plt, origin_size)
-    nr, nc = size(origin_size)
+function gaston_multiplot_pos_size!(n::Int, dat)
+    nr, nc = size(dat)
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
-        xy_wh = origin_size[r, c]
-        if xy_wh isa Array
-            n = gaston_multiplot_pos_size!(n, plt, xy_wh)
-        elseif xy_wh isa Tuple
-            x, y, w, h = xy_wh
-            if (gsp = plt.o.subplots[n += 1]) !== nothing
-                gsp.axesconf = "set origin $x,$y\nset size $w,$h\n" * gsp.axesconf
-            end
+        xy_wh_sp = dat[r, c]
+        if xy_wh_sp isa Array
+            n = gaston_multiplot_pos_size!(n, xy_wh_sp)
+        elseif xy_wh_sp isa Tuple
+            x, y, w, h, sp = xy_wh_sp
+            sp === nothing && continue
+            sp.o === nothing && continue
+            sp.o.axesconf = "set origin $x,$y\nset size $w,$h\n" * sp.o.axesconf
         end
     end
     return n
@@ -269,7 +270,9 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
     w: with 
     =#
     gsp = sp.o; st = series[:seriestype]; extra = []
-    curveconf = String[should_add_to_legend(series) ? "title '$(series[:label])'" : "notitle"]
+    curveconf = String[
+        should_add_to_legend(series) ? "title '$(series[:label])'" : "notitle"
+    ]
 
     clims = get_clims(sp, series)
     if st ∈ (:scatter, :scatter3d)
@@ -338,22 +341,29 @@ function gaston_parse_axes_args(
         axis = sp.attr[Symbol(letter, :axis)]
         # label names
         push!(axesconf, "set $(letter)label '$(axis[:guide])' $(gaston_font(guidefont(axis)))")
-
         mirror = axis[:mirror] ? "mirror" : "nomirror"
 
-        # Handle ticks
+        # handle ticks
         push!(axesconf, "set $(letter)tics $(mirror) $(axis[:tick_direction]) $(gaston_font(tickfont(axis)))")
 
-        logscale = if axis[:scale] == :identity
-            "nologscale"
+        if axis[:scale] == :identity
+            logscale, base = "nologscale", ""
         elseif axis[:scale] == :log10
-            "logscale"
+            logscale, base = "logscale", "10"
+        elseif axis[:scale] == :log2
+            logscale, base = "logscale", "2"
+        elseif axis[:scale] == :ln
+            logscale, base = "logscale", "e"
         end
-        push!(axesconf, "set $logscale $(letter)")
+        push!(axesconf, "set $logscale $letter $base")
 
         # major tick locations
         if axis[:ticks] != :native
-            lo, hi = axis_limits(sp, letter)
+            if axis[:flip]
+                hi, lo = axis_limits(sp, letter)
+            else
+                lo, hi = axis_limits(sp, letter)
+            end
             push!(axesconf, "set $(letter)range [$lo:$hi]")
 
             ticks = get_ticks(sp, axis)
@@ -376,7 +386,7 @@ function gaston_parse_axes_args(
             push!(axesconf, "set size ratio $ratio")
         end
     end
-    gaston_set_legend!(axesconf, sp, any_label) # Set legend params
+    gaston_set_legend!(axesconf, sp, any_label)
 
     if hascolorbar(sp)
         push!(axesconf, "set cbtics $(gaston_font(colorbartitlefont(sp)))")
