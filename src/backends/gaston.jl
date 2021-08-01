@@ -132,7 +132,7 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot
     else
         dims = RecipesPipeline.is3d(sp) || sp.attr[:projection] == "3d" || needs_any_3d_axes(sp) ? 3 : 2
         any_label = false
-        for series ∈ plt.series_list
+        for series ∈ series_list(sp)
             if dims == 2 && series[:seriestype] ∈ (:heatmap, :contour)
                 dims = 3  # we need heatmap/contour to use splot, not plot
             end
