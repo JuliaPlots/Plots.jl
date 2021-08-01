@@ -203,7 +203,6 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
             end
         end
     else
-        seriesconf = gaston_seriesconf!(sp, series, 1)
         if z isa Surface
             z = z.surf
             if st == :image
@@ -269,7 +268,8 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
     w: with 
     =#
     gsp = sp.o; st = series[:seriestype]; extra = []
-    curveconf = String[should_add_to_legend(series) ? "title '$(series[:label])'" : "notitle"]
+    add_to_legend = should_add_to_legend(series) && i == 1
+    curveconf = String[add_to_legend ? "title '$(series[:label])'" : "notitle"]
 
     clims = get_clims(sp, series)
     if st ∈ (:scatter, :scatter3d)
