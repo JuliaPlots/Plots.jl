@@ -196,7 +196,6 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     sp = series[:subplot]; gsp = sp.o
     x, y, z = series[:x], series[:y], series[:z]
     st = series[:seriestype]
-    @show st series[:ribbon]
 
     curves = []
     if gsp.dims == 2 && z === nothing
