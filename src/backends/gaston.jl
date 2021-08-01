@@ -147,7 +147,7 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot
     nothing
 end
 
-function gaston_multiplot_pos_size(layout, parent_xy_wh, level)
+function gaston_multiplot_pos_size(layout, parent_xy_wh)
     nr, nc = size(layout)
     xy_wh_sp = Array{Any}(nothing, nr, nc)
     for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
@@ -164,7 +164,7 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh, level)
             w = layout.widths[c].value * parent_xy_wh[3]
             h = layout.heights[r].value * parent_xy_wh[4]
             if l isa GridLayout
-                sub = gaston_multiplot_pos_size(l, (x, y, w, h), level + 1)
+                sub = gaston_multiplot_pos_size(l, (x, y, w, h))
                 xy_wh_sp[r, c] = size(sub) == (1, 1) ? only(sub) : sub
             else
                 xy_wh_sp[r, c] = x, y, w, h, l
@@ -270,9 +270,7 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int)
     w: with 
     =#
     gsp = sp.o; st = series[:seriestype]; extra = []
-    curveconf = String[
-        should_add_to_legend(series) ? "title '$(series[:label])'" : "notitle"
-    ]
+    curveconf = String[should_add_to_legend(series) ? "title '$(series[:label])'" : "notitle"]
 
     clims = get_clims(sp, series)
     if st ∈ (:scatter, :scatter3d)
@@ -444,8 +442,9 @@ function gaston_set_legend!(axesconf, sp, any_label)
         for position ∈ ("top", "bottom", "left", "right")
             occursin(position, string(leg)) && push!(axesconf, "set key $position")
         end
+        push!(axesconf, "set key $(gaston_font(legendfont(sp), rot=false, align=false))")
         if sp[:legendtitle] !== nothing
-            push!(axesconf, "set key title '$(sp[:legendtitle])' $(gaston_font(legendtitlefont(sp)))")
+            push!(axesconf, "set key title '$(sp[:legendtitle])'")
         end
         push!(axesconf, "set key box lw 1 opaque")
         push!(axesconf, "set border back")
