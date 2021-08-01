@@ -988,6 +988,118 @@ end
 
 
 # ---------------------------------------------------------------------------
+# Histogram 3D
+
+# Check if all neighbours have the same value
+# TODO: Improve this somehow
+function _allneighbours(arr, I::CartesianIndex, val = 0.0)
+    arr[I] == val &&
+    arr[I + CartesianIndex(1,0)]  == val &&
+    arr[I + CartesianIndex(0,1)]  == val &&
+    arr[I - CartesianIndex(1,0)]  == val &&
+    arr[I - CartesianIndex(0,1)]  == val &&
+    arr[I + CartesianIndex(1,1)]  == val &&
+    arr[I + CartesianIndex(1,-1)] == val &&
+    arr[I - CartesianIndex(1,1)]  == val &&
+    arr[I - CartesianIndex(1,-1)] == val
+end
+
+@recipe function f(::Type{Val{:bins3d}}, x, y, z)
+    edge_x, edge_y, weights = x, y, z.surf
+
+    # Create the bins
+    if !plotattributes[:show_empty_bins]
+        edge_x = repeat(edge_x,inner=(4))[2:end-1]
+        edge_y = repeat(edge_y,inner=(4))[2:end-1]
+        float_weights = spzeros(length(edge_x),length(edge_y))
+        float_weights[2:end-1,2:end-1] = repeat(float(weights),inner=(4,4))
+        m = falses(size(float_weights))
+        for I in CartesianIndices((2:length(edge_x)-1,2:length(edge_y)-1))
+            m[I] = _allneighbours(float_weights,I,0)
+        end
+        float_weights[m] .= NaN
+    else
+        edge_x = repeat(edge_x,inner=(2))
+        edge_y = repeat(edge_y,inner=(2))
+        float_weights = spzeros(length(edge_x),length(edge_y))
+        float_weights[2:end-1,2:end-1] .= repeat(float(weights),inner=(2,2))
+    end
+
+    # pyplot can't handle sparse arrays it seems
+    # Maybe get rid off sparse arrays at all, but if any bins-entry is large the additional points for plotting may use up a lot of memory otherwise for zeros and NaNs
+    if backend_name() == :pyplot
+        float_weights = Surface(permutedims(Array(float_weights)))
+    else
+        float_weights = Surface(permutedims(float_weights))
+    end
+
+    # Handle input of one seriescolor only (maybe exchangeable by get_series_color()?)
+    if isa(plotattributes[:seriescolor], Symbol) && plotattributes[:seriescolor] != :auto
+        seriescolor := cgrad([plotattributes[:seriescolor], plotattributes[:seriescolor]])
+    end
+
+    seriestype := :surface
+    colorbar := false
+    x := edge_x
+    y := edge_y
+    z := float_weights
+
+    ()
+end
+Plots.@deps bins3d surface #wireframe mesh3d
+
+
+
+@recipe function f(::Type{Val{:bricks3d}}, x, y, z)
+    edge_x, edge_y, weights = x, y, z.surf
+
+    x_step = edge_x[2] - edge_x[1]
+    y_step = edge_y[2] - edge_y[1]
+    x_len = length(x)
+    y_len = length(y)
+
+    temp_x = vec([0.0 0.0 1.0 1.0]).*x_step .+ edge_x'
+    temp_y = vec([1.0 1.0 0.0 0.0]).*y_step .+ edge_y'
+
+    z_help =     [1.0 0.0 0.0 1.0;
+                  0.0 1.0 1.0 0.0;
+                  0.0 1.0 1.0 0.0;
+                  1.0 0.0 0.0 1.0];
+
+    for (i, c) in enumerate(weights)
+        itx = (i-1)%y_len + 1
+        ity = floor(Int64,i/x_len) + 1
+        @series begin
+            seriestype := :surface
+            x := temp_x[:,itx]
+            y := temp_y[:,ity]
+            z := c == 0 ? Surface(permutedims(NaN .* z_help)) : Surface(permutedims(c .* z_help))
+            ()
+        end
+    end
+
+
+end
+Plots.@deps bins3d surface #wireframe mesh3d
+
+
+@recipe function f(::Type{Val{:histogram3d}}, x, y, z)
+    h = _make_hist(
+        (x, y),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+    )
+    x := h.edges[1]
+    y := h.edges[2]
+    z := Surface(h.weights)
+    seriestype := :bricks3d#:bins3d
+    ()
+end
+@deps histogram3d bins3d bricks3d
+
+
+# ---------------------------------------------------------------------------
 # pie
 @recipe function f(::Type{Val{:pie}}, x, y, z)
     framestyle --> :none

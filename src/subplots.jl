@@ -49,6 +49,7 @@ function should_add_to_legend(series::Series)
             :hexbin,
             :bins2d,
             :histogram2d,
+            :histogram3d,
             :hline,
             :vline,
             :contour,
