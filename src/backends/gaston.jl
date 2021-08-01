@@ -392,7 +392,7 @@ function gaston_parse_axes_args(
         rmin, rmax = axis_limits(sp, :y, false, false)
         rticks = get_ticks(sp, :y)
         if (ttype = ticksType(rticks)) == :ticks
-            gaston_ticks = string.(ticks)
+            gaston_ticks = string.(rticks)
         elseif ttype == :ticks_and_labels
             gaston_ticks = String["'$l' $t" for (t, l) ∈ zip(rticks...)]
         end
