@@ -31,7 +31,7 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     plt.o.layout = gaston_init_subplots(plt, sps)
 
     # Then add the series (curves in gaston)
-    for (s, series) ∈ enumerate(plt.series_list)
+    for series ∈ plt.series_list
         gaston_add_series(plt, series)
     end
     
@@ -392,7 +392,7 @@ function gaston_parse_axes_args(
         rmin, rmax = axis_limits(sp, :y, false, false)
         rticks = get_ticks(sp, :y)
         if (ttype = ticksType(rticks)) == :ticks
-            gaston_ticks = String[string(t) for (t, l) ∈ zip(rticks...)]
+            gaston_ticks = string.(ticks)
         elseif ttype == :ticks_and_labels
             gaston_ticks = String["'$l' $t" for (t, l) ∈ zip(rticks...)]
         end
