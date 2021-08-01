@@ -597,26 +597,23 @@ const _gaston_attr = merge_with_base_supported([
     # :foreground_color_legend,
     # :foreground_color_grid, :foreground_color_axis,
     # :foreground_color_text, :foreground_color_border,
-    :label,
-    # :seriescolor, :seriesalpha,
+    :label, :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
     # :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
     # :fillrange, :fillcolor, :fillalpha,
     # :bins,
     # :bar_width, :bar_edges,
-    # :title,
-    # :window_title,
-    :guide,
-    # :guide_position,
-    :lims, :ticks, :scale, # :flip, :rotation,
+    :title, :window_title,
+    :guide, :guide_position,
+    :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont,
-    # :legendfont,
-    # :grid, :legend,
+    :legendfont, :grid, :legend,
     # :colorbar, :colorbar_title,
     # :fill_z, :line_z, :marker_z, :levels,
-    # :ribbon, :quiver, :arrow,
-    # :orientation,
+    # :ribbon,
+    :quiver,
+    # :arrow, :orientation,
     # :overwrite_figure,
     # :polar,
     # :normalize, :weights, :contours,
@@ -676,12 +673,7 @@ const _gaston_marker = [
     :vline,
 ]
 
-const _gaston_scale = [
-    :identity,
-    # :ln,
-    # :log2,
-    :log10,
-]
+const _gaston_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # unicodeplots
