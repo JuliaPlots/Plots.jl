@@ -51,8 +51,8 @@ end
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
-    xy_wh = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1))
-    gaston_multiplot_pos_size!(0, xy_wh)
+    dat = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1))
+    gaston_multiplot_pos_size!(dat)
 end
 
 for (mime, term) ∈ (
@@ -148,13 +148,13 @@ end
 
 function gaston_multiplot_pos_size(layout, parent_xy_wh)
     nr, nc = size(layout)
-    xy_wh_sp = Array{Any}(nothing, nr, nc)
+    dat = Array{Any}(nothing, nr, nc)
     for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
         l = layout[r, c]
         if !isa(l, EmptyLayout)
             # previous position (origin)
-            prev_r = r > 1 ? xy_wh_sp[r - 1, c] : nothing
-            prev_c = c > 1 ? xy_wh_sp[r, c - 1] : nothing
+            prev_r = r > 1 ? dat[r - 1, c] : nothing
+            prev_c = c > 1 ? dat[r, c - 1] : nothing
             prev_r isa Array && (prev_r = prev_r[end, end])
             prev_c isa Array && (prev_c = prev_c[end, end])
             x = prev_c !== nothing ? prev_c[1] + prev_c[3] : parent_xy_wh[1]
@@ -164,21 +164,21 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
             h = layout.heights[r].value * parent_xy_wh[4]
             if l isa GridLayout
                 sub = gaston_multiplot_pos_size(l, (x, y, w, h))
-                xy_wh_sp[r, c] = size(sub) == (1, 1) ? only(sub) : sub
+                dat[r, c] = size(sub) == (1, 1) ? only(sub) : sub
             else
-                xy_wh_sp[r, c] = x, y, w, h, l
+                dat[r, c] = x, y, w, h, l
             end
         end
     end
-    return xy_wh_sp
+    return dat
 end
 
-function gaston_multiplot_pos_size!(n::Int, dat)
+function gaston_multiplot_pos_size!(dat)
     nr, nc = size(dat)
     for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         xy_wh_sp = dat[r, c]
         if xy_wh_sp isa Array
-            n = gaston_multiplot_pos_size!(n, xy_wh_sp)
+            gaston_multiplot_pos_size!(n, xy_wh_sp)
         elseif xy_wh_sp isa Tuple
             x, y, w, h, sp = xy_wh_sp
             sp === nothing && continue
@@ -186,7 +186,7 @@ function gaston_multiplot_pos_size!(n::Int, dat)
             sp.o.axesconf = "set origin $x,$y\nset size $w,$h\n" * sp.o.axesconf
         end
     end
-    return n
+    nothing
 end
 
 function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
