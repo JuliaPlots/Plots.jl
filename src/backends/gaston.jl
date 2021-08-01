@@ -46,13 +46,12 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
 end
 
 function _update_min_padding!(sp::Subplot{GastonBackend})
-    # FIXME: make this more flexible
-    sp.minpad = (20mm, 5mm, 2mm, 10mm)
+    sp.minpad = 0mm, 0mm, 0mm, 0mm
 end
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
-    xy_wh = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1), 0)
+    xy_wh = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1))
     gaston_multiplot_pos_size!(0, xy_wh)
 end
 
@@ -69,6 +68,7 @@ for (mime, term) ∈ (
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         term = String($term); tmpfile = "$(Gaston.tempname()).$term"
+
         Gaston.save(term=term, output=tmpfile, handle=plt.o.handle, saveopts=gaston_saveopts(plt))
         while !isfile(tmpfile) end  # avoid race condition with read in next line
         write(io, read(tmpfile))
@@ -84,14 +84,17 @@ _display(plt::Plot{GastonBackend}) = display(plt.o)
 # --------------------------------------------
 
 function gaston_saveopts(plt::Plot{GastonBackend})
-    xsize, ysize = plt.attr[:size]
-    saveopts = "size $xsize,$ysize background $(gaston_color(plt.attr[:background_color]))"
+    saveopts = String["size $(join(plt.attr[:size], ","))"]
+
+    push!(saveopts, gaston_font(plottitlefont(plt), rot=false, align=false, color=false, scale=1))
+
+    push!(saveopts, "background $(gaston_color(plt.attr[:background_color]))")
 
     # Scale all plot elements to match Plots.jl DPI standard
     scaling = plt.attr[:dpi] / Plots.DPI
-    saveopts *= "fontscale $scaling lw $scaling dl $scaling ps $scaling"
+    push!(saveopts, "fontscale $scaling lw $scaling dl $scaling ps $scaling")
     
-    return saveopts
+    return join(saveopts, " ")
 end
 
 function gaston_get_subplots(n, plt_subplots, layout)
@@ -129,18 +132,14 @@ function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Union{Nothing,Subplot
     else
         dims = RecipesPipeline.is3d(sp) || sp.attr[:projection] == "3d" || needs_any_3d_axes(sp) ? 3 : 2
         any_label = false
-        if dims == 2
-            for series ∈ plt.series_list
-                if series[:seriestype] ∈ (:heatmap, :contour)
-                    dims = 3  # we need heatmap/contour to use splot, not plot
-                end
-                any_label |= should_add_to_legend(series)
+        for series ∈ plt.series_list
+            if dims == 2 && series[:seriestype] ∈ (:heatmap, :contour)
+                dims = 3  # we need heatmap/contour to use splot, not plot
             end
+            any_label |= should_add_to_legend(series)
         end
         sp.o = Gaston.Plot(
-            dims=dims,
-            axesconf=gaston_parse_axes_args(plt, sp, dims, any_label),  # Gnuplot string
-            curves=[]
+            dims=dims, curves=[], axesconf=gaston_parse_axes_args(plt, sp, dims, any_label),
         )
         push!(plt.o.subplots, sp.o)
     end
@@ -328,11 +327,8 @@ end
 function gaston_parse_axes_args(
     plt::Plot{GastonBackend}, sp::Subplot{GastonBackend}, dims::Int, any_label::Bool
 )
-    axesconf = String["reset"]
-    # Standard 2d axis
-    if !ispolar(sp) && !RecipesPipeline.is3d(sp)
-        # TODO: configure grid, axis spines, thickness
-    end
+    # axesconf = String["set margins 2, 2, 2, 2"]  # left, right, bottom, top
+    axesconf = String[]
 
     for letter ∈ (:x, :y, :z)
         (letter == :z && dims == 2) && continue
@@ -444,6 +440,7 @@ function gaston_set_legend!(axesconf, sp, any_label)
         end
         push!(axesconf, "set key $(gaston_font(legendfont(sp), rot=false, align=false))")
         if sp[:legendtitle] !== nothing
+            # NOTE: cannot use legendtitlefont(sp) as it will override legendfont
             push!(axesconf, "set key title '$(sp[:legendtitle])'")
         end
         push!(axesconf, "set key box lw 1 opaque")
@@ -458,11 +455,12 @@ end
 # Helpers
 # --------------------------------------------
 
-function gaston_font(f; rot=true, align=true)
-    font = "font '$(f.family),$(f.pointsize)' "
-    align && (font *= "$(gaston_halign(f.halign)) ")
-    rot && (font *= "rotate by $(f.rotation) ")
-    font *= "textcolor $(gaston_color(f.color))"
+function gaston_font(f; rot=true, align=true, color=true, scale=1)
+    font = String["font '$(f.family),$(round(Int, scale * f.pointsize))'"]
+    align && push!(font, "$(gaston_halign(f.halign))")
+    rot && push!(font, "rotate by $(f.rotation)")
+    color && push!(font, "textcolor $(gaston_color(f.color))")
+    return join(font, " ")
 end
 
 gaston_halign(k) = (left=:left, hcenter=:center, right=:right)[k]
