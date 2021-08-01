@@ -524,12 +524,25 @@ const _initial_defaults = deepcopy(_all_defaults)
 const _initial_axis_defaults = deepcopy(_axis_defaults)
 
 # to be able to reset font sizes to initial values
-const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefontsize],
-                                :legendfontsize => _subplot_defaults[:legendfontsize],
-                                :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
-                                :annotationfontsize => _subplot_defaults[:annotationfontsize],
-                                :tickfontsize   => _axis_defaults[:tickfontsize],
-                                :guidefontsize  => _axis_defaults[:guidefontsize])
+const _initial_plt_fontsizes = Dict(
+    :plot_titlefontsize => _plot_defaults[:plot_titlefontsize],
+)
+
+const _initial_sp_fontsizes = Dict(
+    :titlefontsize => _subplot_defaults[:titlefontsize],
+    :legendfontsize => _subplot_defaults[:legendfontsize],
+    :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
+    :annotationfontsize => _subplot_defaults[:annotationfontsize],
+    :colorbar_tickfontsize => _subplot_defaults[:colorbar_tickfontsize],
+    :colorbar_titlefontsize => _subplot_defaults[:colorbar_titlefontsize],
+)
+
+const _initial_ax_fontsizes = Dict(
+    :tickfontsize  => _axis_defaults[:tickfontsize],
+    :guidefontsize => _axis_defaults[:guidefontsize],
+)
+
+const _initial_fontsizes = merge(_initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes)
 
 const _internal_args =
     [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
@@ -548,8 +561,7 @@ const _all_subplot_args = sort(union([_subplot_args; _magic_subplot_args]))
 const _all_series_args = sort(union([_series_args; _magic_series_args]))
 const _all_plot_args = _plot_args
 
-const _all_args =
-    sort(union([_all_axis_args; _all_subplot_args; _all_series_args; _all_plot_args]))
+const _all_args = sort(union([_all_axis_args; _all_subplot_args; _all_series_args; _all_plot_args]))
 
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
@@ -571,9 +583,7 @@ function aliasesAndAutopick(plotattributes::AKW, sym::Symbol, aliases::Dict{Symb
     end
 end
 
-function aliases(aliasMap::Dict{Symbol,Symbol}, val)
-    sortedkeys(filter((k,v)-> v==val, aliasMap))
-end
+aliases(aliasMap::Dict{Symbol,Symbol}, val) = sortedkeys(filter((k,v)-> v==val, aliasMap))
 
 # -----------------------------------------------------------------------------
 
@@ -776,9 +786,7 @@ function default(; reset = true, kw...)
     end
 end
 
-function default(plotattributes::AKW, k::Symbol)
-    get(plotattributes, k, default(k))
-end
+default(plotattributes::AKW, k::Symbol) = get(plotattributes, k, default(k))
 
 function reset_defaults()
     foreach(merge!, _all_defaults, _initial_defaults)
@@ -1427,9 +1435,7 @@ function Base.getindex(axis::Axis, k::Symbol)
     end
 end
 
-function Base.getindex(series::Series, k::Symbol)
-    series.plotattributes[k]
-end
+Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]
 
 Base.setindex!(plt::Plot, v, k::Symbol)      = (plt.attr[k] = v)
 Base.setindex!(sp::Subplot, v, k::Symbol)    = (sp.attr[k] = v)
@@ -1611,9 +1617,7 @@ end
 
 has_black_border_for_default(st) = error("The seriestype attribute only accepts Symbols, you passed the $(typeof(st)) $st.")
 has_black_border_for_default(st::Function) = error("The seriestype attribute only accepts Symbols, you passed the function $st.")
-function has_black_border_for_default(st::Symbol)
-    like_histogram(st) || st in (:hexbin, :bar, :shape)
-end
+has_black_border_for_default(st::Symbol) = like_histogram(st) || st in (:hexbin, :bar, :shape)
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
@@ -1626,9 +1630,7 @@ function get_series_color(c, sp::Subplot, n::Int, seriestype)
     plot_color(c)
 end
 
-function get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype)
-    map(x->get_series_color(x, sp, n, seriestype), c)
-end
+get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =  map(x->get_series_color(x, sp, n, seriestype), c)
 
 function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
     if plotattributes[csym] isa ColorPalette
