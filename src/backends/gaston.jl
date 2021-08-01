@@ -185,7 +185,6 @@ function gaston_multiplot_pos_size!(dat)
             x, y, w, h, sp = xy_wh_sp
             sp === nothing && continue
             sp.o === nothing && continue
-            @show r, c x, y sp[:title]
             # gnuplot screen coordinates: bottom left at 0,0 and top right at 1,1
             sp.o.axesconf = "set origin $x, $(1 - y - h)\nset size $w, $h\n" * sp.o.axesconf
         end
