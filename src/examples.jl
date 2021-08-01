@@ -1244,7 +1244,6 @@ _backend_skips = Dict(
     :unicodeplots => [6, 10, 22, 24, 28, 38, 43, 45, 47, 49, 50, 51, 55],
     :gaston => [
         2,  # animations
-        27,  # TODO: support polar
         31,  # animations
         47,  # TODO: support mesh3d
         49,  # TODO: support polar
