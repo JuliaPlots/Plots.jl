@@ -327,12 +327,12 @@ end
 Scales all **current** font sizes by `factor`. For example `scalefontsizes(1.1)` increases all current font sizes by 10%. To reset to initial sizes, use `scalefontsizes()`
 """
 function scalefontsizes(factor::Number)
-    for k in (:titlefontsize, :legendfontsize, :legendtitlefontsize)
+    for k in keys(merge(_initial_plt_fontsizes, _initial_sp_fontsizes))
         scalefontsize(k, factor)
     end
 
     for letter in (:x,:y,:z)
-        for k in (:guidefontsize, :tickfontsize)
+        for k in keys(_initial_ax_fontsizes)
             scalefontsize(Symbol(letter, k), factor)
         end
     end
@@ -344,7 +344,7 @@ end
 Resets font sizes to initial default values.
 """
 function scalefontsizes()
-    for k in (:titlefontsize, :legendfontsize, :legendtitlefontsize)
+    for k in keys(merge(_initial_plt_fontsizes, _initial_sp_fontsizes))
         f = default(k)
         if k in keys(_initial_fontsizes)
             factor = f / _initial_fontsizes[k]
@@ -353,7 +353,7 @@ function scalefontsizes()
     end
 
     for letter in (:x,:y,:z)
-        for k in (:guidefontsize, :tickfontsize)
+        for k in keys(_initial_ax_fontsizes)
             if k in keys(_initial_fontsizes)
                 f = default(Symbol(letter, k))
                 factor = f / _initial_fontsizes[k]
