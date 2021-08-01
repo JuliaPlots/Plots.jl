@@ -149,9 +149,14 @@ end
 function gaston_multiplot_pos_size(layout, parent_xy_wh)
     nr, nc = size(layout)
     dat = Array{Any}(nothing, nr, nc)
-    for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
+    for r ∈ 1:nr, c ∈ 1:nc
         l = layout[r, c]
-        if !isa(l, EmptyLayout)
+        # width and height (pct) are multiplicative (parent)
+        w = layout.widths[c].value * parent_xy_wh[3]
+        h = layout.heights[r].value * parent_xy_wh[4]
+        if isa(l, EmptyLayout)
+            dat[r, c] = (c - 1) * w, (r - 1) * h, w, h, nothing
+        else
             # previous position (origin)
             prev_r = r > 1 ? dat[r - 1, c] : nothing
             prev_c = c > 1 ? dat[r, c - 1] : nothing
@@ -159,9 +164,6 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
             prev_c isa Array && (prev_c = prev_c[end, end])
             x = prev_c !== nothing ? prev_c[1] + prev_c[3] : parent_xy_wh[1]
             y = prev_r !== nothing ? prev_r[2] + prev_r[4] : parent_xy_wh[2]
-            # width and height (pct) are multiplicative (parent)
-            w = layout.widths[c].value * parent_xy_wh[3]
-            h = layout.heights[r].value * parent_xy_wh[4]
             if l isa GridLayout
                 sub = gaston_multiplot_pos_size(l, (x, y, w, h))
                 dat[r, c] = size(sub) == (1, 1) ? only(sub) : sub
@@ -175,15 +177,17 @@ end
 
 function gaston_multiplot_pos_size!(dat)
     nr, nc = size(dat)
-    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
+    for r ∈ 1:nr, c ∈ 1:nc
         xy_wh_sp = dat[r, c]
         if xy_wh_sp isa Array
-            gaston_multiplot_pos_size!(n, xy_wh_sp)
+            gaston_multiplot_pos_size!(xy_wh_sp)
         elseif xy_wh_sp isa Tuple
             x, y, w, h, sp = xy_wh_sp
             sp === nothing && continue
             sp.o === nothing && continue
-            sp.o.axesconf = "set origin $x,$y\nset size $w,$h\n" * sp.o.axesconf
+            @show r, c x, y sp[:title]
+            # gnuplot screen coordinates: bottom left at 0,0 and top right at 1,1
+            sp.o.axesconf = "set origin $x, $(1 - y - h)\nset size $w, $h\n" * sp.o.axesconf
         end
     end
     nothing
