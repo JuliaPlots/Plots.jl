@@ -615,7 +615,7 @@ const _gaston_attr = merge_with_base_supported([
     :quiver,
     # :arrow, :orientation,
     # :overwrite_figure,
-    # :polar,
+    :polar,
     # :normalize, :weights, :contours,
     :aspect_ratio,
     :tick_direction,
