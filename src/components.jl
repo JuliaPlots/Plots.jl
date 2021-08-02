@@ -573,88 +573,93 @@ function Base.iterate(ea::EachAnn, i = 1)
     ((_cycle(ea.x,i), _cycle(ea.y,i), str, fnt), i+1)
 end
 
+# -----------------------------------------------------------------------
 annotations(::Nothing) = []
 annotations(anns::AVec) = anns
 annotations(anns::AMat) = map(annotations, anns)
 annotations(anns) = Any[anns]
 annotations(sa::SeriesAnnotations) = sa
 
+_annotationfont(sp::Subplot) = Plots.font(;
+  family=sp[:annotationfontfamily],
+  pointsize=sp[:annotationfontsize],
+  halign=sp[:annotationhalign],
+  valign=sp[:annotationvalign],
+  rotation=sp[:annotationrotation],
+  color=sp[:annotationcolor],
+)
+
+_annotation(sp, font, lab, pos...; alphabet="abcdefghijklmnopqrstuvwxyz") = (
+  if lab == :auto
+    (pos..., text("($(alphabet[sp[:subplot_index]]))", font))
+  else
+    (pos..., isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab[1], font, lab[2:end]...) : text(lab, font))
+  end
+)
+
 # Expand arrays of coordinates, positions and labels into induvidual annotations
 # and make sure labels are of type PlotText
-function process_annotation(sp::Subplot, xs, ys, labs, font = nothing)
+function process_annotation(sp::Subplot, xs, ys, labs, font=_annotationfont(sp))
     anns = []
     labs = makevec(labs)
     xlength = length(methods(length, (typeof(xs),))) == 0 ? 1 : length(xs)
     ylength = length(methods(length, (typeof(ys),))) == 0 ? 1 : length(ys)
-    if isnothing(font)
-        font = Plots.font(;
-                    family=sp[:annotationfontfamily],
-                    pointsize=sp[:annotationfontsize],
-                    halign=sp[:annotationhalign],
-                    valign=sp[:annotationvalign],
-                    rotation=sp[:annotationrotation],
-                    color=sp[:annotationcolor],
-                         )
-    end
     for i in 1:max(xlength, ylength, length(labs))
       x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
-        x = typeof(x) <: TimeType ? Dates.value(x) : x
-        y = typeof(y) <: TimeType ? Dates.value(y) : y
-        if lab == :auto
-            alphabet = "abcdefghijklmnopqrstuvwxyz"
-            push!(anns, (x, y, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
-        else
-            push!(anns, (x, y, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab[1], font, lab[2:end]...) : text(lab, font)))
-        end
-    end
-    anns
-end
-function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, labs, font = nothing)
-    anns = []
-    positions, labs = makevec(positions), makevec(labs)
-    if isnothing(font)
-        font = Plots.font(;
-                          family=sp[:annotationfontfamily],
-                          pointsize=sp[:annotationfontsize],
-                          halign=sp[:annotationhalign],
-                          valign=sp[:annotationvalign],
-                          rotation=sp[:annotationrotation],
-                          color=sp[:annotationcolor],
-                         )
-    end
-    for i in 1:max(length(positions), length(labs))
-        pos, lab = _cycle(positions, i), _cycle(labs, i)
-        pos = get(_positionAliases, pos, pos)
-        if lab == :auto
-            alphabet = "abcdefghijklmnopqrstuvwxyz"
-            push!(anns, (pos, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
-        else
-            push!(anns, (pos, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab[1], font, lab[2:end]...) : text(lab, font)))
-        end
+      x = typeof(x) <: TimeType ? Dates.value(x) : x
+      y = typeof(y) <: TimeType ? Dates.value(y) : y
+      push!(anns, _annotation(sp, font, lab, x, y))
     end
     anns
 end
 
-function process_any_label(lab, font=Font())
-    lab isa Tuple ? text(lab...) : text( lab, font )
+function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol,Tuple}, labs, font=_annotationfont(sp))
+    anns = []
+    positions, labs = makevec(positions), makevec(labs)
+    for i in 1:max(length(positions), length(labs))
+        pos, lab = _cycle(positions, i), _cycle(labs, i)
+        push!(anns, _annotation(sp, font, lab, get(_positionAliases, pos, pos)))
+    end
+    anns
 end
+
+process_any_label(lab, font=Font()) = lab isa Tuple ? text(lab...) : text(lab, font)
+
+_relative_position(xmin, xmax, pos::Length{:pct}) = xmin + pos.value * (xmax - xmin)
+
 # Give each annotation coordinates based on specified position
-function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
-    position_multiplier = Dict{Symbol, Tuple{Float64,Float64}}(
-        :topleft       => (0.1, 0.9),
-        :topcenter     => (0.5, 0.9),
-        :topright      => (0.9, 0.9),
-        :bottomleft    => (0.1, 0.1),
-        :bottomcenter  => (0.5, 0.1),
-        :bottomright   => (0.9, 0.1),
+function locate_annotation(
+  sp::Subplot, pos::Symbol, label::PlotText;
+  position_multiplier=Dict{Symbol, Tuple{Float64,Float64}}(
+    :topleft       => (0.1pct, 0.9pct),
+    :topcenter     => (0.5pct, 0.9pct),
+    :topright      => (0.9pct, 0.9pct),
+    :bottomleft    => (0.1pct, 0.1pct),
+    :bottomcenter  => (0.5pct, 0.1pct),
+    :bottomright   => (0.9pct, 0.1pct),
+  )
+)
+    x, y = position_multiplier[pos]
+    (
+      _relative_position(axis_limits(sp, :x)..., x),
+      _relative_position(axis_limits(sp, :y)..., y),
+      label
     )
-    xmin, xmax = ignorenan_extrema(sp[:xaxis])
-    ymin, ymax = ignorenan_extrema(sp[:yaxis])
-    x, y = (xmin, ymin).+ position_multiplier[pos].* (xmax - xmin, ymax - ymin)
-    (x, y, lab)
 end
 locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
 locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
+
+locate_annotation(sp::Subplot, rel::NTuple{2,<:Number}, label::PlotText) = (
+  _relative_position(axis_limits(sp, :x)..., rel[1] * Plots.pct),
+  _relative_position(axis_limits(sp, :y)..., rel[2] * Plots.pct),
+  label
+)
+locate_annotation(sp::Subplot, rel::NTuple{3,<:Number}, label::PlotText) = (
+  _relative_position(axis_limits(sp, :x)..., rel[1] * Plots.pct),
+  _relative_position(axis_limits(sp, :y)..., rel[2] * Plots.pct),
+  _relative_position(axis_limits(sp, :z)..., rel[3] * Plots.pct),
+  label
+)
 # -----------------------------------------------------------------------
 
 "type which represents z-values for colors and sizes (and anything else that might come up)"

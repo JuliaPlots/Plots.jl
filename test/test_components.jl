@@ -148,4 +148,14 @@ end
     @test spl.series_list[3].plotattributes[:series_annotations].strs == ["1/3"]
     @test spl.series_list[4].plotattributes[:series_annotations].strs == ["1/4"]
     @test spl.series_list[5].plotattributes[:series_annotations].strs == ["1/5"]
+
+    p = plot([1, 2], annotations=(1.5, 2, text("foo", :left)))
+    x, y, txt = p.subplots[end][:annotations][end]
+    @test (x, y) == (1.5, 2)
+    @test txt.str == "foo"
+
+    p = plot([1, 2], annotations=((.1, .5), :auto))
+    pos, txt = p.subplots[end][:annotations][end]
+    @test pos == (.1, .5)
+    @test txt.str == "(a)"
 end
