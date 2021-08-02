@@ -369,10 +369,12 @@ const _examples = PlotExample[
         "Annotations",
         """
         The `annotations` keyword is used for text annotations in data-coordinates.  Pass in a
-        tuple `(x, y, text)`, or a vector of annotations, each of which is a tuple of `x`, `y`
-        and `text`.
-        `text` may be a simple `String`, or a `PlotText` object, which can be
-        built with the method `text(string, attrs...)`.
+        tuple `(x, y, text)`, a vector of annotations, each of which is a tuple of `x`, `y`
+        and `text`. You can position annotations using relative coordinates with the syntax
+        `((px, py), text)`, where for example `rx=.25` positions the annotation at `25%` of
+        the plot's width.
+        `text` may be a simple `String`, or a `PlotText` object, which can be built with the
+        method `text(string, attrs...)`.
         This wraps font and color attributes and allows you to set text styling.
         `text` may also be a tuple `(string, attrs...)` of arguments which are passed
         to `Plots.text`.
