@@ -996,9 +996,9 @@ function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
     elseif arg == :center
         plotattributes[Symbol(fontname, :halign)] = :hcenter
         plotattributes[Symbol(fontname, :valign)] = :vcenter
-    elseif arg in (:hcenter, :left, :right)
+    elseif arg ∈ _haligns
         plotattributes[Symbol(fontname, :halign)] = arg
-    elseif arg in (:vcenter, :top, :bottom)
+    elseif arg ∈ _valigns
         plotattributes[Symbol(fontname, :valign)] = arg
     elseif T <: Colorant
         plotattributes[Symbol(fontname, :color)] = arg

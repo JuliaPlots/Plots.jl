@@ -70,6 +70,7 @@ function text_size(lablen::Int, sz::Number, rot::Number = 0)
     width, height
 end
 text_size(lab::AbstractString, sz::Number, rot::Number = 0) = text_size(length(lab), sz, rot)
+text_size(lab::PlotText, sz::Number, rot::Number = 0) = text_size(length(lab.str), sz, rot)
 
 # account for the size/length/rotation of tick labels
 function tick_padding(sp::Subplot, axis::Axis)

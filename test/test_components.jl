@@ -116,7 +116,7 @@ end
 end
 
 @testset "Series Annotations" begin
-    square = Shape([(0, 0), (1, 0), (1, 1), (0, 1)])
+    square = Shape([(0., 0.), (1., 0.), (1., 1.), (0., 1.)])
     @test_logs (:warn, "Unused SeriesAnnotations arg: triangle (Symbol)") begin
         p = plot(
             [1, 2, 3],
@@ -130,7 +130,7 @@ end
             ),
         )
         sa = p.series_list[1].plotattributes[:series_annotations]
-        @test sa.strs == ["a"]
+        @test only(sa.strs).str == "a"
         @test sa.font.family == "courier"
         @test sa.baseshape == square
         @test sa.scalefactor == (1, 4)
@@ -141,21 +141,19 @@ end
         layout = (5, 1),
         ylims = (-1.1, 1.1),
         xlims = (0, 5),
-        series_annotations = permutedims([["1/1"],["1/2"],["1/3"],["1/4"],["1/5"]]),
+        series_annotations = permutedims([["1/1"], ["1/2"], ["1/3"], ["1/4"], ["1/5"]]),
     )
-    @test spl.series_list[1].plotattributes[:series_annotations].strs == ["1/1"]
-    @test spl.series_list[2].plotattributes[:series_annotations].strs == ["1/2"]
-    @test spl.series_list[3].plotattributes[:series_annotations].strs == ["1/3"]
-    @test spl.series_list[4].plotattributes[:series_annotations].strs == ["1/4"]
-    @test spl.series_list[5].plotattributes[:series_annotations].strs == ["1/5"]
+    for i ∈ 1:5
+        @test only(spl.series_list[i].plotattributes[:series_annotations].strs).str == "1/$i"
+    end
 
     p = plot([1, 2], annotations=(1.5, 2, text("foo", :left)))
-    x, y, txt = p.subplots[end][:annotations][end]
+    x, y, txt = only(p.subplots[end][:annotations])
     @test (x, y) == (1.5, 2)
     @test txt.str == "foo"
 
     p = plot([1, 2], annotations=((.1, .5), :auto))
-    pos, txt = p.subplots[end][:annotations][end]
+    pos, txt = only(p.subplots[end][:annotations])
     @test pos == (.1, .5)
     @test txt.str == "(a)"
 end

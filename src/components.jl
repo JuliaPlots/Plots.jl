@@ -475,10 +475,15 @@ mutable struct SeriesAnnotations
     scalefactor::Tuple
 end
 
+_text_label(lab::Tuple, font) = text(lab[1], font, lab[2:end]...)
+_text_label(lab::PlotText, font) = lab
+_text_label(lab, font) = text(lab, font)
+
+series_annotations(anns::AMat) = map(series_annotations, anns)
 series_annotations(scalar) = series_annotations([scalar])
-function series_annotations(anns::AMat)
-  map(series_annotations, anns)
-end
+series_annotations(anns::SeriesAnnotations) = anns
+series_annotations(::Nothing) = nothing
+
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
     shp = nothing
@@ -503,10 +508,8 @@ function series_annotations(strs::AbstractVector, args...)
     #         scale!(s, scalefactor, scalefactor, (0,0))
     #     end
     # end
-    SeriesAnnotations(strs, fnt, shp, scalefactor)
+    SeriesAnnotations([_text_label(s, fnt) for s ∈ strs], fnt, shp, scalefactor)
 end
-series_annotations(anns::SeriesAnnotations) = anns
-series_annotations(::Nothing) = nothing
 
 function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     anns = series[:series_annotations]
@@ -574,11 +577,11 @@ function Base.iterate(ea::EachAnn, i = 1)
 end
 
 # -----------------------------------------------------------------------
-annotations(::Nothing) = []
-annotations(anns::AVec) = anns
 annotations(anns::AMat) = map(annotations, anns)
-annotations(anns) = Any[anns]
 annotations(sa::SeriesAnnotations) = sa
+annotations(anns::AVec) = anns
+annotations(anns) = Any[anns]
+annotations(::Nothing) = []
 
 _annotationfont(sp::Subplot) = Plots.font(;
   family=sp[:annotationfontfamily],
@@ -589,12 +592,9 @@ _annotationfont(sp::Subplot) = Plots.font(;
   color=sp[:annotationcolor],
 )
 
-_annotation(sp, font, lab, pos...; alphabet="abcdefghijklmnopqrstuvwxyz") = (
-  if lab == :auto
-    (pos..., text("($(alphabet[sp[:subplot_index]]))", font))
-  else
-    (pos..., isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab[1], font, lab[2:end]...) : text(lab, font))
-  end
+_annotation(sp::Subplot, font, lab, pos...; alphabet="abcdefghijklmnopqrstuvwxyz") = (
+  pos...,
+  lab == :auto ? text("($(alphabet[sp[:subplot_index]]))", font) : _text_label(lab, font)
 )
 
 # Expand arrays of coordinates, positions and labels into induvidual annotations
@@ -622,8 +622,6 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol,Tu
     end
     anns
 end
-
-process_any_label(lab, font=Font()) = lab isa Tuple ? text(lab...) : text(lab, font)
 
 _relative_position(xmin, xmax, pos::Length{:pct}) = xmin + pos.value * (xmax - xmin)
 
