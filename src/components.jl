@@ -1,10 +1,13 @@
 const P2 = GeometryBasics.Point2{Float64}
 const P3 = GeometryBasics.Point3{Float64}
 
-nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
-nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
-nanpush!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN,NaN,NaN)); push!(a, b))
-nanappend!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN,NaN,NaN)); append!(a, b))
+const _haligns = :hcenter, :left, :right
+const _valigns = :vcenter, :top, :bottom
+
+nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN, NaN)); push!(a, b))
+nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN, NaN)); append!(a, b))
+nanpush!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN, NaN, NaN)); push!(a, b))
+nanappend!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN, NaN, NaN)); append!(a, b))
 compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angle)
 
 # -------------------------------------------------------------
@@ -38,9 +41,7 @@ vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 @deprecate shape_coords coords
 
 "return the vertex points from a Shape or Segments object"
-function coords(shape::Shape)
-    shape.x, shape.y
-end
+coords(shape::Shape) = shape.x, shape.y
 
 #coords(shapes::AVec{Shape}) = unzip(map(coords, shapes))
 function coords(shapes::AVec{<:Shape})
@@ -51,12 +52,12 @@ function coords(shapes::AVec{<:Shape})
 end
 
 "get an array of tuples of points on a circle with radius `r`"
-function partialcircle(start_θ, end_θ, n = 20, r=1)
-    [(r*cos(u), r*sin(u)) for u in range(start_θ, stop=end_θ, length=n)]
-end
+partialcircle(start_θ, end_θ, n=20, r=1) = [
+  (r*cos(u), r*sin(u)) for u in range(start_θ, stop=end_θ, length=n)
+]
 
 "interleave 2 vectors into each other (like a zipper's teeth)"
-function weave(x,y; ordering = Vector[x,y])
+function weave(x, y; ordering=Vector[x, y])
   ret = eltype(x)[]
   done = false
   while !done
@@ -72,7 +73,7 @@ function weave(x,y; ordering = Vector[x,y])
 end
 
 "create a star by weaving together points from an outer and inner circle.  `n` is the number of arms"
-function makestar(n; offset = -0.5, radius = 1.0)
+function makestar(n; offset=-0.5, radius=1.0)
     z1 = offset * π
     z2 = z1 + π / (n)
     outercircle = partialcircle(z1, z1 + 2π, n+1, radius)
@@ -81,27 +82,24 @@ function makestar(n; offset = -0.5, radius = 1.0)
 end
 
 "create a shape by picking points around the unit circle.  `n` is the number of point/sides, `offset` is the starting angle"
-function makeshape(n; offset = -0.5, radius = 1.0)
-    z = offset * π
-    Shape(partialcircle(z, z + 2π, n+1, radius))
-end
+makeshape(n; offset=-0.5, radius=1.0) = Shape(
+  partialcircle(offset * π, offset * π + 2π, n+1, radius)
+)
 
-function makecross(; offset = -0.5, radius = 1.0)
+function makecross(; offset=-0.5, radius=1.0)
     z2 = offset * π
     z1 = z2 - π/8
     outercircle = partialcircle(z1, z1 + 2π, 9, radius)
     innercircle = partialcircle(z2, z2 + 2π, 5, 0.5radius)
     Shape(weave(outercircle, innercircle,
-                ordering=Vector[outercircle,innercircle,outercircle]))
+                ordering=Vector[outercircle, innercircle, outercircle]))
 end
 
 from_polar(angle, dist) = P2(dist*cos(angle), dist*sin(angle))
 
-function makearrowhead(angle; h = 2.0, w = 0.4)
-    tip = from_polar(angle, h)
-    Shape(P2[(0,0), from_polar(angle - 0.5π, w) - tip,
-        from_polar(angle + 0.5π, w) - tip, (0,0)])
-end
+makearrowhead(angle; h=2.0, w=0.4, tip=from_polar(angle, h)) = Shape(
+  P2[(0, 0), from_polar(angle - 0.5π, w) - tip, from_polar(angle + 0.5π, w) - tip, (0, 0)]
+)
 
 const _shapes = KW(
     :circle    => makeshape(20),
@@ -117,11 +115,11 @@ const _shapes = KW(
     :octagon    => makeshape(8),
     :cross      => makecross(offset=-0.25),
     :xcross     => makecross(),
-    :vline      => Shape([(0,1),(0,-1)]),
-    :hline      => Shape([(1,0),(-1,0)]),
+    :vline      => Shape([(0, 1), (0, -1)]),
+    :hline      => Shape([(1, 0), (-1, 0)]),
   )
 
-for n in [4,5,6,7,8]
+for n in 4:8
   _shapes[Symbol("star$n")] = makestar(n)
 end
 
@@ -129,20 +127,19 @@ Shape(k::Symbol) = deepcopy(_shapes[k])
 
 # -----------------------------------------------------------------------
 
-
 # uses the centroid calculation from https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
 "return the centroid of a Shape"
 function center(shape::Shape)
     x, y = coords(shape)
     n = length(x)
-    A, Cx, Cy = 0.0, 0.0, 0.0
-    for i=1:n
-        ip1 = i==n ? 1 : i+1
+    A, Cx, Cy = 0, 0, 0
+    for i ∈ 1:n
+        ip1 = i == n ? 1 : i+1
         A += x[i] * y[ip1] - x[ip1] * y[i]
     end
     A *= 0.5
-    for i=1:n
-        ip1 = i==n ? 1 : i+1
+    for i ∈ 1:n
+        ip1 = i == n ? 1 : i+1
         m = (x[i] * y[ip1] - x[ip1] * y[i])
         Cx += (x[i] + x[ip1]) * m
         Cy += (y[i] + y[ip1]) * m
@@ -150,71 +147,63 @@ function center(shape::Shape)
     Cx / 6A, Cy / 6A
 end
 
-function scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
+function scale!(shape::Shape, x::Real, y::Real=x, c=center(shape))
     sx, sy = coords(shape)
     cx, cy = c
-    for i=eachindex(sx)
+    for i ∈ eachindex(sx)
         sx[i] = (sx[i] - cx) * x + cx
         sy[i] = (sy[i] - cy) * y + cy
     end
     shape
 end
 
-function scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
-    shapecopy = deepcopy(shape)
-    scale!(shapecopy, x, y, c)
-end
+scale(shape::Shape, x::Real, y::Real=x, c=center(shape)) = scale!(deepcopy(shape), x, y, c)
+
 
 "translate a Shape in space"
-function translate!(shape::Shape, x::Real, y::Real = x)
+function translate!(shape::Shape, x::Real, y::Real=x)
     sx, sy = coords(shape)
-    for i=eachindex(sx)
+    for i ∈ eachindex(sx)
         sx[i] += x
         sy[i] += y
     end
     shape
 end
 
-function translate(shape::Shape, x::Real, y::Real = x)
-    shapecopy = deepcopy(shape)
-    translate!(shapecopy, x, y)
-end
+translate(shape::Shape, x::Real, y::Real=x) = translate!(deepcopy(shape), x, y)
 
-function rotate_x(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real)
+rotate_x(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real) = (
     (x - centerx) * cos(Θ) - (y - centery) * sin(Θ) + centerx
-end
+)
 
-function rotate_y(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real)
+rotate_y(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real) = (
     (y - centery) * cos(Θ) + (x - centerx) * sin(Θ) + centery
-end
+)
 
-function rotate(x::Real, y::Real, θ::Real, c = center(shape))
-    cx, cy = c
-    rotate_x(x, y, Θ, cx, cy), rotate_y(x, y, Θ, cx, cy)
-end
+rotate(x::Real, y::Real, θ::Real, c=center(shape)) = (
+  rotate_x(x, y, Θ, c...),
+  rotate_y(x, y, Θ, c...),
+)
 
-function rotate!(shape::Shape, Θ::Real, c = center(shape))
+function rotate!(shape::Shape, Θ::Real, c=center(shape))
     x, y = coords(shape)
-    cx, cy = c
-    for i=eachindex(x)
-        xi = rotate_x(x[i], y[i], Θ, cx, cy)
-        yi = rotate_y(x[i], y[i], Θ, cx, cy)
+    for i ∈ eachindex(x)
+        xi = rotate_x(x[i], y[i], Θ, c...)
+        yi = rotate_y(x[i], y[i], Θ, c...)
         x[i], y[i] = xi, yi
     end
     shape
 end
 
 "rotate an object in space"
-function rotate(shape::Shape, θ::Real, c = center(shape))
+function rotate(shape::Shape, θ::Real, c=center(shape))
     x, y = coords(shape)
-    cx, cy = c
-    x_new = rotate_x.(x, y, θ, cx, cy)
-    y_new = rotate_y.(x, y, θ, cx, cy)
+    x_new = rotate_x.(x, y, θ, c...)
+    y_new = rotate_y.(x, y, θ, c...)
     Shape(x_new, y_new)
 end
 
 # -----------------------------------------------------------------------
-
 
 mutable struct Font
   family::AbstractString
@@ -239,17 +228,16 @@ arguments (which are distinguished by type/value) or as keyword arguments.
 # Examples
 ```julia-repl
 julia> font(8)
-julia> font(family="serif",halign=:center,rotation=45.0)
+julia> font(family="serif", halign=:center, rotation=45.0)
 ```
 """
-function font(args...;kw...)
-
+function font(args...; kw...)
   # defaults
   family = "sans-serif"
   pointsize = 14
   halign = :hcenter
   valign = :vcenter
-  rotation = 0.0
+  rotation = 0
   color = colorant"black"
 
   for arg in args
@@ -265,9 +253,9 @@ function font(args...;kw...)
     elseif arg == :center
       halign = :hcenter
       valign = :vcenter
-    elseif arg in (:hcenter, :left, :right)
+    elseif arg ∈ _haligns
       halign = arg
-    elseif arg in (:vcenter, :top, :bottom)
+    elseif arg ∈ _valigns
       valign = arg
     elseif T <: Colorant
       color = arg
@@ -282,33 +270,29 @@ function font(args...;kw...)
     elseif typeof(arg) <: Real
       rotation = convert(Float64, arg)
     else
-      @warn("Unused font arg: $arg ($(typeof(arg)))")
+      @warn "Unused font arg: $arg ($(typeof(arg)))"
     end
   end
 
-  for symbol in keys(kw)
-    if symbol == :family
-      family = string(kw[:family])
-    elseif symbol == :pointsize
-      pointsize = kw[:pointsize]
-    elseif symbol == :halign
-      halign = kw[:halign]
-      if halign == :center
-        halign = :hcenter
-      end
-      @assert halign in (:hcenter, :left, :right)
-    elseif symbol == :valign
-      valign = kw[:valign]
-      if valign == :center
-        valign = :vcenter
-      end
-      @assert valign in (:vcenter, :top, :bottom)
-    elseif symbol == :rotation
-      rotation = kw[:rotation]
-    elseif symbol == :color
-      color = parse(Colorant, kw[:color])
+  for sym in keys(kw)
+    if sym == :family
+      family = string(kw[sym])
+    elseif sym == :pointsize
+      pointsize = kw[sym]
+    elseif sym == :halign
+      halign = kw[sym]
+      halign == :center && (halign = :hcenter)
+      @assert halign ∈ _haligns
+    elseif sym == :valign
+      valign = kw[sym]
+      valign == :center && (valign = :vcenter)
+      @assert valign ∈ _valigns
+    elseif sym == :rotation
+      rotation = kw[sym]
+    elseif sym == :color
+      color = parse(Colorant, kw[sym])
     else
-      @warn("Unused font kwarg: $symbol")
+      @warn "Unused font kwarg: $sym"
     end
   end
 
@@ -331,7 +315,7 @@ function scalefontsizes(factor::Number)
         scalefontsize(k, factor)
     end
 
-    for letter in (:x,:y,:z)
+    for letter in (:x, :y, :z)
         for k in keys(_initial_ax_fontsizes)
             scalefontsize(Symbol(letter, k), factor)
         end
@@ -352,7 +336,7 @@ function scalefontsizes()
         end
     end
 
-    for letter in (:x,:y,:z)
+    for letter in (:x, :y, :z)
         for k in keys(_initial_ax_fontsizes)
             if k in keys(_initial_fontsizes)
                 f = default(Symbol(letter, k))
@@ -381,13 +365,9 @@ Create a PlotText object wrapping a string with font info, for plot annotations.
 text(t::PlotText) = t
 text(t::PlotText, font::Font) = PlotText(t.str, font)
 text(str::AbstractString, f::Font) = PlotText(str, f)
-function text(str, args...;kw...)
-  PlotText(string(str), font(args...;kw...))
-end
+text(str, args...; kw...) = PlotText(string(str), font(args...; kw...))
 
 Base.length(t::PlotText) = length(t.str)
-
-# -----------------------------------------------------------------------
 
 # -----------------------------------------------------------------------
 
@@ -403,7 +383,7 @@ end
 
 Define the properties of the stroke used in plotting lines
 """
-function stroke(args...; alpha = nothing)
+function stroke(args...; alpha=nothing)
   width = 1
   color = :black
   style = :solid
@@ -426,7 +406,7 @@ function stroke(args...; alpha = nothing)
     elseif allReals(arg)
       width = arg
     else
-      @warn("Unused stroke arg: $arg ($(typeof(arg)))")
+      @warn "Unused stroke arg: $arg ($(typeof(arg)))"
     end
   end
 
@@ -440,7 +420,7 @@ struct Brush
   alpha
 end
 
-function brush(args...; alpha = nothing)
+function brush(args...; alpha=nothing)
   size = 1
   color = :black
 
@@ -459,7 +439,7 @@ function brush(args...; alpha = nothing)
     elseif allReals(arg)
       size = arg
     else
-      @warn("Unused brush arg: $arg ($(typeof(arg)))")
+      @warn "Unused brush arg: $arg ($(typeof(arg)))"
     end
   end
 
@@ -487,7 +467,7 @@ series_annotations(::Nothing) = nothing
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
     shp = nothing
-    scalefactor = (1,1)
+    scalefactor = 1, 1
     for arg in args
         if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
             shp = arg
@@ -496,48 +476,48 @@ function series_annotations(strs::AbstractVector, args...)
         elseif isa(arg, Symbol) && haskey(_shapes, arg)
             shp = _shapes[arg]
         elseif isa(arg, Number)
-            scalefactor = (arg,arg)
+            scalefactor = arg, arg
         elseif is_2tuple(arg)
             scalefactor = arg
         else
-            @warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
+            @warn "Unused SeriesAnnotations arg: $arg ($(typeof(arg)))"
         end
     end
     # if scalefactor != 1
     #     for s in get(shp)
-    #         scale!(s, scalefactor, scalefactor, (0,0))
+    #         scale!(s, scalefactor, scalefactor, (0, 0))
     #     end
     # end
     SeriesAnnotations([_text_label(s, fnt) for s ∈ strs], fnt, shp, scalefactor)
 end
 
-function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
+function series_annotations_shapes!(series::Series, scaletype::Symbol=:pixels)
     anns = series[:series_annotations]
-    # msw,msh = anns.scalefactor
+    # msw, msh = anns.scalefactor
     # ms = series[:markersize]
-    # msw,msh = if isa(ms, AbstractVector)
-    #     1,1
+    # msw, msh = if isa(ms, AbstractVector)
+    #     1, 1
     # elseif is_2tuple(ms)
     #     ms
     # else
-    #     ms,ms
+    #     ms, ms
     # end
 
     # @show msw msh
     if anns !== nothing && anns.baseshape !== nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
-        msw,msh = anns.scalefactor
+        msw, msh = anns.scalefactor
         msize = Float64[]
         shapes = Vector{Shape}(undef, length(anns.strs))
-        for i in eachindex(anns.strs)
-            str = _cycle(anns.strs,i)
+        for i ∈ eachindex(anns.strs)
+            str = _cycle(anns.strs, i)
 
             # get the width and height of the string (in mm)
             sw, sh = text_size(str, anns.font.pointsize)
 
             # how much to scale the base shape?
-            # note: it's a rough assumption that the shape fills the unit box [-1,-1,1,1],
+            # note: it's a rough assumption that the shape fills the unit box [-1, -1, 1, 1],
             #       so we scale the length-2 shape by 1/2 the total length
             scalar = (backend() == PyPlotBackend() ? 1.7 : 1.0)
             xscale = 0.5to_pixels(sw) * scalar
@@ -548,7 +528,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
             baseshape = _cycle(anns.baseshape, i)
-            shapes[i] = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
+            shapes[i] = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0, 0))
         end
         series[:markershape] = shapes
         series[:markersize] = msize
@@ -562,18 +542,18 @@ mutable struct EachAnn
     y
 end
 
-function Base.iterate(ea::EachAnn, i = 1)
+function Base.iterate(ea::EachAnn, i=1)
     if ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)
-        return nothing
+        return
     end
 
-    tmp = _cycle(ea.anns.strs,i)
-    str,fnt = if isa(tmp, PlotText)
+    tmp = _cycle(ea.anns.strs, i)
+    str, fnt = if isa(tmp, PlotText)
         tmp.str, tmp.font
     else
         tmp, ea.anns.font
     end
-    ((_cycle(ea.x,i), _cycle(ea.y,i), str, fnt), i+1)
+    ((_cycle(ea.x, i), _cycle(ea.y, i), str, fnt), i+1)
 end
 
 # -----------------------------------------------------------------------
@@ -597,7 +577,7 @@ _annotation(sp::Subplot, font, lab, pos...; alphabet="abcdefghijklmnopqrstuvwxyz
   lab == :auto ? text("($(alphabet[sp[:subplot_index]]))", font) : _text_label(lab, font)
 )
 
-# Expand arrays of coordinates, positions and labels into induvidual annotations
+# Expand arrays of coordinates, positions and labels into individual annotations
 # and make sure labels are of type PlotText
 function process_annotation(sp::Subplot, xs, ys, labs, font=_annotationfont(sp))
     anns = []
@@ -613,7 +593,7 @@ function process_annotation(sp::Subplot, xs, ys, labs, font=_annotationfont(sp))
     anns
 end
 
-function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol,Tuple}, labs, font=_annotationfont(sp))
+function process_annotation(sp::Subplot, positions::Union{AVec{Symbol}, Symbol, Tuple}, labs, font=_annotationfont(sp))
     anns = []
     positions, labs = makevec(positions), makevec(labs)
     for i in 1:max(length(positions), length(labs))
@@ -628,7 +608,7 @@ _relative_position(xmin, xmax, pos::Length{:pct}) = xmin + pos.value * (xmax - x
 # Give each annotation coordinates based on specified position
 function locate_annotation(
   sp::Subplot, pos::Symbol, label::PlotText;
-  position_multiplier=Dict{Symbol, Tuple{Float64,Float64}}(
+  position_multiplier=Dict{Symbol, Tuple{Float64, Float64}}(
     :topleft       => (0.1pct, 0.9pct),
     :topcenter     => (0.5pct, 0.9pct),
     :topright      => (0.9pct, 0.9pct),
@@ -647,12 +627,12 @@ end
 locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
 locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
 
-locate_annotation(sp::Subplot, rel::NTuple{2,<:Number}, label::PlotText) = (
+locate_annotation(sp::Subplot, rel::NTuple{2, <:Number}, label::PlotText) = (
   _relative_position(axis_limits(sp, :x)..., rel[1] * Plots.pct),
   _relative_position(axis_limits(sp, :y)..., rel[2] * Plots.pct),
   label
 )
-locate_annotation(sp::Subplot, rel::NTuple{3,<:Number}, label::PlotText) = (
+locate_annotation(sp::Subplot, rel::NTuple{3, <:Number}, label::PlotText) = (
   _relative_position(axis_limits(sp, :x)..., rel[1] * Plots.pct),
   _relative_position(axis_limits(sp, :y)..., rel[2] * Plots.pct),
   _relative_position(axis_limits(sp, :z)..., rel[3] * Plots.pct),
@@ -663,10 +643,10 @@ locate_annotation(sp::Subplot, rel::NTuple{3,<:Number}, label::PlotText) = (
 "type which represents z-values for colors and sizes (and anything else that might come up)"
 struct ZValues
   values::Vector{Float64}
-  zrange::Tuple{Float64,Float64}
+  zrange::Tuple{Float64, Float64}
 end
 
-function zvalues(values::AVec{T}, zrange::Tuple{T,T} = (ignorenan_minimum(values), ignorenan_maximum(values))) where T<:Real
+function zvalues(values::AVec{T}, zrange::Tuple{T, T}=(ignorenan_minimum(values), ignorenan_maximum(values))) where T<:Real
   ZValues(collect(float(values)), map(Float64, zrange))
 end
 
@@ -689,9 +669,7 @@ end
 # -----------------------------------------------------------------------
 
 # # I don't want to clash with ValidatedNumerics, but this would be nice:
-# ..(a::T, b::T) = (a,b)
-
-
+# ..(a::T, b::T) = (a, b)
 
 # -----------------------------------------------------------------------
 
@@ -712,8 +690,7 @@ Define arrowheads to apply to lines - args are `style` (`:open` or `:closed`),
 function arrow(args...)
     style = :simple
     side = :head
-    headlength = 0.3
-    headwidth = 0.3
+    headlength = headwidth = 0.3
     setlength = false
     for arg in args
         T = typeof(arg)
@@ -733,7 +710,7 @@ function arrow(args...)
         elseif T <: Tuple && length(arg) == 2
             headlength, headwidth = Float64(arg[1]), Float64(arg[2])
         else
-            @warn("Skipped arrow arg $arg")
+            @warn "Skipped arrow arg $arg"
         end
     end
     Arrow(style, side, headlength, headwidth)
@@ -743,11 +720,11 @@ end
 # allow for do-block notation which gets called on every valid start/end pair which
 # we need to draw an arrow
 function add_arrows(func::Function, x::AVec, y::AVec)
-    for i=2:length(x)
+    for i ∈ 2:length(x)
         xyprev = (x[i-1], y[i-1])
         xy = (x[i], y[i])
         if ok(xyprev) && ok(xy)
-            if i==length(x) || !ok(x[i+1], y[i+1])
+            if i == length(x) || !ok(x[i+1], y[i+1])
                 # add the arrow from xyprev to xy
                 func(xyprev, xy)
             end
@@ -772,16 +749,12 @@ end
 
 @deprecate curve_points coords
 
-coords(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, Base.range(first(range), stop=last(range), length=n))
+coords(curve::BezierCurve, n::Integer=30; range=[0, 1]) = map(
+  curve, Base.range(first(range), stop=last(range), length=n)
+)
 
-# build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
-# may create a loop if necessary.  Assumes the view is [0,1]
-function directed_curve(args...; kw...)
-    error("directed_curve has been moved to PlotRecipes")
-end
-
-function extrema_plus_buffer(v, buffmult = 0.2)
-    vmin,vmax = ignorenan_extrema(v)
+function extrema_plus_buffer(v, buffmult=0.2)
+    vmin, vmax = ignorenan_extrema(v)
     vdiff = vmax-vmin
     buffer = vdiff * buffmult
     vmin - buffer, vmax + buffer
