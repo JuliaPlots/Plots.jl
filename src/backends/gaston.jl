@@ -305,6 +305,8 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int, 
     elseif st == :wireframe
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         push!(curveconf, "w lines lc $lc dt $dt lw $lw")
+    elseif st == :quiver
+        push!(curveconf, "w vectors filled")
     else
         @warn "Gaston: $st is not implemented yet"
     end
