@@ -1247,7 +1247,6 @@ _backend_skips = Dict(
     :gaston => [
         2,  # animations
         31,  # animations
-        47,  # TODO: support mesh3d
         49,  # TODO: support polar
         50,  # TODO: 1D data not supported for pm3d
     ],
