@@ -631,7 +631,6 @@ const _gaston_seriestype = [
     :steppre,
     :stepmid,
     :steppost,
-    :histogram2d,
     :ysticks, :xsticks,
     :contour,
     :shape,
