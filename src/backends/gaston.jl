@@ -211,7 +211,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
         if z isa Surface
             z = z.surf
             if st == :image
-                z = Float32.(Gray.(z))
+                z = reverse(Float32.(Gray.(z)), dims=1)  # flip y axis
                 nr, nc = size(z)
                 lx = length(x)
                 if lx == 2 && lx != nr
