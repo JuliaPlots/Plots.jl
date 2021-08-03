@@ -4,10 +4,10 @@ const P3 = GeometryBasics.Point3{Float64}
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
 
-nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN, NaN)); push!(a, b))
-nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN, NaN)); append!(a, b))
-nanpush!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN, NaN, NaN)); push!(a, b))
-nanappend!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN, NaN, NaN)); append!(a, b))
+nanpush!(a::AVec{P2}, b) = (push!(a, P2(NaN, NaN)); push!(a, b))
+nanappend!(a::AVec{P2}, b) = (push!(a, P2(NaN, NaN)); append!(a, b))
+nanpush!(a::AVec{P3}, b) = (push!(a, P3(NaN, NaN, NaN)); push!(a, b))
+nanappend!(a::AVec{P3}, b) = (push!(a, P3(NaN, NaN, NaN)); append!(a, b))
 compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angle)
 
 # -------------------------------------------------------------
@@ -449,9 +449,9 @@ end
 # -----------------------------------------------------------------------
 
 mutable struct SeriesAnnotations
-    strs::AbstractVector  # the labels/names
+    strs::AVec  # the labels/names
     font::Font
-    baseshape::Union{Shape, AbstractVector{Shape}, Nothing}
+    baseshape::Union{Shape, AVec{Shape}, Nothing}
     scalefactor::Tuple
 end
 
@@ -464,12 +464,12 @@ series_annotations(scalar) = series_annotations([scalar])
 series_annotations(anns::SeriesAnnotations) = anns
 series_annotations(::Nothing) = nothing
 
-function series_annotations(strs::AbstractVector, args...)
+function series_annotations(strs::AVec, args...)
     fnt = font()
     shp = nothing
     scalefactor = 1, 1
     for arg in args
-        if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
+        if isa(arg, Shape) || (isa(arg, AVec) && eltype(arg) == Shape)
             shp = arg
         elseif isa(arg, Font)
             fnt = arg
@@ -479,6 +479,8 @@ function series_annotations(strs::AbstractVector, args...)
             scalefactor = arg, arg
         elseif is_2tuple(arg)
             scalefactor = arg
+        elseif isa(arg, AVec)
+            strs = collect(zip(strs, arg))
         else
             @warn "Unused SeriesAnnotations arg: $arg ($(typeof(arg)))"
         end
@@ -495,7 +497,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol=:pixels)
     anns = series[:series_annotations]
     # msw, msh = anns.scalefactor
     # ms = series[:markersize]
-    # msw, msh = if isa(ms, AbstractVector)
+    # msw, msh = if isa(ms, AVec)
     #     1, 1
     # elseif is_2tuple(ms)
     #     ms
