@@ -1869,35 +1869,8 @@ function gr_draw_surface(series, x, y, z, clims)
         GR.surface(x, y, z, get(e_kwargs, :display_option, GR.OPTION_FILLED_MESH))
     elseif st === :mesh3d
         @warn "GR: mesh3d is experimental (no face colors)"
-        conn = series[:connections]
-        if typeof(conn) <: Tuple{Array, Array, Array}
-            ci, cj, ck = conn
-            if !(length(ci) == length(cj) == length(ck))
-                throw(ArgumentError("Argument connections must consist of equally sized arrays."))
-            end
-        else
-            throw(ArgumentError("Argument connections has to be a tuple of three arrays."))
-        end
-        X = zeros(eltype(x), 4length(ci))
-        Y = zeros(eltype(y), 4length(cj))
-        Z = zeros(eltype(z), 4length(ck))
-        @inbounds for I ∈ 1:length(ci)
-            i = ci[I] + 1  # connections are 0-based
-            j = cj[I] + 1
-            k = ck[I] + 1
-            m = 4(I - 1) + 1; n = m + 1; o = m + 2; p = m + 3
-            X[m] = X[p] = x[i]
-            Y[m] = Y[p] = y[i]
-            Z[m] = Z[p] = z[i]
-            X[n] = x[j]
-            Y[n] = y[j]
-            Z[n] = z[j]
-            X[o] = x[k]
-            Y[o] = y[k]
-            Z[o] = z[k]
-        end
         gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
-        GR.polyline3d(X, Y, Z)
+        GR.polyline3d(mesh3d_triangles(x, y, z, series[:connections])...)
     else
         throw(ArgumentError("Not handled !"))
     end

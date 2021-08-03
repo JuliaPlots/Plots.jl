@@ -1,6 +1,7 @@
-function treats_y_as_x(seriestype)
-    return seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
-end
+# ---------------------------------------------------------------
+
+treats_y_as_x(seriestype) = seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
+
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
     colors = palette(vec(z))
@@ -143,7 +144,7 @@ allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
 function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
     i = findfirst(!anynan(itr.args), nextidx:itr.n2)
-    i === nothing && return nothing
+    i === nothing && return
     nextval = nextidx + i - 1
 
     j = findfirst(anynan(itr.args), nextval:itr.n2)
@@ -191,7 +192,7 @@ makevec(v::AVec) = v
 makevec(v::T) where {T} = T[v]
 
 "duplicate a single value, or pass the 2-tuple through"
-maketuple(x::Real)                     = (x,x)
+maketuple(x::Real) = (x, x)
 maketuple(x::Tuple{T,S}) where {T,S} = x
 
 for i in 2:4
@@ -224,7 +225,7 @@ expand_data(v, n::Integer) = [_cycle(v, i) for i=1:n]
 
 # if the type exists in a list, replace the first occurence.  otherwise add it to the end
 function addOrReplace(v::AbstractVector, t::DataType, args...; kw...)
-    for (i,vi) in enumerate(v)
+    for (i, vi) in enumerate(v)
         if isa(vi, t)
             v[i] = t(args...; kw...)
             return
@@ -253,7 +254,6 @@ function replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol})
 end
 
 createSegments(z) = collect(repeat(reshape(z,1,:),2,1))[2:end]
-
 
 sortedkeys(plotattributes::Dict) = sort(collect(keys(plotattributes)))
 
@@ -327,20 +327,18 @@ isscalar(::Any)  = false
 
 is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
-
 isvertical(plotattributes::AKW) = get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
 isvertical(series::Series) = isvertical(series.plotattributes)
 
 
-ticksType(ticks::AVec{T}) where {T<:Real}                      = :ticks
-ticksType(ticks::AVec{T}) where {T<:AbstractString}            = :labels
+ticksType(ticks::AVec{T}) where {T<:Real} = :ticks
+ticksType(ticks::AVec{T}) where {T<:AbstractString} = :labels
 ticksType(ticks::Tuple{T,S}) where {T<:Union{AVec,Tuple},S<:Union{AVec,Tuple}} = :ticks_and_labels
-ticksType(ticks)                                        = :invalid
+ticksType(ticks) = :invalid
 
-limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real}    = :limits
-limsType(lims::Symbol)                                  = lims == :auto ? :auto : :invalid
-limsType(lims)                                          = :invalid
-
+limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real} = :limits
+limsType(lims::Symbol) = lims == :auto ? :auto : :invalid
+limsType(lims) = :invalid
 
 # recursively merge kw-dicts, e.g. for merging extra_kwargs / extra_plot_kwargs in plotly)
 recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)
@@ -386,9 +384,7 @@ end
 handle_surface(z) = z
 handle_surface(z::Surface) = permutedims(z.surf)
 
-function ok(x::Number, y::Number, z::Number = 0)
-    isfinite(x) && isfinite(y) && isfinite(z)
-end
+ok(x::Number, y::Number, z::Number=0) = isfinite(x) && isfinite(y) && isfinite(z)
 ok(tup::Tuple) = ok(tup...)
 
 # compute one side of a fill range from a ribbon
@@ -418,9 +414,7 @@ function concatenate_fillrange(x,y::Tuple)
     return xline, yline
 end
 
-function get_sp_lims(sp::Subplot, letter::Symbol)
-    axis_limits(sp, letter)
-end
+get_sp_lims(sp::Subplot, letter::Symbol) = axis_limits(sp, letter)
 
 """
     xlims([plt])
@@ -466,10 +460,7 @@ function contour_levels(series::Series, clims)
     levels
 end
 
-
-
 for comp in (:line, :fill, :marker)
-
     compcolor = string(comp, :color)
     get_compcolor = Symbol(:get_, compcolor)
     comp_z = string(comp, :_z)
@@ -478,7 +469,6 @@ for comp in (:line, :fill, :marker)
     get_compalpha = Symbol(:get_, compalpha)
 
     @eval begin
-
         function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
             c = series[$Symbol($compcolor)]
             z = series[$Symbol($comp_z)]
@@ -489,7 +479,7 @@ for comp in (:line, :fill, :marker)
             end
         end
 
-        $get_compcolor(series, clims, i::Int = 1) = $get_compcolor(series, clims[1], clims[2], i)
+        $get_compcolor(series, clims, i::Int=1) = $get_compcolor(series, clims[1], clims[2], i)
 
         function $get_compcolor(series, i::Int = 1)
             if series[$Symbol($comp_z)] === nothing
@@ -499,7 +489,7 @@ for comp in (:line, :fill, :marker)
             end
         end
 
-        $get_compalpha(series, i::Int = 1) = _cycle(series[$Symbol($compalpha)], i)
+        $get_compalpha(series, i::Int=1) = _cycle(series[$Symbol($compalpha)], i)
     end
 end
 
@@ -518,33 +508,23 @@ function get_colorgradient(series::Series)
     end
 end
 
-single_color(c, v = 0.5) = c
-single_color(grad::ColorGradient, v = 0.5) = grad[v]
+single_color(c, v=0.5) = c
+single_color(grad::ColorGradient, v=0.5) = grad[v]
 
 get_gradient(c) = cgrad()
 get_gradient(cg::ColorGradient) = cg
-get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
+get_gradient(cp::ColorPalette) = cgrad(cp, categorical=true)
 
-function get_linewidth(series, i::Int = 1)
-    _cycle(series[:linewidth], i)
-end
+get_linewidth(series, i::Int=1) = _cycle(series[:linewidth], i)
+get_linestyle(series, i::Int=1) = _cycle(series[:linestyle], i)
 
-function get_linestyle(series, i::Int = 1)
-    _cycle(series[:linestyle], i)
-end
-
-function get_markerstrokecolor(series, i::Int = 1)
+function get_markerstrokecolor(series, i::Int=1)
     msc = series[:markerstrokecolor]
     isa(msc, ColorGradient) ? msc : _cycle(msc, i)
 end
 
-function get_markerstrokealpha(series, i::Int = 1)
-    _cycle(series[:markerstrokealpha], i)
-end
-
-function get_markerstrokewidth(series, i::Int = 1)
-    _cycle(series[:markerstrokewidth], i)
-end
+get_markerstrokealpha(series, i::Int=1) = _cycle(series[:markerstrokealpha], i)
+get_markerstrokewidth(series, i::Int=1) = _cycle(series[:markerstrokewidth], i)
 
 const _segmenting_vector_attributes = (
     :seriescolor,
@@ -564,7 +544,7 @@ const _segmenting_vector_attributes = (
     :markershape,
 )
 
-const _segmenting_array_attributes = (:line_z, :fill_z, :marker_z)
+const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
@@ -589,19 +569,17 @@ function get_aspect_ratio(sp)
     return aspect_ratio
 end
 
+get_size(series::Series) = get_size(series.plotattributes[:subplot])
 get_size(kw) = get(kw, :size, default(:size))
 get_size(plt::Plot) = get_size(plt.attr)
 get_size(sp::Subplot) = get_size(sp.plt)
-get_size(series::Series) = get_size(series.plotattributes[:subplot])
 
 get_thickness_scaling(kw) = get(kw, :thickness_scaling, default(:thickness_scaling))
 get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
 get_thickness_scaling(sp::Subplot) = get_thickness_scaling(sp.plt)
-get_thickness_scaling(series::Series) =
-    get_thickness_scaling(series.plotattributes[:subplot])
+get_thickness_scaling(series::Series) = get_thickness_scaling(series.plotattributes[:subplot])
 
 # ---------------------------------------------------------------
-
 makekw(; kw...) = KW(kw)
 
 wraptuple(x::Tuple) = x
@@ -610,18 +588,20 @@ wraptuple(x) = (x,)
 trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
 trueOrAllTrue(f::Function, x) = f(x)
 
-allLineTypes(arg)   = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
-allStyles(arg)      = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
-allShapes(arg)      = trueOrAllTrue(a -> is_marker_supported(get(_markerAliases, a, a)), arg) ||
-                        trueOrAllTrue(a -> isa(a, Shape), arg)
-allAlphas(arg)      = trueOrAllTrue(a -> (typeof(a) <: Real && a > 0 && a < 1) ||
-                        (typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))), arg)
-allReals(arg)       = trueOrAllTrue(a -> typeof(a) <: Real, arg)
-allFunctions(arg)   = trueOrAllTrue(a -> isa(a, Function), arg)
+allLineTypes(arg) = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+allStyles(arg) = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+allShapes(arg) = (
+    trueOrAllTrue(a -> is_marker_supported(get(_markerAliases, a, a)), arg) ||
+    trueOrAllTrue(a -> isa(a, Shape), arg)
+)
+allAlphas(arg) = trueOrAllTrue(
+    a -> (typeof(a) <: Real && a > 0 && a < 1) ||
+    (typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))), arg
+)
+allReals(arg) = trueOrAllTrue(a -> typeof(a) <: Real, arg)
+allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
 
 # ---------------------------------------------------------------
-# ---------------------------------------------------------------
-
 
 """
 Allows temporary setting of backend and defaults for Plots. Settings apply only for the `do` block.  Example:
@@ -655,7 +635,6 @@ function with(f::Function, args...; kw...)
     oldbackend = CURRENT_BACKEND.sym
 
     for arg in args
-
         # change backend?
         if arg in backends()
             backend(arg)
@@ -716,10 +695,7 @@ mutable struct DebugMode
 end
 const _debugMode = DebugMode(false)
 
-function debugplots(on = true)
-    _debugMode.on = on
-end
-
+debugplots(on=true) = _debugMode.on = on
 debugshow(io, x) = show(io, x)
 debugshow(io, x::AbstractArray) = print(io, summary(x))
 
@@ -739,9 +715,7 @@ end
 DD(io::IO, plotattributes::AKW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
 DD(plotattributes::AKW, prefix = "") = DD(stdout, plotattributes, prefix)
 
-function dumpcallstack()
-    error()  # well... you wanted the stacktrace, didn't you?!?
-end
+dumpcallstack() = error()  # well... you wanted the stacktrace, didn't you?!?
 
 # -------------------------------------------------------
 # NOTE: backends should implement the following methods to get/set the x/y/z data objects
@@ -773,10 +747,9 @@ function setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z}
     _series_updated(plt, series)
 end
 
-function setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z<:AbstractMatrix}
+setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z<:AbstractMatrix} = (
     setxyz!(plt, (xyz[1], xyz[2], Surface(xyz[3])), i)
-end
-
+)
 
 # -------------------------------------------------------
 # indexing notation
@@ -837,9 +810,7 @@ function extend_to_length!(v::AbstractVector, n)
     extend_by_data!(v, vmax .+ (1:(n - length(v))))
 end
 extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x)
-function extend_by_data!(v::AbstractVector, x::AbstractVector)
-    isimmutable(v) ? vcat(v, x) : append!(v, x)
-end
+extend_by_data!(v::AbstractVector, x::AbstractVector) = isimmutable(v) ? vcat(v, x) : append!(v, x)
 
 # -------------------------------------------------------
 
@@ -898,9 +869,7 @@ end
 
 # push y[i] to the ith series
 # same x for each series
-function Base.push!(plt::Plot, x::Real, y::AVec)
-    push!(plt, [x], y)
-end
+Base.push!(plt::Plot, x::Real, y::AVec) = push!(plt, [x], y)
 
 # push (x[i], y[i]) to the ith series
 function Base.push!(plt::Plot, x::AVec, y::AVec)
@@ -923,36 +892,35 @@ function Base.push!(plt::Plot, x::AVec, y::AVec, z::AVec)
     plt
 end
 
-
-
-
 # ---------------------------------------------------------------
-
 
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
 
-const PX_PER_INCH   = 100
-const DPI           = PX_PER_INCH
-const MM_PER_INCH   = 25.4
-const MM_PER_PX     = MM_PER_INCH / PX_PER_INCH
+const PX_PER_INCH = 100
+const DPI         = PX_PER_INCH
+const MM_PER_INCH = 25.4
+const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
 
-inch2px(inches::Real)   = float(inches * PX_PER_INCH)
-px2inch(px::Real)       = float(px / PX_PER_INCH)
-inch2mm(inches::Real)   = float(inches * MM_PER_INCH)
-mm2inch(mm::Real)       = float(mm / MM_PER_INCH)
-px2mm(px::Real)         = float(px * MM_PER_PX)
-mm2px(mm::Real)         = float(mm / MM_PER_PX)
+inch2px(inches::Real) = float(inches * PX_PER_INCH)
+px2inch(px::Real)     = float(px / PX_PER_INCH)
+inch2mm(inches::Real) = float(inches * MM_PER_INCH)
+mm2inch(mm::Real)     = float(mm / MM_PER_INCH)
+px2mm(px::Real)       = float(px * MM_PER_PX)
+mm2px(mm::Real)       = float(mm / MM_PER_PX)
 
 
 "Smallest x in plot"
-xmin(plt::Plot) = ignorenan_minimum([ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list])
+xmin(plt::Plot) = ignorenan_minimum(
+    [ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list]
+)
 "Largest x in plot"
-xmax(plt::Plot) = ignorenan_maximum([ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list])
+xmax(plt::Plot) = ignorenan_maximum(
+    [ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list]
+)
 
 "Extrema of x-values in plot"
 ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
-
 
 # ---------------------------------------------------------------
 # get fonts from objects:
@@ -1026,18 +994,18 @@ guidefont(ax::Axis) = font(;
 
 function convert_sci_unicode(label::AbstractString)
     unicode_dict = Dict(
-    '⁰' => "0",
-    '¹' => "1",
-    '²' => "2",
-    '³' => "3",
-    '⁴' => "4",
-    '⁵' => "5",
-    '⁶' => "6",
-    '⁷' => "7",
-    '⁸' => "8",
-    '⁹' => "9",
-    '⁻' => "-",
-    "×10" => "×10^{",
+        '⁰' => "0",
+        '¹' => "1",
+        '²' => "2",
+        '³' => "3",
+        '⁴' => "4",
+        '⁵' => "5",
+        '⁶' => "6",
+        '⁷' => "7",
+        '⁸' => "8",
+        '⁹' => "9",
+        '⁻' => "-",
+        "×10" => "×10^{",
     )
     for key in keys(unicode_dict)
         label = replace(label, key => unicode_dict[key])
@@ -1139,40 +1107,70 @@ function shape_data(series, expansion_factor = 1)
     return x, y
 end
 
-function construct_categorical_data(x::AbstractArray, axis::Axis)
+construct_categorical_data(x::AbstractArray, axis::Axis) = (
     map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x)
-end
+)
 
-_fmt_paragraph(paragraph::AbstractString;kwargs...) = _fmt_paragraph(IOBuffer(),paragraph,0;kwargs...)
+_fmt_paragraph(paragraph::AbstractString;kwargs...) = _fmt_paragraph(
+    IOBuffer(), paragraph, 0; kwargs...
+)
 
-function _fmt_paragraph(io::IOBuffer,
-                        remaining_text::AbstractString,
-                        column_count::Integer;
-                        fillwidth=60,
-                        leadingspaces=0)
-
-    kwargs = (fillwidth = fillwidth, leadingspaces = leadingspaces)
+function _fmt_paragraph(
+    io::IOBuffer, remaining_text::AbstractString, column_count::Integer;
+    fillwidth=60, leadingspaces=0
+)
+    kwargs = (fillwidth=fillwidth, leadingspaces=leadingspaces)
 
     m = match(r"(.*?) (.*)",remaining_text)
-    if isa(m,Nothing)
+    if isa(m, Nothing)
         if column_count + length(remaining_text) ≤ fillwidth
-            print(io,remaining_text)
+            print(io, remaining_text)
             String(take!(io))
         else
-            print(io,"\n"*" "^leadingspaces*remaining_text)
+            print(io, "\n"*" "^leadingspaces*remaining_text)
             String(take!(io))
         end
     else
         if column_count + length(m[1]) ≤ fillwidth
             print(io,"$(m[1]) ")
-            _fmt_paragraph(io,m[2],column_count + length(m[1]) + 1;kwargs...)
+            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kwargs...)
         else
             print(io,"\n"*" "^leadingspaces*"$(m[1]) ")
-            _fmt_paragraph(io,m[2],leadingspaces;kwargs...)
+            _fmt_paragraph(io, m[2], leadingspaces; kwargs...)
         end
     end
 end
 
-function _document_argument(S::AbstractString)
-    _fmt_paragraph("`$S`: "*_arg_desc[Symbol(S)],leadingspaces = 6 + length(S))
+_document_argument(S::AbstractString) = _fmt_paragraph(
+    "`$S`: "*_arg_desc[Symbol(S)], leadingspaces=6+length(S)
+)
+
+function mesh3d_triangles(x, y, z, cns)
+    if typeof(cns) <: Tuple{Array, Array, Array}
+        ci, cj, ck = cns
+        if !(length(ci) == length(cj) == length(ck))
+            throw(ArgumentError("Argument connections must consist of equally sized arrays."))
+        end
+    else
+        throw(ArgumentError("Argument connections has to be a tuple of three arrays."))
+    end
+    X = zeros(eltype(x), 4length(ci))
+    Y = zeros(eltype(y), 4length(cj))
+    Z = zeros(eltype(z), 4length(ck))
+    @inbounds for I ∈ 1:length(ci)
+        i = ci[I] + 1  # connections are 0-based
+        j = cj[I] + 1
+        k = ck[I] + 1
+        m = 4(I - 1) + 1; n = m + 1; o = m + 2; p = m + 3
+        X[m] = X[p] = x[i]
+        Y[m] = Y[p] = y[i]
+        Z[m] = Z[p] = z[i]
+        X[n] = x[j]
+        Y[n] = y[j]
+        Z[n] = z[j]
+        X[o] = x[k]
+        Y[o] = y[k]
+        Z[o] = z[k]
+    end
+    return X, Y, Z
 end

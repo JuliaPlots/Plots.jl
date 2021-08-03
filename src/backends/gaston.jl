@@ -47,12 +47,14 @@ end
 
 function _update_min_padding!(sp::Subplot{GastonBackend})
     sp.minpad = 0mm, 0mm, 0mm, 0mm
+    nothing
 end
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
     dat = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1))
     gaston_multiplot_pos_size!(dat)
+    nothing
 end
 
 for (mime, term) ∈ (
@@ -224,6 +226,9 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
                 length(y) == size(z, 1) + 1 && (y = @view y[1:end-1])
             end
         end
+        if st == :mesh3d
+            x, y, z = mesh3d_triangles(x, y, z, series[:connections])
+        end
         for sc ∈ gaston_seriesconf!(sp, series, 1, true)
             push!(curves, Gaston.Curve(x, y, z, nothing, sc))
         end
@@ -302,7 +307,7 @@ function gaston_seriesconf!(sp::Subplot{GastonBackend}, series::Series, i::Int, 
         palette = gaston_palette(series[:seriescolor])
         gsp.axesconf *= "\nset palette model RGB defined $palette"
         st == :heatmap && (gsp.axesconf *= "\nset view map")
-    elseif st == :wireframe
+    elseif st ∈ (:wireframe, :mesh3d)
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         push!(curveconf, "w lines lc $lc dt $dt lw $lw")
     elseif st == :quiver
@@ -467,14 +472,6 @@ end
 # Helpers
 # --------------------------------------------
 
-function gaston_font(f; rot=true, align=true, color=true, scale=1)
-    font = String["font '$(f.family),$(round(Int, scale * f.pointsize))'"]
-    align && push!(font, "$(gaston_halign(f.halign))")
-    rot && push!(font, "rotate by $(f.rotation)")
-    color && push!(font, "textcolor $(gaston_color(f.color))")
-    return join(font, " ")
-end
-
 gaston_halign(k) = (left=:left, hcenter=:center, right=:right)[k]
 gaston_valign(k) = (top=:top, vcenter=:center, bottom=:bottom)[k]
 
@@ -491,6 +488,14 @@ gaston_mk_ms_mc(series::Series, clims, i::Int) = (
     _cycle(series[:markersize], i) * 1.3 / 5,
     gaston_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
 )
+
+function gaston_font(f; rot=true, align=true, color=true, scale=1)
+    font = String["font '$(f.family),$(round(Int, scale * f.pointsize))'"]
+    align && push!(font, "$(gaston_halign(f.halign))")
+    rot && push!(font, "rotate by $(f.rotation)")
+    color && push!(font, "textcolor $(gaston_color(f.color))")
+    return join(font, " ")
+end
 
 function gaston_palette(gradient)
     palette = String[]; n = -1
