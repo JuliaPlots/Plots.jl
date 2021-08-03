@@ -1113,7 +1113,7 @@ const _examples = PlotExample[
             plot!(sin, -π, π, lw=3, color=:red)
         end]
     ),
-    PlotExample(
+    PlotExample( # 52
         "3d quiver",
         "",
         [quote
