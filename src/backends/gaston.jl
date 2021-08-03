@@ -213,13 +213,11 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
             if st == :image
                 z = reverse(Float32.(Gray.(z)), dims=1)  # flip y axis
                 nr, nc = size(z)
-                lx = length(x)
-                if lx == 2 && lx != nr
-                    x = collect(range(x[1], x[2], length=nr))
+                if (ly = length(y)) == 2 && ly != nr
+                    y = collect(range(y[1], y[2], length=nr))
                 end
-                ly = length(y)
-                if ly == 2 && ly != nc
-                    y = collect(range(y[1], y[2], length=nc))
+                if (lx = length(x)) == 2 && lx != nc
+                    x = collect(range(x[1], x[2], length=nc))
                 end
             elseif st == :heatmap
                 length(x) == size(z, 2) + 1 && (x = @view x[1:end-1])
