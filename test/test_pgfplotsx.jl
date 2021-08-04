@@ -1,4 +1,5 @@
 using Plots, Test
+import Plots: Shape
 pgfplotsx()
 
 function create_plot(args...; kwargs...)

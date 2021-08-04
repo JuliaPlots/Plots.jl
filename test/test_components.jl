@@ -1,4 +1,5 @@
 using Plots, Test
+import Plots: Shape
 
 @testset "Shapes" begin
     @testset "Type" begin
