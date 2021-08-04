@@ -396,7 +396,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 end
             end
             if k == 1 &&
-               series[:subplot][:legend] != :none && pgfx_should_add_to_legend(series)
+                series[:subplot][:legend] != :none && pgfx_should_add_to_legend(series)
                 pgfx_filllegend!(series_opt, opt)
             end
         end
@@ -948,8 +948,12 @@ function pgfx_font(fontsize::Nothing, thickness_scaling = 1, font = "\\selectfon
     return string("{", font, "}")
 end
 
-function pgfx_should_add_to_legend(series::Series)
+pgfx_should_add_to_legend(series::Series) = (
     series.plotattributes[:primary] &&
+    !(
+        length(series_list(series[:subplot])) == 1 &&
+        series.plotattributes[:label] == label_auto(series.plotattributes[:series_plotindex])
+    ) &&
     !(
         series.plotattributes[:seriestype] in (
             :hexbin,
@@ -964,7 +968,7 @@ function pgfx_should_add_to_legend(series::Series)
             :image,
         )
     )
-end
+)
 
 function pgfx_marker(plotattributes, i = 1)
     shape = _cycle(plotattributes[:markershape], i)
