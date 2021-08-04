@@ -57,7 +57,7 @@ const _allTypes = vcat([
     :none, :line, :path, :steppre, :stepmid, :steppost, :sticks, :scatter,
     :heatmap, :hexbin, :barbins, :barhist, :histogram, :scatterbins,
     :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :histogram3d,
-    :density, :bar, :hline, :vline,
+    :bar, :hline, :vline,
     :contour, :pie, :shape, :image
 ], _3dTypes)
 
@@ -1200,11 +1200,6 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         plotattributes[:framestyle] = _framestyleAliases[plotattributes[:framestyle]]
     end
 
-    # warnings for moved recipes
-    st = get(plotattributes, :seriestype, :path)
-    if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatsPlots)
-        @warn("seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`")
-    end
     return
 end
 
