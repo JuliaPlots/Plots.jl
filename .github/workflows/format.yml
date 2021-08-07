@@ -1,0 +1,26 @@
+name: Run JuliaFormatter
+
+on:
+  pull_request:
+
+jobs:
+  Benchmark:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: 1
+
+      # Setup
+      - name: Ubuntu TESTCMD
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
+
+      # Check format
+      - name: Install JuliaFormatter and format
+        run: |
+          git diff --name-only --exit-code
+          $TESTCMD -e 'using Pkg; pkg"add JuliaFormatter CSTParser#master"'
+          $TESTCMD -e 'using JuliaFormatter; format(["src", "test"])'
+          git diff --exit-code
