@@ -1,4 +1,7 @@
 style = "blue"
 import_to_using = false
 always_use_return = false
+conditional_to_if = false
+whitespace_typedefs = true
 short_to_long_function_def = false
+annotate_untyped_fields_with_any = false

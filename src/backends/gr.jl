@@ -768,22 +768,20 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         h = 0mm
         if !isempty(first(xticks))
             gr_set_font(
-                tickfont(xaxis),
+                tickfont(xaxis), sp,
                 halign = (:left, :hcenter, :right)[sign(xaxis[:rotation]) + 2],
                 valign = (xaxis[:mirror] ? :bottom : :top),
                 rotation = xaxis[:rotation],
-                sp
             )
             l = 0.01 + last(gr_get_ticks_size(xticks, xaxis[:rotation]))
             h = max(h, 1mm + get_size(sp)[2] * l * px)
         end
         if !isempty(first(yticks))
             gr_set_font(
-                tickfont(yaxis),
+                tickfont(yaxis), sp,
                 halign = (:left, :hcenter, :right)[sign(yaxis[:rotation]) + 2],
                 valign = (yaxis[:mirror] ? :bottom : :top),
                 rotation = yaxis[:rotation],
-                sp
             )
             l = 0.01 + last(gr_get_ticks_size(yticks, yaxis[:rotation]))
             h = max(h, 1mm + get_size(sp)[2] * l * px)
@@ -799,12 +797,11 @@ function _update_min_padding!(sp::Subplot{GRBackend})
 
         if !isempty(first(zticks))
             gr_set_font(
-                tickfont(zaxis),
+                tickfont(zaxis), sp,
                 halign = (zaxis[:mirror] ? :left : :right),
                 valign = (:top, :vcenter, :bottom)[sign(zaxis[:rotation]) + 2],
                 rotation = zaxis[:rotation],
                 color = zaxis[:tickfontcolor],
-                sp
             )
             l = 0.01 + first(gr_get_ticks_size(zticks, zaxis[:rotation]))
             w = 1mm + get_size(sp)[1] * l * px
