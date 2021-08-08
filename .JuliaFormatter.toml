@@ -1,1 +1,4 @@
-whitespace_in_kwargs=false
+style = "blue"
+import_to_using = false
+always_use_return = false
+short_to_long_function_def = false

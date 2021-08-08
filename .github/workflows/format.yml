@@ -1,10 +1,10 @@
-name: Run JuliaFormatter
+name: format
 
 on:
   pull_request:
 
 jobs:
-  Benchmark:
+  JuliaFormatter:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     steps:
