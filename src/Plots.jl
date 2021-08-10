@@ -25,6 +25,7 @@ import JSON
 
 using Requires
 
+#! format: off
 export
     grid,
     bbox,
@@ -117,7 +118,7 @@ export
     scalefontsize,
     scalefontsizes,
     resetfontsizes
-
+#! format: on
 # ---------------------------------------------------------
 
 import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
