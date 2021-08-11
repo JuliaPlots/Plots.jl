@@ -6,7 +6,8 @@ const AVec = AbstractVector
 const AMat = AbstractMatrix
 const KW = Dict{Symbol,Any}
 const AKW = AbstractDict{Symbol,Any}
-const TicksArgs = Union{AVec{T}, Tuple{AVec{T}, AVec{S}}, Symbol} where {T<:Real, S<:AbstractString}
+const TicksArgs =
+    Union{AVec{T},Tuple{AVec{T},AVec{S}},Symbol} where {T<:Real,S<:AbstractString}
 
 struct PlotsDisplay <: AbstractDisplay end
 
@@ -59,10 +60,9 @@ Extrema() = Extrema(Inf, -Inf)
 
 # -----------------------------------------------------------
 
-const SubplotMap = Dict{Any, Subplot}
+const SubplotMap = Dict{Any,Subplot}
 
 # -----------------------------------------------------------
-
 
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
@@ -78,9 +78,18 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
 end
 
 function Plot()
-    Plot(backend(), 0, DefaultsDict(KW(), _plot_defaults), Series[], nothing,
-         Subplot[], SubplotMap(), EmptyLayout(),
-         Subplot[], false)
+    Plot(
+        backend(),
+        0,
+        DefaultsDict(KW(), _plot_defaults),
+        Series[],
+        nothing,
+        Subplot[],
+        SubplotMap(),
+        EmptyLayout(),
+        Subplot[],
+        false,
+    )
 end
 
 # -----------------------------------------------------------------------
@@ -89,7 +98,7 @@ Base.getindex(plt::Plot, i::Integer) = plt.subplots[i]
 Base.length(plt::Plot) = length(plt.subplots)
 Base.lastindex(plt::Plot) = length(plt)
 
-Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r,c]
+Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r, c]
 Base.size(plt::Plot) = size(plt.layout)
 Base.size(plt::Plot, i::Integer) = size(plt.layout)[i]
 Base.ndims(plt::Plot) = 2

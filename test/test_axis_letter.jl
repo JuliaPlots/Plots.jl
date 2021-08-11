@@ -9,12 +9,15 @@ using Plots, Test
     value(m::MyType) = m.val
     data = MyType.(sort(randn(20)))
     # A recipe that puts the axis letter in the title
-    @recipe function f(::Type{T}, m::T) where T <: AbstractArray{<:MyType}
+    @recipe function f(::Type{T}, m::T) where {T<:AbstractArray{<:MyType}}
         title --> string(plotattributes[:letter])
         value.(m)
     end
-    @testset "$f (orientation = $o)" for f in [histogram, barhist, stephist, scatterhist], o in [:vertical, :horizontal]
-        @test f(data, orientation=o).subplots[1].attr[:title] == (o == :vertical ? "x" : "y")
+    @testset "$f (orientation = $o)" for f in [histogram, barhist, stephist, scatterhist],
+        o in [:vertical, :horizontal]
+
+        @test f(data, orientation = o).subplots[1].attr[:title] ==
+              (o == :vertical ? "x" : "y")
     end
     @testset "$f" for f in [hline, hspan]
         @test f(data).subplots[1].attr[:title] == "y"

@@ -1,6 +1,6 @@
 
 mutable struct CurrentPlot
-    nullableplot::Union{AbstractPlot, Nothing}
+    nullableplot::Union{AbstractPlot,Nothing}
 end
 const CURRENT_PLOT = CurrentPlot(nothing)
 
@@ -20,17 +20,20 @@ current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
 
 # ---------------------------------------------------------
 
-
 Base.string(plt::Plot) = "Plot{$(plt.backend) n=$(plt.n)}"
 Base.print(io::IO, plt::Plot) = print(io, string(plt))
 function Base.show(io::IO, plt::Plot)
     print(io, string(plt))
     sp_ekwargs = getindex.(plt.subplots, :extra_kwargs)
     s_ekwargs = getindex.(plt.series_list, :extra_kwargs)
-    if isempty(plt[:extra_plot_kwargs]) && all(isempty, sp_ekwargs) && all(isempty, s_ekwargs)
+    if (
+        isempty(plt[:extra_plot_kwargs]) &&
+        all(isempty, sp_ekwargs) &&
+        all(isempty, s_ekwargs)
+    )
         return
     end
-    print(io,"\nCaptured extra kwargs:\n")
+    print(io, "\nCaptured extra kwargs:\n")
     do_show = true
     for (key, value) in plt[:extra_plot_kwargs]
         do_show && println(io, "  Plot:")
@@ -62,7 +65,6 @@ convertSeriesIndex(plt::Plot, n::Int) = n
 
 # ---------------------------------------------------------
 
-
 """
 The main plot command. Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
@@ -91,7 +93,8 @@ end
 
 # build a new plot from existing plots
 # note: we split into plt1, plt2 and plts_tail so we can dispatch correctly
-plot(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...) = plot!(deepcopy(plt1), deepcopy(plt2), deepcopy.(plts_tail)...; kw...)
+plot(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...) =
+    plot!(deepcopy(plt1), deepcopy(plt2), deepcopy.(plts_tail)...; kw...)
 function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
     @nospecialize
     plotattributes = KW(kw)
@@ -102,8 +105,8 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
     plts = Array{Plot}(undef, n)
     plts[1] = plt1
     plts[2] = plt2
-    for (i,plt) in enumerate(plts_tail)
-        plts[i+2] = plt
+    for (i, plt) in enumerate(plts_tail)
+        plts[i + 2] = plt
     end
 
     # compute the layout
@@ -130,9 +133,9 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
     plt.init = true
 
     series_attr = KW()
-    for (k,v) in plotattributes
+    for (k, v) in plotattributes
         if is_series_attr(k)
-            series_attr[k] = pop!(plotattributes,k)
+            series_attr[k] = pop!(plotattributes, k)
         end
     end
 
@@ -163,7 +166,7 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
     _add_plot_title!(plt)
 
     # first apply any args for the subplots
-    for (idx,sp) in enumerate(plt.subplots)
+    for (idx, sp) in enumerate(plt.subplots)
         _update_subplot_args(plt, sp, plotattributes, idx, false)
     end
 
@@ -172,8 +175,6 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
     _do_plot_show(plt, get(plotattributes, :show, default(:show)))
     plt
 end
-
-
 
 # this adds to the current plot, or creates a new plot if none are current
 function plot!(args...; kw...)
@@ -210,14 +211,13 @@ function _plot!(plt::Plot, plotattributes, args)
     return plt
 end
 
-
 # we're getting ready to display/output.  prep for layout calcs, then update
 # the plot object after
 function prepare_output(plt::Plot)
     _before_layout_calcs(plt)
 
     w, h = plt.attr[:size]
-    plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
+    plt.layout.bbox = BoundingBox(0mm, 0mm, w * px, h * px)
 
     # One pass down and back up the tree to compute the minimum padding
     # of the children on the perimeter.  This is an backend callback.
@@ -229,9 +229,10 @@ function prepare_output(plt::Plot)
     # spedific to :plot_title see _add_plot_title!
     force_minpad = get(plt, :force_minpad, ())
     if !isempty(force_minpad)
-        for i ∈ eachindex(plt.layout.grid)
+        for i in eachindex(plt.layout.grid)
             plt.layout.grid[i].minpad = Tuple(
-                i === nothing ? j : i for (i, j) ∈ zip(force_minpad, plt.layout.grid[i].minpad)
+                i === nothing ? j : i for
+                (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
             )
         end
     end

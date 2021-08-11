@@ -1,8 +1,7 @@
 using REPL
 using Scratch
 
-const plotly_local_file_path = Ref{Union{Nothing, String}}(nothing)
-
+const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 
 function _plots_defaults()
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -12,7 +11,6 @@ function _plots_defaults()
     end
 end
 
-
 function __init__()
     user_defaults = _plots_defaults()
     if haskey(user_defaults, :theme)
@@ -21,14 +19,27 @@ function __init__()
         default(; user_defaults...)
     end
 
-    insert!(Base.Multimedia.displays, findlast(x -> x isa Base.TextDisplay || x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
+    insert!(
+        Base.Multimedia.displays,
+        findlast(
+            x -> x isa Base.TextDisplay || x isa REPL.REPLDisplay,
+            Base.Multimedia.displays,
+        ) + 1,
+        PlotsDisplay(),
+    )
 
-    atreplinit(i -> begin
-        while PlotsDisplay() in Base.Multimedia.displays
-            popdisplay(PlotsDisplay())
-        end
-        insert!(Base.Multimedia.displays, findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
-    end)
+    atreplinit(
+        i -> begin
+            while PlotsDisplay() in Base.Multimedia.displays
+                popdisplay(PlotsDisplay())
+            end
+            insert!(
+                Base.Multimedia.displays,
+                findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
+                PlotsDisplay(),
+            )
+        end,
+    )
 
     @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
         fn = joinpath(@__DIR__, "backends", "hdf5.jl")
@@ -84,9 +95,13 @@ function __init__()
     end
 
     if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == "true"
-        global plotly_local_file_path[] = joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
+        global plotly_local_file_path[] =
+            joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
         if !isfile(plotly_local_file_path[])
-            download("https://cdn.plot.ly/$(_plotly_min_js_filename)", plotly_local_file_path[])
+            download(
+                "https://cdn.plot.ly/$(_plotly_min_js_filename)",
+                plotly_local_file_path[],
+            )
         end
 
         use_local_plotlyjs[] = true
@@ -94,8 +109,8 @@ function __init__()
 
     use_local_dependencies[] = use_local_plotlyjs[]
 
-
     @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
-        _show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) = _show_pdfbackends(io, mime, plt)
+        _show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) =
+            _show_pdfbackends(io, mime, plt)
     end
 end

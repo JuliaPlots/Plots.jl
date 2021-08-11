@@ -241,7 +241,6 @@ julia> ohlc(y)
 """
 @shorthands ohlc
 
-
 """
     contour(x,y,z)
     contour!(x,y,z)
@@ -262,7 +261,6 @@ julia> contour(x, y, (x, y) -> x^2 + y^2)
 
 "An alias for `contour` with fill = true."
 @shorthands contourf
-
 
 @shorthands contour3d
 
@@ -408,17 +406,17 @@ julia> curves([1,2,3,4],[1,1,2,4])
 @shorthands pie
 
 "Plot with seriestype :path3d"
-plot3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
-plot3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
+plot3d(args...; kw...) = plot(args...; kw..., seriestype = :path3d)
+plot3d!(args...; kw...) = plot!(args...; kw..., seriestype = :path3d)
 
 "Add title to an existing plot"
-title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)
+title!(s::AbstractString; kw...) = plot!(; title = s, kw...)
 
 "Add xlabel to an existing plot"
-xlabel!(s::AbstractString; kw...)                = plot!(; xlabel = s, kw...)
+xlabel!(s::AbstractString; kw...) = plot!(; xlabel = s, kw...)
 
 "Add ylabel to an existing plot"
-ylabel!(s::AbstractString; kw...)                = plot!(; ylabel = s, kw...)
+ylabel!(s::AbstractString; kw...) = plot!(; ylabel = s, kw...)
 
 "Set xlims for an existing plot"
 xlims!(lims::Tuple; kw...) = plot!(; xlims = lims, kw...)
@@ -429,21 +427,20 @@ ylims!(lims::Tuple; kw...) = plot!(; ylims = lims, kw...)
 "Set zlims for an existing plot"
 zlims!(lims::Tuple; kw...) = plot!(; zlims = lims, kw...)
 
-xlims!(xmin::Real, xmax::Real; kw...)                     = plot!(; xlims = (xmin,xmax), kw...)
-ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymin,ymax), kw...)
-zlims!(zmin::Real, zmax::Real; kw...)                     = plot!(; zlims = (zmin,zmax), kw...)
-
+xlims!(xmin::Real, xmax::Real; kw...) = plot!(; xlims = (xmin, xmax), kw...)
+ylims!(ymin::Real, ymax::Real; kw...) = plot!(; ylims = (ymin, ymax), kw...)
+zlims!(zmin::Real, zmax::Real; kw...) = plot!(; zlims = (zmin, zmax), kw...)
 
 "Set xticks for an existing plot"
-xticks!(v::TicksArgs; kw...)                              = plot!(; xticks = v, kw...)
+xticks!(v::TicksArgs; kw...) = plot!(; xticks = v, kw...)
 
 "Set yticks for an existing plot"
-yticks!(v::TicksArgs; kw...)                              = plot!(; yticks = v, kw...)
+yticks!(v::TicksArgs; kw...) = plot!(; yticks = v, kw...)
 
-xticks!(
-ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(; xticks = (ticks,labels), kw...)
-yticks!(
-ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(; yticks = (ticks,labels), kw...)
+xticks!(ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString} =
+    plot!(; xticks = (ticks, labels), kw...)
+yticks!(ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString} =
+    plot!(; yticks = (ticks, labels), kw...)
 
 """
     annotate!(anns...)
@@ -463,22 +460,22 @@ julia> annotate!([(7,3,"(7,3)"),(3,7,text("hey", 14, :left, :top, :green))])
 julia> annotate!([(4, 4, ("More text", 8, 45.0, :bottom, :red))])
 ```
 """
-annotate!(anns...; kw...)             = plot!(; annotation = anns, kw...)
+annotate!(anns...; kw...) = plot!(; annotation = anns, kw...)
 annotate!(anns::Tuple...; kw...)      = plot!(; annotation = collect(anns), kw...)
 annotate!(anns::AVec{<:Tuple}; kw...) = plot!(; annotation = anns, kw...)
 
 "Flip the current plots' x axis"
-xflip!(flip::Bool = true; kw...)                          = plot!(; xflip = flip, kw...)
+xflip!(flip::Bool = true; kw...) = plot!(; xflip = flip, kw...)
 
 "Flip the current plots' y axis"
-yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip, kw...)
+yflip!(flip::Bool = true; kw...) = plot!(; yflip = flip, kw...)
 
 "Specify x axis attributes for an existing plot"
-xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
+xaxis!(args...; kw...) = plot!(; xaxis = args, kw...)
 
 "Specify y axis attributes for an existing plot"
-yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
-xgrid!(args...; kw...)                                    = plot!(; xgrid = args, kw...)
-ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
+yaxis!(args...; kw...) = plot!(; yaxis = args, kw...)
+xgrid!(args...; kw...) = plot!(; xgrid = args, kw...)
+ygrid!(args...; kw...) = plot!(; ygrid = args, kw...)
 
 @specialize

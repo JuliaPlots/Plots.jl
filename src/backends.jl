@@ -1,12 +1,12 @@
 struct NoBackend <: AbstractBackend end
 
-const _backendType = Dict{Symbol, DataType}(:none => NoBackend)
-const _backendSymbol = Dict{DataType, Symbol}(NoBackend => :none)
+const _backendType = Dict{Symbol,DataType}(:none => NoBackend)
+const _backendSymbol = Dict{DataType,Symbol}(NoBackend => :none)
 const _backends = Symbol[]
 const _initialized_backends = Set{Symbol}()
 const _default_backends = (:none, :gr, :plotly)
 
-const _backend_packages = Dict{Symbol, Symbol}()
+const _backend_packages = Dict{Symbol,Symbol}()
 
 "Returns a list of supported backends"
 backends() = _backends
@@ -66,10 +66,11 @@ function text_size(lablen::Int, sz::Number, rot::Number = 0)
 
     # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
     height = abs(sind(rot)) * width + abs(cosd(rot)) * ptsz
-    width = abs(sind(rot+90)) * width + abs(cosd(rot+90)) * ptsz
+    width = abs(sind(rot + 90)) * width + abs(cosd(rot + 90)) * ptsz
     width, height
 end
-text_size(lab::AbstractString, sz::Number, rot::Number = 0) = text_size(length(lab), sz, rot)
+text_size(lab::AbstractString, sz::Number, rot::Number = 0) =
+    text_size(length(lab), sz, rot)
 text_size(lab::PlotText, sz::Number, rot::Number = 0) = text_size(length(lab.str), sz, rot)
 
 # account for the size/length/rotation of tick labels
@@ -104,8 +105,8 @@ end
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot)
     # TODO: something different when `RecipesPipeline.is3d(sp) == true`
-    leftpad   = tick_padding(sp, sp[:yaxis]) + sp[:left_margin]   + guide_padding(sp[:yaxis])
-    toppad    = sp[:top_margin]    + title_padding(sp)
+    leftpad   = tick_padding(sp, sp[:yaxis]) + sp[:left_margin] + guide_padding(sp[:yaxis])
+    toppad    = sp[:top_margin] + title_padding(sp)
     rightpad  = sp[:right_margin]
     bottompad = tick_padding(sp, sp[:xaxis]) + sp[:bottom_margin] + guide_padding(sp[:xaxis])
 
@@ -125,10 +126,9 @@ _update_plot_object(plt::Plot) = nothing
 
 # ---------------------------------------------------------
 
-
 mutable struct CurrentBackend
-  sym::Symbol
-  pkg::AbstractBackend
+    sym::Symbol
+    pkg::AbstractBackend
 end
 CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
@@ -143,15 +143,16 @@ function _pick_default_backend()
         if sym in _backends
             backend(sym)
         else
-            @warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t" *
-                 join(sort(_backends), "\n\t"))
+            @warn(
+                "You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t" *
+                join(sort(_backends), "\n\t")
+            )
             _fallback_default_backend()
         end
     else
         _fallback_default_backend()
     end
 end
-
 
 # ---------------------------------------------------------
 
@@ -189,7 +190,8 @@ function backend(sym::Symbol)
     end
 end
 
-const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize, :pgfplots]
+const _deprecated_backends =
+    [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize, :pgfplots]
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
@@ -201,23 +203,29 @@ function warn_on_deprecated_backend(bsym::Symbol)
     end
 end
 
-
-
 # ---------------------------------------------------------
 
 # these are args which every backend supports because they're not used in the backend code
 const _base_supported_args = [
     :color_palette,
-    :background_color, :background_color_subplot,
-    :foreground_color, :foreground_color_subplot,
+    :background_color,
+    :background_color_subplot,
+    :foreground_color,
+    :foreground_color_subplot,
     :group,
     :seriestype,
-    :seriescolor, :seriesalpha,
+    :seriescolor,
+    :seriesalpha,
     :smooth,
-    :xerror, :yerror, :zerror,
+    :xerror,
+    :yerror,
+    :zerror,
     :subplot,
-    :x, :y, :z,
-    :show, :size,
+    :x,
+    :y,
+    :z,
+    :show,
+    :size,
     :margin,
     :left_margin,
     :right_margin,
@@ -231,22 +239,20 @@ const _base_supported_args = [
     :subplot_index,
     :discrete_values,
     :projection,
-    :show_empty_bins
+    :show_empty_bins,
 ]
 
 function merge_with_base_supported(v::AVec)
     v = vcat(v, _base_supported_args)
     for vi in v
         if haskey(_axis_defaults, vi)
-            for letter in (:x,:y,:z)
-                push!(v, Symbol(letter,vi))
+            for letter in (:x, :y, :z)
+                push!(v, Symbol(letter, vi))
             end
         end
     end
     Set(v)
 end
-
-
 
 @init_backend PyPlot
 @init_backend UnicodePlots
@@ -286,7 +292,6 @@ end
 # is_subplot_supported(::AbstractBackend) = false
 # is_subplot_supported() = is_subplot_supported(backend())
 
-
 ################################################################################
 # initialize the backends
 
@@ -305,39 +310,91 @@ _initialize_backend(pkg::GRBackend) = nothing
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
+    :background_color_legend,
+    :background_color_inside,
+    :background_color_outside,
+    :foreground_color_legend,
+    :foreground_color_grid,
+    :foreground_color_axis,
+    :foreground_color_text,
+    :foreground_color_border,
     :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
     :bins,
     :layout,
-    :title, :window_title,
-    :guide, :lims, :ticks, :scale, :flip,
-    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
-    :titlefontrotation, :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
-    :legendfontrotation, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfonthalign, :tickfontvalign,
-    :tickfontrotation, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefonthalign, :guidefontvalign,
-    :guidefontrotation, :guidefontcolor,
-    :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :legendtitle, :colorbar, :colorbar_title, :colorbar_entry,
-    :colorbar_titlefontfamily, :colorbar_titlefontsize,
-    :colorbar_titlefontvalign, :colorbar_titlefonthalign,
-    :colorbar_titlefontrotation, :colorbar_titlefontcolor,
-    :fill_z, :line_z, :marker_z, :levels,
-    :ribbon, :quiver,
+    :title,
+    :window_title,
+    :guide,
+    :lims,
+    :ticks,
+    :scale,
+    :flip,
+    :titlefontfamily,
+    :titlefontsize,
+    :titlefonthalign,
+    :titlefontvalign,
+    :titlefontrotation,
+    :titlefontcolor,
+    :legendfontfamily,
+    :legendfontsize,
+    :legendfonthalign,
+    :legendfontvalign,
+    :legendfontrotation,
+    :legendfontcolor,
+    :tickfontfamily,
+    :tickfontsize,
+    :tickfonthalign,
+    :tickfontvalign,
+    :tickfontrotation,
+    :tickfontcolor,
+    :guidefontfamily,
+    :guidefontsize,
+    :guidefonthalign,
+    :guidefontvalign,
+    :guidefontrotation,
+    :guidefontcolor,
+    :grid,
+    :gridalpha,
+    :gridstyle,
+    :gridlinewidth,
+    :legend,
+    :legendtitle,
+    :colorbar,
+    :colorbar_title,
+    :colorbar_entry,
+    :colorbar_titlefontfamily,
+    :colorbar_titlefontsize,
+    :colorbar_titlefontvalign,
+    :colorbar_titlefonthalign,
+    :colorbar_titlefontrotation,
+    :colorbar_titlefontcolor,
+    :fill_z,
+    :line_z,
+    :marker_z,
+    :levels,
+    :ribbon,
+    :quiver,
     :orientation,
     :overwrite_figure,
     :polar,
     :aspect_ratio,
-    :normalize, :weights,
+    :normalize,
+    :weights,
     :inset_subplots,
     :bar_width,
     :arrow,
@@ -381,35 +438,79 @@ end
 
 const _plotly_attr = merge_with_base_supported([
     :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_legend, :foreground_color_guide,
-    :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
+    :background_color_legend,
+    :background_color_inside,
+    :background_color_outside,
+    :foreground_color_legend,
+    :foreground_color_guide,
+    :foreground_color_grid,
+    :foreground_color_axis,
+    :foreground_color_text,
+    :foreground_color_border,
     :foreground_color_title,
     :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
-    :fillrange, :fillcolor, :fillalpha,
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :markerstrokestyle,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
     :bins,
-    :title, :titlelocation,
-    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
+    :title,
+    :titlelocation,
+    :titlefontfamily,
+    :titlefontsize,
+    :titlefonthalign,
+    :titlefontvalign,
     :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefontcolor,
+    :legendfontfamily,
+    :legendfontsize,
+    :legendfontcolor,
+    :tickfontfamily,
+    :tickfontsize,
+    :tickfontcolor,
+    :guidefontfamily,
+    :guidefontsize,
+    :guidefontcolor,
     :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
-    :grid, :gridalpha, :gridlinewidth,
-    :legend, :colorbar, :colorbar_title, :colorbar_entry,
-    :marker_z, :fill_z, :line_z, :levels,
-    :ribbon, :quiver,
+    :guide,
+    :lims,
+    :ticks,
+    :scale,
+    :flip,
+    :rotation,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    :gridalpha,
+    :gridlinewidth,
+    :legend,
+    :colorbar,
+    :colorbar_title,
+    :colorbar_entry,
+    :marker_z,
+    :fill_z,
+    :line_z,
+    :levels,
+    :ribbon,
+    :quiver,
     :orientation,
     # :overwrite_figure,
     :polar,
-    :normalize, :weights,
+    :normalize,
+    :weights,
     # :contours,
     :aspect_ratio,
     :hover,
@@ -420,7 +521,7 @@ const _plotly_attr = merge_with_base_supported([
     :tick_direction,
     :camera,
     :contour_labels,
-  ])
+])
 
 const _plotly_seriestype = [
     :path,
@@ -434,12 +535,24 @@ const _plotly_seriestype = [
     :shape,
     :scattergl,
     :straightline,
-    :mesh3d
+    :mesh3d,
 ]
 const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _plotly_marker = [
-    :none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle,
-    :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
+    :none,
+    :auto,
+    :circle,
+    :rect,
+    :diamond,
+    :utriangle,
+    :dtriangle,
+    :cross,
+    :xcross,
+    :pentagon,
+    :hexagon,
+    :octagon,
+    :vline,
+    :hline,
 ]
 const _plotly_scale = [:identity, :log10]
 
@@ -454,23 +567,50 @@ const _pgfplots_attr = merge_with_base_supported([
     :background_color_inside,
     # :background_color_outside,
     # :foreground_color_legend,
-    :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
+    :foreground_color_grid,
+    :foreground_color_axis,
+    :foreground_color_text,
+    :foreground_color_border,
     :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
-    :fillrange, :fillcolor, :fillalpha,
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :markerstrokestyle,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
     :bins,
     # :bar_width, :bar_edges,
     :title,
     # :window_title,
-    :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
-    :grid, :legend,
-    :colorbar, :colorbar_title,
-    :fill_z, :line_z, :marker_z, :levels,
+    :guide,
+    :guide_position,
+    :lims,
+    :ticks,
+    :scale,
+    :flip,
+    :rotation,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    :legend,
+    :colorbar,
+    :colorbar_title,
+    :fill_z,
+    :line_z,
+    :marker_z,
+    :levels,
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
@@ -482,9 +622,36 @@ const _pgfplots_attr = merge_with_base_supported([
     :camera,
     :contour_labels,
 ])
-const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
+const _pgfplots_seriestype = [
+    :path,
+    :path3d,
+    :scatter,
+    :steppre,
+    :stepmid,
+    :steppost,
+    :histogram2d,
+    :ysticks,
+    :xsticks,
+    :contour,
+    :shape,
+    :straightline,
+]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline, :vline] #vcat(_allMarkers, Shape)
+const _pgfplots_marker = [
+    :none,
+    :auto,
+    :circle,
+    :rect,
+    :diamond,
+    :utriangle,
+    :dtriangle,
+    :cross,
+    :xcross,
+    :star5,
+    :pentagon,
+    :hline,
+    :vline,
+] #vcat(_allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
@@ -497,11 +664,11 @@ function _initialize_backend(pkg::PlotlyJSBackend)
     end
 end
 
-const _plotlyjs_attr        = _plotly_attr
-const _plotlyjs_seriestype  = _plotly_seriestype
-const _plotlyjs_style       = _plotly_style
-const _plotlyjs_marker      = _plotly_marker
-const _plotlyjs_scale       = _plotly_scale
+const _plotlyjs_attr       = _plotly_attr
+const _plotlyjs_seriestype = _plotly_seriestype
+const _plotlyjs_style      = _plotly_style
+const _plotlyjs_marker     = _plotly_marker
+const _plotlyjs_scale      = _plotly_scale
 
 # ------------------------------------------------------------------------------
 # pyplot
@@ -519,36 +686,89 @@ end
 
 const _pyplot_attr = merge_with_base_supported([
     :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
+    :background_color_legend,
+    :background_color_inside,
+    :background_color_outside,
+    :foreground_color_grid,
+    :foreground_color_legend,
+    :foreground_color_title,
+    :foreground_color_axis,
+    :foreground_color_border,
+    :foreground_color_guide,
+    :foreground_color_text,
     :label,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :titlelocation, :titlefont,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
+    :bins,
+    :bar_width,
+    :bar_edges,
+    :bar_position,
+    :title,
+    :titlelocation,
+    :titlefont,
     :window_title,
-    :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
-    :titlefontfamily, :titlefontsize, :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :legendtitle, :colorbar, :colorbar_title, :colorbar_entry,
-    :colorbar_ticks, :colorbar_tickfontfamily, :colorbar_tickfontsize,
-    :colorbar_tickfonthalign, :colorbar_tickfontvalign,
-    :colorbar_tickfontrotation, :colorbar_tickfontcolor,
+    :guide,
+    :guide_position,
+    :lims,
+    :ticks,
+    :scale,
+    :flip,
+    :rotation,
+    :titlefontfamily,
+    :titlefontsize,
+    :titlefontcolor,
+    :legendfontfamily,
+    :legendfontsize,
+    :legendfontcolor,
+    :tickfontfamily,
+    :tickfontsize,
+    :tickfontcolor,
+    :guidefontfamily,
+    :guidefontsize,
+    :guidefontcolor,
+    :grid,
+    :gridalpha,
+    :gridstyle,
+    :gridlinewidth,
+    :legend,
+    :legendtitle,
+    :colorbar,
+    :colorbar_title,
+    :colorbar_entry,
+    :colorbar_ticks,
+    :colorbar_tickfontfamily,
+    :colorbar_tickfontsize,
+    :colorbar_tickfonthalign,
+    :colorbar_tickfontvalign,
+    :colorbar_tickfontrotation,
+    :colorbar_tickfontcolor,
     :colorbar_scale,
-    :marker_z, :line_z, :fill_z,
+    :marker_z,
+    :line_z,
+    :fill_z,
     :levels,
-    :ribbon, :quiver, :arrow,
+    :ribbon,
+    :quiver,
+    :arrow,
     :orientation,
     :overwrite_figure,
     :polar,
-    :normalize, :weights,
-    :contours, :aspect_ratio,
+    :normalize,
+    :weights,
+    :contours,
+    :aspect_ratio,
     :clims,
     :inset_subplots,
     :dpi,
@@ -557,7 +777,7 @@ const _pyplot_attr = merge_with_base_supported([
     :tick_direction,
     :camera,
     :contour_labels,
-  ])
+])
 const _pyplot_seriestype = [
     :path,
     :steppre,
@@ -598,18 +818,35 @@ const _gaston_attr = merge_with_base_supported([
     # :foreground_color_legend,
     # :foreground_color_grid, :foreground_color_axis,
     # :foreground_color_text, :foreground_color_border,
-    :label, :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
+    :label,
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
     # :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
     # :fillrange, :fillcolor, :fillalpha,
     # :bins,
     # :bar_width, :bar_edges,
-    :title, :window_title,
-    :guide, :guide_position,
-    :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont,
-    :legendfont, :grid, :legend,
+    :title,
+    :window_title,
+    :guide,
+    :guide_position,
+    :lims,
+    :ticks,
+    :scale,
+    :flip,
+    :rotation,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    :legend,
     # :colorbar, :colorbar_title,
     # :fill_z, :line_z, :marker_z, :levels,
     # :ribbon,
@@ -623,7 +860,7 @@ const _gaston_attr = merge_with_base_supported([
     # :framestyle,
     # :camera,
     # :contour_labels,
-  ])
+])
 
 const _gaston_seriestype = [
     :path,
@@ -632,7 +869,8 @@ const _gaston_seriestype = [
     :steppre,
     :stepmid,
     :steppost,
-    :ysticks, :xsticks,
+    :ysticks,
+    :xsticks,
     :contour,
     :shape,
     :straightline,
@@ -645,14 +883,7 @@ const _gaston_seriestype = [
     :image,
 ]
 
-const _gaston_style = [
-    :auto,
-   :solid,
-   :dash,
-   :dot,
-   :dashdot,
-   :dashdotdot
-]
+const _gaston_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 
 const _gaston_marker = [
     :none,
@@ -687,14 +918,17 @@ const _unicodeplots_attr = merge_with_base_supported([
     :markershape,
     :bins,
     :title,
-    :guide, :lims,
-  ])
+    :guide,
+    :lims,
+])
 const _unicodeplots_seriestype = [
-    :path, :scatter, :straightline,
+    :path,
+    :scatter,
+    :straightline,
     # :bar,
     :shape,
     :histogram2d,
-    :spy
+    :spy,
 ]
 const _unicodeplots_style = [:auto, :solid]
 const _unicodeplots_marker = [:none, :auto, :circle]
@@ -708,33 +942,70 @@ const _canvas_type = Ref(:auto)
 
 const _hdf5_attr = merge_with_base_supported([
     :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
+    :background_color_legend,
+    :background_color_inside,
+    :background_color_outside,
+    :foreground_color_grid,
+    :foreground_color_legend,
+    :foreground_color_title,
+    :foreground_color_axis,
+    :foreground_color_border,
+    :foreground_color_guide,
+    :foreground_color_text,
     :label,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :titlelocation, :titlefont,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
+    :bins,
+    :bar_width,
+    :bar_edges,
+    :bar_position,
+    :title,
+    :titlelocation,
+    :titlefont,
     :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar,
-    :marker_z, :line_z, :fill_z,
+    :guide,
+    :lims,
+    :ticks,
+    :scale,
+    :flip,
+    :rotation,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    :legend,
+    :colorbar,
+    :marker_z,
+    :line_z,
+    :fill_z,
     :levels,
-    :ribbon, :quiver, :arrow,
+    :ribbon,
+    :quiver,
+    :arrow,
     :orientation,
     :overwrite_figure,
     :polar,
-    :normalize, :weights,
-    :contours, :aspect_ratio,
+    :normalize,
+    :weights,
+    :contours,
+    :aspect_ratio,
     :clims,
     :inset_subplots,
     :dpi,
     :colorbar_title,
-  ])
+])
 const _hdf5_seriestype = [
     :path,
     :steppre,
@@ -759,68 +1030,115 @@ const _hdf5_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
 #Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
-const HDF5PLOT_MAP_STR2TELEM = Dict{String, Type}()
-const HDF5PLOT_MAP_TELEM2STR = Dict{Type, String}()
+const HDF5PLOT_MAP_STR2TELEM = Dict{String,Type}()
+const HDF5PLOT_MAP_TELEM2STR = Dict{Type,String}()
 
 #Don't really like this global variable... Very hacky
 mutable struct HDF5Plot_PlotRef
-    ref::Union{Plot, Nothing}
+    ref::Union{Plot,Nothing}
 end
 const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
-
 
 # ------------------------------------------------------------------------------
 # inspectdr
 
 const _inspectdr_attr = merge_with_base_supported([
     :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
+    :background_color_legend,
+    :background_color_inside,
+    :background_color_outside,
     # :foreground_color_grid,
-    :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
+    :foreground_color_legend,
+    :foreground_color_title,
+    :foreground_color_axis,
+    :foreground_color_border,
+    :foreground_color_guide,
+    :foreground_color_text,
     :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokealpha,
     :markerstrokestyle, #Causes warning not to have it... what is this?
-    :fillcolor, :fillalpha, #:fillrange,
-#    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :titlelocation,
+    :fillcolor,
+    :fillalpha, #:fillrange,
+    #    :bins, :bar_width, :bar_edges, :bar_position,
+    :title,
+    :titlelocation,
     :window_title,
-    :guide, :lims, :scale, #:ticks, :flip, :rotation,
-    :titlefontfamily, :titlefontsize, :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :grid, :legend, #:colorbar,
-#    :marker_z,
-#    :line_z,
-#    :levels,
- #   :ribbon, :quiver, :arrow,
-#    :orientation,
+    :guide,
+    :lims,
+    :scale, #:ticks, :flip, :rotation,
+    :titlefontfamily,
+    :titlefontsize,
+    :titlefontcolor,
+    :legendfontfamily,
+    :legendfontsize,
+    :legendfontcolor,
+    :tickfontfamily,
+    :tickfontsize,
+    :tickfontcolor,
+    :guidefontfamily,
+    :guidefontsize,
+    :guidefontcolor,
+    :grid,
+    :legend, #:colorbar,
+    #    :marker_z,
+    #    :line_z,
+    #    :levels,
+    #   :ribbon, :quiver, :arrow,
+    #    :orientation,
     :overwrite_figure,
     :polar,
-#    :normalize, :weights,
-#    :contours, :aspect_ratio,
-#    :clims,
-#    :inset_subplots,
+    #    :normalize, :weights,
+    #    :contours, :aspect_ratio,
+    #    :clims,
+    #    :inset_subplots,
     :dpi,
-#    :colorbar_title,
-  ])
+    #    :colorbar_title,
+])
 const _inspectdr_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _inspectdr_seriestype = [
-        :path, :scatter, :shape, :straightline, #, :steppre, :stepmid, :steppost
-    ]
+    :path,
+    :scatter,
+    :shape,
+    :straightline, #, :steppre, :stepmid, :steppost
+]
 #see: _allMarkers, _shape_keys
 const _inspectdr_marker = Symbol[
-    :none, :auto,
-    :circle, :rect, :diamond,
-    :cross, :xcross,
-    :utriangle, :dtriangle, :rtriangle, :ltriangle,
-    :pentagon, :hexagon, :heptagon, :octagon,
-    :star4, :star5, :star6, :star7, :star8,
-    :vline, :hline, :+, :x,
+    :none,
+    :auto,
+    :circle,
+    :rect,
+    :diamond,
+    :cross,
+    :xcross,
+    :utriangle,
+    :dtriangle,
+    :rtriangle,
+    :ltriangle,
+    :pentagon,
+    :hexagon,
+    :heptagon,
+    :octagon,
+    :star4,
+    :star5,
+    :star6,
+    :star7,
+    :star8,
+    :vline,
+    :hline,
+    :+,
+    :x,
 ]
 
 const _inspectdr_scale = [:identity, :ln, :log2, :log10]

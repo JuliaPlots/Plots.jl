@@ -3,7 +3,10 @@
 
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
 
-function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.attr, :window_title, "Plots.jl"))
+function standalone_html(
+    plt::AbstractPlot;
+    title::AbstractString = get(plt.attr, :window_title, "Plots.jl"),
+)
     """
     <!DOCTYPE html>
     <html>
@@ -49,7 +52,8 @@ function standalone_html_window(plt::AbstractPlot)
     old = use_local_dependencies[] # save state to restore afterwards
     # if we open a browser ourself, we can host local files, so
     # when we have a local plotly downloaded this is the way to go!
-    use_local_dependencies[] = plotly_local_file_path[] === nothing ? false : isfile(plotly_local_file_path[])
+    use_local_dependencies[] =
+        plotly_local_file_path[] === nothing ? false : isfile(plotly_local_file_path[])
     filename = write_temp_html(plt)
     open_browser_window(filename)
     # restore for other backends
@@ -58,7 +62,9 @@ end
 
 # uses wkhtmltopdf/wkhtmltoimage: http://wkhtmltopdf.org/downloads.html
 function html_to_png(html_fn, png_fn, w, h)
-    run(`wkhtmltoimage -f png -q --width $w --height $h --disable-smart-width $html_fn $png_fn`)
+    run(
+        `wkhtmltoimage -f png -q --width $w --height $h --disable-smart-width $html_fn $png_fn`,
+    )
 end
 
 function show_png_from_html(io::IO, plt::AbstractPlot)

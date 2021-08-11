@@ -73,7 +73,6 @@ function txt(plt::Plot, fn::AbstractString)
 end
 txt(fn::AbstractString) = txt(current(), fn)
 
-
 # ----------------------------------------------------------------
 
 const _savemap = Dict(
@@ -127,7 +126,6 @@ function savefig(plt::Plot, fn::AbstractString)
     end
 end
 savefig(fn::AbstractString) = savefig(current(), fn)
-
 
 # ---------------------------------------------------------
 
@@ -186,8 +184,8 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
 end
 
 # delegate showable to _show instead
-function Base.showable(m::M, plt::P) where {M <: MIME, P <: Plot}
-    return hasmethod(_show, Tuple{IO, M, P})
+function Base.showable(m::M, plt::P) where {M<:MIME,P<:Plot}
+    return hasmethod(_show, Tuple{IO,M,P})
 end
 
 function _display(plt::Plot)
@@ -224,7 +222,6 @@ Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())
 
-
 # function html_output_format(fmt)
 #     if fmt == "png"
 #         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
@@ -240,7 +237,6 @@ closeall() = closeall(backend())
 # end
 #
 # html_output_format("svg")
-
 
 # ---------------------------------------------------------
 # Atom PlotPane

@@ -9,8 +9,8 @@ using Plots, Test
 end
 
 @testset "Magic axis" begin
-    @test plot(1, axis=nothing)[1][:xaxis][:ticks] == []
-    @test plot(1, axis=nothing)[1][:yaxis][:ticks] == []
+    @test plot(1, axis = nothing)[1][:xaxis][:ticks] == []
+    @test plot(1, axis = nothing)[1][:yaxis][:ticks] == []
 end # testset
 
 @testset "Categorical ticks" begin
@@ -23,34 +23,34 @@ end # testset
 end
 
 @testset "Ticks getter functions" begin
-    ticks1 = ([1,2,3], ("a","b","c"))
-    ticks2 = ([4,5], ("e","f"))
-    p1 = plot(1:5, 1:5, 1:5, xticks=ticks1, yticks=ticks1, zticks=ticks1)
-    p2 = plot(1:5, 1:5, 1:5, xticks=ticks2, yticks=ticks2, zticks=ticks2)
+    ticks1 = ([1, 2, 3], ("a", "b", "c"))
+    ticks2 = ([4, 5], ("e", "f"))
+    p1 = plot(1:5, 1:5, 1:5, xticks = ticks1, yticks = ticks1, zticks = ticks1)
+    p2 = plot(1:5, 1:5, 1:5, xticks = ticks2, yticks = ticks2, zticks = ticks2)
     p = plot(p1, p2)
     @test xticks(p) == yticks(p) == zticks(p) == [ticks1, ticks2]
     @test xticks(p[1]) == yticks(p[1]) == zticks(p[1]) == ticks1
 end
 
 @testset "Axis limits" begin
-    pl = plot(1:5, xlims=:symmetric, widen = false)
+    pl = plot(1:5, xlims = :symmetric, widen = false)
     @test Plots.xlims(pl) == (-5, 5)
 
     pl = plot(1:3)
-    @test Plots.xlims(pl) == Plots.widen(1,3)
+    @test Plots.xlims(pl) == Plots.widen(1, 3)
 
-    pl = plot([1.05,2.0,2.95], ylims=:round)
+    pl = plot([1.05, 2.0, 2.95], ylims = :round)
     @test Plots.ylims(pl) == (1, 3)
 
-    pl = plot(1:3, xlims=(1,5))
+    pl = plot(1:3, xlims = (1, 5))
     @test Plots.xlims(pl) == (1, 5)
 
-    pl = plot(1:3, xlims=(1,5), widen=true)
+    pl = plot(1:3, xlims = (1, 5), widen = true)
     @test Plots.xlims(pl) == Plots.widen(1, 5)
 end
 
 @testset "3D Axis" begin
-    ql = quiver([1, 2], [2, 1], [3, 4], quiver = ([1, -1], [0, 0], [1, -0.5]), arrow=true)
+    ql = quiver([1, 2], [2, 1], [3, 4], quiver = ([1, -1], [0, 0], [1, -0.5]), arrow = true)
     @test ql[1][:projection] == "3d"
 end
 

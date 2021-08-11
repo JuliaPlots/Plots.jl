@@ -18,12 +18,12 @@ using RecipesBase
     @test Plots.plotly_local_file_path[] === nothing
     temp = Plots.use_local_dependencies[]
     withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
-    Plots.__init__()
-    @test Plots.plotly_local_file_path[] isa String
-    @test isfile(Plots.plotly_local_file_path[])
-    @test Plots.use_local_dependencies[] = true
-    @test_nowarn Plots._init_ijulia_plotting()
-end
+        Plots.__init__()
+        @test Plots.plotly_local_file_path[] isa String
+        @test isfile(Plots.plotly_local_file_path[])
+        @test Plots.use_local_dependencies[] = true
+        @test_nowarn Plots._init_ijulia_plotting()
+    end
     Plots.plotly_local_file_path[] = nothing
     Plots.use_local_dependencies[] = temp
 end # testset
@@ -39,12 +39,13 @@ include("test_recipes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
 
-reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+reference_dir(args...) =
+    joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
 
 function reference_file(backend, i, version)
     refdir = reference_dir("Plots", string(backend))
     fn = "ref$i.png"
-    versions = sort(VersionNumber.(readdir(refdir)), rev=true)
+    versions = sort(VersionNumber.(readdir(refdir)), rev = true)
 
     reffn = joinpath(refdir, string(version), fn)
     for v in versions
@@ -62,13 +63,16 @@ reference_path(backend, version) = reference_dir("Plots", string(backend), strin
 
 if !isdir(reference_dir())
     mkpath(reference_dir())
-    LibGit2.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git", reference_dir())
+    LibGit2.clone(
+        "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
+        reference_dir(),
+    )
 end
 
 include("imgcomp.jl")
 # don't actually show the plots
 Random.seed!(PLOTS_SEED)
-default(show=false, reuse=true)
+default(show = false, reuse = true)
 is_ci() = get(ENV, "CI", "false") == "true"
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-4" : "1e-5"))
 
@@ -98,7 +102,6 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-4" 
 ##
 
 @testset "Backends" begin
-
     @testset "GR" begin
         ENV["PLOTS_TEST"] = "true"
         ENV["GKSwstype"] = "100"
@@ -108,7 +111,11 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-4" 
         @static if haskey(ENV, "APPVEYOR")
             @info "Skipping GR image comparison tests on AppVeyor"
         else
-            image_comparison_facts(:gr, tol=PLOTS_IMG_TOL, skip=Plots._backend_skips[:gr])
+            image_comparison_facts(
+                :gr,
+                tol = PLOTS_IMG_TOL,
+                skip = Plots._backend_skips[:gr],
+            )
         end
     end
 
@@ -148,7 +155,6 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-4" 
         @test isa(p, Plots.Plot) == true
         @test_broken isa(display(p), Nothing) == true
     end
-
 end
 
 @testset "Axes" begin
@@ -158,10 +164,10 @@ end
     @test Plots.discrete_value!(axis, "HI") == (0.5, 1)
     @test Plots.discrete_value!(axis, :yo) == (1.5, 2)
     @test Plots.ignorenan_extrema(axis) == (0.5, 1.5)
-    @test axis[:discrete_map] == Dict{Any,Any}(:yo  => 2, "HI" => 1)
+    @test axis[:discrete_map] == Dict{Any,Any}(:yo => 2, "HI" => 1)
 
-    Plots.discrete_value!(axis, ["x$i" for i = 1:5])
-    Plots.discrete_value!(axis, ["x$i" for i = 0:2])
+    Plots.discrete_value!(axis, ["x$i" for i in 1:5])
+    Plots.discrete_value!(axis, ["x$i" for i in 0:2])
     @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
 end
 
@@ -171,14 +177,16 @@ end
     @test backend() == Plots.UnicodePlotsBackend()
 
     @testset "Plot" begin
-        plots = [histogram([1, 0, 0, 0, 0, 0]),
-                 plot([missing]),
-                 plot([missing, missing]),
-                 plot(fill(missing, 10)),
-                 plot([missing; 1:4]),
-                 plot([fill(missing, 10); 1:4]),
-                 plot([1 1; 1 missing]),
-                 plot(["a" "b"; missing "d"], [1 2; 3 4])]
+        plots = [
+            histogram([1, 0, 0, 0, 0, 0]),
+            plot([missing]),
+            plot([missing, missing]),
+            plot(fill(missing, 10)),
+            plot([missing; 1:4]),
+            plot([fill(missing, 10); 1:4]),
+            plot([1 1; 1 missing]),
+            plot(["a" "b"; missing "d"], [1 2; 3 4]),
+        ]
         for plt in plots
             display(plt)
         end
@@ -186,12 +194,11 @@ end
     end
 
     @testset "Bar" begin
-       p = bar([3,2,1], [1,2,3]);
-       @test isa(p, Plots.Plot)
-       @test isa(display(p), Nothing) == true
+        p = bar([3, 2, 1], [1, 2, 3])
+        @test isa(p, Plots.Plot)
+        @test isa(display(p), Nothing) == true
     end
 end
-
 
 @testset "EmptyAnim" begin
     anim = @animate for i in []
@@ -208,17 +215,25 @@ end
     @test segments([NaN]) == []
     @test segments(nan10) == []
     @test segments([nan10; 1:5]) == [11:15]
-    @test segments([1:5;nan10]) == [1:5]
+    @test segments([1:5; nan10]) == [1:5]
     @test segments([nan10; 1:5; nan10; 1:5; nan10]) == [11:15, 26:30]
     @test segments([NaN; 1], 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
     @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
 end
 
 @testset "Utils" begin
-    zipped = ([(1, 2)], [("a", "b")], [(1, "a"),(2, "b")],
-              [(1, 2),(3, 4)], [(1, 2, 3),(3, 4, 5)], [(1, 2, 3, 4),(3, 4, 5, 6)],
-              [(1, 2.0),(missing, missing)], [(1, missing),(missing, "a")],
-              [(missing, missing)], [(missing, missing, missing),("a", "b", "c")])
+    zipped = (
+        [(1, 2)],
+        [("a", "b")],
+        [(1, "a"), (2, "b")],
+        [(1, 2), (3, 4)],
+        [(1, 2, 3), (3, 4, 5)],
+        [(1, 2, 3, 4), (3, 4, 5, 6)],
+        [(1, 2.0), (missing, missing)],
+        [(1, missing), (missing, "a")],
+        [(missing, missing)],
+        [(missing, missing, missing), ("a", "b", "c")],
+    )
     for z in zipped
         @test isequal(collect(zip(Plots.unzip(z)...)), z)
         @test isequal(collect(zip(Plots.unzip(GeometryBasics.Point.(z))...)), z)
@@ -227,5 +242,7 @@ end
     op2 = Plots.process_clims((1, 2.0))
     data = randn(100, 100)
     @test op1(data) == op2(data)
-    @test Plots.process_clims(nothing) == Plots.process_clims(missing) == Plots.process_clims(:auto)
+    @test Plots.process_clims(nothing) ==
+          Plots.process_clims(missing) ==
+          Plots.process_clims(:auto)
 end
