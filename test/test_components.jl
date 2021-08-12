@@ -52,7 +52,7 @@ using Plots, Test
     @testset "Plot" begin
         ang = range(0, 2π, length = 60)
         ellipse(x, y, w, h) = Shape(w * sin.(ang) .+ x, h * cos.(ang) .+ y)
-        myshapes = [ellipse(x, rand(), rand(), rand()) for x = 1:4]
+        myshapes = [ellipse(x, rand(), rand(), rand()) for x in 1:4]
         @test coords(myshapes) isa Tuple{Vector{Vector{S}},Vector{Vector{T}}} where {T,S}
         local p
         @test_nowarn p = plot(myshapes)
@@ -116,7 +116,7 @@ end
 end
 
 @testset "Series Annotations" begin
-    square = Shape([(0., 0.), (1., 0.), (1., 1.), (0., 1.)])
+    square = Shape([(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
     @test_logs (:warn, "Unused SeriesAnnotations arg: triangle (Symbol)") begin
         p = plot(
             [1, 2, 3],
@@ -136,24 +136,25 @@ end
         @test sa.scalefactor == (1, 4)
     end
     spl = scatter(
-        4.53 .* [1/1 1/2 1/3 1/4 1/5],
+        4.53 .* [1 / 1 1 / 2 1 / 3 1 / 4 1 / 5],
         [0 0 0 0 0],
         layout = (5, 1),
         ylims = (-1.1, 1.1),
         xlims = (0, 5),
         series_annotations = permutedims([["1/1"], ["1/2"], ["1/3"], ["1/4"], ["1/5"]]),
     )
-    for i ∈ 1:5
-        @test only(spl.series_list[i].plotattributes[:series_annotations].strs).str == "1/$i"
+    for i in 1:5
+        @test only(spl.series_list[i].plotattributes[:series_annotations].strs).str ==
+              "1/$i"
     end
 
-    p = plot([1, 2], annotations=(1.5, 2, text("foo", :left)))
+    p = plot([1, 2], annotations = (1.5, 2, text("foo", :left)))
     x, y, txt = only(p.subplots[end][:annotations])
     @test (x, y) == (1.5, 2)
     @test txt.str == "foo"
 
-    p = plot([1, 2], annotations=((.1, .5), :auto))
+    p = plot([1, 2], annotations = ((0.1, 0.5), :auto))
     pos, txt = only(p.subplots[end][:annotations])
-    @test pos == (.1, .5)
+    @test pos == (0.1, 0.5)
     @test txt.str == "(a)"
 end

@@ -34,11 +34,8 @@ end
 
 @userplot ShowTheme
 
-_color_functions = KW(
-    :protanopic => protanopic,
-    :deuteranopic => deuteranopic,
-    :tritanopic => tritanopic,
-)
+_color_functions =
+    KW(:protanopic => protanopic, :deuteranopic => deuteranopic, :tritanopic => tritanopic)
 _get_showtheme_args(thm::Symbol) = thm, identity
 _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func, identity)
 
@@ -110,8 +107,8 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         subplot := 4
         seriestype := :heatmap
         seriescolor := colorgradient
-        xticks := (-2π:2π:2π, string.(-2:2:2, "π"))
-        yticks := (-2π:2π:2π, string.(-2:2:2, "π"))
+        xticks := ((-2π):(2π):(2π), string.(-2:2:2, "π"))
+        yticks := ((-2π):(2π):(2π), string.(-2:2:2, "π"))
         x, y, z
     end
 
@@ -119,8 +116,8 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         subplot := 5
         seriestype := :surface
         seriescolor := colorgradient
-        xticks := (-2π:2π:2π, string.(-2:2:2, "π"))
-        yticks := (-2π:2π:2π, string.(-2:2:2, "π"))
+        xticks := ((-2π):(2π):(2π), string.(-2:2:2, "π"))
+        yticks := ((-2π):(2π):(2π), string.(-2:2:2, "π"))
         x, y, z
     end
 
@@ -137,5 +134,4 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         line_z := z
         x, y, z
     end
-
 end
