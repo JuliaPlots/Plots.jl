@@ -308,7 +308,8 @@ function gaston_seriesconf!(
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         if fr !== nothing # filled curves, but not filled curves with markers
-            push!(curveconf, "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt")
+            push!(curveconf, "w filledcurves y=$fr fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt")
+            #push!(curveconf, "w lines lc $lc lw $lw dt $dt")
         elseif series[:markershape] == :none  # simplepath
             push!(curveconf, "w lines  lc $lc dt $dt lw $lw")
         else
