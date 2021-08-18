@@ -108,8 +108,9 @@ function create_kw_body(func_signature::Expr)
     args = func_signature.args[2:end]
     kw_body = Expr(:block)
     cleanup_body = Expr(:block)
-    if isa(args[1], Expr) && args[1].head == :parameters
-        for kwpair in args[1].args
+    arg1 = args[1]
+    if isa(arg1, Expr) && arg1.head == :parameters
+        for kwpair in arg1.args
             k, v = kwpair.args
             if isa(k, Expr) && k.head == :(::)
                 k = k.args[1]
