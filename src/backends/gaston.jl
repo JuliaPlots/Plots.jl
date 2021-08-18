@@ -225,13 +225,13 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     gsp = sp.o
     x, y, z = series[:x], series[:y], series[:z]
     st = series[:seriestype]
-
     curves = []
     if gsp.dims == 2 && z === nothing
         for (n, seg) in enumerate(series_segments(series, st; check = true))
             i, rng = seg.attr_index, seg.range
+            fr =_cycle(series[:fillrange], 1:length(x[rng])) ####
             for sc in gaston_seriesconf!(sp, series, i, n == 1)
-                push!(curves, Gaston.Curve(x[rng], y[rng], nothing, nothing, sc))
+                push!(curves, Gaston.Curve(x[rng], y[rng], nothing, fr, sc)) 
             end
         end
     else
@@ -307,9 +307,8 @@ function gaston_seriesconf!(
         fr = series[:fillrange]
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
-        if fr !== nothing # filled curves, but not filled curves with markers
-            push!(curveconf, "w filledcurves y=$fr fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt")
-            #push!(curveconf, "w lines lc $lc lw $lw dt $dt")
+        if fr !== nothing # filled curves, but not filled curves with markers 
+            push!(curveconf, "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt")
         elseif series[:markershape] == :none  # simplepath
             push!(curveconf, "w lines  lc $lc dt $dt lw $lw")
         else
