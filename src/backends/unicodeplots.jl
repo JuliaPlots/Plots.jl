@@ -6,15 +6,13 @@ warn_on_unsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 
-function _canvas_map()
-    (
-        braille = UnicodePlots.BrailleCanvas,
-        ascii = UnicodePlots.AsciiCanvas,
-        block = UnicodePlots.BlockCanvas,
-        dot = UnicodePlots.DotCanvas,
-        density = UnicodePlots.DensityCanvas,
-    )
-end
+_canvas_map() = (
+    braille = UnicodePlots.BrailleCanvas,
+    ascii = UnicodePlots.AsciiCanvas,
+    block = UnicodePlots.BlockCanvas,
+    dot = UnicodePlots.DotCanvas,
+    density = UnicodePlots.DensityCanvas,
+)
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
 function rebuildUnicodePlot!(plt::Plot, width, height)
@@ -93,14 +91,7 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
 end
 
 # add a single series
-function addUnicodeSeries!(
-    o,
-    plotattributes,
-    addlegend::Bool,
-    xlim,
-    ylim;
-    rev_color_names = Dict(v => k for (k, v) in Colors.color_names),
-)
+function addUnicodeSeries!(o, plotattributes, addlegend::Bool, xlim, ylim)
     # get the function, or special handling for step/bar/hist
     st = plotattributes[:seriestype]
     if st == :histogram2d
@@ -130,12 +121,15 @@ function addUnicodeSeries!(
     end
     label = addlegend ? plotattributes[:label] : ""
 
-    # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide
-    lc = convert(ARGB32, plotattributes[:linecolor])
-    sym = Symbol(
-        get(rev_color_names, map(Int, (red(lc).i, green(lc).i, blue(lc).i)), nothing),
-    )
-    color = sym in UnicodePlots.color_cycle ? sym : :auto
+    lc = plotattributes[:linecolor]
+    if typeof(lc) <: UnicodePlots.UserColorType
+        color = lc
+    elseif lc isa RGBA{Float64}
+        lc = convert(ARGB32, lc)
+        color = map(Int, (red(lc).i, green(lc).i, blue(lc).i))
+    else
+        color = :auto
+    end
 
     # add the series
     x, y = RecipesPipeline.unzip(
