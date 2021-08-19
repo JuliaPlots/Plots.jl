@@ -1279,21 +1279,28 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         push!(opt, string(letter, "tick") => string("{", join(tick_values, ","), "}"))
         if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
             # wrap the power part of label with }
-            tick_labels = Vector{String}(undef, length(ticks[2]))
+            tick_labels = similar(ticks[2])
             for (i, label) in enumerate(ticks[2])
                 base, power = split(label, "^")
                 power = string("{", power, "}")
                 tick_labels[i] = string(base, "^", power)
             end
-            push!(
-                opt,
-                string(letter, "ticklabels") =>
-                    string("{\$", join(tick_labels, "\$,\$"), "\$}"),
-            )
+            if tick_labels isa Vector{String}
+                push!(
+                    opt,
+                    string(letter, "ticklabels") =>
+                        string("{\$", join(tick_labels, "\$,\$"), "\$}"),
+                )
+            elseif tick_labels isa Vector{LaTeXString}
+                push!(
+                    opt,
+                    string(letter, "ticklabels") => join(tick_labels)
+                )
+            end
         elseif axis[:showaxis]
             tick_labels =
                 ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
-            if axis[:formatter] in (:scientific, :auto)
+            if axis[:formatter] in (:scientific, :auto) && tick_labels isa Vector{String}
                 tick_labels = string.("\$", convert_sci_unicode.(tick_labels), "\$")
                 tick_labels = replace.(tick_labels, Ref("×" => "\\times"))
             end
