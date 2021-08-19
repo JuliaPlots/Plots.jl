@@ -1232,6 +1232,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         opt,
         string(letter, "label style") => PGFPlotsX.Options(
             labelpos => nothing,
+            "at" => string("{(ticklabel cs:", get((left = 0, right = 1), axis[:guidefonthalign], 0.5),")}"),
+            "anchor" => "near ticklabel",
             "font" => pgfx_font(axis[:guidefontsize], pgfx_thickness_scaling(sp)),
             "color" => cstr,
             "draw opacity" => α,
