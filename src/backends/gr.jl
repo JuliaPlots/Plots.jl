@@ -1947,19 +1947,23 @@ function gr_draw_surface(series, x, y, z, clims)
     e_kwargs = series[:extra_kwargs]
     st = series[:seriestype]
     if st === :surface
-        fillalpha = get_fillalpha(series)
-        fillcolor = get_fillcolor(series)
-        # NOTE: setting nx = 0 or ny = 0 disables GR.gridit interpolation
-        nx, ny = get(e_kwargs, :nx, 200), get(e_kwargs, :ny, 200)
-        if length(x) == length(y) == length(z) && nx > 0 && ny > 0
-            x, y, z = GR.gridit(x, y, z, nx, ny)
-        end
-        d_opt = get(e_kwargs, :display_option, GR.OPTION_COLORED_MESH)
-        if (!isnothing(fillalpha) && fillalpha < 1) || alpha(first(fillcolor)) < 1
-            gr_set_transparency(fillcolor, fillalpha)
-            GR.surface(x, y, z, d_opt)
+        if ndims(x) == ndims(y) == ndims(z) == 2
+            GR.gr3.surface(x', y', z, GR.OPTION_3D_MESH)
         else
-            GR.gr3.surface(x, y, z, d_opt)
+            fillalpha = get_fillalpha(series)
+            fillcolor = get_fillcolor(series)
+            # NOTE: setting nx = 0 or ny = 0 disables GR.gridit interpolation
+            nx, ny = get(e_kwargs, :nx, 200), get(e_kwargs, :ny, 200)
+            if length(x) == length(y) == length(z) && nx > 0 && ny > 0
+                x, y, z = GR.gridit(x, y, z, nx, ny)
+            end
+            d_opt = get(e_kwargs, :display_option, GR.OPTION_COLORED_MESH)
+            if (!isnothing(fillalpha) && fillalpha < 1) || alpha(first(fillcolor)) < 1
+                gr_set_transparency(fillcolor, fillalpha)
+                GR.surface(x, y, z, d_opt)
+            else
+                GR.gr3.surface(x, y, z, d_opt)
+            end
         end
     elseif st === :wireframe
         GR.setfillcolorind(0)
