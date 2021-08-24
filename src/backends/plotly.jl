@@ -621,8 +621,9 @@ function plotly_series(plt::Plot, series::Series)
             :coloring => filled ? "fill" : "lines",
             :showlabels => series[:contour_labels] == true,
         )
-        # Plotly does not support arbitrary sets of contours:
-        # https://github.com/plotly/plotly.js/issues/4503
+        # Plotly does not support arbitrary sets of contours
+        # (https://github.com/plotly/plotly.js/issues/4503)
+        # so we distinguish AbstractRanges and AbstractVectors
         let levels = series[:levels]
             if levels isa AbstractRange
                 plotattributes_out[:contours][:start] = first(levels)
@@ -638,10 +639,9 @@ function plotly_series(plt::Plot, series::Series)
                     "setting arbitrary contour levels with Plotly backend is not supported; " *
                     "use a range to set equally-spaced contours or an integer to set the " *
                     "approximate number of contours with the keyword `levels`. " *
-                    "Using levels $(levels_range)"
+                    "Setting levels to $(levels_range)"
                 )
-            elseif isinteger(levels)
-                # Assume this is a number of levels
+            elseif levels isa Integer
                 plotattributes_out[:ncontours] = levels + 2
             end
         end

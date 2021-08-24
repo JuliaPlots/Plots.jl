@@ -46,7 +46,7 @@ using Plots, Test
                     "setting arbitrary contour levels with Plotly backend " *
                     "is not supported; use a range to set equally-spaced contours or an " *
                     "integer to set the approximate number of contours with the keyword " *
-                    "`levels`. Using levels -1.0:0.5:1.0",
+                    "`levels`. Setting levels to -1.0:0.5:1.0",
                 ) Plots.plotly_series(p)
                 @test series_dict[1][:contours][:start] == first(levels_range)
                 @test series_dict[1][:contours][:end] == last(levels_range)
