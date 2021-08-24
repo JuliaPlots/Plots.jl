@@ -7,7 +7,7 @@ mutable struct PlotExample
     exprs::Vector{Expr}
 end
 
-# the _examples we'll run for each
+# the _examples we'll run for each backend
 const _examples = PlotExample[
     PlotExample( # 1
         "Lines",
@@ -28,35 +28,33 @@ const _examples = PlotExample[
         to generate the animation.)  Use command `gif(anim, filename, fps=15)` to save the
         animation.
         """,
-        [:(
-            begin
-                p = plot([sin, cos], zeros(0), leg = false, xlims = (0, 2π), ylims = (-1, 1))
-                anim = Animation()
-                for x in range(0, stop = 2π, length = 20)
-                    push!(p, x, Float64[sin(x), cos(x)])
-                    frame(anim)
+        [
+            :(
+                begin
+                    p = plot(
+                        [sin, cos],
+                        zeros(0),
+                        leg = false,
+                        xlims = (0, 2π),
+                        ylims = (-1, 1),
+                    )
+                    anim = Animation()
+                    for x in range(0, stop = 2π, length = 20)
+                        push!(p, x, Float64[sin(x), cos(x)])
+                        frame(anim)
+                    end
                 end
-            end
-        )],
+            ),
+        ],
     ),
     PlotExample( # 3
         "Parametric plots",
         "Plot function pair (x(u), y(u)).",
-        [
-            :(
+        [:(
                 begin
-                    plot(
-                        sin,
-                        x -> sin(2x),
-                        0,
-                        2π,
-                        line = 4,
-                        leg = false,
-                        fill = (0, :orange),
-                    )
+                    plot(sin, x -> sin(2x), 0, 2π, line = 4, leg = false, fill = (0, :orange))
                 end
-            ),
-        ],
+            )],
     ),
     PlotExample( # 4
         "Colors",
@@ -115,12 +113,11 @@ const _examples = PlotExample[
                     )
                     vline!([5, 10])
                     title!("TITLE")
-                    yaxis!("YLABEL", :log10)
+                    yaxis!("YLABEL", :log10, minorgrid = true)
                 end
             ),
         ],
     ),
-
     PlotExample( # 6
         "Images",
         "Plot an image.  y-axis is set to flipped",
@@ -128,8 +125,9 @@ const _examples = PlotExample[
             :(
                 begin
                     import FileIO
-                    path =
-                            download("http://juliaplots.org/PlotReferenceImages.jl/Plots/pyplot/0.7.0/ref1.png")
+                    path = download(
+                        "http://juliaplots.org/PlotReferenceImages.jl/Plots/pyplot/0.7.0/ref1.png",
+                    )
                     img = FileIO.load(path)
                     plot(img)
                 end
@@ -190,12 +188,11 @@ const _examples = PlotExample[
     PlotExample( # 11
         "Line types",
         "",
-        [
-            :(
+        [:(
                 begin
                     linetypes = [:path :steppre :steppost :sticks :scatter]
                     n = length(linetypes)
-                    x = Vector[sort(rand(20)) for i = 1:n]
+                    x = Vector[sort(rand(20)) for i in 1:n]
                     y = rand(20, n)
                     plot(
                         x,
@@ -205,8 +202,7 @@ const _examples = PlotExample[
                         ms = 15,
                     )
                 end
-            ),
-        ],
+            )],
     ),
     PlotExample( # 12
         "Line styles",
@@ -237,18 +233,17 @@ const _examples = PlotExample[
         [
             :(
                 begin
-                    markers = filter(
-                        m -> m in Plots.supported_markers(),
-                        Plots._shape_keys,
-                    )
-                    markers = reshape(markers, 1, length(markers))
+                    markers =
+                        filter(m -> m in Plots.supported_markers(), Plots._shape_keys)
+                    markers = permutedims(markers)
                     n = length(markers)
                     x = range(0, stop = 10, length = n + 2)[2:(end - 1)]
                     y = repeat(reshape(reverse(x), 1, :), n, 1)
                     scatter(
                         x,
                         y,
-                        m = (8, :auto),
+                        m = markers,
+                        markersize = 8,
                         lab = map(string, markers),
                         bg = :linen,
                         xlim = (0, 10),
@@ -270,17 +265,11 @@ const _examples = PlotExample[
     PlotExample( # 15
         "Histogram",
         "",
-        [
-            :(
+        [:(
                 begin
-                    histogram(
-                        randn(1000),
-                        bins = :scott,
-                        weights = repeat(1:5, outer = 200),
-                    )
+                    histogram(randn(1000), bins = :scott, weights = repeat(1:5, outer = 200))
                 end
-            ),
-        ],
+            )],
     ),
     PlotExample( # 16
         "Subplots",
@@ -326,15 +315,13 @@ const _examples = PlotExample[
     PlotExample( # 18
         "",
         "",
-        [
-            :(
-                begin
-                    using Random
-                    Random.seed!(111)
-                    plot!(Plots.fakedata(100, 10))
-                end
-            )
-        ]
+        [:(
+            begin
+                using Random
+                Random.seed!(111)
+                plot!(Plots.fakedata(100, 10))
+            end
+        )],
     ),
     PlotExample( # 19
         "Open/High/Low/Close",
@@ -357,8 +344,7 @@ const _examples = PlotExample[
                             bot[i] + hgt[i],
                             bot[i],
                             closepct[i] * hgt[i] + bot[i],
-                        )
-                        for i = 1:n
+                        ) for i in 1:n
                     ]
                     ohlc(y)
                 end
@@ -369,10 +355,21 @@ const _examples = PlotExample[
         "Annotations",
         """
         The `annotations` keyword is used for text annotations in data-coordinates.  Pass in a
-        tuple (x,y,text) or a vector of annotations.  `annotate!(ann)` is shorthand for `plot!(;
-        annotation=ann)`.  Series annotations are used for annotating individual data points.
-        They require only the annotation... x/y values are computed.  A `PlotText` object can be
-        build with the method `text(string, attr...)`, which wraps font and color attributes.
+        tuple `(x, y, text)`, a vector of annotations, each of which is a tuple of `x`, `y`
+        and `text`. You can position annotations using relative coordinates with the syntax
+        `((px, py), text)`, where for example `px=.25` positions the annotation at `25%` of
+        the subplot's axis width.
+        `text` may be a simple `String`, or a `PlotText` object, which can be built with the
+        method `text(string, attrs...)`.
+        This wraps font and color attributes and allows you to set text styling.
+        `text` may also be a tuple `(string, attrs...)` of arguments which are passed
+        to `Plots.text`.
+
+        `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`.
+
+        Series annotations are used for annotating individual data points.
+        They require only the annotation; x/y values are computed.  Series annotations
+        require either plain `String`s or `PlotText` objects.
         """,
         [
             :(
@@ -384,12 +381,8 @@ const _examples = PlotExample[
                         leg = false,
                     )
                     annotate!([
-                        (5, y[5], Plots.text("this is #5", 16, :red, :center)),
-                        (
-                            10,
-                            y[10],
-                            Plots.text("this is #10", :right, 20, "courier"),
-                        ),
+                        (5, y[5], ("this is #5", 16, :red, :center)),
+                        (10, y[10], ("this is #10", :right, 20, "courier")),
                     ])
                     scatter!(
                         range(2, stop = 8, length = 6),
@@ -568,8 +561,8 @@ const _examples = PlotExample[
         "",
         [:(
             begin
-                xs = [string("x", i) for i = 1:10]
-                ys = [string("y", i) for i = 1:4]
+                xs = [string("x", i) for i in 1:10]
+                ys = [string("y", i) for i in 1:4]
                 z = float((1:4) * reshape(1:10, 1, :))
                 heatmap(xs, ys, z, aspect_ratio = 1)
             end
@@ -604,12 +597,7 @@ const _examples = PlotExample[
                 begin
                     import RDatasets
                     singers = RDatasets.dataset("lattice", "singer")
-                    @df singers violin(
-                        :VoicePart,
-                        :Height,
-                        line = 0,
-                        fill = (0.2, :blue),
-                    )
+                    @df singers violin(:VoicePart, :Height, line = 0, fill = (0.2, :blue))
                     @df singers boxplot!(
                         :VoicePart,
                         :Height,
@@ -637,11 +625,7 @@ const _examples = PlotExample[
 
                     anim = Animation()
                     for x in range(1, stop = 2π, length = 20)
-                        plot(push!(
-                            p,
-                            x,
-                            Float64[sin(x), cos(x), atan(x), cos(x), log(x)],
-                        ))
+                        plot(push!(p, x, Float64[sin(x), cos(x), atan(x), cos(x), log(x)]))
                         frame(anim)
                     end
                 end
@@ -666,18 +650,8 @@ const _examples = PlotExample[
                         10 => ones(40),
                         -10 => ones(40),
                     )
-                    b = spdiagm(
-                        0 => 1:50,
-                        1 => 1:49,
-                        -1 => 1:49,
-                        10 => 1:40,
-                        -10 => 1:40,
-                    )
-                    plot(
-                        spy(a),
-                        spy(b),
-                        title = ["Unique nonzeros" "Different nonzeros"],
-                    )
+                    b = spdiagm(0 => 1:50, 1 => 1:49, -1 => 1:49, 10 => 1:40, -10 => 1:40)
+                    plot(spy(a), spy(b), title = ["Unique nonzeros" "Different nonzeros"])
                 end
             ),
         ],
@@ -742,51 +716,37 @@ const _examples = PlotExample[
         You can use the `line_z` and `marker_z` properties to associate a color with
         each line segment or marker in the plot.
         """,
-        [
-            :(
-                begin
-                    t = range(0, stop = 1, length = 100)
-                    θ = 6π .* t
-                    x = t .* cos.(θ)
-                    y = t .* sin.(θ)
-                    p1 = plot(x, y, line_z = t, linewidth = 3, legend = false)
-                    p2 = scatter(
-                        x,
-                        y,
-                        marker_z = +,
-                        color = :bluesreds,
-                        legend = false,
-                    )
-                    plot(p1, p2)
-                end
-            ),
-        ],
+        [:(
+            begin
+                t = range(0, stop = 1, length = 100)
+                θ = 6π .* t
+                x = t .* cos.(θ)
+                y = t .* sin.(θ)
+                p1 = plot(x, y, line_z = t, linewidth = 3, legend = false)
+                p2 = scatter(x, y, marker_z = +, color = :bluesreds, legend = false)
+                plot(p1, p2)
+            end
+        )],
     ),
     PlotExample( # 36
         "Portfolio Composition maps",
         """
         see: http://stackoverflow.com/a/37732384/5075246
         """,
-        [
-            :(
-                begin
-                    using Random
-                    Random.seed!(111)
-                    tickers = ["IBM", "Google", "Apple", "Intel"]
-                    N = 10
-                    D = length(tickers)
-                    weights = rand(N, D)
-                    weights ./= sum(weights, dims = 2)
-                    returns = sort!((1:N) + D * randn(N))
+        [:(
+            begin
+                using Random
+                Random.seed!(111)
+                tickers = ["IBM", "Google", "Apple", "Intel"]
+                N = 10
+                D = length(tickers)
+                weights = rand(N, D)
+                weights ./= sum(weights, dims = 2)
+                returns = sort!((1:N) + D * randn(N))
 
-                    portfoliocomposition(
-                        weights,
-                        returns,
-                        labels = permutedims(tickers),
-                    )
-                end
-            ),
-        ],
+                portfoliocomposition(weights, returns, labels = permutedims(tickers))
+            end
+        )],
     ),
     PlotExample( # 37
         "Ribbons",
@@ -799,10 +759,7 @@ const _examples = PlotExample[
             :(
                 begin
                     plot(
-                        plot(
-                            0:10;
-                            ribbon = (LinRange(0, 2, 11), LinRange(0, 1, 11)),
-                        ),
+                        plot(0:10; ribbon = (LinRange(0, 2, 11), LinRange(0, 1, 11))),
                         plot(0:10; ribbon = 0:0.5:5),
                         plot(0:10; ribbon = sqrt),
                         plot(0:10; ribbon = 1),
@@ -867,11 +824,7 @@ const _examples = PlotExample[
                     plot!([(0, 0), (0, 0.9), (2, 0.9), (3, 1), (4, 0.9), (80, 0)])
                     plot!([(0, 0), (0, 0.9), (3, 0.9), (4, 1), (5, 0.9), (80, 0)])
                     plot!([(0, 0), (0, 0.9), (4, 0.9), (5, 1), (6, 0.9), (80, 0)])
-                    lens!(
-                        [1, 6],
-                        [0.9, 1.1],
-                        inset = (1, bbox(0.5, 0.0, 0.4, 0.4)),
-                    )
+                    lens!([1, 6], [0.9, 1.1], inset = (1, bbox(0.5, 0.0, 0.4, 0.4)))
                 end
             end,
         ],
@@ -879,17 +832,15 @@ const _examples = PlotExample[
     PlotExample( # 41
         "Array Types",
         "Plots supports different `Array` types that follow the `AbstractArray` interface, like `StaticArrays` and `OffsetArrays.`",
-        [
-            quote
-                begin
-                    using StaticArrays, OffsetArrays
-                    sv = SVector{10}(rand(10))
-                    ov = OffsetVector(rand(10), -2)
-                    plot([sv, ov], label = ["StaticArray" "OffsetArray"])
-                    plot!(3ov, ribbon=ov, label="OffsetArray ribbon")
-                end
-            end,
-        ],
+        [quote
+            begin
+                using StaticArrays, OffsetArrays
+                sv = SVector{10}(rand(10))
+                ov = OffsetVector(rand(10), -2)
+                plot([sv, ov], label = ["StaticArray" "OffsetArray"])
+                plot!(3ov, ribbon = ov, label = "OffsetArray ribbon")
+            end
+        end],
     ),
     PlotExample( # 42
         "Setting defaults and font arguments",
@@ -905,7 +856,7 @@ const _examples = PlotExample[
                         tickfont = (12, :orange),
                         guide = "x",
                         framestyle = :zerolines,
-                        yminorgrid = true
+                        yminorgrid = true,
                     )
                     plot(
                         [sin, cos],
@@ -924,29 +875,25 @@ const _examples = PlotExample[
     PlotExample( # 43
         "Heatmap with DateTime axis",
         "",
-        [
-            quote
-                begin
-                    using Dates
-                    z = rand(5, 5)
-                    x = DateTime.(2016:2020)
-                    y = 1:5
-                    heatmap(x, y, z)
-                end
-            end,
-        ],
+        [quote
+            begin
+                using Dates
+                z = rand(5, 5)
+                x = DateTime.(2016:2020)
+                y = 1:5
+                heatmap(x, y, z)
+            end
+        end],
     ),
     PlotExample( # 44
         "Linked axes",
         "",
-        [
-            quote
-                begin
-                    x = -5:0.1:5
-                    plot(plot(x, x->x^2), plot(x, x->sin(x)), layout = 2, link = :y)
-                end
-            end,
-        ],
+        [quote
+            begin
+                x = -5:0.1:5
+                plot(plot(x, x -> x^2), plot(x, x -> sin(x)), layout = 2, link = :y)
+            end
+        end],
     ),
     PlotExample( # 45
         "Error bars and array type recipes",
@@ -961,8 +908,21 @@ const _examples = PlotExample[
                     value(m::Measurement) = m.val
                     uncertainty(m::Measurement) = m.err
 
-                    @recipe function f(::Type{T}, m::T) where T <: AbstractArray{<:Measurement}
-                        if !(get(plotattributes, :seriestype, :path) in [:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image])
+                    @recipe function f(
+                        ::Type{T},
+                        m::T,
+                    ) where {T<:AbstractArray{<:Measurement}}
+                        if !(
+                            get(plotattributes, :seriestype, :path) in [
+                                :contour,
+                                :contourf,
+                                :contour3d,
+                                :heatmap,
+                                :surface,
+                                :wireframe,
+                                :image,
+                            ]
+                        )
                             error_sym = Symbol(plotattributes[:letter], :error)
                             plotattributes[error_sym] = uncertainty.(m)
                         end
@@ -972,14 +932,14 @@ const _examples = PlotExample[
                     x = Measurement.(10sort(rand(10)), rand(10))
                     y = Measurement.(10sort(rand(10)), rand(10))
                     z = Measurement.(10sort(rand(10)), rand(10))
-                    surf = Measurement.((1:10) .* (1:10)', rand(10,10))
+                    surf = Measurement.((1:10) .* (1:10)', rand(10, 10))
 
                     plot(
                         scatter(x, [x y]),
                         scatter(x, y, z),
                         heatmap(x, y, surf),
                         wireframe(x, y, surf),
-                        legend = :topleft
+                        legend = :topleft,
                     )
                 end
             end,
@@ -992,90 +952,291 @@ const _examples = PlotExample[
             using GeometryBasics
             using Distributions
             d = MvNormal([1.0 0.75; 0.75 2.0])
-            plot([(1,2),(3,2),(2,1),(2,3)])
-            scatter!(Point2.(eachcol(rand(d,1000))), alpha=0.25)
-        end]
+            plot([(1, 2), (3, 2), (2, 1), (2, 3)])
+            scatter!(Point2.(eachcol(rand(d, 1000))), alpha = 0.25)
+        end],
     ),
     PlotExample( # 47
-	"Mesh3d",
-	"""
-	Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
-	You can also specify the connections using the connections keyword.
-    The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
-	such that elements at the same position of these vectors form a triangle.
-	""",
-	[
-		:(
-		  begin
-			# specify the vertices
-			x=[0, 1, 2, 0]
-			y=[0, 0, 1, 2]
-			z=[0, 2, 0, 1]
+        "Mesh3d",
+        """
+        Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
+        You can also specify the connections using the connections keyword.
+        The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
+        such that elements at the same position of these vectors form a triangle.
+        """,
+        [
+            :(
+                begin
+                    # specify the vertices
+                    x = [0, 1, 2, 0]
+                    y = [0, 0, 1, 2]
+                    z = [0, 2, 0, 1]
 
-			# specify the triangles
-			# every column is one triangle,
-			# where the values denote the indices of the vertices of the triangle
-			i=[0, 0, 0, 1]
-			j=[1, 2, 3, 2]
-			k=[2, 3, 1, 3]
+                    # specify the triangles
+                    # every column is one triangle,
+                    # where the values denote the indices of the vertices of the triangle
+                    i = [0, 0, 0, 1]
+                    j = [1, 2, 3, 2]
+                    k = [2, 3, 1, 3]
 
-			# the four triangles gives above give a tetrahedron
-			mesh3d(x,y,z;connections=(i,j,k))
-		  end
-		),
-	],
+                    # the four triangles gives above give a tetrahedron
+                    mesh3d(
+                        x,
+                        y,
+                        z;
+                        connections = (i, j, k),
+                        title = "triangles",
+                        xlabel = "x",
+                        ylabel = "y",
+                        zlabel = "z",
+                        legend = :none,
+                        margin = 2Plots.mm,
+                    )
+                end
+            ),
+        ],
     ),
     PlotExample( # 48
         "Vectors of markershapes and segments",
         "",
-        [quote
-            yv = ones(9)
-            ys = [1; 1; NaN; ones(6)]
-            plot(
-                5 .- [yv 2ys 3yv 4ys],
-                seriestype = [:path :path :scatter :scatter],
-                markershape = [:utriangle, :rect],
-                markersize = 8,
-                color = [:red, :black],
-            )
-        end]
+        [
+            quote
+                using Base.Iterators: cycle, take
+
+                yv = ones(9)
+                ys = [1; 1; NaN; ones(6)]
+                y = 5 .- [yv 2ys 3yv 4ys]
+
+                plt_color_rows = plot(
+                    y,
+                    seriestype = [:path :path :scatter :scatter],
+                    markershape = collect(take(cycle((:utriangle, :rect)), 9)),
+                    markersize = 8,
+                    color = collect(take(cycle((:red, :black)), 9)),
+                )
+
+                plt_z_cols = plot(
+                    y,
+                    markershape = [:utriangle :x :circle :square],
+                    markersize = [5 10 10 5],
+                    marker_z = [5 4 3 2],
+                    line_z = [1 3 3 1],
+                    linewidth = [1 10 5 1],
+                )
+
+                plot(plt_color_rows, plt_z_cols)
+            end,
+        ],
     ),
     PlotExample( # 49
         "Polar heatmaps",
         "",
         [quote
+            x = range(0, 2π, length = 9)
+            y = 0:4
             z = (1:4) .+ (1:8)'
-            heatmap(z, projection = :polar)
-        end]
+            heatmap(x, y, z, projection = :polar)
+        end],
     ),
     PlotExample( # 50
         "3D surface with axis guides",
         "",
+        [
+            quote
+                f(x, a) = 1 / x + a * x^2
+                xs = collect(0.1:0.05:2.0)
+                as = collect(0.2:0.1:2.0)
+
+                x_grid = [x for x in xs for y in as]
+                a_grid = [y for x in xs for y in as]
+
+                plot(
+                    x_grid,
+                    a_grid,
+                    f.(x_grid, a_grid),
+                    st = :surface,
+                    xlabel = "longer xlabel",
+                    ylabel = "longer ylabel",
+                    zlabel = "longer zlabel",
+                )
+            end,
+        ],
+    ),
+    PlotExample( # 51
+        "Images with custom axes",
+        "",
+        [
+            quote
+                using Plots
+                using TestImages
+                img = testimage("lighthouse")
+
+                # plot the image reversing the first dimension and setting yflip = false
+                plot(
+                    [-π, π],
+                    [-1, 1],
+                    reverse(img, dims = 1),
+                    yflip = false,
+                    aspect_ratio = :none,
+                )
+                # plot other data
+                plot!(sin, -π, π, lw = 3, color = :red)
+            end,
+        ],
+    ),
+    PlotExample( # 52
+        "3d quiver",
+        "",
         [quote
-        f(x,a) = 1/x + a*x^2
-        xs = collect(0.1:0.05:2.0);
-        as = collect(0.2:0.1:2.0);
-        
-        x_grid = [x for x in xs for y in as];
-        a_grid = [y for x in xs for y in as];
-        
-        plot(x_grid, a_grid, f.(x_grid,a_grid),
-            st = :surface,
-            xlabel = "longer xlabel",
-            ylabel = "longer ylabel",
-            zlabel = "longer zlabel",
-        )
-        end]
+            using Plots
+
+            ϕs = range(-π, π, length = 50)
+            θs = range(0, π, length = 25)
+            θqs = range(1, π - 1, length = 25)
+
+            x = vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+            y = vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+            z = vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+
+            u = 0.1 * vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            v = 0.1 * vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            w = 0.1 * vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+
+            quiver(x, y, z, quiver = (u, v, w))
+        end],
+    ),
+    PlotExample( # 53
+        "Step Types",
+        "A comparison of the various step-like `seriestype`s",
+        [
+            :(
+                begin
+                    x = 1:5
+                    y = [1, 2, 3, 2, 1]
+                    default(shape = :circle)
+                    plot(
+                        plot(
+                            x,
+                            y,
+                            markershape = :circle,
+                            seriestype = :steppre,
+                            label = "steppre",
+                        ),
+                        plot(
+                            x,
+                            y,
+                            markershape = :circle,
+                            seriestype = :stepmid,
+                            label = "stepmid",
+                        ),
+                        plot(
+                            x,
+                            y,
+                            markershape = :circle,
+                            seriestype = :steppost,
+                            label = "steppost",
+                        ),
+                        layout = (3, 1),
+                    )
+                end
+            ),
+        ],
+    ),
+    PlotExample( # 54
+        "Guide positions and alignment",
+        "",
+        [
+            :(
+                begin
+                    plot(
+                        rand(10, 4),
+                        layout = 4,
+                        xguide = "x guide",
+                        yguide = "y guide",
+                        xguidefonthalign = [:left :right :right :left],
+                        yguidefontvalign = [:top :bottom :bottom :top],
+                        xguideposition = :top,
+                        yguideposition = [:right :left :right :left],
+                        ymirror = [false true true false],
+                        xmirror = [false false true true],
+                        legend = false,
+                        seriestype = [:bar :scatter :path :stepmid],
+                    )
+                end
+            ),
+        ],
+    ),
+    PlotExample( # 55
+        "3D axis flip / mirror",
+        "",
+        [
+            :(
+                begin
+                    using LinearAlgebra
+                    scalefontsizes(0.4)
+
+                    x, y = collect(-6:0.5:10), collect(-8:0.5:8)
+
+                    args = x, y, (x, y) -> sinc(norm([x, y]) / π)
+                    kwargs = Dict(
+                        :xlabel => "x",
+                        :ylabel => "y",
+                        :zlabel => "z",
+                        :grid => true,
+                        :minorgrid => true,
+                    )
+
+                    plots = [wireframe(args..., title = "wire"; kwargs...)]
+
+                    for ax in (:x, :y, :z)
+                        push!(
+                            plots,
+                            wireframe(
+                                args...,
+                                title = "wire-flip-$ax",
+                                xflip = ax == :x,
+                                yflip = ax == :y,
+                                zflip = ax == :z;
+                                kwargs...,
+                            ),
+                        )
+                    end
+
+                    for ax in (:x, :y, :z)
+                        push!(
+                            plots,
+                            wireframe(
+                                args...,
+                                title = "wire-mirror-$ax",
+                                xmirror = ax == :x,
+                                ymirror = ax == :y,
+                                zmirror = ax == :z;
+                                kwargs...,
+                            ),
+                        )
+                    end
+
+                    plt = plot(
+                        plots...,
+                        layout = (@layout [_ ° _; ° ° °; ° ° °]),
+                        margin = 0Plots.px,
+                    )
+
+                    resetfontsizes()
+                    plt
+                end
+            ),
+        ],
     ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [2, 31]
 _backend_skips = Dict(
-    :gr => [25, 30, 47],
-    :pyplot => [2, 25, 30, 31, 47, 49],
-    :plotlyjs => [2, 21, 24, 25, 30, 31, 49],
-    :plotly => [2, 21, 24, 25, 30, 31, 49],
+    :gr => [25, 30],
+    :pyplot => [2, 25, 30, 31, 47, 49, 55],
+    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51, 55],
+    :plotly => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55],
     :pgfplotsx => [
         2, # animation
         6, # images
@@ -1084,10 +1245,17 @@ _backend_skips = Dict(
         31, # animation
         32, # spy
         49, # polar heatmap
+        51, # image with custom axes
+    ],
+    :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55],
+    :unicodeplots => [6, 10, 22, 24, 28, 38, 43, 45, 47, 49, 50, 51, 55],
+    :gaston => [
+        2,  # animations
+        31,  # animations
+        49,  # TODO: support polar
+        50,  # TODO: 1D data not supported for pm3d
     ],
 )
-
-
 
 # ---------------------------------------------------------------------------------
 

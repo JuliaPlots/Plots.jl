@@ -1,7 +1,7 @@
 function makeplural(s::Symbol)
     str = string(s)
     if last(str) != 's'
-        return Symbol(string(s,"s"))
+        return Symbol(string(s, "s"))
     end
     return s
 end
@@ -25,7 +25,7 @@ function add_aliases(sym::Symbol, aliases::Symbol...)
 end
 
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
-    for (k,v) in aliases
+    for (k, v) in aliases
         s = string(k)
         if '_' in s
             aliases[make_non_underscore(k)] = v
@@ -44,22 +44,42 @@ end
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
-const _axesAliases = Dict{Symbol,Symbol}(
-    :a => :auto,
-    :l => :left,
-    :r => :right
-)
+const _axesAliases = Dict{Symbol,Symbol}(:a => :auto, :l => :left, :r => :right)
 
-const _3dTypes = [
-    :path3d, :scatter3d, :surface, :wireframe, :contour3d, :volume, :mesh3d
-]
-const _allTypes = vcat([
-    :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-    :heatmap, :hexbin, :barbins, :barhist, :histogram, :scatterbins,
-    :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :histogram3d,
-    :density, :bar, :hline, :vline,
-    :contour, :pie, :shape, :image
-], _3dTypes)
+const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe, :contour3d, :volume, :mesh3d]
+const _allTypes = vcat(
+    [
+        :none,
+        :line,
+        :path,
+        :steppre,
+        :stepmid,
+        :steppost,
+        :sticks,
+        :scatter,
+        :heatmap,
+        :hexbin,
+        :barbins,
+        :barhist,
+        :histogram,
+        :scatterbins,
+        :scatterhist,
+        :stepbins,
+        :stephist,
+        :bins2d,
+        :histogram2d,
+        :histogram3d,
+        :density,
+        :bar,
+        :hline,
+        :vline,
+        :contour,
+        :pie,
+        :shape,
+        :image,
+    ],
+    _3dTypes,
+)
 
 const _typeAliases = Dict{Symbol,Symbol}(
     :n             => :none,
@@ -101,8 +121,9 @@ const _typeAliases = Dict{Symbol,Symbol}(
 add_non_underscore_aliases!(_typeAliases)
 
 const _histogram_like = [:histogram, :barhist, :barbins]
-const _line_like = [:line, :path, :steppre, :steppost]
-const _surface_like = [:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image]
+const _line_like = [:line, :path, :steppre, :stepmid, :steppost]
+const _surface_like =
+    [:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image]
 
 like_histogram(seriestype::Symbol) = seriestype in _histogram_like
 like_line(seriestype::Symbol)      = seriestype in _line_like
@@ -117,88 +138,88 @@ ispolar(series::Series) = ispolar(series.plotattributes[:subplot])
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _styleAliases = Dict{Symbol,Symbol}(
-    :a    => :auto,
-    :s    => :solid,
-    :d    => :dash,
-    :dd   => :dashdot,
-    :ddd  => :dashdotdot,
+    :a   => :auto,
+    :s   => :solid,
+    :d   => :dash,
+    :dd  => :dashdot,
+    :ddd => :dashdotdot,
 )
 
 const _shape_keys = Symbol[
-  :circle,
-  :rect,
-  :star5,
-  :diamond,
-  :hexagon,
-  :cross,
-  :xcross,
-  :utriangle,
-  :dtriangle,
-  :rtriangle,
-  :ltriangle,
-  :pentagon,
-  :heptagon,
-  :octagon,
-  :star4,
-  :star6,
-  :star7,
-  :star8,
-  :vline,
-  :hline,
-  :+,
-  :x,
+    :circle,
+    :rect,
+    :star5,
+    :diamond,
+    :hexagon,
+    :cross,
+    :xcross,
+    :utriangle,
+    :dtriangle,
+    :rtriangle,
+    :ltriangle,
+    :pentagon,
+    :heptagon,
+    :octagon,
+    :star4,
+    :star6,
+    :star7,
+    :star8,
+    :vline,
+    :hline,
+    :+,
+    :x,
 ]
 
 const _allMarkers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))))
 const _markerAliases = Dict{Symbol,Symbol}(
-    :n            => :none,
-    :no           => :none,
-    :a            => :auto,
-    :ellipse      => :circle,
-    :c            => :circle,
-    :circ         => :circle,
-    :square       => :rect,
-    :sq           => :rect,
-    :r            => :rect,
-    :d            => :diamond,
-    :^            => :utriangle,
-    :ut           => :utriangle,
-    :utri         => :utriangle,
-    :uptri        => :utriangle,
-    :uptriangle   => :utriangle,
-    :v            => :dtriangle,
-    :V            => :dtriangle,
-    :dt           => :dtriangle,
-    :dtri         => :dtriangle,
-    :downtri      => :dtriangle,
-    :downtriangle => :dtriangle,
-    :>            => :rtriangle,
-    :rt           => :rtriangle,
-    :rtri         => :rtriangle,
+    :n             => :none,
+    :no            => :none,
+    :a             => :auto,
+    :ellipse       => :circle,
+    :c             => :circle,
+    :circ          => :circle,
+    :square        => :rect,
+    :sq            => :rect,
+    :r             => :rect,
+    :d             => :diamond,
+    :^             => :utriangle,
+    :ut            => :utriangle,
+    :utri          => :utriangle,
+    :uptri         => :utriangle,
+    :uptriangle    => :utriangle,
+    :v             => :dtriangle,
+    :V             => :dtriangle,
+    :dt            => :dtriangle,
+    :dtri          => :dtriangle,
+    :downtri       => :dtriangle,
+    :downtriangle  => :dtriangle,
+    :>             => :rtriangle,
+    :rt            => :rtriangle,
+    :rtri          => :rtriangle,
     :righttri      => :rtriangle,
     :righttriangle => :rtriangle,
-    :<            => :ltriangle,
-    :lt           => :ltriangle,
-    :ltri         => :ltriangle,
+    :<             => :ltriangle,
+    :lt            => :ltriangle,
+    :ltri          => :ltriangle,
     :lighttri      => :ltriangle,
     :lighttriangle => :ltriangle,
-    # :+            => :cross,
-    :plus         => :cross,
-    # :x            => :xcross,
-    :X            => :xcross,
-    :star         => :star5,
-    :s            => :star5,
-    :star1        => :star5,
-    :s2           => :star8,
-    :star2        => :star8,
-    :p            => :pentagon,
-    :pent         => :pentagon,
-    :h            => :hexagon,
-    :hex          => :hexagon,
-    :hep          => :heptagon,
-    :o            => :octagon,
-    :oct          => :octagon,
-    :spike        => :vline,
+    # :+           => :cross,
+    :plus => :cross,
+    # :x           => :xcross,
+    :X     => :xcross,
+    :star  => :star5,
+    :s     => :star5,
+    :star1 => :star5,
+    :s2    => :star8,
+    :star2 => :star8,
+    :p     => :pentagon,
+    :pent  => :pentagon,
+    :h     => :hexagon,
+    :hex   => :hexagon,
+    :hep   => :heptagon,
+    :o     => :octagon,
+    :oct   => :octagon,
+    :spike => :vline,
 )
 
 const _positionAliases = Dict{Symbol,Symbol}(
@@ -219,16 +240,34 @@ const _positionAliases = Dict{Symbol,Symbol}(
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _logScales = [:ln, :log2, :log10]
 const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
-const _scaleAliases = Dict{Symbol,Symbol}(
-    :none => :identity,
-    :log  => :log10,
-)
+const _scaleAliases = Dict{Symbol,Symbol}(:none => :identity, :log => :log10)
 
-const _allGridSyms = [:x, :y, :z,
-                    :xy, :xz, :yx, :yz, :zx, :zy,
-                    :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
-                    :all, :both, :on, :yes, :show,
-                    :none, :off, :no, :hide]
+const _allGridSyms = [
+    :x,
+    :y,
+    :z,
+    :xy,
+    :xz,
+    :yx,
+    :yz,
+    :zx,
+    :zy,
+    :xyz,
+    :xzy,
+    :yxz,
+    :yzx,
+    :zxy,
+    :zyx,
+    :all,
+    :both,
+    :on,
+    :yes,
+    :show,
+    :none,
+    :off,
+    :no,
+    :hide,
+]
 const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
 hasgrid(arg::Nothing, letter) = false
 hasgrid(arg::Bool, letter) = arg
@@ -236,17 +275,39 @@ function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
-        @warn("Unknown grid argument $arg; $(Symbol(letter, :grid)) was set to `true` instead.")
+        @warn(
+            "Unknown grid argument $arg; $(Symbol(letter, :grid)) was set to `true` instead."
+        )
         true
     end
 end
 hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
-const _allShowaxisSyms = [:x, :y, :z,
-                    :xy, :xz, :yx, :yz, :zx, :zy,
-                    :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
-                    :all, :both, :on, :yes, :show,
-                    :off, :no, :hide]
+const _allShowaxisSyms = [
+    :x,
+    :y,
+    :z,
+    :xy,
+    :xz,
+    :yx,
+    :yz,
+    :zx,
+    :zy,
+    :xyz,
+    :xzy,
+    :yxz,
+    :yzx,
+    :zxy,
+    :zyx,
+    :all,
+    :both,
+    :on,
+    :yes,
+    :show,
+    :off,
+    :no,
+    :hide,
+]
 const _allShowaxisArgs = [_allGridSyms; string.(_allGridSyms)]
 showaxis(arg::Nothing, letter) = false
 showaxis(arg::Bool, letter) = arg
@@ -254,214 +315,233 @@ function showaxis(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
-        @warn("Unknown showaxis argument $arg; $(Symbol(letter, :showaxis)) was set to `true` instead.")
+        @warn(
+            "Unknown showaxis argument $arg; $(Symbol(letter, :showaxis)) was set to `true` instead."
+        )
         true
     end
 end
 showaxis(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
 const _allFramestyles = [:box, :semi, :axes, :origin, :zerolines, :grid, :none]
-const _framestyleAliases = Dict{Symbol, Symbol}(
-    :frame              => :box,
-    :border             => :box,
-    :on                 => :box,
-    :transparent        => :semi,
-    :semitransparent    => :semi,
+const _framestyleAliases = Dict{Symbol,Symbol}(
+    :frame           => :box,
+    :border          => :box,
+    :on              => :box,
+    :transparent     => :semi,
+    :semitransparent => :semi,
 )
 
 const _bar_width = 0.8
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(
-    :label             => :auto,
-    :colorbar_entry    => true,
-    :seriescolor       => :auto,
-    :seriesalpha       => nothing,
-    :seriestype        => :path,
-    :linestyle         => :solid,
-    :linewidth         => :auto,
-    :linecolor         => :auto,
-    :linealpha         => nothing,
-    :fillrange         => nothing,   # ribbons, areas, etc
-    :fillcolor         => :match,
-    :fillalpha         => nothing,
-    :fillstyle         => nothing,
-    :markershape       => :none,
-    :markercolor       => :match,
-    :markeralpha       => nothing,
-    :markersize        => 4,
-    :markerstrokestyle => :solid,
-    :markerstrokewidth => 1,
-    :markerstrokecolor => :match,
-    :markerstrokealpha => nothing,
-    :bins              => :auto,        # number of bins for hists
-    :smooth            => false,     # regression line?
-    :group             => nothing,   # groupby vector
-    :x                 => nothing,
-    :y                 => nothing,
-    :z                 => nothing,   # depth for contour, surface, etc
-    :marker_z          => nothing,   # value for color scale
-    :line_z            => nothing,
-    :fill_z            => nothing,
-    :levels            => 15,
-    :orientation       => :vertical,
-    :bar_position      => :overlay,  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
-    :bar_width         => nothing,
-    :bar_edges         => false,
-    :xerror            => nothing,
-    :yerror            => nothing,
-    :zerror            => nothing,
-    :ribbon            => nothing,
-    :quiver            => nothing,
-    :arrow             => nothing,   # allows for adding arrows to line/path... call `arrow(args...)`
-    :normalize         => false,     # do we want a normalized histogram?
-    :weights           => nothing,   # optional weights for histograms (1D and 2D)
-    :show_empty_bins   => false,     # should empty bins in 2D histogram be colored as zero (otherwise they are transparent)
-    :contours          => false,     # add contours to 3d surface and wireframe plots
-    :contour_labels    => false,
-    :subplot           => :auto,     # which subplot(s) does this series belong to?
+    :label              => :auto,
+    :colorbar_entry     => true,
+    :seriescolor        => :auto,
+    :seriesalpha        => nothing,
+    :seriestype         => :path,
+    :linestyle          => :solid,
+    :linewidth          => :auto,
+    :linecolor          => :auto,
+    :linealpha          => nothing,
+    :fillrange          => nothing,   # ribbons, areas, etc
+    :fillcolor          => :match,
+    :fillalpha          => nothing,
+    :fillstyle          => nothing,
+    :markershape        => :none,
+    :markercolor        => :match,
+    :markeralpha        => nothing,
+    :markersize         => 4,
+    :markerstrokestyle  => :solid,
+    :markerstrokewidth  => 1,
+    :markerstrokecolor  => :match,
+    :markerstrokealpha  => nothing,
+    :bins               => :auto,        # number of bins for hists
+    :smooth             => false,     # regression line?
+    :group              => nothing,   # groupby vector
+    :x                  => nothing,
+    :y                  => nothing,
+    :z                  => nothing,   # depth for contour, surface, etc
+    :marker_z           => nothing,   # value for color scale
+    :line_z             => nothing,
+    :fill_z             => nothing,
+    :levels             => 15,
+    :orientation        => :vertical,
+    :bar_position       => :overlay,  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
+    :bar_width          => nothing,
+    :bar_edges          => false,
+    :xerror             => nothing,
+    :yerror             => nothing,
+    :zerror             => nothing,
+    :ribbon             => nothing,
+    :quiver             => nothing,
+    :arrow              => nothing,   # allows for adding arrows to line/path... call `arrow(args...)`
+    :normalize          => false,     # do we want a normalized histogram?
+    :weights            => nothing,   # optional weights for histograms (1D and 2D)
+    :show_empty_bins    => false,     # should empty bins in 2D histogram be colored as zero (otherwise they are transparent)
+    :contours           => false,     # add contours to 3d surface and wireframe plots
+    :contour_labels     => false,
+    :subplot            => :auto,     # which subplot(s) does this series belong to?
     :series_annotations => nothing,       # a list of annotations which apply to the coordinates of this series
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
-                                     #     one logical series to be broken up (path and markers, for example)
-    :hover              => nothing,  # text to display when hovering over the data points
-    :stride             => (1,1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
-    :connections	  => nothing,  # tuple of arrays to specifiy connectivity of a 3d mesh
-    :extra_kwargs       => Dict()
+    #     one logical series to be broken up (path and markers, for example)
+    :hover        => nothing,  # text to display when hovering over the data points
+    :stride       => (1, 1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
+    :connections  => nothing,  # tuple of arrays to specifiy connectivity of a 3d mesh
+    :extra_kwargs => Dict(),
 )
-
 
 const _plot_defaults = KW(
-    :plot_title                  => "",
-    :plot_titlefontsize          => 16,
-    :plot_title_location         => :center,           # also :left or :right
-    :plot_titlefontfamily        => :match,
-    :plot_titlefonthalign        => :hcenter,
-    :plot_titlefontvalign        => :vcenter,
-    :plot_titlefontrotation      => 0.0,
-    :plot_titlefontcolor         => :match,
-    :background_color            => colorant"white",   # default for all backgrounds,
-    :background_color_outside    => :match,            # background outside grid,
-    :foreground_color            => :auto,             # default for all foregrounds, and title color,
-    :fontfamily                  => "sans-serif",
-    :size                        => (600,400),
-    :pos                         => (0,0),
-    :window_title                => "Plots.jl",
-    :show                        => false,
-    :layout                      => 1,
-    :link                        => :none,
-    :overwrite_figure            => true,
-    :html_output_format          => :auto,
-    :tex_output_standalone       => false,
-    :inset_subplots              => nothing,   # optionally pass a vector of (parent,bbox) tuples which are
-                                               # the parent layout and the relative bounding box of inset subplots
-    :dpi                         => DPI,        # dots per inch for images, etc
-    :thickness_scaling           => 1,
-    :display_type                => :auto,
-    :warn_on_unsupported         => true,
-    :extra_plot_kwargs           => Dict(),
-    :extra_kwargs                => :series,    # directs collection of extra_kwargs
+    :plot_title               => "",
+    :plot_titleindex          => 0,
+    :plot_titlefontsize       => 16,
+    :plot_titlelocation       => :center,           # also :left or :right
+    :plot_titlefontfamily     => :match,
+    :plot_titlefonthalign     => :hcenter,
+    :plot_titlefontvalign     => :vcenter,
+    :plot_titlefontrotation   => 0.0,
+    :plot_titlefontcolor      => :match,
+    :plot_titlevspan          => 0.05,              # vertical span of the plot title, here 5%
+    :background_color         => colorant"white",   # default for all backgrounds,
+    :background_color_outside => :match,            # background outside grid,
+    :foreground_color         => :auto,             # default for all foregrounds, and title color,
+    :fontfamily               => "sans-serif",
+    :size                     => (600, 400),
+    :pos                      => (0, 0),
+    :window_title             => "Plots.jl",
+    :show                     => false,
+    :layout                   => 1,
+    :link                     => :none,
+    :overwrite_figure         => true,
+    :html_output_format       => :auto,
+    :tex_output_standalone    => false,
+    :inset_subplots           => nothing,   # optionally pass a vector of (parent,bbox) tuples which are
+    # the parent layout and the relative bounding box of inset subplots
+    :dpi                 => DPI,        # dots per inch for images, etc
+    :thickness_scaling   => 1,
+    :display_type        => :auto,
+    :warn_on_unsupported => true,
+    :extra_plot_kwargs   => Dict(),
+    :extra_kwargs        => :series,    # directs collection of extra_kwargs
 )
 
-
 const _subplot_defaults = KW(
-    :title                    => "",
-    :titlelocation            => :center,           # also :left or :right
-    :fontfamily_subplot       => :match,
-    :titlefontfamily          => :match,
-    :titlefontsize            => 14,
-    :titlefonthalign          => :hcenter,
-    :titlefontvalign          => :vcenter,
-    :titlefontrotation        => 0.0,
-    :titlefontcolor           => :match,
+    :title => "",
+    :titlelocation => :center,           # also :left or :right
+    :fontfamily_subplot => :match,
+    :titlefontfamily => :match,
+    :titlefontsize => 14,
+    :titlefonthalign => :hcenter,
+    :titlefontvalign => :vcenter,
+    :titlefontrotation => 0.0,
+    :titlefontcolor => :match,
     :background_color_subplot => :match,            # default for other bg colors... match takes plot default
-    :background_color_legend  => :match,            # background of legend
-    :background_color_inside  => :match,            # background inside grid
+    :background_color_legend => :match,            # background of legend
+    :background_color_inside => :match,            # background inside grid
     :foreground_color_subplot => :match,            # default for other fg colors... match takes plot default
-    :foreground_color_legend  => :match,            # foreground of legend
-    :foreground_color_title   => :match,            # title color
-    :color_palette            => :auto,
-    :legend                   => :best,
-    :legendtitle              => nothing,
-    :colorbar                 => :legend,
-    :clims                    => :auto,
-    :legendfontfamily         => :match,
-    :legendfontsize           => 8,
-    :legendfonthalign         => :hcenter,
-    :legendfontvalign         => :vcenter,
-    :legendfontrotation       => 0.0,
-    :legendfontcolor          => :match,
-    :legendtitlefontfamily    => :match,
-    :legendtitlefontsize      => 11,
-    :legendtitlefonthalign    => :hcenter,
-    :legendtitlefontvalign    => :vcenter,
-    :legendtitlefontrotation  => 0.0,
-    :legendtitlefontcolor     => :match,
-    :annotations              => [],                # annotation tuples... list of (x,y,annotation)
-    :projection               => :none,             # can also be :polar or :3d
-    :aspect_ratio             => :auto,             # choose from :none or :equal
-    :margin                   => 1mm,
-    :left_margin              => :match,
-    :top_margin               => :match,
-    :right_margin             => :match,
-    :bottom_margin            => :match,
-    :subplot_index            => -1,
-    :colorbar_title                  => "",
-    :colorbar_titlefontsize          => 10,
-    :colorbar_title_location         => :center,           # also :left or :right
-    :colorbar_fontfamily             => :match,
-    :colorbar_titlefontfamily        => :match,
-    :colorbar_titlefonthalign        => :hcenter,
-    :colorbar_titlefontvalign        => :vcenter,
-    :colorbar_titlefontrotation      => 0.0,
-    :colorbar_titlefontcolor         => :match,
-    :framestyle                      => :axes,
-    :camera                          => (30,30),
-    :extra_kwargs                    => Dict()
+    :foreground_color_legend => :match,            # foreground of legend
+    :foreground_color_title => :match,            # title color
+    :color_palette => :auto,
+    :legend => :best,
+    :legendtitle => nothing,
+    :colorbar => :legend,
+    :clims => :auto,
+    :colorbar_fontfamily => :match,
+    :colorbar_ticks => :auto,
+    :colorbar_tickfontfamily => :match,
+    :colorbar_tickfontsize => 8,
+    :colorbar_tickfonthalign => :hcenter,
+    :colorbar_tickfontvalign => :vcenter,
+    :colorbar_tickfontrotation => 0.0,
+    :colorbar_tickfontcolor => :match,
+    :colorbar_scale => :identity,
+    :colorbar_formatter => :auto,
+    :colorbar_discrete_values => [],
+    :colorbar_continuous_values => zeros(0),
+    :legendfontfamily => :match,
+    :legendfontsize => 8,
+    :legendfonthalign => :hcenter,
+    :legendfontvalign => :vcenter,
+    :legendfontrotation => 0.0,
+    :legendfontcolor => :match,
+    :legendtitlefontfamily => :match,
+    :legendtitlefontsize => 11,
+    :legendtitlefonthalign => :hcenter,
+    :legendtitlefontvalign => :vcenter,
+    :legendtitlefontrotation => 0.0,
+    :legendtitlefontcolor => :match,
+    :annotations => [],                # annotation tuples... list of (x,y,annotation)
+    :annotationfontfamily => :match,
+    :annotationfontsize => 14,
+    :annotationhalign => :hcenter,
+    :annotationvalign => :vcenter,
+    :annotationrotation => 0.0,
+    :annotationcolor => :match,
+    :projection => :none,             # can also be :polar or :3d
+    :aspect_ratio => :auto,             # choose from :none or :equal
+    :margin => 1mm,
+    :left_margin => :match,
+    :top_margin => :match,
+    :right_margin => :match,
+    :bottom_margin => :match,
+    :subplot_index => -1,
+    :colorbar_title => "",
+    :colorbar_titlefontsize => 10,
+    :colorbar_title_location => :center,           # also :left or :right
+    :colorbar_titlefontfamily => :match,
+    :colorbar_titlefonthalign => :hcenter,
+    :colorbar_titlefontvalign => :vcenter,
+    :colorbar_titlefontrotation => 0.0,
+    :colorbar_titlefontcolor => :match,
+    :framestyle => :axes,
+    :camera => (30, 30),
+    :extra_kwargs => Dict(),
 )
 
 const _axis_defaults = KW(
-    :guide     => "",
-    :guide_position => :auto,
-    :lims      => :auto,
-    :ticks     => :auto,
-    :scale     => :identity,
-    :rotation  => 0,
-    :flip      => false,
-    :link      => [],
-    :tickfontfamily         => :match,
-    :tickfontsize           => 8,
-    :tickfonthalign         => :hcenter,
-    :tickfontvalign         => :vcenter,
-    :tickfontrotation       => 0.0,
-    :tickfontcolor          => :match,
-    :guidefontfamily         => :match,
-    :guidefontsize           => 11,
-    :guidefonthalign         => :hcenter,
-    :guidefontvalign         => :vcenter,
-    :guidefontrotation       => 0.0,
-    :guidefontcolor          => :match,
-    :foreground_color_axis   => :match,            # axis border/tick colors,
-    :foreground_color_border => :match,            # plot area border/spines,
-    :foreground_color_text   => :match,            # tick text color,
-    :foreground_color_guide  => :match,            # guide text color,
-    :discrete_values => [],
-    :formatter => :auto,
-    :mirror => false,
-    :grid                     => true,
-    :foreground_color_grid    => :match,            # grid color
-    :gridalpha                => 0.1,
-    :gridstyle                => :solid,
-    :gridlinewidth            => 0.5,
+    :guide                       => "",
+    :guide_position              => :auto,
+    :lims                        => :auto,
+    :ticks                       => :auto,
+    :scale                       => :identity,
+    :rotation                    => 0,
+    :flip                        => false,
+    :link                        => [],
+    :tickfontfamily              => :match,
+    :tickfontsize                => 8,
+    :tickfonthalign              => :hcenter,
+    :tickfontvalign              => :vcenter,
+    :tickfontrotation            => 0.0,
+    :tickfontcolor               => :match,
+    :guidefontfamily             => :match,
+    :guidefontsize               => 11,
+    :guidefonthalign             => :hcenter,
+    :guidefontvalign             => :vcenter,
+    :guidefontrotation           => 0.0,
+    :guidefontcolor              => :match,
+    :foreground_color_axis       => :match,            # axis border/tick colors,
+    :foreground_color_border     => :match,            # plot area border/spines,
+    :foreground_color_text       => :match,            # tick text color,
+    :foreground_color_guide      => :match,            # guide text color,
+    :discrete_values             => [],
+    :formatter                   => :auto,
+    :mirror                      => false,
+    :grid                        => true,
+    :foreground_color_grid       => :match,            # grid color
+    :gridalpha                   => 0.1,
+    :gridstyle                   => :solid,
+    :gridlinewidth               => 0.5,
     :foreground_color_minor_grid => :match,            # grid color
-    :minorgridalpha           => 0.05,
-    :minorgridstyle           => :solid,
-    :minorgridlinewidth       => 0.5,
-    :tick_direction           => :in,
-    :minorticks               => false,
-    :minorgrid                => false,
-    :showaxis                 => true,
-    :widen                    => true,
-    :draw_arrow               => false,
+    :minorgridalpha              => 0.05,
+    :minorgridstyle              => :solid,
+    :minorgridlinewidth          => 0.5,
+    :tick_direction              => :in,
+    :minorticks                  => false,
+    :minorgrid                   => false,
+    :showaxis                    => true,
+    :widen                       => :auto,
+    :draw_arrow                  => false,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -482,35 +562,45 @@ const _suppress_warnings = Set{Symbol}([
 const _axis_defaults_byletter = KW()
 
 function reset_axis_defaults_byletter!()
-    for letter in (:x,:y,:z)
+    for letter in (:x, :y, :z)
         _axis_defaults_byletter[letter] = KW()
-        for (k,v) in _axis_defaults
+        for (k, v) in _axis_defaults
             _axis_defaults_byletter[letter][k] = v
         end
     end
 end
 reset_axis_defaults_byletter!()
 
-for letter in (:x,:y,:z), k in keys(_axis_defaults)
+for letter in (:x, :y, :z), k in keys(_axis_defaults)
     # allow the underscore version too: xguide or x_guide
     add_aliases(Symbol(letter, k), Symbol(letter, "_", k))
 end
 
-const _all_defaults = KW[
-    _series_defaults,
-    _plot_defaults,
-    _subplot_defaults
-]
+const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 
 const _initial_defaults = deepcopy(_all_defaults)
 const _initial_axis_defaults = deepcopy(_axis_defaults)
 
 # to be able to reset font sizes to initial values
-const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefontsize],
-                                :legendfontsize => _subplot_defaults[:legendfontsize],
-                                :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
-                                :tickfontsize   => _axis_defaults[:tickfontsize],
-                                :guidefontsize  => _axis_defaults[:guidefontsize])
+const _initial_plt_fontsizes =
+    Dict(:plot_titlefontsize => _plot_defaults[:plot_titlefontsize])
+
+const _initial_sp_fontsizes = Dict(
+    :titlefontsize => _subplot_defaults[:titlefontsize],
+    :legendfontsize => _subplot_defaults[:legendfontsize],
+    :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
+    :annotationfontsize => _subplot_defaults[:annotationfontsize],
+    :colorbar_tickfontsize => _subplot_defaults[:colorbar_tickfontsize],
+    :colorbar_titlefontsize => _subplot_defaults[:colorbar_titlefontsize],
+)
+
+const _initial_ax_fontsizes = Dict(
+    :tickfontsize  => _axis_defaults[:tickfontsize],
+    :guidefontsize => _axis_defaults[:guidefontsize],
+)
+
+const _initial_fontsizes =
+    merge(_initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes)
 
 const _internal_args =
     [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
@@ -521,7 +611,8 @@ const _subplot_args = sort(union(collect(keys(_subplot_defaults))))
 const _plot_args = sort(union(collect(keys(_plot_defaults))))
 
 const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
-const _magic_subplot_args = [:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont]
+const _magic_subplot_args =
+    [:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont]
 const _magic_series_args = [:line, :marker, :fill]
 
 const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
@@ -534,17 +625,24 @@ const _all_args =
 
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
-is_axis_attr(k) = Symbol(chop(string(k); head=1, tail=0)) in _all_axis_args
+is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
 is_axis_attr_noletter(k) = k in _all_axis_args
 
 RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
 is_default_attribute(k) = k in _internal_args || k in _all_args || is_axis_attr_noletter(k)
 
 # -----------------------------------------------------------------------------
-autopick_ignore_none_auto(arr::AVec, idx::Integer) = _cycle(setdiff(arr, [:none, :auto]), idx)
+autopick_ignore_none_auto(arr::AVec, idx::Integer) =
+    _cycle(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
-function aliasesAndAutopick(plotattributes::AKW, sym::Symbol, aliases::Dict{Symbol,Symbol}, options::AVec, plotIndex::Int)
+function aliasesAndAutopick(
+    plotattributes::AKW,
+    sym::Symbol,
+    aliases::Dict{Symbol,Symbol},
+    options::AVec,
+    plotIndex::Int,
+)
     if plotattributes[sym] == :auto
         plotattributes[sym] = autopick_ignore_none_auto(options, plotIndex)
     elseif haskey(aliases, plotattributes[sym])
@@ -552,19 +650,16 @@ function aliasesAndAutopick(plotattributes::AKW, sym::Symbol, aliases::Dict{Symb
     end
 end
 
-function aliases(aliasMap::Dict{Symbol,Symbol}, val)
-    sortedkeys(filter((k,v)-> v==val, aliasMap))
-end
+aliases(aliasMap::Dict{Symbol,Symbol}, val) =
+    sortedkeys(filter((k, v) -> v == val, aliasMap))
 
 # -----------------------------------------------------------------------------
 
-
 # margin
-add_aliases(:left_margin , :leftmargin )
-add_aliases(:top_margin , :topmargin)
-add_aliases(:bottom_margin , :bottommargin)
-add_aliases(:right_margin ,:rightmargin)
-
+add_aliases(:left_margin, :leftmargin)
+add_aliases(:top_margin, :topmargin)
+add_aliases(:bottom_margin, :bottommargin)
+add_aliases(:right_margin, :rightmargin)
 
 # colors
 add_aliases(:seriescolor, :c, :color, :colour)
@@ -574,36 +669,176 @@ add_aliases(:markerstrokecolor, :msc, :mscolor, :mscolour, :markerstrokecolour)
 add_aliases(:markerstrokewidth, :msw, :mswidth)
 add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
 
-add_aliases(:background_color, :bg, :bgcolor, :bg_color, :background,
-                              :background_colour, :bgcolour, :bg_colour)
-add_aliases(:background_color_legend, :bg_legend, :bglegend, :bgcolor_legend, :bg_color_legend, :background_legend,
-                              :background_colour_legend, :bgcolour_legend, :bg_colour_legend)
-add_aliases(:background_color_subplot, :bg_subplot, :bgsubplot, :bgcolor_subplot, :bg_color_subplot, :background_subplot,
-                              :background_colour_subplot, :bgcolour_subplot, :bg_colour_subplot)
-add_aliases(:background_color_inside, :bg_inside, :bginside, :bgcolor_inside, :bg_color_inside, :background_inside,
-                              :background_colour_inside, :bgcolour_inside, :bg_colour_inside)
-add_aliases(:background_color_outside, :bg_outside, :bgoutside, :bgcolor_outside, :bg_color_outside, :background_outside,
-                              :background_colour_outside, :bgcolour_outside, :bg_colour_outside)
-add_aliases(:foreground_color, :fg, :fgcolor, :fg_color, :foreground,
-                            :foreground_colour, :fgcolour, :fg_colour)
-add_aliases(:foreground_color_legend, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
-                            :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend)
-add_aliases(:foreground_color_subplot, :fg_subplot, :fgsubplot, :fgcolor_subplot, :fg_color_subplot, :foreground_subplot,
-                            :foreground_colour_subplot, :fgcolour_subplot, :fg_colour_subplot)
-add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_grid, :foreground_grid,
-                            :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid, :gridcolor)
-add_aliases(:foreground_color_minor_grid, :fg_minor_grid, :fgminorgrid, :fgcolor_minorgrid, :fg_color_minorgrid, :foreground_minorgrid,
-                            :foreground_colour_minor_grid, :fgcolour_minorgrid, :fg_colour_minor_grid, :minorgridcolor)
-add_aliases(:foreground_color_title, :fg_title, :fgtitle, :fgcolor_title, :fg_color_title, :foreground_title,
-                            :foreground_colour_title, :fgcolour_title, :fg_colour_title, :titlecolor)
-add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
-                            :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis, :axiscolor)
-add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
-                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor)
-add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
-                            :foreground_colour_text, :fgcolour_text, :fg_colour_text, :textcolor)
-add_aliases(:foreground_color_guide, :fg_guide, :fgguide, :fgcolor_guide, :fg_color_guide, :foreground_guide,
-                            :foreground_colour_guide, :fgcolour_guide, :fg_colour_guide, :guidecolor)
+add_aliases(
+    :background_color,
+    :bg,
+    :bgcolor,
+    :bg_color,
+    :background,
+    :background_colour,
+    :bgcolour,
+    :bg_colour,
+)
+add_aliases(
+    :background_color_legend,
+    :bg_legend,
+    :bglegend,
+    :bgcolor_legend,
+    :bg_color_legend,
+    :background_legend,
+    :background_colour_legend,
+    :bgcolour_legend,
+    :bg_colour_legend,
+)
+add_aliases(
+    :background_color_subplot,
+    :bg_subplot,
+    :bgsubplot,
+    :bgcolor_subplot,
+    :bg_color_subplot,
+    :background_subplot,
+    :background_colour_subplot,
+    :bgcolour_subplot,
+    :bg_colour_subplot,
+)
+add_aliases(
+    :background_color_inside,
+    :bg_inside,
+    :bginside,
+    :bgcolor_inside,
+    :bg_color_inside,
+    :background_inside,
+    :background_colour_inside,
+    :bgcolour_inside,
+    :bg_colour_inside,
+)
+add_aliases(
+    :background_color_outside,
+    :bg_outside,
+    :bgoutside,
+    :bgcolor_outside,
+    :bg_color_outside,
+    :background_outside,
+    :background_colour_outside,
+    :bgcolour_outside,
+    :bg_colour_outside,
+)
+add_aliases(
+    :foreground_color,
+    :fg,
+    :fgcolor,
+    :fg_color,
+    :foreground,
+    :foreground_colour,
+    :fgcolour,
+    :fg_colour,
+)
+add_aliases(
+    :foreground_color_legend,
+    :fg_legend,
+    :fglegend,
+    :fgcolor_legend,
+    :fg_color_legend,
+    :foreground_legend,
+    :foreground_colour_legend,
+    :fgcolour_legend,
+    :fg_colour_legend,
+)
+add_aliases(
+    :foreground_color_subplot,
+    :fg_subplot,
+    :fgsubplot,
+    :fgcolor_subplot,
+    :fg_color_subplot,
+    :foreground_subplot,
+    :foreground_colour_subplot,
+    :fgcolour_subplot,
+    :fg_colour_subplot,
+)
+add_aliases(
+    :foreground_color_grid,
+    :fg_grid,
+    :fggrid,
+    :fgcolor_grid,
+    :fg_color_grid,
+    :foreground_grid,
+    :foreground_colour_grid,
+    :fgcolour_grid,
+    :fg_colour_grid,
+    :gridcolor,
+)
+add_aliases(
+    :foreground_color_minor_grid,
+    :fg_minor_grid,
+    :fgminorgrid,
+    :fgcolor_minorgrid,
+    :fg_color_minorgrid,
+    :foreground_minorgrid,
+    :foreground_colour_minor_grid,
+    :fgcolour_minorgrid,
+    :fg_colour_minor_grid,
+    :minorgridcolor,
+)
+add_aliases(
+    :foreground_color_title,
+    :fg_title,
+    :fgtitle,
+    :fgcolor_title,
+    :fg_color_title,
+    :foreground_title,
+    :foreground_colour_title,
+    :fgcolour_title,
+    :fg_colour_title,
+    :titlecolor,
+)
+add_aliases(
+    :foreground_color_axis,
+    :fg_axis,
+    :fgaxis,
+    :fgcolor_axis,
+    :fg_color_axis,
+    :foreground_axis,
+    :foreground_colour_axis,
+    :fgcolour_axis,
+    :fg_colour_axis,
+    :axiscolor,
+)
+add_aliases(
+    :foreground_color_border,
+    :fg_border,
+    :fgborder,
+    :fgcolor_border,
+    :fg_color_border,
+    :foreground_border,
+    :foreground_colour_border,
+    :fgcolour_border,
+    :fg_colour_border,
+    :bordercolor,
+)
+add_aliases(
+    :foreground_color_text,
+    :fg_text,
+    :fgtext,
+    :fgcolor_text,
+    :fg_color_text,
+    :foreground_text,
+    :foreground_colour_text,
+    :fgcolour_text,
+    :fg_colour_text,
+    :textcolor,
+)
+add_aliases(
+    :foreground_color_guide,
+    :fg_guide,
+    :fgguide,
+    :fgcolor_guide,
+    :fg_color_guide,
+    :foreground_guide,
+    :foreground_colour_guide,
+    :fgcolour_guide,
+    :fg_colour_guide,
+    :guidecolor,
+)
 
 # alphas
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
@@ -643,11 +878,29 @@ add_aliases(:zlims, :zlim, :zlimit, :zlimits)
 add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
 add_aliases(:guidefontsize, :labelfontsize)
-add_aliases(:fill_z, :fillz, :fz, :surfacecolor, :surfacecolour, :sc, :surfcolor, :surfcolour)
+add_aliases(
+    :fill_z,
+    :fillz,
+    :fz,
+    :surfacecolor,
+    :surfacecolour,
+    :sc,
+    :surfcolor,
+    :surfcolour,
+)
 add_aliases(:legend, :leg, :key)
 add_aliases(:legendtitle, :legend_title, :labeltitle, :label_title, :leg_title, :key_title)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
-add_aliases(:colorbar_title, :colorbartitle, :cb_title, :cbtitle, :cbartitle, :cbar_title, :colorkeytitle, :colorkey_title)
+add_aliases(
+    :colorbar_title,
+    :colorbartitle,
+    :cb_title,
+    :cbtitle,
+    :cbartitle,
+    :cbar_title,
+    :colorkeytitle,
+    :colorkey_title,
+)
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
 add_aliases(:smooth, :regression, :reg)
 add_aliases(:levels, :nlevels, :nlev, :levs)
@@ -665,18 +918,75 @@ add_aliases(:show_empty_bins, :showemptybins, :showempty, :show_empty)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
-add_aliases(:titlelocation, :title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)
-add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation, :text, :txt, :texts, :txts)
+add_aliases(
+    :titlelocation,
+    :title_location,
+    :title_loc,
+    :titleloc,
+    :title_position,
+    :title_pos,
+    :titlepos,
+    :titleposition,
+    :title_align,
+    :title_alignment,
+)
+add_aliases(
+    :series_annotations,
+    :series_ann,
+    :seriesann,
+    :series_anns,
+    :seriesanns,
+    :series_annotation,
+    :text,
+    :txt,
+    :texts,
+    :txts,
+)
 add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
 add_aliases(:stride, :wirefame_stride, :surface_stride, :surf_str, :str)
 add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
 add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
-add_aliases(:minorgridlinewidth, :minorgridwidth, :minorgrid_linewidth, :minorgrid_width, :minorgridlw, :minorgrid_lw)
-add_aliases(:minorgridstyle, :minorgrid_style, :minorgridlinestyle, :minorgrid_linestyle, :minorgrid_ls, :minorgridls)
-add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyle, :box_style, :box, :borderstyle, :border_style, :border)
-add_aliases(:tick_direction, :tickdirection, :tick_dir, :tickdir, :tick_orientation, :tickorientation, :tick_or, :tickor)
+add_aliases(
+    :minorgridlinewidth,
+    :minorgridwidth,
+    :minorgrid_linewidth,
+    :minorgrid_width,
+    :minorgridlw,
+    :minorgrid_lw,
+)
+add_aliases(
+    :minorgridstyle,
+    :minorgrid_style,
+    :minorgridlinestyle,
+    :minorgrid_linestyle,
+    :minorgrid_ls,
+    :minorgridls,
+)
+add_aliases(
+    :framestyle,
+    :frame_style,
+    :frame,
+    :axesstyle,
+    :axes_style,
+    :boxstyle,
+    :box_style,
+    :box,
+    :borderstyle,
+    :border_style,
+    :border,
+)
+add_aliases(
+    :tick_direction,
+    :tickdirection,
+    :tick_dir,
+    :tickdir,
+    :tick_orientation,
+    :tickorientation,
+    :tick_or,
+    :tickor,
+)
 add_aliases(:camera, :cam, :viewangle, :view_angle)
 add_aliases(:contour_labels, :contourlabels, :clabels, :clabs)
 add_aliases(:warn_on_unsupported, :warn)
@@ -694,7 +1004,7 @@ function parse_axis_kw(s::Symbol)
     s = string(s)
     for letter in ('x', 'y', 'z')
         if startswith(s, letter)
-            return (Symbol(letter), Symbol(chop(s, head=1, tail=0)))
+            return (Symbol(letter), Symbol(chop(s, head = 1, tail = 0)))
         end
     end
     return nothing
@@ -752,14 +1062,12 @@ function default(; reset = true, kw...)
     end
     kw = KW(kw)
     RecipesPipeline.preprocess_attributes!(kw)
-    for (k,v) in kw
+    for (k, v) in kw
         default(k, v)
     end
 end
 
-function default(plotattributes::AKW, k::Symbol)
-    get(plotattributes, k, default(k))
-end
+default(plotattributes::AKW, k::Symbol) = get(plotattributes, k, default(k))
 
 function reset_defaults()
     foreach(merge!, _all_defaults, _initial_defaults)
@@ -785,109 +1093,118 @@ function handleColors!(plotattributes::AKW, arg, csym::Symbol)
     false
 end
 
-
-
 function processLineArg(plotattributes::AKW, arg)
     # seriestype
     if allLineTypes(arg)
         plotattributes[:seriestype] = arg
 
-    # linestyle
+        # linestyle
     elseif allStyles(arg)
         plotattributes[:linestyle] = arg
 
     elseif typeof(arg) <: Stroke
         arg.width === nothing || (plotattributes[:linewidth] = arg.width)
-        arg.color === nothing || (plotattributes[:linecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.color === nothing || (
+            plotattributes[:linecolor] =
+                arg.color == :auto ? :auto : plot_color(arg.color)
+        )
         arg.alpha === nothing || (plotattributes[:linealpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:linestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size  === nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color === nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.size === nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color === nothing || (
+            plotattributes[:fillcolor] =
+                arg.color == :auto ? :auto : plot_color(arg.color)
+        )
         arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
 
     elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
         plotattributes[:arrow] = arg
 
-    # linealpha
+        # linealpha
     elseif allAlphas(arg)
         plotattributes[:linealpha] = arg
 
-    # linewidth
+        # linewidth
     elseif allReals(arg)
         plotattributes[:linewidth] = arg
 
-    # color
+        # color
     elseif !handleColors!(plotattributes, arg, :linecolor)
         @warn("Skipped line arg $arg.")
-
     end
 end
-
 
 function processMarkerArg(plotattributes::AKW, arg)
     # markershape
     if allShapes(arg)
         plotattributes[:markershape] = arg
 
-    # stroke style
+        # stroke style
     elseif allStyles(arg)
         plotattributes[:markerstrokestyle] = arg
 
     elseif typeof(arg) <: Stroke
         arg.width === nothing || (plotattributes[:markerstrokewidth] = arg.width)
-        arg.color === nothing || (plotattributes[:markerstrokecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.color === nothing || (
+            plotattributes[:markerstrokecolor] =
+                arg.color == :auto ? :auto : plot_color(arg.color)
+        )
         arg.alpha === nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:markerstrokestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size  === nothing || (plotattributes[:markersize]  = arg.size)
-        arg.color === nothing || (plotattributes[:markercolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.size === nothing || (plotattributes[:markersize] = arg.size)
+        arg.color === nothing || (
+            plotattributes[:markercolor] =
+                arg.color == :auto ? :auto : plot_color(arg.color)
+        )
         arg.alpha === nothing || (plotattributes[:markeralpha] = arg.alpha)
 
-    # linealpha
+        # linealpha
     elseif allAlphas(arg)
         plotattributes[:markeralpha] = arg
 
-    # bool
+        # bool
     elseif typeof(arg) <: Bool
         plotattributes[:markershape] = arg ? :circle : :none
 
-    # markersize
+        # markersize
     elseif allReals(arg)
         plotattributes[:markersize] = arg
 
-    # markercolor
+        # markercolor
     elseif !handleColors!(plotattributes, arg, :markercolor)
         @warn("Skipped marker arg $arg.")
-
     end
 end
-
 
 function processFillArg(plotattributes::AKW, arg)
     # fr = get(plotattributes, :fillrange, 0)
     if typeof(arg) <: Brush
-        arg.size  === nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color === nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.size === nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color === nothing || (
+            plotattributes[:fillcolor] =
+                arg.color == :auto ? :auto : plot_color(arg.color)
+        )
         arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
 
     elseif typeof(arg) <: Bool
         plotattributes[:fillrange] = arg ? 0 : nothing
 
-    # fillrange function
+        # fillrange function
     elseif allFunctions(arg)
         plotattributes[:fillrange] = arg
 
-    # fillalpha
+        # fillalpha
     elseif allAlphas(arg)
         plotattributes[:fillalpha] = arg
 
-    # fillrange provided as vector or number
-    elseif typeof(arg) <: Union{AbstractArray{<:Real}, Real}
+        # fillrange provided as vector or number
+    elseif typeof(arg) <: Union{AbstractArray{<:Real},Real}
         plotattributes[:fillrange] = arg
 
     elseif !handleColors!(plotattributes, arg, :fillcolor)
@@ -897,7 +1214,6 @@ function processFillArg(plotattributes::AKW, arg)
     return
 end
 
-
 function processGridArg!(plotattributes::AKW, arg, letter)
     if arg in _allGridArgs || isa(arg, Bool)
         plotattributes[Symbol(letter, :grid)] = hasgrid(arg, letter)
@@ -906,23 +1222,26 @@ function processGridArg!(plotattributes::AKW, arg, letter)
         plotattributes[Symbol(letter, :gridstyle)] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width === nothing || (plotattributes[Symbol(letter, :gridlinewidth)] = arg.width)
-        arg.color === nothing || (plotattributes[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.width === nothing ||
+            (plotattributes[Symbol(letter, :gridlinewidth)] = arg.width)
+        arg.color === nothing || (
+            plotattributes[Symbol(letter, :foreground_color_grid)] =
+                arg.color in (:auto, :match) ? :match : plot_color(arg.color)
+        )
         arg.alpha === nothing || (plotattributes[Symbol(letter, :gridalpha)] = arg.alpha)
         arg.style === nothing || (plotattributes[Symbol(letter, :gridstyle)] = arg.style)
 
-    # linealpha
+        # linealpha
     elseif allAlphas(arg)
         plotattributes[Symbol(letter, :gridalpha)] = arg
 
-    # linewidth
+        # linewidth
     elseif allReals(arg)
         plotattributes[Symbol(letter, :gridlinewidth)] = arg
 
-    # color
+        # color
     elseif !handleColors!(plotattributes, arg, Symbol(letter, :foreground_color_grid))
         @warn("Skipped grid arg $arg.")
-
     end
 end
 
@@ -935,23 +1254,29 @@ function processMinorGridArg!(plotattributes::AKW, arg, letter)
         plotattributes[Symbol(letter, :minorgrid)] = true
 
     elseif typeof(arg) <: Stroke
-        arg.width === nothing || (plotattributes[Symbol(letter, :minorgridlinewidth)] = arg.width)
-        arg.color === nothing || (plotattributes[Symbol(letter, :foreground_color_minor_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
-        arg.alpha === nothing || (plotattributes[Symbol(letter, :minorgridalpha)] = arg.alpha)
-        arg.style === nothing || (plotattributes[Symbol(letter, :minorgridstyle)] = arg.style)
+        arg.width === nothing ||
+            (plotattributes[Symbol(letter, :minorgridlinewidth)] = arg.width)
+        arg.color === nothing || (
+            plotattributes[Symbol(letter, :foreground_color_minor_grid)] =
+                arg.color in (:auto, :match) ? :match : plot_color(arg.color)
+        )
+        arg.alpha === nothing ||
+            (plotattributes[Symbol(letter, :minorgridalpha)] = arg.alpha)
+        arg.style === nothing ||
+            (plotattributes[Symbol(letter, :minorgridstyle)] = arg.style)
         plotattributes[Symbol(letter, :minorgrid)] = true
 
-    # linealpha
+        # linealpha
     elseif allAlphas(arg)
         plotattributes[Symbol(letter, :minorgridalpha)] = arg
         plotattributes[Symbol(letter, :minorgrid)] = true
 
-    # linewidth
+        # linewidth
     elseif allReals(arg)
         plotattributes[Symbol(letter, :minorgridlinewidth)] = arg
         plotattributes[Symbol(letter, :minorgrid)] = true
 
-    # color
+        # color
     elseif handleColors!(plotattributes, arg, Symbol(letter, :foreground_color_minor_grid))
         plotattributes[Symbol(letter, :minorgrid)] = true
     else
@@ -971,9 +1296,9 @@ function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
     elseif arg == :center
         plotattributes[Symbol(fontname, :halign)] = :hcenter
         plotattributes[Symbol(fontname, :valign)] = :vcenter
-    elseif arg in (:hcenter, :left, :right)
+    elseif arg ∈ _haligns
         plotattributes[Symbol(fontname, :halign)] = arg
-    elseif arg in (:vcenter, :top, :bottom)
+    elseif arg ∈ _valigns
         plotattributes[Symbol(fontname, :valign)] = arg
     elseif T <: Colorant
         plotattributes[Symbol(fontname, :color)] = arg
@@ -1099,7 +1424,8 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
 
     # fonts
-    for fontname in (:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
+    for fontname in
+        (:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
@@ -1111,7 +1437,8 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         processLineArg(plotattributes, arg)
     end
 
-    if haskey(plotattributes, :seriestype) && haskey(_typeAliases, plotattributes[:seriestype])
+    if haskey(plotattributes, :seriestype) &&
+       haskey(_typeAliases, plotattributes[:seriestype])
         plotattributes[:seriestype] = _typeAliases[plotattributes[:seriestype]]
     end
 
@@ -1124,7 +1451,9 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     RecipesPipeline.reset_kw!(plotattributes, :marker)
     if haskey(plotattributes, :markershape)
         plotattributes[:markershape] = _replace_markershape(plotattributes[:markershape])
-        if plotattributes[:markershape] == :none && plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
+        if plotattributes[:markershape] == :none &&
+           get(plotattributes, :seriestype, :path) in
+           (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
             plotattributes[:markershape] = :circle
         end
     elseif anymarker
@@ -1139,10 +1468,11 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
 
     # handle series annotations
     if haskey(plotattributes, :series_annotations)
-        plotattributes[:series_annotations] = series_annotations(wraptuple(plotattributes[:series_annotations])...)
+        plotattributes[:series_annotations] =
+            series_annotations(wraptuple(plotattributes[:series_annotations])...)
     end
 
-  # convert into strokes and brushes
+    # convert into strokes and brushes
 
     if haskey(plotattributes, :arrow)
         a = plotattributes[:arrow]
@@ -1157,7 +1487,6 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         end
     end
 
-
     # if get(plotattributes, :arrow, false) == true
     #     plotattributes[:arrow] = arrow()
     # end
@@ -1171,18 +1500,20 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
 
     # framestyle
-    if haskey(plotattributes, :framestyle) && haskey(_framestyleAliases, plotattributes[:framestyle])
+    if haskey(plotattributes, :framestyle) &&
+       haskey(_framestyleAliases, plotattributes[:framestyle])
         plotattributes[:framestyle] = _framestyleAliases[plotattributes[:framestyle]]
     end
 
     # warnings for moved recipes
     st = get(plotattributes, :seriestype, :path)
     if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatsPlots)
-        @warn("seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`")
+        @warn(
+            "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
+        )
     end
     return
 end
-
 
 # -----------------------------------------------------------------------------
 
@@ -1206,10 +1537,12 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     end
 
     if !isempty(_to_warn) &&
-        !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+       !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
-            @warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_attrs(pkg))")
+            @warn(
+                "Keyword argument $k not supported with $pkg.  Choose from: $(supported_attrs(pkg))"
+            )
         end
     end
     return extra_kwargs
@@ -1224,13 +1557,19 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
         return
     end
     if !is_seriestype_supported(pkg, plotattributes[:seriestype])
-        @warn("seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))")
+        @warn(
+            "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))"
+        )
     end
     if !is_style_supported(pkg, plotattributes[:linestyle])
-        @warn("linestyle $(plotattributes[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))")
+        @warn(
+            "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))"
+        )
     end
     if !is_marker_supported(pkg, plotattributes[:markershape])
-        @warn("markershape $(plotattributes[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))")
+        @warn(
+            "markershape $(plotattributes[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))"
+        )
     end
 end
 
@@ -1242,12 +1581,13 @@ function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
         if haskey(plotattributes, k)
             v = plotattributes[k]
             if !is_scale_supported(pkg, v)
-                @warn("scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
+                @warn(
+                    "scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))"
+                )
             end
         end
     end
 end
-
 
 # -----------------------------------------------------------------------------
 
@@ -1256,7 +1596,28 @@ function convertLegendValue(val::Symbol)
         :best
     elseif val in (:no, :none)
         :none
-    elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend, :topright, :topleft, :bottomleft, :bottomright, :outertopright, :outertopleft, :outertop, :outerright, :outerleft, :outerbottomright, :outerbottomleft, :outerbottom, :inline)
+    elseif val in (
+        :right,
+        :left,
+        :top,
+        :bottom,
+        :inside,
+        :best,
+        :legend,
+        :topright,
+        :topleft,
+        :bottomleft,
+        :bottomright,
+        :outertopright,
+        :outertopleft,
+        :outertop,
+        :outerright,
+        :outerleft,
+        :outerbottomright,
+        :outerbottomleft,
+        :outerbottom,
+        :inline,
+    )
         val
     else
         error("Invalid symbol for legend: $val")
@@ -1264,36 +1625,42 @@ function convertLegendValue(val::Symbol)
 end
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Nothing) = :none
-convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
+convertLegendValue(v::Tuple{S,T}) where {S<:Real,T<:Real} = v
+convertLegendValue(v::Tuple{<:Real,Symbol}) = v
+convertLegendValue(v::Real) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------
-
 
 # 1-row matrices will give an element
 # multi-row matrices will give a column
 # InputWrapper just gives the contents
 # anything else is returned as-is
 function slice_arg(v::AMat, idx::Int)
-    c = mod1(idx, size(v,2))
-    m,n = axes(v)
-    size(v,1) == 1 ? v[first(m),n[c]] : v[:,n[c]]
+    c = mod1(idx, size(v, 2))
+    m, n = axes(v)
+    size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v, idx) = v
 
-
 # given an argument key (k), extract the argument value for this index,
 # and set into plotattributes[k]. Matrices are sliced by column.
 # if nothing is set (or container is empty), return the existing value.
-function slice_arg!(plotattributes_in, plotattributes_out,
-                    k::Symbol, idx::Int, remove_pair::Bool)
+function slice_arg!(
+    plotattributes_in,
+    plotattributes_out,
+    k::Symbol,
+    idx::Int,
+    remove_pair::Bool,
+)
     v = get(plotattributes_in, k, plotattributes_out[k])
-    plotattributes_out[k] = if haskey(plotattributes_in, k) && typeof(v) <: AMat && !isempty(v)
-        slice_arg(v, idx)
-    else
-        v
-    end
+    plotattributes_out[k] =
+        if haskey(plotattributes_in, k) && typeof(v) <: AMat && !isempty(v)
+            slice_arg(v, idx)
+        else
+            v
+        end
     if remove_pair
         RecipesPipeline.reset_kw!(plotattributes_in, k)
     end
@@ -1330,10 +1697,10 @@ const _match_map = KW(
     :background_color_inside  => :background_color_subplot,
     :foreground_color_legend  => :foreground_color_subplot,
     :foreground_color_title   => :foreground_color_subplot,
-    :left_margin   => :margin,
-    :top_margin    => :margin,
-    :right_margin  => :margin,
-    :bottom_margin => :margin,
+    :left_margin              => :margin,
+    :top_margin               => :margin,
+    :right_margin             => :margin,
+    :bottom_margin            => :margin,
     :titlefontfamily          => :fontfamily_subplot,
     :titlefontcolor           => :foreground_color_subplot,
     :legendfontfamily         => :fontfamily_subplot,
@@ -1343,25 +1710,29 @@ const _match_map = KW(
     :colorbar_fontfamily      => :fontfamily_subplot,
     :colorbar_titlefontfamily => :fontfamily_subplot,
     :colorbar_titlefontcolor  => :foreground_color_subplot,
+    :colorbar_tickfontfamily  => :fontfamily_subplot,
+    :colorbar_tickfontcolor   => :foreground_color_subplot,
     :plot_titlefontfamily     => :fontfamily,
     :plot_titlefontcolor      => :foreground_color,
     :tickfontcolor            => :foreground_color_text,
     :guidefontcolor           => :foreground_color_guide,
+    :annotationfontfamily     => :fontfamily_subplot,
+    :annotationcolor          => :foreground_color_subplot,
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
 const _match_map2 = KW(
     :background_color_subplot => :background_color,
     :foreground_color_subplot => :foreground_color,
-    :foreground_color_axis    => :foreground_color_subplot,
-    :foreground_color_border  => :foreground_color_subplot,
-    :foreground_color_grid    => :foreground_color_subplot,
-    :foreground_color_minor_grid=> :foreground_color_subplot,
-    :foreground_color_guide   => :foreground_color_subplot,
-    :foreground_color_text    => :foreground_color_subplot,
-    :fontfamily_subplot       => :fontfamily,
-    :tickfontfamily           => :fontfamily_subplot,
-    :guidefontfamily          => :fontfamily_subplot,
+    :foreground_color_axis => :foreground_color_subplot,
+    :foreground_color_border => :foreground_color_subplot,
+    :foreground_color_grid => :foreground_color_subplot,
+    :foreground_color_minor_grid => :foreground_color_subplot,
+    :foreground_color_guide => :foreground_color_subplot,
+    :foreground_color_text => :foreground_color_subplot,
+    :fontfamily_subplot => :fontfamily,
+    :tickfontfamily => :fontfamily_subplot,
+    :guidefontfamily => :fontfamily_subplot,
 )
 
 # properly retrieve from plt.attr, passing `:match` to the correct key
@@ -1373,7 +1744,6 @@ function Base.getindex(plt::Plot, k::Symbol)
         v
     end
 end
-
 
 # properly retrieve from sp.attr, passing `:match` to the correct key
 function Base.getindex(sp::Subplot, k::Symbol)
@@ -1389,7 +1759,6 @@ function Base.getindex(sp::Subplot, k::Symbol)
     end
 end
 
-
 # properly retrieve from axis.attr, passing `:match` to the correct key
 function Base.getindex(axis::Axis, k::Symbol)
     v = axis.plotattributes[k]
@@ -1404,9 +1773,7 @@ function Base.getindex(axis::Axis, k::Symbol)
     end
 end
 
-function Base.getindex(series::Series, k::Symbol)
-    series.plotattributes[k]
-end
+Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]
 
 Base.setindex!(plt::Plot, v, k::Symbol)      = (plt.attr[k] = v)
 Base.setindex!(sp::Subplot, v, k::Symbol)    = (sp.attr[k] = v)
@@ -1417,7 +1784,6 @@ Base.get(plt::Plot, k::Symbol, v)      = get(plt.attr, k, v)
 Base.get(sp::Subplot, k::Symbol, v)    = get(sp.attr, k, v)
 Base.get(axis::Axis, k::Symbol, v)     = get(axis.plotattributes, k, v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
-
 
 # -----------------------------------------------------------------------------
 
@@ -1440,16 +1806,14 @@ function fg_color_sp(plotattributes::AKW)
     end
 end
 
-
-
 # update attr from an input dictionary
 function _update_plot_args(plt::Plot, plotattributes_in::AKW)
-    for (k,v) in _plot_defaults
+    for (k, v) in _plot_defaults
         slice_arg!(plotattributes_in, plt.attr, k, 1, true)
     end
 
     # handle colors
-    plotattributes= plt.attr
+    plotattributes = plt.attr
     plt[:background_color] = plot_color(plotattributes[:background_color])
     plt[:foreground_color] = fg_color(plotattributes)
     # bg = plot_color(plt.attr[:background_color])
@@ -1495,7 +1859,13 @@ function _update_subplot_colors(sp::Subplot)
     return
 end
 
-function _update_axis(plt::Plot, sp::Subplot, plotattributes_in::AKW, letter::Symbol, subplot_index::Int)
+function _update_axis(
+    plt::Plot,
+    sp::Subplot,
+    plotattributes_in::AKW,
+    letter::Symbol,
+    subplot_index::Int,
+)
     # get (maybe initialize) the axis
     axis = get_axis(sp, letter)
 
@@ -1511,7 +1881,12 @@ function _update_axis(plt::Plot, sp::Subplot, plotattributes_in::AKW, letter::Sy
     return
 end
 
-function _update_axis(axis::Axis, plotattributes_in::AKW, letter::Symbol, subplot_index::Int)
+function _update_axis(
+    axis::Axis,
+    plotattributes_in::AKW,
+    letter::Symbol,
+    subplot_index::Int,
+)
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
     for k in _all_axis_args
@@ -1559,7 +1934,13 @@ function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
 end
 
 # update a subplots args and axes
-function _update_subplot_args(plt::Plot, sp::Subplot, plotattributes_in, subplot_index::Int, remove_pair::Bool)
+function _update_subplot_args(
+    plt::Plot,
+    sp::Subplot,
+    plotattributes_in,
+    subplot_index::Int,
+    remove_pair::Bool,
+)
     anns = RecipesPipeline.pop_kw!(sp.attr, :annotations)
 
     # # grab those args which apply to this subplot
@@ -1576,20 +1957,25 @@ function _update_subplot_args(plt::Plot, sp::Subplot, plotattributes_in, subplot
         lk = Symbol(letter, :lims)
 
         # warn against using `Range` in x,y,z lims
-        if !lims_warned && haskey(plotattributes_in, lk) && plotattributes_in[lk] isa AbstractRange
+        if !lims_warned &&
+           haskey(plotattributes_in, lk) &&
+           plotattributes_in[lk] isa AbstractRange
             @warn("lims should be a Tuple, not $(typeof(plotattributes_in[lk])).")
             lims_warned = true
         end
     end
+    _update_subplot_colorbars(sp)
 end
 
 # -----------------------------------------------------------------------------
 
-has_black_border_for_default(st) = error("The seriestype attribute only accepts Symbols, you passed the $(typeof(st)) $st.")
-has_black_border_for_default(st::Function) = error("The seriestype attribute only accepts Symbols, you passed the function $st.")
-function has_black_border_for_default(st::Symbol)
+has_black_border_for_default(st) = error(
+    "The seriestype attribute only accepts Symbols, you passed the $(typeof(st)) $st.",
+)
+has_black_border_for_default(st::Function) =
+    error("The seriestype attribute only accepts Symbols, you passed the function $st.")
+has_black_border_for_default(st::Symbol) =
     like_histogram(st) || st in (:hexbin, :bar, :shape)
-end
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
@@ -1602,9 +1988,8 @@ function get_series_color(c, sp::Subplot, n::Int, seriestype)
     plot_color(c)
 end
 
-function get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype)
-    map(x->get_series_color(x, sp, n, seriestype), c)
-end
+get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
+    map(x -> get_series_color(x, sp, n, seriestype), c)
 
 function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
     if plotattributes[csym] isa ColorPalette
@@ -1614,31 +1999,37 @@ function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
         end
         plotattributes[csym] = cgrad(plotattributes[csym], categorical = true, alpha = α)
     elseif !(plotattributes[csym] isa ColorGradient)
-        plotattributes[csym] = typeof(plotattributes[asym]) <: AbstractVector ? cgrad() : cgrad(alpha = plotattributes[asym])
+        plotattributes[csym] =
+            typeof(plotattributes[asym]) <: AbstractVector ? cgrad() :
+            cgrad(alpha = plotattributes[asym])
     end
 end
 
 function _replace_linewidth(plotattributes::AKW)
     # get a good default linewidth... 0 for surface and heatmaps
     if plotattributes[:linewidth] == :auto
-        plotattributes[:linewidth] = (get(plotattributes, :seriestype, :path) in (:surface,:heatmap,:image) ? 0 : 1)
+        plotattributes[:linewidth] = (
+            get(plotattributes, :seriestype, :path) in (:surface, :heatmap, :image) ? 0 : 1
+        )
     end
 end
 
 function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
     for k in keys(_series_defaults)
-        haskey(plotattributes, k) && slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
+        haskey(plotattributes, k) &&
+            slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
     end
     return plotattributes
 end
 
-label_to_string(label::Bool, series_plotindex) = label ? label_to_string(:auto, series_plotindex) : ""
+label_to_string(label::Bool, series_plotindex) =
+    label ? label_to_string(:auto, series_plotindex) : ""
 label_to_string(label::Nothing, series_plotindex) = ""
 label_to_string(label::Missing, series_plotindex) = ""
 function label_to_string(label::Symbol, series_plotindex)
-    if label==:auto
+    if label == :auto
         return string("y", series_plotindex)
-    elseif label==:none
+    elseif label == :none
         return ""
     else
         throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
@@ -1651,8 +2042,20 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     globalIndex = plotattributes[:series_plotindex]
     plotIndex = _series_index(plotattributes, sp)
 
-    aliasesAndAutopick(plotattributes, :linestyle, _styleAliases, supported_styles(pkg), plotIndex)
-    aliasesAndAutopick(plotattributes, :markershape, _markerAliases, supported_markers(pkg), plotIndex)
+    aliasesAndAutopick(
+        plotattributes,
+        :linestyle,
+        _styleAliases,
+        supported_styles(pkg),
+        plotIndex,
+    )
+    aliasesAndAutopick(
+        plotattributes,
+        :markershape,
+        _markerAliases,
+        supported_markers(pkg),
+        plotIndex,
+    )
 
     # update alphas
     for asym in (:linealpha, :markeralpha, :fillalpha)
@@ -1671,7 +2074,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 
     # update other colors
     for s in (:line, :marker, :fill)
-        csym, asym = Symbol(s,:color), Symbol(s,:alpha)
+        csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] == :auto
             plot_color(if has_black_border_for_default(stype) && s == :line
                 sp[:foreground_color_subplot]
@@ -1717,7 +2120,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes[:label] = label_to_string.(plotattributes[:label], globalIndex)
 
     _replace_linewidth(plotattributes)
-   plotattributes
+    plotattributes
 end
 
 function _series_index(plotattributes, sp)
@@ -1738,7 +2141,7 @@ end
 
 #--------------------------------------------------
 ## inspired by Base.@kwdef
-macro add_attributes( level, expr )
+macro add_attributes(level, expr)
     expr = macroexpand(__module__, expr) # to expand @static
     expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
     T = expr.args[2]
@@ -1756,18 +2159,32 @@ macro add_attributes( level, expr )
         # e.g. _series_defualts[key] = value
         exp_key = Symbol(lowercase(string(T)), "_", key)
         pl_key = makeplural(exp_key)
-        push!(insert_block.args, Expr(
-            :(=), Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(exp_key)), value
-        ))
-        push!(insert_block.args, :(
-            add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))
-        ))
-        push!(insert_block.args, :(
-            add_aliases($(QuoteNode(exp_key)), $(QuoteNode(make_non_underscore(exp_key))))
-        ))
-        push!(insert_block.args, :(
-            add_aliases($(QuoteNode(exp_key)), $(QuoteNode(make_non_underscore(pl_key))))
-        ))
+        push!(
+            insert_block.args,
+            Expr(
+                :(=),
+                Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(exp_key)),
+                value,
+            ),
+        )
+        push!(
+            insert_block.args,
+            :(add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
+        )
+        push!(
+            insert_block.args,
+            :(add_aliases(
+                $(QuoteNode(exp_key)),
+                $(QuoteNode(make_non_underscore(exp_key))),
+            )),
+        )
+        push!(
+            insert_block.args,
+            :(add_aliases(
+                $(QuoteNode(exp_key)),
+                $(QuoteNode(make_non_underscore(pl_key))),
+            )),
+        )
     end
     return quote
         $expr

@@ -3,17 +3,17 @@ import Plots._current_plots_version
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
 function replace_rand!(ex) end
 function replace_rand!(ex::Expr)
-   for arg in ex.args
-       replace_rand!(arg)
-   end
-   if ex.head === :call && ex.args[1] ∈ (:rand, :randn)
-       pushfirst!(ex.args, ex.args[1])
-       ex.args[2] = :rng
-   end
+    for arg in ex.args
+        replace_rand!(arg)
+    end
+    if ex.head === :call && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
+        pushfirst!(ex.args, ex.args[1])
+        ex.args[2] = :rng
+    end
 end
 function fix_rand!(ex)
     replace_rand!(ex)
-    pushfirst!(ex.args[1].args, :(rng = StableRNG(1234)))
+    pushfirst!(ex.args[1].args, :(rng = StableRNG(PLOTS_SEED)))
 end
 
 function image_comparison_tests(
@@ -35,6 +35,7 @@ function image_comparison_tests(
     fn = "ref$idx.png"
     reffn = reference_file(pkg, idx, _current_plots_version)
     newfn = joinpath(reference_path(pkg, _current_plots_version), fn)
+    @debug example.exprs
 
     # test function
     func = (fn, idx) -> begin
@@ -58,7 +59,7 @@ function image_comparison_facts(
     sigma = [1, 1],  # number of pixels to "blur"
     tol = 1e-2,
 )     # acceptable error (percent)
-    for i = 1:length(Plots._examples)
+    for i in 1:length(Plots._examples)
         i in skip && continue
         if only === nothing || i in only
             @test image_comparison_tests(pkg, i, debug = debug, sigma = sigma, tol = tol) |>

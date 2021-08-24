@@ -10,3 +10,6 @@ deps/deps.jl
 Manifest.toml
 dev/
 test/tmpplotsave.hdf5
+/.benchmarkci
+/benchmark/*.json
+.vscode/

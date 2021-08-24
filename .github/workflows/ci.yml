@@ -13,6 +13,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
       GKS_ENCODING: "utf8"
+      GKSwstype: "100"
 
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -59,10 +60,10 @@ jobs:
 
       # TESTCMD
       - name: Default TESTCMD
-        run: echo ::set-env name=TESTCMD::"julia"
+        run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
-        run: echo ::set-env name=TESTCMD::"xvfb-run --auto-servernum julia"
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
 
       # Julia Dependencies
       - name: Install Julia dependencies
@@ -70,12 +71,16 @@ jobs:
 
       # Run tests
       - name: Run Graphical test
-        run:  $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true);'
+        run:  |
+          $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true)'
+          $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")'
+          $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")'
 
-      - name: Codecov
-        uses: julia-actions/julia-uploadcodecov@latest
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      # Codecov
+      - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v1
+        with:
+          file: lcov.info
 
   Skip:
     if: "contains(github.event.head_commit.message, '[skip ci]')"

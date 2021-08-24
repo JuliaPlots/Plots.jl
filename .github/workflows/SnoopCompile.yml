@@ -21,11 +21,9 @@ jobs:
       fail-fast: false
       matrix:
         version:   # NOTE: the versions below should match those in your botconfig
-          - '1.5'
+          - '1'
         os:        # NOTE: should match the os setting of your botconfig
           - ubuntu-latest
-          - windows-latest
-          - macos-latest
         arch:
           - x64
     steps:
@@ -43,10 +41,10 @@ jobs:
 
       # TESTCMD
       - name: Default TESTCMD
-        run: echo ::set-env name=TESTCMD::"julia"
+        run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
-        run: echo ::set-env name=TESTCMD::"xvfb-run --auto-servernum julia"
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
 
       # Generate precompile files
       - name: Generating precompile files
@@ -77,10 +75,12 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Update precompile_*.jl file
-          title: "[AUTO] Update precompiles"
-          labels: SnoopCompile
-          branch: "SnoopCompile_AutoPR"
+          commit-message: Update precompile_*.jl file [skip ci]
+          title: "[AUTO] Update precompiles [skip ci]"
+          labels: |
+            SnoopCompile
+            no changelog
+          branch: "Test_SnoopCompile_AutoPR_${{ github.ref }}"
 
 
   Skip:

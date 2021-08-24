@@ -1,8 +1,10 @@
 # ---------------------------------------------------------
 # A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
 
-_fileio_load(@nospecialize(filename::AbstractString)) = FileIO.load(filename::AbstractString)
-_fileio_save(@nospecialize(filename::AbstractString), @nospecialize(x)) = FileIO.save(filename::AbstractString, x)
+_fileio_load(@nospecialize(filename::AbstractString)) =
+    FileIO.load(filename::AbstractString)
+_fileio_save(@nospecialize(filename::AbstractString), @nospecialize(x)) =
+    FileIO.save(filename::AbstractString, x)
 
 function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     fn = tempname()
@@ -21,4 +23,5 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     write(io, read(open(pngfn), String))
 end
 
-const PDFBackends = Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
+const PDFBackends =
+    Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
