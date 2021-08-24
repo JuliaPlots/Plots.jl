@@ -1502,6 +1502,11 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         plotattributes[:framestyle] = _framestyleAliases[plotattributes[:framestyle]]
     end
 
+    # contours
+    if haskey(plotattributes, :levels)
+        check_contour_levels(plotattributes[:levels])
+    end
+
     # warnings for moved recipes
     st = get(plotattributes, :seriestype, :path)
     if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatsPlots)
@@ -1626,6 +1631,26 @@ convertLegendValue(v::Tuple{S,T}) where {S<:Real,T<:Real} = v
 convertLegendValue(v::Tuple{<:Real,Symbol}) = v
 convertLegendValue(v::Real) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
+
+# -----------------------------------------------------------------------------
+
+"""Throw an error if the `levels` keyword argument is not of the correct type
+or `levels` is less than 1"""
+function check_contour_levels(levels)
+    if !(levels isa Union{Integer,AVec})
+        throw(
+            ArgumentError(
+                "the levels keyword argument must be an integer or AbstractVector",
+            ),
+        )
+    elseif levels isa Integer && levels <= 0
+        throw(
+            ArgumentError(
+                "must pass a positive number of contours to the levels keyword argument",
+            ),
+        )
+    end
+end
 
 # -----------------------------------------------------------------------------
 

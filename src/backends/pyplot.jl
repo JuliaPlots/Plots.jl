@@ -390,8 +390,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     elseif isvector(levels)
         extrakw[:levels] = levels
         ()
-    else
-        error("Only numbers and vectors are supported with levels keyword")
     end
 
     # add custom frame shapes to markershape?
