@@ -64,7 +64,7 @@ jobs:
       # Run tests
       - name: Run tests
         run:  |
-          $TESTCMD --project -e 'using Pkg; Pkg.build("Plots"); Pkg.test(coverage=true);'
+          $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true);'
 
   Skip:
     if: "contains(github.event.head_commit.message, '[skip ci]')"
