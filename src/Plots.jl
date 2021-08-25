@@ -31,6 +31,7 @@ using Base.Meta
 @reexport using PlotThemes
 import Showoff
 import StatsBase
+import Downloads
 import JSON
 
 using Requires

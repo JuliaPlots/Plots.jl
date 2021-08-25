@@ -98,7 +98,7 @@ function __init__()
         global plotly_local_file_path[] =
             joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
         if !isfile(plotly_local_file_path[])
-            download(
+            Downloads.download(
                 "https://cdn.plot.ly/$(_plotly_min_js_filename)",
                 plotly_local_file_path[],
             )
