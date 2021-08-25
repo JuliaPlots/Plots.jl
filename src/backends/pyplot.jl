@@ -714,28 +714,45 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
             if length(rng) > 1
-                fs = get_fillstyle(series, i)
-                has_fs = !isnothing(fs)
                 lc = get_linecolor(series, clims, i)
                 la = get_linealpha(series, i)
+                ls = get_linestyle(series, i)
                 fc = get_fillcolor(series, clims, i)
                 fa = get_fillalpha(series, i)
+                fs = get_fillstyle(series, i)
+                has_fs = !isnothing(fs)
 
                 path = pypath."Path"(hcat(x[rng], y[rng]))
+
+                # shape outline (and potentially solid fill)
                 patches = pypatches."PathPatch"(
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
-                    # hatch color/alpha controlled by edge (not face) color/alpha
-                    # if has_fs, set edge color/alpha <- fill color/alpha and face alpha <- 0
-                    edgecolor = has_fs ? py_color(fc, fa) : py_color(lc, la),
+                    edgecolor = py_color(lc, la),
                     facecolor = py_color(fc, has_fs ? 0 : fa),
-                    hatch = py_fillstyle(fs),
                     linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
-                    linestyle = py_linestyle(st, get_linestyle(series, i)),
-                    fill = true,
+                    linestyle = py_linestyle(st, ls),
+                    fill = !has_fs,
                 )
                 push!(handle, ax."add_patch"(patches))
+
+                # shape hatched fill
+                # hatch color/alpha are controlled by edge (not face) color/alpha
+                if has_fs
+                    patches = pypatches."PathPatch"(
+                        path;
+                        label = "",
+                        zorder = series[:series_plotindex],
+                        edgecolor = py_color(fc, fa),
+                        facecolor = py_color(fc, 0), # don't fill with solid background
+                        hatch = py_fillstyle(fs),
+                        linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
+                        linestyle = py_linestyle(st, ls),
+                        fill = false,
+                    )
+                    push!(handle, ax."add_patch"(patches))
+                end
             end
         end
         push!(handles, handle)
@@ -763,11 +780,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 dim1, _cycle(fillrange[1], rng), _cycle(fillrange[2], rng)
             end
 
-            fs = get_fillstyle(series, i)
-            has_fs = !isnothing(fs)
             la = get_linealpha(series, i)
             fc = get_fillcolor(series, clims, i)
             fa = get_fillalpha(series, i)
+            fs = get_fillstyle(series, i)
+            has_fs = !isnothing(fs)
 
             handle = getproperty(ax, f)(
                 args...,
@@ -775,7 +792,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 false,
                 py_fillstepstyle(st);
                 zorder = series[:series_plotindex],
-                # hatch color/alpha controlled by edge (not face) color/alpha
+                # hatch color/alpha are controlled by edge (not face) color/alpha
                 # if has_fs, set edge color/alpha <- fill color/alpha and face alpha <- 0
                 edgecolor = py_color(fc, has_fs ? fa : la),
                 facecolor = py_color(fc, has_fs ? 0 : fa),
