@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install JuliaFormatter and format
         run: |
-          julia  -e 'import Pkg; pkg"add JuliaFormatter CSTParser#master"'
+          julia  -e 'using Pkg; pkg"add JuliaFormatter CSTParser#master"'
           julia  -e 'using JuliaFormatter; [format(["src", "test"]) for _ in 1:2]'
           git diff --exit-code
 
