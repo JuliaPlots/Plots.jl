@@ -617,11 +617,34 @@ function plotly_series(plt::Plot, series::Series)
         filled = isfilledcontour(series)
         plotattributes_out[:type] = "contour"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-        plotattributes_out[:ncontours] = series[:levels] + 2
         plotattributes_out[:contours] = KW(
             :coloring => filled ? "fill" : "lines",
             :showlabels => series[:contour_labels] == true,
         )
+        # Plotly does not support arbitrary sets of contours
+        # (https://github.com/plotly/plotly.js/issues/4503)
+        # so we distinguish AbstractRanges and AbstractVectors
+        let levels = series[:levels]
+            if levels isa AbstractRange
+                plotattributes_out[:contours][:start] = first(levels)
+                plotattributes_out[:contours][:end] = last(levels)
+                plotattributes_out[:contours][:size] = step(levels)
+            elseif levels isa AVec
+                levels_range =
+                    range(first(levels), stop = last(levels), length = length(levels))
+                plotattributes_out[:contours][:start] = first(levels_range)
+                plotattributes_out[:contours][:end] = last(levels_range)
+                plotattributes_out[:contours][:size] = step(levels_range)
+                @warn(
+                    "setting arbitrary contour levels with Plotly backend is not supported; " *
+                    "use a range to set equally-spaced contours or an integer to set the " *
+                    "approximate number of contours with the keyword `levels`. " *
+                    "Setting levels to $(levels_range)"
+                )
+            elseif levels isa Integer
+                plotattributes_out[:ncontours] = levels + 2
+            end
+        end
         plotattributes_out[:colorscale] =
             plotly_colorscale(series[:linecolor], series[:linealpha])
         plotattributes_out[:showscale] = hascolorbar(sp) && hascolorbar(series)
