@@ -162,6 +162,9 @@ function py_fillstepstyle(seriestype::Symbol)
     return nothing
 end
 
+py_fillstyle(::Nothing) = nothing
+py_fillstyle(fillstyle::Symbol) = string(fillstyle)
+
 # # untested... return a FontProperties object from a Plots.Font
 # function py_font(font::Font)
 #     pyfont["FontProperties"](
@@ -709,24 +712,45 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
             if length(rng) > 1
+                lc = get_linecolor(series, clims, i)
+                la = get_linealpha(series, i)
+                ls = get_linestyle(series, i)
+                fc = get_fillcolor(series, clims, i)
+                fa = get_fillalpha(series, i)
+                fs = get_fillstyle(series, i)
+                has_fs = !isnothing(fs)
+
                 path = pypath."Path"(hcat(x[rng], y[rng]))
+
+                # shape outline (and potentially solid fill)
                 patches = pypatches."PathPatch"(
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
-                    edgecolor = py_color(
-                        get_linecolor(series, clims, i),
-                        get_linealpha(series, i),
-                    ),
-                    facecolor = py_color(
-                        get_fillcolor(series, clims, i),
-                        get_fillalpha(series, i),
-                    ),
+                    edgecolor = py_color(lc, la),
+                    facecolor = py_color(fc, has_fs ? 0 : fa),
                     linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
-                    linestyle = py_linestyle(st, get_linestyle(series, i)),
-                    fill = true,
+                    linestyle = py_linestyle(st, ls),
+                    fill = !has_fs,
                 )
                 push!(handle, ax."add_patch"(patches))
+
+                # shape hatched fill
+                # hatch color/alpha are controlled by edge (not face) color/alpha
+                if has_fs
+                    patches = pypatches."PathPatch"(
+                        path;
+                        label = "",
+                        zorder = series[:series_plotindex],
+                        edgecolor = py_color(fc, fa),
+                        facecolor = py_color(fc, 0), # don't fill with solid background
+                        hatch = py_fillstyle(fs),
+                        linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
+                        linestyle = py_linestyle(st, ls),
+                        fill = false,
+                    )
+                    push!(handle, ax."add_patch"(patches))
+                end
             end
         end
         push!(handles, handle)
@@ -754,17 +778,24 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 dim1, _cycle(fillrange[1], rng), _cycle(fillrange[2], rng)
             end
 
+            la = get_linealpha(series, i)
+            fc = get_fillcolor(series, clims, i)
+            fa = get_fillalpha(series, i)
+            fs = get_fillstyle(series, i)
+            has_fs = !isnothing(fs)
+
             handle = getproperty(ax, f)(
                 args...,
                 trues(n),
                 false,
                 py_fillstepstyle(st);
                 zorder = series[:series_plotindex],
-                facecolor = py_color(
-                    get_fillcolor(series, clims, i),
-                    get_fillalpha(series, i),
-                ),
-                linewidths = 0,
+                # hatch color/alpha are controlled by edge (not face) color/alpha
+                # if has_fs, set edge color/alpha <- fill color/alpha and face alpha <- 0
+                edgecolor = py_color(fc, has_fs ? fa : la),
+                facecolor = py_color(fc, has_fs ? 0 : fa),
+                hatch = py_fillstyle(fs),
+                linewidths = 0
             )
             push!(handles, handle)
         end
@@ -1455,67 +1486,82 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             if should_add_to_legend(series)
                 clims = get_clims(sp, series)
                 # add a line/marker and a label
-                push!(
-                    handles,
-                    if series[:seriestype] == :shape || series[:fillrange] !== nothing
-                        pypatches."Patch"(
-                            edgecolor = py_color(
-                                single_color(get_linecolor(series, clims)),
-                                get_linealpha(series),
-                            ),
-                            facecolor = py_color(
-                                single_color(get_fillcolor(series, clims)),
-                                get_fillalpha(series),
-                            ),
-                            linewidth = py_thickness_scale(
-                                plt,
-                                clamp(get_linewidth(series), 0, 5),
-                            ),
-                            linestyle = py_linestyle(
-                                series[:seriestype],
-                                get_linestyle(series),
-                            ),
+                if series[:seriestype] == :shape || series[:fillrange] !== nothing
+                    lc = get_linecolor(series, clims)
+                    la = get_linealpha(series)
+                    ls = get_linestyle(series)
+                    fc = get_fillcolor(series, clims)
+                    fa = get_fillalpha(series)
+                    fs = get_fillstyle(series)
+                    has_fs = !isnothing(fs)
+
+                    # line (and potentially solid fill)
+                    line_handle = pypatches."Patch"(
+                        edgecolor = py_color(single_color(lc), la),
+                        facecolor = py_color(single_color(fc), has_fs ? 0 : fa),
+                        linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
+                        linestyle = py_linestyle(series[:seriestype], ls),
+                        capstyle = "butt",
+                    )
+
+                    # hatched fill
+                    # hatch color/alpha are controlled by edge (not face) color/alpha
+                    if has_fs
+                        fill_handle = pypatches."Patch"(
+                            edgecolor = py_color(single_color(fc), fa),
+                            facecolor = py_color(single_color(fc), 0), # don't fill with solid background
+                            hatch = py_fillstyle(fs),
+                            linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
+                            linestyle = py_linestyle(series[:seriestype], ls),
                             capstyle = "butt",
                         )
-                    elseif series[:seriestype] in
-                           (:path, :straightline, :scatter, :steppre, :stepmid, :steppost)
-                        hasline = get_linewidth(series) > 0
-                        PyPlot.plt."Line2D"(
-                            (0, 1),
-                            (0, 0),
-                            color = py_color(
-                                single_color(get_linecolor(series, clims)),
-                                get_linealpha(series),
-                            ),
-                            linewidth = py_thickness_scale(
-                                plt,
-                                hasline * sp[:legendfontsize] / 8,
-                            ),
-                            linestyle = py_linestyle(:path, get_linestyle(series)),
-                            solid_capstyle = "butt",
-                            solid_joinstyle = "miter",
-                            dash_capstyle = "butt",
-                            dash_joinstyle = "miter",
-                            marker = py_marker(_cycle(series[:markershape], 1)),
-                            markersize = py_thickness_scale(plt, 0.8 * sp[:legendfontsize]),
-                            markeredgecolor = py_color(
-                                single_color(get_markerstrokecolor(series)),
-                                get_markerstrokealpha(series),
-                            ),
-                            markerfacecolor = py_color(
-                                single_color(get_markercolor(series, clims)),
-                                get_markeralpha(series),
-                            ),
-                            markeredgewidth = py_thickness_scale(
-                                plt,
-                                0.8 * get_markerstrokewidth(series) * sp[:legendfontsize] /
-                                first(series[:markersize]),
-                            ),   # retain the markersize/markerstroke ratio from the markers on the plot
-                        )
+
+                        # plot two handles on top of each other by passing in a tuple
+                        # https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html
+                        push!(handles, (line_handle, fill_handle))
                     else
-                        series[:serieshandle][1]
-                    end,
-                )
+                        # plot line handle (which includes solid fill) only
+                        push!(handles, line_handle)
+                    end
+                elseif series[:seriestype] in
+                       (:path, :straightline, :scatter, :steppre, :stepmid, :steppost)
+                    hasline = get_linewidth(series) > 0
+                    handle = PyPlot.plt."Line2D"(
+                        (0, 1),
+                        (0, 0),
+                        color = py_color(
+                            single_color(get_linecolor(series, clims)),
+                            get_linealpha(series),
+                        ),
+                        linewidth = py_thickness_scale(
+                            plt,
+                            hasline * sp[:legendfontsize] / 8,
+                        ),
+                        linestyle = py_linestyle(:path, get_linestyle(series)),
+                        solid_capstyle = "butt",
+                        solid_joinstyle = "miter",
+                        dash_capstyle = "butt",
+                        dash_joinstyle = "miter",
+                        marker = py_marker(_cycle(series[:markershape], 1)),
+                        markersize = py_thickness_scale(plt, 0.8 * sp[:legendfontsize]),
+                        markeredgecolor = py_color(
+                            single_color(get_markerstrokecolor(series)),
+                            get_markerstrokealpha(series),
+                        ),
+                        markerfacecolor = py_color(
+                            single_color(get_markercolor(series, clims)),
+                            get_markeralpha(series),
+                        ),
+                        markeredgewidth = py_thickness_scale(
+                            plt,
+                            0.8 * get_markerstrokewidth(series) * sp[:legendfontsize] /
+                            first(series[:markersize]),
+                        ),   # retain the markersize/markerstroke ratio from the markers on the plot
+                    )
+                    push!(handles, handle)
+                else
+                    push!(handles, series[:serieshandle][1])
+                end
                 push!(labels, series[:label])
             end
         end
