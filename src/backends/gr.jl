@@ -136,6 +136,23 @@ gr_set_arrowstyle(s::Symbol) = GR.setarrowstyle(
     ),
 )
 
+gr_set_fillstyle(::Nothing) = GR.setfillintstyle(GR.INTSTYLE_SOLID)
+function gr_set_fillstyle(s::Symbol)
+    GR.setfillintstyle(GR.INTSTYLE_HATCH)
+    GR.setfillstyle(get(
+        (
+            (/) = 9,
+            (\) = 10,
+            (|) = 7,
+            (-) = 8,
+            (+) = 11,
+            (x) = 6,
+        ),
+        s,
+        9),
+    )
+end
+
 # --------------------------------------------------------------------------------------
 
 # draw line segments, splitting x/y into contiguous/finite segments
@@ -1058,7 +1075,9 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     series[:ribbon] === nothing
                 )
                     fc = get_fillcolor(series, clims)
-                    gr_set_fill(fc) #, series[:fillalpha])
+                    gr_set_fill(fc)
+                    fs = get_fillstyle(series, i)
+                    gr_set_fillstyle(fs)
                     l, r = xpos - leg.width_factor * 3.5, xpos - leg.width_factor / 2
                     b, t = ypos - 0.4 * leg.dy, ypos + 0.4 * leg.dy
                     x = [l, r, r, l, l]
@@ -1824,6 +1843,8 @@ function gr_draw_segments(series, x, y, fillrange, clims)
                 i, rng = segment.attr_index, segment.range
                 fc = get_fillcolor(series, clims, i)
                 gr_set_fillcolor(fc)
+                fs = get_fillstyle(series, i)
+                gr_set_fillstyle(fs)
                 fx = _cycle(x, vcat(rng, reverse(rng)))
                 fy = vcat(_cycle(fr_from, rng), _cycle(fr_to, reverse(rng)))
                 gr_set_transparency(fc, get_fillalpha(series, i))
@@ -1912,6 +1933,8 @@ function gr_draw_shapes(series, clims)
             # draw the interior
             fc = get_fillcolor(series, clims, i)
             gr_set_fill(fc)
+            fs = get_fillstyle(series, i)
+            gr_set_fillstyle(fs)
             gr_set_transparency(fc, get_fillalpha(series, i))
             GR.fillarea(xseg, yseg)
 

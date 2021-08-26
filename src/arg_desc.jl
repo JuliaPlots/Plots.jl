@@ -14,6 +14,7 @@ const _arg_desc = KW(
     :fillcolor          => "Color Type. Color of the filled area of path or bar types.  `:match` will take the value from `:seriescolor`.",
     :fillalpha          => "Number in [0,1]. The alpha/opacity override for the fill area.  `nothing` (the default) means it will take the alpha value of fillcolor.",
     :markershape        => "Symbol, Shape, or AbstractVector. Choose from $(_allMarkers).",
+    :fillstyle          => "Symbol. Style of the fill area. `nothing` (the default) means solid fill. Choose from :/, :\\, :|, :-, :+, :x",
     :markercolor        => "Color Type. Color of the interior of the marker or shape. `:match` will take the value from `:seriescolor`.",
     :markeralpha        => "Number in [0,1]. The alpha/opacity override for the marker interior.  `nothing` (the default) means it will take the alpha value of markercolor.",
     :markersize         => "Number or AbstractVector. Size (radius pixels) of the markers",
