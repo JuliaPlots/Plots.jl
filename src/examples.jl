@@ -1239,17 +1239,43 @@ _backend_skips = Dict(
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51, 55],
     :plotly => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55],
     :pgfplotsx => [
-        2, # animation
-        6, # images
-        16, # pgfplots thinks the upper panel is too small
-        30, # @df
-        31, # animation
-        32, # spy
-        49, # polar heatmap
-        51, # image with custom axes
+        2,  # animation
+        6,  # images
+        16,  # pgfplots thinks the upper panel is too small
+        30,  # @df
+        31,  # animation
+        32,  # spy
+        49,  # polar heatmap
+        51,  # image with custom axes
     ],
     :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55],
-    :unicodeplots => [6, 10, 22, 24, 28, 38, 43, 45, 47, 49, 50, 51, 55],
+    :unicodeplots => [
+        6,  # embedded images unsupported
+        10,  # histogram2d
+        13,  # markers unsupported
+        16,  # subplots unsupported
+        17,  # grid layout unsupported
+        20,  # annotations unsupported
+        21,  # custom markers unsupported
+        22,  # contours unsupported
+        24,  # 3D unsupported
+        26,  # subplots unsupported
+        28,  # heatmap
+        29,  # layout unsupported
+        33,  # grid lines unsupported
+        34,  # framestyles unsupported
+        37,  # ribbons / filled unsupported
+        38,  # histogram2D 
+        43,  # heatmap with DateTime
+        45,  # error bars
+        47,  # mesh3D unsupported
+        48,  # markershapes unsupported
+        49,  # polar heatmap
+        50,  # 3D surface unsupported
+        51,  # embedded images unsupported
+        52,  # 3D quiver unsupported
+        55,  # 3D unsupported
+    ],
     :gaston => [
         2,  # animations
         31,  # animations
