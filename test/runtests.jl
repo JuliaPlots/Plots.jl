@@ -12,6 +12,11 @@ using LibGit2
 import GeometryBasics
 using Dates
 using RecipesBase
+using JSON
+
+@testset "Infrastructure" begin
+    @test_nowarn JSON.Parser.parse(String(read(joinpath(dirname(pathof(Plots)), "..", ".zenodo.json"))))
+end
 
 @testset "Plotly standalone" begin
     @test_nowarn Plots._init_ijulia_plotting()
