@@ -816,7 +816,7 @@ end
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
     d = extend_by_data!(series[letter], v)
-    expand_extrema!(series[:subplot][Symbol(letter, :axis)], d)
+    expand_extrema!(series[:subplot][get_axis_attr(letter, :axis)], d)
     return d
 end
 

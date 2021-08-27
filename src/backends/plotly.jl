@@ -499,7 +499,7 @@ function plotly_close_shapes(x, y)
 end
 
 function plotly_data(series::Series, letter::Symbol, data)
-    axis = series[:subplot][Symbol(letter, :axis)]
+    axis = series[:subplot][get_axis_attr(letter, :axis)]
 
     data = if axis[:ticks] == :native && data !== nothing
         plotly_native_data(axis, data)

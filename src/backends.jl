@@ -247,7 +247,7 @@ function merge_with_base_supported(v::AVec)
     for vi in v
         if haskey(_axis_defaults, vi)
             for letter in (:x, :y, :z)
-                push!(v, Symbol(letter, vi))
+                push!(v, get_axis_attr(letter, vi))
             end
         end
     end

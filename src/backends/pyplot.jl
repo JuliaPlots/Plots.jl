@@ -827,7 +827,7 @@ end
 
 function py_set_ticks(sp, ax, ticks, letter, env)
     ticks == :auto && return
-    axis = getproperty(ax, Symbol(letter, "axis"))
+    axis = getproperty(ax, get_axis_attr(letter, "axis"))
     if ticks == :none || ticks === nothing || ticks == false
         kw = KW()
         for dir in (:top, :bottom, :left, :right)
@@ -894,7 +894,7 @@ function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
         elseif scale == :log10
             10
         end
-        axis = sp[Symbol(letter, :axis)]
+        axis = sp[get_axis_attr(letter, :axis)]
         kw[Symbol(:linthresh, pyletter)] =
             NaNMath.max(1e-16, py_compute_axis_minval(sp, axis))
         "symlog"
@@ -1193,7 +1193,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
         # axis attributes
         for letter in (:x, :y, :z)
-            axissym = Symbol(letter, :axis)
+            axissym = get_axis_attr(letter, :axis)
             PyPlot.PyCall.hasproperty(ax, axissym) || continue
             axis = sp[axissym]
             pyaxis = getproperty(ax, axissym)

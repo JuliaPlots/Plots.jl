@@ -321,7 +321,7 @@ function scalefontsizes(factor::Number)
 
     for letter in (:x, :y, :z)
         for k in keys(_initial_ax_fontsizes)
-            scalefontsize(Symbol(letter, k), factor)
+            scalefontsize(get_axis_attr(letter, k), factor)
         end
     end
 end
@@ -343,9 +343,9 @@ function scalefontsizes()
     for letter in (:x, :y, :z)
         for k in keys(_initial_ax_fontsizes)
             if k in keys(_initial_fontsizes)
-                f = default(Symbol(letter, k))
+                f = default(get_axis_attr(letter, k))
                 factor = f / _initial_fontsizes[k]
-                scalefontsize(Symbol(letter, k), 1.0 / factor)
+                scalefontsize(get_axis_attr(letter, k), 1.0 / factor)
             end
         end
     end

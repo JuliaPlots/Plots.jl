@@ -331,7 +331,7 @@ end
 # ----------------------------------------------------------------
 
 function pgf_axis(sp::Subplot, letter)
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_axis_attr(letter, :axis)]
     style = []
     kw = KW()
 
@@ -342,7 +342,7 @@ function pgf_axis(sp::Subplot, letter)
     framestyle = pgf_framestyle(sp[:framestyle])
 
     # axis guide
-    kw[Symbol(letter, :label)] = axis[:guide]
+    kw[get_axis_attr(letter, :label)] = axis[:guide]
 
     # axis label position
     labelpos = ""
@@ -378,7 +378,7 @@ function pgf_axis(sp::Subplot, letter)
     # scale
     scale = axis[:scale]
     if scale in (:log2, :ln, :log10)
-        kw[Symbol(letter, :mode)] = "log"
+        kw[get_axis_attr(letter, :mode)] = "log"
         scale == :ln || push!(style, "log basis $letter=$(scale == :log2 ? 2 : 10)")
     end
 
@@ -400,8 +400,8 @@ function pgf_axis(sp::Subplot, letter)
         lims =
             ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) :
             axis_limits(sp, letter)
-        kw[Symbol(letter, :min)] = lims[1]
-        kw[Symbol(letter, :max)] = lims[2]
+        kw[get_axis_attr(letter, :min)] = lims[1]
+        kw[get_axis_attr(letter, :max)] = lims[2]
     end
 
     if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
