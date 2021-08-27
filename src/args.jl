@@ -1004,7 +1004,7 @@ function parse_axis_kw(s::Symbol)
     s = string(s)
     for letter in ('x', 'y', 'z')
         if startswith(s, letter)
-            return (get_axis_attr(letter), Symbol(chop(s, head = 1, tail = 0)))
+            return (Symbol(letter), Symbol(chop(s, head = 1, tail = 0)))
         end
     end
     return nothing
