@@ -1905,6 +1905,8 @@ function _update_axis(
     _update_axis_links(plt, axis, letter)
     return
 end
+    
+axisattrcache = Dict{Symbol, Dict{Symbol, Symbol}}()
 
 function _update_axis(
     axis::Axis,
@@ -1922,7 +1924,18 @@ function _update_axis(
         end
 
         # then get those args that were passed with a leading letter: `xlabel = "X"`
-        lk = Symbol(letter, k)
+        lt = if haskey(axisattrcache, letter)
+                axisattrcache[letter]
+            else
+                axisattrcache[letter] = Dict{Symbol, Symbol}()
+            end
+
+        lk = if haskey(lt, k)
+                lt[k]
+            else
+                lt[k] = Symbol(letter, k)
+            end
+
         if haskey(plotattributes_in, lk)
             kw[k] = slice_arg(plotattributes_in[lk], subplot_index)
         end
