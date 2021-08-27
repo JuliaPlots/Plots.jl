@@ -573,7 +573,7 @@ reset_axis_defaults_byletter!()
 
 for letter in (:x, :y, :z), k in keys(_axis_defaults)
     # allow the underscore version too: xguide or x_guide
-    add_aliases(get_axis_attr(letter, k), get_axis_attr(letter, "_", k))
+    add_aliases(get_axis_attr(letter, k), Symbol(letter, "_", k))
 end
 
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]

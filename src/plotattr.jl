@@ -80,6 +80,7 @@ end
 
 axisattrcache = Dict{Symbol, Dict{Symbol, Symbol}}()
 
+get_axis_attr(letter, keyword::String) = get_axis_attr(letter, Symbol(keyword))
 function get_axis_attr(letter, keyword)
     lt = if haskey(axisattrcache, letter)
         axisattrcache[letter]
