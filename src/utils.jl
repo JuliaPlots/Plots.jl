@@ -1215,21 +1215,22 @@ function mesh3d_triangles(x, y, z, cns)
     return X, Y, Z
 end
 
-axisattrcache = Dict{Symbol, Dict{Symbol, Symbol}}()
+_axisattrcache = Dict{Symbol, Dict{Symbol, Symbol}}()
 
-get_axis_attr(letter, keyword::String) = get_axis_attr(letter, Symbol(keyword))
-function get_axis_attr(letter, keyword)
-    lt = if haskey(axisattrcache, letter)
-        axisattrcache[letter]
+get_axis_attr(letter::Symbol, keyword::String) = get_axis_attr(letter, Symbol(keyword))
+                                                
+function get_axis_attr(letter::Symbol, keyword::Symbol)
+    lt = if haskey(_axisattrcache, letter)
+        _axisattrcache[letter]
     else
-        axisattrcache[letter] = Dict{Symbol, Symbol}()
+        _axisattrcache[letter] = Dict{Symbol, Symbol}()
     end
 
     lk = if haskey(lt, keyword)
-            lt[keyword]
-        else
-            lt[keyword] = Symbol(letter, keyword)
-        end
+        lt[keyword]
+    else
+        lt[keyword] = Symbol(letter, keyword)
+    end
 
     return lk
 end
