@@ -32,6 +32,7 @@ StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 
 [targets]
-test = ["Distributions", "FileIO", "GeometryBasics", "Images", "ImageMagick", "OffsetArrays", "Plots", "Random", "RDatasets", "SparseArrays", "StaticArrays", "Statistics", "StatsPlots", "Test", "TestImages", "LinearAlgebra"]
+test = ["Distributions", "FileIO", "GeometryBasics", "Images", "ImageMagick", "OffsetArrays", "Plots", "Random", "RDatasets", "SparseArrays", "StaticArrays", "Statistics", "StatsPlots", "Test", "TestImages", "LinearAlgebra", "Downloads"]
