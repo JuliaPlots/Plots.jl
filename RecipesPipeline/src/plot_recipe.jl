@@ -1,4 +1,4 @@
-# # Plot Recipes
+# Plot Recipes
 
 @nospecialize
 
@@ -27,29 +27,20 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
         push!(kw_list, kw)
         return
     end
-    try
-        st = kw[:seriestype]
-        st = kw[:seriestype] = type_alias(plt, st)
-        datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
-        if !isnothing(datalist)
-            warn_on_recipe_aliases!(plt, datalist, :plot, st)
-            for data in datalist
-                preprocess_attributes!(plt, data.plotattributes)
-                if data.plotattributes[:seriestype] == st
-                    error("Plot recipe $st returned the same seriestype: $(data.plotattributes)")
-                end
-                push!(still_to_process, data.plotattributes)
+    st = kw[:seriestype]
+    st = kw[:seriestype] = type_alias(plt, st)
+    datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
+    if !isnothing(datalist)
+        warn_on_recipe_aliases!(plt, datalist, :plot, st)
+        for data in datalist
+            preprocess_attributes!(plt, data.plotattributes)
+            if data.plotattributes[:seriestype] == st
+                error("Plot recipe $st returned the same seriestype: $(data.plotattributes)")
             end
-        else
-            push!(kw_list, kw)
+            push!(still_to_process, data.plotattributes)
         end
-    catch err
-        # the try/catch block can be removed when Plots.jl makes the compensating change
-        if err isa MethodError && occursin("plot recipe", err.args)
-            push!(kw_list, kw)
-        else
-            rethrow()
-        end
+    else
+        push!(kw_list, kw)
     end
     return
 end
