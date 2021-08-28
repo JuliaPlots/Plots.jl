@@ -1215,7 +1215,7 @@ function mesh3d_triangles(x, y, z, cns)
     return X, Y, Z
 end
 
-_axisattrcache = Dict{Symbol, Dict{Symbol, Symbol}}()
+const _axisattrcache = Dict{Symbol, Dict{Symbol, Symbol}}()
 
 get_axis_attr(letter::Symbol, keyword::String) = get_axis_attr(letter, Symbol(keyword))
                                                 
