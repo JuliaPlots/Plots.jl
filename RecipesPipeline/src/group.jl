@@ -8,15 +8,19 @@ end
 
 # this is when given a vector-type of values to group by
 function _extract_group_attributes(v::AVec, args...; legend_entry = string)
-    group_labels = collect(unique(sort(v)))
-    n = length(group_labels)
-    if n > 100
-        @warn("You created n=$n groups... Is that intended?")
+    res = Dict{eltype(v),Vector{Int}}()
+    for (i,label) in enumerate(v)
+        if haskey(res,label)
+            push!(res[label],i)
+        else
+            res[label] = [i]
+        end
     end
-    group_indices = Vector{Int}[filter(i -> v[i] == glab, eachindex(v)) for glab in group_labels]
+    group_labels = sort(collect(keys(res)))
+    group_indices = [res[i] for i in group_labels]
+    
     GroupBy(map(legend_entry, group_labels), group_indices)
 end
-
 legend_entry_from_tuple(ns::Tuple) = join(ns, ' ')
 
 # this is when given a tuple of vectors of values to group by

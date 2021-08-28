@@ -22,11 +22,14 @@ using TestImages
     # @testset "Makie integration" begin cd(makie_test_dir) do
     #     include("makie.jl")
     # end end
-    @testset "Plots tests" begin
-    for i in eachindex(Plots._examples)
-        if i ∉ Plots._backend_skips[:gr]
-            @test Plots.test_examples(:gr, i, disp=false) isa Plots.Plot
+    @testset "Plots" begin
+        for i in eachindex(Plots._examples)
+            if i ∉ Plots._backend_skips[:gr]
+                @test Plots.test_examples(:gr, i, disp=false) isa Plots.Plot
+            end
         end
     end
+    @testset "Group" begin
+        include("test_group.jl")
     end
 end
