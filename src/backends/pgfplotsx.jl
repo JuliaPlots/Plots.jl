@@ -1174,6 +1174,12 @@ function pgfx_sanitize_plot!(plt)
                 end
             elseif value isa Union{AbstractString,AbstractVector{<:AbstractString}}
                 subplot.attr[key] = pgfx_sanitize_string.(value)
+            elseif value isa Axis
+                for (k, v) in value.plotattributes
+                    if v isa Union{AbstractString,AbstractVector{<:AbstractString}}
+                        value.plotattributes[k] = pgfx_sanitize_string.(v)
+                    end
+                end
             end
         end
     end
