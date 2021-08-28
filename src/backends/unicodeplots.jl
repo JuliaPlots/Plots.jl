@@ -111,7 +111,7 @@ function addUnicodeSeries!(sp::Subplot{UnicodePlotsBackend}, o, series, addlegen
     lc = attrs[:linecolor]
     if typeof(lc) <: UnicodePlots.UserColorType
         color = lc
-    elseif lc <: RGBA
+    elseif typeof(lc) <: RGBA
         lc = convert(ARGB32, lc)
         color = map(Int, (red(lc).i, green(lc).i, blue(lc).i))
     else
