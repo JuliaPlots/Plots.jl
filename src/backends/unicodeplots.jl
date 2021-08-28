@@ -7,11 +7,13 @@ warn_on_unsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing
 # --------------------------------------------------------------------------------------
 
 _canvas_map() = (
-    braille = UnicodePlots.BrailleCanvas,
     ascii = UnicodePlots.AsciiCanvas,
     block = UnicodePlots.BlockCanvas,
-    dot = UnicodePlots.DotCanvas,
+    braille = UnicodePlots.BrailleCanvas,
     density = UnicodePlots.DensityCanvas,
+    dot = UnicodePlots.DotCanvas,
+    heatmap = UnicodePlots.HeatmapCanvas,
+    lookup = UnicodePlots.LookupCanvas,
 )
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
@@ -41,29 +43,6 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
             _canvas_map()[ct]
         end
 
-        # special handling for spy
-        if length(sp.series_list) == 1
-            series = sp.series_list[1]
-            if series[:seriestype] == :spy
-                push!(
-                    plt.o,
-                    UnicodePlots.spy(
-                        series[:z].surf,
-                        width = width,
-                        height = height,
-                        title = sp[:title],
-                        canvas = canvas_type,
-                    ),
-                )
-                continue
-            end
-        end
-
-        # # make it a bar canvas if plotting bar
-        # if any(series -> series[:seriestype] == :bar, series_list(sp))
-        #     canvas_type = UnicodePlots.BarplotGraphics
-        # end
-
         o = UnicodePlots.Plot(
             x,
             y,
@@ -75,14 +54,12 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
             ylim = ylim,
             border = isijulia() ? :ascii : :solid,
         )
-
         # set the axis labels
         UnicodePlots.xlabel!(o, xaxis[:guide])
         UnicodePlots.ylabel!(o, yaxis[:guide])
 
-        # now use the ! functions to add to the plot
         for series in series_list(sp)
-            addUnicodeSeries!(o, series.plotattributes, sp[:legend] != :none, xlim, ylim)
+            o = addUnicodeSeries!(sp, o, series, sp[:legend] != :none, xlim, ylim)
         end
 
         # save the object
@@ -91,40 +68,50 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
 end
 
 # add a single series
-function addUnicodeSeries!(o, plotattributes, addlegend::Bool, xlim, ylim)
-    # get the function, or special handling for step/bar/hist
-    st = plotattributes[:seriestype]
+function addUnicodeSeries!(sp::Subplot{UnicodePlotsBackend}, o, series, addlegend::Bool, xlim, ylim)
+    attrs = series.plotattributes
+    st = attrs[:seriestype]
+
+    # special handling
     if st == :histogram2d
-        UnicodePlots.densityplot!(o, plotattributes[:x], plotattributes[:y])
-        return
+        return UnicodePlots.densityplot!(o, attrs[:x], attrs[:y])
+    elseif st == :heatmap
+        rng = range(0, 1, length=length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
+        cmap = [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
+        return UnicodePlots.heatmap(
+            series[:z].surf; title = sp[:title], zlabel = sp[:colorbar_title], colormap = cmap
+        )
+    elseif st == :spy
+        return UnicodePlots.spy(series[:z].surf; title = sp[:title])
     end
 
+    # now use the ! functions to add to the plot
     if st in (:path, :straightline)
         func = UnicodePlots.lineplot!
-    elseif st == :scatter || plotattributes[:markershape] != :none
+    elseif st == :scatter || attrs[:markershape] != :none
         func = UnicodePlots.scatterplot!
-        # elseif st == :bar
-        #     func = UnicodePlots.barplot!
+    # elseif st == :bar
+    #     func = UnicodePlots.barplot!
     elseif st == :shape
         func = UnicodePlots.lineplot!
     else
-        error("Linestyle $st not supported by UnicodePlots")
+        error("Series type $st not supported by UnicodePlots")
     end
 
     # get the series data and label
     x, y = if st == :straightline
-        straightline_data(plotattributes)
+        straightline_data(attrs)
     elseif st == :shape
-        shape_data(plotattributes)
+        shape_data(attrs)
     else
-        [collect(float(plotattributes[s])) for s in (:x, :y)]
+        [collect(float(attrs[s])) for s in (:x, :y)]
     end
-    label = addlegend ? plotattributes[:label] : ""
+    label = addlegend ? attrs[:label] : ""
 
-    lc = plotattributes[:linecolor]
+    lc = attrs[:linecolor]
     if typeof(lc) <: UnicodePlots.UserColorType
         color = lc
-    elseif lc isa RGBA{Float64}
+    elseif typeof(lc) <: RGBA
         lc = convert(ARGB32, lc)
         color = map(Int, (red(lc).i, green(lc).i, blue(lc).i))
     else
@@ -141,15 +128,14 @@ end
 # -------------------------------
 
 # since this is such a hack, it's only callable using `png`... should error during normal `show`
-function png(plt::AbstractPlot{UnicodePlotsBackend}, fn::AbstractString)
+function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
     fn = addExtension(fn, "png")
 
-    # make some whitespace and show the plot
-    println("\n\n\n\n\n\n")
-    gui(plt)
-
-    # @osx_only begin
     @static if Sys.isapple()
+        # make some whitespace and show the plot
+        println("\n\n\n\n\n\n")
+        gui(plt)
+
         # BEGIN HACK
 
         # wait while the plot gets drawn
@@ -161,9 +147,14 @@ function png(plt::AbstractPlot{UnicodePlotsBackend}, fn::AbstractString)
 
         # END HACK (phew)
         return
+    elseif Sys.islinux()
+        run(`clear`)
+        gui(plt); println()
+        run(`import -window $(ENV["WINDOWID"]) $fn`)
+        return
     end
 
-    error("Can only savepng on osx with UnicodePlots (though even then I wouldn't do it)")
+    error("Can only savepng on MacOS or Linux with UnicodePlots (though even then I wouldn't do it)")
 end
 
 # -------------------------------

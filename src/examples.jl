@@ -1260,7 +1260,6 @@ _backend_skips = Dict(
         22,  # contours unsupported
         24,  # 3D unsupported
         26,  # subplots unsupported
-        28,  # heatmap
         29,  # layout unsupported
         33,  # grid lines unsupported
         34,  # framestyles unsupported
