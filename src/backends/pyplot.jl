@@ -795,7 +795,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 edgecolor = py_color(fc, has_fs ? fa : la),
                 facecolor = py_color(fc, has_fs ? 0 : fa),
                 hatch = py_fillstyle(fs),
-                linewidths = 0
+                linewidths = 0,
             )
             push!(handles, handle)
         end
@@ -1499,7 +1499,10 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     line_handle = pypatches."Patch"(
                         edgecolor = py_color(single_color(lc), la),
                         facecolor = py_color(single_color(fc), has_fs ? 0 : fa),
-                        linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
+                        linewidth = py_thickness_scale(
+                            plt,
+                            clamp(get_linewidth(series), 0, 5),
+                        ),
                         linestyle = py_linestyle(series[:seriestype], ls),
                         capstyle = "butt",
                     )

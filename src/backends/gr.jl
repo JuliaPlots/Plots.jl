@@ -139,18 +139,7 @@ gr_set_arrowstyle(s::Symbol) = GR.setarrowstyle(
 gr_set_fillstyle(::Nothing) = GR.setfillintstyle(GR.INTSTYLE_SOLID)
 function gr_set_fillstyle(s::Symbol)
     GR.setfillintstyle(GR.INTSTYLE_HATCH)
-    GR.setfillstyle(get(
-        (
-            (/) = 9,
-            (\) = 10,
-            (|) = 7,
-            (-) = 8,
-            (+) = 11,
-            (x) = 6,
-        ),
-        s,
-        9),
-    )
+    GR.setfillstyle(get(((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6), s, 9))
 end
 
 # --------------------------------------------------------------------------------------

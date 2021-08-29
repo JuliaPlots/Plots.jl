@@ -15,7 +15,9 @@ using RecipesBase
 using JSON
 
 @testset "Infrastructure" begin
-    @test_nowarn JSON.Parser.parse(String(read(joinpath(dirname(pathof(Plots)), "..", ".zenodo.json"))))
+    @test_nowarn JSON.Parser.parse(
+        String(read(joinpath(dirname(pathof(Plots)), "..", ".zenodo.json"))),
+    )
 end
 
 @testset "Plotly standalone" begin
