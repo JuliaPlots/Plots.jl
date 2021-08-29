@@ -672,16 +672,38 @@ end
 function gr_set_tickfont(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
 
-    # invalidate alignment changes for small rotations (|θ| < 45°)
-    trigger(rot) = abs(sind(rot)) < abs(cosd(rot)) ? 0 : sign(rot)
-
-    rot = axis[:rotation]
+    rot = axis[:rotation] % 360
     if letter === :x || (RecipesPipeline.is3d(sp) && letter === :y)
-        halign = (:left, :hcenter, :right)[trigger(rot) + 2]
-        valign = (axis[:mirror] ? :bottom : :top, :vcenter)[trigger(abs(rot)) + 1]
+        valign = if -90 < rot < 90 || rot < -270 || rot > 270
+                    axis[:mirror] ? :bottom : :top
+                elseif abs(rot) % 90 == 0 # -270, -90, 90, 270
+                    :vcenter
+                else
+                    axis[:mirror] ? :top : :bottom
+                end
+        halign = if abs(rot) % 180 == 0 # -180, 0, 180
+                    :hcenter
+                elseif 0 < rot < 180 || -360 < rot < -180
+                    axis[:mirror] ? :left : :right
+                else # 180 < rot < 360 || -180 < rot < 0
+                    axis[:mirror] ? :right : :left
+                end
     else
-        halign = (axis[:mirror] ? :left : :right, :hcenter)[trigger(abs(rot)) + 1]
-        valign = (:top, :vcenter, :bottom)[trigger(rot) + 2]
+        valign = if rot % 180 == 0
+                    :vcenter
+                elseif 0 < rot < 180 || -360 < rot < -180
+                    axis[:mirror] ? :top : :bottom
+                else # rot < 0
+                    axis[:mirror] ? :bottom : :top
+                end
+
+        halign = if -90 < rot < 90 || rot < -270 || rot > 270
+                    axis[:mirror] ? :left : :right
+                elseif abs(rot) == 90 || abs(rot) == 270
+                    :hcenter
+                else # 90 < rot < 270; -270 < rot < -90
+                    axis[:mirror] ? :right : :left
+                end
     end
     gr_set_font(
         tickfont(axis),
