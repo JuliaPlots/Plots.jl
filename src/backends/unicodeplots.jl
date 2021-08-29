@@ -68,7 +68,14 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
 end
 
 # add a single series
-function addUnicodeSeries!(sp::Subplot{UnicodePlotsBackend}, o, series, addlegend::Bool, xlim, ylim)
+function addUnicodeSeries!(
+    sp::Subplot{UnicodePlotsBackend},
+    o,
+    series,
+    addlegend::Bool,
+    xlim,
+    ylim,
+)
     attrs = series.plotattributes
     st = attrs[:seriestype]
 
@@ -76,10 +83,13 @@ function addUnicodeSeries!(sp::Subplot{UnicodePlotsBackend}, o, series, addlegen
     if st == :histogram2d
         return UnicodePlots.densityplot!(o, attrs[:x], attrs[:y])
     elseif st == :heatmap
-        rng = range(0, 1, length=length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
+        rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
         cmap = [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
         return UnicodePlots.heatmap(
-            series[:z].surf; title = sp[:title], zlabel = sp[:colorbar_title], colormap = cmap
+            series[:z].surf;
+            title = sp[:title],
+            zlabel = sp[:colorbar_title],
+            colormap = cmap,
         )
     elseif st == :spy
         return UnicodePlots.spy(series[:z].surf; title = sp[:title])
@@ -90,8 +100,8 @@ function addUnicodeSeries!(sp::Subplot{UnicodePlotsBackend}, o, series, addlegen
         func = UnicodePlots.lineplot!
     elseif st == :scatter || attrs[:markershape] != :none
         func = UnicodePlots.scatterplot!
-    # elseif st == :bar
-    #     func = UnicodePlots.barplot!
+        # elseif st == :bar
+        #     func = UnicodePlots.barplot!
     elseif st == :shape
         func = UnicodePlots.lineplot!
     else
@@ -149,12 +159,15 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
         return
     elseif Sys.islinux()
         run(`clear`)
-        gui(plt); println()
+        gui(plt)
+        println()
         run(`import -window $(ENV["WINDOWID"]) $fn`)
         return
     end
 
-    error("Can only savepng on MacOS or Linux with UnicodePlots (though even then I wouldn't do it)")
+    error(
+        "Can only savepng on MacOS or Linux with UnicodePlots (though even then I wouldn't do it)",
+    )
 end
 
 # -------------------------------

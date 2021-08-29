@@ -1238,7 +1238,11 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         opt,
         string(letter, "label style") => PGFPlotsX.Options(
             labelpos => nothing,
-            "at" => string("{(ticklabel cs:", get((left = 0, right = 1), axis[:guidefonthalign], 0.5),")}"),
+            "at" => string(
+                "{(ticklabel cs:",
+                get((left = 0, right = 1), axis[:guidefonthalign], 0.5),
+                ")}",
+            ),
             "anchor" => "near ticklabel",
             "font" => pgfx_font(axis[:guidefontsize], pgfx_thickness_scaling(sp)),
             "color" => cstr,
@@ -1300,10 +1304,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
                         string("{\$", join(tick_labels, "\$,\$"), "\$}"),
                 )
             elseif tick_labels isa Vector{LaTeXString}
-                push!(
-                    opt,
-                    string(letter, "ticklabels") => join(tick_labels)
-                )
+                push!(opt, string(letter, "ticklabels") => join(tick_labels))
             end
         elseif axis[:showaxis]
             tick_labels =
