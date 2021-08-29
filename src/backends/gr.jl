@@ -681,6 +681,7 @@ function gr_set_tickfont(sp, letter)
                 else
                     axis[:mirror] ? :top : :bottom
                 end
+                
         halign = if abs(rot) % 180 == 0 # -180, 0, 180
                     :hcenter
                 elseif 0 < rot < 180 || -360 < rot < -180
