@@ -1567,7 +1567,7 @@ function gr_label_ticks(sp, letter, ticks)
     axis = sp[get_axis_attr(letter, :axis)]
     isy = letter === :y
     oletter = isy ? :x : :y
-    oaxis = sp[Symbol(oletter, :axis)]
+    oaxis = sp[get_axis_attr(oletter, :axis)]
     oamin, oamax = axis_limits(sp, oletter)
     gr_set_tickfont(sp, letter)
     out_factor = ifelse(axis[:tick_direction] === :out, 1.5, 1)
@@ -1589,8 +1589,8 @@ function gr_label_ticks_3d(sp, letter, ticks)
     far_letter = letter in (:x, :y) ? :z : :x
 
     ax = sp[get_axis_attr(letter, :axis)]
-    nax = sp[Symbol(near_letter, :axis)]
-    fax = sp[Symbol(far_letter, :axis)]
+    nax = sp[get_axis_attr(near_letter, :axis)]
+    fax = sp[get_axis_attr(far_letter, :axis)]
 
     amin, amax = axis_limits(sp, letter)
     namin, namax = axis_limits(sp, near_letter)
@@ -1600,7 +1600,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     # find out which axes we are dealing with
     i = findfirst(==(letter), (:x, :y, :z))
     letters = axes_shift((:x, :y, :z), 1 - i)
-    asyms = Symbol.(letters, :axis)
+    asyms = get_axis_attr.(letters, :axis)
 
     # get axis objects, ticks and minor ticks
     # regardless of the `letter` we now use the convention that `x` in variable names refer to

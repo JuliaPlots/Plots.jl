@@ -922,7 +922,7 @@ end
 
 function py_set_axis_colors(sp, ax, a::Axis)
     py_set_spine_color(ax.spines, py_color(a[:foreground_color_border]))
-    axissym = Symbol(a[:letter], :axis)
+    axissym = get_axis_attr(a[:letter], :axis)
     if PyPlot.PyCall.hasproperty(ax, axissym)
         tickcolor =
             sp[:framestyle] in (:zerolines, :grid) ?

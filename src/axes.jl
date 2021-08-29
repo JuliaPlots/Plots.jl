@@ -297,7 +297,7 @@ for l in (:x, :y, :z)
     end
 end
 # get_ticks from axis symbol :x, :y, or :z
-get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[Symbol(s, :axis)])
+get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_axis_attr(s, :axis)])
 get_ticks(p::Plot, s::Symbol) = [get_ticks(sp, s) for sp in p.subplots]
 
 function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T}
@@ -393,7 +393,7 @@ end
 
 function reset_extrema!(sp::Subplot)
     for asym in (:x, :y, :z)
-        sp[Symbol(asym, :axis)][:extrema] = Extrema()
+        sp[get_axis_attr(asym, :axis)][:extrema] = Extrema()
     end
     for series in sp.series_list
         expand_extrema!(sp, series.plotattributes)
@@ -502,7 +502,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
                 plotattributes[:bar_width] =
                     _bar_width * ignorenan_minimum(filter(x -> x > 0, diff(sort(data))))
         end
-        axis = sp.attr[Symbol(dsym, :axis)]
+        axis = sp.attr[get_axis_attr(dsym, :axis)]
         expand_extrema!(axis, ignorenan_maximum(data) + 0.5maximum(bw))
         expand_extrema!(axis, ignorenan_minimum(data) - 0.5minimum(bw))
     end
@@ -727,7 +727,7 @@ function axis_drawing_info(sp, letter)
     asym = get_axis_attr(letter, :axis)
     isy = letter === :y
     oletter = isy ? :x : :y
-    oasym = Symbol(oletter, :axis)
+    oasym = get_axis_attr(oletter, :axis)
 
     # get axis objects, ticks and minor ticks
     ax, oax = sp[asym], sp[oasym]
@@ -857,8 +857,8 @@ function axis_drawing_info_3d(sp, letter)
     far_letter = letter in (:x, :y) ? :z : :x
 
     ax = sp[get_axis_attr(letter, :axis)]
-    nax = sp[Symbol(near_letter, :axis)]
-    fax = sp[Symbol(far_letter, :axis)]
+    nax = sp[get_axis_attr(near_letter, :axis)]
+    fax = sp[get_axis_attr(far_letter, :axis)]
 
     amin, amax = axis_limits(sp, letter)
     namin, namax = axis_limits(sp, near_letter)
