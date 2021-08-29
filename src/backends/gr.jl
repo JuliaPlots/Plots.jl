@@ -1686,8 +1686,8 @@ function gr_label_axis_3d(sp, letter)
         near_letter = letter in (:x, :z) ? :y : :x
         far_letter = letter in (:x, :y) ? :z : :x
 
-        nax = sp[Symbol(near_letter, :axis)]
-        fax = sp[Symbol(far_letter, :axis)]
+        nax = sp[get_axis_attr(near_letter, :axis)]
+        fax = sp[get_axis_attr(far_letter, :axis)]
 
         amin, amax = axis_limits(sp, letter)
         namin, namax = axis_limits(sp, near_letter)
