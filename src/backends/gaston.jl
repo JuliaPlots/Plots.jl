@@ -369,7 +369,7 @@ function gaston_parse_axes_args(
 
     for letter in (:x, :y, :z)
         (letter == :z && dims == 2) && continue
-        axis = sp.attr[get_axis_attr(letter, :axis)]
+        axis = sp.attr[get_attr_symbol(letter, :axis)]
         # label names
         push!(
             axesconf,

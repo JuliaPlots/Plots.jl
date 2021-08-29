@@ -816,7 +816,7 @@ end
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
     d = extend_by_data!(series[letter], v)
-    expand_extrema!(series[:subplot][get_axis_attr(letter, :axis)], d)
+    expand_extrema!(series[:subplot][get_attr_symbol(letter, :axis)], d)
     return d
 end
 
@@ -1215,15 +1215,15 @@ function mesh3d_triangles(x, y, z, cns)
     return X, Y, Z
 end
 
-const _axisattrcache = Dict{Symbol, Dict{Symbol, Symbol}}()
+const _attrsymbolcache = Dict{Symbol, Dict{Symbol, Symbol}}()
 
-get_axis_attr(letter::Symbol, keyword::String) = get_axis_attr(letter, Symbol(keyword))
+get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
                                                 
-function get_axis_attr(letter::Symbol, keyword::Symbol)
-    lt = if haskey(_axisattrcache, letter)
-        _axisattrcache[letter]
+function get_attr_symbol(letter::Symbol, keyword::Symbol)
+    lt = if haskey(_attrsymbolcache, letter)
+        _attrsymbolcache[letter]
     else
-        _axisattrcache[letter] = Dict{Symbol, Symbol}()
+        _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
     end
 
     lk = if haskey(lt, keyword)

@@ -276,7 +276,7 @@ function hasgrid(arg::Symbol, letter)
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
         @warn(
-            "Unknown grid argument $arg; $(get_axis_attr(letter, :grid)) was set to `true` instead."
+            "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
         )
         true
     end
@@ -316,7 +316,7 @@ function showaxis(arg::Symbol, letter)
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
         @warn(
-            "Unknown showaxis argument $arg; $(get_axis_attr(letter, :showaxis)) was set to `true` instead."
+            "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
         )
         true
     end
@@ -573,7 +573,7 @@ reset_axis_defaults_byletter!()
 
 for letter in (:x, :y, :z), k in keys(_axis_defaults)
     # allow the underscore version too: xguide or x_guide
-    add_aliases(get_axis_attr(letter, k), Symbol(letter, "_", k))
+    add_aliases(get_attr_symbol(letter, k), Symbol(letter, "_", k))
 end
 
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
@@ -1216,69 +1216,69 @@ end
 
 function processGridArg!(plotattributes::AKW, arg, letter)
     if arg in _allGridArgs || isa(arg, Bool)
-        plotattributes[get_axis_attr(letter, :grid)] = hasgrid(arg, letter)
+        plotattributes[get_attr_symbol(letter, :grid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
-        plotattributes[get_axis_attr(letter, :gridstyle)] = arg
+        plotattributes[get_attr_symbol(letter, :gridstyle)] = arg
 
     elseif typeof(arg) <: Stroke
         arg.width === nothing ||
-            (plotattributes[get_axis_attr(letter, :gridlinewidth)] = arg.width)
+            (plotattributes[get_attr_symbol(letter, :gridlinewidth)] = arg.width)
         arg.color === nothing || (
-            plotattributes[get_axis_attr(letter, :foreground_color_grid)] =
+            plotattributes[get_attr_symbol(letter, :foreground_color_grid)] =
                 arg.color in (:auto, :match) ? :match : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[get_axis_attr(letter, :gridalpha)] = arg.alpha)
-        arg.style === nothing || (plotattributes[get_axis_attr(letter, :gridstyle)] = arg.style)
+        arg.alpha === nothing || (plotattributes[get_attr_symbol(letter, :gridalpha)] = arg.alpha)
+        arg.style === nothing || (plotattributes[get_attr_symbol(letter, :gridstyle)] = arg.style)
 
         # linealpha
     elseif allAlphas(arg)
-        plotattributes[get_axis_attr(letter, :gridalpha)] = arg
+        plotattributes[get_attr_symbol(letter, :gridalpha)] = arg
 
         # linewidth
     elseif allReals(arg)
-        plotattributes[get_axis_attr(letter, :gridlinewidth)] = arg
+        plotattributes[get_attr_symbol(letter, :gridlinewidth)] = arg
 
         # color
-    elseif !handleColors!(plotattributes, arg, get_axis_attr(letter, :foreground_color_grid))
+    elseif !handleColors!(plotattributes, arg, get_attr_symbol(letter, :foreground_color_grid))
         @warn("Skipped grid arg $arg.")
     end
 end
 
 function processMinorGridArg!(plotattributes::AKW, arg, letter)
     if arg in _allGridArgs || isa(arg, Bool)
-        plotattributes[get_axis_attr(letter, :minorgrid)] = hasgrid(arg, letter)
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
-        plotattributes[get_axis_attr(letter, :minorgridstyle)] = arg
-        plotattributes[get_axis_attr(letter, :minorgrid)] = true
+        plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
     elseif typeof(arg) <: Stroke
         arg.width === nothing ||
-            (plotattributes[get_axis_attr(letter, :minorgridlinewidth)] = arg.width)
+            (plotattributes[get_attr_symbol(letter, :minorgridlinewidth)] = arg.width)
         arg.color === nothing || (
-            plotattributes[get_axis_attr(letter, :foreground_color_minor_grid)] =
+            plotattributes[get_attr_symbol(letter, :foreground_color_minor_grid)] =
                 arg.color in (:auto, :match) ? :match : plot_color(arg.color)
         )
         arg.alpha === nothing ||
-            (plotattributes[get_axis_attr(letter, :minorgridalpha)] = arg.alpha)
+            (plotattributes[get_attr_symbol(letter, :minorgridalpha)] = arg.alpha)
         arg.style === nothing ||
-            (plotattributes[get_axis_attr(letter, :minorgridstyle)] = arg.style)
-        plotattributes[get_axis_attr(letter, :minorgrid)] = true
+            (plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg.style)
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
         # linealpha
     elseif allAlphas(arg)
-        plotattributes[get_axis_attr(letter, :minorgridalpha)] = arg
-        plotattributes[get_axis_attr(letter, :minorgrid)] = true
+        plotattributes[get_attr_symbol(letter, :minorgridalpha)] = arg
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
         # linewidth
     elseif allReals(arg)
-        plotattributes[get_axis_attr(letter, :minorgridlinewidth)] = arg
-        plotattributes[get_axis_attr(letter, :minorgrid)] = true
+        plotattributes[get_attr_symbol(letter, :minorgridlinewidth)] = arg
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
         # color
-    elseif handleColors!(plotattributes, arg, get_axis_attr(letter, :foreground_color_minor_grid))
-        plotattributes[get_axis_attr(letter, :minorgrid)] = true
+    elseif handleColors!(plotattributes, arg, get_attr_symbol(letter, :foreground_color_minor_grid))
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
     else
         @warn("Skipped grid arg $arg.")
     end
@@ -1344,7 +1344,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
     # handle axis args
     for letter in (:x, :y, :z)
-        asym = get_axis_attr(letter, :axis)
+        asym = get_attr_symbol(letter, :axis)
         args = RecipesPipeline.pop_kw!(plotattributes, asym, ())
         if !(typeof(args) <: Axis)
             for arg in wraptuple(args)
@@ -1371,7 +1371,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
     # handle individual axes grid args
     for letter in (:x, :y, :z)
-        gridsym = get_axis_attr(letter, :grid)
+        gridsym = get_attr_symbol(letter, :grid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
             processGridArg!(plotattributes, arg, letter)
@@ -1386,7 +1386,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
     # handle individual axes grid args
     for letter in (:x, :y, :z)
-        gridsym = get_axis_attr(letter, :minorgrid)
+        gridsym = get_attr_symbol(letter, :minorgrid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
             processMinorGridArg!(plotattributes, arg, letter)
@@ -1397,16 +1397,16 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             for letter in (:x, :y, :z)
-                processFontArg!(plotattributes, get_axis_attr(letter, fontname), arg)
+                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
             end
         end
     end
     # handle individual axes font args
     for letter in (:x, :y, :z)
         for fontname in (:tickfont, :guidefont)
-            args = RecipesPipeline.pop_kw!(plotattributes, get_axis_attr(letter, fontname), ())
+            args = RecipesPipeline.pop_kw!(plotattributes, get_attr_symbol(letter, fontname), ())
             for arg in wraptuple(args)
-                processFontArg!(plotattributes, get_axis_attr(letter, fontname), arg)
+                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
             end
         end
     end
@@ -1415,7 +1415,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         if haskey(plotattributes, k) && k !== :link
             v = plotattributes[k]
             for letter in (:x, :y, :z)
-                lk = get_axis_attr(letter, k)
+                lk = get_attr_symbol(letter, k)
                 if !is_explicit(plotattributes, lk)
                     plotattributes[lk] = v
                 end
@@ -1922,7 +1922,7 @@ function _update_axis(
         end
 
         # then get those args that were passed with a leading letter: `xlabel = "X"`
-        lk = get_axis_attr(letter, k)
+        lk = get_attr_symbol(letter, k)
 
         if haskey(plotattributes_in, lk)
             kw[k] = slice_arg(plotattributes_in[lk], subplot_index)
@@ -1980,7 +1980,7 @@ function _update_subplot_args(
     lims_warned = false
     for letter in (:x, :y, :z)
         _update_axis(plt, sp, plotattributes_in, letter, subplot_index)
-        lk = get_axis_attr(letter, :lims)
+        lk = get_attr_symbol(letter, :lims)
 
         # warn against using `Range` in x,y,z lims
         if !lims_warned &&
