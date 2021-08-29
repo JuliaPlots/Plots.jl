@@ -831,7 +831,7 @@ function py_set_ticks(sp, ax, ticks, letter, env)
     if ticks == :none || ticks === nothing || ticks == false
         kw = KW()
         for dir in (:top, :bottom, :left, :right)
-            kw[dir] = kw[Symbol(:label, dir)] = false
+            kw[dir] = kw[get_axis_attr(:label, dir)] = false
         end
         axis."set_tick_params"(; which = "both", kw...)
         return
@@ -887,7 +887,7 @@ function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     arg = if scale == :identity
         "linear"
     else
-        kw[Symbol(:base, pyletter)] = if scale == :ln
+        kw[get_axis_attr(:base, pyletter)] = if scale == :ln
             ℯ
         elseif scale == :log2
             2
@@ -895,7 +895,7 @@ function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
             10
         end
         axis = sp[get_axis_attr(letter, :axis)]
-        kw[Symbol(:linthresh, pyletter)] =
+        kw[get_axis_attr(:linthresh, pyletter)] =
             NaNMath.max(1e-16, py_compute_axis_minval(sp, axis))
         "symlog"
     end
@@ -1327,7 +1327,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 if !ispolar(sp)
                     ax.spines[string(dir)].set_visible(false)
                 end
-                kw[dir] = kw[Symbol(:label, dir)] = false
+                kw[dir] = kw[get_axis_attr(:label, dir)] = false
             end
             ax."xaxis"."set_tick_params"(; which = "both", kw...)
         end
@@ -1337,7 +1337,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 if !ispolar(sp)
                     ax.spines[string(dir)].set_visible(false)
                 end
-                kw[dir] = kw[Symbol(:label, dir)] = false
+                kw[dir] = kw[get_axis_attr(:label, dir)] = false
             end
             ax."yaxis"."set_tick_params"(; which = "both", kw...)
         end
