@@ -169,7 +169,11 @@ end
 
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
-    foreach(x -> (show(io, x); println(io)), plt.o)
+    n = length(plt.o)
+    for (i, p) in enumerate(plt.o)
+        show(io, p)
+        i < n && println(io)
+    end
     nothing
 end
 
