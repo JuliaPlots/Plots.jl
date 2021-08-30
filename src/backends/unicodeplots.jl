@@ -17,8 +17,8 @@ _canvas_map() = (
 )
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
-function rebuildUnicodePlot!(plt::Plot{UnicodePlotsBackend}, width, height)
-    plt.o = []
+function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
+    plt.o = UnicodePlots.Plot[]
 
     for sp in plt.subplots
         xaxis = sp[:xaxis]
@@ -47,8 +47,6 @@ function rebuildUnicodePlot!(plt::Plot{UnicodePlotsBackend}, width, height)
             x,
             y,
             canvas_type;
-            width = width,
-            height = height,
             title = sp[:title],
             xlim = xlim,
             ylim = ylim,
@@ -61,8 +59,7 @@ function rebuildUnicodePlot!(plt::Plot{UnicodePlotsBackend}, width, height)
             o = addUnicodeSeries!(sp, o, series, sp[:legend] != :none, xlim, ylim)
         end
 
-        # save the object
-        push!(plt.o, o)
+        push!(plt.o, o)  # save the object
     end
 end
 
@@ -147,7 +144,7 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
 
         # BEGIN HACK
 
-        # wait while the plot gets drawndisplay
+        # wait while the plot gets drawn
         sleep(0.5)
 
         # use osx screen capture when my terminal is maximized and cursor starts at the bottom (I know, right?)
@@ -159,7 +156,6 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
     elseif Sys.islinux()
         run(`clear`)
         gui(plt)
-        println()
         run(`import -window $(ENV["WINDOWID"]) $fn`)
         return
     end
@@ -170,14 +166,6 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
 end
 
 # -------------------------------
-
-# we don't do very much for subplots... just stack them vertically
-
-function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
-    w, h = plt[:size]
-    plt.attr[:color_palette] = [RGB(0, 0, 0)]
-    rebuildUnicodePlot!(plt, div(w, 10), div(h, 20))
-end
 
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
