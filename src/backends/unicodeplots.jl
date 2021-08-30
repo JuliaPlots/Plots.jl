@@ -169,7 +169,7 @@ end
 
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
-    foreach(x -> show(io, x), plt.o)
+    foreach(x -> (show(io, x); println(io)), plt.o)
     nothing
 end
 
