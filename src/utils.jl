@@ -1215,22 +1215,14 @@ function mesh3d_triangles(x, y, z, cns)
     return X, Y, Z
 end
 
-const _attrsymbolcache = Dict{Symbol, Dict{Symbol, Symbol}}()
+const _attrsymbolcache = Dict{Symbol, Dict{Symbol, Symbol}}( 
+    :x => Dict( k => Symbol("x", String(k)) for k in keys(_axis_defaults)),
+    :y => Dict( k => Symbol("y", String(k)) for k in keys(_axis_defaults)),
+    :z => Dict( k => Symbol("z", String(k)) for k in keys(_axis_defaults))
+)
 
 get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
                                                 
 function get_attr_symbol(letter::Symbol, keyword::Symbol)
-    lt = if haskey(_attrsymbolcache, letter)
-        _attrsymbolcache[letter]
-    else
-        _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
-    end
-
-    lk = if haskey(lt, keyword)
-        lt[keyword]
-    else
-        lt[keyword] = Symbol(letter, keyword)
-    end
-
-    return lk
+    return _attrsymbolcache[letter][keyword]
 end
