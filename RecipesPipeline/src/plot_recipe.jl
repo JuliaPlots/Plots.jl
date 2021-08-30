@@ -49,6 +49,7 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
         else
             rethrow()
         end
+    end
     return
 end
 
