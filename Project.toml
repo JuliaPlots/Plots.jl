@@ -1,7 +1,7 @@
 name = "Plots"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 author = ["Tom Breloff (@tbreloff)"]
-version = "1.21.1"
+version = "1.21.2"
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -46,7 +46,7 @@ NaNMath = "0.3"
 PlotThemes = "2"
 PlotUtils = "1"
 RecipesBase = "1"
-RecipesPipeline = "0.3.5"
+RecipesPipeline = "0.3.5, 0.4"
 Reexport = "0.2, 1.0"
 Requires = "1"
 Scratch = "1"
