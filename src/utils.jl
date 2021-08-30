@@ -1218,15 +1218,11 @@ end
 const _attrsymbolcache = Dict{Symbol, Dict{Symbol, Symbol}}( 
     :x => Dict( k => Symbol("x", String(k)) for k in keys(_axis_defaults)),
     :y => Dict( k => Symbol("y", String(k)) for k in keys(_axis_defaults)),
-    :z => Dict( k => Symbol("z", String(k)) for k in keys(_axis_defaults)),
-    # for PyPlot
-    :label => Dict( k => Symbol("label", String(k)) for k in (:top, :bottom, :left, :right)),
-    :base => Dict( k => Symbol("base", String(k)) for k in (:x, :y, :z, Symbol(""))),
-    :linthresh => Dict( k => Symbol("base", String(k)) for k in (:x, :y, :z, Symbol("")))
+    :z => Dict( k => Symbol("z", String(k)) for k in keys(_axis_defaults))
 )
 
 get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
-
+                                                
 function get_attr_symbol(letter::Symbol, keyword::Symbol)
     return _attrsymbolcache[letter][keyword]
 end
