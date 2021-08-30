@@ -17,7 +17,7 @@ _canvas_map() = (
 )
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
-function rebuildUnicodePlot!(plt::Plot, width, height)
+function rebuildUnicodePlot!(plt::Plot{UnicodePlotsBackend}, width, height)
     plt.o = []
 
     for sp in plt.subplots
@@ -52,11 +52,10 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
             title = sp[:title],
             xlim = xlim,
             ylim = ylim,
+            xlabel = xaxis[:guide],
+            ylabel = yaxis[:guide],
             border = isijulia() ? :ascii : :solid,
         )
-        # set the axis labels
-        UnicodePlots.xlabel!(o, xaxis[:guide])
-        UnicodePlots.ylabel!(o, yaxis[:guide])
 
         for series in series_list(sp)
             o = addUnicodeSeries!(sp, o, series, sp[:legend] != :none, xlim, ylim)
@@ -148,7 +147,7 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
 
         # BEGIN HACK
 
-        # wait while the plot gets drawn
+        # wait while the plot gets drawndisplay
         sleep(0.5)
 
         # use osx screen capture when my terminal is maximized and cursor starts at the bottom (I know, right?)
@@ -188,6 +187,6 @@ end
 
 function _display(plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
-    map(show, plt.o)
+    map(display, plt.o)
     nothing
 end
