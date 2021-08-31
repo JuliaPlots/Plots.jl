@@ -446,7 +446,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
         )
             data = [NaN]
         end
-        axis = sp[get_attr_symbol(letter, "axis")]
+        axis = sp[get_attr_symbol(letter, :axis)]
 
         if isa(data, Volume)
             expand_extrema!(sp[:xaxis], data.x_extents)
@@ -463,7 +463,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
-            plotattributes[letter], plotattributes[get_attr_symbol(letter, "_discrete_indices")] =
+            plotattributes[letter], plotattributes[get_attr_symbol(letter, :(_discrete_indices))] =
                 discrete_value!(axis, data)
             expand_extrema!(axis, plotattributes[letter])
         end
@@ -511,8 +511,8 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
     if plotattributes[:seriestype] == :heatmap
         for letter in (:x, :y)
             data = plotattributes[letter]
-            axis = sp[get_attr_symbol(letter, "axis")]
-            scale = get(plotattributes, get_attr_symbol(letter, "scale"), :identity)
+            axis = sp[get_attr_symbol(letter, :axis)]
+            scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
             expand_extrema!(axis, heatmap_edges(data, scale))
         end
     end

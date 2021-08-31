@@ -60,6 +60,14 @@ end
 # # anything else just gets a bluesred gradient
 # py_colormap(c, α=nothing) = py_colormap(default_gradient(), α)
 
+for k in (:linthresh, :base, :label)
+    # add PyPlot specific symbols to cache
+    _attrsymbolcache[k] = Dict{Symbol, Symbol}()
+    for letter in (:x, :y, :z, Symbol(""))
+        _attrsymbolcache[k][letter] = Symbol(k, letter)
+    end
+end
+
 py_handle_surface(v) = v
 py_handle_surface(z::Surface) = z.surf
 
@@ -827,7 +835,7 @@ end
 
 function py_set_ticks(sp, ax, ticks, letter, env)
     ticks == :auto && return
-    axis = getproperty(ax, get_attr_symbol(letter, "axis"))
+    axis = getproperty(ax, get_attr_symbol(letter, :axis))
     if ticks == :none || ticks === nothing || ticks == false
         kw = KW()
         for dir in (:top, :bottom, :left, :right)

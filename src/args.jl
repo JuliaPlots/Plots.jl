@@ -571,11 +571,6 @@ function reset_axis_defaults_byletter!()
 end
 reset_axis_defaults_byletter!()
 
-for letter in (:x, :y, :z), k in keys(_axis_defaults)
-    # allow the underscore version too: xguide or x_guide
-    add_aliases(get_attr_symbol(letter, k), Symbol(letter, "_", k))
-end
-
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 
 const _initial_defaults = deepcopy(_all_defaults)
@@ -619,6 +614,20 @@ const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
 const _all_subplot_args = sort(union([_subplot_args; _magic_subplot_args]))
 const _all_series_args = sort(union([_series_args; _magic_series_args]))
 const _all_plot_args = _plot_args
+
+for letter in (:x, :y, :z)
+    _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
+    for k in keys(_axis_defaults)
+        # populate attribute cache
+        lk = Symbol(letter, k)
+        _attrsymbolcache[letter][k] = lk
+        # allow the underscore version too: xguide or x_guide
+        add_aliases(lk, Symbol(letter, "_", k))
+    end
+    for k in _magic_axis_args
+        _attrsymbolcache[letter][k] = Symbol(letter, k)
+    end
+end
 
 const _all_args =
     sort(union([_all_axis_args; _all_subplot_args; _all_series_args; _all_plot_args]))
@@ -2255,3 +2264,27 @@ function _splitdef!(blk, value_args, key_args)
     end
     blk
 end
+
+
+# const _attrsymbolcache = Dict{Symbol, Dict{Symbol, Symbol}}()
+
+# get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
+                                                
+# function get_attr_symbol(letter::Symbol, keyword::Symbol)
+#     lt = if haskey(_attrsymbolcache, letter)
+#         _attrsymbolcache[letter]
+#     else
+#         _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
+#     end
+
+#     lk = if haskey(lt, keyword)
+#         lt[keyword]
+#     else
+#         lt[keyword] = Symbol(letter, keyword)
+#     end
+
+#     return lk
+# end
+
+
+
