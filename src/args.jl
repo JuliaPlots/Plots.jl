@@ -624,7 +624,7 @@ for letter in (:x, :y, :z)
         # allow the underscore version too: xguide or x_guide
         add_aliases(lk, Symbol(letter, "_", k))
     end
-    for k in _magic_axis_args
+    for k in (_magic_axis_args..., :(_discrete_indices))
         _attrsymbolcache[letter][k] = Symbol(letter, k)
     end
 end
