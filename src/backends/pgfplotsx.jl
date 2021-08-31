@@ -1200,7 +1200,7 @@ function pgfx_sanitize_plot!(plt)
 end
 # --------------------------------------------------------------------------------------
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_attr_symbol(letter, :axis)]
 
     # turn off scaled ticks
     push!(opt, "scaled $(letter) ticks" => "false", string(letter, :label) => axis[:guide])

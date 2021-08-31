@@ -60,6 +60,14 @@ end
 # # anything else just gets a bluesred gradient
 # py_colormap(c, α=nothing) = py_colormap(default_gradient(), α)
 
+for k in (:linthresh, :base, :label)
+    # add PyPlot specific symbols to cache
+    _attrsymbolcache[k] = Dict{Symbol, Symbol}()
+    for letter in (:x, :y, :z, Symbol(""))
+        _attrsymbolcache[k][letter] = Symbol(k, letter)
+    end
+end
+
 py_handle_surface(v) = v
 py_handle_surface(z::Surface) = z.surf
 
@@ -827,11 +835,11 @@ end
 
 function py_set_ticks(sp, ax, ticks, letter, env)
     ticks == :auto && return
-    axis = getproperty(ax, Symbol(letter, "axis"))
+    axis = getproperty(ax, get_attr_symbol(letter, :axis))
     if ticks == :none || ticks === nothing || ticks == false
         kw = KW()
         for dir in (:top, :bottom, :left, :right)
-            kw[dir] = kw[Symbol(:label, dir)] = false
+            kw[dir] = kw[get_attr_symbol(:label, dir)] = false
         end
         axis."set_tick_params"(; which = "both", kw...)
         return
@@ -887,15 +895,15 @@ function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     arg = if scale == :identity
         "linear"
     else
-        kw[Symbol(:base, pyletter)] = if scale == :ln
+        kw[get_attr_symbol(:base, pyletter)] = if scale == :ln
             ℯ
         elseif scale == :log2
             2
         elseif scale == :log10
             10
         end
-        axis = sp[Symbol(letter, :axis)]
-        kw[Symbol(:linthresh, pyletter)] =
+        axis = sp[get_attr_symbol(letter, :axis)]
+        kw[get_attr_symbol(:linthresh, pyletter)] =
             NaNMath.max(1e-16, py_compute_axis_minval(sp, axis))
         "symlog"
     end
@@ -922,7 +930,7 @@ end
 
 function py_set_axis_colors(sp, ax, a::Axis)
     py_set_spine_color(ax.spines, py_color(a[:foreground_color_border]))
-    axissym = Symbol(a[:letter], :axis)
+    axissym = get_attr_symbol(a[:letter], :axis)
     if PyPlot.PyCall.hasproperty(ax, axissym)
         tickcolor =
             sp[:framestyle] in (:zerolines, :grid) ?
@@ -1193,7 +1201,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
         # axis attributes
         for letter in (:x, :y, :z)
-            axissym = Symbol(letter, :axis)
+            axissym = get_attr_symbol(letter, :axis)
             PyPlot.PyCall.hasproperty(ax, axissym) || continue
             axis = sp[axissym]
             pyaxis = getproperty(ax, axissym)
@@ -1327,7 +1335,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 if !ispolar(sp)
                     ax.spines[string(dir)].set_visible(false)
                 end
-                kw[dir] = kw[Symbol(:label, dir)] = false
+                kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
             ax."xaxis"."set_tick_params"(; which = "both", kw...)
         end
@@ -1337,7 +1345,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 if !ispolar(sp)
                     ax.spines[string(dir)].set_visible(false)
                 end
-                kw[dir] = kw[Symbol(:label, dir)] = false
+                kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
             ax."yaxis"."set_tick_params"(; which = "both", kw...)
         end
