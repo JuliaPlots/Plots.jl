@@ -2264,27 +2264,3 @@ function _splitdef!(blk, value_args, key_args)
     end
     blk
 end
-
-
-# const _attrsymbolcache = Dict{Symbol, Dict{Symbol, Symbol}}()
-
-# get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
-                                                
-# function get_attr_symbol(letter::Symbol, keyword::Symbol)
-#     lt = if haskey(_attrsymbolcache, letter)
-#         _attrsymbolcache[letter]
-#     else
-#         _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
-#     end
-
-#     lk = if haskey(lt, keyword)
-#         lt[keyword]
-#     else
-#         lt[keyword] = Symbol(letter, keyword)
-#     end
-
-#     return lk
-# end
-
-
-
