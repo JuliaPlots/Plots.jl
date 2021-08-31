@@ -1253,16 +1253,15 @@ _backend_skips = Dict(
         6,  # embedded images unsupported
         10,  # histogram2d
         13,  # markers unsupported
-        16,  # subplots unsupported
-        17,  # grid layout unsupported
+        16,  # nested layout unsupported
         20,  # annotations unsupported
         21,  # custom markers unsupported
         22,  # contours unsupported
         24,  # 3D unsupported
-        26,  # subplots unsupported
-        29,  # layout unsupported
+        26,  # nested layout unsupported
+        29,  # nested layout unsupported
         33,  # grid lines unsupported
-        34,  # framestyles unsupported
+        34,  # framestyle unsupported
         37,  # ribbons / filled unsupported
         38,  # histogram2D 
         43,  # heatmap with DateTime
