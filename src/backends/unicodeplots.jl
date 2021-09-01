@@ -173,10 +173,10 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     nr, nc = size(plt.layout)
     lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
     lines_uncolored = copy(lines_colored)
+    l_max = zeros(Int, nr)
     buf = IOBuffer()
     cbuf = IOContext(buf, :color => true)
     sps = wmax = 0
-    l_max = zeros(Int, nr)
     for r in 1:nr
         lmax = 0
         for c in 1:nc
@@ -200,16 +200,17 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
         end
         l_max[r] = lmax
     end
+    empty = ' '^wmax
     for r in 1:nr
         for n in 1:l_max[r]
             for c in 1:nc
-                pre = c == 1 ? '' : ' '
-                if (lc = lines_colored[r, c]) !== nothing
-                    length(lc) < n && continue
+                pre = c == 1 ? '\0' : ' '
+                lc = lines_colored[r, c]
+                if lc === nothing || length(lc) < n
+                    print(io, pre, empty)
+                else
                     lu = lines_uncolored[r, c]
                     print(io, pre, lc[n], ' '^(wmax - length(lu[n])))
-                else
-                    print(io, pre, ' '^wmax)
                 end
             end
             println(io)
