@@ -166,13 +166,55 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
 end
 
 # -------------------------------
+Base.show(plt::Plot{UnicodePlotsBackend}) = _show(stdout, MIME("text/plain"), plt)
 
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
-    n = length(plt.o)
-    for (i, p) in enumerate(plt.o)
-        show(io, p)
-        i < n && println(io)
+    nr, nc = size(plt.layout)
+    lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
+    lines_uncolored = copy(lines_colored)
+    buf = IOBuffer()
+    cbuf = IOContext(buf, :color => true)
+    sps = wmax = 0
+    l_max = zeros(Int, nr)
+    for r in 1:nr
+        lmax = 0
+        for c in 1:nc
+            l = plt.layout[r, c]
+            if l isa GridLayout
+                @error "UnicodePlots: nested layout is currently unsupported !"
+            else
+                if get(l.attr, :blank, false)
+                    lines_colored[r, c] = lines_uncolored[r, c] = nothing
+                else
+                    sp = plt.o[sps += 1]
+                    show(cbuf, sp)
+                    colored = String(take!(buf))
+                    uncolored = replace(colored, r"\x1B\[[0-9;]*[a-zA-Z]" => "")
+                    lines_colored[r, c] = lc = split(colored, "\n")
+                    lines_uncolored[r, c] = lu = split(uncolored, "\n")
+                    lmax = max(length(lc), lmax)
+                    wmax = max(maximum(length.(lu)), wmax)
+                end
+            end
+        end
+        l_max[r] = lmax
+    end
+    for r in 1:nr
+        for n in 1:l_max[r]
+            for c in 1:nc
+                pre = c == 1 ? '' : ' '
+                if (lc = lines_colored[r, c]) !== nothing
+                    length(lc) < n && continue
+                    lu = lines_uncolored[r, c]
+                    print(io, pre, lc[n], ' '^(wmax - length(lu[n])))
+                else
+                    print(io, pre, ' '^wmax)
+                end
+            end
+            println(io)
+        end
+        r < nr && println(io)
     end
     nothing
 end
