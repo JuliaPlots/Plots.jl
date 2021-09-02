@@ -1,5 +1,5 @@
 
-# https://github.com/Evizero/UnicodePlots.jl
+# https://github.com/JuliaPlots/UnicodePlots.jl
 
 # don't warn on unsupported... there's just too many warnings!!
 warn_on_unsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing
