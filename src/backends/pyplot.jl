@@ -24,11 +24,15 @@ pycollections = PyPlot.pyimport("matplotlib.collections")
 pyart3d = PyPlot.art3D
 pyrcparams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 
-# "support" matplotlib v1.5
+
+# "support" matplotlib v3.4
+if PyPlot.version < v"3.4"
+    @warn("You are using Matplotlib $(PyPlot.version), which is no longer
+    officialy supported by the Plots community. To ensure smooth Plots.jl
+    integration update your Matplotlib library to a version >= 3.4.0")
+end
+
 set_facecolor_sym = if PyPlot.version < v"2"
-    @warn(
-        "You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0"
-    )
     :set_axis_bgcolor
 else
     :set_facecolor
@@ -172,6 +176,17 @@ end
 
 py_fillstyle(::Nothing) = nothing
 py_fillstyle(fillstyle::Symbol) = string(fillstyle)
+
+function py_get_matching_math_font(parent_fontfamily)
+    math_font_family = if parent_fontfamily == "sans-serif"
+        "dejavusans"
+    elseif parent_fontfamily == "serif"
+        "dejavuserif"
+    else
+        parent_fontfamily
+    end
+    return math_font_family
+end
 
 # # untested... return a FontProperties object from a Plots.Font
 # function py_font(font::Font)
@@ -824,16 +839,7 @@ function py_set_lims(ax, sp::Subplot, axis::Axis)
     getproperty(ax, Symbol("set_", letter, "lim"))(lfrom, lto)
 end
 
-function py_surround_latextext(latexstring, env)
-    if !isempty(latexstring) && latexstring[1] == '$' && latexstring[end] == '$'
-        unenclosed = latexstring[2:(end - 1)]
-    else
-        unenclosed = latexstring
-    end
-    PyPlot.LaTeXStrings.latexstring(env, "{", unenclosed, "}")
-end
-
-function py_set_ticks(sp, ax, ticks, letter, env)
+function py_set_ticks(sp, ax, ticks, letter)
     ticks == :auto && return
     axis = getproperty(ax, get_attr_symbol(letter, :axis))
     if ticks == :none || ticks === nothing || ticks == false
@@ -850,14 +856,7 @@ function py_set_ticks(sp, ax, ticks, letter, env)
         axis."set_ticks"(ticks)
     elseif ttype == :ticks_and_labels
         axis."set_ticks"(ticks[1])
-
-        if get(sp[:extra_kwargs], :rawticklabels, false)
-            tick_labels = ticks[2]
-        else
-            tick_labels = [py_surround_latextext(ticklabel, env) for ticklabel in ticks[2]]
-        end
-
-        axis."set_ticklabels"(tick_labels)
+        axis."set_ticklabels"(ticks[2])
     else
         error("Invalid input for $(letter)ticks: $ticks")
     end
@@ -998,6 +997,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 py_thickness_scale(plt, sp[:titlefontsize]),
             )
             getproperty(ax, func)."set_family"(sp[:titlefontfamily])
+            getproperty(ax, func)."set_math_fontfamily"(py_get_matching_math_font(sp[:titlefontfamily]))
             getproperty(ax, func)."set_color"(py_color(sp[:titlefontcolor]))
             # ax[:set_title](sp[:title], loc = loc)
         end
@@ -1090,6 +1090,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 sp[:colorbar_title],
                 size = py_thickness_scale(plt, sp[:colorbar_titlefontsize]),
                 family = sp[:colorbar_titlefontfamily],
+                math_fontfamily = py_get_matching_math_font(sp[:colorbar_titlefontfamily]),
                 color = py_color(sp[:colorbar_titlefontcolor]),
             )
 
@@ -1097,9 +1098,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             cb."formatter".set_powerlimits((-Inf, Inf))
             cb."update_ticks"()
 
-            env = "\\mathregular"  # matches the outer fonts https://matplotlib.org/tutorials/text/mathtext.html
             ticks = get_colorbar_ticks(sp)
-
             if sp[:colorbar] in (:top, :bottom)
                 axis = sp[:xaxis]  # colorbar inherits from x axis
                 cbar_axis = cb."ax"."xaxis"
@@ -1110,12 +1109,12 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ticks_letter = :y
             end
             py_set_scale(cb.ax, sp, sp[:colorbar_scale], ticks_letter)
-            sp[:colorbar_ticks] == :native ? nothing :
-            py_set_ticks(sp, cb.ax, ticks, ticks_letter, env)
+            sp[:colorbar_ticks] == :native ? nothing : py_set_ticks(sp, cb.ax, ticks, ticks_letter)
 
             for lab in cbar_axis."get_ticklabels"()
                 lab."set_fontsize"(py_thickness_scale(plt, sp[:colorbar_tickfontsize]))
                 lab."set_family"(sp[:colorbar_tickfontfamily])
+                lab."set_math_fontfamily"(py_get_matching_math_font(sp[:colorbar_tickfontfamily]))
                 lab."set_color"(py_color(sp[:colorbar_tickfontcolor]))
             end
 
@@ -1225,6 +1224,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             fontProperties = PyPlot.PyCall.PyDict(
                 Dict(
                     "family" => axis[:tickfontfamily],
+                    "math_fontfamily" => py_get_matching_math_font(axis[:tickfontfamily]),
                     "size" => py_thickness_scale(plt, axis[:tickfontsize]),
                     "rotation" => axis[:tickfontrotation],
                 ),
@@ -1244,10 +1244,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 )
             end
 
-            # workaround to set mathtext.fontspec per Text element
-            env = "\\mathregular"  # matches the outer fonts https://matplotlib.org/tutorials/text/mathtext.html
 
-            axis[:ticks] == :native ? nothing : py_set_ticks(sp, ax, ticks, letter, env)
+            axis[:ticks] == :native ? nothing : py_set_ticks(sp, ax, ticks, letter)
             # Tick marks
             intensity = 0.5  # This value corresponds to scaling of other grid elements
             pyaxis."set_tick_params"(
@@ -1263,6 +1261,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             pyaxis."label"."set_fontsize"(py_thickness_scale(plt, axis[:guidefontsize]))
             pyaxis."label"."set_family"(axis[:guidefontfamily])
+            pyaxis."label"."set_math_fontfamily"(py_get_matching_math_font(axis[:guidefontfamily]))
 
             if (RecipesPipeline.is3d(sp))
                 pyaxis."set_rotate_label"(false)
@@ -1602,6 +1601,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     leg."get_title"(),
                     color = py_color(sp[:legendtitlefontcolor]),
                     family = sp[:legendtitlefontfamily],
+                    math_fontfamily = py_get_matching_math_font(sp[:legendtitlefontfamily]),
                     fontsize = py_thickness_scale(plt, sp[:legendtitlefontsize]),
                 )
             end
@@ -1611,6 +1611,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     txt,
                     color = py_color(sp[:legendfontcolor]),
                     family = sp[:legendfontfamily],
+                    math_fontfamily = py_get_matching_math_font(sp[:legendtitlefontfamily]),
                     fontsize = py_thickness_scale(plt, sp[:legendfontsize]),
                 )
             end
