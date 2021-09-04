@@ -1250,8 +1250,8 @@ _backend_skips = Dict(
     ],
     :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55],
     :unicodeplots => [
+        5,  # log scales unsupported
         6,  # embedded images unsupported
-        10,  # histogram2d
         13,  # markers unsupported
         16,  # nested layout unsupported
         20,  # annotations unsupported
@@ -1263,7 +1263,6 @@ _backend_skips = Dict(
         33,  # grid lines unsupported
         34,  # framestyle unsupported
         37,  # ribbons / filled unsupported
-        38,  # histogram2D 
         43,  # heatmap with DateTime
         45,  # error bars
         47,  # mesh3D unsupported
