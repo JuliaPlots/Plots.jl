@@ -19,7 +19,7 @@ _canvas_map() = (
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
 function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
     plt.o = UnicodePlots.Plot[]
-
+    canvas_map = _canvas_map()
     for sp in plt.subplots
         xaxis = sp[:xaxis]
         yaxis = sp[:yaxis]
@@ -36,17 +36,16 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         y = Float64[ylim[1]]
 
         # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
-        ct = _canvas_type[]
-        canvas_type = if ct == :auto
-            isijulia() ? UnicodePlots.AsciiCanvas : UnicodePlots.BrailleCanvas
+        canvas_type = if (ct = _canvas_type[]) == :auto
+            isijulia() ? :ascii : :braille
         else
-            _canvas_map()[ct]
+            ct
         end
 
         o = UnicodePlots.Plot(
             x,
             y,
-            canvas_type;
+            canvas_map[canvas_type];
             title = sp[:title],
             xlim = xlim,
             ylim = ylim,
@@ -54,7 +53,6 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             ylabel = yaxis[:guide],
             border = isijulia() ? :ascii : :solid,
         )
-
         for series in series_list(sp)
             o = addUnicodeSeries!(sp, o, series, sp[:legend] != :none, xlim, ylim)
         end
@@ -66,18 +64,26 @@ end
 # add a single series
 function addUnicodeSeries!(
     sp::Subplot{UnicodePlotsBackend},
-    o,
+    up::UnicodePlots.Plot,
     series,
     addlegend::Bool,
     xlim,
     ylim,
 )
-    attrs = series.plotattributes
-    st = attrs[:seriestype]
+    st = series[:seriestype]
+    
+    # get the series data and label
+    x, y = if st == :straightline
+        straightline_data(series)
+    elseif st == :shape
+        shape_data(series)
+    else
+        float(series[:x]), float(series[:y])
+    end
 
-    # special handling
+    # special handling (src/interface)
     if st == :histogram2d
-        return UnicodePlots.densityplot!(o, attrs[:x], attrs[:y])
+        return UnicodePlots.densityplot(x, y)
     elseif st == :heatmap
         rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
         cmap = [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
@@ -92,39 +98,31 @@ function addUnicodeSeries!(
     end
 
     # now use the ! functions to add to the plot
-    if st in (:path, :straightline)
+    if st in (:path, :straightline, :shape)
         func = UnicodePlots.lineplot!
-    elseif st == :scatter || attrs[:markershape] != :none
+    elseif st == :scatter || series[:markershape] != :none
         func = UnicodePlots.scatterplot!
-        # elseif st == :bar
-        #     func = UnicodePlots.barplot!
-    elseif st == :shape
-        func = UnicodePlots.lineplot!
     else
         error("Series type $st not supported by UnicodePlots")
     end
 
-    # get the series data and label
-    x, y = if st == :straightline
-        straightline_data(attrs)
-    elseif st == :shape
-        shape_data(attrs)
-    else
-        [collect(float(attrs[s])) for s in (:x, :y)]
-    end
-    label = addlegend ? attrs[:label] : ""
+    label = addlegend ? series[:label] : ""
 
-    lc = attrs[:linecolor]
-    if typeof(lc) <: UnicodePlots.UserColorType
-        color = lc
-    elseif typeof(lc) <: RGBA
-        lc = convert(ARGB32, lc)
-        color = map(Int, (red(lc).i, green(lc).i, blue(lc).i))
-    else
-        color = :auto
-    end
+    for (n, segment) in enumerate(series_segments(series, st; check = true))
+        i, rng = segment.attr_index, segment.range
+        lc = get_linecolor(series, i)
+        if typeof(lc) <: UnicodePlots.UserColorType
+            color = lc
+        elseif typeof(lc) <: RGBA
+            lc = convert(ARGB32, lc)
+            color = map(Int, (red(lc).i, green(lc).i, blue(lc).i))
+        else
+            color = :auto
+        end
 
-    func(o, x, y; color = color, name = label)
+        up = func(up, x[rng], y[rng]; color = color, name = n == 1 ? label : "")
+    end
+    return up
 end
 
 # -------------------------------
