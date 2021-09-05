@@ -1216,7 +1216,7 @@ function mesh3d_triangles(x, y, z, cns)
 end
 
 # cache joined symbols so they can be looked up instead of constructed each time
-const _attrsymbolcache = Dict{Symbol, Dict{Symbol, Symbol}}()
+const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
 
 get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
 get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
