@@ -178,14 +178,19 @@ py_fillstyle(::Nothing) = nothing
 py_fillstyle(fillstyle::Symbol) = string(fillstyle)
 
 function py_get_matching_math_font(parent_fontfamily)
-    math_font_family = if parent_fontfamily == "sans-serif"
-        "dejavusans"
-    elseif parent_fontfamily == "serif"
-        "dejavuserif"
-    else
-        parent_fontfamily
-    end
-    return math_font_family
+    # matplotlib supported math fonts according to
+    # https://matplotlib.org/stable/tutorials/text/mathtext.html
+    py_math_supported_fonts = Dict{String, String}(
+        "sans-serif" => "dejavusans", 
+        "serif" => "dejavuserif", 
+        "cm" => "cm", 
+        "stix" => "stix", 
+        "stixsans" => "stixsans"
+    )
+    # Fallback to "dejavusans" or "dejavuserif" in case the parentfont is different
+    # from supported by matplotlib fonts
+    matching_font(font) = occursin("serif", lowercase(font)) ? "dejavuserif" : "dejavusans"
+    return get(py_math_supported_fonts, parent_fontfamily, matching_font(parent_fontfamily))
 end
 
 # # untested... return a FontProperties object from a Plots.Font
