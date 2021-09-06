@@ -933,7 +933,7 @@ const _unicodeplots_seriestype = [
 ]
 const _unicodeplots_style = [:auto, :solid]
 const _unicodeplots_marker = [:none, :auto, :circle]
-const _unicodeplots_scale = [:identity]
+const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
 const _canvas_type = Ref(:auto)
