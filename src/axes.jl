@@ -68,7 +68,11 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     elseif typeof(arg) <: Function
         plotattributes[get_attr_symbol(letter, :formatter)] = arg
 
-    elseif !handleColors!(plotattributes, arg, get_attr_symbol(letter, :foreground_color_axis))
+    elseif !handleColors!(
+        plotattributes,
+        arg,
+        get_attr_symbol(letter, :foreground_color_axis),
+    )
         @warn("Skipped $(letter)axis arg $arg")
     end
 end
@@ -463,7 +467,8 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
-            plotattributes[letter], plotattributes[get_attr_symbol(letter, :(_discrete_indices))] =
+            plotattributes[letter],
+            plotattributes[get_attr_symbol(letter, :(_discrete_indices))] =
                 discrete_value!(axis, data)
             expand_extrema!(axis, plotattributes[letter])
         end

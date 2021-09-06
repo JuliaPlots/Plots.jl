@@ -71,7 +71,7 @@ function addUnicodeSeries!(
     ylim,
 )
     st = series[:seriestype]
-    
+
     # get the series data and label
     x, y = if st == :straightline
         straightline_data(series)

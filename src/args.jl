@@ -616,7 +616,7 @@ const _all_series_args = sort(union([_series_args; _magic_series_args]))
 const _all_plot_args = _plot_args
 
 for letter in (:x, :y, :z)
-    _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
+    _attrsymbolcache[letter] = Dict{Symbol,Symbol}()
     for k in keys(_axis_defaults)
         # populate attribute cache
         lk = Symbol(letter, k)
@@ -1237,8 +1237,10 @@ function processGridArg!(plotattributes::AKW, arg, letter)
             plotattributes[get_attr_symbol(letter, :foreground_color_grid)] =
                 arg.color in (:auto, :match) ? :match : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[get_attr_symbol(letter, :gridalpha)] = arg.alpha)
-        arg.style === nothing || (plotattributes[get_attr_symbol(letter, :gridstyle)] = arg.style)
+        arg.alpha === nothing ||
+            (plotattributes[get_attr_symbol(letter, :gridalpha)] = arg.alpha)
+        arg.style === nothing ||
+            (plotattributes[get_attr_symbol(letter, :gridstyle)] = arg.style)
 
         # linealpha
     elseif allAlphas(arg)
@@ -1249,7 +1251,11 @@ function processGridArg!(plotattributes::AKW, arg, letter)
         plotattributes[get_attr_symbol(letter, :gridlinewidth)] = arg
 
         # color
-    elseif !handleColors!(plotattributes, arg, get_attr_symbol(letter, :foreground_color_grid))
+    elseif !handleColors!(
+        plotattributes,
+        arg,
+        get_attr_symbol(letter, :foreground_color_grid),
+    )
         @warn("Skipped grid arg $arg.")
     end
 end
@@ -1286,7 +1292,11 @@ function processMinorGridArg!(plotattributes::AKW, arg, letter)
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
         # color
-    elseif handleColors!(plotattributes, arg, get_attr_symbol(letter, :foreground_color_minor_grid))
+    elseif handleColors!(
+        plotattributes,
+        arg,
+        get_attr_symbol(letter, :foreground_color_minor_grid),
+    )
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
     else
         @warn("Skipped grid arg $arg.")
@@ -1413,7 +1423,11 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     # handle individual axes font args
     for letter in (:x, :y, :z)
         for fontname in (:tickfont, :guidefont)
-            args = RecipesPipeline.pop_kw!(plotattributes, get_attr_symbol(letter, fontname), ())
+            args = RecipesPipeline.pop_kw!(
+                plotattributes,
+                get_attr_symbol(letter, fontname),
+                (),
+            )
             for arg in wraptuple(args)
                 processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
             end
