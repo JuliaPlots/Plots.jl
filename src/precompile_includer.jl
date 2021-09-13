@@ -7,10 +7,9 @@ ismultiversion = false
 @static if !should_precompile
     # nothing
 elseif !ismultios && !ismultiversion
-    @static if isfile(joinpath(
-        @__DIR__,
-        "../deps/SnoopCompile/precompile/precompile_Plots.jl",
-    ))
+    @static if isfile(
+        joinpath(@__DIR__, "../deps/SnoopCompile/precompile/precompile_Plots.jl"),
+    )
         include("../deps/SnoopCompile/precompile/precompile_Plots.jl")
         _precompile_()
     end

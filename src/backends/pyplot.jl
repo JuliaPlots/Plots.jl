@@ -24,7 +24,6 @@ pycollections = PyPlot.pyimport("matplotlib.collections")
 pyart3d = PyPlot.art3D
 pyrcparams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 
-
 # "support" matplotlib v3.4
 if PyPlot.version < v"3.4"
     @warn("You are using Matplotlib $(PyPlot.version), which is no longer
@@ -180,12 +179,12 @@ py_fillstyle(fillstyle::Symbol) = string(fillstyle)
 function py_get_matching_math_font(parent_fontfamily)
     # matplotlib supported math fonts according to
     # https://matplotlib.org/stable/tutorials/text/mathtext.html
-    py_math_supported_fonts = Dict{String, String}(
-        "sans-serif" => "dejavusans", 
-        "serif" => "dejavuserif", 
-        "cm" => "cm", 
-        "stix" => "stix", 
-        "stixsans" => "stixsans"
+    py_math_supported_fonts = Dict{String,String}(
+        "sans-serif" => "dejavusans",
+        "serif" => "dejavuserif",
+        "cm" => "cm",
+        "stix" => "stix",
+        "stixsans" => "stixsans",
     )
     # Fallback to "dejavusans" or "dejavuserif" in case the parentfont is different
     # from supported by matplotlib fonts
@@ -1002,7 +1001,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 py_thickness_scale(plt, sp[:titlefontsize]),
             )
             getproperty(ax, func)."set_family"(sp[:titlefontfamily])
-            getproperty(ax, func)."set_math_fontfamily"(py_get_matching_math_font(sp[:titlefontfamily]))
+            getproperty(ax, func)."set_math_fontfamily"(
+                py_get_matching_math_font(sp[:titlefontfamily]),
+            )
             getproperty(ax, func)."set_color"(py_color(sp[:titlefontcolor]))
             # ax[:set_title](sp[:title], loc = loc)
         end
@@ -1114,12 +1115,15 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ticks_letter = :y
             end
             py_set_scale(cb.ax, sp, sp[:colorbar_scale], ticks_letter)
-            sp[:colorbar_ticks] == :native ? nothing : py_set_ticks(sp, cb.ax, ticks, ticks_letter)
+            sp[:colorbar_ticks] == :native ? nothing :
+            py_set_ticks(sp, cb.ax, ticks, ticks_letter)
 
             for lab in cbar_axis."get_ticklabels"()
                 lab."set_fontsize"(py_thickness_scale(plt, sp[:colorbar_tickfontsize]))
                 lab."set_family"(sp[:colorbar_tickfontfamily])
-                lab."set_math_fontfamily"(py_get_matching_math_font(sp[:colorbar_tickfontfamily]))
+                lab."set_math_fontfamily"(
+                    py_get_matching_math_font(sp[:colorbar_tickfontfamily]),
+                )
                 lab."set_color"(py_color(sp[:colorbar_tickfontcolor]))
             end
 
@@ -1229,7 +1233,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             fontProperties = PyPlot.PyCall.PyDict(
                 Dict(
                     "family" => axis[:tickfontfamily],
-                    "math_fontfamily" => py_get_matching_math_font(axis[:tickfontfamily]),
+                    "math_fontfamily" =>
+                        py_get_matching_math_font(axis[:tickfontfamily]),
                     "size" => py_thickness_scale(plt, axis[:tickfontsize]),
                     "rotation" => axis[:tickfontrotation],
                 ),
@@ -1249,7 +1254,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 )
             end
 
-
             axis[:ticks] == :native ? nothing : py_set_ticks(sp, ax, ticks, letter)
             # Tick marks
             intensity = 0.5  # This value corresponds to scaling of other grid elements
@@ -1266,7 +1270,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             pyaxis."label"."set_fontsize"(py_thickness_scale(plt, axis[:guidefontsize]))
             pyaxis."label"."set_family"(axis[:guidefontfamily])
-            pyaxis."label"."set_math_fontfamily"(py_get_matching_math_font(axis[:guidefontfamily]))
+            pyaxis."label"."set_math_fontfamily"(
+                py_get_matching_math_font(axis[:guidefontfamily]),
+            )
 
             if (RecipesPipeline.is3d(sp))
                 pyaxis."set_rotate_label"(false)
