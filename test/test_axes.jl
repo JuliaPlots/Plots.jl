@@ -63,3 +63,17 @@ end
     @test twpl[:top_margin] == 2Plots.cm
     @test twpl[:bottom_margin] == 2Plots.cm
 end
+
+@testset "aliases" begin
+    plot(1:2, xl = "x label")
+    plot(1:2, xrange = (1, 2))
+    plot(1:2, xtick = :auto)
+    plot(1:2, xlabelfontsize = 10)
+    plot(1:2, xgα = .1)
+    plot(1:2, xgridls = :solid)
+    plot(1:2, xgridcolor = :red)
+    plot(1:2, xminorgridcolor = :red)
+    plot(1:2, xgrid_lw = .1)
+    plot(1:2, xminorgrid_lw = .1)
+    plot(1:2, xtickor = :out)
+end
