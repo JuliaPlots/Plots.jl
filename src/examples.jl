@@ -1250,6 +1250,7 @@ _backend_skips = Dict(
     ],
     :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55],
     :unicodeplots => [
+        5,  # limits issue
         6,  # embedded images unsupported
         13,  # markers unsupported
         16,  # nested layout unsupported
@@ -1258,6 +1259,7 @@ _backend_skips = Dict(
         22,  # contours unsupported
         24,  # 3D unsupported
         26,  # nested layout unsupported
+        27,  # polar plots unsupported
         29,  # nested layout unsupported
         33,  # grid lines unsupported
         34,  # framestyle unsupported
