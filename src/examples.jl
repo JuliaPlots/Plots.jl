@@ -1254,7 +1254,6 @@ _backend_skips = Dict(
         6,  # embedded images unsupported
         13,  # markers unsupported
         16,  # nested layout unsupported
-        20,  # annotations unsupported
         21,  # custom markers unsupported
         22,  # contours unsupported
         24,  # 3D unsupported
