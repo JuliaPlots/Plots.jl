@@ -42,19 +42,20 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             ct
         end
 
-        o = UnicodePlots.Plot(
-            x,
-            y,
-            canvas_map[canvas_type];
+        kw = (
             title = sp[:title],
             xlim = xlim,
             ylim = ylim,
+            border = isijulia() ? :ascii : :solid,
             xlabel = xaxis[:guide],
             ylabel = yaxis[:guide],
-            border = isijulia() ? :ascii : :solid,
+            xscale = xaxis[:scale],
+            yscale = yaxis[:scale],
         )
+
+        o = UnicodePlots.Plot(x, y, canvas_map[canvas_type]; kw...)
         for series in series_list(sp)
-            o = addUnicodeSeries!(sp, o, series, sp[:legend] != :none, xlim, ylim)
+            o = addUnicodeSeries!(sp, o, kw, series, sp[:legend] != :none, xlim, ylim)
         end
 
         for ann in sp[:annotations]
@@ -85,6 +86,7 @@ end
 function addUnicodeSeries!(
     sp::Subplot{UnicodePlotsBackend},
     up::UnicodePlots.Plot,
+    kw,
     series,
     addlegend::Bool,
     xlim,
@@ -103,18 +105,18 @@ function addUnicodeSeries!(
 
     # special handling (src/interface)
     if st == :histogram2d
-        return UnicodePlots.densityplot(x, y)
+        return UnicodePlots.densityplot(x, y; kw...)
     elseif st == :heatmap
         rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
         cmap = [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
         return UnicodePlots.heatmap(
             series[:z].surf;
-            title = sp[:title],
             zlabel = sp[:colorbar_title],
             colormap = cmap,
+            kw...
         )
     elseif st == :spy
-        return UnicodePlots.spy(series[:z].surf; title = sp[:title])
+        return UnicodePlots.spy(series[:z].surf; kw...)
     end
 
     # now use the ! functions to add to the plot

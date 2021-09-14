@@ -52,7 +52,7 @@ Requires = "1"
 Scratch = "1"
 Showoff = "0.3.1, 1.0"
 StatsBase = "0.32 - 0.33"
-UnicodePlots = "2.2"
+UnicodePlots = "2.4"
 julia = "1.5"
 
 [extras]
