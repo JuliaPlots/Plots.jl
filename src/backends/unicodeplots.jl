@@ -57,8 +57,28 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             o = addUnicodeSeries!(sp, o, series, sp[:legend] != :none, xlim, ylim)
         end
 
+        for ann in sp[:annotations]
+            x, y, val = locate_annotation(sp, ann...)
+            o = UnicodePlots.annotate!(
+                o, x, y, val.str;
+                color = up_color(val.font.color), halign = val.font.halign, valign = val.font.valign
+            )
+        end
+
         push!(plt.o, o)  # save the object
     end
+end
+
+function up_color(col)
+    if typeof(col) <: UnicodePlots.UserColorType
+        color = col
+    elseif typeof(col) <: RGBA
+        col = convert(ARGB32, col)
+        color = map(Int, (red(col).i, green(col).i, blue(col).i))
+    else
+        color = :auto
+    end
+    color
 end
 
 # add a single series
@@ -111,17 +131,16 @@ function addUnicodeSeries!(
     for (n, segment) in enumerate(series_segments(series, st; check = true))
         i, rng = segment.attr_index, segment.range
         lc = get_linecolor(series, i)
-        if typeof(lc) <: UnicodePlots.UserColorType
-            color = lc
-        elseif typeof(lc) <: RGBA
-            lc = convert(ARGB32, lc)
-            color = map(Int, (red(lc).i, green(lc).i, blue(lc).i))
-        else
-            color = :auto
-        end
-
-        up = func(up, x[rng], y[rng]; color = color, name = n == 1 ? label : "")
+        up = func(up, x[rng], y[rng]; color = up_color(lc), name = n == 1 ? label : "")
     end
+
+    for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
+        up = UnicodePlots.annotate!(
+            up, xi, yi, str;
+            color = up_color(fnt.color), halign = fnt.halign, valign = fnt.valign
+        )
+    end
+
     return up
 end
 
