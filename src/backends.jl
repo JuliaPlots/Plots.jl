@@ -910,6 +910,7 @@ const _gaston_scale = [:identity, :ln, :log2, :log10]
 # unicodeplots
 
 const _unicodeplots_attr = merge_with_base_supported([
+    :annotations,
     :label,
     :legend,
     :seriescolor,
