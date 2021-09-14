@@ -63,3 +63,28 @@ end
     @test twpl[:top_margin] == 2Plots.cm
     @test twpl[:bottom_margin] == 2Plots.cm
 end
+
+@testset "aliases" begin
+    p = plot(1:2, xl = "x label")
+    @test p[1][:xaxis][:guide] === "x label"
+    p = plot(1:2, xrange = (0, 3))
+    @test xlims(p) === (0, 3)
+    p = plot(1:2, xtick = [1.25, 1.5, 1.75])
+    @test p[1][:xaxis][:ticks] == [1.25, 1.5, 1.75]
+    p = plot(1:2, xlabelfontsize = 4)
+    @test p[1][:xaxis][:guidefontsize] == 4
+    p = plot(1:2, xgα = .07)
+    @test p[1][:xaxis][:gridalpha] ≈ .07
+    p = plot(1:2, xgridls = :dashdot)
+    @test p[1][:xaxis][:gridstyle] === :dashdot
+    p = plot(1:2, xgridcolor = :red)
+    @test p[1][:xaxis][:foreground_color_grid] === RGBA{Float64}(1.,0.,0.,1.)
+    p = plot(1:2, xminorgridcolor = :red)
+    @test p[1][:xaxis][:foreground_color_minor_grid] === RGBA{Float64}(1.,0.,0.,1.)
+    p = plot(1:2, xgrid_lw = .01)
+    @test p[1][:xaxis][:gridlinewidth] ≈ .01
+    p = plot(1:2, xminorgrid_lw = .01)
+    @test p[1][:xaxis][:minorgridlinewidth] ≈ .01
+    p = plot(1:2, xtickor = :out)
+    @test p[1][:xaxis][:tick_direction] === :out
+end
