@@ -24,6 +24,13 @@ function add_aliases(sym::Symbol, aliases::Symbol...)
     return nothing
 end
 
+function add_axes_aliases(sym::Symbol, aliases::Symbol...)
+    sym in keys(_axis_defaults) || throw(ArgumentError("Invalid `$sym`"))
+    for letter in (:x, :y, :z)
+        add_aliases(Symbol(letter, sym), (Symbol(letter, a) for a in aliases)...)
+    end
+end
+
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k, v) in aliases
         s = string(k)
@@ -764,30 +771,7 @@ add_aliases(
     :fgcolour_subplot,
     :fg_colour_subplot,
 )
-add_aliases(
-    :foreground_color_grid,
-    :fg_grid,
-    :fggrid,
-    :fgcolor_grid,
-    :fg_color_grid,
-    :foreground_grid,
-    :foreground_colour_grid,
-    :fgcolour_grid,
-    :fg_colour_grid,
-    :gridcolor,
-)
-add_aliases(
-    :foreground_color_minor_grid,
-    :fg_minor_grid,
-    :fgminorgrid,
-    :fgcolor_minorgrid,
-    :fg_color_minorgrid,
-    :foreground_minorgrid,
-    :foreground_colour_minor_grid,
-    :fgcolour_minorgrid,
-    :fg_colour_minor_grid,
-    :minorgridcolor,
-)
+
 add_aliases(
     :foreground_color_title,
     :fg_title,
@@ -855,7 +839,66 @@ add_aliases(:linealpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
 add_aliases(:markeralpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
 add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
-add_aliases(:gridalpha, :ga, :galpha, :gα, :gridopacity, :gopacity)
+
+# axes attributes
+add_axes_aliases(:guide, :label, :lab, :l)
+add_axes_aliases(:lims, :lim, :limit, :limits, :range)
+add_axes_aliases(:ticks, :tick)
+add_axes_aliases(:rotation, :rot, :r)
+add_axes_aliases(:guidefontsize, :labelfontsize)
+add_axes_aliases(:gridalpha, :ga, :galpha, :gα, :gridopacity, :gopacity)
+add_axes_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
+add_axes_aliases(
+    :foreground_color_grid,
+    :fg_grid,
+    :fggrid,
+    :fgcolor_grid,
+    :fg_color_grid,
+    :foreground_grid,
+    :foreground_colour_grid,
+    :fgcolour_grid,
+    :fg_colour_grid,
+    :gridcolor,
+)
+add_axes_aliases(
+    :foreground_color_minor_grid,
+    :fg_minor_grid,
+    :fgminorgrid,
+    :fgcolor_minorgrid,
+    :fg_color_minorgrid,
+    :foreground_minorgrid,
+    :foreground_colour_minor_grid,
+    :fgcolour_minorgrid,
+    :fg_colour_minor_grid,
+    :minorgridcolor,
+)
+add_axes_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
+add_axes_aliases(
+    :minorgridstyle,
+    :minorgrid_style,
+    :minorgridlinestyle,
+    :minorgrid_linestyle,
+    :minorgrid_ls,
+    :minorgridls,
+)
+add_axes_aliases(
+    :minorgridlinewidth,
+    :minorgridwidth,
+    :minorgrid_linewidth,
+    :minorgrid_width,
+    :minorgridlw,
+    :minorgrid_lw,
+)
+add_axes_aliases(
+    :tick_direction,
+    :tickdirection,
+    :tick_dir,
+    :tickdir,
+    :tick_orientation,
+    :tickorientation,
+    :tick_or,
+    :tickor,
+)
 
 # series attributes
 add_aliases(:seriestype, :st, :t, :typ, :linetype, :lt)
@@ -874,19 +917,7 @@ add_aliases(:group, :g, :grouping)
 add_aliases(:bins, :bin, :nbin, :nbins, :nb)
 add_aliases(:ribbon, :rib)
 add_aliases(:annotations, :ann, :anns, :annotate, :annotation)
-add_aliases(:xguide, :xlabel, :xlab, :xl)
-add_aliases(:xlims, :xlim, :xlimit, :xlimits, :xrange)
-add_aliases(:xticks, :xtick)
-add_aliases(:xrotation, :xrot, :xr)
-add_aliases(:yguide, :ylabel, :ylab, :yl)
-add_aliases(:ylims, :ylim, :ylimit, :ylimits, :yrange)
-add_aliases(:yticks, :ytick)
-add_aliases(:yrotation, :yrot, :yr)
-add_aliases(:zguide, :zlabel, :zlab, :zl)
-add_aliases(:zlims, :zlim, :zlimit, :zlimits)
-add_aliases(:zticks, :ztick)
-add_aliases(:zrotation, :zrot, :zr)
-add_aliases(:guidefontsize, :labelfontsize)
+
 add_aliases(
     :fill_z,
     :fillz,
@@ -955,24 +986,7 @@ add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
 add_aliases(:stride, :wirefame_stride, :surface_stride, :surf_str, :str)
-add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
-add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
-add_aliases(
-    :minorgridlinewidth,
-    :minorgridwidth,
-    :minorgrid_linewidth,
-    :minorgrid_width,
-    :minorgridlw,
-    :minorgrid_lw,
-)
-add_aliases(
-    :minorgridstyle,
-    :minorgrid_style,
-    :minorgridlinestyle,
-    :minorgrid_linestyle,
-    :minorgrid_ls,
-    :minorgridls,
-)
+
 add_aliases(
     :framestyle,
     :frame_style,
@@ -986,16 +1000,7 @@ add_aliases(
     :border_style,
     :border,
 )
-add_aliases(
-    :tick_direction,
-    :tickdirection,
-    :tick_dir,
-    :tickdir,
-    :tick_orientation,
-    :tickorientation,
-    :tick_or,
-    :tickor,
-)
+
 add_aliases(:camera, :cam, :viewangle, :view_angle)
 add_aliases(:contour_labels, :contourlabels, :clabels, :clabs)
 add_aliases(:warn_on_unsupported, :warn)
