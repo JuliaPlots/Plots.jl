@@ -23,12 +23,8 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
     for sp in plt.subplots
         xaxis = sp[:xaxis]
         yaxis = sp[:yaxis]
-        xlim = axis_limits(sp, :x)
-        ylim = axis_limits(sp, :y)
-
-        # make vectors
-        xlim = [xlim[1], xlim[2]]
-        ylim = [ylim[1], ylim[2]]
+        xlim = collect(axis_limits(sp, :x))
+        ylim = collect(axis_limits(sp, :y))
 
         # we set x/y to have a single point, since we need to create the plot with some data.
         # since this point is at the bottom left corner of the plot, it shouldn't actually be shown
@@ -55,7 +51,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         o = UnicodePlots.Plot(x, y, canvas_map[canvas_type]; kw...)
         for series in series_list(sp)
-            o = addUnicodeSeries!(sp, o, kw, series, sp[:legend] != :none, xlim, ylim)
+            o = addUnicodeSeries!(sp, o, kw, series, sp[:legend] != :none)
         end
 
         for ann in sp[:annotations]
@@ -86,11 +82,7 @@ end
 function addUnicodeSeries!(
     sp::Subplot{UnicodePlotsBackend},
     up::UnicodePlots.Plot,
-    kw,
-    series,
-    addlegend::Bool,
-    xlim,
-    ylim,
+    kw, series, addlegend::Bool,
 )
     st = series[:seriestype]
 
@@ -105,6 +97,7 @@ function addUnicodeSeries!(
 
     # special handling (src/interface)
     if st == :histogram2d
+        kw[:xlim][:] .= kw[:ylim][:] .= 0
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st == :heatmap
         rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
