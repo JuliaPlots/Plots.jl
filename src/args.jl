@@ -428,7 +428,7 @@ const _plot_defaults = KW(
     :dpi                 => DPI,        # dots per inch for images, etc
     :thickness_scaling   => 1,
     :display_type        => :auto,
-    :warn_on_unsupported => true,
+    :warn_on_unsupported => false,
     :extra_plot_kwargs   => Dict(),
     :extra_kwargs        => :series,    # directs collection of extra_kwargs
 )
