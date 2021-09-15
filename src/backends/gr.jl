@@ -724,8 +724,8 @@ function gr_get_ticks_size(ticks, rot)
     w, h = 0.0, 0.0
     for (cv, dv) in zip(ticks...)
         wi, hi = gr_text_size(dv, rot)
-        w = max(w, wi)
-        h = max(h, hi)
+        w = NaNMath.max(w, wi)
+        h = NaNMath.max(h, hi)
     end
     return w, h
 end
