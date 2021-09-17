@@ -26,6 +26,7 @@ end
 
 function add_axes_aliases(sym::Symbol, aliases::Symbol...)
     sym in keys(_axis_defaults) || throw(ArgumentError("Invalid `$sym`"))
+    add_aliases(sym, aliases...)
     for letter in (:x, :y, :z)
         add_aliases(Symbol(letter, sym), (Symbol(letter, a) for a in aliases)...)
     end
