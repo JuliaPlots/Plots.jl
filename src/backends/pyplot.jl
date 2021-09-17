@@ -26,9 +26,25 @@ pyrcparams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 
 # "support" matplotlib v3.4
 if PyPlot.version < v"3.4"
-    @warn("You are using Matplotlib $(PyPlot.version), which is no longer
+    @warn("""You are using Matplotlib $(PyPlot.version), which is no longer
     officialy supported by the Plots community. To ensure smooth Plots.jl
-    integration update your Matplotlib library to a version >= 3.4.0")
+    integration update your Matplotlib library to a version >= 3.4.0
+    
+    If you have used Conda.jl to install PyPlot (default installation),
+    upgrade your matplotlib via Conda.jl and rebuild the PyPlot.
+
+    If you are not sure, here are the default instructions:
+    
+    Then run Julia:
+    ```
+    import Pkg;
+    Pkg.add("Conda")
+    import Conda
+    Conda.update()
+    Pkg.build("Pyplot")
+    ```
+
+    """)
 end
 
 set_facecolor_sym = if PyPlot.version < v"2"
