@@ -1235,7 +1235,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
 
             py_set_scale(ax, sp, axis)
-            axis[:ticks] == :native ? nothing : py_set_lims(ax, sp, axis)
+            py_set_lims(ax, sp, axis)
             if ispolar(sp) && letter == :y
                 ax."set_rlabel_position"(90)
             end
@@ -1270,7 +1270,14 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 )
             end
 
-            axis[:ticks] == :native ? nothing : py_set_ticks(sp, ax, ticks, letter)
+            py_set_ticks(sp, ax, ticks, letter)
+            
+            if axis[:ticks] == :native # It is easier to reset than to account for this
+                py_set_lims(ax, sp, axis)
+                pyaxis.set_major_locator(pyticker.AutoLocator())
+                pyaxis.set_major_formatter(pyticker.ScalarFormatter())
+            end
+
             # Tick marks
             intensity = 0.5  # This value corresponds to scaling of other grid elements
             pyaxis."set_tick_params"(
