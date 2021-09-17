@@ -1569,8 +1569,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         end
     end
 
-    if !isempty(_to_warn) &&
-       !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+    if !isempty(_to_warn) && get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
             @warn(
