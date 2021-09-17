@@ -35,13 +35,13 @@ if PyPlot.version < v"3.4"
 
     If you are not sure, here are the default instructions:
     
-    Then run Julia:
+    In Julia REPL:
     ```
     import Pkg;
     Pkg.add("Conda")
     import Conda
     Conda.update()
-    Pkg.build("Pyplot")
+    Pkg.build("PyPlot")
     ```
 
     """)
