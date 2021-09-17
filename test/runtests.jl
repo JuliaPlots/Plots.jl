@@ -132,28 +132,30 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-4" 
         @test unicodeplots() == Plots.UnicodePlotsBackend()
         @test backend() == Plots.UnicodePlotsBackend()
 
+        io = IOBuffer()
+
         # lets just make sure it runs without error
         p = plot(rand(10))
-        @test isa(p, Plots.Plot) == true
-        @test isa(display(p), Nothing) == true
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
         p = bar(randn(10))
-        @test isa(p, Plots.Plot) == true
-        @test isa(display(p), Nothing) == true
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
         p = plot([1, 2], [3, 4])
         annotate!(p, [(1.5, 3.2, Plots.text("Test", :red, :center))])
         hline!(p, [3.1])
-        @test isa(p, Plots.Plot) == true
-        @test isa(display(p), Nothing) == true
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
         p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
         hline!(p, [3.1])
         annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
-        @test isa(p, Plots.Plot) == true
-        @test isa(display(p), Nothing) == true
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
         p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
         annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, :auto)])
         hline!(p, [3.1])
-        @test isa(p, Plots.Plot) == true
-        @test isa(display(p), Nothing) == true
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
     end
 
     @testset "PlotlyJS" begin
@@ -161,8 +163,8 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-4" 
         @test backend() == Plots.PlotlyJSBackend()
 
         p = plot(rand(10))
-        @test isa(p, Plots.Plot) == true
-        @test_broken isa(display(p), Nothing) == true
+        @test p isa Plots.Plot
+        @test_broken display(p) isa Nothing
     end
 end
 
