@@ -1,18 +1,20 @@
 using Plots: guidefont, series_annotations, PLOTS_SEED
-import ImageMagick
+
 using VisualRegressionTests
-using Plots
-using Random
-using StableRNGs
-using Test
-using TestImages
-using FileIO
-using Gtk
-using LibGit2
-import GeometryBasics
-using Dates
 using RecipesBase
+using StableRNGs
+using TestImages
+using LibGit2
+using Random
+using FileIO
+using Plots
+using Dates
 using JSON
+using Test
+using Gtk
+
+import GeometryBasics
+import ImageMagick
 
 @testset "Infrastructure" begin
     @test_nowarn JSON.Parser.parse(
@@ -33,7 +35,7 @@ end
     end
     Plots.plotly_local_file_path[] = nothing
     Plots.use_local_dependencies[] = temp
-end # testset
+end
 
 include("test_defaults.jl")
 include("test_pipeline.jl")
@@ -55,7 +57,6 @@ function reference_file(backend, i, version)
     refdir = reference_dir("Plots", string(backend))
     fn = "ref$i.png"
     versions = sort(VersionNumber.(readdir(refdir)), rev = true)
-
     reffn = joinpath(refdir, string(version), fn)
     for v in versions
         tmpfn = joinpath(refdir, string(v), fn)
@@ -64,7 +65,6 @@ function reference_file(backend, i, version)
             break
         end
     end
-
     return reffn
 end
 
@@ -79,9 +79,10 @@ if !isdir(reference_dir())
 end
 
 include("imgcomp.jl")
-# don't actually show the plots
 Random.seed!(PLOTS_SEED)
-default(show = false, reuse = true)
+
+default(show = false, reuse = true)  # don't actually show the plots
+
 is_ci() = get(ENV, "CI", "false") == "true"
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-4" : "1e-5"))
 
@@ -106,67 +107,7 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-4" 
 #     image_comparison_facts(:pgfplotsx, tol=PLOTS_IMG_TOL, skip = Plots._backend_skips[:pgfplotsx])
 # end
 
-# 10 Histogram2D
-
 ##
-
-@testset "Backends" begin
-    @testset "GR" begin
-        ENV["PLOTS_TEST"] = "true"
-        ENV["GKSwstype"] = "100"
-        @test gr() == Plots.GRBackend()
-        @test backend() == Plots.GRBackend()
-
-        @static if haskey(ENV, "APPVEYOR")
-            @info "Skipping GR image comparison tests on AppVeyor"
-        else
-            image_comparison_facts(
-                :gr,
-                tol = PLOTS_IMG_TOL,
-                skip = Plots._backend_skips[:gr],
-            )
-        end
-    end
-
-    @testset "UnicodePlots" begin
-        @test unicodeplots() == Plots.UnicodePlotsBackend()
-        @test backend() == Plots.UnicodePlotsBackend()
-
-        io = IOBuffer()
-
-        # lets just make sure it runs without error
-        p = plot(rand(10))
-        @test p isa Plots.Plot
-        @test show(io, p) isa Nothing
-        p = bar(randn(10))
-        @test p isa Plots.Plot
-        @test show(io, p) isa Nothing
-        p = plot([1, 2], [3, 4])
-        annotate!(p, [(1.5, 3.2, Plots.text("Test", :red, :center))])
-        hline!(p, [3.1])
-        @test p isa Plots.Plot
-        @test show(io, p) isa Nothing
-        p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
-        hline!(p, [3.1])
-        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
-        @test p isa Plots.Plot
-        @test show(io, p) isa Nothing
-        p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
-        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, :auto)])
-        hline!(p, [3.1])
-        @test p isa Plots.Plot
-        @test show(io, p) isa Nothing
-    end
-
-    @testset "PlotlyJS" begin
-        @test plotlyjs() == Plots.PlotlyJSBackend()
-        @test backend() == Plots.PlotlyJSBackend()
-
-        p = plot(rand(10))
-        @test p isa Plots.Plot
-        @test_broken display(p) isa Nothing
-    end
-end
 
 @testset "Axes" begin
     p = plot()
@@ -183,9 +124,11 @@ end
 end
 
 @testset "NoFail" begin
-    #ensure backend with tested display
+    # ensure backend with tested display
     @test unicodeplots() == Plots.UnicodePlotsBackend()
     @test backend() == Plots.UnicodePlotsBackend()
+
+    dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 
     @testset "Plot" begin
         plots = [
@@ -199,21 +142,20 @@ end
             plot(["a" "b"; missing "d"], [1 2; 3 4]),
         ]
         for plt in plots
-            display(plt)
+            display(dsp, plt)
         end
         @test_nowarn plot(x -> x^2, 0, 2)
     end
 
     @testset "Bar" begin
         p = bar([3, 2, 1], [1, 2, 3])
-        @test isa(p, Plots.Plot)
-        @test isa(display(p), Nothing) == true
+        @test p isa Plots.Plot
+        @test display(dsp, p) isa Nothing
     end
 end
 
 @testset "EmptyAnim" begin
-    anim = @animate for i in []
-    end
+    anim = @animate for i in [] end
 
     @test_throws ArgumentError gif(anim)
 end
@@ -256,4 +198,63 @@ end
     @test Plots.process_clims(nothing) ==
           Plots.process_clims(missing) ==
           Plots.process_clims(:auto)
+end
+
+
+@testset "Backends" begin
+    @testset "UnicodePlots" begin
+        @test unicodeplots() == Plots.UnicodePlotsBackend()
+        @test backend() == Plots.UnicodePlotsBackend()
+
+        io = IOContext(IOBuffer(), :color => true)
+
+        # lets just make sure it runs without error
+        p = plot(rand(10))
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
+        p = bar(randn(10))
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
+        p = plot([1, 2], [3, 4])
+        annotate!(p, [(1.5, 3.2, Plots.text("Test", :red, :center))])
+        hline!(p, [3.1])
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
+        p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
+        hline!(p, [3.1])
+        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
+        p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
+        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, :auto)])
+        hline!(p, [3.1])
+        @test p isa Plots.Plot
+        @test show(io, p) isa Nothing
+    end
+
+    @testset "PlotlyJS" begin
+        @test plotlyjs() == Plots.PlotlyJSBackend()
+        @test backend() == Plots.PlotlyJSBackend()
+
+        p = plot(rand(10))
+        @test p isa Plots.Plot
+        @test_broken display(p) isa Nothing
+    end
+
+    @testset "GR" begin
+        ENV["PLOTS_TEST"] = "true"
+        ENV["GKSwstype"] = "100"
+        @test gr() == Plots.GRBackend()
+        @test backend() == Plots.GRBackend()
+
+        @static if haskey(ENV, "APPVEYOR")
+            @info "Skipping GR image comparison tests on AppVeyor"
+        else
+            image_comparison_facts(
+                :gr,
+                tol = PLOTS_IMG_TOL,
+                skip = Plots._backend_skips[:gr],
+            )
+        end
+    end
 end
