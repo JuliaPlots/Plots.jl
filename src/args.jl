@@ -24,9 +24,9 @@ function add_aliases(sym::Symbol, aliases::Symbol...)
     return nothing
 end
 
-function add_axes_aliases(sym::Symbol, aliases::Symbol...; onlyxyz::Bool = false)
+function add_axes_aliases(sym::Symbol, aliases::Symbol...; generic::Bool = true)
     sym in keys(_axis_defaults) || throw(ArgumentError("Invalid `$sym`"))
-    !onlyxyz && add_aliases(sym, aliases...)
+    generic && add_aliases(sym, aliases...)
     for letter in (:x, :y, :z)
         add_aliases(Symbol(letter, sym), (Symbol(letter, a) for a in aliases)...)
     end
@@ -842,7 +842,7 @@ add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :ms
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 
 # axes attributes
-add_axes_aliases(:guide, :label, :lab, :l; onlyxyz = true)
+add_axes_aliases(:guide, :label, :lab, :l; generic = false)
 add_axes_aliases(:lims, :lim, :limit, :limits, :range)
 add_axes_aliases(:ticks, :tick)
 add_axes_aliases(:rotation, :rot, :r)
