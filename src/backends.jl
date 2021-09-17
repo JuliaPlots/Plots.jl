@@ -911,16 +911,21 @@ const _gaston_scale = [:identity, :ln, :log2, :log10]
 
 const _unicodeplots_attr = merge_with_base_supported([
     :annotations,
+    :bins,
+    :guide,
+    # :grid,
     :label,
+    :layout,
     :legend,
-    :seriescolor,
-    :seriesalpha,
+    :lims,
+    :linealpha,
+    :linecolor,
     :linestyle,
     :markershape,
-    :bins,
+    :seriesalpha,
+    :seriescolor,
+    :scale,
     :title,
-    :guide,
-    :lims,
 ])
 const _unicodeplots_seriestype = [
     :path,
