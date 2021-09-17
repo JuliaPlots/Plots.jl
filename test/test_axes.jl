@@ -64,7 +64,7 @@ end
     @test twpl[:bottom_margin] == 2Plots.cm
 end
 
-@testset "aliases" begin
+@testset "axis-aliases" begin
     p = plot(1:2, xl = "x label")
     @test p[1][:xaxis][:guide] === "x label"
     p = plot(1:2, xrange = (0, 3))
@@ -87,4 +87,31 @@ end
     @test p[1][:xaxis][:minorgridlinewidth] ≈ .01
     p = plot(1:2, xtickor = :out)
     @test p[1][:xaxis][:tick_direction] === :out
+end
+
+@testset "aliases" begin
+    p = plot(1:2, guide = "both labels")
+    @test p[1][:xaxis][:guide] === p[1][:yaxis][:guide] === "both labels"
+    p = plot(1:2, label = "test")
+    @test p[1][:xaxis][:guide] === p[1][:yaxis][:guide] === ""
+    p = plot(1:2, lim = (0, 3))
+    @test xlims(p) === ylims(p) === (0,3)
+    p = plot(1:2, tick = [1.25, 1.5, 1.75])
+    @test p[1][:xaxis][:ticks] == p[1][:yaxis][:ticks] == [1.25, 1.5, 1.75]
+    p = plot(1:2, labelfontsize = 4)
+    @test p[1][:xaxis][:guidefontsize] == p[1][:yaxis][:guidefontsize] == 4
+    p = plot(1:2, gα = .07)
+    @test p[1][:xaxis][:gridalpha] ≈ p[1][:yaxis][:gridalpha] ≈ .07
+    p = plot(1:2, gridls = :dashdot)
+    @test p[1][:xaxis][:gridstyle] === p[1][:yaxis][:gridstyle] === :dashdot
+    p = plot(1:2, gridcolor = :red)
+    @test p[1][:xaxis][:foreground_color_grid] === p[1][:yaxis][:foreground_color_grid] === RGBA{Float64}(1.,0.,0.,1.)
+    p = plot(1:2, minorgridcolor = :red)
+    @test p[1][:xaxis][:foreground_color_minor_grid] === p[1][:yaxis][:foreground_color_minor_grid] === RGBA{Float64}(1.,0.,0.,1.)
+    p = plot(1:2, grid_lw = .01)
+    @test p[1][:xaxis][:gridlinewidth] ≈ p[1][:yaxis][:gridlinewidth] ≈ .01
+    p = plot(1:2, minorgrid_lw = .01)
+    @test p[1][:xaxis][:minorgridlinewidth] ≈ p[1][:yaxis][:minorgridlinewidth] ≈ .01
+    p = plot(1:2, tickor = :out)
+    @test p[1][:xaxis][:tick_direction] === p[1][:yaxis][:tick_direction] === :out
 end
