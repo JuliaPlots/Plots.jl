@@ -1576,21 +1576,27 @@ function gr_draw_ticks(sp, axis, segments, func = gr_polyline)
 end
 
 function gr_label_ticks(sp, letter, ticks)
-    axis = sp[Symbol(letter, :axis)]
+    println(ticks)
+    println(gr_text_size.(ticks |> last))
+    grs = gr_text_size.(ticks |> last)
+    axis = sp[get_attr_symbol(letter, :axis)]
+    println(text_box_width.(map(first, grs), map(last, grs), axis[:rotation]))
+    diff_width = ((text_box_width.(map(first, grs), map(last, grs), axis[:rotation]) .- map(first, grs)) ./ 2) .* cos(axis[:rotation])
+    println(diff_width)
     isy = letter === :y
     oletter = isy ? :x : :y
     oaxis = sp[Symbol(oletter, :axis)]
     oamin, oamax = axis_limits(sp, oletter)
     gr_set_tickfont(sp, letter)
     out_factor = ifelse(axis[:tick_direction] === :out, 1.5, 1)
-    x_offset = isy ? -1.5e-2 * out_factor : 0
+    x_offset = (isy ? -1.5e-2 * out_factor : 0)
     y_offset = isy ? 0 : -8e-3 * out_factor
 
     ov = sp[:framestyle] == :origin ? 0 : xor(oaxis[:flip], axis[:mirror]) ? oamax : oamin
     sgn = axis[:mirror] ? -1 : 1
-    for (cv, dv) in zip(ticks...)
+    for (cv, dv, diff_width) in zip(ticks..., diff_width)
         x, y = GR.wctondc(reverse_if((cv, ov), isy)...)
-        gr_text(x + sgn * x_offset, y + sgn * y_offset, dv)
+        gr_text(x + sgn * (x_offset + diff_width), y + sgn * y_offset, dv)
     end
 end
 
