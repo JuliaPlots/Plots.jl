@@ -205,14 +205,14 @@ maketuple(x::Tuple{T,S}) where {T,S} = x
 for i in 2:4
     @eval begin
         RecipesPipeline.unzip(
-            v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},AVec{<:GeometryBasics.Point{$i}}},
+            v::Union{AVec{<:NTuple{$i,T} where T},AVec{<:GeometryBasics.Point{$i}}},
         ) = $(Expr(:tuple, (:([t[$j] for t in v]) for j in 1:i)...))
     end
 end
 
-RecipesPipeline.unzip(
-    ::Union{AVec{<:GeometryBasics.Point{N}},AVec{<:Tuple{Vararg{T,N} where T}}},
-) where {N} = error("$N-dimensional unzip not implemented.")
+RecipesPipeline.unzip(::Union{AVec{<:GeometryBasics.Point{N}},AVec{<:NTuple{N,T} where T}}) where {N} = 
+    error("$N-dimensional unzip not implemented.")
+
 RecipesPipeline.unzip(::Union{AVec{<:GeometryBasics.Point},AVec{<:Tuple}}) =
     error("Can't unzip points of different dimensions.")
 
@@ -816,7 +816,7 @@ end
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
     d = extend_by_data!(series[letter], v)
-    expand_extrema!(series[:subplot][Symbol(letter, :axis)], d)
+    expand_extrema!(series[:subplot][get_attr_symbol(letter, :axis)], d)
     return d
 end
 
@@ -1214,3 +1214,9 @@ function mesh3d_triangles(x, y, z, cns)
     end
     return X, Y, Z
 end
+
+# cache joined symbols so they can be looked up instead of constructed each time
+const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
+
+get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
+get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]

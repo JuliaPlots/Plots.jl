@@ -23,7 +23,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
 end
 
 function get_axis(sp::Subplot, letter::Symbol)
-    axissym = Symbol(letter, :axis)
+    axissym = get_attr_symbol(letter, :axis)
     if haskey(sp.attr, axissym)
         sp.attr[axissym]
     else
@@ -35,40 +35,44 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scaleAliases, arg, arg)
     if typeof(arg) <: Font
-        plotattributes[Symbol(letter, :tickfont)] = arg
-        plotattributes[Symbol(letter, :guidefont)] = arg
+        plotattributes[get_attr_symbol(letter, :tickfont)] = arg
+        plotattributes[get_attr_symbol(letter, :guidefont)] = arg
 
     elseif arg in _allScales
-        plotattributes[Symbol(letter, :scale)] = arg
+        plotattributes[get_attr_symbol(letter, :scale)] = arg
 
     elseif arg in (:flip, :invert, :inverted)
-        plotattributes[Symbol(letter, :flip)] = true
+        plotattributes[get_attr_symbol(letter, :flip)] = true
 
     elseif T <: AbstractString
-        plotattributes[Symbol(letter, :guide)] = arg
+        plotattributes[get_attr_symbol(letter, :guide)] = arg
 
         # xlims/ylims
     elseif (T <: Tuple || T <: AVec) && length(arg) == 2
         sym = typeof(arg[1]) <: Number ? :lims : :ticks
-        plotattributes[Symbol(letter, sym)] = arg
+        plotattributes[get_attr_symbol(letter, sym)] = arg
 
         # xticks/yticks
     elseif T <: AVec
-        plotattributes[Symbol(letter, :ticks)] = arg
+        plotattributes[get_attr_symbol(letter, :ticks)] = arg
 
     elseif arg === nothing
-        plotattributes[Symbol(letter, :ticks)] = []
+        plotattributes[get_attr_symbol(letter, :ticks)] = []
 
     elseif T <: Bool || arg in _allShowaxisArgs
-        plotattributes[Symbol(letter, :showaxis)] = showaxis(arg, letter)
+        plotattributes[get_attr_symbol(letter, :showaxis)] = showaxis(arg, letter)
 
     elseif typeof(arg) <: Number
-        plotattributes[Symbol(letter, :rotation)] = arg
+        plotattributes[get_attr_symbol(letter, :rotation)] = arg
 
     elseif typeof(arg) <: Function
-        plotattributes[Symbol(letter, :formatter)] = arg
+        plotattributes[get_attr_symbol(letter, :formatter)] = arg
 
-    elseif !handleColors!(plotattributes, arg, Symbol(letter, :foreground_color_axis))
+    elseif !handleColors!(
+        plotattributes,
+        arg,
+        get_attr_symbol(letter, :foreground_color_axis),
+    )
         @warn("Skipped $(letter)axis arg $arg")
     end
 end
@@ -297,7 +301,7 @@ for l in (:x, :y, :z)
     end
 end
 # get_ticks from axis symbol :x, :y, or :z
-get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[Symbol(s, :axis)])
+get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
 get_ticks(p::Plot, s::Symbol) = [get_ticks(sp, s) for sp in p.subplots]
 
 function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T}
@@ -393,7 +397,7 @@ end
 
 function reset_extrema!(sp::Subplot)
     for asym in (:x, :y, :z)
-        sp[Symbol(asym, :axis)][:extrema] = Extrema()
+        sp[get_attr_symbol(asym, :axis)][:extrema] = Extrema()
     end
     for series in sp.series_list
         expand_extrema!(sp, series.plotattributes)
@@ -446,7 +450,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
         )
             data = [NaN]
         end
-        axis = sp[Symbol(letter, "axis")]
+        axis = sp[get_attr_symbol(letter, :axis)]
 
         if isa(data, Volume)
             expand_extrema!(sp[:xaxis], data.x_extents)
@@ -463,7 +467,8 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
-            plotattributes[letter], plotattributes[Symbol(letter, "_discrete_indices")] =
+            plotattributes[letter],
+            plotattributes[get_attr_symbol(letter, :(_discrete_indices))] =
                 discrete_value!(axis, data)
             expand_extrema!(axis, plotattributes[letter])
         end
@@ -502,7 +507,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
                 plotattributes[:bar_width] =
                     _bar_width * ignorenan_minimum(filter(x -> x > 0, diff(sort(data))))
         end
-        axis = sp.attr[Symbol(dsym, :axis)]
+        axis = sp.attr[get_attr_symbol(dsym, :axis)]
         expand_extrema!(axis, ignorenan_maximum(data) + 0.5maximum(bw))
         expand_extrema!(axis, ignorenan_minimum(data) - 0.5minimum(bw))
     end
@@ -511,8 +516,8 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
     if plotattributes[:seriestype] == :heatmap
         for letter in (:x, :y)
             data = plotattributes[letter]
-            axis = sp[Symbol(letter, "axis")]
-            scale = get(plotattributes, Symbol(letter, "scale"), :identity)
+            axis = sp[get_attr_symbol(letter, :axis)]
+            scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
             expand_extrema!(axis, heatmap_edges(data, scale))
         end
     end
@@ -586,10 +591,10 @@ end
 function axis_limits(
     sp,
     letter,
-    should_widen = default_should_widen(sp[Symbol(letter, :axis)]),
+    should_widen = default_should_widen(sp[get_attr_symbol(letter, :axis)]),
     consider_aspect = true,
 )
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_attr_symbol(letter, :axis)]
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = axis[:lims]
@@ -724,10 +729,10 @@ end
 # compute the line segments which should be drawn for this axis
 function axis_drawing_info(sp, letter)
     # find out which axis we are dealing with
-    asym = Symbol(letter, :axis)
+    asym = get_attr_symbol(letter, :axis)
     isy = letter === :y
     oletter = isy ? :x : :y
-    oasym = Symbol(oletter, :axis)
+    oasym = get_attr_symbol(oletter, :axis)
 
     # get axis objects, ticks and minor ticks
     ax, oax = sp[asym], sp[oasym]
@@ -856,9 +861,9 @@ function axis_drawing_info_3d(sp, letter)
     near_letter = letter in (:x, :z) ? :y : :x
     far_letter = letter in (:x, :y) ? :z : :x
 
-    ax = sp[Symbol(letter, :axis)]
-    nax = sp[Symbol(near_letter, :axis)]
-    fax = sp[Symbol(far_letter, :axis)]
+    ax = sp[get_attr_symbol(letter, :axis)]
+    nax = sp[get_attr_symbol(near_letter, :axis)]
+    fax = sp[get_attr_symbol(far_letter, :axis)]
 
     amin, amax = axis_limits(sp, letter)
     namin, namax = axis_limits(sp, near_letter)

@@ -670,7 +670,7 @@ function gr_display(plt::Plot, fmt = "")
 end
 
 function gr_set_tickfont(sp, letter)
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_attr_symbol(letter, :axis)]
 
     mirror = (
         vcenter = :vcenter,
@@ -746,8 +746,8 @@ function gr_get_ticks_size(ticks, rot)
     w, h = 0.0, 0.0
     for (cv, dv) in zip(ticks...)
         wi, hi = gr_text_size(dv, rot)
-        w = max(w, wi)
-        h = max(h, hi)
+        w = NaNMath.max(w, wi)
+        h = NaNMath.max(h, hi)
     end
     return w, h
 end
@@ -1478,7 +1478,7 @@ end
 
 function gr_draw_axis(sp, letter, viewport_plotarea)
     ax = axis_drawing_info(sp, letter)
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_attr_symbol(letter, :axis)]
 
     # draw segments
     gr_draw_grid(sp, axis, ax.grid_segments)
@@ -1494,7 +1494,7 @@ end
 
 function gr_draw_axis_3d(sp, letter, viewport_plotarea)
     ax = axis_drawing_info_3d(sp, letter)
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_attr_symbol(letter, :axis)]
 
     # draw segments
     gr_draw_grid(sp, axis, ax.grid_segments, gr_polyline3d)
@@ -1575,10 +1575,10 @@ function gr_draw_ticks(sp, axis, segments, func = gr_polyline)
 end
 
 function gr_label_ticks(sp, letter, ticks)
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_attr_symbol(letter, :axis)]
     isy = letter === :y
     oletter = isy ? :x : :y
-    oaxis = sp[Symbol(oletter, :axis)]
+    oaxis = sp[get_attr_symbol(oletter, :axis)]
     oamin, oamax = axis_limits(sp, oletter)
     gr_set_tickfont(sp, letter)
     out_factor = ifelse(axis[:tick_direction] === :out, 1.5, 1)
@@ -1611,9 +1611,9 @@ function gr_label_ticks_3d(sp, letter, ticks)
     near_letter = letter in (:x, :z) ? :y : :x
     far_letter = letter in (:x, :y) ? :z : :x
 
-    ax = sp[Symbol(letter, :axis)]
-    nax = sp[Symbol(near_letter, :axis)]
-    fax = sp[Symbol(far_letter, :axis)]
+    ax = sp[get_attr_symbol(letter, :axis)]
+    nax = sp[get_attr_symbol(near_letter, :axis)]
+    fax = sp[get_attr_symbol(far_letter, :axis)]
 
     amin, amax = axis_limits(sp, letter)
     namin, namax = axis_limits(sp, near_letter)
@@ -1623,7 +1623,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     # find out which axes we are dealing with
     i = findfirst(==(letter), (:x, :y, :z))
     letters = axes_shift((:x, :y, :z), 1 - i)
-    asyms = Symbol.(letters, :axis)
+    asyms = get_attr_symbol.(letters, :axis)
 
     # get axis objects, ticks and minor ticks
     # regardless of the `letter` we now use the convention that `x` in variable names refer to
@@ -1660,7 +1660,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
 end
 
 function gr_label_axis(sp, letter, viewport_plotarea)
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_attr_symbol(letter, :axis)]
     mirror = axis[:mirror]
     # guide
     if axis[:guide] != ""
@@ -1704,13 +1704,13 @@ function gr_label_axis(sp, letter, viewport_plotarea)
 end
 
 function gr_label_axis_3d(sp, letter)
-    ax = sp[Symbol(letter, :axis)]
+    ax = sp[get_attr_symbol(letter, :axis)]
     if ax[:guide] != ""
         near_letter = letter in (:x, :z) ? :y : :x
         far_letter = letter in (:x, :y) ? :z : :x
 
-        nax = sp[Symbol(near_letter, :axis)]
-        fax = sp[Symbol(far_letter, :axis)]
+        nax = sp[get_attr_symbol(near_letter, :axis)]
+        fax = sp[get_attr_symbol(far_letter, :axis)]
 
         amin, amax = axis_limits(sp, letter)
         namin, namax = axis_limits(sp, near_letter)

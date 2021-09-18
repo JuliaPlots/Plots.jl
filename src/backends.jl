@@ -247,7 +247,7 @@ function merge_with_base_supported(v::AVec)
     for vi in v
         if haskey(_axis_defaults, vi)
             for letter in (:x, :y, :z)
-                push!(v, Symbol(letter, vi))
+                push!(v, get_attr_symbol(letter, vi))
             end
         end
     end
@@ -910,16 +910,22 @@ const _gaston_scale = [:identity, :ln, :log2, :log10]
 # unicodeplots
 
 const _unicodeplots_attr = merge_with_base_supported([
+    :annotations,
+    :bins,
+    :guide,
+    # :grid,
     :label,
+    :layout,
     :legend,
-    :seriescolor,
-    :seriesalpha,
+    :lims,
+    :linealpha,
+    :linecolor,
     :linestyle,
     :markershape,
-    :bins,
+    :seriesalpha,
+    :seriescolor,
+    :scale,
     :title,
-    :guide,
-    :lims,
 ])
 const _unicodeplots_seriestype = [
     :path,
@@ -933,7 +939,7 @@ const _unicodeplots_seriestype = [
 ]
 const _unicodeplots_style = [:auto, :solid]
 const _unicodeplots_marker = [:none, :auto, :circle]
-const _unicodeplots_scale = [:identity]
+const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
 const _canvas_type = Ref(:auto)

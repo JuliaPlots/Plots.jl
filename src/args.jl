@@ -24,6 +24,14 @@ function add_aliases(sym::Symbol, aliases::Symbol...)
     return nothing
 end
 
+function add_axes_aliases(sym::Symbol, aliases::Symbol...; generic::Bool = true)
+    sym in keys(_axis_defaults) || throw(ArgumentError("Invalid `$sym`"))
+    generic && add_aliases(sym, aliases...)
+    for letter in (:x, :y, :z)
+        add_aliases(Symbol(letter, sym), (Symbol(letter, a) for a in aliases)...)
+    end
+end
+
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k, v) in aliases
         s = string(k)
@@ -276,7 +284,7 @@ function hasgrid(arg::Symbol, letter)
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
         @warn(
-            "Unknown grid argument $arg; $(Symbol(letter, :grid)) was set to `true` instead."
+            "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
         )
         true
     end
@@ -316,7 +324,7 @@ function showaxis(arg::Symbol, letter)
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
         @warn(
-            "Unknown showaxis argument $arg; $(Symbol(letter, :showaxis)) was set to `true` instead."
+            "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
         )
         true
     end
@@ -571,11 +579,6 @@ function reset_axis_defaults_byletter!()
 end
 reset_axis_defaults_byletter!()
 
-for letter in (:x, :y, :z), k in keys(_axis_defaults)
-    # allow the underscore version too: xguide or x_guide
-    add_aliases(Symbol(letter, k), Symbol(letter, "_", k))
-end
-
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 
 const _initial_defaults = deepcopy(_all_defaults)
@@ -619,6 +622,20 @@ const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
 const _all_subplot_args = sort(union([_subplot_args; _magic_subplot_args]))
 const _all_series_args = sort(union([_series_args; _magic_series_args]))
 const _all_plot_args = _plot_args
+
+for letter in (:x, :y, :z)
+    _attrsymbolcache[letter] = Dict{Symbol,Symbol}()
+    for k in keys(_axis_defaults)
+        # populate attribute cache
+        lk = Symbol(letter, k)
+        _attrsymbolcache[letter][k] = lk
+        # allow the underscore version too: xguide or x_guide
+        add_aliases(lk, Symbol(letter, "_", k))
+    end
+    for k in (_magic_axis_args..., :(_discrete_indices))
+        _attrsymbolcache[letter][k] = Symbol(letter, k)
+    end
+end
 
 const _all_args =
     sort(union([_all_axis_args; _all_subplot_args; _all_series_args; _all_plot_args]))
@@ -755,30 +772,7 @@ add_aliases(
     :fgcolour_subplot,
     :fg_colour_subplot,
 )
-add_aliases(
-    :foreground_color_grid,
-    :fg_grid,
-    :fggrid,
-    :fgcolor_grid,
-    :fg_color_grid,
-    :foreground_grid,
-    :foreground_colour_grid,
-    :fgcolour_grid,
-    :fg_colour_grid,
-    :gridcolor,
-)
-add_aliases(
-    :foreground_color_minor_grid,
-    :fg_minor_grid,
-    :fgminorgrid,
-    :fgcolor_minorgrid,
-    :fg_color_minorgrid,
-    :foreground_minorgrid,
-    :foreground_colour_minor_grid,
-    :fgcolour_minorgrid,
-    :fg_colour_minor_grid,
-    :minorgridcolor,
-)
+
 add_aliases(
     :foreground_color_title,
     :fg_title,
@@ -846,7 +840,66 @@ add_aliases(:linealpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
 add_aliases(:markeralpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
 add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
-add_aliases(:gridalpha, :ga, :galpha, :gα, :gridopacity, :gopacity)
+
+# axes attributes
+add_axes_aliases(:guide, :label, :lab, :l; generic = false)
+add_axes_aliases(:lims, :lim, :limit, :limits, :range)
+add_axes_aliases(:ticks, :tick)
+add_axes_aliases(:rotation, :rot, :r)
+add_axes_aliases(:guidefontsize, :labelfontsize)
+add_axes_aliases(:gridalpha, :ga, :galpha, :gα, :gridopacity, :gopacity)
+add_axes_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
+add_axes_aliases(
+    :foreground_color_grid,
+    :fg_grid,
+    :fggrid,
+    :fgcolor_grid,
+    :fg_color_grid,
+    :foreground_grid,
+    :foreground_colour_grid,
+    :fgcolour_grid,
+    :fg_colour_grid,
+    :gridcolor,
+)
+add_axes_aliases(
+    :foreground_color_minor_grid,
+    :fg_minor_grid,
+    :fgminorgrid,
+    :fgcolor_minorgrid,
+    :fg_color_minorgrid,
+    :foreground_minorgrid,
+    :foreground_colour_minor_grid,
+    :fgcolour_minorgrid,
+    :fg_colour_minor_grid,
+    :minorgridcolor,
+)
+add_axes_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
+add_axes_aliases(
+    :minorgridstyle,
+    :minorgrid_style,
+    :minorgridlinestyle,
+    :minorgrid_linestyle,
+    :minorgrid_ls,
+    :minorgridls,
+)
+add_axes_aliases(
+    :minorgridlinewidth,
+    :minorgridwidth,
+    :minorgrid_linewidth,
+    :minorgrid_width,
+    :minorgridlw,
+    :minorgrid_lw,
+)
+add_axes_aliases(
+    :tick_direction,
+    :tickdirection,
+    :tick_dir,
+    :tickdir,
+    :tick_orientation,
+    :tickorientation,
+    :tick_or,
+    :tickor,
+)
 
 # series attributes
 add_aliases(:seriestype, :st, :t, :typ, :linetype, :lt)
@@ -865,19 +918,7 @@ add_aliases(:group, :g, :grouping)
 add_aliases(:bins, :bin, :nbin, :nbins, :nb)
 add_aliases(:ribbon, :rib)
 add_aliases(:annotations, :ann, :anns, :annotate, :annotation)
-add_aliases(:xguide, :xlabel, :xlab, :xl)
-add_aliases(:xlims, :xlim, :xlimit, :xlimits, :xrange)
-add_aliases(:xticks, :xtick)
-add_aliases(:xrotation, :xrot, :xr)
-add_aliases(:yguide, :ylabel, :ylab, :yl)
-add_aliases(:ylims, :ylim, :ylimit, :ylimits, :yrange)
-add_aliases(:yticks, :ytick)
-add_aliases(:yrotation, :yrot, :yr)
-add_aliases(:zguide, :zlabel, :zlab, :zl)
-add_aliases(:zlims, :zlim, :zlimit, :zlimits)
-add_aliases(:zticks, :ztick)
-add_aliases(:zrotation, :zrot, :zr)
-add_aliases(:guidefontsize, :labelfontsize)
+
 add_aliases(
     :fill_z,
     :fillz,
@@ -946,24 +987,7 @@ add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
 add_aliases(:stride, :wirefame_stride, :surface_stride, :surf_str, :str)
-add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
-add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
-add_aliases(
-    :minorgridlinewidth,
-    :minorgridwidth,
-    :minorgrid_linewidth,
-    :minorgrid_width,
-    :minorgridlw,
-    :minorgrid_lw,
-)
-add_aliases(
-    :minorgridstyle,
-    :minorgrid_style,
-    :minorgridlinestyle,
-    :minorgrid_linestyle,
-    :minorgrid_ls,
-    :minorgridls,
-)
+
 add_aliases(
     :framestyle,
     :frame_style,
@@ -977,16 +1001,7 @@ add_aliases(
     :border_style,
     :border,
 )
-add_aliases(
-    :tick_direction,
-    :tickdirection,
-    :tick_dir,
-    :tickdir,
-    :tick_orientation,
-    :tickorientation,
-    :tick_or,
-    :tickor,
-)
+
 add_aliases(:camera, :cam, :viewangle, :view_angle)
 add_aliases(:contour_labels, :contourlabels, :clabels, :clabs)
 add_aliases(:warn_on_unsupported, :warn)
@@ -1216,69 +1231,79 @@ end
 
 function processGridArg!(plotattributes::AKW, arg, letter)
     if arg in _allGridArgs || isa(arg, Bool)
-        plotattributes[Symbol(letter, :grid)] = hasgrid(arg, letter)
+        plotattributes[get_attr_symbol(letter, :grid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
-        plotattributes[Symbol(letter, :gridstyle)] = arg
+        plotattributes[get_attr_symbol(letter, :gridstyle)] = arg
 
     elseif typeof(arg) <: Stroke
         arg.width === nothing ||
-            (plotattributes[Symbol(letter, :gridlinewidth)] = arg.width)
+            (plotattributes[get_attr_symbol(letter, :gridlinewidth)] = arg.width)
         arg.color === nothing || (
-            plotattributes[Symbol(letter, :foreground_color_grid)] =
+            plotattributes[get_attr_symbol(letter, :foreground_color_grid)] =
                 arg.color in (:auto, :match) ? :match : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[Symbol(letter, :gridalpha)] = arg.alpha)
-        arg.style === nothing || (plotattributes[Symbol(letter, :gridstyle)] = arg.style)
+        arg.alpha === nothing ||
+            (plotattributes[get_attr_symbol(letter, :gridalpha)] = arg.alpha)
+        arg.style === nothing ||
+            (plotattributes[get_attr_symbol(letter, :gridstyle)] = arg.style)
 
         # linealpha
     elseif allAlphas(arg)
-        plotattributes[Symbol(letter, :gridalpha)] = arg
+        plotattributes[get_attr_symbol(letter, :gridalpha)] = arg
 
         # linewidth
     elseif allReals(arg)
-        plotattributes[Symbol(letter, :gridlinewidth)] = arg
+        plotattributes[get_attr_symbol(letter, :gridlinewidth)] = arg
 
         # color
-    elseif !handleColors!(plotattributes, arg, Symbol(letter, :foreground_color_grid))
+    elseif !handleColors!(
+        plotattributes,
+        arg,
+        get_attr_symbol(letter, :foreground_color_grid),
+    )
         @warn("Skipped grid arg $arg.")
     end
 end
 
 function processMinorGridArg!(plotattributes::AKW, arg, letter)
     if arg in _allGridArgs || isa(arg, Bool)
-        plotattributes[Symbol(letter, :minorgrid)] = hasgrid(arg, letter)
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
-        plotattributes[Symbol(letter, :minorgridstyle)] = arg
-        plotattributes[Symbol(letter, :minorgrid)] = true
+        plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
     elseif typeof(arg) <: Stroke
         arg.width === nothing ||
-            (plotattributes[Symbol(letter, :minorgridlinewidth)] = arg.width)
+            (plotattributes[get_attr_symbol(letter, :minorgridlinewidth)] = arg.width)
         arg.color === nothing || (
-            plotattributes[Symbol(letter, :foreground_color_minor_grid)] =
+            plotattributes[get_attr_symbol(letter, :foreground_color_minor_grid)] =
                 arg.color in (:auto, :match) ? :match : plot_color(arg.color)
         )
         arg.alpha === nothing ||
-            (plotattributes[Symbol(letter, :minorgridalpha)] = arg.alpha)
+            (plotattributes[get_attr_symbol(letter, :minorgridalpha)] = arg.alpha)
         arg.style === nothing ||
-            (plotattributes[Symbol(letter, :minorgridstyle)] = arg.style)
-        plotattributes[Symbol(letter, :minorgrid)] = true
+            (plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg.style)
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
         # linealpha
     elseif allAlphas(arg)
-        plotattributes[Symbol(letter, :minorgridalpha)] = arg
-        plotattributes[Symbol(letter, :minorgrid)] = true
+        plotattributes[get_attr_symbol(letter, :minorgridalpha)] = arg
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
         # linewidth
     elseif allReals(arg)
-        plotattributes[Symbol(letter, :minorgridlinewidth)] = arg
-        plotattributes[Symbol(letter, :minorgrid)] = true
+        plotattributes[get_attr_symbol(letter, :minorgridlinewidth)] = arg
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
         # color
-    elseif handleColors!(plotattributes, arg, Symbol(letter, :foreground_color_minor_grid))
-        plotattributes[Symbol(letter, :minorgrid)] = true
+    elseif handleColors!(
+        plotattributes,
+        arg,
+        get_attr_symbol(letter, :foreground_color_minor_grid),
+    )
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = true
     else
         @warn("Skipped grid arg $arg.")
     end
@@ -1344,7 +1369,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
     # handle axis args
     for letter in (:x, :y, :z)
-        asym = Symbol(letter, :axis)
+        asym = get_attr_symbol(letter, :axis)
         args = RecipesPipeline.pop_kw!(plotattributes, asym, ())
         if !(typeof(args) <: Axis)
             for arg in wraptuple(args)
@@ -1371,7 +1396,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
     # handle individual axes grid args
     for letter in (:x, :y, :z)
-        gridsym = Symbol(letter, :grid)
+        gridsym = get_attr_symbol(letter, :grid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
             processGridArg!(plotattributes, arg, letter)
@@ -1386,7 +1411,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
     # handle individual axes grid args
     for letter in (:x, :y, :z)
-        gridsym = Symbol(letter, :minorgrid)
+        gridsym = get_attr_symbol(letter, :minorgrid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
             processMinorGridArg!(plotattributes, arg, letter)
@@ -1397,16 +1422,20 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             for letter in (:x, :y, :z)
-                processFontArg!(plotattributes, Symbol(letter, fontname), arg)
+                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
             end
         end
     end
     # handle individual axes font args
     for letter in (:x, :y, :z)
         for fontname in (:tickfont, :guidefont)
-            args = RecipesPipeline.pop_kw!(plotattributes, Symbol(letter, fontname), ())
+            args = RecipesPipeline.pop_kw!(
+                plotattributes,
+                get_attr_symbol(letter, fontname),
+                (),
+            )
             for arg in wraptuple(args)
-                processFontArg!(plotattributes, Symbol(letter, fontname), arg)
+                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
             end
         end
     end
@@ -1415,7 +1444,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         if haskey(plotattributes, k) && k !== :link
             v = plotattributes[k]
             for letter in (:x, :y, :z)
-                lk = Symbol(letter, k)
+                lk = get_attr_symbol(letter, k)
                 if !is_explicit(plotattributes, lk)
                     plotattributes[lk] = v
                 end
@@ -1541,8 +1570,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         end
     end
 
-    if !isempty(_to_warn) &&
-       !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+    if !isempty(_to_warn) && get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
             @warn(
@@ -1922,7 +1950,8 @@ function _update_axis(
         end
 
         # then get those args that were passed with a leading letter: `xlabel = "X"`
-        lk = Symbol(letter, k)
+        lk = get_attr_symbol(letter, k)
+
         if haskey(plotattributes_in, lk)
             kw[k] = slice_arg(plotattributes_in[lk], subplot_index)
         end
@@ -1979,7 +2008,7 @@ function _update_subplot_args(
     lims_warned = false
     for letter in (:x, :y, :z)
         _update_axis(plt, sp, plotattributes_in, letter, subplot_index)
-        lk = Symbol(letter, :lims)
+        lk = get_attr_symbol(letter, :lims)
 
         # warn against using `Range` in x,y,z lims
         if !lims_warned &&
