@@ -1550,9 +1550,8 @@ function gr_label_ticks(sp, letter, ticks)
     oamin, oamax = axis_limits(sp, oletter)
     gr_set_tickfont(sp, letter)
     out_factor = ifelse(axis[:tick_direction] === :out, 1.5, 1)
-    tick_offset = -5e-4 * out_factor * axis[:tickfontsize]
-    x_base_offset = isy ? tick_offset : 0
-    y_base_offset = isy ? 0 : tick_offset
+    x_base_offset = isy ? -1.5e-2 * out_factor : 0
+    y_base_offset = isy ? 0 : -8e-3 * out_factor
     
     rot = axis[:rotation] % 360
     ov = sp[:framestyle] == :origin ? 0 : xor(oaxis[:flip], axis[:mirror]) ? oamax : oamin
