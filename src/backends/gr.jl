@@ -670,54 +670,20 @@ function gr_display(plt::Plot, fmt = "")
 end
 
 function gr_set_tickfont(sp, letter)
-    axis = sp[get_attr_symbol(letter, :axis)]
-
-    mirror = (
-        vcenter = :vcenter,
-        hcenter = :hcenter,
-        left = :right,
-        right = :left,
-        bottom = :top,
-        top = :bottom,
-    )
-
-    hv_align(rot) = begin
-        halign = if 0 < rot < 180 || -360 < rot < -180
-            :right
-        elseif 180 < rot < 360 || -180 < rot < 0
-            :left
-        else
-            :hcenter
-        end
-        valign = if -90 < rot < 90 || rot < -270 || rot > 270
-            :top
-        elseif 90 < rot < 270 || -270 < rot < -90
-            :bottom
-        else
-            :vcenter
-        end
-        halign, valign
-    end
-
-    if letter === :x || (RecipesPipeline.is3d(sp) && letter === :y)
-        halign, valign = hv_align(axis[:rotation] % 360)
-    else
-        halign, valign = hv_align((axis[:rotation] + 90) % 360)  # y := x + 90°
-    end
-
+    axis = sp[Symbol(letter, :axis)]
     gr_set_font(
         tickfont(axis),
         sp,
-        halign = axis[:mirror] ? mirror[halign] : halign,
-        valign = axis[:mirror] ? mirror[valign] : valign,
         rotation = axis[:rotation],
         color = axis[:tickfontcolor],
     )
 end
 
+# size of the text with no rotation
 function gr_text_size(str)
     GR.savestate()
     GR.selntran(0)
+    GR.setcharup(0, 1)
     xs, ys = gr_inqtext(0, 0, string(str))
     l, r = extrema(xs)
     b, t = extrema(ys)
@@ -727,12 +693,16 @@ function gr_text_size(str)
     return w, h
 end
 
+# size of the text with rotation applied
 function gr_text_size(str, rot)
     GR.savestate()
     GR.selntran(0)
+    GR.setcharup(0, 1)
     xs, ys = gr_inqtext(0, 0, string(str))
     l, r = extrema(xs)
     b, t = extrema(ys)
+    w = r - l
+    h = t - b
     w = text_box_width(r - l, t - b, rot)
     h = text_box_height(r - l, t - b, rot)
     GR.restorestate()
@@ -746,8 +716,8 @@ function gr_get_ticks_size(ticks, rot)
     w, h = 0.0, 0.0
     for (cv, dv) in zip(ticks...)
         wi, hi = gr_text_size(dv, rot)
-        w = NaNMath.max(w, wi)
-        h = NaNMath.max(h, hi)
+        w = max(w, wi)
+        h = max(h, hi)
     end
     return w, h
 end
@@ -1478,7 +1448,7 @@ end
 
 function gr_draw_axis(sp, letter, viewport_plotarea)
     ax = axis_drawing_info(sp, letter)
-    axis = sp[get_attr_symbol(letter, :axis)]
+    axis = sp[Symbol(letter, :axis)]
 
     # draw segments
     gr_draw_grid(sp, axis, ax.grid_segments)
@@ -1494,7 +1464,7 @@ end
 
 function gr_draw_axis_3d(sp, letter, viewport_plotarea)
     ax = axis_drawing_info_3d(sp, letter)
-    axis = sp[get_attr_symbol(letter, :axis)]
+    axis = sp[Symbol(letter, :axis)]
 
     # draw segments
     gr_draw_grid(sp, axis, ax.grid_segments, gr_polyline3d)
@@ -1578,30 +1548,41 @@ function gr_label_ticks(sp, letter, ticks)
     axis = sp[Symbol(letter, :axis)]
     isy = letter === :y
     oletter = isy ? :x : :y
-    oaxis = sp[get_attr_symbol(oletter, :axis)]
+    oaxis = sp[Symbol(oletter, :axis)]
     oamin, oamax = axis_limits(sp, oletter)
     gr_set_tickfont(sp, letter)
     out_factor = ifelse(axis[:tick_direction] === :out, 1.5, 1)
-    x_offset = isy ? -1.5e-2 * out_factor : 0
-    y_offset = isy ? 0 : -8e-3 * out_factor
-
-    rot = axis[:rotation]
+    tick_offset = -5e-4 * out_factor * axis[:tickfontsize]
+    x_base_offset = isy ? tick_offset : 0
+    y_base_offset = isy ? 0 : tick_offset
+    
+    rot = axis[:rotation] % 360
     ov = sp[:framestyle] == :origin ? 0 : xor(oaxis[:flip], axis[:mirror]) ? oamax : oamin
     sgn = axis[:mirror] ? -1 : 1
+    sgn2 = iseven(floor(rot / 90)) ? -1 : 1
+    sgn3 = if isy
+                -360 < rot < -180 || 0 < rot < 180 ? 1 : -1
+            else
+                rot < -270 || -90 < rot < 90 || rot > 270 ? 1 : -1
+            end
     for (cv, dv) in zip(ticks...)
         x, y = GR.wctondc(reverse_if((cv, ov), isy)...)
-        y_rot_offset = y_offset
-        x_rot_offset = x_offset
-        if rot % 90 != 0
-            if isy
-                sgn2 = -180 < rot < 0 ? -1 : 1
-                y_rot_offset -= sgn2 * last(gr_text_size(dv)) / 2 * cosd(rot)
-            else
-                sgn2 = rot < -90 || rot > 90 ? -1 : 1
-                x_rot_offset -= sgn2 * first(gr_text_size(dv)) / 2 * sind(rot)
+        sz_rot = gr_text_size(dv, rot)
+        sz = gr_text_size(dv)
+        x_offset = x_base_offset
+        y_offset = y_base_offset
+        if isy
+            x_offset += -first(sz_rot) / 2
+            if rot % 90 != 0
+                y_offset += sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
             end
+        else
+            if rot % 90 != 0
+                x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
+            end
+            y_offset += -last(sz_rot) / 2
         end
-        gr_text(x + sgn * x_rot_offset, y + sgn * y_rot_offset, dv)
+        gr_text(x + sgn * x_offset, y + sgn * y_offset, dv)
     end
 end
 
@@ -1611,9 +1592,9 @@ function gr_label_ticks_3d(sp, letter, ticks)
     near_letter = letter in (:x, :z) ? :y : :x
     far_letter = letter in (:x, :y) ? :z : :x
 
-    ax = sp[get_attr_symbol(letter, :axis)]
-    nax = sp[get_attr_symbol(near_letter, :axis)]
-    fax = sp[get_attr_symbol(far_letter, :axis)]
+    ax = sp[Symbol(letter, :axis)]
+    nax = sp[Symbol(near_letter, :axis)]
+    fax = sp[Symbol(far_letter, :axis)]
 
     amin, amax = axis_limits(sp, letter)
     namin, namax = axis_limits(sp, near_letter)
@@ -1623,7 +1604,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     # find out which axes we are dealing with
     i = findfirst(==(letter), (:x, :y, :z))
     letters = axes_shift((:x, :y, :z), 1 - i)
-    asyms = get_attr_symbol.(letters, :axis)
+    asyms = Symbol.(letters, :axis)
 
     # get axis objects, ticks and minor ticks
     # regardless of the `letter` we now use the convention that `x` in variable names refer to
@@ -1660,7 +1641,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
 end
 
 function gr_label_axis(sp, letter, viewport_plotarea)
-    axis = sp[get_attr_symbol(letter, :axis)]
+    axis = sp[Symbol(letter, :axis)]
     mirror = axis[:mirror]
     # guide
     if axis[:guide] != ""
@@ -1704,13 +1685,13 @@ function gr_label_axis(sp, letter, viewport_plotarea)
 end
 
 function gr_label_axis_3d(sp, letter)
-    ax = sp[get_attr_symbol(letter, :axis)]
+    ax = sp[Symbol(letter, :axis)]
     if ax[:guide] != ""
         near_letter = letter in (:x, :z) ? :y : :x
         far_letter = letter in (:x, :y) ? :z : :x
 
-        nax = sp[get_attr_symbol(near_letter, :axis)]
-        fax = sp[get_attr_symbol(far_letter, :axis)]
+        nax = sp[Symbol(near_letter, :axis)]
+        fax = sp[Symbol(far_letter, :axis)]
 
         amin, amax = axis_limits(sp, letter)
         namin, namax = axis_limits(sp, near_letter)
