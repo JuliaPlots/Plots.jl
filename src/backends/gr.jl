@@ -1617,8 +1617,8 @@ function gr_label_ticks_3d(sp, letter, ticks)
     ft = sp[:framestyle] == :origin ? 0 : ax[:mirror] ? famax : famin
 
     out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
-    x_base_offset = isz ? -1.5e-2 * out_factor : isy ? 1e-2 * out_factor : 0 # -1e-2 * out_factor
-    y_base_offset = isz ? 0 : isy ? -1e-2 * out_factor : -8e-3 * out_factor # -1e-2 * out_factor
+    x_base_offset = isz ? -1.5e-2 * out_factor : isy ? 1.5e-2 * out_factor : 0
+    y_base_offset = isz ? 0 : isy ? -1.5e-2 * out_factor : -8e-3 * out_factor
 
     rot = ax[:rotation] % 360
     sgn = ax[:mirror] ? -1 : 1
@@ -1644,16 +1644,8 @@ function gr_label_ticks_3d(sp, letter, ticks)
                 y_offset += sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
             end
         elseif isy
-            if 0 <= rot < 16 || 180 <= rot < 196 # 16 is approximately the angle of the axis
-                x_offset += -sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) / 2 * sind(rot)
-                y_offset += -sgn2 * last(sz_rot) / 2 - sgn3 * last(sz) / 2 * cosd(rot)
-            elseif 16 <= rot < 90 || 196 <= rot < 270
-                x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) / 2 * sind(rot)
-                y_offset += sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) / 2 * cosd(rot)
-            elseif 90 <= rot < 180 || 270 <= rot < 360
-                x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) / 2 * sind(rot)
-                y_offset += -sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) / 2 * cosd(rot)
-            end
+            x_offset += first(sz_rot) / 2
+            y_offset -= sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
         else
             if rot % 90 != 0
                 x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
