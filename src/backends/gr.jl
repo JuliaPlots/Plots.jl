@@ -1589,6 +1589,9 @@ function gr_label_ticks_3d(sp, letter, ticks)
     near_letter = letter in (:x, :z) ? :y : :x
     far_letter = letter in (:x, :y) ? :z : :x
 
+    isy = letter === :y
+    isz = letter === :z
+
     ax = sp[get_attr_symbol(letter, :axis)]
     nax = sp[get_attr_symbol(near_letter, :axis)]
     fax = sp[get_attr_symbol(far_letter, :axis)]
@@ -1596,7 +1599,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     amin, amax = axis_limits(sp, letter)
     namin, namax = axis_limits(sp, near_letter)
     famin, famax = axis_limits(sp, far_letter)
-    n0, n1 = letter === :y ? (namax, namin) : (namin, namax)
+    n0, n1 = isy ? (namax, namin) : (namin, namax)
 
     # find out which axes we are dealing with
     i = findfirst(==(letter), (:x, :y, :z))
@@ -1613,27 +1616,51 @@ function gr_label_ticks_3d(sp, letter, ticks)
     nt = sp[:framestyle] == :origin ? 0 : ax[:mirror] ? n1 : n0
     ft = sp[:framestyle] == :origin ? 0 : ax[:mirror] ? famax : famin
 
-    xoffset = if letter === :x
-        (sp[:yaxis][:mirror] ? 1 : -1) * 1e-2 * (sp[:xaxis][:tick_direction] == :out ? 1.5 : 1)
-    elseif letter === :y
-        (sp[:yaxis][:mirror] ? -1 : 1) * 1e-2 * (sp[:yaxis][:tick_direction] == :out ? 1.5 : 1)
-    else
-        (sp[:zaxis][:mirror] ? 1 : -1) * 1e-2 * (sp[:zaxis][:tick_direction] == :out ? 1.5 : 1)
-    end
-    yoffset = if letter === :x
-        (sp[:xaxis][:mirror] ? 1 : -1) * 1e-2 * (sp[:xaxis][:tick_direction] == :out ? 1.5 : 1)
-    elseif letter === :y
-        (sp[:yaxis][:mirror] ? 1 : -1) * 1e-2 * (sp[:yaxis][:tick_direction] == :out ? 1.5 : 1)
-    else
-        0
-    end
+    out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
+    x_base_offset = isz ? -1.5e-2 * out_factor : isy ? 1e-2 * out_factor : 0 # -1e-2 * out_factor
+    y_base_offset = isz ? 0 : isy ? -1e-2 * out_factor : -8e-3 * out_factor # -1e-2 * out_factor
+
+    rot = ax[:rotation] % 360
+    sgn = ax[:mirror] ? -1 : 1
+    sgn2 = iseven(floor(rot / 90)) ? -1 : 1
+    sgn3 = if isz
+                -360 < rot < -180 || 0 < rot < 180 ? 1 : -1
+            else
+                rot < -270 || -90 < rot < 90 || rot > 270 ? 1 : -1
+            end
 
     cvs, dvs = ticks
     ax[:flip] && reverse!(cvs)
 
     for (cv, dv) in zip((cvs, dvs)...)
         xi, yi = gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...)
-        gr_text(xi + xoffset, yi + yoffset, dv)
+        sz_rot = gr_text_size(dv, rot)
+        sz = gr_text_size(dv)
+        x_offset = x_base_offset
+        y_offset = y_base_offset
+        if isz
+            x_offset += -first(sz_rot) / 2
+            if rot % 90 != 0
+                y_offset += sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
+            end
+        elseif isy
+            if 0 <= rot < 16 || 180 <= rot < 196 # 16 is approximately the angle of the axis
+                x_offset += -sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) / 2 * sind(rot)
+                y_offset += -sgn2 * last(sz_rot) / 2 - sgn3 * last(sz) / 2 * cosd(rot)
+            elseif 16 <= rot < 90 || 196 <= rot < 270
+                x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) / 2 * sind(rot)
+                y_offset += sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) / 2 * cosd(rot)
+            elseif 90 <= rot < 180 || 270 <= rot < 360
+                x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) / 2 * sind(rot)
+                y_offset += -sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) / 2 * cosd(rot)
+            end
+        else
+            if rot % 90 != 0
+                x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
+            end
+            y_offset += -last(sz_rot) / 2
+        end
+        gr_text(xi + sgn * x_offset, yi + sgn * y_offset, dv)
     end
 end
 
