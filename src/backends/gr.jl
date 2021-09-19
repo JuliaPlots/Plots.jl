@@ -1617,8 +1617,8 @@ function gr_label_ticks_3d(sp, letter, ticks)
     ft = sp[:framestyle] == :origin ? 0 : ax[:mirror] ? famax : famin
 
     out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
-    x_base_offset = isz ? -1.5e-2 * out_factor : isy ? 1.5e-2 * out_factor : 0
-    y_base_offset = isz ? 0 : isy ? -1.5e-2 * out_factor : -8e-3 * out_factor
+    x_base_offset = isz ? -1.5e-2 * out_factor : isy ? 1e-2 * out_factor : 0
+    y_base_offset = isz ? 0 : isy ? -1e-2 * out_factor : -8e-3 * out_factor
 
     rot = ax[:rotation] % 360
     sgn = ax[:mirror] ? -1 : 1
