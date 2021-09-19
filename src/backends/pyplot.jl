@@ -29,12 +29,12 @@ if PyPlot.version < v"3.4"
     @warn("""You are using Matplotlib $(PyPlot.version), which is no longer
     officialy supported by the Plots community. To ensure smooth Plots.jl
     integration update your Matplotlib library to a version >= 3.4.0
-    
+
     If you have used Conda.jl to install PyPlot (default installation),
     upgrade your matplotlib via Conda.jl and rebuild the PyPlot.
 
     If you are not sure, here are the default instructions:
-    
+
     In Julia REPL:
     ```
     import Pkg;
@@ -1271,7 +1271,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
 
             py_set_ticks(sp, ax, ticks, letter)
-            
+
             if axis[:ticks] == :native # It is easier to reset than to account for this
                 py_set_lims(ax, sp, axis)
                 pyaxis.set_major_locator(pyticker.AutoLocator())

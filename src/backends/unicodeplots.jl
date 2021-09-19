@@ -60,9 +60,13 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         for ann in sp[:annotations]
             x, y, val = locate_annotation(sp, ann...)
             o = UnicodePlots.annotate!(
-                o, x, y, val.str;
+                o,
+                x,
+                y,
+                val.str;
                 color = up_color(val.font.color),
-                halign = val.font.halign, valign = val.font.valign
+                halign = val.font.halign,
+                valign = val.font.valign,
             )
         end
 
@@ -79,7 +83,9 @@ up_color(col) = :auto
 function addUnicodeSeries!(
     sp::Subplot{UnicodePlotsBackend},
     up::UnicodePlots.Plot,
-    kw, series, addlegend::Bool,
+    kw,
+    series,
+    addlegend::Bool,
 )
     st = series[:seriestype]
 
@@ -101,7 +107,9 @@ function addUnicodeSeries!(
         cmap = [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
         return UnicodePlots.heatmap(
             series[:z].surf;
-            zlabel = sp[:colorbar_title], colormap = cmap, kw...
+            zlabel = sp[:colorbar_title],
+            colormap = cmap,
+            kw...,
         )
     elseif st == :spy
         return UnicodePlots.spy(series[:z].surf; kw...)
@@ -126,8 +134,13 @@ function addUnicodeSeries!(
 
     for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
         up = UnicodePlots.annotate!(
-            up, xi, yi, str;
-            color = up_color(fnt.color), halign = fnt.halign, valign = fnt.valign
+            up,
+            xi,
+            yi,
+            str;
+            color = up_color(fnt.color),
+            halign = fnt.halign,
+            valign = fnt.valign,
         )
     end
 
@@ -159,7 +172,7 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
 
     error(
         "Can only savepng on MacOS or Linux with UnicodePlots " *
-        "(though even then I wouldn't do it)"
+        "(though even then I wouldn't do it)",
     )
 end
 
@@ -201,7 +214,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
         end
         l_max[r] = lmax
     end
-    empty = String[' '^w for w ∈ w_max]
+    empty = String[' '^w for w in w_max]
     for r in 1:nr
         for n in 1:l_max[r]
             for c in 1:nc
