@@ -2115,3 +2115,4 @@ function _display(plt::Plot{GRBackend})
 end
 
 closeall(::GRBackend) = GR.emergencyclosegks()
+                                
