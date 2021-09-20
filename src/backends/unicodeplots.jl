@@ -41,7 +41,6 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         end
 
         kw = (
-            compact = true,
             title = sp[:title],
             xlabel = xaxis[:guide],
             ylabel = yaxis[:guide],
