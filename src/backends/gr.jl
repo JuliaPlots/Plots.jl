@@ -670,7 +670,7 @@ function gr_display(plt::Plot, fmt = "")
 end
 
 function gr_set_tickfont(sp, letter)
-    axis = sp[Symbol(letter, :axis)]
+    axis = sp[get_attr_symbol(letter, :axis)]
     gr_set_font(
         tickfont(axis),
         sp,
