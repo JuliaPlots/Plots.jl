@@ -155,7 +155,8 @@ end
 end
 
 @testset "EmptyAnim" begin
-    anim = @animate for i in [] end
+    anim = @animate for i in []
+    end
 
     @test_throws ArgumentError gif(anim)
 end
@@ -199,7 +200,6 @@ end
           Plots.process_clims(missing) ==
           Plots.process_clims(:auto)
 end
-
 
 @testset "Backends" begin
     @testset "UnicodePlots" begin
