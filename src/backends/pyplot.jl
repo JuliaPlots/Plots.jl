@@ -698,6 +698,27 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
     end
 
+    if st == :mesh3d
+        if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
+            polygons = broadcast(inds -> broadcast(i -> [x[i], y[i], z[i]], inds), series[:connections])
+            col = mplot3d.art3d.Poly3DCollection(polygons;
+                linewidths = py_thickness_scale(plt, series[:linewidth]), 
+                edgecolor = py_color(get_linecolor(series)),
+                facecolor = py_color(series[:fillcolor]),
+                alpha = get_fillalpha(series),
+                zorder = series[:series_plotindex]
+            )
+            handle = ax."add_collection3d"(col)
+            # Fix for handle: https://stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
+            # It seems there aren't two different alpha values for edge and face
+            handle._facecolors2d = py_color(series[:fillcolor])
+            handle._edgecolors2d = py_color(get_linecolor(series))
+            push!(handles, handle)
+        else
+            error("Unsupported type $(typeof(series[:connections])) for keyword `:connections`.")
+        end
+    end
+
     if st == :image
         xmin, xmax = ignorenan_extrema(series[:x])
         ymin, ymax = ignorenan_extrema(series[:y])

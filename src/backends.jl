@@ -777,6 +777,7 @@ const _pyplot_attr = merge_with_base_supported([
     :tick_direction,
     :camera,
     :contour_labels,
+    :connections
 ])
 const _pyplot_seriestype = [
     :path,
@@ -793,6 +794,7 @@ const _pyplot_seriestype = [
     :contour3d,
     :path3d,
     :scatter3d,
+    :mesh3d,
     :surface,
     :wireframe,
 ]
