@@ -402,6 +402,7 @@ const _gr_attr = merge_with_base_supported([
     :tick_direction,
     :camera,
     :contour_labels,
+    :connections,
 ])
 const _gr_seriestype = [
     :path,
@@ -521,6 +522,7 @@ const _plotly_attr = merge_with_base_supported([
     :tick_direction,
     :camera,
     :contour_labels,
+    :connections,
 ])
 
 const _plotly_seriestype = [
@@ -777,7 +779,7 @@ const _pyplot_attr = merge_with_base_supported([
     :tick_direction,
     :camera,
     :contour_labels,
-    :connections
+    :connections,
 ])
 const _pyplot_seriestype = [
     :path,
@@ -862,6 +864,7 @@ const _gaston_attr = merge_with_base_supported([
     # :framestyle,
     # :camera,
     # :contour_labels,
+    :connections,
 ])
 
 const _gaston_seriestype = [
@@ -1242,6 +1245,7 @@ const _pgfplotsx_attr = merge_with_base_supported([
     :tick_direction,
     :camera,
     :contour_labels,
+    :connections,
 ])
 const _pgfplotsx_seriestype = [
     :path,
