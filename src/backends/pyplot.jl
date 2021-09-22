@@ -698,6 +698,43 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
     end
 
+    if st == :mesh3d
+        polygons = if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
+            # Combination of any polygon types
+            broadcast(inds -> broadcast(i -> [x[i], y[i], z[i]], inds), series[:connections])
+        elseif series[:connections] isa AbstractVector{NTuple{N, Int}} where N
+            # Only N-gons - connections have to be 1-based (indexing)
+            broadcast(inds -> broadcast(i -> [x[i], y[i], z[i]], inds), series[:connections])
+        elseif series[:connections] isa NTuple{3,<:AbstractVector{Int}}
+            # Only triangles - connections have to be 0-based (indexing)
+            ci, cj, ck = series[:connections] 
+            if !(length(ci) == length(cj) == length(ck))
+                throw(
+                    ArgumentError("Argument connections must consist of equally sized arrays."),
+                )
+            end
+            broadcast(j -> broadcast(i -> [x[i], y[i], z[i]], [ci[j]+1, cj[j]+1, ck[j]+1]), eachindex(ci))
+        else
+            throw(
+                ArgumentError("Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st"),
+            )
+        end
+        col = mplot3d.art3d.Poly3DCollection(polygons,
+            linewidths = py_thickness_scale(plt, series[:linewidth]), 
+            edgecolor = py_color(get_linecolor(series)),
+            facecolor = py_color(series[:fillcolor]),
+            alpha = get_fillalpha(series),
+            zorder = series[:series_plotindex]
+        )
+        handle = ax."add_collection3d"(col)
+        # Fix for handle: https://stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
+        # It seems there aren't two different alpha values for edge and face
+        handle._facecolors2d = py_color(series[:fillcolor])
+        handle._edgecolors2d = py_color(get_linecolor(series))
+        push!(handles, handle)
+    end
+
+
     if st == :image
         xmin, xmax = ignorenan_extrema(series[:x])
         ymin, ymax = ignorenan_extrema(series[:y])
