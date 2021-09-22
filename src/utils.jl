@@ -1180,16 +1180,12 @@ end
 _document_argument(S::AbstractString) =
     _fmt_paragraph("`$S`: " * _arg_desc[Symbol(S)], leadingspaces = 6 + length(S))
 
-function mesh3d_triangles(x, y, z, cns)
-    if typeof(cns) <: Tuple{Array,Array,Array}
-        ci, cj, ck = cns
-        if !(length(ci) == length(cj) == length(ck))
-            throw(
-                ArgumentError("Argument connections must consist of equally sized arrays."),
-            )
-        end
-    else
-        throw(ArgumentError("Argument connections has to be a tuple of three arrays."))
+function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
+    ci, cj, ck = cns
+    if !(length(ci) == length(cj) == length(ck))
+        throw(
+            ArgumentError("Argument connections must consist of equally sized arrays."),
+        )
     end
     X = zeros(eltype(x), 4length(ci))
     Y = zeros(eltype(y), 4length(cj))
@@ -1198,6 +1194,30 @@ function mesh3d_triangles(x, y, z, cns)
         i = ci[I] + 1  # connections are 0-based
         j = cj[I] + 1
         k = ck[I] + 1
+        m = 4(I - 1) + 1
+        n = m + 1
+        o = m + 2
+        p = m + 3
+        X[m] = X[p] = x[i]
+        Y[m] = Y[p] = y[i]
+        Z[m] = Z[p] = z[i]
+        X[n] = x[j]
+        Y[n] = y[j]
+        Z[n] = z[j]
+        X[o] = x[k]
+        Y[o] = y[k]
+        Z[o] = z[k]
+    end
+    return X, Y, Z
+end
+function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3, Int}})
+    X = zeros(eltype(x), 4length(cns))
+    Y = zeros(eltype(y), 4length(cns))
+    Z = zeros(eltype(z), 4length(cns))
+    @inbounds for I in 1:length(cns)
+        i = cns[I][1]  # connections are 1-based
+        j = cns[I][2]
+        k = cns[I][3]
         m = 4(I - 1) + 1
         n = m + 1
         o = m + 2
