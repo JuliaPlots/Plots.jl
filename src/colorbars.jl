@@ -8,7 +8,7 @@ process_clims(f) = f
 function get_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float64, Float64}
     zmin, zmax = Inf, -Inf
     for series in series_list(sp)
-        if series[:colorbar_entry]
+        if series[:colorbar_entry] && (series[:seriestype] != :shape || series[:fillcolor] === nothing)
             zmin, zmax = _update_clims(zmin, zmax, get_clims(series, op)...)
         end
     end
