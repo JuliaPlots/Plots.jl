@@ -16,7 +16,7 @@ function get_clims(sp::Subplot, op = process_clims(sp[:clims]))
 end
 
 function get_clims(sp::Subplot, series::Series, op = process_clims(sp[:clims]))
-    series[:seriestype] != :shape || return -Inf, Inf
+    series[:seriestype] != :shape || return NaN, NaN
     zmin, zmax = if series[:colorbar_entry]
         get_clims(sp, op)
     else
