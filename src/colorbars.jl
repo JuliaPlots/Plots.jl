@@ -16,7 +16,7 @@ function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float6
     sp[:colorbar_limits] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-get_clims(sp::Subplot, op = nothing))::Tuple{Float64, Float64} = sp[:colorbar_limits]
+get_clims(sp::Subplot, op = nothing)::Tuple{Float64, Float64} = sp[:colorbar_limits]
 
 function get_clims(sp::Subplot, series::Series, op = process_clims(sp[:clims]))::Tuple{Float64, Float64}
     zmin, zmax = if series[:colorbar_entry]
