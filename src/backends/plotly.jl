@@ -339,7 +339,7 @@ end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     plotattributes_out[:showlegend] = sp[:legend] != :none
-    legend_position = plotly_legend_pos(sp[:legend], RecipesPipeline.is3d(sp))
+    legend_position = plotly_legend_pos(sp[:legend])
     if sp[:legend] != :none
         plotattributes_out[:legend] = KW(
             :bgcolor => rgba_string(sp[:background_color_legend]),
@@ -360,11 +360,11 @@ function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     end
 end
 
-function plotly_legend_pos(pos::Symbol, is3d::Bool)
+function plotly_legend_pos(pos::Symbol)
     xleft = 0.07
     xright = 1.0
     ybot = 0.07
-    ytop = is3d ? 0.93 : 1.0
+    ytop = 1.0
     xcenter = 0.55
     ycenter = 0.52
     center = 0.5
@@ -408,12 +408,12 @@ function plotly_legend_pos(pos::Symbol, is3d::Bool)
         get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
 end
 
-plotly_legend_pos(v::Tuple{S,T}, is3d::Bool) where {S<:Real,T<:Real} =
+plotly_legend_pos(v::Tuple{S,T}) where {S<:Real,T<:Real} =
     (coords = v, xanchor = "left", yanchor = "top")
 
-plotly_legend_pos(theta::Real, is3d::Bool) = plotly_legend_pos((theta, :inner), is3d)
+plotly_legend_pos(theta::Real) = plotly_legend_pos((theta, :inner), is3d)
 
-function plotly_legend_pos(v::Tuple{S,Symbol}, is3d::Bool) where {S<:Real}
+function plotly_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
     (s, c) = sincosd(v[1])
     xanchors = ["left", "center", "right"]
     yanchors = ["bottom", "middle", "top"]
