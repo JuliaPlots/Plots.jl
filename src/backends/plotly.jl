@@ -339,7 +339,7 @@ end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     plotattributes_out[:showlegend] = sp[:legend] != :none
-    legend_position = plotly_legend_pos(sp[:legend])
+    legend_position = plotly_legend_pos(sp[:legend], RecipesPipeline.is3d(sp))
     if sp[:legend] != :none
         plotattributes_out[:legend] = KW(
             :bgcolor => rgba_string(sp[:background_color_legend]),
@@ -360,10 +360,11 @@ function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     end
 end
 
-function plotly_legend_pos(pos::Symbol)
+function plotly_legend_pos(pos::Symbol, is3d::Bool)
     xleft = 0.07
+    xright = 1.0
     ybot = 0.07
-    ytop = 1.0
+    ytop = is3d ? 0.93 : 1.0
     xcenter = 0.55
     ycenter = 0.52
     center = 0.5
@@ -372,14 +373,14 @@ function plotly_legend_pos(pos::Symbol)
     xouterright = 1.05
     xouterleft = -0.15
     plotly_legend_position_mapping = (
-        right = (coords = [1.0, ycenter], xanchor = "right", yanchor = "middle"),
+        right = (coords = [xright, ycenter], xanchor = "right", yanchor = "middle"),
         left = (coords = [xleft, ycenter], xanchor = "left", yanchor = "middle"),
         top = (coords = [xcenter, ytop], xanchor = "center", yanchor = "top"),
         bottom = (coords = [xcenter, ybot], xanchor = "center", yanchor = "bottom"),
         bottomleft = (coords = [xleft, ybot], xanchor = "left", yanchor = "bottom"),
-        bottomright = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
-        topright = (coords = [1.0, 1.0], xanchor = "right", yanchor = "top"),
-        topleft = (coords = [xleft, 1.0], xanchor = "left", yanchor = "top"),
+        bottomright = (coords = [xright, ybot], xanchor = "right", yanchor = "bottom"),
+        topright = (coords = [xright, ytop], xanchor = "right", yanchor = "top"),
+        topleft = (coords = [xleft, ytop], xanchor = "left", yanchor = "top"),
         outertop = (coords = [center, youtertop], xanchor = "upper", yanchor = "middle"),
         outerbottom = (coords = [center, youterbot], xanchor = "lower", yanchor = "middle"),
         outerleft = (coords = [xouterleft, center], xanchor = "left", yanchor = "top"),
@@ -400,25 +401,25 @@ function plotly_legend_pos(pos::Symbol)
             xanchor = "lower",
             yanchor = "right",
         ),
-        default = (coords = [1.0, 1.0], xanchor = "auto", yanchor = "auto"),
+        default = (coords = [xright, ytop], xanchor = "auto", yanchor = "auto"),
     )
 
     legend_position =
         get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
 end
 
-plotly_legend_pos(v::Tuple{S,T}) where {S<:Real,T<:Real} =
+plotly_legend_pos(v::Tuple{S,T}, is3d::Bool) where {S<:Real,T<:Real} =
     (coords = v, xanchor = "left", yanchor = "top")
 
-plotly_legend_pos(theta::Real) = plotly_legend_pos((theta, :inner))
+plotly_legend_pos(theta::Real, is3d::Bool) = plotly_legend_pos((theta, :inner), is3d)
 
-function plotly_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
+function plotly_legend_pos(v::Tuple{S,Symbol}, is3d::Bool) where {S<:Real}
     (s, c) = sincosd(v[1])
     xanchors = ["left", "center", "right"]
     yanchors = ["bottom", "middle", "top"]
 
     if v[2] === :inner
-        rect = (0.07, 0.5, 1.0, 0.07, 0.52, 1.0)
+        rect = (0.07, 0.5, (is3d ? 0.93 : 1.0), 0.07, 0.52, 1.0)
         xanchor = xanchors[legend_anchor_index(c)]
         yanchor = yanchors[legend_anchor_index(s)]
     else
