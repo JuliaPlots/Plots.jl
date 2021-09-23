@@ -411,7 +411,7 @@ end
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real,T<:Real} =
     (coords = v, xanchor = "left", yanchor = "top")
 
-plotly_legend_pos(theta::Real) = plotly_legend_pos((theta, :inner), is3d)
+plotly_legend_pos(theta::Real) = plotly_legend_pos((theta, :inner))
 
 function plotly_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
     (s, c) = sincosd(v[1])
@@ -419,7 +419,7 @@ function plotly_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
     yanchors = ["bottom", "middle", "top"]
 
     if v[2] === :inner
-        rect = (0.07, 0.5, (is3d ? 0.93 : 1.0), 0.07, 0.52, 1.0)
+        rect = (0.07, 0.5, 1.0, 0.07, 0.52, 1.0)
         xanchor = xanchors[legend_anchor_index(c)]
         yanchor = yanchors[legend_anchor_index(s)]
     else
