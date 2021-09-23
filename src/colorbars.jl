@@ -5,7 +5,7 @@ process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
 
-function update_clims(sp::Subplot, op = process_clims(sp[:clims]))
+function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float64, Float64}
     zmin, zmax = Inf, -Inf
     for series in series_list(sp)
         if series[:colorbar_entry]
