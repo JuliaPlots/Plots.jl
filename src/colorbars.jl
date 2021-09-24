@@ -34,7 +34,6 @@ which must return the tuple `(zmin, zmax)`. The value is stored as a series prop
 retrieved by `get_clims`.
 """
 function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64, Float64}
-    println("     series")
     zmin, zmax = Inf, -Inf
     z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin)
     for vals in (
@@ -97,4 +96,5 @@ end
 
 function _update_subplot_colorbars(sp::Subplot)
     # Dynamic callback from the pipeline if needed
+    update_clims(sp)
 end
