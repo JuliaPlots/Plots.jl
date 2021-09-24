@@ -30,8 +30,8 @@ end
     update_clims(::Series, op=Plots.ignorenan_extrema)
 
 Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
-which must return the tuple `(zmin, zmax)`. The value is stored as a series property, which is 
-retrieved by `get_clims`.
+which must return the tuple `(zmin, zmax)`.The default op is the extrema of the finite
+values of the input. The value is stored as a series property, which is retrieved by `get_clims`.
 """
 function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64, Float64}
     zmin, zmax = Inf, -Inf
