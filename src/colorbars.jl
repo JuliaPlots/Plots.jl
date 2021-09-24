@@ -5,36 +5,36 @@ process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
 
+
+get_clims(sp::Subplot)::Tuple{Float64, Float64} = sp[:crange]
+get_clims(series::Series)::Tuple{Float64, Float64} = series[:crange]
+
+function get_clims(sp::Subplot, series::Series)::Tuple{Float64, Float64} =
+    series[:colorbar_entry] ?
+        sp[:crange] :
+        series[:crange]
+
 function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float64, Float64}
     zmin, zmax = Inf, -Inf
     for series in series_list(sp)
         if series[:colorbar_entry]
-            zmin, zmax = _update_clims(zmin, zmax, get_clims(series, op)...)
+            zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
+        else
+             update_clims(series, op)
         end
     end
-
-    sp[:clims] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-get_clims(sp::Subplot, op = nothing)::Tuple{Float64, Float64} = sp[:clims]
-
-function get_clims(sp::Subplot, series::Series, op = process_clims(sp[:clims]))::Tuple{Float64, Float64}
-    zmin, zmax = if series[:colorbar_entry]
-        sp[:clims]
-    else
-        get_clims(series, op)
-    end
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+    return sp[:crange] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 """
-    get_clims(::Series, op=Plots.ignorenan_extrema)
+    update_clims(::Series, op=Plots.ignorenan_extrema)
 
 Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
-which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite
-values of the input.
+which must return the tuple `(zmin, zmax)`. The value is stored as a series property, which is 
+retrieved by `get_clims`.
 """
-function get_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64, Float64}
+function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64, Float64}
+    println("     series")
     zmin, zmax = Inf, -Inf
     z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin)
     for vals in (
@@ -49,7 +49,7 @@ function get_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64, Float
             zmin, zmax = _update_clims(zmin, zmax, op(vals)...)
         end
     end
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+    return series[:crange] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 _update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
