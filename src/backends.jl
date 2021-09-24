@@ -943,7 +943,34 @@ const _unicodeplots_seriestype = [
     :spy,
 ]
 const _unicodeplots_style = [:auto, :solid]
-const _unicodeplots_marker = [:none, :auto, :circle]
+const _unicodeplots_marker = [
+    :none,
+    :auto,
+    :pixel,
+    # vvvvvvvvvv shapes
+    :circle,
+    :rect,
+    :star5,
+    :diamond,
+    :hexagon,
+    :cross,
+    :xcross,
+    :utriangle,
+    :dtriangle,
+    :rtriangle,
+    :ltriangle,
+    :pentagon,
+    # :heptagon,
+    # :octagon,
+    :star4,
+    :star6,
+    # :star7,
+    :star8,
+    :vline,
+    :hline,
+    :+,
+    :x,
+]
 const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
