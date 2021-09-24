@@ -9,7 +9,7 @@ process_clims(f) = f
 get_clims(sp::Subplot)::Tuple{Float64, Float64} = sp[:crange]
 get_clims(series::Series)::Tuple{Float64, Float64} = series[:crange]
 
-function get_clims(sp::Subplot, series::Series)::Tuple{Float64, Float64} =
+get_clims(sp::Subplot, series::Series)::Tuple{Float64, Float64} =
     series[:colorbar_entry] ?
         sp[:crange] :
         series[:crange]
