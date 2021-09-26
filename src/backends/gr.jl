@@ -1635,7 +1635,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     axisϕ = mod(axisθ - 90, 360)
 
     out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
-    axisoffset = out_factor * 1.2e-2
+    axisoffset = out_factor * 1e-2
     x_base_offset = axisoffset * cosd(axisϕ)
     y_base_offset = axisoffset * sind(axisϕ)
 
