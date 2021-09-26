@@ -122,7 +122,7 @@ function addUnicodeSeries!(
         func = UnicodePlots.lineplot!
     elseif st == :scatter || series[:markershape] != :none
         func = UnicodePlots.scatterplot!
-        series_kw = (; marker=series[:markershape])
+        series_kw = (; marker = series[:markershape])
     else
         error("Series type $st not supported by UnicodePlots")
     end
@@ -132,7 +132,14 @@ function addUnicodeSeries!(
     for (n, segment) in enumerate(series_segments(series, st; check = true))
         i, rng = segment.attr_index, segment.range
         lc = get_linecolor(series, i)
-        up = func(up, x[rng], y[rng]; color = up_color(lc), name = n == 1 ? label : "", series_kw...)
+        up = func(
+            up,
+            x[rng],
+            y[rng];
+            color = up_color(lc),
+            name = n == 1 ? label : "",
+            series_kw...,
+        )
     end
 
     for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
