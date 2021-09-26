@@ -691,9 +691,12 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k
-            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3, Int}}
+            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3,Int}}
                 # 1-based indexing
-                i, j, k = broadcast(i -> [ inds[i]-1 for inds in series[:connections]], (1, 2, 3))
+                i, j, k = broadcast(
+                    i -> [inds[i] - 1 for inds in series[:connections]],
+                    (1, 2, 3),
+                )
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k
