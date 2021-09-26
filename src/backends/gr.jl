@@ -1625,16 +1625,8 @@ function gr_label_ticks_3d(sp, letter, ticks)
     nt = sp[:framestyle] == :origin ? 0 : ax[:mirror] ? n1 : n0
     ft = sp[:framestyle] == :origin ? 0 : ax[:mirror] ? famax : famin
 
-    
-
     rot = mod(ax[:rotation], 360)
     sgn = ax[:mirror] ? -1 : 1
-    sgn2 = iseven(floor(rot / 90)) ? -1 : 1
-    sgn3 = if isz
-                -360 < rot < -180 || 0 < rot < 180 ? 1 : -1
-            else
-                rot < -270 || -90 < rot < 90 || rot > 270 ? 1 : -1
-            end
 
     cvs, dvs = ticks
     ax[:flip] && reverse!(cvs)
