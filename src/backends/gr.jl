@@ -710,6 +710,15 @@ end
 text_box_width(w, h, rot) = abs(cosd(rot)) * w + abs(cosd(rot + 90)) * h
 text_box_height(w, h, rot) = abs(sind(rot)) * w + abs(sind(rot + 90)) * h
 
+function gr_get_3d_axis_angle(cvs, nt, ft, letter)
+    length(cvs) < 2 && return 0
+    tickpoints = [gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...) for cv ∈ cvs]
+
+    dx = tickpoints[2][1] - tickpoints[1][1]
+    dy = tickpoints[2][2] - tickpoints[1][2]
+    return atand(dy, dx)
+end
+
 function gr_get_ticks_size(ticks, rot)
     w, h = 0.0, 0.0
     for (cv, dv) in zip(ticks...)
@@ -1616,11 +1625,9 @@ function gr_label_ticks_3d(sp, letter, ticks)
     nt = sp[:framestyle] == :origin ? 0 : ax[:mirror] ? n1 : n0
     ft = sp[:framestyle] == :origin ? 0 : ax[:mirror] ? famax : famin
 
-    out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
-    x_base_offset = isz ? -1.5e-2 * out_factor : isy ? 1.5e-2 * out_factor : 0
-    y_base_offset = isz ? 0 : isy ? -1.5e-2 * out_factor : -8e-3 * out_factor
+    
 
-    rot = ax[:rotation] % 360
+    rot = mod(ax[:rotation], 360)
     sgn = ax[:mirror] ? -1 : 1
     sgn2 = iseven(floor(rot / 90)) ? -1 : 1
     sgn3 = if isz
@@ -1632,26 +1639,45 @@ function gr_label_ticks_3d(sp, letter, ticks)
     cvs, dvs = ticks
     ax[:flip] && reverse!(cvs)
 
+    axisθ = isz ? 270 : mod(gr_get_3d_axis_angle(cvs, nt, ft, letter), 360) # issue: doesn't work with 1 tick
+    axisϕ = mod(axisθ - 90, 360)
+
+    out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
+    axisoffset = out_factor * 1.2e-2
+    x_base_offset = axisoffset * cosd(axisϕ)
+    y_base_offset = axisoffset * sind(axisϕ)
+
+    sgn2a = sgn2b = sgn3 = 0
+    if axisθ != 0 || rot % 90 != 0
+        sgn2a = (axisθ != 90) &&
+        (axisθ == 0 && (rot < 90 || 180 ≤ rot < 270)) ||
+        (axisθ == 270) ||
+        (axisθ < 90 && (axisθ < rot < 90 || axisθ + 180 < rot < 270)) ||
+        (axisθ > 270 && (rot < 90 || axisθ - 180 < rot < 270 || rot > axisθ)) ? -1 : 1
+    end
+
+    if (axisθ - 90) % 180 != 0 || (rot - 90) % 180 != 0
+        sgn2b = axisθ == 0 ||
+        (axisθ == 90 && (90 ≤ rot < 180 || 270 ≤ rot < 360)) ||
+        (axisθ == 270 && (rot < 90 || 180 ≤ rot < 270)) ||
+        (axisθ < 90 && (axisθ < rot < 180 || axisθ + 180 < rot)) ||
+        (axisθ > 270 && (rot < axisθ - 180 || 180 ≤ rot < axisθ)) ? -1 : 1
+    end
+
+    if !(axisθ == 0 && rot % 180 == 0) && ((rot - 90) % 180 != 0)
+        sgn3 = (axisθ == 0 && 90 < rot < 270) ||
+        (axisθ == 90 && rot < 180) ||
+        (axisθ == 270 && rot > 180) ||
+        (axisθ < 90 && (rot < axisθ || 90 ≤ rot < 180 || axisθ + 180 < rot < 270)) ||
+        (axisθ > 270 && (90 ≤ rot < axisθ - 180 || 180 ≤ rot < 270 || rot > axisθ)) ? -1 : 1
+    end
+
     for (cv, dv) in zip((cvs, dvs)...)
         xi, yi = gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...)
         sz_rot = gr_text_size(dv, rot)
         sz = gr_text_size(dv)
-        x_offset = x_base_offset
-        y_offset = y_base_offset
-        if isz
-            x_offset += -first(sz_rot) / 2
-            if rot % 90 != 0
-                y_offset += sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
-            end
-        elseif isy
-            x_offset += first(sz_rot) / 2
-            y_offset -= sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
-        else
-            if rot % 90 != 0
-                x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
-            end
-            y_offset += -last(sz_rot) / 2
-        end
+        x_offset = x_base_offset + sgn2a * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
+        y_offset = y_base_offset + sgn2b * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
         gr_text(xi + sgn * x_offset, yi + sgn * y_offset, dv)
     end
 end
