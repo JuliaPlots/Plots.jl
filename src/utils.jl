@@ -1184,9 +1184,7 @@ _document_argument(S::AbstractString) =
 function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     ci, cj, ck = cns
     if !(length(ci) == length(cj) == length(ck))
-        throw(
-            ArgumentError("Argument connections must consist of equally sized arrays."),
-        )
+        throw(ArgumentError("Argument connections must consist of equally sized arrays."))
     end
     X = zeros(eltype(x), 4length(ci))
     Y = zeros(eltype(y), 4length(cj))
@@ -1211,7 +1209,7 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     end
     return X, Y, Z
 end
-function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3, Int}})
+function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))

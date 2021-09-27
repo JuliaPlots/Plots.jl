@@ -362,6 +362,7 @@ end
 
 function plotly_legend_pos(pos::Symbol)
     xleft = 0.07
+    xright = 1.0
     ybot = 0.07
     ytop = 1.0
     xcenter = 0.55
@@ -372,14 +373,14 @@ function plotly_legend_pos(pos::Symbol)
     xouterright = 1.05
     xouterleft = -0.15
     plotly_legend_position_mapping = (
-        right = (coords = [1.0, ycenter], xanchor = "right", yanchor = "middle"),
+        right = (coords = [xright, ycenter], xanchor = "right", yanchor = "middle"),
         left = (coords = [xleft, ycenter], xanchor = "left", yanchor = "middle"),
         top = (coords = [xcenter, ytop], xanchor = "center", yanchor = "top"),
         bottom = (coords = [xcenter, ybot], xanchor = "center", yanchor = "bottom"),
         bottomleft = (coords = [xleft, ybot], xanchor = "left", yanchor = "bottom"),
-        bottomright = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
-        topright = (coords = [1.0, 1.0], xanchor = "right", yanchor = "top"),
-        topleft = (coords = [xleft, 1.0], xanchor = "left", yanchor = "top"),
+        bottomright = (coords = [xright, ybot], xanchor = "right", yanchor = "bottom"),
+        topright = (coords = [xright, ytop], xanchor = "right", yanchor = "top"),
+        topleft = (coords = [xleft, ytop], xanchor = "left", yanchor = "top"),
         outertop = (coords = [center, youtertop], xanchor = "upper", yanchor = "middle"),
         outerbottom = (coords = [center, youterbot], xanchor = "lower", yanchor = "middle"),
         outerleft = (coords = [xouterleft, center], xanchor = "left", yanchor = "top"),
@@ -400,7 +401,7 @@ function plotly_legend_pos(pos::Symbol)
             xanchor = "lower",
             yanchor = "right",
         ),
-        default = (coords = [1.0, 1.0], xanchor = "auto", yanchor = "auto"),
+        default = (coords = [xright, ytop], xanchor = "auto", yanchor = "auto"),
     )
 
     legend_position =
@@ -690,9 +691,12 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k
-            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3, Int}}
+            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3,Int}}
                 # 1-based indexing
-                i, j, k = broadcast(i -> [ inds[i]-1 for inds in series[:connections]], (1, 2, 3))
+                i, j, k = broadcast(
+                    i -> [inds[i] - 1 for inds in series[:connections]],
+                    (1, 2, 3),
+                )
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k

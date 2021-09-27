@@ -1255,7 +1255,6 @@ _backend_skips = Dict(
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images unsupported
-        13,  # markers unsupported
         16,  # nested layout unsupported
         21,  # custom markers unsupported
         22,  # contours unsupported
@@ -1269,7 +1268,6 @@ _backend_skips = Dict(
         43,  # heatmap with DateTime
         45,  # error bars
         47,  # mesh3D unsupported
-        48,  # markershapes unsupported
         49,  # polar heatmap
         50,  # 3D surface unsupported
         51,  # embedded images unsupported

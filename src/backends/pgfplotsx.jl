@@ -518,10 +518,13 @@ function pgfx_add_series!(::Val{:mesh3d}, axis, series_opt, series, series_func,
             [string(i, " ", j, " ", k, "\\\\") for (i, j, k) in zip(opt[:connections]...)],
             "\n        ",
         )
-    elseif typeof(opt[:connections]) <: AbstractVector{NTuple{3, Int}}
+    elseif typeof(opt[:connections]) <: AbstractVector{NTuple{3,Int}}
         # 1-based indexing
         ptable = join(
-            [string(i-1, " ", j-1, " ", k-1, "\\\\") for (i, j, k) in opt[:connections]],
+            [
+                string(i - 1, " ", j - 1, " ", k - 1, "\\\\") for
+                (i, j, k) in opt[:connections]
+            ],
             "\n        ",
         )
     else
