@@ -416,4 +416,5 @@ function _add_the_series(plt, sp, plotattributes)
     push!(plt.series_list, series)
     push!(sp.series_list, series)
     _series_added(plt, series)
+    _update_subplot_colorbars(sp)
 end
