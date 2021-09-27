@@ -692,6 +692,10 @@
         {
             "name": "Fred Callaway",
             "type": "Other"
+        },
+        {
+            "name": "Jan Thorben Schneider",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
