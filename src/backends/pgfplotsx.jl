@@ -203,7 +203,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
 
             if hascolorbar(sp)
                 cticks = get_colorbar_ticks(sp)[2]
-                colorbar_style = PGFPlotsX.Options("title" => sp[:colorbar_title])
+                colorbar_style = PGFPlotsX.Options("ylabel" => sp[:colorbar_title])
                 if sp[:colorbar] === :top
                     push!(
                         colorbar_style,
