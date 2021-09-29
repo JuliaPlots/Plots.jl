@@ -1259,7 +1259,10 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
         GR.restorestate()
     end
 
-    legend_width_factor = (viewport_plotarea[2] - viewport_plotarea[1]) / 45 # Determines the width of legend box
+    # legend_width_factor = (viewport_plotarea[2] - viewport_plotarea[1]) / 45 # Determines the width of legend box
+    # Let's prefer constant width instead
+    legend_width_factor = 0.02
+
     legend_textw = legendw
     legend_rightw = legend_width_factor
     legend_leftw = legend_width_factor * 4
