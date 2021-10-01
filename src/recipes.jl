@@ -1042,11 +1042,7 @@ export lens!
     series_plotindex := backup[:series_plotindex]
     seriestype := :path
     primary := false
-    if haskey(backup, :linecolor)
-        linecolor := backup[:linecolor]
-    else
-        linecolor := :lightgray
-    end
+    linecolor := get(backup, :linecolor, :lightgray)
     if haskey(backup, :linestyle)
         linestyle := backup[:linestyle]
     end
