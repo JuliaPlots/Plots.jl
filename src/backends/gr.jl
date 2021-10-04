@@ -1565,7 +1565,7 @@ function gr_label_ticks(sp, letter, ticks)
     rot = axis[:rotation] % 360
     ov = sp[:framestyle] == :origin ? 0 : xor(oaxis[:flip], axis[:mirror]) ? oamax : oamin
     sgn = axis[:mirror] ? -1 : 1
-    sgn2 = iseven(floor(rot / 90)) ? -1 : 1
+    sgn2 = iseven(Int(floor(rot / 90))) ? -1 : 1
     sgn3 = if isy
                 -360 < rot < -180 || 0 < rot < 180 ? 1 : -1
             else
