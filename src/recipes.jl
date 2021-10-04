@@ -1042,7 +1042,13 @@ export lens!
     series_plotindex := backup[:series_plotindex]
     seriestype := :path
     primary := false
-    linecolor := :lightgray
+    linecolor := get(backup, :linecolor, :lightgray)
+    if haskey(backup, :linestyle)
+        linestyle := backup[:linestyle]
+    end
+    if haskey(backup, :linewidth)
+        linewidth := backup[:linewidth]
+    end
     bbx_mag = (x1 + x2) / 2
     bby_mag = (y1 + y2) / 2
     xi_lens, yi_lens =
