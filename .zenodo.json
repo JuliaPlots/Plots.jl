@@ -696,6 +696,12 @@
         {
             "name": "Jan Thorben Schneider",
             "type": "Other"
+        },
+        {
+            "orcid": "0000-0003-4102-2460",
+            "affiliation": "Alogus Research Corporation:,
+            "name": "Lee Phillips",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
