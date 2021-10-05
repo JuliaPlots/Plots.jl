@@ -981,7 +981,7 @@ end
 
 function py_set_spine_color(spines, color)
     for loc in spines
-        spines[loc]."set_color"(color)
+        getproperty(spines, loc)."set_color"(color)
     end
 end
 
@@ -1206,7 +1206,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         if !ispolar(sp) && !RecipesPipeline.is3d(sp)
             for pos in ("left", "right", "top", "bottom")
                 # Scale all axes by default first
-                ax.spines[pos]."set_linewidth"(py_thickness_scale(plt, 1))
+                getproperty(ax.spines, pos)."set_linewidth"(py_thickness_scale(plt, 1))
             end
 
             # Then set visible some of them
@@ -1214,28 +1214,28 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 intensity = 0.5
 
                 spine = sp[:yaxis][:mirror] ? "left" : "right"
-                ax.spines[spine]."set_alpha"(intensity)
-                ax.spines[spine]."set_linewidth"(py_thickness_scale(plt, intensity))
+                getproperty(ax.spines, spine)."set_alpha"(intensity)
+                getproperty(ax.spines, spine)."set_linewidth"(py_thickness_scale(plt, intensity))
 
                 spine = sp[:xaxis][:mirror] ? "bottom" : "top"
-                ax.spines[spine]."set_linewidth"(py_thickness_scale(plt, intensity))
-                ax.spines[spine]."set_alpha"(intensity)
+                getproperty(ax.spines, spine)."set_linewidth"(py_thickness_scale(plt, intensity))
+                getproperty(ax.spines, spine)."set_alpha"(intensity)
             elseif sp[:framestyle] == :box
                 ax.tick_params(top = true)   # Add ticks too
                 ax.tick_params(right = true) # Add ticks too
             elseif sp[:framestyle] in (:axes, :origin)
-                sp[:xaxis][:mirror] ? ax.spines["bottom"]."set_visible"(false) :
-                ax.spines["top"]."set_visible"(false)
-                sp[:yaxis][:mirror] ? ax.spines["left"]."set_visible"(false) :
-                ax.spines["right"]."set_visible"(false)
+                sp[:xaxis][:mirror] ? ax.spines."bottom"."set_visible"(false) :
+                ax.spines."top"."set_visible"(false)
+                sp[:yaxis][:mirror] ? ax.spines."left"."set_visible"(false) :
+                ax.spines."right"."set_visible"(false)
                 if sp[:framestyle] == :origin
-                    ax.spines["bottom"]."set_position"("zero")
-                    ax.spines["left"]."set_position"("zero")
+                    ax.spines."bottom"."set_position"("zero")
+                    ax.spines."left"."set_position"("zero")
                 end
             elseif sp[:framestyle] in (:grid, :none, :zerolines)
                 if PyPlot.version >= v"3.4.1" # that is one where it worked, the API change may have some other value
                     for spine in ax.spines
-                        ax.spines[string(spine)]."set_visible"(false)
+                        getproperty(ax.spines, string(spine))."set_visible"(false)
                     end
                 else
                     for (loc, spine) in ax.spines
@@ -1406,11 +1406,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         if !sp[:xaxis][:showaxis]
             kw = KW()
             if ispolar(sp)
-                ax.spines["polar"].set_visible(false)
+                ax.spines."polar".set_visible(false)
             end
             for dir in (:top, :bottom)
                 if !ispolar(sp)
-                    ax.spines[string(dir)].set_visible(false)
+                    getproperty(ax.spines, string(dir)).set_visible(false)
                 end
                 kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
@@ -1420,7 +1420,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             kw = KW()
             for dir in (:left, :right)
                 if !ispolar(sp)
-                    ax.spines[string(dir)].set_visible(false)
+                    getproperty(ax.spines, string(dir)).set_visible(false)
                 end
                 kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
