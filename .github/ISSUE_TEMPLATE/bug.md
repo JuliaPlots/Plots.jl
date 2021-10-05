@@ -20,10 +20,11 @@ Backend      | yes | no  | untested
 -------------|-----|-----|---------
 gr (default) |     |     |
 pyplot       |     |     |
-plotly       |     |     |
 plotlyjs     |     |     |
 pgfplotsx    |     |     |
+unicodeplots |     |     |
 inspectdr    |     |     |
+gaston       |     |     |
 
 ### Versions
 

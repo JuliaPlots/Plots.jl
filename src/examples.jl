@@ -962,8 +962,10 @@ const _examples = PlotExample[
         """
         Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
         You can also specify the connections using the connections keyword.
-        The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
-        such that elements at the same position of these vectors form a triangle.
+        The connections can be specified in two ways: Either as a tuple of vectors where each vector 
+        contains the 0-based indices of one point of a triangle, such that elements at the same 
+        position of these vectors form a triangle. Or as a vector of NTuple{3,Ints} where each element 
+        contains the 1-based indices of the three points of a triangle.
         """,
         [
             :(
@@ -979,13 +981,14 @@ const _examples = PlotExample[
                     i = [0, 0, 0, 1]
                     j = [1, 2, 3, 2]
                     k = [2, 3, 1, 3]
+                    # Or: cns = [(1, 2, 3), (1, 3, 4), (1, 4, 2), (2, 3, 4)] (1-based indexing)
 
                     # the four triangles gives above give a tetrahedron
                     mesh3d(
                         x,
                         y,
                         z;
-                        connections = (i, j, k),
+                        connections = (i, j, k), # connections = cns
                         title = "triangles",
                         xlabel = "x",
                         ylabel = "y",
@@ -1235,7 +1238,7 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [25, 30],
-    :pyplot => [2, 25, 30, 31, 47, 49, 55],
+    :pyplot => [2, 25, 30, 31, 49, 55],
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51, 55],
     :plotly => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55],
     :pgfplotsx => [
@@ -1252,7 +1255,6 @@ _backend_skips = Dict(
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images unsupported
-        13,  # markers unsupported
         16,  # nested layout unsupported
         21,  # custom markers unsupported
         22,  # contours unsupported
@@ -1266,7 +1268,6 @@ _backend_skips = Dict(
         43,  # heatmap with DateTime
         45,  # error bars
         47,  # mesh3D unsupported
-        48,  # markershapes unsupported
         49,  # polar heatmap
         50,  # 3D surface unsupported
         51,  # embedded images unsupported

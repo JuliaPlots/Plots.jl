@@ -10,7 +10,7 @@
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 [docs-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-url]: http://docs.juliaplots.org/latest/
+[docs-url]: https://docs.juliaplots.org/latest/
 
 [![][gh-ci-img]][gh-ci-url]
 [![][pkgeval-img]][pkgeval-url]

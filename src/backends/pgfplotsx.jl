@@ -203,7 +203,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
 
             if hascolorbar(sp)
                 cticks = get_colorbar_ticks(sp)[2]
-                colorbar_style = PGFPlotsX.Options("title" => sp[:colorbar_title])
+                colorbar_style = PGFPlotsX.Options("ylabel" => sp[:colorbar_title])
                 if sp[:colorbar] === :top
                     push!(
                         colorbar_style,
@@ -512,10 +512,29 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
 end
 
 function pgfx_add_series!(::Val{:mesh3d}, axis, series_opt, series, series_func, opt)
-    ptable = join(
-        [string(i, " ", j, " ", k, "\\\\") for (i, j, k) in zip(opt[:connections]...)],
-        "\n        ",
-    )
+    if opt[:connections] isa Tuple{Array,Array,Array}
+        # 0-based indexing
+        ptable = join(
+            [string(i, " ", j, " ", k, "\\\\") for (i, j, k) in zip(opt[:connections]...)],
+            "\n        ",
+        )
+    elseif typeof(opt[:connections]) <: AbstractVector{NTuple{3,Int}}
+        # 1-based indexing
+        ptable = join(
+            [
+                string(i - 1, " ", j - 1, " ", k - 1, "\\\\") for
+                (i, j, k) in opt[:connections]
+            ],
+            "\n        ",
+        )
+    else
+        throw(
+            ArgumentError(
+                "Argument connections has to be either a tuple of three arrays (0-based indexing)
+                    or an AbstractVector{NTuple{3,Int}} (1-based indexing).",
+            ),
+        )
+    end
     push!(
         series_opt,
         "patch" => nothing,
