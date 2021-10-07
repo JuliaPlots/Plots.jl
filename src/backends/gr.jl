@@ -2061,7 +2061,7 @@ function gr_draw_surface(series, x, y, z, clims)
         fillalpha = get_fillalpha(series)
         n_polygons = length(cns)
         facecolor = if series[:fillcolor] isa AbstractArray
-            [typeof(fc)(fc) for fc in series[:fillcolor]]
+            series[:fillcolor]
         else
             fill(series[:fillcolor], n_polygons)
         end
