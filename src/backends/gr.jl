@@ -104,6 +104,9 @@ function gr_color(c, ::Type{<:AbstractGray})
 end
 gr_color(c, ::Type) = gr_color(RGBA(c), RGB)
 
+set_RGBA_alpha(alpha, c::RGBA) = RGBA(red(c), green(c), blue(c), alpha)
+set_RGBA_alpha(alpha::Nothing, c::RGBA) = c
+
 function gr_getcolorind(c)
     gr_set_transparency(float(alpha(c)))
     convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
@@ -2030,14 +2033,41 @@ function gr_draw_surface(series, x, y, z, clims)
         GR.setfillcolorind(0)
         GR.surface(x, y, z, get(e_kwargs, :display_option, GR.OPTION_FILLED_MESH))
     elseif st === :mesh3d
-        @warn "GR: mesh3d is experimental (no face colors)"
-        gr_set_line(
-            get_linewidth(series),
-            get_linestyle(series),
-            get_linecolor(series),
-            series,
-        )
-        GR.polyline3d(mesh3d_triangles(x, y, z, series[:connections])...)
+        if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
+            # Combination of any polygon types
+            cns = [[length(polyinds), polyinds...] for polyinds in series[:connections]]
+        elseif series[:connections] isa AbstractVector{NTuple{N,Int}} where {N}
+            # Only N-gons - connections have to be 1-based (indexing)
+            N = length(series[:connections][1])
+            cns = [[N, polyinds...] for polyinds in series[:connections]]
+        elseif series[:connections] isa NTuple{3,<:AbstractVector{Int}}
+            # Only triangles - connections have to be 0-based (indexing)
+            ci, cj, ck = series[:connections]
+            if !(length(ci) == length(cj) == length(ck))
+                throw(
+                    ArgumentError(
+                        "Argument connections must consist of equally sized arrays.",
+                    ),
+                )
+            end
+            cns = [([3, ci[i] + 1, cj[i] + 1, ck[i] + 1]) for i in eachindex(ci)]
+        else
+            throw(
+                ArgumentError(
+                    "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st",
+                ),
+            )
+        end 
+        fillalpha = get_fillalpha(series)
+        n_polygons = length(cns)
+        facecolor = if series[:fillcolor] isa AbstractArray
+            [typeof(fc)(fc) for fc in series[:fillcolor]]
+        else
+            fill(series[:fillcolor], n_polygons)
+        end
+        # gr_set_transparency(fillalpha) # not supported via GR.jl yet -> set_RGBA_alpha
+        facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor) 
+        GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))
     else
         throw(ArgumentError("Not handled !"))
     end
