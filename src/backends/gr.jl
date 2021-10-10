@@ -2065,8 +2065,9 @@ function gr_draw_surface(series, x, y, z, clims)
         else
             fill(series[:fillcolor], n_polygons)
         end
-        # gr_set_transparency(fillalpha) # not supported via GR.jl yet -> set_RGBA_alpha
         facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor) 
+        GR.setborderwidth(get_linewidth(series))
+        GR.setbordercolorind(gr_getcolorind(get_linecolor(series)))
         GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))
     else
         throw(ArgumentError("Not handled !"))
