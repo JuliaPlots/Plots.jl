@@ -712,7 +712,7 @@ text_box_height(w, h, rot) = abs(sind(rot)) * w + abs(sind(rot + 90)) * h
 
 function gr_get_3d_axis_angle(cvs, nt, ft, letter)
     length(cvs) < 2 && return 0
-    tickpoints = [gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...) for cv ∈ cvs]
+    tickpoints = [gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...) for cv in cvs]
 
     dx = tickpoints[2][1] - tickpoints[1][1]
     dy = tickpoints[2][2] - tickpoints[1][2]
@@ -1561,16 +1561,16 @@ function gr_label_ticks(sp, letter, ticks)
     out_factor = ifelse(axis[:tick_direction] === :out, 1.5, 1)
     x_base_offset = isy ? -1.5e-2 * out_factor : 0
     y_base_offset = isy ? 0 : -8e-3 * out_factor
-    
+
     rot = axis[:rotation] % 360
     ov = sp[:framestyle] == :origin ? 0 : xor(oaxis[:flip], axis[:mirror]) ? oamax : oamin
     sgn = axis[:mirror] ? -1 : 1
     sgn2 = iseven(Int(floor(rot / 90))) ? -1 : 1
     sgn3 = if isy
-                -360 < rot < -180 || 0 < rot < 180 ? 1 : -1
-            else
-                rot < -270 || -90 < rot < 90 || rot > 270 ? 1 : -1
-            end
+        -360 < rot < -180 || 0 < rot < 180 ? 1 : -1
+    else
+        rot < -270 || -90 < rot < 90 || rot > 270 ? 1 : -1
+    end
     for (cv, dv) in zip(ticks...)
         x, y = GR.wctondc(reverse_if((cv, ov), isy)...)
         sz_rot = gr_text_size(dv, rot)
@@ -1641,35 +1641,40 @@ function gr_label_ticks_3d(sp, letter, ticks)
 
     sgn2a = sgn2b = sgn3 = 0
     if axisθ != 0 || rot % 90 != 0
-        sgn2a = (axisθ != 90) &&
-        (axisθ == 0 && (rot < 90 || 180 ≤ rot < 270)) ||
-        (axisθ == 270) ||
-        (axisθ < 90 && (axisθ < rot < 90 || axisθ + 180 < rot < 270)) ||
-        (axisθ > 270 && (rot < 90 || axisθ - 180 < rot < 270 || rot > axisθ)) ? -1 : 1
+        sgn2a =
+            (axisθ != 90) && (axisθ == 0 && (rot < 90 || 180 ≤ rot < 270)) ||
+            (axisθ == 270) ||
+            (axisθ < 90 && (axisθ < rot < 90 || axisθ + 180 < rot < 270)) ||
+            (axisθ > 270 && (rot < 90 || axisθ - 180 < rot < 270 || rot > axisθ)) ? -1 : 1
     end
 
     if (axisθ - 90) % 180 != 0 || (rot - 90) % 180 != 0
-        sgn2b = axisθ == 0 ||
-        (axisθ == 90 && (90 ≤ rot < 180 || 270 ≤ rot < 360)) ||
-        (axisθ == 270 && (rot < 90 || 180 ≤ rot < 270)) ||
-        (axisθ < 90 && (axisθ < rot < 180 || axisθ + 180 < rot)) ||
-        (axisθ > 270 && (rot < axisθ - 180 || 180 ≤ rot < axisθ)) ? -1 : 1
+        sgn2b =
+            axisθ == 0 ||
+            (axisθ == 90 && (90 ≤ rot < 180 || 270 ≤ rot < 360)) ||
+            (axisθ == 270 && (rot < 90 || 180 ≤ rot < 270)) ||
+            (axisθ < 90 && (axisθ < rot < 180 || axisθ + 180 < rot)) ||
+            (axisθ > 270 && (rot < axisθ - 180 || 180 ≤ rot < axisθ)) ? -1 : 1
     end
 
     if !(axisθ == 0 && rot % 180 == 0) && ((rot - 90) % 180 != 0)
-        sgn3 = (axisθ == 0 && 90 < rot < 270) ||
-        (axisθ == 90 && rot < 180) ||
-        (axisθ == 270 && rot > 180) ||
-        (axisθ < 90 && (rot < axisθ || 90 ≤ rot < 180 || axisθ + 180 < rot < 270)) ||
-        (axisθ > 270 && (90 ≤ rot < axisθ - 180 || 180 ≤ rot < 270 || rot > axisθ)) ? -1 : 1
+        sgn3 =
+            (axisθ == 0 && 90 < rot < 270) ||
+            (axisθ == 90 && rot < 180) ||
+            (axisθ == 270 && rot > 180) ||
+            (axisθ < 90 && (rot < axisθ || 90 ≤ rot < 180 || axisθ + 180 < rot < 270)) ||
+            (axisθ > 270 && (90 ≤ rot < axisθ - 180 || 180 ≤ rot < 270 || rot > axisθ)) ?
+            -1 : 1
     end
 
     for (cv, dv) in zip((cvs, dvs)...)
         xi, yi = gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...)
         sz_rot = gr_text_size(dv, rot)
         sz = gr_text_size(dv)
-        x_offset = x_base_offset + sgn2a * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
-        y_offset = y_base_offset + sgn2b * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
+        x_offset =
+            x_base_offset + sgn2a * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
+        y_offset =
+            y_base_offset + sgn2b * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
         gr_text(xi + sgn * x_offset, yi + sgn * y_offset, dv)
     end
 end
@@ -2133,4 +2138,3 @@ function _display(plt::Plot{GRBackend})
 end
 
 closeall(::GRBackend) = GR.emergencyclosegks()
-                                
