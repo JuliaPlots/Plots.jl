@@ -2033,7 +2033,6 @@ function _update_subplot_args(
             lims_warned = true
         end
     end
-    _update_subplot_colorbars(sp)
 end
 
 # -----------------------------------------------------------------------------
