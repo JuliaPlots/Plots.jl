@@ -35,15 +35,21 @@ values of the input. The value is stored as a series property, which is retrieve
 function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64,Float64}
     zmin, zmax = Inf, -Inf
     z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin)
-    for vals in (
-        series[:seriestype] in z_colored_series ? series[:z] : nothing,
-        series[:line_z],
-        series[:marker_z],
-        series[:fill_z],
-    )
-        vals === nothing && continue
-        zmin, zmax = update_clims(zmin, zmax, vals, op)
+
+    # keeping this unrolled has higher performance
+    if series[:seriestype] ∈ z_colored_series && series[:z] !== nothing
+        zmin, zmax = update_clims(zmin, zmax, series[:z], op)
     end
+    if series[:line_z] !== nothing
+        zmin, zmax = update_clims(zmin, zmax, series[:line_z], op)
+    end
+    if series[:marker_z] !== nothing
+        zmin, zmax = update_clims(zmin, zmax, series[:marker_z], op)
+    end
+    if series[:fill_z] !== nothing
+        zmin, zmax = update_clims(zmin, zmax, series[:fill_z], op)
+    end
+
     return series_clims[series] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
