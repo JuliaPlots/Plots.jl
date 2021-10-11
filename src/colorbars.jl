@@ -41,14 +41,15 @@ function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64,Flo
         series[:marker_z],
         series[:fill_z],
     )
-        if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing,Real})
-            zmin, zmax = _update_clims(zmin, zmax, op(vals.surf)...)
-        elseif (vals !== nothing) && (eltype(vals) <: Union{Missing,Real})
-            zmin, zmax = _update_clims(zmin, zmax, op(vals)...)
-        end
+        vals === nothing && continue
+        zmin, zmax = update_clims(zmin, zmax, vals, op)
     end
     return series_clims[series] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
+
+update_clims(zmin, zmax, vals::AbstractSurface, op)::Tuple{Float64, Float64} = update_clims(zmin, zmax, vals.surf, op)
+update_clims(zmin, zmax, vals::AbstractArray, op)::Tuple{Float64, Float64} = update_clims(zmin, zmax, op(vals)...)
+update_clims(zmin, zmax, ::Nothing, ::Any)::Tuple{Float64, Float64} = zmin, zmax
 
 _update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
 
