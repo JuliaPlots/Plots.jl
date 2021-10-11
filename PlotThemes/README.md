@@ -30,6 +30,7 @@ Currently the following themes are available:
 - `:vibrant`
 - `:mute`
 - `:dao`
+- `:dracula`
 
 
 When using Plots, a theme can be set using the `theme` function:
@@ -89,10 +90,11 @@ Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 ### `:mute`
 ![theme_mute](https://user-images.githubusercontent.com/16589944/70848069-9860bf80-1e6c-11ea-9cac-8a797d526835.png)
 
-
 ### `:dao`
 ![theme_dao](https://user-images.githubusercontent.com/7330605/106512313-54de7000-64c9-11eb-98d5-2aee3603879a.png)
 
+### `:dracula`
+![theme_dracula](https://user-images.githubusercontent.com/64332767/136754217-31d4348a-c873-4496-8b66-905e4d8a7e36.png)
 
 ## Contributing
 A theme specifies default values for different Plots [attributes](http://docs.juliaplots.org/attributes/).
