@@ -969,21 +969,20 @@ function pgfx_font(fontsize::Nothing, thickness_scaling = 1, font = "\\selectfon
 end
 
 function pgfx_should_add_to_legend(series::Series)
-    series.plotattributes[:primary] &&
-        !(
-            series.plotattributes[:seriestype] in (
-                :hexbin,
-                :bins2d,
-                :histogram2d,
-                :hline,
-                :vline,
-                :contour,
-                :contourf,
-                :contour3d,
-                :heatmap,
-                :image,
-            )
+    series.plotattributes[:primary] && !(
+        series.plotattributes[:seriestype] in (
+            :hexbin,
+            :bins2d,
+            :histogram2d,
+            :hline,
+            :vline,
+            :contour,
+            :contourf,
+            :contour3d,
+            :heatmap,
+            :image,
         )
+    )
 end
 
 function pgfx_marker(plotattributes, i = 1)
