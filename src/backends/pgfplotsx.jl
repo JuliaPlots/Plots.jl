@@ -141,6 +141,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             title_loc = sp[:titlelocation]
             bgc_inside = plot_color(sp[:background_color_inside])
             bgc_inside_a = alpha(bgc_inside)
+            update_clims(sp)
             axis_opt = PGFPlotsX.Options(
                 "point meta max" => get_clims(sp)[2],
                 "point meta min" => get_clims(sp)[1],
