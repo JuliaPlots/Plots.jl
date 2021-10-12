@@ -5,8 +5,8 @@ process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
 
-const sp_clims = Dict{Subplot, Tuple{Float64, Float64}}()
-const series_clims = Dict{Series, Tuple{Float64, Float64}}()
+const sp_clims = IdDict{Subplot, Tuple{Float64, Float64}}()
+const series_clims = IdDict{Series, Tuple{Float64, Float64}}()
 
 get_clims(sp::Subplot)::Tuple{Float64,Float64} = haskey(sp_clims, sp) ? sp_clims[sp] : update_clims(sp)
 get_clims(series::Series)::Tuple{Float64,Float64} = haskey(series_clims, series) ? series_clims[series] : update_clims(series)
