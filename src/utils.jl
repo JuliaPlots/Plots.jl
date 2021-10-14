@@ -1209,6 +1209,7 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     end
     return X, Y, Z
 end
+
 function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))
@@ -1239,3 +1240,5 @@ const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
 
 get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
 get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
+
+tex2unicode(s::AbstractString, pat=r"\$([^$]+)\$") = replace(s, pat => m->to_latex(m[2:(length(m)-1)]))

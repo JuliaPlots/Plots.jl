@@ -42,9 +42,9 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         kw = (
             compact = true,
-            title = sp[:title],
-            xlabel = xaxis[:guide],
-            ylabel = yaxis[:guide],
+            title = tex2unicode(sp[:title]),
+            xlabel = tex2unicode(xaxis[:guide]),
+            ylabel = tex2unicode(yaxis[:guide]),
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
             border = isijulia() ? :ascii : :solid,
@@ -63,7 +63,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
                 o,
                 x,
                 y,
-                val.str;
+                tex2unicode(val.str);
                 color = up_color(val.font.color),
                 halign = val.font.halign,
                 valign = val.font.valign,

@@ -35,6 +35,7 @@ import Downloads
 import JSON
 
 using Requires
+import UnicodeFun: to_latex
 
 #! format: off
 export
