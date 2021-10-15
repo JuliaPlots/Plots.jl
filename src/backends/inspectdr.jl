@@ -70,7 +70,7 @@ function _inspectdr_add_annotations(plot, x, y, val::PlotText)
         color = _inspectdr_mapcolor(val.font.color),
     )
     ann = InspectDR.atext(
-        tex2unicode(val.str),
+        texmath2unicode(val.str),
         x = x,
         y = y,
         font = fnt,
@@ -384,9 +384,9 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
     _inspectdr_setticks(sp, plot, strip, xaxis, yaxis)
 
     a = plot.annotation
-    a.title = tex2unicode(sp[:title])
-    a.xlabel = tex2unicode(xaxis[:guide])
-    a.ylabels = [tex2unicode(yaxis[:guide])]
+    a.title = texmath2unicode(sp[:title])
+    a.xlabel = texmath2unicode(xaxis[:guide])
+    a.ylabels = [texmath2unicode(yaxis[:guide])]
 
     #Modify base layout of new object:
     l = plot.layout.defaults = deepcopy(InspectDR.defaults.plotlayout)
