@@ -1769,7 +1769,7 @@ function gr_label_axis_3d(sp, letter)
 end
 
 function gr_add_title(sp, viewport_plotarea, viewport_subplot)
-    if sp[:title] != ""
+    if (ttl = sp[:title]) != ""
         GR.savestate()
         gr_set_font(titlefont(sp), sp)
         loc = sp[:titlelocation]
@@ -1783,8 +1783,33 @@ function gr_add_title(sp, viewport_plotarea, viewport_subplot)
             xpos = gr_view_xcenter(viewport_plotarea)
             halign = GR.TEXT_HALIGN_CENTER
         end
-        GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
-        gr_text(xpos, viewport_subplot[4], sp[:title])
+        if ttl isa AbstractVector
+            if length(ttl) > 0
+                w, h = gr_text_size(ttl[1])
+                if halign == GR.TEXT_HALIGN_CENTER
+                    xpos -= .5w
+                elseif halign == GR.TEXT_HALIGN_RIGHT
+                    xpos -= w
+                end
+                GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_TOP)
+                x, y = xpos, viewport_subplot[4]
+                for t in ttl
+                    length(t) == 0 && continue
+                    for (j, st) in enumerate(split(t, '\n'))
+                        if j > 1
+                            x = xpos
+                            y -= h
+                        end
+                        gr_text(x, y, st)
+                        w, h = gr_text_size(st)
+                    end
+                    x += w
+                end
+            end
+        else
+            GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
+            gr_text(xpos, viewport_subplot[4], ttl)
+        end
         GR.restorestate()
     end
 end
