@@ -5,11 +5,13 @@ process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
 
-const sp_clims = IdDict{Subplot, Tuple{Float64, Float64}}()
-const series_clims = IdDict{Series, Tuple{Float64, Float64}}()
+const sp_clims = IdDict{Subplot,Tuple{Float64,Float64}}()
+const series_clims = IdDict{Series,Tuple{Float64,Float64}}()
 
-get_clims(sp::Subplot)::Tuple{Float64,Float64} = haskey(sp_clims, sp) ? sp_clims[sp] : update_clims(sp)
-get_clims(series::Series)::Tuple{Float64,Float64} = haskey(series_clims, series) ? series_clims[series] : update_clims(series)
+get_clims(sp::Subplot)::Tuple{Float64,Float64} =
+    haskey(sp_clims, sp) ? sp_clims[sp] : update_clims(sp)
+get_clims(series::Series)::Tuple{Float64,Float64} =
+    haskey(series_clims, series) ? series_clims[series] : update_clims(series)
 
 get_clims(sp::Subplot, series::Series)::Tuple{Float64,Float64} =
     series[:colorbar_entry] ? get_clims(sp) : get_clims(series)
@@ -53,9 +55,11 @@ function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64,Flo
     return series_clims[series] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-update_clims(zmin, zmax, vals::AbstractSurface, op)::Tuple{Float64, Float64} = update_clims(zmin, zmax, vals.surf, op)
-update_clims(zmin, zmax, vals::Any, op)::Tuple{Float64, Float64} = _update_clims(zmin, zmax, op(vals)...)
-update_clims(zmin, zmax, ::Nothing, ::Any)::Tuple{Float64, Float64} = zmin, zmax
+update_clims(zmin, zmax, vals::AbstractSurface, op)::Tuple{Float64,Float64} =
+    update_clims(zmin, zmax, vals.surf, op)
+update_clims(zmin, zmax, vals::Any, op)::Tuple{Float64,Float64} =
+    _update_clims(zmin, zmax, op(vals)...)
+update_clims(zmin, zmax, ::Nothing, ::Any)::Tuple{Float64,Float64} = zmin, zmax
 
 _update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
 

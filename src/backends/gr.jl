@@ -2065,7 +2065,7 @@ function gr_draw_surface(series, x, y, z, clims)
                     "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st",
                 ),
             )
-        end 
+        end
         fillalpha = get_fillalpha(series)
         n_polygons = length(cns)
         facecolor = if series[:fillcolor] isa AbstractArray
@@ -2073,7 +2073,7 @@ function gr_draw_surface(series, x, y, z, clims)
         else
             fill(series[:fillcolor], n_polygons)
         end
-        facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor) 
+        facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
         GR.setborderwidth(get_linewidth(series))
         GR.setbordercolorind(gr_getcolorind(get_linecolor(series)))
         GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))

@@ -1215,10 +1215,14 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
                 spine = sp[:yaxis][:mirror] ? "left" : "right"
                 getproperty(ax.spines, spine)."set_alpha"(intensity)
-                getproperty(ax.spines, spine)."set_linewidth"(py_thickness_scale(plt, intensity))
+                getproperty(ax.spines, spine)."set_linewidth"(
+                    py_thickness_scale(plt, intensity),
+                )
 
                 spine = sp[:xaxis][:mirror] ? "bottom" : "top"
-                getproperty(ax.spines, spine)."set_linewidth"(py_thickness_scale(plt, intensity))
+                getproperty(ax.spines, spine)."set_linewidth"(
+                    py_thickness_scale(plt, intensity),
+                )
                 getproperty(ax.spines, spine)."set_alpha"(intensity)
             elseif sp[:framestyle] == :box
                 ax.tick_params(top = true)   # Add ticks too
