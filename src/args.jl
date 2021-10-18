@@ -564,9 +564,6 @@ function reset_axis_defaults_byletter!()
 end
 reset_axis_defaults_byletter!()
 
-const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
-
-
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
 is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
@@ -909,6 +906,7 @@ function parse_axis_kw(s::Symbol)
     end
     return nothing
 end
+
 
 # update the defaults globally
 

@@ -49,3 +49,18 @@ for arg in _all_args
 end
 # add all non_underscored forms to the _keyAliases
 add_non_underscore_aliases!(_keyAliases)
+
+# fill symbol cache
+for letter in (:x, :y, :z)
+    _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
+    for k in keys(_axis_defaults)
+        # populate attribute cache
+        lk = Symbol(letter, k)
+        _attrsymbolcache[letter][k] = lk
+        # allow the underscore version too: xguide or x_guide
+        add_aliases(lk, Symbol(letter, "_", k))
+    end
+    for k in (_magic_axis_args..., :(_discrete_indices))
+        _attrsymbolcache[letter][k] = Symbol(letter, k)
+    end
+end
