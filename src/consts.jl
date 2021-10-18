@@ -5,13 +5,25 @@ const _initial_defaults = deepcopy(_all_defaults)
 const _initial_axis_defaults = deepcopy(_axis_defaults)
 
 # to be able to reset font sizes to initial values
-const _initial_fontsizes = Dict(
+const _initial_plt_fontsizes =
+    Dict(:plot_titlefontsize => _plot_defaults[:plot_titlefontsize])
+
+const _initial_sp_fontsizes = Dict(
     :titlefontsize => _subplot_defaults[:titlefontsize],
-    :legend_font_pointsize => _subplot_defaults[:legend_font_pointsize],
-    :legend_title_font_pointsize => _subplot_defaults[:legend_title_font_pointsize],
-    :tickfontsize => _axis_defaults[:tickfontsize],
+    :legendfontsize => _subplot_defaults[:legend_font_pointsize],
+    :legendtitlefontsize => _subplot_defaults[:legend_title_font_pointsize],
+    :annotationfontsize => _subplot_defaults[:annotationfontsize],
+    :colorbar_tickfontsize => _subplot_defaults[:colorbar_tickfontsize],
+    :colorbar_titlefontsize => _subplot_defaults[:colorbar_titlefontsize],
+)
+
+const _initial_ax_fontsizes = Dict(
+    :tickfontsize  => _axis_defaults[:tickfontsize],
     :guidefontsize => _axis_defaults[:guidefontsize],
 )
+
+const _initial_fontsizes =
+    merge(_initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes)
 
 const _internal_args =
     [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
@@ -23,10 +35,10 @@ const _plot_args = sort(union(collect(keys(_plot_defaults))))
 
 const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
 const _magic_subplot_args = [
-    :titlefont,
-    :legendfont,
-    :legend_titlefont,
-    :plot_titlefont,
+    :title_font,
+    :legend_font,
+    :legend_title_font,
+    :plot_title_font,
     :colorbar_titlefont,
 ]
 const _magic_series_args = [:line, :marker, :fill]

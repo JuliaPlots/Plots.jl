@@ -1236,8 +1236,7 @@ function gr_legend_pos(theta::Real, leg, viewport_plotarea; axisclearance = noth
 end
 
 function gr_get_legend_geometry(viewport_plotarea, sp)
-    legendn = 0
-    legendw = 0
+    legendn = legendw = dy = 0
     if sp[:legend_position] != :none
         GR.savestate()
         GR.selntran(0)

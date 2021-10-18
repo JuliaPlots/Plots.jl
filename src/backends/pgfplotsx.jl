@@ -1235,7 +1235,9 @@ end
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
 
-# turn off scaled ticks
+    # turn off scaled ticks
+    push!(opt, "scaled $(letter) ticks" => "false", string(letter, :label) => axis[:guide])
+    tick_color = plot_color(axis[:foreground_color_axis])
     push!(
         opt,
         "$(letter) tick style" =>
