@@ -1243,6 +1243,7 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
         GR.setscale(0)
         if sp[:legend_title] !== nothing
             gr_set_font(legendtitlefont(sp), sp)
+            legendn += 1
             tbx, tby = gr_inqtext(0, 0, string(sp[:legend_title]))
             legendw = tbx[3] - tbx[1]
             dy = tby[3] - tby[1]
@@ -1270,7 +1271,7 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
     x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
     y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 30
 
-    dy = gr_point_mult(sp) * sp[:legend_font_pointsize] * 1.75
+    dy = get(sp[:extra_kwargs], :legend_hfactor, 1)
     legendh = dy * legendn
 
     return (
@@ -1289,7 +1290,7 @@ end
 ## Viewport, window and scale
 
 function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
-    leg_str = string(sp[:legend_position])
+    s = sp[:legend_position]
 
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
     xmirror =
@@ -1299,8 +1300,8 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
         yaxis[:guide_position] == :right ||
         (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
 
-    if sp[:legend_position] isa Tuple{<:Real,Symbol}
-        if sp[:legend_position][2] === :outer
+    if s isa Tuple{<:Real,Symbol}
+        if s[2] === :outer
             (x,y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
             if x < viewport_plotarea[1]
                 viewport_plotarea[1] +=
@@ -1320,6 +1321,7 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
             end
         end
     end
+    leg_str = string(s)
     if occursin("outer", leg_str)
         if occursin("right", leg_str)
             viewport_plotarea[2] -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
@@ -1337,7 +1339,7 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
                 leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, sp[:xaxis])
         end
     end
-    if sp[:legend_position] == :inline
+    if s == :inline
         if sp[:yaxis][:mirror]
             viewport_plotarea[1] += leg.w
         else

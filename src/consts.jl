@@ -4,14 +4,27 @@ const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 const _initial_defaults = deepcopy(_all_defaults)
 const _initial_axis_defaults = deepcopy(_axis_defaults)
 
+# add defaults for the letter versions
+const _axis_defaults_byletter = KW()
+
+function reset_axis_defaults_byletter!()
+    for letter in (:x, :y, :z)
+        _axis_defaults_byletter[letter] = KW()
+        for (k, v) in _axis_defaults
+            _axis_defaults_byletter[letter][k] = v
+        end
+    end
+end
+reset_axis_defaults_byletter!()
+
 # to be able to reset font sizes to initial values
 const _initial_plt_fontsizes =
     Dict(:plot_titlefontsize => _plot_defaults[:plot_titlefontsize])
 
 const _initial_sp_fontsizes = Dict(
     :titlefontsize => _subplot_defaults[:titlefontsize],
-    :legendfontsize => _subplot_defaults[:legend_font_pointsize],
-    :legendtitlefontsize => _subplot_defaults[:legend_title_font_pointsize],
+    :legend_font_pointsize => _subplot_defaults[:legend_font_pointsize],
+    :legend_title_font_pointsize => _subplot_defaults[:legend_title_font_pointsize],
     :annotationfontsize => _subplot_defaults[:annotationfontsize],
     :colorbar_tickfontsize => _subplot_defaults[:colorbar_tickfontsize],
     :colorbar_titlefontsize => _subplot_defaults[:colorbar_titlefontsize],

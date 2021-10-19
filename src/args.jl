@@ -551,18 +551,6 @@ const _suppress_warnings = Set{Symbol}([
     :relative_bbox,
 ])
 
-# add defaults for the letter versions
-const _axis_defaults_byletter = KW()
-
-function reset_axis_defaults_byletter!()
-    for letter in (:x, :y, :z)
-        _axis_defaults_byletter[letter] = KW()
-        for (k, v) in _axis_defaults
-            _axis_defaults_byletter[letter][k] = v
-        end
-    end
-end
-reset_axis_defaults_byletter!()
 
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
