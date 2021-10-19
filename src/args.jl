@@ -2069,7 +2069,16 @@ end
 
 #--------------------------------------------------
 ## inspired by Base.@kwdef
-macro add_attributes(level, expr)
+"""
+    add_attributes(level, expr, match_table)
+
+Takes a `struct` definition and recurses into its fields to create keywords by chaining the field names with the structs' name with underscore.
+Also creates pluralized and non-underscore aliases for these keywords.
+- `level` indicates which group of `plot`, `subplot`, `series`, etc. the keywords belong to.
+- `expr` is the struct definition with default values like `Base.@kwdef`
+- `match_table` is an expression of the form `:match = (symbols)`, with symbols whose default value should be `:match`
+"""
+macro add_attributes(level, expr, match_table)
     expr = macroexpand(__module__, expr) # to expand @static
     expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
     T = expr.args[2]
@@ -2086,6 +2095,9 @@ macro add_attributes(level, expr)
         # e.g. _series_defualts[key] = value
         exp_key = Symbol(lowercase(string(T)), "_", key)
         pl_key = makeplural(exp_key)
+        if QuoteNode(exp_key) in match_table.args[2].args
+            value = QuoteNode(:match)
+        end
         push!(
             insert_block.args,
             Expr(
