@@ -103,7 +103,10 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
 
     segments = if has_attribute_segments(series)
         Iterators.flatten(map(nan_segments) do r
-                if seriestype in (:scatter, :scatter3d)
+                if seriestype == :shape
+                    warn_on_inconsistent_shape_attr(series, x, y, z, r)
+                    (SeriesSegment(r, first(r)),)
+                elseif seriestype in (:scatter, :scatter3d)
                     (SeriesSegment(i:i, i) for i in r)
                 else
                     (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
@@ -136,6 +139,16 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
                         plot([1:2,1:3], [[4,5],[3,4,5]], label=["y" ""], $attr=[1 2])
                     """
             end
+        end
+    end
+end
+
+function warn_on_inconsistent_shape_attr(series, x, y, z, r)
+    for attr in _segmenting_vector_attributes
+        v = get(series, attr, nothing)
+        if v isa AVec && length(unique(v[r])) > 1
+            @warn "Different values of `$attr` specified for different shape vertices. Only first one will be used."
+            break
         end
     end
 end
@@ -573,7 +586,6 @@ const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
     # of its attributes
-    series[:seriestype] == :shape && return false
     # check relevant attributes if they have multiple inputs
     return any(
         series[attr] isa AbstractVector && length(series[attr]) > 1 for
