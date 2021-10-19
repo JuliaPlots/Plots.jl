@@ -72,13 +72,11 @@ const _all_args = sort(union([
 for arg in _all_args
     add_aliases(arg, makeplural(arg))
 end
-# add all non_underscored forms to the _keyAliases
-add_non_underscore_aliases!(_keyAliases)
 
 # fill symbol cache
 for letter in (:x, :y, :z)
     _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
-    for k in keys(_axis_defaults)
+    for k in _axis_args
         # populate attribute cache
         lk = Symbol(letter, k)
         _attrsymbolcache[letter][k] = lk
@@ -89,3 +87,6 @@ for letter in (:x, :y, :z)
         _attrsymbolcache[letter][k] = Symbol(letter, k)
     end
 end
+
+# add all non_underscored forms to the _keyAliases
+add_non_underscore_aliases!(_keyAliases)
