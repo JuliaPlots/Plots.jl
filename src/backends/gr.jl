@@ -1271,7 +1271,7 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
     x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
     y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 30
 
-    dy *= get(sp[:extra_kwargs], :legend_hfactor, 1)
+    dy *= get(sp[:extra_kwargs], :legend_hfactor, 1.05)  # default arbitrary 5% white space
 
     legendh = dy * legendn
 
