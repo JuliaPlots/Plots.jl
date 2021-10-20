@@ -70,8 +70,9 @@ jobs:
 
       - name: CompileBot postprocess
         run: |
+          ls artifact
           ls
-          if ! grep -m1 -q 'format' src/precompile_includer.jl; then sed -i '1 i\#! format: off' src/precompile_includer.jl; fi
+          if ! grep -m1 -q 'format' artifact/src/precompile_includer.jl; then sed -i '1 i\#! format: off' artifact/src/precompile_includer.jl; fi
           julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); using CompileBot; CompileBot.postprocess();'
 
       - name: Create Pull Request
