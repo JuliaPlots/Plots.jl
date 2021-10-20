@@ -435,61 +435,61 @@ const _plot_defaults = KW(
 )
 
 const _subplot_defaults = KW(
-    :title                    => "",
-    :titlelocation            => :center,           # also :left or :right
-    :fontfamily_subplot       => :match,
-    :titlefontfamily          => :match,
-    :titlefontsize            => 14,
-    :titlefonthalign          => :hcenter,
-    :titlefontvalign          => :vcenter,
-    :titlefontrotation        => 0.0,
-    :titlefontcolor           => :match,
+    :title => "",
+    :titlelocation => :center,           # also :left or :right
+    :fontfamily_subplot => :match,
+    :titlefontfamily => :match,
+    :titlefontsize => 14,
+    :titlefonthalign => :hcenter,
+    :titlefontvalign => :vcenter,
+    :titlefontrotation => 0.0,
+    :titlefontcolor => :match,
     :background_color_subplot => :match,            # default for other bg colors... match takes plot default
-    :background_color_inside  => :match,            # background inside grid
+    :background_color_inside => :match,            # background inside grid
     :foreground_color_subplot => :match,            # default for other fg colors... match takes plot default
-    :foreground_color_title   => :match,            # title color
-    :color_palette            => :auto,
-    :colorbar                 => :legend,
-    :clims                    => :auto,
-    :colorbar_fontfamily        => :match,
-    :colorbar_ticks             => :auto,
-    :colorbar_tickfontfamily    => :match,
-    :colorbar_tickfontsize      => 8,
-    :colorbar_tickfonthalign    => :hcenter,
-    :colorbar_tickfontvalign    => :vcenter,
-    :colorbar_tickfontrotation  => 0.0,
-    :colorbar_tickfontcolor     => :match,
-    :colorbar_scale             => :identity,
-    :colorbar_formatter         => :auto,
-    :colorbar_discrete_values   => [],
-    :colorbar_continuous_values   => zeros(0),
-    :annotations              => [],                # annotation tuples... list of (x,y,annotation)
-    :annotationfontfamily       => :match,
-    :annotationfontsize         => 14,
-    :annotationhalign           => :hcenter,
-    :annotationvalign           => :vcenter,
-    :annotationrotation         => 0.0,
-    :annotationcolor            => :match,
-    :projection               => :none,             # can also be :polar or :3d
-    :aspect_ratio             => :auto,             # choose from :none or :equal
-    :margin                   => 1mm,
-    :left_margin              => :match,
-    :top_margin               => :match,
-    :right_margin             => :match,
-    :bottom_margin            => :match,
-    :subplot_index            => -1,
-    :colorbar_title                  => "",
-    :colorbar_titlefontsize          => 10,
-    :colorbar_title_location         => :center,           # also :left or :right
-    :colorbar_fontfamily             => :match,
-    :colorbar_titlefontfamily        => :match,
-    :colorbar_titlefonthalign        => :hcenter,
-    :colorbar_titlefontvalign        => :vcenter,
-    :colorbar_titlefontrotation      => 0.0,
-    :colorbar_titlefontcolor         => :match,
-    :framestyle                      => :axes,
-    :camera                          => (30,30),
-    :extra_kwargs                    => Dict()
+    :foreground_color_title => :match,            # title color
+    :color_palette => :auto,
+    :colorbar => :legend,
+    :clims => :auto,
+    :colorbar_fontfamily => :match,
+    :colorbar_ticks => :auto,
+    :colorbar_tickfontfamily => :match,
+    :colorbar_tickfontsize => 8,
+    :colorbar_tickfonthalign => :hcenter,
+    :colorbar_tickfontvalign => :vcenter,
+    :colorbar_tickfontrotation => 0.0,
+    :colorbar_tickfontcolor => :match,
+    :colorbar_scale => :identity,
+    :colorbar_formatter => :auto,
+    :colorbar_discrete_values => [],
+    :colorbar_continuous_values => zeros(0),
+    :annotations => [],                # annotation tuples... list of (x,y,annotation)
+    :annotationfontfamily => :match,
+    :annotationfontsize => 14,
+    :annotationhalign => :hcenter,
+    :annotationvalign => :vcenter,
+    :annotationrotation => 0.0,
+    :annotationcolor => :match,
+    :projection => :none,             # can also be :polar or :3d
+    :aspect_ratio => :auto,             # choose from :none or :equal
+    :margin => 1mm,
+    :left_margin => :match,
+    :top_margin => :match,
+    :right_margin => :match,
+    :bottom_margin => :match,
+    :subplot_index => -1,
+    :colorbar_title => "",
+    :colorbar_titlefontsize => 10,
+    :colorbar_title_location => :center,           # also :left or :right
+    :colorbar_fontfamily => :match,
+    :colorbar_titlefontfamily => :match,
+    :colorbar_titlefonthalign => :hcenter,
+    :colorbar_titlefontvalign => :vcenter,
+    :colorbar_titlefontrotation => 0.0,
+    :colorbar_titlefontcolor => :match,
+    :framestyle => :axes,
+    :camera => (30, 30),
+    :extra_kwargs => Dict(),
 )
 
 const _axis_defaults = KW(
@@ -551,7 +551,6 @@ const _suppress_warnings = Set{Symbol}([
     :relative_bbox,
 ])
 
-
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
 is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
@@ -585,19 +584,47 @@ aliases(aliasMap::Dict{Symbol,Symbol}, val) =
 # -----------------------------------------------------------------------------
 # legend
 add_aliases(:legend_position, :legend, :leg, :key, :legends)
-add_aliases(:legend_background_color, :bg_legend, :bglegend, :bgcolor_legend, :bg_color_legend, :background_legend,
-                              :background_colour_legend, :bgcolour_legend, :bg_colour_legend, :background_color_legend)
-add_aliases(:legend_foreground_color, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
-                            :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend, :foreground_color_legend)
+add_aliases(
+    :legend_background_color,
+    :bg_legend,
+    :bglegend,
+    :bgcolor_legend,
+    :bg_color_legend,
+    :background_legend,
+    :background_colour_legend,
+    :bgcolour_legend,
+    :bg_colour_legend,
+    :background_color_legend,
+)
+add_aliases(
+    :legend_foreground_color,
+    :fg_legend,
+    :fglegend,
+    :fgcolor_legend,
+    :fg_color_legend,
+    :foreground_legend,
+    :foreground_colour_legend,
+    :fgcolour_legend,
+    :fg_colour_legend,
+    :foreground_color_legend,
+)
 add_aliases(:legend_font_pointsize, :legendfontsize)
-add_aliases(:legend_title, :key_title, :keytitle, :label_title, :labeltitle, :leg_title, :legtitle)
+add_aliases(
+    :legend_title,
+    :key_title,
+    :keytitle,
+    :label_title,
+    :labeltitle,
+    :leg_title,
+    :legtitle,
+)
 add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
 # margin
-add_aliases(:left_margin , :leftmargin )
+add_aliases(:left_margin, :leftmargin)
 
-add_aliases(:top_margin , :topmargin)
-add_aliases(:bottom_margin , :bottommargin)
-add_aliases(:right_margin ,:rightmargin)
+add_aliases(:top_margin, :topmargin)
+add_aliases(:bottom_margin, :bottommargin)
+add_aliases(:right_margin, :rightmargin)
 
 # colors
 add_aliases(:seriescolor, :c, :color, :colour)
@@ -607,33 +634,155 @@ add_aliases(:markerstrokecolor, :msc, :mscolor, :mscolour, :markerstrokecolour)
 add_aliases(:markerstrokewidth, :msw, :mswidth)
 add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
 
-add_aliases(:background_color, :bg, :bgcolor, :bg_color, :background,
-                              :background_colour, :bgcolour, :bg_colour)
-add_aliases(:background_color_subplot, :bg_subplot, :bgsubplot, :bgcolor_subplot, :bg_color_subplot, :background_subplot,
-                              :background_colour_subplot, :bgcolour_subplot, :bg_colour_subplot)
-add_aliases(:background_color_inside, :bg_inside, :bginside, :bgcolor_inside, :bg_color_inside, :background_inside,
-                              :background_colour_inside, :bgcolour_inside, :bg_colour_inside)
-add_aliases(:background_color_outside, :bg_outside, :bgoutside, :bgcolor_outside, :bg_color_outside, :background_outside,
-                              :background_colour_outside, :bgcolour_outside, :bg_colour_outside)
-add_aliases(:foreground_color, :fg, :fgcolor, :fg_color, :foreground,
-                            :foreground_colour, :fgcolour, :fg_colour)
+add_aliases(
+    :background_color,
+    :bg,
+    :bgcolor,
+    :bg_color,
+    :background,
+    :background_colour,
+    :bgcolour,
+    :bg_colour,
+)
+add_aliases(
+    :background_color_subplot,
+    :bg_subplot,
+    :bgsubplot,
+    :bgcolor_subplot,
+    :bg_color_subplot,
+    :background_subplot,
+    :background_colour_subplot,
+    :bgcolour_subplot,
+    :bg_colour_subplot,
+)
+add_aliases(
+    :background_color_inside,
+    :bg_inside,
+    :bginside,
+    :bgcolor_inside,
+    :bg_color_inside,
+    :background_inside,
+    :background_colour_inside,
+    :bgcolour_inside,
+    :bg_colour_inside,
+)
+add_aliases(
+    :background_color_outside,
+    :bg_outside,
+    :bgoutside,
+    :bgcolor_outside,
+    :bg_color_outside,
+    :background_outside,
+    :background_colour_outside,
+    :bgcolour_outside,
+    :bg_colour_outside,
+)
+add_aliases(
+    :foreground_color,
+    :fg,
+    :fgcolor,
+    :fg_color,
+    :foreground,
+    :foreground_colour,
+    :fgcolour,
+    :fg_colour,
+)
 
-add_aliases(:foreground_color_subplot, :fg_subplot, :fgsubplot, :fgcolor_subplot, :fg_color_subplot, :foreground_subplot,
-                            :foreground_colour_subplot, :fgcolour_subplot, :fg_colour_subplot)
-add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_grid, :foreground_grid,
-                            :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid, :gridcolor)
-add_aliases(:foreground_color_minor_grid, :fg_minor_grid, :fgminorgrid, :fgcolor_minorgrid, :fg_color_minorgrid, :foreground_minorgrid,
-                            :foreground_colour_minor_grid, :fgcolour_minorgrid, :fg_colour_minor_grid, :minorgridcolor)
-add_aliases(:foreground_color_title, :fg_title, :fgtitle, :fgcolor_title, :fg_color_title, :foreground_title,
-                            :foreground_colour_title, :fgcolour_title, :fg_colour_title, :titlecolor)
-add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
-                            :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis, :axiscolor)
-add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
-                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor)
-add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
-                            :foreground_colour_text, :fgcolour_text, :fg_colour_text, :textcolor)
-add_aliases(:foreground_color_guide, :fg_guide, :fgguide, :fgcolor_guide, :fg_color_guide, :foreground_guide,
-                            :foreground_colour_guide, :fgcolour_guide, :fg_colour_guide, :guidecolor)
+add_aliases(
+    :foreground_color_subplot,
+    :fg_subplot,
+    :fgsubplot,
+    :fgcolor_subplot,
+    :fg_color_subplot,
+    :foreground_subplot,
+    :foreground_colour_subplot,
+    :fgcolour_subplot,
+    :fg_colour_subplot,
+)
+add_aliases(
+    :foreground_color_grid,
+    :fg_grid,
+    :fggrid,
+    :fgcolor_grid,
+    :fg_color_grid,
+    :foreground_grid,
+    :foreground_colour_grid,
+    :fgcolour_grid,
+    :fg_colour_grid,
+    :gridcolor,
+)
+add_aliases(
+    :foreground_color_minor_grid,
+    :fg_minor_grid,
+    :fgminorgrid,
+    :fgcolor_minorgrid,
+    :fg_color_minorgrid,
+    :foreground_minorgrid,
+    :foreground_colour_minor_grid,
+    :fgcolour_minorgrid,
+    :fg_colour_minor_grid,
+    :minorgridcolor,
+)
+add_aliases(
+    :foreground_color_title,
+    :fg_title,
+    :fgtitle,
+    :fgcolor_title,
+    :fg_color_title,
+    :foreground_title,
+    :foreground_colour_title,
+    :fgcolour_title,
+    :fg_colour_title,
+    :titlecolor,
+)
+add_aliases(
+    :foreground_color_axis,
+    :fg_axis,
+    :fgaxis,
+    :fgcolor_axis,
+    :fg_color_axis,
+    :foreground_axis,
+    :foreground_colour_axis,
+    :fgcolour_axis,
+    :fg_colour_axis,
+    :axiscolor,
+)
+add_aliases(
+    :foreground_color_border,
+    :fg_border,
+    :fgborder,
+    :fgcolor_border,
+    :fg_color_border,
+    :foreground_border,
+    :foreground_colour_border,
+    :fgcolour_border,
+    :fg_colour_border,
+    :bordercolor,
+)
+add_aliases(
+    :foreground_color_text,
+    :fg_text,
+    :fgtext,
+    :fgcolor_text,
+    :fg_color_text,
+    :foreground_text,
+    :foreground_colour_text,
+    :fgcolour_text,
+    :fg_colour_text,
+    :textcolor,
+)
+add_aliases(
+    :foreground_color_guide,
+    :fg_guide,
+    :fgguide,
+    :fgcolor_guide,
+    :fg_color_guide,
+    :foreground_guide,
+    :foreground_colour_guide,
+    :fgcolour_guide,
+    :fg_colour_guide,
+    :guidecolor,
+)
 
 add_aliases(
     :foreground_color_title,
@@ -807,7 +956,16 @@ add_aliases(:zlims, :zlim, :zlimit, :zlimits)
 add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
 add_aliases(:guidefontsize, :labelfontsize)
-add_aliases(:fill_z, :fillz, :fz, :surfacecolor, :surfacecolour, :sc, :surfcolor, :surfcolour)
+add_aliases(
+    :fill_z,
+    :fillz,
+    :fz,
+    :surfacecolor,
+    :surfacecolour,
+    :sc,
+    :surfcolor,
+    :surfcolour,
+)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
 add_aliases(
     :colorbar_title,
@@ -894,7 +1052,6 @@ function parse_axis_kw(s::Symbol)
     end
     return nothing
 end
-
 
 # update the defaults globally
 
@@ -1393,7 +1550,8 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
 
     # legends
     if haskey(plotattributes, :legend_position)
-        plotattributes[:legend_position] = convertLegendValue(plotattributes[:legend_position])
+        plotattributes[:legend_position] =
+            convertLegendValue(plotattributes[:legend_position])
     end
     if haskey(plotattributes, :colorbar)
         plotattributes[:colorbar] = convertLegendValue(plotattributes[:colorbar])
@@ -1533,8 +1691,8 @@ end
 convertLegendValue(val::Real) = val
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Nothing) = :none
-convertLegendValue(v::Union{Tuple, NamedTuple}) = convertLegendValue.(v)
-convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
+convertLegendValue(v::Union{Tuple,NamedTuple}) = convertLegendValue.(v)
+convertLegendValue(v::Tuple{S,T}) where {S<:Real,T<:Real} = v
 convertLegendValue(v::Tuple{<:Real,Symbol}) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
@@ -2146,13 +2304,14 @@ function _splitdef!(blk, key_dict)
                 elseif lhs isa Expr && lhs.head === :(::) && lhs.args[1] isa Symbol
                     #  var::T = defexpr
                     var = lhs.args[1]
-                    type =  lhs.args[2]
+                    type = lhs.args[2]
                     if @isdefined type
                         for field in fieldnames(getproperty(Plots, type))
-                            key_dict[Symbol(var, "_", field)] = :(getfield($(ei.args[2]), $(QuoteNode(field))))
+                            key_dict[Symbol(var, "_", field)] =
+                                :(getfield($(ei.args[2]), $(QuoteNode(field))))
                         end
                     end
-                    else
+                else
                     # something else, e.g. inline inner constructor
                     #   F(...) = ...
                     continue

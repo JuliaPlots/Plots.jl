@@ -47,13 +47,8 @@ const _subplot_args = sort(union(collect(keys(_subplot_defaults))))
 const _plot_args = sort(union(collect(keys(_plot_defaults))))
 
 const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
-const _magic_subplot_args = [
-    :title_font,
-    :legend_font,
-    :legend_title_font,
-    :plot_title_font,
-    :colorbar_titlefont,
-]
+const _magic_subplot_args =
+    [:title_font, :legend_font, :legend_title_font, :plot_title_font, :colorbar_titlefont]
 const _magic_series_args = [:line, :marker, :fill]
 
 const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
@@ -75,7 +70,7 @@ end
 
 # fill symbol cache
 for letter in (:x, :y, :z)
-    _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
+    _attrsymbolcache[letter] = Dict{Symbol,Symbol}()
     for k in _axis_args
         # populate attribute cache
         lk = Symbol(letter, k)

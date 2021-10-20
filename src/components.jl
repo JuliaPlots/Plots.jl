@@ -783,4 +783,9 @@ end
     font::Font = font(8)
     title_font::Font = font(11)
     column = 1
-end :match = (:legend_font_family, :legend_font_color, :legend_title_font_family, :legend_title_font_color)
+end :match = (
+    :legend_font_family,
+    :legend_font_color,
+    :legend_title_font_family,
+    :legend_title_font_color,
+)
