@@ -954,7 +954,7 @@ function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = :solid)
     )
 end
 
-function pgfx_legend_col(s::Symbol) = s == :horizontal ? -1 : 1
+pgfx_legend_col(s::Symbol) = s == :horizontal ? -1 : 1
 pgfx_legend_col(n) = n
 
 
