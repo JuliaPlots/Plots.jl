@@ -1024,7 +1024,7 @@ end
 ## Legend
 
 function gr_add_legend(sp, leg, viewport_plotarea)
-    if sp[:legend] ∉ (:none, :inline)
+    if !(sp[:legend_position] in(:none, :inline))
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
@@ -1032,14 +1032,14 @@ function gr_add_legend(sp, leg, viewport_plotarea)
         if leg.w > 0
             xpos, ypos = gr_legend_pos(sp, leg, viewport_plotarea)
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
-            gr_set_fillcolor(sp[:background_color_legend])
+            gr_set_fillcolor(sp[:legend_background_color])
             GR.fillrect(
                 xpos - leg.leftw,
                 xpos + leg.textw + leg.rightw,
                 ypos + leg.dy,
                 ypos - leg.h,
             ) # Allocating white space for actual legend width here
-            gr_set_line(1, :solid, sp[:foreground_color_legend], sp)
+            gr_set_line(1, :solid, sp[:legend_foreground_color], sp)
             GR.drawrect(
                 xpos - leg.leftw,
                 xpos + leg.textw + leg.rightw,
@@ -1047,10 +1047,10 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                 ypos - leg.h,
             ) # Drawing actual legend width here
             i = 0
-            if sp[:legendtitle] !== nothing
+            if sp[:legend_title] !== nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
                 gr_set_font(legendtitlefont(sp), sp)
-                gr_text(xpos - 0.03 + 0.5 * leg.w, ypos, string(sp[:legendtitle]))
+                gr_text(xpos - 0.03 + 0.5 * leg.w, ypos, string(sp[:legend_title]))
                 ypos -= leg.dy
                 gr_set_font(legendfont(sp), sp)
             end
@@ -1059,7 +1059,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
                 lc = get_linecolor(series, clims)
-                gr_set_line(sp[:legendfontsize] / 8, get_linestyle(series), lc, sp)
+                gr_set_line(sp[:legend_font_pointsize] / 8, get_linestyle(series), lc, sp)
 
                 if (
                     (st == :shape || series[:fillrange] !== nothing) &&
@@ -1100,16 +1100,16 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     ms = first(series[:markersize])
                     msw = first(series[:markerstrokewidth])
                     s, sw = if ms > 0
-                        0.8 * sp[:legendfontsize], 0.8 * sp[:legendfontsize] * msw / ms
+                        0.8 * sp[:legend_font_pointsize], 0.8 * sp[:legend_font_pointsize] * msw / ms
                     else
-                        0, 0.8 * sp[:legendfontsize] * msw / 8
+                        0, 0.8 * sp[:legend_font_pointsize] * msw / 8
                     end
                     gr_draw_markers(series, xpos - leg.width_factor * 2, ypos, clims, s, sw)
                 end
 
                 lab = series[:label]
                 GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-                gr_set_textcolor(plot_color(sp[:legendfontcolor]))
+                gr_set_textcolor(plot_color(sp[:legend_font_color]))
                 gr_text(xpos, ypos, string(lab))
                 ypos -= leg.dy
             end
@@ -1120,7 +1120,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
 end
 
 function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
-    s = sp[:legend]
+    s = sp[:legend_position]
     s isa Real && return gr_legend_pos(s, leg, viewport_plotarea)
     if s isa Tuple{<:Real,Symbol}
         if s[2] !== :outer
@@ -1237,14 +1237,14 @@ end
 
 function gr_get_legend_geometry(viewport_plotarea, sp)
     legendn = legendw = dy = 0
-    if sp[:legend] != :none
+    if sp[:legend_position] != :none
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
-        if sp[:legendtitle] !== nothing
+        if sp[:legend_title] !== nothing
             gr_set_font(legendtitlefont(sp), sp)
             legendn += 1
-            tbx, tby = gr_inqtext(0, 0, string(sp[:legendtitle]))
+            tbx, tby = gr_inqtext(0, 0, string(sp[:legend_title]))
             legendw = tbx[3] - tbx[1]
             dy = tby[3] - tby[1]
         end
@@ -1272,7 +1272,6 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
     y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 30
 
     dy *= get(sp[:extra_kwargs], :legend_hfactor, 1)
-
     legendh = dy * legendn
 
     return (
@@ -1291,7 +1290,7 @@ end
 ## Viewport, window and scale
 
 function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
-    s = sp[:legend]
+    s = sp[:legend_position]
 
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
     xmirror =
@@ -1303,7 +1302,7 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
 
     if s isa Tuple{<:Real,Symbol}
         if s[2] === :outer
-            (x, y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
+            (x,y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
             if x < viewport_plotarea[1]
                 viewport_plotarea[1] +=
                     leg.leftw +
@@ -1340,7 +1339,7 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
                 leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, sp[:xaxis])
         end
     end
-    if s === :inline
+    if s == :inline
         if sp[:yaxis][:mirror]
             viewport_plotarea[1] += leg.w
         else
@@ -1841,7 +1840,7 @@ function gr_add_series(sp, series)
     elseif st in (:surface, :wireframe, :mesh3d)
         gr_draw_surface(series, x, y, z, clims)
     elseif st === :volume
-        sp[:legend] = :none
+        sp[:legend_position] = :none
         GR.gr3.clear()
         dmin, dmax = GR.gr3.volume(y.v, 0)
     elseif st === :heatmap
@@ -1859,9 +1858,9 @@ function gr_add_series(sp, series)
         gr_text(GR.wctondc(xi, yi)..., str)
     end
 
-    if sp[:legend] == :inline && should_add_to_legend(series)
+    if sp[:legend_position] == :inline && should_add_to_legend(series)
         gr_set_font(legendfont(sp), sp)
-        gr_set_textcolor(plot_color(sp[:legendfontcolor]))
+        gr_set_textcolor(plot_color(sp[:legend_font_color]))
         if sp[:yaxis][:mirror]
             (_, i) = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
             GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)

@@ -772,3 +772,20 @@ function extrema_plus_buffer(v, buffmult = 0.2)
     buffer = vdiff * buffmult
     vmin - buffer, vmax + buffer
 end
+
+### Legend
+
+@add_attributes subplot struct Legend
+    background_color = :match
+    foreground_color = :match
+    position = :best
+    title = nothing
+    font::Font = font(8)
+    title_font::Font = font(11)
+    column = 1
+end :match = (
+    :legend_font_family,
+    :legend_font_color,
+    :legend_title_font_family,
+    :legend_title_font_color,
+)

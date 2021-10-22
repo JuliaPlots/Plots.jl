@@ -145,6 +145,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             axis_opt = PGFPlotsX.Options(
                 "point meta max" => get_clims(sp)[2],
                 "point meta min" => get_clims(sp)[1],
+                "legend cell align" => "left",
+                "legend columns" => pgfx_legend_col(sp[:legend_position]),
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
                     pgfx_get_title_pos(title_loc)...,
@@ -164,8 +166,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             sp_width > 0 * mm ? push!(axis_opt, "width" => string(axis_width)) : nothing
             sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) : nothing
             for letter in (:x, :y, :z)
-                if letter != :z || RecipesPipeline.is3d(sp)
-                    pgfx_axis!(axis_opt, sp, letter)
+                if letter != :z ||
+                   RecipesPipeline.is3d(sp)
+                   pgfx_axis!(axis_opt, sp, letter)
                 end
             end
             # Search series for any gradient. In case one series uses a gradient set
@@ -246,12 +249,20 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 extra_sp = wraptuple(extra_sp)
                 push!(axis, extra_sp...)
             end
-            if sp[:legendtitle] !== nothing
+            if sp[:legend_title] !== nothing
+                legtfont = legendtitlefont(sp)
                 push!(axis, PGFPlotsX.Options("\\addlegendimage{empty legend}" => nothing))
                 push!(
                     axis,
                     PGFPlotsX.LegendEntry(
-                        string("\\hspace{-.6cm}{\\textbf{", sp[:legendtitle], "}}"),
+                        PGFPlotsX.Options(
+                            "font" => pgfx_font(
+                                legtfont.pointsize,
+                                pgfx_thickness_scaling(sp),
+                            ),
+                            "text" => legtfont.color
+                        ),
+                        string("\\hspace{-.6cm}{\\textbf{", sp[:legend_title], "}}"),
                         false,
                     ),
                 )
@@ -376,11 +387,8 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                     )
                 end
             end
-            if (
-                k == 1 &&
-                series[:subplot][:legend] != :none &&
-                pgfx_should_add_to_legend(series)
-            )
+            if i == 1 &&
+               series[:subplot][:legend_position] != :none && pgfx_should_add_to_legend(series)
                 pgfx_filllegend!(series_opt, opt)
             end
         end
@@ -653,7 +661,7 @@ function pgfx_add_series!(::Val{:xsticks}, axis, series_opt, series, series_func
 end
 
 function pgfx_add_legend!(axis, series, opt, i = 1)
-    if series[:subplot][:legend] != :none
+    if series[:subplot][:legend_position] != :none
         leg_entry = if opt[:label] isa AVec
             get(opt[:label], i, "")
         elseif opt[:label] isa AbstractString
@@ -800,30 +808,27 @@ function pgfx_get_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
 end
 
 function pgfx_get_legend_style(sp)
-    cstr = plot_color(sp[:background_color_legend])
+    cstr = plot_color(sp[:legend_background_color])
     a = alpha(cstr)
-    fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
+    fg_alpha = alpha(plot_color(sp[:legend_foreground_color]))
     legfont = legendfont(sp)
     PGFPlotsX.Options(
         pgfx_linestyle(
             pgfx_thickness_scaling(sp),
-            sp[:foreground_color_legend],
+            sp[:legend_foreground_color],
             fg_alpha,
             "solid",
         ) => nothing,
         "fill" => cstr,
         "fill opacity" => a,
-        "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
-        "font" => pgfx_font(sp[:legendfontsize], pgfx_thickness_scaling(sp)),
-        "text" => plot_color(sp[:legendfontcolor]),
-        "cells" => PGFPlotsX.Options(
-            "anchor" => get(
-                (left = "west", right = "east", hcenter = "center"),
-                legfont.halign,
-                "west",
-            ),
+        "text opacity" => alpha(plot_color(sp[:legend_font_color])),
+        "font" => pgfx_font(
+            sp[:legend_font_pointsize],
+            pgfx_thickness_scaling(sp),
         ),
-        pgfx_get_legend_pos(sp[:legend])...,
+        "text" => plot_color(sp[:legend_font_color]),
+        "cells" => PGFPlotsX.Options("anchor" => get((left = "west", right = "east", hcenter = "center"), legfont.halign, "west")),
+        pgfx_get_legend_pos(sp[:legend_position])...,
     )
 end
 
@@ -948,6 +953,10 @@ function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = :solid)
         pgfx_get_linestyle(linestyle) => nothing,
     )
 end
+
+pgfx_legend_col(s::Symbol) = s == :horizontal ? -1 : 1
+pgfx_legend_col(n) = n
+
 
 function pgfx_linestyle(plotattributes, i = 1)
     lw = pgfx_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)
@@ -1444,9 +1453,8 @@ end
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
-    leg = sp[:legend]
-    if leg in (:best, :outertopright, :outerright, :outerbottomright) ||
-       (leg isa Tuple && leg[1] >= 1)
+    leg = sp[:legend_position]
+    if leg in (:best, :outertopright, :outerright, :outerbottomright) || (leg isa Tuple && leg[1] >= 1)
         sp.minpad = (0mm, 0mm, 5mm, 0mm)
     else
         sp.minpad = (0mm, 0mm, 0mm, 0mm)
