@@ -445,14 +445,10 @@ const _subplot_defaults = KW(
     :titlefontrotation => 0.0,
     :titlefontcolor => :match,
     :background_color_subplot => :match,            # default for other bg colors... match takes plot default
-    :background_color_legend => :match,            # background of legend
     :background_color_inside => :match,            # background inside grid
     :foreground_color_subplot => :match,            # default for other fg colors... match takes plot default
-    :foreground_color_legend => :match,            # foreground of legend
     :foreground_color_title => :match,            # title color
     :color_palette => :auto,
-    :legend => :best,
-    :legendtitle => nothing,
     :colorbar => :legend,
     :clims => :auto,
     :colorbar_fontfamily => :match,
@@ -467,18 +463,6 @@ const _subplot_defaults = KW(
     :colorbar_formatter => :auto,
     :colorbar_discrete_values => [],
     :colorbar_continuous_values => zeros(0),
-    :legendfontfamily => :match,
-    :legendfontsize => 8,
-    :legendfonthalign => :hcenter,
-    :legendfontvalign => :vcenter,
-    :legendfontrotation => 0.0,
-    :legendfontcolor => :match,
-    :legendtitlefontfamily => :match,
-    :legendtitlefontsize => 11,
-    :legendtitlefonthalign => :hcenter,
-    :legendtitlefontvalign => :vcenter,
-    :legendtitlefontrotation => 0.0,
-    :legendtitlefontcolor => :match,
     :annotations => [],                # annotation tuples... list of (x,y,annotation)
     :annotationfontfamily => :match,
     :annotationfontsize => 14,
@@ -497,6 +481,7 @@ const _subplot_defaults = KW(
     :colorbar_title => "",
     :colorbar_titlefontsize => 10,
     :colorbar_title_location => :center,           # also :left or :right
+    :colorbar_fontfamily => :match,
     :colorbar_titlefontfamily => :match,
     :colorbar_titlefonthalign => :hcenter,
     :colorbar_titlefontvalign => :vcenter,
@@ -566,80 +551,6 @@ const _suppress_warnings = Set{Symbol}([
     :relative_bbox,
 ])
 
-# add defaults for the letter versions
-const _axis_defaults_byletter = KW()
-
-function reset_axis_defaults_byletter!()
-    for letter in (:x, :y, :z)
-        _axis_defaults_byletter[letter] = KW()
-        for (k, v) in _axis_defaults
-            _axis_defaults_byletter[letter][k] = v
-        end
-    end
-end
-reset_axis_defaults_byletter!()
-
-const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
-
-const _initial_defaults = deepcopy(_all_defaults)
-const _initial_axis_defaults = deepcopy(_axis_defaults)
-
-# to be able to reset font sizes to initial values
-const _initial_plt_fontsizes =
-    Dict(:plot_titlefontsize => _plot_defaults[:plot_titlefontsize])
-
-const _initial_sp_fontsizes = Dict(
-    :titlefontsize => _subplot_defaults[:titlefontsize],
-    :legendfontsize => _subplot_defaults[:legendfontsize],
-    :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
-    :annotationfontsize => _subplot_defaults[:annotationfontsize],
-    :colorbar_tickfontsize => _subplot_defaults[:colorbar_tickfontsize],
-    :colorbar_titlefontsize => _subplot_defaults[:colorbar_titlefontsize],
-)
-
-const _initial_ax_fontsizes = Dict(
-    :tickfontsize  => _axis_defaults[:tickfontsize],
-    :guidefontsize => _axis_defaults[:guidefontsize],
-)
-
-const _initial_fontsizes =
-    merge(_initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes)
-
-const _internal_args =
-    [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
-
-const _axis_args = sort(union(collect(keys(_axis_defaults))))
-const _series_args = sort(union(collect(keys(_series_defaults))))
-const _subplot_args = sort(union(collect(keys(_subplot_defaults))))
-const _plot_args = sort(union(collect(keys(_plot_defaults))))
-
-const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
-const _magic_subplot_args =
-    [:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont]
-const _magic_series_args = [:line, :marker, :fill]
-
-const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
-const _all_subplot_args = sort(union([_subplot_args; _magic_subplot_args]))
-const _all_series_args = sort(union([_series_args; _magic_series_args]))
-const _all_plot_args = _plot_args
-
-for letter in (:x, :y, :z)
-    _attrsymbolcache[letter] = Dict{Symbol,Symbol}()
-    for k in keys(_axis_defaults)
-        # populate attribute cache
-        lk = Symbol(letter, k)
-        _attrsymbolcache[letter][k] = lk
-        # allow the underscore version too: xguide or x_guide
-        add_aliases(lk, Symbol(letter, "_", k))
-    end
-    for k in (_magic_axis_args..., :(_discrete_indices))
-        _attrsymbolcache[letter][k] = Symbol(letter, k)
-    end
-end
-
-const _all_args =
-    sort(union([_all_axis_args; _all_subplot_args; _all_series_args; _all_plot_args]))
-
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
 is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
@@ -671,9 +582,46 @@ aliases(aliasMap::Dict{Symbol,Symbol}, val) =
     sortedkeys(filter((k, v) -> v == val, aliasMap))
 
 # -----------------------------------------------------------------------------
-
+# legend
+add_aliases(:legend_position, :legend, :leg, :key, :legends)
+add_aliases(
+    :legend_background_color,
+    :bg_legend,
+    :bglegend,
+    :bgcolor_legend,
+    :bg_color_legend,
+    :background_legend,
+    :background_colour_legend,
+    :bgcolour_legend,
+    :bg_colour_legend,
+    :background_color_legend,
+)
+add_aliases(
+    :legend_foreground_color,
+    :fg_legend,
+    :fglegend,
+    :fgcolor_legend,
+    :fg_color_legend,
+    :foreground_legend,
+    :foreground_colour_legend,
+    :fgcolour_legend,
+    :fg_colour_legend,
+    :foreground_color_legend,
+)
+add_aliases(:legend_font_pointsize, :legendfontsize)
+add_aliases(
+    :legend_title,
+    :key_title,
+    :keytitle,
+    :label_title,
+    :labeltitle,
+    :leg_title,
+    :legtitle,
+)
+add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
 # margin
 add_aliases(:left_margin, :leftmargin)
+
 add_aliases(:top_margin, :topmargin)
 add_aliases(:bottom_margin, :bottommargin)
 add_aliases(:right_margin, :rightmargin)
@@ -695,17 +643,6 @@ add_aliases(
     :background_colour,
     :bgcolour,
     :bg_colour,
-)
-add_aliases(
-    :background_color_legend,
-    :bg_legend,
-    :bglegend,
-    :bgcolor_legend,
-    :bg_color_legend,
-    :background_legend,
-    :background_colour_legend,
-    :bgcolour_legend,
-    :bg_colour_legend,
 )
 add_aliases(
     :background_color_subplot,
@@ -750,17 +687,7 @@ add_aliases(
     :fgcolour,
     :fg_colour,
 )
-add_aliases(
-    :foreground_color_legend,
-    :fg_legend,
-    :fglegend,
-    :fgcolor_legend,
-    :fg_color_legend,
-    :foreground_legend,
-    :foreground_colour_legend,
-    :fgcolour_legend,
-    :fg_colour_legend,
-)
+
 add_aliases(
     :foreground_color_subplot,
     :fg_subplot,
@@ -771,6 +698,90 @@ add_aliases(
     :foreground_colour_subplot,
     :fgcolour_subplot,
     :fg_colour_subplot,
+)
+add_aliases(
+    :foreground_color_grid,
+    :fg_grid,
+    :fggrid,
+    :fgcolor_grid,
+    :fg_color_grid,
+    :foreground_grid,
+    :foreground_colour_grid,
+    :fgcolour_grid,
+    :fg_colour_grid,
+    :gridcolor,
+)
+add_aliases(
+    :foreground_color_minor_grid,
+    :fg_minor_grid,
+    :fgminorgrid,
+    :fgcolor_minorgrid,
+    :fg_color_minorgrid,
+    :foreground_minorgrid,
+    :foreground_colour_minor_grid,
+    :fgcolour_minorgrid,
+    :fg_colour_minor_grid,
+    :minorgridcolor,
+)
+add_aliases(
+    :foreground_color_title,
+    :fg_title,
+    :fgtitle,
+    :fgcolor_title,
+    :fg_color_title,
+    :foreground_title,
+    :foreground_colour_title,
+    :fgcolour_title,
+    :fg_colour_title,
+    :titlecolor,
+)
+add_aliases(
+    :foreground_color_axis,
+    :fg_axis,
+    :fgaxis,
+    :fgcolor_axis,
+    :fg_color_axis,
+    :foreground_axis,
+    :foreground_colour_axis,
+    :fgcolour_axis,
+    :fg_colour_axis,
+    :axiscolor,
+)
+add_aliases(
+    :foreground_color_border,
+    :fg_border,
+    :fgborder,
+    :fgcolor_border,
+    :fg_color_border,
+    :foreground_border,
+    :foreground_colour_border,
+    :fgcolour_border,
+    :fg_colour_border,
+    :bordercolor,
+)
+add_aliases(
+    :foreground_color_text,
+    :fg_text,
+    :fgtext,
+    :fgcolor_text,
+    :fg_color_text,
+    :foreground_text,
+    :foreground_colour_text,
+    :fgcolour_text,
+    :fg_colour_text,
+    :textcolor,
+)
+add_aliases(
+    :foreground_color_guide,
+    :fg_guide,
+    :fgguide,
+    :fgcolor_guide,
+    :fg_color_guide,
+    :foreground_guide,
+    :foreground_colour_guide,
+    :fgcolour_guide,
+    :fg_colour_guide,
+    :guidecolor,
 )
 
 add_aliases(
@@ -932,7 +943,19 @@ add_aliases(:group, :g, :grouping)
 add_aliases(:bins, :bin, :nbin, :nbins, :nb)
 add_aliases(:ribbon, :rib)
 add_aliases(:annotations, :ann, :anns, :annotate, :annotation)
-
+add_aliases(:xguide, :xlabel, :xlab, :xl)
+add_aliases(:xlims, :xlim, :xlimit, :xlimits, :xrange)
+add_aliases(:xticks, :xtick)
+add_aliases(:xrotation, :xrot, :xr)
+add_aliases(:yguide, :ylabel, :ylab, :yl)
+add_aliases(:ylims, :ylim, :ylimit, :ylimits, :yrange)
+add_aliases(:yticks, :ytick)
+add_aliases(:yrotation, :yrot, :yr)
+add_aliases(:zguide, :zlabel, :zlab, :zl)
+add_aliases(:zlims, :zlim, :zlimit, :zlimits)
+add_aliases(:zticks, :ztick)
+add_aliases(:zrotation, :zrot, :zr)
+add_aliases(:guidefontsize, :labelfontsize)
 add_aliases(
     :fill_z,
     :fillz,
@@ -943,8 +966,6 @@ add_aliases(
     :surfcolor,
     :surfcolour,
 )
-add_aliases(:legend, :leg, :key)
-add_aliases(:legendtitle, :legend_title, :labeltitle, :label_title, :leg_title, :key_title)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
 add_aliases(
     :colorbar_title,
@@ -1019,13 +1040,6 @@ add_aliases(
 add_aliases(:camera, :cam, :viewangle, :view_angle)
 add_aliases(:contour_labels, :contourlabels, :clabels, :clabs)
 add_aliases(:warn_on_unsupported, :warn)
-
-# add all pluralized forms to the _keyAliases dict
-for arg in _all_args
-    add_aliases(arg, makeplural(arg))
-end
-# add all non_underscored forms to the _keyAliases
-add_non_underscore_aliases!(_keyAliases)
 
 # -----------------------------------------------------------------------------
 
@@ -1535,8 +1549,9 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     # end
 
     # legends
-    if haskey(plotattributes, :legend)
-        plotattributes[:legend] = convertLegendValue(plotattributes[:legend])
+    if haskey(plotattributes, :legend_position)
+        plotattributes[:legend_position] =
+            convertLegendValue(plotattributes[:legend_position])
     end
     if haskey(plotattributes, :colorbar)
         plotattributes[:colorbar] = convertLegendValue(plotattributes[:colorbar])
@@ -1667,15 +1682,18 @@ function convertLegendValue(val::Symbol)
         :inline,
     )
         val
+    elseif val == :horizontal
+        -1
     else
         error("Invalid symbol for legend: $val")
     end
 end
+convertLegendValue(val::Real) = val
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Nothing) = :none
+convertLegendValue(v::Union{Tuple,NamedTuple}) = convertLegendValue.(v)
 convertLegendValue(v::Tuple{S,T}) where {S<:Real,T<:Real} = v
 convertLegendValue(v::Tuple{<:Real,Symbol}) = v
-convertLegendValue(v::Real) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------
@@ -1761,9 +1779,9 @@ end
 # when a value can be `:match`, this is the key that should be used instead for value retrieval
 const _match_map = KW(
     :background_color_outside => :background_color,
-    :background_color_legend  => :background_color_subplot,
+    :legend_background_color  => :background_color_subplot,
     :background_color_inside  => :background_color_subplot,
-    :foreground_color_legend  => :foreground_color_subplot,
+    :legend_foreground_color  => :foreground_color_subplot,
     :foreground_color_title   => :foreground_color_subplot,
     :left_margin              => :margin,
     :top_margin               => :margin,
@@ -1771,10 +1789,10 @@ const _match_map = KW(
     :bottom_margin            => :margin,
     :titlefontfamily          => :fontfamily_subplot,
     :titlefontcolor           => :foreground_color_subplot,
-    :legendfontfamily         => :fontfamily_subplot,
-    :legendfontcolor          => :foreground_color_subplot,
-    :legendtitlefontfamily    => :fontfamily_subplot,
-    :legendtitlefontcolor     => :foreground_color_subplot,
+    :legend_font_family       => :fontfamily_subplot,
+    :legend_font_color        => :foreground_color_subplot,
+    :legend_title_font_family => :fontfamily_subplot,
+    :legend_title_font_color  => :foreground_color_subplot,
     :colorbar_fontfamily      => :fontfamily_subplot,
     :colorbar_titlefontfamily => :fontfamily_subplot,
     :colorbar_titlefontcolor  => :foreground_color_subplot,
@@ -1905,10 +1923,10 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     sp.attr[:annotations] = newanns
 
     # handle legend/colorbar
-    sp.attr[:legend] = convertLegendValue(sp.attr[:legend])
+    sp.attr[:legend_position] = convertLegendValue(sp.attr[:legend_position])
     sp.attr[:colorbar] = convertLegendValue(sp.attr[:colorbar])
     if sp.attr[:colorbar] == :legend
-        sp.attr[:colorbar] = sp.attr[:legend]
+        sp.attr[:colorbar] = sp.attr[:legend_position]
     end
     return
 end
@@ -1917,12 +1935,12 @@ function _update_subplot_colors(sp::Subplot)
     # background colors
     color_or_nothing!(sp.attr, :background_color_subplot)
     sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], 30)
-    color_or_nothing!(sp.attr, :background_color_legend)
+    color_or_nothing!(sp.attr, :legend_background_color)
     color_or_nothing!(sp.attr, :background_color_inside)
 
     # foreground colors
     color_or_nothing!(sp.attr, :foreground_color_subplot)
-    color_or_nothing!(sp.attr, :foreground_color_legend)
+    color_or_nothing!(sp.attr, :legend_foreground_color)
     color_or_nothing!(sp.attr, :foreground_color_title)
     return
 end
@@ -2209,7 +2227,16 @@ end
 
 #--------------------------------------------------
 ## inspired by Base.@kwdef
-macro add_attributes(level, expr)
+"""
+    add_attributes(level, expr, match_table)
+
+Takes a `struct` definition and recurses into its fields to create keywords by chaining the field names with the structs' name with underscore.
+Also creates pluralized and non-underscore aliases for these keywords.
+- `level` indicates which group of `plot`, `subplot`, `series`, etc. the keywords belong to.
+- `expr` is the struct definition with default values like `Base.@kwdef`
+- `match_table` is an expression of the form `:match = (symbols)`, with symbols whose default value should be `:match`
+"""
+macro add_attributes(level, expr, match_table)
     expr = macroexpand(__module__, expr) # to expand @static
     expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
     T = expr.args[2]
@@ -2217,16 +2244,18 @@ macro add_attributes(level, expr)
         T = T.args[1]
     end
 
-    key_args = Any[]
-    value_args = Any[]
+    key_dict = KW()
 
-    _splitdef!(expr.args[3], value_args, key_args)
+    _splitdef!(expr.args[3], key_dict)
 
     insert_block = Expr(:block)
-    for (key, value) in zip(key_args, value_args)
+    for (key, value) in key_dict
         # e.g. _series_defualts[key] = value
         exp_key = Symbol(lowercase(string(T)), "_", key)
         pl_key = makeplural(exp_key)
+        if QuoteNode(exp_key) in match_table.args[2].args
+            value = QuoteNode(:match)
+        end
         push!(
             insert_block.args,
             Expr(
@@ -2260,7 +2289,7 @@ macro add_attributes(level, expr)
     end |> esc
 end
 
-function _splitdef!(blk, value_args, key_args)
+function _splitdef!(blk, key_dict)
     for i in eachindex(blk.args)
         ei = blk.args[i]
         if ei isa Symbol
@@ -2275,20 +2304,25 @@ function _splitdef!(blk, value_args, key_args)
                 elseif lhs isa Expr && lhs.head === :(::) && lhs.args[1] isa Symbol
                     #  var::T = defexpr
                     var = lhs.args[1]
+                    type = lhs.args[2]
+                    if @isdefined type
+                        for field in fieldnames(getproperty(Plots, type))
+                            key_dict[Symbol(var, "_", field)] =
+                                :(getfield($(ei.args[2]), $(QuoteNode(field))))
+                        end
+                    end
                 else
                     # something else, e.g. inline inner constructor
                     #   F(...) = ...
                     continue
                 end
                 defexpr = ei.args[2]  # defexpr
-                push!(value_args, defexpr)
-                push!(key_args, var)
+                key_dict[var] = defexpr
                 blk.args[i] = lhs
             elseif ei.head === :(::) && ei.args[1] isa Symbol
                 # var::Typ
                 var = ei.args[1]
-                push!(value_args, var)
-                push!(key_args, var)
+                key_dict[var] = defexpr
             elseif ei.head === :block
                 # can arise with use of @static inside type decl
                 _kwdef!(ei, value_args, key_args)

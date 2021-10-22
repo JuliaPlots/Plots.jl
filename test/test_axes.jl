@@ -65,6 +65,9 @@ end
 end
 
 @testset "axis-aliases" begin
+    @test haskey(Plots._keyAliases, :xguideposition)
+    @test haskey(Plots._keyAliases, :x_guide_position)
+    @test !haskey(Plots._keyAliases, :xguide_position)
     p = plot(1:2, xl = "x label")
     @test p[1][:xaxis][:guide] === "x label"
     p = plot(1:2, xrange = (0, 3))

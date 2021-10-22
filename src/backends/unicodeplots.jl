@@ -54,7 +54,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         o = UnicodePlots.Plot(x, y, _canvas_map[canvas_type]; kw...)
         for series in series_list(sp)
-            o = addUnicodeSeries!(sp, o, kw, series, sp[:legend] != :none)
+            o = addUnicodeSeries!(sp, o, kw, series, sp[:legend_position] != :none)
         end
 
         for ann in sp[:annotations]
