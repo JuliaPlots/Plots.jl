@@ -517,7 +517,7 @@ end
                 end
                 # Each segment is 6 elements long, including the NaN separator.
                 # There is no trailing NaN, so the last repetition is dropped.
-                plotattributes[k] = @view repeat(v; inner=6)[1:end-1]
+                plotattributes[k] = @view repeat(v; inner = 6)[1:(end - 1)]
             end
         end
         ()

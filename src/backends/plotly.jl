@@ -342,7 +342,7 @@ function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     legend_position = plotly_legend_pos(sp[:legend_position])
     if sp[:legend_position] != :none
         plotattributes_out[:legend_position] = KW(
-            :bgcolor  => rgba_string(sp[:legend_background_color]),
+            :bgcolor => rgba_string(sp[:legend_background_color]),
             :bordercolor => rgba_string(sp[:legend_foreground_color]),
             :borderwidth => 1,
             :traceorder => "normal",
