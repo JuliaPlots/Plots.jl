@@ -5,28 +5,27 @@ process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
 
-const sp_clims = IdDict{Subplot,Tuple{Float64,Float64}}()
-const series_clims = IdDict{Series,Tuple{Float64,Float64}}()
-
 get_clims(sp::Subplot)::Tuple{Float64,Float64} =
-    haskey(sp_clims, sp) ? sp_clims[sp] : update_clims(sp)
+    haskey(sp.attr, :clims_calculated) ? sp[:clims_calculated] : update_clims(sp)
 get_clims(series::Series)::Tuple{Float64,Float64} =
-    haskey(series_clims, series) ? series_clims[series] : update_clims(series)
-
+    haskey(series.plotattributes, :clims_calculated) ?
+        series[:clims_calculated]::Tuple{Float64,Float64} : update_clims(series)
 get_clims(sp::Subplot, series::Series)::Tuple{Float64,Float64} =
     series[:colorbar_entry] ? get_clims(sp) : get_clims(series)
 
 function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float64,Float64}
     zmin, zmax = Inf, -Inf
     for series in series_list(sp)
-        if series[:colorbar_entry]
+        if series[:colorbar_entry]::Bool
             zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
         else
             update_clims(series, op)
         end
     end
-    return sp_clims[sp] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+    return sp[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
+
+const z_colored_series = [:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin]
 
 """
     update_clims(::Series, op=Plots.ignorenan_extrema)
@@ -36,7 +35,6 @@ values of the input. The value is stored as a series property, which is retrieve
 """
 function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64,Float64}
     zmin, zmax = Inf, -Inf
-    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin)
 
     # keeping this unrolled has higher performance
     if series[:seriestype] ∈ z_colored_series && series[:z] !== nothing
@@ -51,8 +49,7 @@ function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64,Flo
     if series[:fill_z] !== nothing
         zmin, zmax = update_clims(zmin, zmax, series[:fill_z], op)
     end
-
-    return series_clims[series] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+    return series[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 update_clims(zmin, zmax, vals::AbstractSurface, op)::Tuple{Float64,Float64} =
