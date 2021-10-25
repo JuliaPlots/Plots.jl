@@ -25,8 +25,6 @@ function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float6
     return sp[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-const z_colored_series = [:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin]
-
 """
     update_clims(::Series, op=Plots.ignorenan_extrema)
 Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
@@ -37,7 +35,7 @@ function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64,Flo
     zmin, zmax = Inf, -Inf
 
     # keeping this unrolled has higher performance
-    if series[:seriestype] ∈ z_colored_series && series[:z] !== nothing
+    if series[:seriestype] ∈ _z_colored_series && series[:z] !== nothing
         zmin, zmax = update_clims(zmin, zmax, series[:z], op)
     end
     if series[:line_z] !== nothing
