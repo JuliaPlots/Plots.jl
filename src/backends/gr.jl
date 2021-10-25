@@ -1024,7 +1024,7 @@ end
 ## Legend
 
 function gr_add_legend(sp, leg, viewport_plotarea)
-    if !(sp[:legend_position] in(:none, :inline))
+    if !(sp[:legend_position] in (:none, :inline))
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
@@ -1100,7 +1100,8 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     ms = first(series[:markersize])
                     msw = first(series[:markerstrokewidth])
                     s, sw = if ms > 0
-                        0.8 * sp[:legend_font_pointsize], 0.8 * sp[:legend_font_pointsize] * msw / ms
+                        0.8 * sp[:legend_font_pointsize],
+                        0.8 * sp[:legend_font_pointsize] * msw / ms
                     else
                         0, 0.8 * sp[:legend_font_pointsize] * msw / 8
                     end
@@ -1302,7 +1303,7 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
 
     if s isa Tuple{<:Real,Symbol}
         if s[2] === :outer
-            (x,y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
+            (x, y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
             if x < viewport_plotarea[1]
                 viewport_plotarea[1] +=
                     leg.leftw +

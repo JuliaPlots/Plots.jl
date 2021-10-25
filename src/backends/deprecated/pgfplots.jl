@@ -597,15 +597,25 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         cstr, bg_alpha = pgf_color(plot_color(sp[:legend_background_color]))
         fg_alpha = alpha(plot_color(sp[:legend_foreground_color]))
 
-        push!(style, string(
-            "legend style = {",
-                pgf_linestyle(pgf_thickness_scaling(sp), sp[:legend_foreground_color], fg_alpha, "solid", ), ",",
+        push!(
+            style,
+            string(
+                "legend style = {",
+                pgf_linestyle(
+                    pgf_thickness_scaling(sp),
+                    sp[:legend_foreground_color],
+                    fg_alpha,
+                    "solid",
+                ),
+                ",",
                 "fill = $cstr,",
                 "fill opacity = $bg_alpha,",
                 "text opacity = $(alpha(plot_color(sp[:legend_font_color]))),",
-                "font = ", pgf_font(sp[:legend_font_pointsize], pgf_thickness_scaling(sp)),
-            "}",
-        ))
+                "font = ",
+                pgf_font(sp[:legend_font_pointsize], pgf_thickness_scaling(sp)),
+                "}",
+            ),
+        )
 
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
