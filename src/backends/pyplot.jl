@@ -1679,11 +1679,21 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             leg."set_zorder"(1000)
             if sp[:legend_title] !== nothing
                 leg."set_title"(sp[:legend_title])
-                PyPlot.plt."setp"(leg."get_title"(), color = py_color(sp[:legend_title_font_color]), family = sp[:legend_title_font_family], fontsize = py_thickness_scale(plt, sp[:legend_title_font_pointsize]))
+                PyPlot.plt."setp"(
+                    leg."get_title"(),
+                    color = py_color(sp[:legend_title_font_color]),
+                    family = sp[:legend_title_font_family],
+                    fontsize = py_thickness_scale(plt, sp[:legend_title_font_pointsize]),
+                )
             end
 
             for txt in leg."get_texts"()
-                PyPlot.plt."setp"(txt, color = py_color(sp[:legend_font_color]), family = sp[:legend_font_family], fontsize = py_thickness_scale(plt, sp[:legend_font_pointsize]))
+                PyPlot.plt."setp"(
+                    txt,
+                    color = py_color(sp[:legend_font_color]),
+                    family = sp[:legend_font_family],
+                    fontsize = py_thickness_scale(plt, sp[:legend_font_pointsize]),
+                )
             end
         end
     end
