@@ -1627,7 +1627,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         ),
                         linewidth = py_thickness_scale(
                             plt,
-                            hasline * sp[:legendfontsize] / 8,
+                            hasline * sp[:legend_font_pointsize] / 8,
                         ),
                         linestyle = py_linestyle(:path, get_linestyle(series)),
                         solid_capstyle = "butt",
@@ -1635,7 +1635,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         dash_capstyle = "butt",
                         dash_joinstyle = "miter",
                         marker = py_marker(_cycle(series[:markershape], 1)),
-                        markersize = py_thickness_scale(plt, 0.8 * sp[:legendfontsize]),
+                        markersize = py_thickness_scale(plt, 0.8 * sp[:legend_font_pointsize]),
                         markeredgecolor = py_color(
                             single_color(get_markerstrokecolor(series)),
                             get_markerstrokealpha(series),
@@ -1646,7 +1646,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         ),
                         markeredgewidth = py_thickness_scale(
                             plt,
-                            0.8 * get_markerstrokewidth(series) * sp[:legendfontsize] /
+                            0.8 * get_markerstrokewidth(series) * sp[:legend_font_pointsize] /
                             first(series[:markersize]),
                         ),   # retain the markersize/markerstroke ratio from the markers on the plot
                     )
