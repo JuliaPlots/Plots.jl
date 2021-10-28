@@ -15,8 +15,6 @@ end
 
 @testset "lens!" begin
     pl = plot(1:5)
-    pl = plot(LegendPlot(); legend = :right)
-    @test pl[1][:legend_position] == :right
     lens!(pl, [1, 2], [1, 2], inset = (1, bbox(0.0, 0.0, 0.2, 0.2)), colorbar = false)
     @test length(pl.series_list) == 4
     @test pl[2][:colorbar] == :none
