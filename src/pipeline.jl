@@ -8,24 +8,14 @@ function RecipesPipeline.warn_on_recipe_aliases!(
     recipe_type::Symbol,
     @nospecialize(args)
 )
-    for k in keys(plotattributes)
-        if !is_default_attribute(k)
-            dk = get(_keyAliases, k, k)
-            if k !== dk
-                if recipe_type == :user
-                    signature_string = RecipesPipeline.userrecipe_signature_string(args)
-                elseif recipe_type == :type
-                    signature_string = RecipesPipeline.typerecipe_signature_string(args)
-                elseif recipe_type == :plot
-                    signature_string = RecipesPipeline.plotrecipe_signature_string(args)
-                elseif recipe_type == :series
-                    signature_string = RecipesPipeline.seriesrecipe_signature_string(args)
-                else
-                    throw(ArgumentError("Invalid recipe type `$recipe_type`"))
-                end
-                # @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $signature_string. To ensure expected behavior it is recommended to use the default attribute `$dk`."
+    pkeys = keys(plotattributes)
+    for k in pkeys
+        dk = get(_keyAliases, k, nothing)
+        if dk !== nothing
+            kv = RecipesPipeline.pop_kw!(plotattributes, k)
+            if dk ∉ pkeys
+                plotattributes[dk] = kv
             end
-            plotattributes[dk] = RecipesPipeline.pop_kw!(plotattributes, k)
         end
     end
 end
