@@ -1037,14 +1037,14 @@ export lens!
         throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
     end
     sp = plt.subplots[sp_index]
-    xl1, xl2 = xlims(plt.subplots[sp_index])
+    xl1, xl2 = xlims(sp)
     bbx1 = xl1 + left(inset_bbox).value * (xl2 - xl1)
     bbx2 = bbx1 + width(inset_bbox).value * (xl2 - xl1)
-    yl1, yl2 = ylims(plt.subplots[sp_index])
+    yl1, yl2 = ylims(sp)
     bby1 = yl1 + (1 - bottom(inset_bbox).value) * (yl2 - yl1)
     bby2 = bby1 + height(inset_bbox).value * (yl2 - yl1)
-    bbx = bbx1 + width(inset_bbox).value * (xl2 - xl1) / 2
-    bby = bby1 + height(inset_bbox).value * (yl2 - yl1) / 2
+    bbx = bbx1 + width(inset_bbox).value * (xl2 - xl1) / 2 * (sp[:xaxis][:flip] ? -1 : 1)
+    bby = bby1 + height(inset_bbox).value * (yl2 - yl1) / 2 * (sp[:yaxis][:flip] ? -1 : 1)
     lens_index = last(plt.subplots)[:subplot_index] + 1
     x1, x2 = plotattributes[:x]
     y1, y2 = plotattributes[:y]
