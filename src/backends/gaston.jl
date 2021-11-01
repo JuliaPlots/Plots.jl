@@ -290,7 +290,7 @@ function gaston_seriesconf!(
     ps: pointscale
     pt: pointtype
     tc: textcolor
-    w: with 
+    w: with
     =#
     gsp = sp.o
     st = series[:seriestype]
@@ -307,7 +307,7 @@ function gaston_seriesconf!(
         fr = series[:fillrange]
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
-        if fr !== nothing # filled curves, but not filled curves with markers 
+        if fr !== nothing # filled curves, but not filled curves with markers
             push!(
                 curveconf,
                 "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt",
@@ -505,8 +505,8 @@ function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
 end
 
 function gaston_set_legend!(axesconf, sp, any_label)
-    leg = sp[:legend]
-    if sp[:legend] ∉ (:none, :inline) && any_label
+    leg = sp[:legend_position]
+    if sp[:legend_position] ∉ (:none, :inline) && any_label
         leg == :best && (leg = :topright)
 
         push!(
@@ -517,9 +517,9 @@ function gaston_set_legend!(axesconf, sp, any_label)
             occursin(position, string(leg)) && push!(axesconf, "set key $position")
         end
         push!(axesconf, "set key $(gaston_font(legendfont(sp), rot=false, align=false))")
-        if sp[:legendtitle] !== nothing
+        if sp[:legend_title] !== nothing
             # NOTE: cannot use legendtitlefont(sp) as it will override legendfont
-            push!(axesconf, "set key title '$(sp[:legendtitle])'")
+            push!(axesconf, "set key title '$(sp[:legend_title])'")
         end
         push!(axesconf, "set key box lw 1 opaque")
         push!(axesconf, "set border back")
