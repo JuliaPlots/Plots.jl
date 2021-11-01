@@ -9,7 +9,7 @@ get_clims(sp::Subplot)::Tuple{Float64,Float64} =
     haskey(sp.attr, :clims_calculated) ? sp[:clims_calculated] : update_clims(sp)
 get_clims(series::Series)::Tuple{Float64,Float64} =
     haskey(series.plotattributes, :clims_calculated) ?
-        series[:clims_calculated]::Tuple{Float64,Float64} : update_clims(series)
+    series[:clims_calculated]::Tuple{Float64,Float64} : update_clims(series)
 get_clims(sp::Subplot, series::Series)::Tuple{Float64,Float64} =
     series[:colorbar_entry] ? get_clims(sp) : get_clims(series)
 
