@@ -569,8 +569,11 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
 
     ztick = 0.5 * GR.tick(zmin, zmax)
     gr_set_line(1, :solid, plot_color(:black), sp)
+    if sp[:colorbar_scale] == :log10
+        GR.setscale(2)
+    end
     GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
-
+    
     title = if isa(sp[:colorbar_title], PlotText)
         sp[:colorbar_title]
     else
@@ -949,6 +952,9 @@ function get_z_normalized(z, clims...)
 end
 
 function gr_clims(args...)
+    if args[1][:clims] != :auto
+        return args[1][:clims]
+    end
     lo, hi = get_clims(args...)
     if lo == hi
         if lo == 0
@@ -992,7 +998,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # init the colorbar
     cbar = GRColorbar()
-
+    
     for series in series_list(sp)
         gr_add_series(sp, series)
         gr_update_colorbar!(cbar, series)
@@ -2085,15 +2091,37 @@ function gr_draw_heatmap(series, x, y, z, clims)
         # pdf output, and also supports alpha values.
         # Note that drawimage draws uniformly spaced data correctly
         # even on log scales, where it is visually non-uniform.
-        colors = plot_color.(get(fillgrad, z, clims), series[:fillalpha])
+        colors, _z = if series[:subplot][:colorbar_scale] == :identity
+            plot_color.(get(fillgrad, z, clims), series[:fillalpha]), z
+        elseif series[:subplot][:colorbar_scale] == :log10
+            z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
+            z_normalized = get_z_normalized.(z_log, log10.(clims)...)
+            plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
+        end
+        for i in eachindex(colors)
+            if isnan(_z[i])
+                colors[i] = set_RGBA_alpha(0, colors[i])
+            end
+        end
         rgba = gr_color.(colors)
         GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
     else
         if something(series[:fillalpha], 1) < 1
             @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
         end
-        z_normalized = get_z_normalized.(z, clims...)
+        z_normalized, _z = if series[:subplot][:colorbar_scale] == :identity
+            get_z_normalized.(z, clims...), z
+        elseif series[:subplot][:colorbar_scale] == :log10
+            z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
+            get_z_normalized.(z_log, log10.(clims)...), z_log
+        end
         rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
+        background_color_ind = gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))
+        for i in eachindex(rgba)
+            if isnan(_z[i])
+                rgba[i] = background_color_ind 
+            end
+        end
         if !ispolar(series)
             GR.nonuniformcellarray(x, y, w, h, rgba)
         else
