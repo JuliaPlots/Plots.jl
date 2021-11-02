@@ -377,6 +377,8 @@ const _gr_attr = merge_with_base_supported([
     :colorbar,
     :colorbar_title,
     :colorbar_entry,
+    :colorbar_scale,
+    :clims,
     :fill_z,
     :line_z,
     :marker_z,
