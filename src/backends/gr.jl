@@ -228,7 +228,7 @@ end
 gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 
 function gr_inqtext(x, y, s::AbstractString)
-    if (occursin('\\', s) || occursin("10^{", s)) && match(r".*\$[^\$]+?\$.*", s) == nothing
+    if (occursin('\\', s) || occursin("10^{", s)) && match(r".*\$[^\$]+?\$.*", String(s)) == nothing
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -238,7 +238,7 @@ end
 gr_text(x, y, s) = gr_text(x, y, string(s))
 
 function gr_text(x, y, s::AbstractString)
-    if (occursin('\\', s) || occursin("10^{", s)) && match(r".*\$[^\$]+?\$.*", s) == nothing
+    if (occursin('\\', s) || occursin("10^{", s)) && match(r".*\$[^\$]+?\$.*", String(s)) == nothing
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
@@ -1243,21 +1243,26 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
     if sp[:legend_position] != :none
         GR.savestate()
         GR.selntran(0)
+        GR.setcharup(0, 1)
         GR.setscale(0)
         if sp[:legend_title] !== nothing
             gr_set_font(legendtitlefont(sp), sp)
             legendn += 1
             tbx, tby = gr_inqtext(0, 0, string(sp[:legend_title]))
-            legendw = tbx[3] - tbx[1]
-            dy = tby[3] - tby[1]
+            l, r = extrema(tbx)
+            b, t = extrema(tby)
+            legendw = r - l
+            dy = t - b
         end
         gr_set_font(legendfont(sp), sp)
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             legendn += 1
             tbx, tby = gr_inqtext(0, 0, string(series[:label]))
-            legendw = max(legendw, tbx[3] - tbx[1]) # Holds text width right now
-            dy = max(dy, tby[3] - tby[1])
+            l, r = extrema(tbx)
+            b, t = extrema(tby)
+            legendw = max(legendw, r - l) # Holds text width right now
+            dy = max(dy, t - b)
         end
 
         GR.setscale(1)
