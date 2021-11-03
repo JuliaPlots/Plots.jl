@@ -29,9 +29,10 @@ import RecipesBase: plot, plot!, animate, is_explicit
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
-import Showoff
+import UnicodeFun
 import StatsBase
 import Downloads
+import Showoff
 import JSON
 
 using Requires
