@@ -1253,4 +1253,5 @@ const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
 get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
 get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
 
-texmath2unicode(s::AbstractString, pat=r"\$([^$]+)\$") = replace(s, pat => m->UnicodeFun.to_latex(m[2:(length(m)-1)]))
+texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
+    replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))
