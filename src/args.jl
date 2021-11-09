@@ -1484,7 +1484,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
 
     # fonts
     for fontname in
-        (:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
+        (:titlefont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
@@ -1947,6 +1947,11 @@ function _update_subplot_colors(sp::Subplot)
     return
 end
 
+function _update_subplot_legend(sp::Subplot, plotattributes_in)
+    @show plotattributes_in |> keys
+    # sp.attr[:legend] = Legend(background_color = sp[:legend_background_color], foreground_color = sp[:legend_foreground_color], position = sp[:legend_position], title = sp[:legend_title], font = font(sp[:legend_font]; )) # TODO: make legend_font and legend_font_* attributes coherent
+end
+
 function _update_axis(
     plt::Plot,
     sp::Subplot,
@@ -2039,6 +2044,7 @@ function _update_subplot_args(
 
     _update_subplot_periphery(sp, anns)
     _update_subplot_colors(sp)
+    _update_subplot_legend(sp, plotattributes_in)
 
     lims_warned = false
     for letter in (:x, :y, :z)

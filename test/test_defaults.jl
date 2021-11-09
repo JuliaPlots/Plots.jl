@@ -67,4 +67,7 @@ end # testset
     @test p[1][:legend_title_font_color] == :blue
     @test p[1][:legend_background_color] == RGBA{Float64}(0.0, 1.0, 1.0, 1.0)
     @test p[1][:legend_foreground_color] == RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
+
+    #setting whole font
+    @test plot(1:5, legendfont=font(12))[1][:legend_font_pointsize] == 12
 end # testset
