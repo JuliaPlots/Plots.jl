@@ -201,8 +201,10 @@ end
           Plots.process_clims(:auto)
 
     @test (==)(
-        Plots.texmath2unicode(raw"Equation $y = \alpha \cdot x + \beta$ and eqn $y = \sin(x)^2$"),
-        raw"Equation y = α ⋅ x + β and eqn y = sin(x)²"
+        Plots.texmath2unicode(
+            raw"Equation $y = \alpha \cdot x + \beta$ and eqn $y = \sin(x)^2$",
+        ),
+        raw"Equation y = α ⋅ x + β and eqn y = sin(x)²",
     )
 end
 

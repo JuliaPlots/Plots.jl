@@ -228,7 +228,8 @@ end
 gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 
 function gr_inqtext(x, y, s::AbstractString)
-    if (occursin('\\', s) || occursin("10^{", s)) && match(r".*\$[^\$]+?\$.*", String(s)) == nothing
+    if (occursin('\\', s) || occursin("10^{", s)) &&
+       match(r".*\$[^\$]+?\$.*", String(s)) == nothing
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -238,7 +239,8 @@ end
 gr_text(x, y, s) = gr_text(x, y, string(s))
 
 function gr_text(x, y, s::AbstractString)
-    if (occursin('\\', s) || occursin("10^{", s)) && match(r".*\$[^\$]+?\$.*", String(s)) == nothing
+    if (occursin('\\', s) || occursin("10^{", s)) &&
+       match(r".*\$[^\$]+?\$.*", String(s)) == nothing
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
@@ -573,7 +575,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
         GR.setscale(2)
     end
     GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
-    
+
     title = if isa(sp[:colorbar_title], PlotText)
         sp[:colorbar_title]
     else
@@ -998,7 +1000,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # init the colorbar
     cbar = GRColorbar()
-    
+
     for series in series_list(sp)
         gr_add_series(sp, series)
         gr_update_colorbar!(cbar, series)
@@ -2121,10 +2123,11 @@ function gr_draw_heatmap(series, x, y, z, clims)
             get_z_normalized.(z_log, log10.(clims)...), z_log
         end
         rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
-        background_color_ind = gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))
+        background_color_ind =
+            gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))
         for i in eachindex(rgba)
             if isnan(_z[i])
-                rgba[i] = background_color_ind 
+                rgba[i] = background_color_ind
             end
         end
         if !ispolar(series)
