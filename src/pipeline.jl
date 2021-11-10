@@ -243,12 +243,12 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
                     attr[get_attr_symbol(letter, k)] = v
                 end
             end
-            for k in (:scale,), letter in (:x, :y, :z)
-                # Series recipes may need access to this information
-                lk = get_attr_symbol(letter, k)
-                if haskey(attr, lk)
-                    kw[lk] = attr[lk]
-                end
+        end
+        for k in (:scale,), letter in (:x, :y, :z)
+            # Series recipes may need access to this information
+            lk = get_attr_symbol(letter, k)
+            if haskey(attr, lk)
+                kw[lk] = attr[lk]
             end
         end
         sp_attrs[sp] = attr
