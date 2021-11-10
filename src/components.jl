@@ -246,6 +246,7 @@ function font(args...; kw...)
 
     for arg in args
         T = typeof(arg)
+        @assert arg !== :match
 
         if T == Font
             family = arg.family
@@ -269,12 +270,12 @@ function font(args...; kw...)
             catch
                 family = string(arg)
             end
-        elseif typeof(arg) <: Integer
+        elseif T <: Integer
             pointsize = arg
-        elseif typeof(arg) <: Real
+        elseif T <: Real
             rotation = convert(Float64, arg)
         else
-            @warn "Unused font arg: $arg ($(typeof(arg)))"
+            @warn "Unused font arg: $arg ($T)"
         end
     end
 
