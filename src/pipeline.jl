@@ -263,6 +263,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
             get(sp_attrs, sp, KW())
         end
         _update_subplot_args(plt, sp, attr, idx, false)
+        _update_subplot_legend(sp, attr)
     end
 
     # do we need to link any axes together?
