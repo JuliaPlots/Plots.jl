@@ -1948,8 +1948,10 @@ function _update_subplot_colors(sp::Subplot)
 end
 
 function _update_subplot_legend(sp::Subplot, plotattributes_in)
-    @show plotattributes_in |> keys
-    # sp.attr[:legend] = Legend(background_color = sp[:legend_background_color], foreground_color = sp[:legend_foreground_color], position = sp[:legend_position], title = sp[:legend_title], font = font(sp[:legend_font]; )) # TODO: make legend_font and legend_font_* attributes coherent
+    f_attr = NamedTuple( k => plotattributes_in[Symbol(:legend_font_, k)] for k in (:family, :pointsize, :valign, :halign, :rotation, :color) if haskey(plotattributes_in, Symbol(:legend_font_, k)))
+    sp.attr[:legend_font] = font(default(plotattributes_in, :legend_font);
+        f_attr...
+    )
 end
 
 function _update_axis(
