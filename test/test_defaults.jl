@@ -6,7 +6,7 @@ Plots.__init__()
 @testset "Loading theme" begin
     pl = plot(1:5)
     @test pl[1][1][:seriescolor] == RGBA(colorant"black")
-    @test guidefont(pl[1][:xaxis]).family == "palantino"
+    @test Plots.guidefont(pl[1][:xaxis]).family == "palantino"
 end
 
 empty!(PLOTS_DEFAULTS)
@@ -67,4 +67,12 @@ end # testset
     @test p[1][:legend_title_font_color] == :blue
     @test p[1][:legend_background_color] == RGBA{Float64}(0.0, 1.0, 1.0, 1.0)
     @test p[1][:legend_foreground_color] == RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
+
+    #setting whole font
+    sp = plot(1:5, legendfont=font(12), legend_font_halign = :left, foreground_color_subplot = :red)[1]
+    @test Plots.legendfont(sp).pointsize == 12
+    @test Plots.legendfont(sp).halign == :left
+    # match mechanism
+    @test sp[:legend_font_color] == sp[:foreground_color_subplot]
+    @test Plots.legendfont(sp).color == sp[:foreground_color_subplot]
 end # testset
