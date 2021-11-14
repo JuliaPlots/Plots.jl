@@ -69,7 +69,12 @@ end # testset
     @test p[1][:legend_foreground_color] == RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
 
     #setting whole font
-    sp = plot(1:5, legendfont=font(12), legend_font_halign = :left, foreground_color_subplot = :red)[1]
+    sp = plot(
+        1:5,
+        legendfont = font(12),
+        legend_font_halign = :left,
+        foreground_color_subplot = :red,
+    )[1]
     @test Plots.legendfont(sp).pointsize == 12
     @test Plots.legendfont(sp).halign == :left
     # match mechanism
