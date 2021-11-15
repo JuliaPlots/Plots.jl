@@ -1483,8 +1483,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
 
     # fonts
-    for fontname in
-        (:titlefont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
+    for fontname in (:titlefont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
@@ -1948,14 +1947,22 @@ function _update_subplot_colors(sp::Subplot)
 end
 
 function _update_subplot_legend(sp::Subplot, plotattributes_in)
-    f_attr = NamedTuple( k => plotattributes_in[Symbol(:legend_font_, k)] for k in (:family, :pointsize, :valign, :halign, :rotation, :color) if haskey(plotattributes_in, Symbol(:legend_font_, k)))
-    match_attr = NamedTuple( (lk = Symbol(:legend_font_, k); k => haskey(_match_map, lk) ? sp[lk] :
-            haskey(plotattributes_in, :legend_font) ? getproperty(plotattributes_in[:legend_font], k) :
-            default(plotattributes_in, lk))
-            for k in (:family, :pointsize, :valign, :halign, :rotation, :color))
-    sp.attr[:legend_font] = font(;
-        merge(match_attr, f_attr)...
+    f_attr = NamedTuple(
+        k => plotattributes_in[Symbol(:legend_font_, k)] for
+        k in (:family, :pointsize, :valign, :halign, :rotation, :color) if
+        haskey(plotattributes_in, Symbol(:legend_font_, k))
     )
+    match_attr = NamedTuple(
+        (
+            lk = Symbol(:legend_font_, k);
+            k =>
+                haskey(_match_map, lk) ? sp[lk] :
+                haskey(plotattributes_in, :legend_font) ?
+                getproperty(plotattributes_in[:legend_font], k) :
+                default(plotattributes_in, lk)
+        ) for k in (:family, :pointsize, :valign, :halign, :rotation, :color)
+    )
+    sp.attr[:legend_font] = font(; merge(match_attr, f_attr)...)
 end
 
 function _update_axis(
