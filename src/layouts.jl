@@ -601,7 +601,7 @@ function create_grid(expr::Expr)
         create_grid_vcat(expr)
     elseif isrow(expr)
         :(
-            let cell = GridLayout(1, $(length(expr.args)))
+            let cell = Matrix(undef, 1, $(length(expr.args)))
                 $(
                     [
                         :(cell[1, $i] = $(create_grid(v))) for
@@ -640,7 +640,7 @@ function create_grid_vcat(expr::Expr)
             end
         end
         :(
-            let cell = GridLayout($nr, $nc)
+            let cell = Matrix(undef, $nr, $nc)
                 $body
                 cell
             end
@@ -648,7 +648,7 @@ function create_grid_vcat(expr::Expr)
     else
         # otherwise just build one row at a time
         :(
-            let cell = GridLayout($(length(expr.args)), 1)
+            let cell = Matrix(undef, $(length(expr.args)), 1)
                 $(
                     [
                         :(cell[$i, 1] = $(create_grid(v))) for
@@ -676,7 +676,7 @@ function create_grid_curly(expr::Expr)
             )),
         )
     elseif isa(s, Symbol)
-        :(EmptyLayout(
+        :((
             label = $(QuoteNode(s)),
             width = $(get(kw, :w, QuoteNode(:auto))),
             height = $(get(kw, :h, QuoteNode(:auto))),
@@ -687,7 +687,7 @@ function create_grid_curly(expr::Expr)
 end
 
 function create_grid(s::Symbol)
-    :(EmptyLayout(label = $(QuoteNode(s)), blank = $(s == :_)))
+    :((label = $(QuoteNode(s)), blank = $(s == :_)))
 end
 
 macro layout(mat::Expr)
