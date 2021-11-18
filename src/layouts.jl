@@ -475,17 +475,6 @@ end
 
 layout_args(n_override::Integer, n::Integer) = layout_args(n)
 layout_args(n, sztup::NTuple{2,Integer}) = layout_args(sztup)
-layout_args(nt::NamedTuple) = EmptyLayout(;nt...), 1
-function layout_args(m::AbstractVecOrMat)
-    sz = size(m)
-    nr = sz[1]
-    nc = get(sz, 2, 1)
-    gl = GridLayout(nr, nc)
-    for ci in CartesianIndices(m)
-        gl[ci] = layout_args(m[ci])[1]
-    end
-    layout_args(gl)
-end
 
 function layout_args(n, sztup::Tuple{Colon,Integer})
     nc = sztup[2]
@@ -505,6 +494,19 @@ function layout_args(sztup::NTuple{3,Integer})
     GridLayout(nr, nc), n
 end
 
+layout_args(nt::NamedTuple) = EmptyLayout(;nt...), 1
+
+function layout_args(m::AbstractVecOrMat)
+    sz = size(m)
+    nr = sz[1]
+    nc = get(sz, 2, 1)
+    gl = GridLayout(nr, nc)
+    for ci in CartesianIndices(m)
+        gl[ci] = layout_args(m[ci])[1]
+    end
+    layout_args(gl)
+end
+
 # compute number of subplots
 function layout_args(layout::GridLayout)
     # recursively get the size of the grid
@@ -512,7 +514,7 @@ function layout_args(layout::GridLayout)
     layout, n
 end
 
-layout_args(n_override::Integer, layout::GridLayout) = layout_args(layout)
+layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) = layout_args(layout)
 
 layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 
