@@ -269,6 +269,9 @@ Base.getindex(layout::GridLayout, r::Int, c::Int) = layout.grid[r, c]
 function Base.setindex!(layout::GridLayout, v, r::Int, c::Int)
     layout.grid[r, c] = v
 end
+function Base.setindex!(layout::GridLayout, v, ci::CartesianIndex)
+    layout.grid[ci] = v
+end
 
 leftpad(layout::GridLayout)   = layout.minpad[1]
 toppad(layout::GridLayout)    = layout.minpad[2]
@@ -472,6 +475,17 @@ end
 
 layout_args(n_override::Integer, n::Integer) = layout_args(n)
 layout_args(n, sztup::NTuple{2,Integer}) = layout_args(sztup)
+layout_args(nt::NamedTuple) = EmptyLayout(;nt...), 1
+function layout_args(m::AbstractVecOrMat)
+    sz = size(m)
+    nr = sz[1]
+    nc = get(sz, 2, 1)
+    gl = GridLayout(nr, nc)
+    for ci in CartesianIndices(m)
+        gl[ci] = layout_args(m[ci])[1]
+    end
+    layout_args(gl)
+end
 
 function layout_args(n, sztup::Tuple{Colon,Integer})
     nc = sztup[2]
