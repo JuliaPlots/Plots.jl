@@ -25,7 +25,7 @@ using SparseArrays
 using FFMPEG
 
 @reexport using RecipesBase
-import RecipesBase: plot, plot!, animate, is_explicit
+import RecipesBase: plot, plot!, animate, is_explicit, grid
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
@@ -42,7 +42,6 @@ export
     grid,
     bbox,
     plotarea,
-    @layout,
     KW,
 
     wrap,
