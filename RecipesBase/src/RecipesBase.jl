@@ -6,6 +6,7 @@ export
     @series,
     @userplot,
     @shorthands,
+    @layout,
     RecipeData,
     AbstractBackend,
     AbstractPlot,
@@ -15,6 +16,9 @@ export
 abstract type AbstractBackend end
 abstract type AbstractPlot{T<:AbstractBackend} end
 abstract type AbstractLayout end
+
+const KW = Dict{Symbol,Any}
+const AKW = AbstractDict{Symbol,Any}
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.plot since RecipesBase is the common
@@ -31,6 +35,8 @@ function animate end
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.is_key_supported(k::Symbol)
 function is_key_supported end
+
+function grid end
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.group_as_matrix(t)
@@ -435,6 +441,137 @@ function recipetype(s::Val{T}, args...) where T
     error("No type recipe defined for type $T. You may need to load StatsPlots")
 end
 
+# ----------------------------------------------------------------------
+# @layout macro
+
+function add_layout_pct!(kw::AKW, v::Expr, idx::Integer, nidx::Integer)
+    # dump(v)
+    # something like {0.2w}?
+    if v.head == :call && v.args[1] == :*
+        num = v.args[2]
+        if length(v.args) == 3 && isa(num, Number)
+            units = v.args[3]
+            if units == :h
+                return kw[:h] = num * pct
+            elseif units == :w
+                return kw[:w] = num * pct
+            elseif units in (:pct, :px, :mm, :cm, :inch)
+                idx == 1 && (kw[:w] = v)
+                (idx == 2 || nidx == 1) && (kw[:h] = v)
+                # return kw[idx == 1 ? :w : :h] = v
+            end
+        end
+    end
+    error("Couldn't match layout curly (idx=$idx): $v")
+end
+
+function add_layout_pct!(kw::AKW, v::Number, idx::Integer)
+    # kw[idx == 1 ? :w : :h] = v*pct
+    idx == 1 && (kw[:w] = v * pct)
+    (idx == 2 || nidx == 1) && (kw[:h] = v * pct)
+end
+
+isrow(v) = isa(v, Expr) && v.head in (:hcat, :row)
+iscol(v) = isa(v, Expr) && v.head == :vcat
+rowsize(v) = isrow(v) ? length(v.args) : 1
+
+function create_grid(expr::Expr)
+    if iscol(expr)
+        create_grid_vcat(expr)
+    elseif isrow(expr)
+        :(
+            let cell = Matrix(undef, 1, $(length(expr.args)))
+                $(
+                    [
+                        :(cell[1, $i] = $(create_grid(v))) for
+                        (i, v) in enumerate(expr.args)
+                    ]...
+                )
+                cell
+            end
+        )
+
+    elseif expr.head == :curly
+        create_grid_curly(expr)
+    else
+        # if it's something else, just return that (might be an existing layout?)
+        esc(expr)
+    end
+end
+
+function create_grid_vcat(expr::Expr)
+    rowsizes = map(rowsize, expr.args)
+    rmin, rmax = extrema(rowsizes)
+    if rmin > 0 && rmin == rmax
+        # we have a grid... build the whole thing
+        # note: rmin is the number of columns
+        nr = length(expr.args)
+        nc = rmin
+        body = Expr(:block)
+        for r in 1:nr
+            arg = expr.args[r]
+            if isrow(arg)
+                for (c, item) in enumerate(arg.args)
+                    push!(body.args, :(cell[$r, $c] = $(create_grid(item))))
+                end
+            else
+                push!(body.args, :(cell[$r, 1] = $(create_grid(arg))))
+            end
+        end
+        :(
+            let cell = Matrix(undef, $nr, $nc)
+                $body
+                cell
+            end
+        )
+    else
+        # otherwise just build one row at a time
+        :(
+            let cell = Matrix(undef, $(length(expr.args)), 1)
+                $(
+                    [
+                        :(cell[$i, 1] = $(create_grid(v))) for
+                        (i, v) in enumerate(expr.args)
+                    ]...
+                )
+                cell
+            end
+        )
+    end
+end
+
+function create_grid_curly(expr::Expr)
+    kw = KW()
+    for (i, arg) in enumerate(expr.args[2:end])
+        add_layout_pct!(kw, arg, i, length(expr.args) - 1)
+    end
+    s = expr.args[1]
+    if isa(s, Expr) && s.head == :call && s.args[1] == :grid
+        create_grid(
+            :(grid(
+                $(s.args[2:end]...),
+                width = $(get(kw, :w, QuoteNode(:auto))),
+                height = $(get(kw, :h, QuoteNode(:auto))),
+            )),
+        )
+    elseif isa(s, Symbol)
+        :((
+            label = $(QuoteNode(s)),
+            width = $(get(kw, :w, QuoteNode(:auto))),
+            height = $(get(kw, :h, QuoteNode(:auto))),
+        ))
+    else
+        error("Unknown use of curly brackets: $expr")
+    end
+end
+
+function create_grid(s::Symbol)
+    :((label = $(QuoteNode(s)), blank = $(s == :_)))
+end
+
+macro layout(mat::Expr)
+    create_grid(mat)
+end
 include("precompile.jl")
 
 end # module
