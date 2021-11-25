@@ -25,7 +25,7 @@ using SparseArrays
 using FFMPEG
 
 @reexport using RecipesBase
-import RecipesBase: plot, plot!, animate, is_explicit
+import RecipesBase: plot, plot!, animate, is_explicit, grid
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
@@ -42,7 +42,6 @@ export
     grid,
     bbox,
     plotarea,
-    @layout,
     KW,
 
     wrap,
@@ -166,6 +165,8 @@ const BBox = Measures.Absolute2DBox
 # allow pixels and percentages
 const px = AbsoluteLength(0.254)
 const pct = Length{:pct,Float64}(1.0)
+
+Base.convert(::Type{<:Measure}, x::Float64) = x * pct
 
 Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
 Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)

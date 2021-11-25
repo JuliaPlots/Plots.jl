@@ -269,6 +269,9 @@ Base.getindex(layout::GridLayout, r::Int, c::Int) = layout.grid[r, c]
 function Base.setindex!(layout::GridLayout, v, r::Int, c::Int)
     layout.grid[r, c] = v
 end
+function Base.setindex!(layout::GridLayout, v, ci::CartesianIndex)
+    layout.grid[ci] = v
+end
 
 leftpad(layout::GridLayout)   = layout.minpad[1]
 toppad(layout::GridLayout)    = layout.minpad[2]
@@ -491,6 +494,19 @@ function layout_args(sztup::NTuple{3,Integer})
     GridLayout(nr, nc), n
 end
 
+layout_args(nt::NamedTuple) = EmptyLayout(;nt...), 1
+
+function layout_args(m::AbstractVecOrMat)
+    sz = size(m)
+    nr = sz[1]
+    nc = get(sz, 2, 1)
+    gl = GridLayout(nr, nc)
+    for ci in CartesianIndices(m)
+        gl[ci] = layout_args(m[ci])[1]
+    end
+    layout_args(gl)
+end
+
 # compute number of subplots
 function layout_args(layout::GridLayout)
     # recursively get the size of the grid
@@ -498,7 +514,7 @@ function layout_args(layout::GridLayout)
     layout, n
 end
 
-layout_args(n_override::Integer, layout::GridLayout) = layout_args(layout)
+layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) = layout_args(layout)
 
 layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 
@@ -562,137 +578,6 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
     layout, subplots, spmap
 end
 
-# ----------------------------------------------------------------------
-# @layout macro
-
-function add_layout_pct!(kw::AKW, v::Expr, idx::Integer, nidx::Integer)
-    # dump(v)
-    # something like {0.2w}?
-    if v.head == :call && v.args[1] == :*
-        num = v.args[2]
-        if length(v.args) == 3 && isa(num, Number)
-            units = v.args[3]
-            if units == :h
-                return kw[:h] = num * pct
-            elseif units == :w
-                return kw[:w] = num * pct
-            elseif units in (:pct, :px, :mm, :cm, :inch)
-                idx == 1 && (kw[:w] = v)
-                (idx == 2 || nidx == 1) && (kw[:h] = v)
-                # return kw[idx == 1 ? :w : :h] = v
-            end
-        end
-    end
-    error("Couldn't match layout curly (idx=$idx): $v")
-end
-
-function add_layout_pct!(kw::AKW, v::Number, idx::Integer)
-    # kw[idx == 1 ? :w : :h] = v*pct
-    idx == 1 && (kw[:w] = v * pct)
-    (idx == 2 || nidx == 1) && (kw[:h] = v * pct)
-end
-
-isrow(v) = isa(v, Expr) && v.head in (:hcat, :row)
-iscol(v) = isa(v, Expr) && v.head == :vcat
-rowsize(v) = isrow(v) ? length(v.args) : 1
-
-function create_grid(expr::Expr)
-    if iscol(expr)
-        create_grid_vcat(expr)
-    elseif isrow(expr)
-        :(
-            let cell = GridLayout(1, $(length(expr.args)))
-                $(
-                    [
-                        :(cell[1, $i] = $(create_grid(v))) for
-                        (i, v) in enumerate(expr.args)
-                    ]...
-                )
-                cell
-            end
-        )
-
-    elseif expr.head == :curly
-        create_grid_curly(expr)
-    else
-        # if it's something else, just return that (might be an existing layout?)
-        esc(expr)
-    end
-end
-
-function create_grid_vcat(expr::Expr)
-    rowsizes = map(rowsize, expr.args)
-    rmin, rmax = extrema(rowsizes)
-    if rmin > 0 && rmin == rmax
-        # we have a grid... build the whole thing
-        # note: rmin is the number of columns
-        nr = length(expr.args)
-        nc = rmin
-        body = Expr(:block)
-        for r in 1:nr
-            arg = expr.args[r]
-            if isrow(arg)
-                for (c, item) in enumerate(arg.args)
-                    push!(body.args, :(cell[$r, $c] = $(create_grid(item))))
-                end
-            else
-                push!(body.args, :(cell[$r, 1] = $(create_grid(arg))))
-            end
-        end
-        :(
-            let cell = GridLayout($nr, $nc)
-                $body
-                cell
-            end
-        )
-    else
-        # otherwise just build one row at a time
-        :(
-            let cell = GridLayout($(length(expr.args)), 1)
-                $(
-                    [
-                        :(cell[$i, 1] = $(create_grid(v))) for
-                        (i, v) in enumerate(expr.args)
-                    ]...
-                )
-                cell
-            end
-        )
-    end
-end
-
-function create_grid_curly(expr::Expr)
-    kw = KW()
-    for (i, arg) in enumerate(expr.args[2:end])
-        add_layout_pct!(kw, arg, i, length(expr.args) - 1)
-    end
-    s = expr.args[1]
-    if isa(s, Expr) && s.head == :call && s.args[1] == :grid
-        create_grid(
-            :(grid(
-                $(s.args[2:end]...),
-                width = $(get(kw, :w, QuoteNode(:auto))),
-                height = $(get(kw, :h, QuoteNode(:auto))),
-            )),
-        )
-    elseif isa(s, Symbol)
-        :(EmptyLayout(
-            label = $(QuoteNode(s)),
-            width = $(get(kw, :w, QuoteNode(:auto))),
-            height = $(get(kw, :h, QuoteNode(:auto))),
-        ))
-    else
-        error("Unknown use of curly brackets: $expr")
-    end
-end
-
-function create_grid(s::Symbol)
-    :(EmptyLayout(label = $(QuoteNode(s)), blank = $(s == :_)))
-end
-
-macro layout(mat::Expr)
-    create_grid(mat)
-end
 
 # -------------------------------------------------------------------------
 
