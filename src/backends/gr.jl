@@ -955,7 +955,7 @@ end
 
 function gr_clims(args...)
     if args[1][:clims] != :auto
-        return args[1][:clims]
+        return get_clims(args[1])
     end
     lo, hi = get_clims(args...)
     if lo == hi

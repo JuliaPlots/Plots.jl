@@ -513,7 +513,7 @@ for comp in (:line, :fill, :marker)
             end
         end
 
-        $get_compcolor(series, clims, i::Int = 1) =
+        $get_compcolor(series, clims::Tuple{<:Number, <:Number}, i::Int = 1) =
             $get_compcolor(series, clims[1], clims[2], i)
 
         function $get_compcolor(series, i::Int = 1)
