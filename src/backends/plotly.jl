@@ -1030,11 +1030,7 @@ end
 
 # get a list of dictionaries, each representing the series params
 function plotly_series(plt::Plot)
-    slist = []
-    for series in plt.series_list
-        append!(slist, plotly_series(plt, series))
-    end
-    slist
+    [plotly_series(plt, series) for series in plt.series_list]
 end
 
 # get json string for a list of dictionaries, each representing the series params
