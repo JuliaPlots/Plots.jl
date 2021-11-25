@@ -452,9 +452,9 @@ function add_layout_pct!(kw::AKW, v::Expr, idx::Integer, nidx::Integer)
         if length(v.args) == 3 && isa(num, Number)
             units = v.args[3]
             if units == :h
-                return kw[:h] = num * pct
+                return kw[:h] = num
             elseif units == :w
-                return kw[:w] = num * pct
+                return kw[:w] = num
             elseif units in (:pct, :px, :mm, :cm, :inch)
                 idx == 1 && (kw[:w] = v)
                 (idx == 2 || nidx == 1) && (kw[:h] = v)
@@ -467,8 +467,8 @@ end
 
 function add_layout_pct!(kw::AKW, v::Number, idx::Integer)
     # kw[idx == 1 ? :w : :h] = v*pct
-    idx == 1 && (kw[:w] = v * pct)
-    (idx == 2 || nidx == 1) && (kw[:h] = v * pct)
+    idx == 1 && (kw[:w] = v)
+    (idx == 2 || nidx == 1) && (kw[:h] = v)
 end
 
 isrow(v) = isa(v, Expr) && v.head in (:hcat, :row)
