@@ -162,6 +162,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "anchor" => "north west",
                 "xshift" => string(dx),
                 "yshift" => string(-dy),
+                "clip mode" => "individual",
             )
             sp_width > 0 * mm ? push!(axis_opt, "width" => string(axis_width)) : nothing
             sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) : nothing
@@ -1055,7 +1056,11 @@ function pgfx_add_annotation!(
     push!(
         o,
         join([
-            "\\node",
+            raw"""
+            \begin{scope}
+                \clip \pgfextra{\pgfplotspathaxisoutline};
+                \node
+            """,
             sprint(
                 PGFPlotsX.print_tex,
                 merge(
@@ -1074,6 +1079,7 @@ function pgfx_add_annotation!(
                 ),
             ),
             string(" at (", cs, x, ",", y, ") {", val.str, "};"),
+            "\\end{scope}",
         ]),
     )
 end
