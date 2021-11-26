@@ -754,7 +754,7 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(plotattributes_out, series)
     plotly_hover!(plotattributes_out, series[:hover])
 
-    return plotattributes_out
+    return [plotattributes_out]
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
@@ -1030,7 +1030,7 @@ end
 
 # get a list of dictionaries, each representing the series params
 function plotly_series(plt::Plot)
-    [plotly_series(plt, series) for series in plt.series_list]
+    reduce(vcat, plotly_series(plt, series) for series in plt.series_list)
 end
 
 # get json string for a list of dictionaries, each representing the series params
