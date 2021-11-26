@@ -8,6 +8,7 @@ function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     traces = PlotlyJS.GenericTrace[]
     for series_dict in plotly_series(plt)
         plotly_type = pop!(series_dict, :type)
+        series_dict[:transpose] = false
         push!(traces, PlotlyJS.GenericTrace(plotly_type; series_dict...))
     end
     PlotlyJS.addtraces!(plt.o, traces...)
