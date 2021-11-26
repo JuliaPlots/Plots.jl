@@ -754,7 +754,7 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(plotattributes_out, series)
     plotly_hover!(plotattributes_out, series[:hover])
 
-    return [plotattributes_out]
+    return plotattributes_out
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
@@ -1106,10 +1106,7 @@ function js_body(plt::Plot, uuid)
 end
 
 function plotly_show_js(io::IO, plot::Plot)
-    data = []
-    for series in plot.series_list
-        append!(data, plotly_series(plot, series))
-    end
+    data = plotly_series(plot)
     layout = plotly_layout(plot)
     JSON.print(io, Dict(:data => data, :layout => layout))
 end
