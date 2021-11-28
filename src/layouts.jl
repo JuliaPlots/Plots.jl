@@ -494,7 +494,7 @@ function layout_args(sztup::NTuple{3,Integer})
     GridLayout(nr, nc), n
 end
 
-layout_args(nt::NamedTuple) = EmptyLayout(;nt...), 1
+layout_args(nt::NamedTuple) = EmptyLayout(; nt...), 1
 
 function layout_args(m::AbstractVecOrMat)
     sz = size(m)
@@ -514,7 +514,8 @@ function layout_args(layout::GridLayout)
     layout, n
 end
 
-layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) = layout_args(layout)
+layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) =
+    layout_args(layout)
 
 layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 
@@ -577,7 +578,6 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
 
     layout, subplots, spmap
 end
-
 
 # -------------------------------------------------------------------------
 
