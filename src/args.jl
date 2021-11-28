@@ -1743,7 +1743,10 @@ function slice_arg!(
 )
     v = get(plotattributes_in, k, plotattributes_out[k])
     plotattributes_out[k] =
-        if haskey(plotattributes_in, k) && typeof(v) <: AMat && !isempty(v) && !(k in _plot_args)
+        if haskey(plotattributes_in, k) &&
+           typeof(v) <: AMat &&
+           !isempty(v) &&
+           !(k in _plot_args)
             slice_arg(v, idx)
         else
             v
