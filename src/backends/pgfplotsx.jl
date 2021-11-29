@@ -1226,6 +1226,18 @@ function pgfx_sanitize_plot!(plt)
     end
     ##
 end
+
+function wrap_power_labels(ticks)
+    # wrap the power part of label with }
+    tick_labels = similar(ticks)
+    for (i, label) in enumerate(ticks)
+        base, power = split(label, "^")
+        power = string("{", power, "}")
+        tick_labels[i] = string(base, "^", power)
+    end
+    tick_labels
+end
+
 # --------------------------------------------------------------------------------------
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
@@ -1284,7 +1296,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 
     # scale
     scale = axis[:scale]
-    if scale in (:log2, :ln, :log10)
+    is_log_scale = scale in (:ln, :log2, :log10)
+    if is_log_scale
         push!(opt, string(letter, :mode) => "log")
         scale == :ln || push!(opt, "log basis $letter" => "$(scale == :log2 ? 2 : 10)")
     end
@@ -1297,11 +1310,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     end
 
     # grid on or off
-    if axis[:grid] && framestyle != :none
-        push!(opt, "$(letter)majorgrids" => "true")
-    else
-        push!(opt, "$(letter)majorgrids" => "false")
-    end
+    push!(opt, "$(letter)majorgrids" => axis[:grid] && framestyle != :none ? "true" : "false")
 
     # limits
     lims =
@@ -1312,19 +1321,13 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
         # ticks
         ticks = get_ticks(sp, axis)
-        #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
+        # pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values =
             ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] :
             ticks[1]
         push!(opt, string(letter, "tick") => string("{", join(tick_values, ","), "}"))
-        if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
-            # wrap the power part of label with }
-            tick_labels = similar(ticks[2])
-            for (i, label) in enumerate(ticks[2])
-                base, power = split(label, "^")
-                power = string("{", power, "}")
-                tick_labels[i] = string(base, "^", power)
-            end
+        if axis[:showaxis] && is_log_scale && axis[:ticks] == :auto
+            tick_labels = wrap_power_labels(ticks[2])
             if tick_labels isa Vector{String}
                 push!(
                     opt,
@@ -1335,8 +1338,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
                 push!(opt, string(letter, "ticklabels") => join(tick_labels))
             end
         elseif axis[:showaxis]
-            tick_labels =
-                ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+            tick_labels = ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+            is_log_scale && (tick_labels = wrap_power_labels(tick_labels))
             if axis[:formatter] in (:scientific, :auto) && tick_labels isa Vector{String}
                 tick_labels = string.("\$", convert_sci_unicode.(tick_labels), "\$")
                 tick_labels = replace.(tick_labels, Ref("×" => "\\times"))
