@@ -22,7 +22,7 @@ jobs:
       matrix:
         version:   # NOTE: the versions below should match those in your botconfig
           - '1.6'
-          - '1'
+          - '1.7'
         os:        # NOTE: should match the os setting of your botconfig
           - ubuntu-latest
         arch:
