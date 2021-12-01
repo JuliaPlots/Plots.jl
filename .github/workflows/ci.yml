@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   CI:
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && (${{matrix.version}} == '1' || (${{matrix.version}} != '1' && ${{matrix.os}} == 'ubuntu-latest'))"
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
       GKS_ENCODING: "utf8"
       GKSwstype: "100"
@@ -34,7 +34,7 @@ jobs:
           # - x86
 
     steps:
-
+      - if: "${{matrix.version}} == '1' || (${{matrix.version}} != '1' && ${{matrix.os}} == 'ubuntu-latest')"
       # Setup environment
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
