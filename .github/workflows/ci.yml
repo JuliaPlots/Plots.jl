@@ -28,11 +28,14 @@ jobs:
           - 'nightly'
         os:
           - ubuntu-latest
-          - windows-latest
-          - macos-latest
         arch:
           - x64
           # - x86
+        include:
+          version: '1'
+          os:
+            - windows-latest
+            - macos-latest
 
     steps:
       # Setup environment
@@ -64,7 +67,6 @@ jobs:
 
       # TESTCMD
       - name: Default TESTCMD
-        if: "${{matrix.version}} == '1' || (${{matrix.version}} != '1' && ${{matrix.os}} == 'ubuntu-latest')"
         run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
@@ -73,11 +75,9 @@ jobs:
       # Julia Dependencies
       - name: Install Julia dependencies
         uses: julia-actions/julia-buildpkg@latest
-        if: "${{matrix.version}} == '1' || (${{matrix.version}} != '1' && ${{matrix.os}} == 'ubuntu-latest')"
 
       # Run tests
       - name: Run Graphical test
-        if: "${{matrix.version}} == '1' || (${{matrix.version}} != '1' && ${{matrix.os}} == 'ubuntu-latest')"
         run:  |
           $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true)'
           $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")'
@@ -85,9 +85,7 @@ jobs:
 
       # Codecov
       - uses: julia-actions/julia-processcoverage@v1
-        if: "${{matrix.version}} == '1'"
       - uses: codecov/codecov-action@v2
-        if: "${{matrix.version}} == '1'"
         with:
           file: lcov.info
 
