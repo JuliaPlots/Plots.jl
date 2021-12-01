@@ -1013,8 +1013,9 @@ function plotly_polar!(plotattributes_out::KW, series::Series)
     # convert polar plots x/y to theta/radius
     if ispolar(series[:subplot])
         theta, r = pop!(plotattributes_out, :x), pop!(plotattributes_out, :y)
-        plotattributes_out[:t] = rad2deg.(theta)
+        plotattributes_out[:theta] = rad2deg.(theta)
         plotattributes_out[:r] = r
+        plotattributes_out[:type] = :scatterpolar
     end
 end
 
@@ -1078,10 +1079,10 @@ function plotly_html_body(plt, style = nothing)
         requirejs_prefix = """
             requirejs.config({
                 paths: {
-                    Plotly: '$(plotly_no_ext)'
+                    Plotly2: '$(plotly_no_ext)'
                 }
             });
-            require(['Plotly'], function (Plotly) {
+            require(['Plotly2'], function (Plotly2) {
         """
         requirejs_suffix = "});"
     end
@@ -1100,8 +1101,7 @@ end
 
 function js_body(plt::Plot, uuid)
     js = """
-        var PLOT = document.getElementById('$(uuid)');
-        Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
+        Plotly2.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
     """
 end
 
