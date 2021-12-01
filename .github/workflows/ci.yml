@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   CI:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && matrix.version == '1' || (matrix.version != '1' && matrix.os == 'ubuntu-latest')"
     env:
       GKS_ENCODING: "utf8"
       GKSwstype: "100"
@@ -22,6 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
+          - '1.6'
           - '1'
           - 'nightly'
         os:
