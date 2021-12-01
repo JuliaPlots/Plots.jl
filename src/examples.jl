@@ -1270,9 +1270,8 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [25, 30],
-    :pyplot => [2, 25, 30, 31, 49, 55],
-    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51, 55],
-    :plotly => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55],
+    :pyplot => [2, 25, 30, 31, 49, 55, 56],
+    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51, 55, 56],
     :pgfplotsx => [
         2,  # animation
         6,  # images
@@ -1282,8 +1281,9 @@ _backend_skips = Dict(
         32,  # spy
         49,  # polar heatmap
         51,  # image with custom axes
+        56,  # custom bar plot
     ],
-    :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55],
+    :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56],
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images unsupported
@@ -1305,6 +1305,7 @@ _backend_skips = Dict(
         51,  # embedded images unsupported
         52,  # 3D quiver unsupported
         55,  # 3D unsupported
+        56,  # barplots
     ],
     :gaston => [
         2,  # animations
