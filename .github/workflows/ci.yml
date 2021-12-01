@@ -31,11 +31,11 @@ jobs:
           - x64
           # - x86
         include:
-          - version: '1'
+          - version: '1.7'
             os: ubuntu-latest
-          - version: '1'
+          - version: '1.7'
             os: windows-latest
-          - version: '1'
+          - version: '1.7'
             os: macos-latest
 
     steps:
