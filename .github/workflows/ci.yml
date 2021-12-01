@@ -24,7 +24,6 @@ jobs:
         version:
           - '1.5'
           - '1.6'
-          - '1'
           - 'nightly'
         os:
           - ubuntu-latest
@@ -32,10 +31,11 @@ jobs:
           - x64
           # - x86
         include:
-          version: '1'
-          os:
-            - windows-latest
-            - macos-latest
+          - version: '1'
+            os:
+              - ubuntu-latest
+              - windows-latest
+              - macos-latest
 
     steps:
       # Setup environment
