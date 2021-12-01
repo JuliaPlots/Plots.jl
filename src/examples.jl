@@ -1314,6 +1314,7 @@ _backend_skips = Dict(
         50,  # TODO: 1D data not supported for pm3d
     ],
 )
+_backend_skips[:plotly] = _backend_skips[:plotlyjs]
 
 # ---------------------------------------------------------------------------------
 
