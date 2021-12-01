@@ -40,14 +40,11 @@ jobs:
     steps:
       # Setup environment
       - uses: actions/checkout@v2
-        if: "${{matrix.version}} == '1' || (${{matrix.version}} != '1' && ${{matrix.os}} == 'ubuntu-latest')"
       - uses: julia-actions/setup-julia@latest
-        if: "${{matrix.version}} == '1' || (${{matrix.version}} != '1' && ${{matrix.os}} == 'ubuntu-latest')"
         with:
           version: ${{ matrix.version }}
       - name: Cache artifacts
         uses: actions/cache@v1
-        if: "${{matrix.version}} == '1' || (${{matrix.version}} != '1' && ${{matrix.os}} == 'ubuntu-latest')"
         env:
           cache-name: cache-artifacts
         with:
