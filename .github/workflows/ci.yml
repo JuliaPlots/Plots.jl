@@ -22,20 +22,18 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6'
-          - 'nightly'
+          - '1.6' # LTS
+          - '1.7' # latest stable
         os:
           - ubuntu-latest
+          - windows-latest
+          - macos-latest
         arch:
           - x64
           # - x86
         include:
-          - version: '1.7'
+          - version: 'nightly'
             os: ubuntu-latest
-          - version: '1.7'
-            os: windows-latest
-          - version: '1.7'
-            os: macos-latest
 
     steps:
       # Setup environment
