@@ -1079,10 +1079,10 @@ function plotly_html_body(plt, style = nothing)
         requirejs_prefix = """
             requirejs.config({
                 paths: {
-                    Plotly2: '$(plotly_no_ext)'
+                    Plotly: '$(plotly_no_ext)'
                 }
             });
-            require(['Plotly2'], function (Plotly2) {
+            require(['Plotly'], function (Plotly) {
         """
         requirejs_suffix = "});"
     end
@@ -1101,7 +1101,7 @@ end
 
 function js_body(plt::Plot, uuid)
     js = """
-        Plotly2.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
+        Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
     """
 end
 
