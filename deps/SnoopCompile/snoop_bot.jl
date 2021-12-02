@@ -1,8 +1,6 @@
-using CompileBot
+include("snoop_bot_config.jl")
 
 snoop_bot(
-    BotConfig(
-        "Plots",
-    ),
+    botconfig,
     joinpath(@__DIR__, "precompile_script.jl"),
 )

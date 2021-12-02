@@ -21,7 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         version:   # NOTE: the versions below should match those in your botconfig
-          - '1'
+          - '1.6'  # ⎤
+          - '1.7'  # ⎦ <<< keep these versions in sync with deps/SnoopCompile/snoop_bot_config.jl
         os:        # NOTE: should match the os setting of your botconfig
           - ubuntu-latest
         arch:
@@ -35,9 +36,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          julia --project -e 'using Pkg; Pkg.instantiate();'
-          julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep();'
-
+          julia --project -e 'using Pkg; Pkg.instantiate()'
+          julia -e 'using Pkg; Pkg.add(PackageSpec(name="CompileBot", version="1")); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep()'
 
       # TESTCMD
       - name: Default TESTCMD
@@ -70,10 +70,8 @@ jobs:
 
       - name: CompileBot postprocess
         run: |
-          ls artifact
-          ls
-          if ! grep -m1 -q 'format' artifact/src/precompile_includer.jl; then sed -i '1 i\#! format: off' artifact/src/precompile_includer.jl; fi
-          julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); using CompileBot; CompileBot.postprocess();'
+          if ! grep -m1 -q 'format: off' artifact/src/precompile_includer.jl; then sed -i '1 i\#! format: off' artifact/src/precompile_includer.jl; fi
+          julia -e 'using Pkg; Pkg.add(PackageSpec(name="CompileBot", version="1")); using CompileBot; CompileBot.postprocess()'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
