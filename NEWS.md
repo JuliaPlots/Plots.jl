@@ -5,6 +5,10 @@
 
 ## (current master)
 
+## 1.25.0
+- drop support for julia `1.5`
+- support julia LTS `1.6` and julia `1.7`
+
 ## 0.28.3
 - support generalized array interface
 - save to pdf, svg and eps in plotlyjs
