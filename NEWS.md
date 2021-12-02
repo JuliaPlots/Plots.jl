@@ -3,7 +3,7 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-## (current master)
+## NOTE: this file is deprecated, see the [TagBot](https://github.com/marketplace/actions/julia-tagbot) auto-generated changelogs instead
 
 ## 0.28.3
 - support generalized array interface
