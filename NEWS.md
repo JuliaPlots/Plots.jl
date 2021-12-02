@@ -3,11 +3,7 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-## (current master)
-
-## 1.25.0
-- drop support for julia `1.5`
-- support julia LTS `1.6` and julia `1.7`
+## NOTE: this file is deprecated, see the [TagBot](https://github.com/marketplace/actions/julia-tagbot) auto-generated changelogs instead
 
 ## 0.28.3
 - support generalized array interface
