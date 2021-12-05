@@ -1316,7 +1316,10 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     end
 
     # grid on or off
-    push!(opt, "$(letter)majorgrids" => axis[:grid] && framestyle != :none ? "true" : "false")
+    push!(
+        opt,
+        "$(letter)majorgrids" => axis[:grid] && framestyle != :none ? "true" : "false",
+    )
 
     # limits
     lims =
@@ -1344,7 +1347,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
                 push!(opt, string(letter, "ticklabels") => join(tick_labels))
             end
         elseif axis[:showaxis]
-            tick_labels = ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+            tick_labels =
+                ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
             is_log_scale && (tick_labels = wrap_power_labels(tick_labels))
             if axis[:formatter] in (:scientific, :auto) && tick_labels isa Vector{String}
                 tick_labels = string.("\$", convert_sci_unicode.(tick_labels), "\$")
