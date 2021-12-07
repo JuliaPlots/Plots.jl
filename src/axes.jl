@@ -587,6 +587,22 @@ function round_limits(amin, amax, scale)
     amin, amax
 end
 
+parse_limits(lims::Tuple{<:Real, <:Real}, letter) = lims
+parse_limits(lims::Symbol, letter) = lims
+parse_limits(lims::AVec, letter) = if length(lims) == 2 && all(x isa Real for x in lims)
+    Tuple(lims)
+else
+    limits_err(lims, letter)
+end
+parse_limits(lims, letter) = limits_err(lims, letter)
+
+function limits_err(lims, letter)
+    @warn """Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
+             $(letter)lims = $lims
+             """
+    nothing
+end
+
 # using the axis extrema and limit overrides, return the min/max value for this axis
 function axis_limits(
     sp,
@@ -597,8 +613,8 @@ function axis_limits(
     axis = sp[get_attr_symbol(letter, :axis)]
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
-    lims = axis[:lims]
-    has_user_lims = (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
+    lims = parse_limits(axis[:lims], letter)
+    has_user_lims = lims isa Tuple
     if has_user_lims
         lmin, lmax = lims
         if lmin === :auto
