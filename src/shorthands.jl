@@ -348,8 +348,8 @@ Make a box and whisker plot.
 
 # Keyword arguments
 - `notch`: Bool. Notch the box plot? (false)
-- `range`: Real. Values more than range*IQR below the first quartile
-           or above the third quartile are shown as outliers (1.5)
+- `whisker_range`: Real. Whiskers extend `whisker_range`*IQR below the first quartile
+           and above the third quartile. Values outside this range are shown as outliers (1.5)
 - `outliers`: Bool. Show outliers? (true)
 - `whisker_width`: Real or Symbol. Length of whiskers (:match)
 
