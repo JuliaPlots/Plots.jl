@@ -47,6 +47,7 @@ jobs:
           PYTHON: ""
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: |
+          echo $GITHUB_REF
           export JULIA_DEBUG=Documenter
           export PLOTDOCS_ANSICOLOR=true
           export GKSwstype=nul  # Plots.jl/issues/3664
