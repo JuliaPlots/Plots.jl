@@ -54,11 +54,21 @@ end
     pl = plot([1.05, 2.0, 2.95], ylims = :round)
     @test Plots.ylims(pl) == (1, 3)
 
-    pl = plot(1:3, xlims = (1, 5))
-    @test Plots.xlims(pl) == (1, 5)
+    for x in (1:3, -10:10), xlims in ((1, 5), [1, 5])
+        pl = plot(x; xlims)
+        @test Plots.xlims(pl) == (1, 5)
+        pl = plot(x; xlims, widen = true)
+        @test Plots.xlims(pl) == Plots.widen(1, 5)
+    end
 
-    pl = plot(1:3, xlims = (1, 5), widen = true)
-    @test Plots.xlims(pl) == Plots.widen(1, 5)
+    pl = plot(1:5, lims = :symmetric, widen = false)
+    @test Plots.xlims(pl) == Plots.ylims(pl) == (-5, 5)
+
+    for xlims in (0, 0.0, false, true, plot())
+        pl = plot(1:5; xlims)
+        @test Plots.xlims(pl) == Plots.widen(1, 5)
+        @test_logs (:warn, r"Invalid limits for x axis") match_mode=:any display(pl)
+    end
 end
 
 @testset "3D Axis" begin
