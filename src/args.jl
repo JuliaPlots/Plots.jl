@@ -1644,7 +1644,7 @@ function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
     for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(plotattributes, k)
             v = plotattributes[k]
-            if !all(x->is_scale_supported(pkg, x), v)
+            if !all(is_scale_supported.(Ref(pkg), v))
                 @warn(
                     "scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))"
                 )
