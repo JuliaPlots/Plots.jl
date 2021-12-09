@@ -413,7 +413,7 @@ function gr_set_font(
             gr_font_family[family] >= 200 ? 3 : GR.TEXT_PRECISION_STRING,
         )
     end
-    gr_set_textcolor(color)
+    gr_set_textcolor(plot_color(color))
     GR.settextalign(gr_halign(halign), gr_valign(valign))
 end
 
