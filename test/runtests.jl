@@ -190,8 +190,8 @@ end
         [(missing, missing, missing), ("a", "b", "c")],
     )
     for z in zipped
-        @test isequal(collect(zip(Plots.unzip(z)...)), z)
-        @test isequal(collect(zip(Plots.unzip(GeometryBasics.Point.(z))...)), z)
+        @test isequal(collect(zip(Plots.RecipesPipeline.unzip(z)...)), z)
+        @test isequal(collect(zip(Plots.RecipesPipeline.unzip(GeometryBasics.Point.(z))...)), z)
     end
     op1 = Plots.process_clims((1.0, 2.0))
     op2 = Plots.process_clims((1, 2.0))
