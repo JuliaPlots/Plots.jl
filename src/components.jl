@@ -43,13 +43,7 @@ vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 "return the vertex points from a Shape or Segments object"
 coords(shape::Shape) = shape.x, shape.y
 
-#coords(shapes::AVec{Shape}) = unzip(map(coords, shapes))
-function coords(shapes::AVec{<:Shape})
-    c = map(coords, shapes)
-    x = [q[1] for q in c]
-    y = [q[2] for q in c]
-    x, y
-end
+coords(shapes::AVec{<:Shape}) = unzip(map(coords, shapes))
 
 "get an array of tuples of points on a circle with radius `r`"
 partialcircle(start_θ, end_θ, n = 20, r = 1) =

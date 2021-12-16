@@ -19,7 +19,7 @@ const _current_plots_version = VersionNumber(
 using Reexport
 
 import GeometryBasics
-using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
+using Dates, Printf, Statistics, Base64, LinearAlgebra, Random, Unzip
 using SparseArrays
 
 using FFMPEG
@@ -196,7 +196,6 @@ import RecipesPipeline:
     pop_kw!,
     scale_func,
     inverse_scale_func,
-    unzip,
     dateformatter,
     datetimeformatter,
     timeformatter
