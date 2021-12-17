@@ -942,9 +942,6 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             if typeof(series[:fillrange]) <: Real
                 plotattributes_out[:fillrange] = fill(series[:fillrange], length(rng))
             elseif typeof(series[:fillrange]) <: Tuple
-                @show rng
-                @show typeof(series[:fillrange][1])
-                @show series[:fillrange][1]
                 f1 =
                     typeof(series[:fillrange][1]) <: Real ?
                     fill(series[:fillrange][1], length(rng)) : series[:fillrange][1][rng]
