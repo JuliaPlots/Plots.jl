@@ -196,6 +196,7 @@ Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback
 for mime in (
     "text/html",
+    "text/latex",
     "image/png",
     "image/eps",
     "image/svg+xml",
