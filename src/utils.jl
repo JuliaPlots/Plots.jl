@@ -216,9 +216,11 @@ maketuple(x::Real) = (x, x)
 maketuple(x::Tuple{T,S}) where {T,S} = x
 
 RecipesPipeline.unzip(v) = unzip(v)
-RecipesPipeline.unzip(points::AbstractVector{<:GeometryBasics.Point}) = unzip(Tuple.(points))
+RecipesPipeline.unzip(points::AbstractVector{<:GeometryBasics.Point}) =
+    unzip(Tuple.(points))
 RecipesPipeline.unzip(points::AbstractVector{GeometryBasics.Point{N,T}}) where {N,T} =
-    isbitstype(T) && sizeof(T) > 0 ? unzip(reinterpret(NTuple{N,T}, points)) : unzip(Tuple.(points))
+    isbitstype(T) && sizeof(T) > 0 ? unzip(reinterpret(NTuple{N,T}, points)) :
+    unzip(Tuple.(points))
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
