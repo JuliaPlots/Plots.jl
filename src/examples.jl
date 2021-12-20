@@ -962,9 +962,9 @@ const _examples = PlotExample[
         """
         Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
         You can also specify the connections using the connections keyword.
-        The connections can be specified in two ways: Either as a tuple of vectors where each vector 
-        contains the 0-based indices of one point of a triangle, such that elements at the same 
-        position of these vectors form a triangle. Or as a vector of NTuple{3,Ints} where each element 
+        The connections can be specified in two ways: Either as a tuple of vectors where each vector
+        contains the 0-based indices of one point of a triangle, such that elements at the same
+        position of these vectors form a triangle. Or as a vector of NTuple{3,Ints} where each element
         contains the 1-based indices of the three points of a triangle.
         """,
         [
@@ -1235,7 +1235,7 @@ const _examples = PlotExample[
     PlotExample( # 56
         "Bar plot customizations",
         """
-        Width of bars may be specified as `bar_width`. 
+        Width of bars may be specified as `bar_width`.
         The bars' baseline may be specified as `fillto`.
         Each may be scalar, or a vector spcifying one value per bar.
         """,
@@ -1271,7 +1271,7 @@ _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [25, 30],
     :pyplot => [2, 25, 30, 31, 49, 55, 56],
-    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51, 55, 56],
+    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55, 56],
     :pgfplotsx => [
         2,  # animation
         6,  # images

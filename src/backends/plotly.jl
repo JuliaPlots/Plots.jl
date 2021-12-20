@@ -940,7 +940,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             plotattributes_out_fillrange[:showlegend] = false
             # if fillrange is provided as real or tuple of real, expand to array
             if typeof(series[:fillrange]) <: Real
-                series[:fillrange] = fill(series[:fillrange], length(rng))
+                plotattributes_out[:fillrange] = fill(series[:fillrange], length(rng))
             elseif typeof(series[:fillrange]) <: Tuple
                 f1 =
                     typeof(series[:fillrange][1]) <: Real ?
@@ -948,7 +948,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 f2 =
                     typeof(series[:fillrange][2]) <: Real ?
                     fill(series[:fillrange][2], length(rng)) : series[:fillrange][2][rng]
-                series[:fillrange] = (f1, f2)
+                plotattributes_out[:fillrange] = (f1, f2)
             end
             if isa(series[:fillrange], AbstractVector)
                 plotattributes_out_fillrange[:y] = series[:fillrange][rng]

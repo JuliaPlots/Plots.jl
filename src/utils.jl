@@ -434,9 +434,9 @@ end
 
 #turn tuple of fillranges to one path
 function concatenate_fillrange(x, y::Tuple)
-    rib1, rib2 = first(y), last(y)
-    yline = vcat(rib1, (rib2)[end:-1:1])
-    xline = vcat(x, x[end:-1:1])
+    rib1, rib2 = collect(first(y)), collect(last(y)) # collect needed until https://github.com/JuliaLang/julia/pull/37629 is merged
+    yline = vcat(rib1, reverse(rib2))
+    xline = vcat(x, reverse(x))
     return xline, yline
 end
 
