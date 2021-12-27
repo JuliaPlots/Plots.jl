@@ -1725,7 +1725,8 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
                 _cbar_width - 1mm,
                 height(sp.bbox) - 4mm,
             )
-            pcts = bbox_to_pcts(cb_bbox, figw, figh)
+            pcts = get(sp[:extra_kwargs], "3d_colorbar_axis", bbox_to_pcts(cb_bbox, figw, figh))
+
             sp.attr[:cbar_ax]."set_position"(pcts)
         end
     end
