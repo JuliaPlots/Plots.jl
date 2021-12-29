@@ -1,4 +1,4 @@
-name: SnoopCompile
+name: CompileBot
 
 on:
   push:
