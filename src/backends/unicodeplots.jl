@@ -1,17 +1,17 @@
 # https://github.com/JuliaPlots/UnicodePlots.jl
 
-# don't warn on unsupported... there's just too many warnings!!
+# don't warn on unsupported... there's just too many warnings !
 warn_on_unsupported_args(::UnicodePlotsBackend, plotattributes) = nothing
 
 # ------------------------------------------------------------------------------------------
 const _canvas_map = (
-    ascii = UnicodePlots.AsciiCanvas,
-    block = UnicodePlots.BlockCanvas,
     braille = UnicodePlots.BrailleCanvas,
     density = UnicodePlots.DensityCanvas,
-    dot = UnicodePlots.DotCanvas,
     heatmap = UnicodePlots.HeatmapCanvas,
     lookup = UnicodePlots.LookupCanvas,
+    ascii = UnicodePlots.AsciiCanvas,
+    block = UnicodePlots.BlockCanvas,
+    dot = UnicodePlots.DotCanvas,
 )
 
 # do all the magic here... build it all at once,
@@ -25,10 +25,10 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         xlim = collect(axis_limits(sp, :x))
         ylim = collect(axis_limits(sp, :y))
 
-        # we set x/y to have a single point,
+        # We set x/y to have a single point,
         # since we need to create the plot with some data.
-        # since this point is at the bottom left corner of the plot,
-        # it shouldn't actually be shown
+        # Since this point is at the bottom left corner of the plot,
+        # it should be hidden by consecutive plotting commands.
         x = Float64[xlim[1]]
         y = Float64[ylim[1]]
 
@@ -51,8 +51,8 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             title = texmath2unicode(sp[:title]),
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
-            width = _unicodeplots_width[],
             height = _unicodeplots_height[],
+            width = _unicodeplots_width[],
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
             border = border,
@@ -196,8 +196,10 @@ end
 
 # ------------------------------------------------------------------------------------------
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
+Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
 
-function Base.show(io::IO, plt::Plot{UnicodePlotsBackend})
+# NOTE: _show(..) must be kept for Base.showable (src/output.jl)
+function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
@@ -207,13 +209,13 @@ function Base.show(io::IO, plt::Plot{UnicodePlotsBackend})
             i < n && println(io)
         end
     else
+        re_col = r"\e\[[0-9;]*m"  # m: color, [a-zA-Z]: all escape sequences
         have_color = Base.get_have_color()
+        buf = IOContext(PipeBuffer(), :color => have_color)
         lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
         lines_uncolored = have_color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
-        buf = IOContext(PipeBuffer(), :color => have_color)
-        re_col = r"\e\[[0-9;]*[a-zA-Z]"
         sps = 0
         for r in 1:nr
             lmax = 0
