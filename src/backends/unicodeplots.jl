@@ -188,64 +188,82 @@ end
 
 # ------------------------------------------------------------------------------------------
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
-Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
 
-function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
+function Base.show(io::IO, plt::Plot{UnicodePlotsBackend})
+    prepare_output(plt)
     unicodeplots_rebuild(plt)
-    nr, nc = size(plt.layout)
-    lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
-    lines_uncolored = copy(lines_colored)
-    l_max = zeros(Int, nr)
-    w_max = zeros(Int, nc)
-    buf = IOBuffer()
-    cbuf = IOContext(buf, :color => true)
-    re_col = r"\x1B\[[0-9;]*[a-zA-Z]"
-    sps = 0
-    for r in 1:nr
-        lmax = 0
-        for c in 1:nc
-            l = plt.layout[r, c]
-            if l isa GridLayout && size(l) != (1, 1)
-                @error "UnicodePlots: complex nested layout is currently unsupported !"
-            else
-                if get(l.attr, :blank, false)
-                    lines_colored[r, c] = lines_uncolored[r, c] = nothing
-                else
-                    sp = plt.o[sps += 1]
-                    show(cbuf, sp)
-                    colored = String(take!(buf))
-                    uncolored = replace(colored, re_col => "")
-                    lines_colored[r, c] = lc = split(colored, "\n")
-                    lines_uncolored[r, c] = lu = split(uncolored, "\n")
-                    lmax = max(length(lc), lmax)
-                    w_max[c] = max(maximum(length.(lu)), w_max[c])
-                end
-            end
-        end
-        l_max[r] = lmax
-    end
-    empty = String[' '^w for w in w_max]
-    for r in 1:nr
-        for n in 1:l_max[r]
-            for c in 1:nc
-                pre = c == 1 ? '\0' : ' '
-                lc = lines_colored[r, c]
-                if lc === nothing || length(lc) < n
-                    print(io, pre, empty[c])
-                else
-                    lu = lines_uncolored[r, c]
-                    print(io, pre, lc[n], ' '^(w_max[c] - length(lu[n])))
-                end
-            end
-            println(io)
-        end
-        r < nr && println(io)
+    _show(io, MIME("text/plain"), plt, Val{false})  # no layout, hence vertical stacked
+end
+
+# we only support "text/plain", hence display(...) falls back to plain-text stdout
+function Base.display(::PlotsDisplay, plt::Plot)
+    prepare_output(plt)
+    unicodeplots_rebuild(plt)
+    _show(stdout, MIME("text/plain"), plt, Val{true})  # consider layout
+end
+
+function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend}, ::Type{Val{false}})
+    n = length(plt.o)
+    for (i, p) in enumerate(plt.o)
+        show(io, p)
+        i < n && println(io)
     end
     nothing
 end
 
-function _display(plt::Plot{UnicodePlotsBackend})
-    unicodeplots_rebuild(plt)
-    map(display, plt.o)
+function _show(io::IO, m::MIME"text/plain", plt::Plot{UnicodePlotsBackend}, ::Type{Val{true}})
+    nr, nc = size(plt.layout)
+    if nr == 1 && nc == 1 # fast path
+        _show(io, m, plt, Val{false})
+    else
+        lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
+        lines_uncolored = copy(lines_colored)
+        l_max = zeros(Int, nr)
+        w_max = zeros(Int, nc)
+        buf = IOBuffer()
+        cbuf = IOContext(buf, :color => Base.get_have_color())
+        re_col = r"\x1B\[[0-9;]*[a-zA-Z]"
+        sps = 0
+        for r in 1:nr
+            lmax = 0
+            for c in 1:nc
+                l = plt.layout[r, c]
+                if l isa GridLayout && size(l) != (1, 1)
+                    @error "UnicodePlots: complex nested layout is currently unsupported !"
+                else
+                    if get(l.attr, :blank, false)
+                        lines_colored[r, c] = lines_uncolored[r, c] = nothing
+                    else
+                        sp = plt.o[sps += 1]
+                        show(cbuf, sp)
+                        colored = String(take!(buf))
+                        uncolored = replace(colored, re_col => "")
+                        lines_colored[r, c] = lc = split(colored, "\n")
+                        lines_uncolored[r, c] = lu = split(uncolored, "\n")
+                        lmax = max(length(lc), lmax)
+                        w_max[c] = max(maximum(length.(lu)), w_max[c])
+                    end
+                end
+            end
+            l_max[r] = lmax
+        end
+        empty = String[' '^w for w in w_max]
+        for r in 1:nr
+            for n in 1:l_max[r]
+                for c in 1:nc
+                    pre = c == 1 ? '\0' : ' '
+                    lc = lines_colored[r, c]
+                    if lc === nothing || length(lc) < n
+                        print(io, pre, empty[c])
+                    else
+                        lu = lines_uncolored[r, c]
+                        print(io, pre, lc[n], ' '^(w_max[c] - length(lu[n])))
+                    end
+                end
+                n < l_max[r] && println(io)
+            end
+            r < nr && println(io)
+        end
+    end
     nothing
 end
