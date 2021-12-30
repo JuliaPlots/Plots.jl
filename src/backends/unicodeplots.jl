@@ -205,11 +205,12 @@ function Base.show(io::IO, plt::Plot{UnicodePlotsBackend})
             i < n && println(io)
         end
     else
+        have_color = Base.get_have_color()
         lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
-        lines_uncolored = similar(lines_colored)
+        lines_uncolored = have_color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
-        buf = IOContext(PipeBuffer(), :color => Base.get_have_color())
+        buf = IOContext(PipeBuffer(), :color => have_color)
         re_col = r"\e\[[0-9;]*[a-zA-Z]"
         sps = 0
         for r in 1:nr
@@ -225,9 +226,11 @@ function Base.show(io::IO, plt::Plot{UnicodePlotsBackend})
                         sp = plt.o[sps += 1]
                         show(buf, sp)
                         colored = read(buf, String)
-                        uncolored = replace(colored, re_col => "")
-                        lines_colored[r, c] = lc = split(colored, "\n")
-                        lines_uncolored[r, c] = lu = split(uncolored, "\n")
+                        lines_colored[r, c] = lu = lc = split(colored, '\n')
+                        if have_color
+                            uncolored = replace(colored, re_col => '\0')
+                            lines_uncolored[r, c] = lu = split(uncolored, '\n')
+                        end
                         lmax = max(length(lc), lmax)
                         w_max[c] = max(maximum(length.(lu)), w_max[c])
                     end
