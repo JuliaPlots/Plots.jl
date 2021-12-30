@@ -40,6 +40,12 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             ct
         end
 
+        border_type = if (bt = _border_type[]) == :auto
+            isijulia() ? :ascii : :solid
+        else
+            bt
+        end
+
         kw = (
             compact = true,
             title = texmath2unicode(sp[:title]),
@@ -47,7 +53,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             ylabel = texmath2unicode(yaxis[:guide]),
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
-            border = isijulia() ? :ascii : :solid,
+            border = border_type,
             xlim = xlim,
             ylim = ylim,
         )
@@ -213,7 +219,7 @@ end
 
 function _show(io::IO, m::MIME"text/plain", plt::Plot{UnicodePlotsBackend}, ::Type{Val{true}})
     nr, nc = size(plt.layout)
-    if nr == 1 && nc == 1 # fast path
+    if nr == 1 && nc == 1  # fast path
         _show(io, m, plt, Val{false})
     else
         lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)

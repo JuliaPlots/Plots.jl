@@ -971,6 +971,7 @@ const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
 const _canvas_type = Ref(:auto)
+const _border_type = Ref(:auto)
 
 # ------------------------------------------------------------------------------
 # hdf5
