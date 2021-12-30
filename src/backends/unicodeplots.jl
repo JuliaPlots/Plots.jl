@@ -34,16 +34,16 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
-        canvas_type = if (ct = _canvas_type[]) == :auto
+        canvas = if (up_c = _unicodeplots_canvas[]) == :auto
             isijulia() ? :ascii : :braille
         else
-            ct
+            up_c
         end
 
-        border_type = if (bt = _border_type[]) == :auto
+        border = if (up_b = _unicodeplots_border[]) == :auto
             isijulia() ? :ascii : :solid
         else
-            bt
+            up_b
         end
 
         kw = (
@@ -51,14 +51,16 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             title = texmath2unicode(sp[:title]),
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
+            width = _unicodeplots_width[],
+            height = _unicodeplots_height[],
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
-            border = border_type,
+            border = border,
             xlim = xlim,
             ylim = ylim,
         )
 
-        o = UnicodePlots.Plot(x, y, _canvas_map[canvas_type]; kw...)
+        o = UnicodePlots.Plot(x, y, _canvas_map[canvas]; kw...)
         for series in series_list(sp)
             o = addUnicodeSeries!(sp, o, kw, series, sp[:legend_position] != :none)
         end
