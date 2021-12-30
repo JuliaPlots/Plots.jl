@@ -196,39 +196,21 @@ end
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
 
 function Base.show(io::IO, plt::Plot{UnicodePlotsBackend})
-    prepare_output(plt)
     unicodeplots_rebuild(plt)
-    _show(io, MIME("text/plain"), plt, Val{false})  # no layout, hence vertical stacked
-end
-
-# we only support "text/plain", hence display(...) falls back to plain-text stdout
-function Base.display(::PlotsDisplay, plt::Plot)
-    prepare_output(plt)
-    unicodeplots_rebuild(plt)
-    _show(stdout, MIME("text/plain"), plt, Val{true})  # consider layout
-end
-
-function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend}, ::Type{Val{false}})
-    n = length(plt.o)
-    for (i, p) in enumerate(plt.o)
-        show(io, p)
-        i < n && println(io)
-    end
-    nothing
-end
-
-function _show(io::IO, m::MIME"text/plain", plt::Plot{UnicodePlotsBackend}, ::Type{Val{true}})
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
-        _show(io, m, plt, Val{false})
+        n = length(plt.o)
+        for (i, p) in enumerate(plt.o)
+            show(io, p)
+            i < n && println(io)
+        end
     else
         lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
-        lines_uncolored = copy(lines_colored)
+        lines_uncolored = similar(lines_colored)
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
-        buf = IOBuffer()
-        cbuf = IOContext(buf, :color => Base.get_have_color())
-        re_col = r"\x1B\[[0-9;]*[a-zA-Z]"
+        buf = IOContext(PipeBuffer(), :color => Base.get_have_color())
+        re_col = r"\e\[[0-9;]*[a-zA-Z]"
         sps = 0
         for r in 1:nr
             lmax = 0
@@ -241,8 +223,8 @@ function _show(io::IO, m::MIME"text/plain", plt::Plot{UnicodePlotsBackend}, ::Ty
                         lines_colored[r, c] = lines_uncolored[r, c] = nothing
                     else
                         sp = plt.o[sps += 1]
-                        show(cbuf, sp)
-                        colored = String(take!(buf))
+                        show(buf, sp)
+                        colored = read(buf, String)
                         uncolored = replace(colored, re_col => "")
                         lines_colored[r, c] = lc = split(colored, "\n")
                         lines_uncolored[r, c] = lu = split(uncolored, "\n")
@@ -273,3 +255,6 @@ function _show(io::IO, m::MIME"text/plain", plt::Plot{UnicodePlotsBackend}, ::Ty
     end
     nothing
 end
+
+# we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
+_display(plt::Plot{UnicodePlotsBackend}) = (show(stdout, plt); println(stdout))

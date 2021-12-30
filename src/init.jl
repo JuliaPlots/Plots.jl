@@ -89,7 +89,6 @@ function __init__()
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
             _init_ijulia_plotting()
-
             IJulia.display_dict(plt::Plot) = _ijulia_display_dict(plt)
         end
     end
