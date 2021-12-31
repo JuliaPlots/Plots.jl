@@ -1,17 +1,17 @@
 # https://github.com/JuliaPlots/UnicodePlots.jl
 
-# don't warn on unsupported... there's just too many warnings!!
+# don't warn on unsupported... there's just too many warnings !
 warn_on_unsupported_args(::UnicodePlotsBackend, plotattributes) = nothing
 
 # ------------------------------------------------------------------------------------------
 const _canvas_map = (
-    ascii = UnicodePlots.AsciiCanvas,
-    block = UnicodePlots.BlockCanvas,
     braille = UnicodePlots.BrailleCanvas,
     density = UnicodePlots.DensityCanvas,
-    dot = UnicodePlots.DotCanvas,
     heatmap = UnicodePlots.HeatmapCanvas,
     lookup = UnicodePlots.LookupCanvas,
+    ascii = UnicodePlots.AsciiCanvas,
+    block = UnicodePlots.BlockCanvas,
+    dot = UnicodePlots.DotCanvas,
 )
 
 # do all the magic here... build it all at once,
@@ -25,19 +25,25 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         xlim = collect(axis_limits(sp, :x))
         ylim = collect(axis_limits(sp, :y))
 
-        # we set x/y to have a single point,
+        # We set x/y to have a single point,
         # since we need to create the plot with some data.
-        # since this point is at the bottom left corner of the plot,
-        # it shouldn't actually be shown
+        # Since this point is at the bottom left corner of the plot,
+        # it should be hidden by consecutive plotting commands.
         x = Float64[xlim[1]]
         y = Float64[ylim[1]]
 
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
-        canvas_type = if (ct = _canvas_type[]) == :auto
+        canvas = if (up_c = _unicodeplots_canvas[]) == :auto
             isijulia() ? :ascii : :braille
         else
-            ct
+            up_c
+        end
+
+        border = if (up_b = _unicodeplots_border[]) == :auto
+            isijulia() ? :ascii : :solid
+        else
+            up_b
         end
 
         kw = (
@@ -45,14 +51,16 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             title = texmath2unicode(sp[:title]),
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
+            height = _unicodeplots_height[],
+            width = _unicodeplots_width[],
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
-            border = isijulia() ? :ascii : :solid,
+            border = border,
             xlim = xlim,
             ylim = ylim,
         )
 
-        o = UnicodePlots.Plot(x, y, _canvas_map[canvas_type]; kw...)
+        o = UnicodePlots.Plot(x, y, _canvas_map[canvas]; kw...)
         for series in series_list(sp)
             o = addUnicodeSeries!(sp, o, kw, series, sp[:legend_position] != :none)
         end
@@ -190,62 +198,70 @@ end
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
 Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
 
+# NOTE: _show(..) must be kept for Base.showable (src/output.jl)
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
     nr, nc = size(plt.layout)
-    lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
-    lines_uncolored = copy(lines_colored)
-    l_max = zeros(Int, nr)
-    w_max = zeros(Int, nc)
-    buf = IOBuffer()
-    cbuf = IOContext(buf, :color => true)
-    re_col = r"\x1B\[[0-9;]*[a-zA-Z]"
-    sps = 0
-    for r in 1:nr
-        lmax = 0
-        for c in 1:nc
-            l = plt.layout[r, c]
-            if l isa GridLayout && size(l) != (1, 1)
-                @error "UnicodePlots: complex nested layout is currently unsupported !"
-            else
-                if get(l.attr, :blank, false)
-                    lines_colored[r, c] = lines_uncolored[r, c] = nothing
-                else
-                    sp = plt.o[sps += 1]
-                    show(cbuf, sp)
-                    colored = String(take!(buf))
-                    uncolored = replace(colored, re_col => "")
-                    lines_colored[r, c] = lc = split(colored, "\n")
-                    lines_uncolored[r, c] = lu = split(uncolored, "\n")
-                    lmax = max(length(lc), lmax)
-                    w_max[c] = max(maximum(length.(lu)), w_max[c])
-                end
-            end
+    if nr == 1 && nc == 1  # fast path
+        n = length(plt.o)
+        for (i, p) in enumerate(plt.o)
+            show(io, p)
+            i < n && println(io)
         end
-        l_max[r] = lmax
-    end
-    empty = String[' '^w for w in w_max]
-    for r in 1:nr
-        for n in 1:l_max[r]
+    else
+        re_col = r"\e\[[0-9;]*m"  # m: color, [a-zA-Z]: all escape sequences
+        have_color = Base.get_have_color()
+        buf = IOContext(PipeBuffer(), :color => have_color)
+        lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
+        lines_uncolored = have_color ? similar(lines_colored) : lines_colored
+        l_max = zeros(Int, nr)
+        w_max = zeros(Int, nc)
+        sps = 0
+        for r in 1:nr
+            lmax = 0
             for c in 1:nc
-                pre = c == 1 ? '\0' : ' '
-                lc = lines_colored[r, c]
-                if lc === nothing || length(lc) < n
-                    print(io, pre, empty[c])
+                l = plt.layout[r, c]
+                if l isa GridLayout && size(l) != (1, 1)
+                    @error "UnicodePlots: complex nested layout is currently unsupported !"
                 else
-                    lu = lines_uncolored[r, c]
-                    print(io, pre, lc[n], ' '^(w_max[c] - length(lu[n])))
+                    if get(l.attr, :blank, false)
+                        lines_colored[r, c] = lines_uncolored[r, c] = nothing
+                    else
+                        sp = plt.o[sps += 1]
+                        show(buf, sp)
+                        colored = read(buf, String)
+                        lines_colored[r, c] = lu = lc = split(colored, '\n')
+                        if have_color
+                            uncolored = replace(colored, re_col => '\0')
+                            lines_uncolored[r, c] = lu = split(uncolored, '\n')
+                        end
+                        lmax = max(length(lc), lmax)
+                        w_max[c] = max(maximum(length.(lu)), w_max[c])
+                    end
                 end
             end
-            println(io)
+            l_max[r] = lmax
         end
-        r < nr && println(io)
+        empty = String[' '^w for w in w_max]
+        for r in 1:nr
+            for n in 1:l_max[r]
+                for c in 1:nc
+                    pre = c == 1 ? '\0' : ' '
+                    lc = lines_colored[r, c]
+                    if lc === nothing || length(lc) < n
+                        print(io, pre, empty[c])
+                    else
+                        lu = lines_uncolored[r, c]
+                        print(io, pre, lc[n], ' '^(w_max[c] - length(lu[n])))
+                    end
+                end
+                n < l_max[r] && println(io)
+            end
+            r < nr && println(io)
+        end
     end
     nothing
 end
 
-function _display(plt::Plot{UnicodePlotsBackend})
-    unicodeplots_rebuild(plt)
-    map(display, plt.o)
-    nothing
-end
+# we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
+_display(plt::Plot{UnicodePlotsBackend}) = (show(stdout, plt); println(stdout))
