@@ -209,7 +209,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
             i < n && println(io)
         end
     else
-        re_col = r"\e\[[0-9;]*m"  # m: color, [a-zA-Z]: all escape sequences
+        re_ansi = r"\e\[[0-9;]*[a-zA-Z]"  # m: color, [a-zA-Z]: all escape sequences
         have_color = Base.get_have_color()
         buf = IOContext(PipeBuffer(), :color => have_color)
         lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
@@ -232,7 +232,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
                         colored = read(buf, String)
                         lines_colored[r, c] = lu = lc = split(colored, '\n')
                         if have_color
-                            uncolored = replace(colored, re_col => '\0')
+                            uncolored = replace(colored, re_ansi => "")
                             lines_uncolored[r, c] = lu = split(uncolored, '\n')
                         end
                         lmax = max(length(lc), lmax)
