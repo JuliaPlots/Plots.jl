@@ -1104,10 +1104,10 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     ms = first(series[:markersize])
                     msw = first(series[:markerstrokewidth])
                     s, sw = if ms > 0
-                        0.8 * sp[:legend_font_pointsize],
-                        0.8 * sp[:legend_font_pointsize] * msw / ms
+                        0.4 * sp[:legend_font_pointsize],
+                        0.4 * sp[:legend_font_pointsize] * msw / ms
                     else
-                        0, 0.8 * sp[:legend_font_pointsize] * msw / 8
+                        0, 0.4 * sp[:legend_font_pointsize] * msw / 8
                     end
                     gr_draw_markers(series, xpos - leg.width_factor * 2, ypos, clims, s, sw)
                 end
