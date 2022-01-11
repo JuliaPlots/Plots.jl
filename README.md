@@ -17,6 +17,7 @@
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 [![][docs-img]][docs-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl)
+[![Plots Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/Plots)](https://pkgs.genieframework.com?packages=Plots)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725317.svg)](https://doi.org/10.5281/zenodo.4725317)
 This is the DOI for all Versions, please follow the link to get the DOI for a specific version.
