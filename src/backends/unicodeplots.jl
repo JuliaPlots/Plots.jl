@@ -88,6 +88,11 @@ up_color(col::RGBA) =
     (c = convert(ARGB32, col); map(Int, (red(c).i, green(c).i, blue(c).i)))
 up_color(col) = :auto
 
+function up_cmap(series)
+    rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
+    [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
+end
+
 # add a single series
 function addUnicodeSeries!(
     sp::Subplot{UnicodePlotsBackend},
@@ -112,16 +117,19 @@ function addUnicodeSeries!(
         kw[:xlim][:] .= kw[:ylim][:] .= 0
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st == :heatmap
-        rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
-        cmap = [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
         return UnicodePlots.heatmap(
             series[:z].surf;
             zlabel = sp[:colorbar_title],
-            colormap = cmap,
+            colormap = up_cmap(series),
             kw...,
         )
     elseif st == :spy
         return UnicodePlots.spy(series[:z].surf; kw...)
+    elseif st == :contour
+        return UnicodePlots.contourplot(
+            x, y, series[:z].surf;
+            levels=series[:levels], colormap = up_cmap(series), kw...
+        )
     end
 
     # now use the ! functions to add to the plot
