@@ -2,7 +2,8 @@ name: ci
 
 on:
   push:
-    - master
+    branches:
+      - master
   pull_request:
 
 defaults:
