@@ -277,26 +277,35 @@ end
 
 function _add_plot_title!(plt)
     plot_title = plt[:plot_title]
+
     if plot_title != ""
-        the_layout = plt.layout
-        vspan = plt[:plot_titlevspan]
-        plt.layout = grid(2, 1, heights = (vspan, 1 - vspan))
-        plt.layout.grid[1, 1] = subplot = Subplot(plt.backend, parent = plt.layout[1, 1])
-        plt.layout.grid[2, 1] = the_layout
-        subplot.plt = plt
+        # make new subplot for plot title
+        if plt[:plot_titleindex] == 0
+            the_layout = plt.layout
+            vspan = plt[:plot_titlevspan]
+            plt.layout = grid(2, 1, heights = (vspan, 1 - vspan))
+            plt.layout.grid[1, 1] = subplot = Subplot(plt.backend, parent = plt.layout[1, 1])
+            plt.layout.grid[2, 1] = the_layout
+            subplot.plt = plt
+
+            top = plt.backend isa PyPlotBackend ? nothing : 0mm
+            bot = 0mm
+            plt[:force_minpad] = nothing, top, nothing, bot
+            subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
+            plt[:plot_titleindex] = subplot[:subplot_index]
+            subplot[:framestyle] = :none
+            subplot[:margin] = 0px
+            push!(plt.subplots, subplot)
+        end
+
         # propagate arguments plt[:plot_titleXXX] --> subplot[:titleXXX]
+        plot_titleindex = plt[:plot_titleindex]
+        subplot = plt.subplots[plot_titleindex]
         for sym in filter(x -> startswith(string(x), "plot_title"), keys(_plot_defaults))
             subplot[Symbol(string(sym)[(length("plot_") + 1):end])] = plt[sym]
         end
-        top = plt.backend isa PyPlotBackend ? nothing : 0mm
-        bot = 0mm
-        plt[:force_minpad] = nothing, top, nothing, bot
-        subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
-        plt[:plot_titleindex] = subplot[:subplot_index]
-        subplot[:framestyle] = :none
-        subplot[:margin] = 0px
-        push!(plt.subplots, subplot)
     end
+
     return nothing
 end
 
