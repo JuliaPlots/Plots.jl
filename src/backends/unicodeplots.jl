@@ -51,6 +51,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             title = texmath2unicode(sp[:title]),
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
+            grid = xaxis[:grid] && yaxis[:grid],
             height = _unicodeplots_height[],
             width = _unicodeplots_width[],
             xscale = xaxis[:scale],
