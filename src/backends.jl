@@ -923,6 +923,8 @@ const _unicodeplots_attr = merge_with_base_supported([
     :linecolor,
     :linestyle,
     :markershape,
+    :quiver,
+    :arrow,
     :seriesalpha,
     :seriescolor,
     :scale,

@@ -123,11 +123,10 @@ function addUnicodeSeries!(
         return UnicodePlots.spy(series[:z].surf; kw...)
     end
 
-    series_kw = (;)
-
     # now use the ! functions to add to the plot
     if st in (:path, :straightline, :shape)
         func = UnicodePlots.lineplot!
+        series_kw = (; head_tail = series[:arrow] isa Arrow ? series[:arrow].side : nothing)
     elseif st == :scatter || series[:markershape] != :none
         func = UnicodePlots.scatterplot!
         series_kw = (; marker = series[:markershape])
