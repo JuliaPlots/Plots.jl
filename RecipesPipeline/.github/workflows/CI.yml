@@ -2,6 +2,7 @@ name: ci
 
 on:
   push:
+    - master
   pull_request:
 
 defaults:
@@ -21,8 +22,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1'
-          - 'nightly'
+          - '1.6' # LTS
+          - '1.7' # latest stable
         os:
           - ubuntu-latest
           - windows-latest
@@ -30,6 +31,9 @@ jobs:
         arch:
           - x64
           # - x86
+        include:
+          - version: 'nightly'
+            os: ubuntu-latest
 
     steps:
 

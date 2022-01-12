@@ -52,21 +52,6 @@ function _series_data_vector(v::AMat{<:DataPoint}, plotattributes)
     end
 end
 
-# --------------------------------------------------------------------
-# Fillranges & ribbons
-
-
-_process_fillrange(range::Number, plotattributes) = [range]
-_process_fillrange(range, plotattributes) = _series_data_vector(range, plotattributes)
-
-_process_ribbon(ribbon::Number, plotattributes) = [ribbon]
-_process_ribbon(ribbon, plotattributes) = _series_data_vector(ribbon, plotattributes)
-# ribbon as a tuple: (lower_ribbons, upper_ribbons)
-_process_ribbon(ribbon::Tuple{S, T}, plotattributes) where {S, T} = collect(zip(
-    _series_data_vector(ribbon[1], plotattributes),
-    _series_data_vector(ribbon[2], plotattributes),
-))
-
 
 # --------------------------------------------------------------------
 
@@ -118,8 +103,6 @@ _compute_xyz(x::Nothing, y::Nothing, z::Nothing) = error("x/y/z are all nothing!
 # ensure we dispatch to the slicer
 struct SliceIt end
 
-# TODO: Should ribbon and fillrange be handled by the plotting package?
-
 # The `SliceIt` recipe finishes user and type recipe processing.
 # It splits processed data into individual series data, stores in copied `plotattributes`
 # for each series and returns no arguments.
@@ -144,13 +127,6 @@ struct SliceIt end
     ys = _series_data_vector(y, plotattributes)
     zs = _series_data_vector(z, plotattributes)
 
-    fr = pop!(plotattributes, :fillrange, nothing)
-    fillranges = _process_fillrange(fr, plotattributes)
-    mf = length(fillranges)
-
-    rib = pop!(plotattributes, :ribbon, nothing)
-    ribbons = _process_ribbon(rib, plotattributes)
-    mr = length(ribbons)
 
     mx = length(xs)
     my = length(ys)
@@ -161,14 +137,6 @@ struct SliceIt end
             di = copy(plotattributes)
             xi, yi, zi = xs[mod1(i, mx)], ys[mod1(i, my)], zs[mod1(i, mz)]
             di[:x], di[:y], di[:z] = _compute_xyz(xi, yi, zi, nice_error)
-
-            # handle fillrange
-            fr = fillranges[mod1(i, mf)]
-            di[:fillrange] = isa(fr, Function) ? map(fr, di[:x]) : fr
-
-            # handle ribbons
-            rib = ribbons[mod1(i, mr)]
-            di[:ribbon] = isa(rib, Function) ? map(rib, di[:x]) : rib
 
             push!(series_list, RecipeData(di, ()))
         end

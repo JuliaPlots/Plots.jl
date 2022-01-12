@@ -20,7 +20,8 @@ jobs:
       fail-fast: false
       matrix:
         version:   # NOTE: the versions below should match those in your botconfig
-          - '1'
+          - '1.6'  # ⎤
+          - '1.7'  # ⎦ <<< keep these versions in sync with deps/SnoopCompile/snoop_bot_config.jl
         os:        # NOTE: should match the os setting of your botconfig
           - ubuntu-latest
         arch:
