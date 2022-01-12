@@ -69,7 +69,7 @@ function _preprocess_userrecipe(kw::AKW)
     _add_markershape(kw)
 
     # map marker_z if it's a Function
-    if isa(get(kw, :marker_z, nothing), Function)
+    if isa(get(kw, :marker_z, default(:marker_z)), Function)
         # TODO: should this take y and/or z as arguments?
         kw[:marker_z] =
             isa(kw[:z], Nothing) ? map(kw[:marker_z], kw[:x], kw[:y]) :
@@ -77,15 +77,24 @@ function _preprocess_userrecipe(kw::AKW)
     end
 
     # map line_z if it's a Function
-    if isa(get(kw, :line_z, nothing), Function)
+    if isa(get(kw, :line_z, default(:line_z)), Function)
         kw[:line_z] =
             isa(kw[:z], Nothing) ? map(kw[:line_z], kw[:x], kw[:y]) :
             map(kw[:line_z], kw[:x], kw[:y], kw[:z])
     end
 
+    rib = get(kw, :ribbon, default(:ribbon))
+    fr = get(kw, :fillrange, default(:fillrange))
+    # map ribbon if it's a Function
+    if rib isa Function
+        kw[:ribbon] = map(rib, kw[:x])
+    end
     # convert a ribbon into a fillrange
-    if get(kw, :ribbon, nothing) !== nothing
+    if  rib !== nothing
         make_fillrange_from_ribbon(kw)
+    # map fillrange if it's a Function
+    elseif fr !== nothing && fr isa Function
+        kw[:fillrange] = map(fr, kw[:x])
     end
     return
 end
@@ -154,6 +163,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
             kw_list[ind - 1] = tmp
         end
     end
+
     return nothing
 end
 
@@ -418,3 +428,4 @@ function _add_the_series(plt, sp, plotattributes)
     _series_added(plt, series)
     _update_subplot_colorbars(sp)
 end
+
