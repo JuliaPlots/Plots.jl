@@ -104,39 +104,41 @@ function addUnicodeSeries!(
     st = series[:seriestype]
 
     # get the series data and label
-    x, y = if st == :straightline
+    x, y = if st === :straightline
         straightline_data(series)
-    elseif st == :shape
+    elseif st === :shape
         shape_data(series)
     else
         float(series[:x]), float(series[:y])
     end
 
     # special handling (src/interface)
-    if st == :histogram2d
+    if st === :histogram2d
         kw[:xlim][:] .= kw[:ylim][:] .= 0
         return UnicodePlots.densityplot(x, y; kw...)
-    elseif st == :heatmap
-        return UnicodePlots.heatmap(
-            series[:z].surf;
+    elseif st === :spy
+        return UnicodePlots.spy(series[:z].surf; kw...)
+    elseif st in (:contour, :heatmap)
+        kw_hm_ct = (;
             zlabel = sp[:colorbar_title],
             colormap = up_cmap(series),
-            kw...,
+            colorbar = hascolorbar(sp),
         )
-    elseif st == :spy
-        return UnicodePlots.spy(series[:z].surf; kw...)
-    elseif st == :contour
-        return UnicodePlots.contourplot(
-            x, y, series[:z].surf;
-            levels=series[:levels], colormap = up_cmap(series), kw...
-        )
+        if st === :contour
+            return UnicodePlots.contourplot(
+                x, y, series[:z].surf;
+                levels = series[:levels], kw_hm_ct..., kw...
+            )
+        else
+            return UnicodePlots.heatmap(series[:z].surf; kw_hm_ct..., kw...)
+        end
     end
 
     # now use the ! functions to add to the plot
     if st in (:path, :straightline, :shape)
         func = UnicodePlots.lineplot!
         series_kw = (; head_tail = series[:arrow] isa Arrow ? series[:arrow].side : nothing)
-    elseif st == :scatter || series[:markershape] != :none
+    elseif st === :scatter || series[:markershape] != :none
         func = UnicodePlots.scatterplot!
         series_kw = (; marker = series[:markershape])
     else
