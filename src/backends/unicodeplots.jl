@@ -117,6 +117,7 @@ function addUnicodeSeries!(
         kw[:xlim][:] .= kw[:ylim][:] .= 0
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st === :spy
+        kw = (; kw..., width = 0, height = 0)  # w/h handled in UnicodePlots
         return UnicodePlots.spy(series[:z].surf; kw...)
     elseif st in (:contour, :heatmap)
         kw_hm_ct = (;
@@ -125,11 +126,13 @@ function addUnicodeSeries!(
             colorbar = hascolorbar(sp),
         )
         if st === :contour
+            isfilledcontour(series) && @warn "Plots(UnicodePlots): filled contour is not implemented"
             return UnicodePlots.contourplot(
                 x, y, series[:z].surf;
                 levels = series[:levels], kw_hm_ct..., kw...
             )
         else
+            kw = (; kw..., width = 0, height = 0)  # w/h handled in UnicodePlots
             return UnicodePlots.heatmap(series[:z].surf; kw_hm_ct..., kw...)
         end
     end
@@ -142,7 +145,7 @@ function addUnicodeSeries!(
         func = UnicodePlots.scatterplot!
         series_kw = (; marker = series[:markershape])
     else
-        error("Series type $st not supported by UnicodePlots")
+        error("Plots(UnicodePlots): series type $st not supported")
     end
 
     label = addlegend ? series[:label] : ""
@@ -172,7 +175,7 @@ function addUnicodeSeries!(
         )
     end
 
-    return up
+    up
 end
 
 # ------------------------------------------------------------------------------------------
@@ -208,7 +211,7 @@ end
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
 Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
 
-# NOTE: _show(..) must be kept for Base.showable (src/output.jl)
+# NOTE: _show(...) must be kept for Base.showable (src/output.jl)
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
     nr, nc = size(plt.layout)
@@ -232,7 +235,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
             for c in 1:nc
                 l = plt.layout[r, c]
                 if l isa GridLayout && size(l) != (1, 1)
-                    @error "UnicodePlots: complex nested layout is currently unsupported !"
+                    @error "Plots(UnicodePlots): complex nested layout is currently unsupported"
                 else
                     if get(l.attr, :blank, false)
                         lines_colored[r, c] = lines_uncolored[r, c] = nothing
