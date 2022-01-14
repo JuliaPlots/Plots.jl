@@ -24,36 +24,55 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         yaxis = sp[:yaxis]
         xlim = collect(axis_limits(sp, :x))
         ylim = collect(axis_limits(sp, :y))
+        F = float(eltype(xlim))
 
         # We set x/y to have a single point,
         # since we need to create the plot with some data.
         # Since this point is at the bottom left corner of the plot,
         # it should be hidden by consecutive plotting commands.
-        x = Float64[xlim[1]]
-        y = Float64[ylim[1]]
+        x = F[xlim[1]]
+        y = F[ylim[1]]
 
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
-        canvas = if (up_c = _unicodeplots_canvas[]) == :auto
+        canvas = if (up_c = _up_canvas[]) == :auto
             isijulia() ? :ascii : :braille
         else
             up_c
         end
 
-        border = if (up_b = _unicodeplots_border[]) == :auto
+        border = if (up_b = _up_border[]) == :auto
             isijulia() ? :ascii : :solid
         else
             up_b
         end
+
+        width, height = UnicodePlots.DEFAULT_WIDTH[], UnicodePlots.DEFAULT_HEIGHT[]
+
+        grid = xaxis[:grid] && yaxis[:grid]
+        quiver = contour = false
+        for series in series_list(sp)
+            st = series[:seriestype]
+            quiver |= series[:arrow] isa Arrow  # post-pipeline detection (:quiver -> :path)
+            contour |= st === :contour
+            if st === :histogram2d
+                xlim = ylim = (0, 0)
+            elseif st === :spy || st === :heatmap
+                width = height = 0
+                grid = false
+            end
+        end
+        grid &= !contour && !quiver
 
         kw = (
             compact = true,
             title = texmath2unicode(sp[:title]),
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
-            grid = xaxis[:grid] && yaxis[:grid],
-            height = _unicodeplots_height[],
-            width = _unicodeplots_width[],
+            grid = grid,
+            blend = !(quiver || contour),
+            height = height,
+            width = width,
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
             border = border,
@@ -114,26 +133,22 @@ function addUnicodeSeries!(
 
     # special handling (src/interface)
     if st === :histogram2d
-        kw[:xlim][:] .= kw[:ylim][:] .= 0
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st === :spy
-        kw = (; kw..., width = 0, height = 0)  # w/h handled in UnicodePlots
-        return UnicodePlots.spy(series[:z].surf; kw...)
+        return UnicodePlots.spy(series[:z].surf; fix_ar = _up_fix_ar[], kw...)
     elseif st in (:contour, :heatmap)
-        kw_hm_ct = (;
+        kw = (
+            kw...,
             zlabel = sp[:colorbar_title],
-            colormap = up_cmap(series),
+            colormap = (cm = _up_colormap[] === :none) ? up_cmap(series) : cm,
             colorbar = hascolorbar(sp),
         )
         if st === :contour
             isfilledcontour(series) && @warn "Plots(UnicodePlots): filled contour is not implemented"
-            return UnicodePlots.contourplot(
-                x, y, series[:z].surf;
-                levels = series[:levels], kw_hm_ct..., kw...
-            )
-        else
-            kw = (; kw..., width = 0, height = 0)  # w/h handled in UnicodePlots
-            return UnicodePlots.heatmap(series[:z].surf; kw_hm_ct..., kw...)
+            return UnicodePlots.contourplot(x, y, series[:z].surf; kw..., levels = series[:levels])
+        elseif st === :heatmap
+            return UnicodePlots.heatmap(series[:z].surf; fix_ar = _up_fix_ar[], kw...)
+            # zlim = collect(axis_limits(sp, :z))
         end
     end
 
