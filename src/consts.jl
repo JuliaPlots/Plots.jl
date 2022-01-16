@@ -50,7 +50,8 @@ const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
 const _magic_subplot_args =
     [:title_font, :legend_font, :legend_title_font, :plot_title_font, :colorbar_titlefont]
 const _magic_series_args = [:line, :marker, :fill]
-const _all_magic_args = sort(union(_magic_axis_args, _magic_series_args, _magic_subplot_args))
+const _all_magic_args =
+    sort(union(_magic_axis_args, _magic_series_args, _magic_subplot_args))
 
 const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
 const _all_subplot_args = sort(union([_subplot_args; _magic_subplot_args]))
