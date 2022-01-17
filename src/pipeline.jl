@@ -90,9 +90,9 @@ function _preprocess_userrecipe(kw::AKW)
         kw[:ribbon] = map(rib, kw[:x])
     end
     # convert a ribbon into a fillrange
-    if  rib !== nothing
+    if rib !== nothing
         make_fillrange_from_ribbon(kw)
-    # map fillrange if it's a Function
+        # map fillrange if it's a Function
     elseif fr !== nothing && fr isa Function
         kw[:fillrange] = map(fr, kw[:x])
     end
@@ -294,7 +294,8 @@ function _add_plot_title!(plt)
             the_layout = plt.layout
             vspan = plt[:plot_titlevspan]
             plt.layout = grid(2, 1, heights = (vspan, 1 - vspan))
-            plt.layout.grid[1, 1] = subplot = Subplot(plt.backend, parent = plt.layout[1, 1])
+            plt.layout.grid[1, 1] =
+                subplot = Subplot(plt.backend, parent = plt.layout[1, 1])
             plt.layout.grid[2, 1] = the_layout
             subplot.plt = plt
 
@@ -428,4 +429,3 @@ function _add_the_series(plt, sp, plotattributes)
     _series_added(plt, series)
     _update_subplot_colorbars(sp)
 end
-

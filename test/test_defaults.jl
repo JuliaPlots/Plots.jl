@@ -13,7 +13,7 @@ empty!(PLOTS_DEFAULTS)
 Plots.__init__()
 
 @testset "default" begin
-    default(fillrange=0)
+    default(fillrange = 0)
     @test Plots._series_defaults[:fillrange] == 0
     pl = plot(1:5)
     @test pl[1][1][:fillrange] == 0

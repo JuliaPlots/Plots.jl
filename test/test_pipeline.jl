@@ -19,9 +19,8 @@ end
 end
 
 @testset "Slicing" begin
-
     @test plot(1:5, fillrange = 0)[1][1][:fillrange] == 0
-    data4 = rand(4,4)
+    data4 = rand(4, 4)
     for i in axes(data4, 1)
         @test plot(data4, fillrange = 0)[1][i][:fillrange] == 0
         @test plot(data4, fillrange = [1, 2])[1][i][:fillrange] == [1.0, 2.0]
