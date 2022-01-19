@@ -24,35 +24,55 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         yaxis = sp[:yaxis]
         xlim = collect(axis_limits(sp, :x))
         ylim = collect(axis_limits(sp, :y))
+        F = float(eltype(xlim))
 
         # We set x/y to have a single point,
         # since we need to create the plot with some data.
         # Since this point is at the bottom left corner of the plot,
         # it should be hidden by consecutive plotting commands.
-        x = Float64[xlim[1]]
-        y = Float64[ylim[1]]
+        x = F[xlim[1]]
+        y = F[ylim[1]]
 
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
-        canvas = if (up_c = _unicodeplots_canvas[]) == :auto
+        canvas = if (up_c = _up_canvas[]) == :auto
             isijulia() ? :ascii : :braille
         else
             up_c
         end
 
-        border = if (up_b = _unicodeplots_border[]) == :auto
+        border = if (up_b = _up_border[]) == :auto
             isijulia() ? :ascii : :solid
         else
             up_b
         end
+
+        width, height = UnicodePlots.DEFAULT_WIDTH[], UnicodePlots.DEFAULT_HEIGHT[]
+
+        grid = xaxis[:grid] && yaxis[:grid]
+        quiver = contour = false
+        for series in series_list(sp)
+            st = series[:seriestype]
+            quiver |= series[:arrow] isa Arrow  # post-pipeline detection (:quiver -> :path)
+            contour |= st === :contour
+            if st === :histogram2d
+                xlim = ylim = (0, 0)
+            elseif st === :spy || st === :heatmap
+                width = height = 0
+                grid = false
+            end
+        end
+        grid &= !contour && !quiver
 
         kw = (
             compact = true,
             title = texmath2unicode(sp[:title]),
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
-            height = _unicodeplots_height[],
-            width = _unicodeplots_width[],
+            grid = grid,
+            blend = !(quiver || contour),
+            height = height,
+            width = width,
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
             border = border,
@@ -87,6 +107,11 @@ up_color(col::RGBA) =
     (c = convert(ARGB32, col); map(Int, (red(c).i, green(c).i, blue(c).i)))
 up_color(col) = :auto
 
+function up_cmap(series)
+    rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
+    [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
+end
+
 # add a single series
 function addUnicodeSeries!(
     sp::Subplot{UnicodePlotsBackend},
@@ -98,41 +123,44 @@ function addUnicodeSeries!(
     st = series[:seriestype]
 
     # get the series data and label
-    x, y = if st == :straightline
+    x, y = if st === :straightline
         straightline_data(series)
-    elseif st == :shape
+    elseif st === :shape
         shape_data(series)
     else
         float(series[:x]), float(series[:y])
     end
 
     # special handling (src/interface)
-    if st == :histogram2d
-        kw[:xlim][:] .= kw[:ylim][:] .= 0
+    if st === :histogram2d
         return UnicodePlots.densityplot(x, y; kw...)
-    elseif st == :heatmap
-        rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
-        cmap = [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
-        return UnicodePlots.heatmap(
-            series[:z].surf;
-            zlabel = sp[:colorbar_title],
-            colormap = cmap,
+    elseif st === :spy
+        return UnicodePlots.spy(series[:z].surf; fix_ar = _up_fix_ar[], kw...)
+    elseif st in (:contour, :heatmap)
+        kw = (
             kw...,
+            zlabel = sp[:colorbar_title],
+            colormap = (cm = _up_colormap[] === :none) ? up_cmap(series) : cm,
+            colorbar = hascolorbar(sp),
         )
-    elseif st == :spy
-        return UnicodePlots.spy(series[:z].surf; kw...)
+        if st === :contour
+            isfilledcontour(series) && @warn "Plots(UnicodePlots): filled contour is not implemented"
+            return UnicodePlots.contourplot(x, y, series[:z].surf; kw..., levels = series[:levels])
+        elseif st === :heatmap
+            return UnicodePlots.heatmap(series[:z].surf; fix_ar = _up_fix_ar[], kw...)
+            # zlim = collect(axis_limits(sp, :z))
+        end
     end
-
-    series_kw = (;)
 
     # now use the ! functions to add to the plot
     if st in (:path, :straightline, :shape)
         func = UnicodePlots.lineplot!
-    elseif st == :scatter || series[:markershape] != :none
+        series_kw = (; head_tail = series[:arrow] isa Arrow ? series[:arrow].side : nothing)
+    elseif st === :scatter || series[:markershape] != :none
         func = UnicodePlots.scatterplot!
         series_kw = (; marker = series[:markershape])
     else
-        error("Series type $st not supported by UnicodePlots")
+        error("Plots(UnicodePlots): series type $st not supported")
     end
 
     label = addlegend ? series[:label] : ""
@@ -162,7 +190,7 @@ function addUnicodeSeries!(
         )
     end
 
-    return up
+    up
 end
 
 # ------------------------------------------------------------------------------------------
@@ -198,7 +226,7 @@ end
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
 Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
 
-# NOTE: _show(..) must be kept for Base.showable (src/output.jl)
+# NOTE: _show(...) must be kept for Base.showable (src/output.jl)
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
     nr, nc = size(plt.layout)
@@ -222,7 +250,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
             for c in 1:nc
                 l = plt.layout[r, c]
                 if l isa GridLayout && size(l) != (1, 1)
-                    @error "UnicodePlots: complex nested layout is currently unsupported !"
+                    @error "Plots(UnicodePlots): complex nested layout is currently unsupported"
                 else
                     if get(l.attr, :blank, false)
                         lines_colored[r, c] = lines_uncolored[r, c] = nothing

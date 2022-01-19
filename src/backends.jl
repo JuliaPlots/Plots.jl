@@ -923,6 +923,8 @@ const _unicodeplots_attr = merge_with_base_supported([
     :linecolor,
     :linestyle,
     :markershape,
+    :quiver,
+    :arrow,
     :seriesalpha,
     :seriescolor,
     :scale,
@@ -936,6 +938,7 @@ const _unicodeplots_seriestype = [
     :shape,
     :histogram2d,
     :heatmap,
+    :contour,
     :spy,
 ]
 const _unicodeplots_style = [:auto, :solid]
@@ -970,10 +973,10 @@ const _unicodeplots_marker = [
 const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
-const _unicodeplots_canvas = Ref(:auto)
-const _unicodeplots_border = Ref(:auto)
-const _unicodeplots_height = Ref(15)
-const _unicodeplots_width = Ref(40)
+const _up_colormap = Ref(:none)
+const _up_canvas = Ref(:auto)
+const _up_border = Ref(:auto)
+const _up_fix_ar = Ref(true)
 
 # ------------------------------------------------------------------------------
 # hdf5
