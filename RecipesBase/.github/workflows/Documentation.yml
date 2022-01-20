@@ -16,14 +16,14 @@ jobs:
         with:
           version: '1.6'
       - name: Install dependencies
-        run:
-          - apt-get update -y
-          - apt-get install -y qt5-default
-          - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        run: |
+          apt-get update -y
+          apt-get install -y qt5-default
+          julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # If authenticating with GitHub Actions token
-        run:
-          - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+        run: |
+          julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.instantiate()'
-          - xvfb-run julia --project=docs/ docs/make.jl
+          xvfb-run julia --project=docs/ docs/make.jl
