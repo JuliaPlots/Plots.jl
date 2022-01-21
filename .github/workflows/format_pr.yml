@@ -1,19 +1,19 @@
-name: format-pr
+name: format
 
 on:
   schedule:
-    - cron: '0 0 * * SUN'
+    - cron: '0 0 1 * *'
 
 jobs:
-  build:
+  pr:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install JuliaFormatter and format
         run: |
-          julia  -e 'using Pkg; pkg"add JuliaFormatter"'
-          julia  -e 'using JuliaFormatter; [format(["src", "test"]) for _ in 1:2]'
+          julia -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter"))'
+          julia -e 'using JuliaFormatter; [format(["src", "test"]) for _ in 1:2]'
           git diff --exit-code
 
       - name: Create Pull Request

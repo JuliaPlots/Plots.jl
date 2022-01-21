@@ -144,8 +144,15 @@ function addUnicodeSeries!(
             colorbar = hascolorbar(sp),
         )
         if st === :contour
-            isfilledcontour(series) && @warn "Plots(UnicodePlots): filled contour is not implemented"
-            return UnicodePlots.contourplot(x, y, series[:z].surf; kw..., levels = series[:levels])
+            isfilledcontour(series) &&
+                @warn "Plots(UnicodePlots): filled contour is not implemented"
+            return UnicodePlots.contourplot(
+                x,
+                y,
+                series[:z].surf;
+                kw...,
+                levels = series[:levels],
+            )
         elseif st === :heatmap
             return UnicodePlots.heatmap(series[:z].surf; fix_ar = _up_fix_ar[], kw...)
             # zlim = collect(axis_limits(sp, :z))
