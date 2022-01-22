@@ -19,6 +19,7 @@ const _canvas_map = (
 function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
     plt.o = UnicodePlots.Plot[]
 
+    has_layout = prod(size(plt.layout)) > 1
     for sp in plt.subplots
         xaxis = sp[:xaxis]
         yaxis = sp[:yaxis]
@@ -47,7 +48,9 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             up_b
         end
 
-        width, height = UnicodePlots.DEFAULT_WIDTH[], UnicodePlots.DEFAULT_HEIGHT[]
+        # blank plots will not be shown
+        width = has_layout && isempty(series_list(sp)) ? 0 : UnicodePlots.DEFAULT_WIDTH[]
+        height = UnicodePlots.DEFAULT_HEIGHT[]
 
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
