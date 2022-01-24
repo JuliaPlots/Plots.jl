@@ -1269,15 +1269,13 @@ const _examples = PlotExample[
         """
         `vspan` and `hspan` can be used to shade horizontal and vertical ranges.
         """,
-        [
-            :(
-                begin
-                    hspan([1, 2, 3, 4]; label="hspan", legend=:topleft)
-                    vspan!([2, 3]; alpha=0.5, label="vspan")
-                    plot!([0, 2, 3, 5], [-1, 3, 2, 6]; c=:black, lw=2, label="line")
-                end
-            )
-        ]
+        [:(
+            begin
+                hspan([1, 2, 3, 4]; label = "hspan", legend = :topleft)
+                vspan!([2, 3]; alpha = 0.5, label = "vspan")
+                plot!([0, 2, 3, 5], [-1, 3, 2, 6]; c = :black, lw = 2, label = "line")
+            end
+        )],
     ),
 ]
 
