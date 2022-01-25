@@ -119,7 +119,7 @@ function _precompile_()
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:marker, :series_annotations, :seriestype), Tuple{Tuple{Int64, Float64, Symbol}, Vector{Any}, Symbol}},typeof(plot!),Plot{GRBackend},StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:marker, :series_annotations, :seriestype), Tuple{Tuple{Int64, Float64, Symbol}, Vector{Any}, Symbol}},typeof(plot!),Plot{PlotlyBackend},StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:marker, :series_annotations, :seriestype), Tuple{Tuple{Int64, Float64, Symbol}, Vector{Any}, Symbol}},typeof(plot!),StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}},Vector{Float64}})
-    Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:markersize, :c, :seriestype), Tuple{Int64, Symbol, Symbol}},typeof(plot!),Plot{PlotlyBackend},Vector{Float64}})
+    Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:markersize, :c, :seriestype), Tuple{Int64, Symbol, Symbol}},typeof(plot!),Plot{GRBackend},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:markersize, :c, :seriestype), Tuple{Int64, Symbol, Symbol}},typeof(plot!),Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:seriestype, :inset), Tuple{Symbol, Tuple{Int64, BoundingBox{Tuple{Length{:w, Float64}, Length{:h, Float64}}, Tuple{Length{:w, Float64}, Length{:h, Float64}}}}}},typeof(plot!),Plot{GRBackend},Vector{Int64},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:seriestype, :inset), Tuple{Symbol, Tuple{Int64, BoundingBox{Tuple{Length{:w, Float64}, Length{:h, Float64}}, Tuple{Length{:w, Float64}, Length{:h, Float64}}}}}},typeof(plot!),Plot{PlotlyBackend},Vector{Int64},Vector{Float64}})
@@ -227,10 +227,11 @@ function _precompile_()
     Base.precompile(Tuple{typeof(RecipesPipeline.plot_setup!),Plot{GRBackend},Dict{Symbol, Any},Vector{Dict{Symbol, Any}}})
     Base.precompile(Tuple{typeof(RecipesPipeline.plot_setup!),Plot{PlotlyBackend},Dict{Symbol, Any},Vector{Dict{Symbol, Any}}})
     Base.precompile(Tuple{typeof(RecipesPipeline.preprocess_attributes!),Plot{GRBackend},DefaultsDict})
+    Base.precompile(Tuple{typeof(RecipesPipeline.process_sliced_series_attributes!),Plot{GRBackend},Vector{Dict{Symbol, Any}}})
+    Base.precompile(Tuple{typeof(RecipesPipeline.process_sliced_series_attributes!),Plot{PlotlyBackend},Vector{Dict{Symbol, Any}}})
     Base.precompile(Tuple{typeof(RecipesPipeline.process_userrecipe!),Plot{GRBackend},Vector{Dict{Symbol, Any}},Dict{Symbol, Any}})
     Base.precompile(Tuple{typeof(RecipesPipeline.process_userrecipe!),Plot{PlotlyBackend},Vector{Dict{Symbol, Any}},Dict{Symbol, Any}})
     Base.precompile(Tuple{typeof(RecipesPipeline.unzip),Vector{GeometryBasics.Point2{Float64}}})
-    Base.precompile(Tuple{typeof(RecipesPipeline.warn_on_recipe_aliases!),Plot{PlotlyBackend},Dict{Symbol, Any},Symbol,Any})
     Base.precompile(Tuple{typeof(_bin_centers),StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}}})
     Base.precompile(Tuple{typeof(_cbar_unique),Vector{Float64},String})
     Base.precompile(Tuple{typeof(_cbar_unique),Vector{Int64},String})
@@ -313,7 +314,6 @@ function _precompile_()
     Base.precompile(Tuple{typeof(layout_args),NamedTuple{(:label, :blank), Tuple{Symbol, Bool}}})
     Base.precompile(Tuple{typeof(layout_args),NamedTuple{(:label, :width, :height), Tuple{Symbol, Symbol, Float64}}})
     Base.precompile(Tuple{typeof(make_fillrange_side),UnitRange{Int64},LinRange{Float64}})
-    Base.precompile(Tuple{typeof(make_steps),Vector{Float64},Symbol,Bool})
     Base.precompile(Tuple{typeof(optimal_ticks_and_labels),Nothing,Tuple{Float64, Float64},Symbol,Function})
     Base.precompile(Tuple{typeof(optimal_ticks_and_labels),Nothing,Tuple{Float64, Float64},Symbol,Symbol})
     Base.precompile(Tuple{typeof(optimal_ticks_and_labels),Nothing,Tuple{Int64, Float64},Symbol,Symbol})
@@ -342,10 +342,11 @@ function _precompile_()
     Base.precompile(Tuple{typeof(process_axis_arg!),Dict{Symbol, Any},StepRange{Int64, Int64},Symbol})
     Base.precompile(Tuple{typeof(process_axis_arg!),Dict{Symbol, Any},Symbol,Symbol})
     Base.precompile(Tuple{typeof(push!),Plot{GRBackend},Float64,Vector{Float64}})
+    Base.precompile(Tuple{typeof(push!),Segments{Tuple{Float64, Float64, Float64}},Tuple{Int64, Int64, Float64},Tuple{Int64, Int64, Float64}})
     Base.precompile(Tuple{typeof(resetfontsizes)})
     Base.precompile(Tuple{typeof(scalefontsizes),Float64})
     Base.precompile(Tuple{typeof(series_annotations),Vector{Any}})
-    Base.precompile(Tuple{typeof(slice_arg),Matrix{AbsoluteLength},Int64})
+    Base.precompile(Tuple{typeof(slice_arg),Base.ReshapedArray{Int64, 2, UnitRange{Int64}, Tuple{}},Int64})
     Base.precompile(Tuple{typeof(slice_arg),Matrix{RGBA{Float64}},Int64})
     Base.precompile(Tuple{typeof(spy),Any})
     Base.precompile(Tuple{typeof(straightline_data),Tuple{Float64, Float64},Tuple{Float64, Float64},Vector{Float64},Vector{Float64},Int64})
@@ -355,44 +356,38 @@ function _precompile_()
     Base.precompile(Tuple{typeof(warn_on_attr_dim_mismatch),Series,Vector{Float64},Vector{Float64},Nothing,Base.Iterators.Flatten{Vector{Tuple{SeriesSegment}}}})
     Base.precompile(Tuple{typeof(xgrid!),Plot{GRBackend},Symbol,Vararg{Any, N} where N})
     Base.precompile(Tuple{typeof(xlims),Subplot{PlotlyBackend}})
-    isdefined(Plots, Symbol("#296#332")) && Base.precompile(Tuple{getfield(Plots, Symbol("#296#332"))})
     isdefined(Plots, Symbol("#297#333")) && Base.precompile(Tuple{getfield(Plots, Symbol("#297#333"))})
     isdefined(Plots, Symbol("#4#8")) && Base.precompile(Tuple{getfield(Plots, Symbol("#4#8")),UnitRange{Int64}})
     isdefined(Plots, Symbol("#add_major_or_minor_segments#102")) && Base.precompile(Tuple{getfield(Plots, Symbol("#add_major_or_minor_segments#102")),Vector{Float64},Bool,Segments{Tuple{Float64, Float64}},Float64,Bool})
     isdefined(Plots, Symbol("#add_major_or_minor_segments#103")) && Base.precompile(Tuple{getfield(Plots, Symbol("#add_major_or_minor_segments#103")),Vector{Float64},Bool,Segments{Tuple{Float64, Float64, Float64}},Float64,Bool})
     let fbody = try __lookup_kwbody__(which(font, (Font,Vararg{Any, N} where N,))) catch missing end
-        if !ismissing(fbody)
-            precompile(fbody, (Base.Iterators.Pairs{Union{}, Union{}, Tuple{}, NamedTuple{(), Tuple{}}},typeof(font),Font,Vararg{Any, N} where N,))
-        end
+    if !ismissing(fbody)
+        precompile(fbody, (Base.Iterators.Pairs{Union{}, Union{}, Tuple{}, NamedTuple{(), Tuple{}}},typeof(font),Font,Vararg{Any, N} where N,))
     end
+end
     let fbody = try __lookup_kwbody__(which(plot!, (Any,))) catch missing end
-        if !ismissing(fbody)
-            precompile(fbody, (Any,typeof(plot!),Any,))
-        end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(plot!),Any,))
     end
+end
     let fbody = try __lookup_kwbody__(which(plot!, (Any,Vararg{Any, N} where N,))) catch missing end
-        if !ismissing(fbody)
-            precompile(fbody, (Any,typeof(plot!),Any,Vararg{Any, N} where N,))
-        end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(plot!),Any,Vararg{Any, N} where N,))
     end
+end
     let fbody = try __lookup_kwbody__(which(plot, (Any,))) catch missing end
-        if !ismissing(fbody)
-            precompile(fbody, (Any,typeof(plot),Any,))
-        end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(plot),Any,))
     end
+end
     let fbody = try __lookup_kwbody__(which(plot, (Any,Vararg{Any, N} where N,))) catch missing end
-        if !ismissing(fbody)
-            precompile(fbody, (Any,typeof(plot),Any,Vararg{Any, N} where N,))
-        end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(plot),Any,Vararg{Any, N} where N,))
     end
+end
     let fbody = try __lookup_kwbody__(which(title!, (AbstractString,))) catch missing end
-        if !ismissing(fbody)
-            precompile(fbody, (Any,typeof(title!),AbstractString,))
-        end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(title!),AbstractString,))
     end
-    let fbody = try __lookup_kwbody__(which(yaxis!, (Any,Vararg{Any, N} where N,))) catch missing end
-        if !ismissing(fbody)
-            precompile(fbody, (Any,typeof(yaxis!),Any,Vararg{Any, N} where N,))
-        end
-    end
+end
 end
