@@ -7,6 +7,7 @@ using Plots, Test
 
         p = plot(rand(10))
         @test isa(p, Plots.Plot) == true
+        @test_nowarn Plots.plotly_series(plot())
     end
 
     @testset "Contours" begin

@@ -1031,6 +1031,9 @@ end
 
 # get a list of dictionaries, each representing the series params
 function plotly_series(plt::Plot)
+    if isempty(plt.series_list)
+        return KW[]
+    end
     reduce(vcat, plotly_series(plt, series) for series in plt.series_list)
 end
 
