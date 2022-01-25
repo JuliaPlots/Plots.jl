@@ -83,19 +83,6 @@ function _preprocess_userrecipe(kw::AKW)
             map(kw[:line_z], kw[:x], kw[:y], kw[:z])
     end
 
-    rib = get(kw, :ribbon, default(:ribbon))
-    fr = get(kw, :fillrange, default(:fillrange))
-    # map ribbon if it's a Function
-    if rib isa Function
-        kw[:ribbon] = map(rib, kw[:x])
-    end
-    # convert a ribbon into a fillrange
-    if rib !== nothing
-        make_fillrange_from_ribbon(kw)
-        # map fillrange if it's a Function
-    elseif fr !== nothing && fr isa Function
-        kw[:fillrange] = map(fr, kw[:x])
-    end
     return
 end
 
@@ -164,6 +151,21 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
         end
     end
 
+    for kw in kw_list
+        rib = get(kw, :ribbon, default(:ribbon))
+        fr = get(kw, :fillrange, default(:fillrange))
+        # map ribbon if it's a Function
+        if rib isa Function
+            kw[:ribbon] = map(rib, kw[:x])
+        end
+        # convert a ribbon into a fillrange
+        if rib !== nothing
+            make_fillrange_from_ribbon(kw)
+            # map fillrange if it's a Function
+        elseif fr !== nothing && fr isa Function
+            kw[:fillrange] = map(fr, kw[:x])
+        end
+    end
     return nothing
 end
 
