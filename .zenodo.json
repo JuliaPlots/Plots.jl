@@ -702,6 +702,10 @@
             "affiliation": "Alogus Research Corporation",
             "name": "Lee Phillips",
             "type": "Other"
+        },
+        {
+            "name": "Tom Gillam",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
