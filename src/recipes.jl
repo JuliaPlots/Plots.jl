@@ -795,7 +795,7 @@ function _auto_binning_nbins(
     elseif mode == :fd  # Freedman–Diaconis rule
         _cl(_span(v) / (2 * _iqr(v) / nd))
     elseif mode == :wand
-        _cl(wand_edges(v))  # this makes this function not type stable, but the type instability does not propagate
+        wand_edges(v)  # this makes this function not type stable, but the type instability does not propagate
     else
         error("Unknown auto-binning mode $mode")
     end
