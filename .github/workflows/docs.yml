@@ -57,4 +57,5 @@ jobs:
           # xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"add Documenter#master"'
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"st -m"'
           xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl") do; include("docs/make.jl"); end'
-          cat $UP_DEBUG_IO
+          cat $UP_DEBUG_IO | sed 's,\x1B,ESC,g'
+          rm $UP_DEBUG_IO
