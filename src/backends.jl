@@ -974,9 +974,6 @@ const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
 const _up_colormap = Ref(:none)
-const _up_canvas = Ref(:auto)
-const _up_border = Ref(:auto)
-const _up_fix_ar = Ref(true)
 
 # ------------------------------------------------------------------------------
 # hdf5
