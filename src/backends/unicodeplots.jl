@@ -1,8 +1,5 @@
 # https://github.com/JuliaPlots/UnicodePlots.jl
 
-# don't warn on unsupported... there's just too many warnings !
-warn_on_unsupported_args(::UnicodePlotsBackend, plotattributes) = nothing
-
 # ------------------------------------------------------------------------------------------
 const _canvas_map = (
     braille = UnicodePlots.BrailleCanvas,
@@ -17,6 +14,7 @@ const _canvas_map = (
 # do all the magic here... build it all at once,
 # since we need to know about all the series at the very beginning
 function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
+    plt.attr[:warn_on_unsupported] = false
     plt.o = UnicodePlots.Plot[]
 
     has_layout = prod(size(plt.layout)) > 1
@@ -54,8 +52,10 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
+        blend = true
         for series in series_list(sp)
             st = series[:seriestype]
+            blend &= get(series[:extra_kwargs], :blend, true)
             quiver |= series[:arrow] isa Arrow  # post-pipeline detection (:quiver -> :path)
             contour |= st === :contour
             if st === :histogram2d
@@ -66,6 +66,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             end
         end
         grid &= !contour && !quiver
+        blend &= !(quiver || contour)
 
         kw = (
             compact = true,
@@ -73,7 +74,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
             grid = grid,
-            blend = !(quiver || contour),
+            blend = blend,
             height = height,
             width = width,
             xscale = xaxis[:scale],
