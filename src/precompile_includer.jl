@@ -1,4 +1,5 @@
-should_precompile =  false
+#! format: off
+should_precompile =   true
 
 
 # Don't edit the following! Instead change the script for `snoop_bot`.
@@ -23,11 +24,12 @@ elseif v"1.7.0-DEV" <= VERSION <= v"1.7.9"
         include("../deps/SnoopCompile/precompile//1.7/precompile_Plots.jl")
         _precompile_()
     end
-else 
+elseif v"1.8.0-DEV" <= VERSION <= v"1.8.9" 
     @static if isfile(joinpath(@__DIR__, "../deps/SnoopCompile/precompile//1.8/precompile_Plots.jl"))
         include("../deps/SnoopCompile/precompile//1.8/precompile_Plots.jl")
         _precompile_()
     end
+else 
     end
 
 end # precompile_enclosure
