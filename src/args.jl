@@ -1588,6 +1588,8 @@ end
 const _already_warned = Dict{Symbol,Set{Symbol}}()
 const _to_warn = Set{Symbol}()
 
+should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
+
 function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     empty!(_to_warn)
     bend = backend_name(pkg)
@@ -1605,7 +1607,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     end
 
     if !isempty(_to_warn) &&
-       get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+       get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
             @warn(
@@ -1621,7 +1623,7 @@ end
 # _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
-    if !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+    if !get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
         return
     end
     if !is_seriestype_supported(pkg, plotattributes[:seriestype])
@@ -1642,7 +1644,7 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
-    if !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+    if !get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
         return
     end
     for k in (:xscale, :yscale, :zscale, :scale)
