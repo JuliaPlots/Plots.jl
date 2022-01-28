@@ -1,5 +1,7 @@
 # https://github.com/JuliaPlots/UnicodePlots.jl
 
+should_warn_on_unsupported(::UnicodePlotsBackend) = false
+
 # ------------------------------------------------------------------------------------------
 const _canvas_map = (
     braille = UnicodePlots.BrailleCanvas,
