@@ -34,13 +34,13 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
-        canvas = if (up_c = _up_canvas[]) == :auto
+        canvas = if (up_c = get(sp[:extra_kwargs], :canvas, :auto)) == :auto
             isijulia() ? :ascii : :braille
         else
             up_c
         end
 
-        border = if (up_b = _up_border[]) == :auto
+        border = if (up_b = get(sp[:extra_kwargs], :border, :auto)) == :auto
             isijulia() ? :ascii : :solid
         else
             up_b
@@ -50,9 +50,9 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         width = has_layout && isempty(series_list(sp)) ? 0 : UnicodePlots.DEFAULT_WIDTH[]
         height = UnicodePlots.DEFAULT_HEIGHT[]
 
+        blend = get(sp[:extra_kwargs], :blend, true)
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
-        blend = true
         for series in series_list(sp)
             st = series[:seriestype]
             blend &= get(series[:extra_kwargs], :blend, true)
@@ -65,7 +65,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
                 grid = false
             end
         end
-        grid &= !contour && !quiver
+        grid &= !(quiver || contour)
         blend &= !(quiver || contour)
 
         kw = (
@@ -136,10 +136,11 @@ function addUnicodeSeries!(
     end
 
     # special handling (src/interface)
+    fix_ar = get(series[:extra_kwargs], :fix_ar, true)
     if st === :histogram2d
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st === :spy
-        return UnicodePlots.spy(series[:z].surf; fix_ar = _up_fix_ar[], kw...)
+        return UnicodePlots.spy(series[:z].surf; fix_ar = fix_ar, kw...)
     elseif st in (:contour, :heatmap)
         kw = (
             kw...,
@@ -158,7 +159,7 @@ function addUnicodeSeries!(
                 levels = series[:levels],
             )
         elseif st === :heatmap
-            return UnicodePlots.heatmap(series[:z].surf; fix_ar = _up_fix_ar[], kw...)
+            return UnicodePlots.heatmap(series[:z].surf; fix_ar = fix_ar, kw...)
             # zlim = collect(axis_limits(sp, :z))
         end
     end
