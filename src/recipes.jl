@@ -1037,6 +1037,8 @@ export lens!
         throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
     end
     sp = plt.subplots[sp_index]
+    xscale = sp[:xaxis][:scale]
+    yscale = sp[:yaxis][:scale]
     xl1, xl2 = xlims(sp)
     bbx1 = xl1 + left(inset_bbox).value * (xl2 - xl1)
     bbx2 = bbx1 + width(inset_bbox).value * (xl2 - xl1)
@@ -1046,8 +1048,8 @@ export lens!
     bbx = bbx1 + width(inset_bbox).value * (xl2 - xl1) / 2 * (sp[:xaxis][:flip] ? -1 : 1)
     bby = bby1 + height(inset_bbox).value * (yl2 - yl1) / 2 * (sp[:yaxis][:flip] ? -1 : 1)
     lens_index = last(plt.subplots)[:subplot_index] + 1
-    x1, x2 = plotattributes[:x]
-    y1, y2 = plotattributes[:y]
+    x1, x2 = RecipesPipeline.inverse_scale_func(xscale).(plotattributes[:x])
+    y1, y2 = RecipesPipeline.inverse_scale_func(yscale).(plotattributes[:y])
     backup = copy(plotattributes)
     empty!(plotattributes)
 
@@ -1072,8 +1074,8 @@ export lens!
         @series begin
             primary := false
             subplot := sp_index
-            x := [xi_mag, xi_lens]
-            y := [yi_mag, yi_lens]
+            x := RecipesPipeline.scale_func(xscale).([xi_mag, xi_lens])
+            y := RecipesPipeline.scale_func(yscale).([yi_mag, yi_lens])
             ()
         end
     end
@@ -1081,8 +1083,8 @@ export lens!
     @series begin
         primary := false
         subplot := sp_index
-        x := [x1, x1, x2, x2, x1]
-        y := [y1, y2, y2, y1, y1]
+        x := RecipesPipeline.scale_func(xscale).([x1, x1, x2, x2, x1])
+        y := RecipesPipeline.scale_func(yscale).([y1, y2, y2, y1, y1])
         ()
     end
     # add subplot
@@ -1091,8 +1093,8 @@ export lens!
             plotattributes = merge(backup, copy(series.plotattributes))
             subplot := lens_index
             primary := false
-            xlims := (x1, x2)
-            ylims := (y1, y2)
+            xlims := RecipesPipeline.scale_func(xscale).((x1, x2))
+            ylims := RecipesPipeline.scale_func(yscale).((y1, y2))
             ()
         end
     end
