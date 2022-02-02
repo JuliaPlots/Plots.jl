@@ -249,15 +249,6 @@ end
         @test show(io, p) isa Nothing
     end
 
-    @testset "PlotlyJS" begin
-        @test plotlyjs() == Plots.PlotlyJSBackend()
-        @test backend() == Plots.PlotlyJSBackend()
-
-        p = plot(rand(10))
-        @test p isa Plots.Plot
-        @test_broken display(p) isa Nothing
-    end
-
     @testset "GR" begin
         ENV["PLOTS_TEST"] = "true"
         ENV["GKSwstype"] = "100"
@@ -273,5 +264,14 @@ end
                 skip = Plots._backend_skips[:gr],
             )
         end
+    end
+
+    @testset "PlotlyJS" begin
+        @test plotlyjs() == Plots.PlotlyJSBackend()
+        @test backend() == Plots.PlotlyJSBackend()
+
+        p = plot(rand(10))
+        @test p isa Plots.Plot
+        @test_broken display(p) isa Nothing
     end
 end
