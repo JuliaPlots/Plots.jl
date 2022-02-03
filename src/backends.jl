@@ -948,7 +948,7 @@ const _unicodeplots_seriestype = [
     :spy,
     :surface,
     :wireframe,
-    # :mesh3d,
+    :mesh3d,
 ]
 const _unicodeplots_style = [:auto, :solid]
 const _unicodeplots_marker = [

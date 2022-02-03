@@ -90,8 +90,10 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             ylim = ylim,
             # 3d
             projection = plot_3d ? :orthographic : nothing,
-            azimuth = -50,
             up = sp[:zaxis][:flip] ? :mz : :pz,
+            # PyPlot: azimuth = -60 & elevation = 30
+            azimuth = -45,
+            elevation = 30,
         )
 
         o = UnicodePlots.Plot(x, y, plot_3d ? z : nothing, _canvas_map[canvas]; kw...)
@@ -173,20 +175,25 @@ function addUnicodeSeries!(
         elseif st === :heatmap
             return UnicodePlots.heatmap(Array(series[:z]); fix_ar = fix_ar, kw...)
         end
-    elseif st in (:wireframe, :surface)  # 3D
+    elseif st in (:surface, :wireframe)  # 3D
         colormap = get(series[:extra_kwargs], :colormap, :none)
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
             colormap = colormap === :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
-            color = st === :wireframe ? up_color(get_linecolor(series, 1)) : nothing
+            color = st === :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
+            lines = st === :wireframe,
         )
         return UnicodePlots.surfaceplot(x, y, Array(series[:z]); kw...)
+    elseif st === :mesh3d
+        return UnicodePlots.lineplot!(
+            up, mesh3d_triangles(x, y, series[:z], series[:connections])...
+        )
     end
 
     # now use the ! functions to add to the plot
-    if st in (:path, :path3d, :straightline, :shape)
+    if st in (:path, :path3d, :straightline, :shape, :mesh3d)
         func = UnicodePlots.lineplot!
         series_kw = (; head_tail = series[:arrow] isa Arrow ? series[:arrow].side : nothing)
     elseif st in (:scatter, :scatter3d) || series[:markershape] !== :none

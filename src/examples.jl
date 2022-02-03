@@ -1310,7 +1310,6 @@ _backend_skips = Dict(
         37,  # ribbons / filled unsupported
         43,  # heatmap with DateTime
         45,  # error bars
-        47,  # mesh3D unsupported
         49,  # polar heatmap
         51,  # embedded images unsupported
         55,  # mirror unsupported, resolution too low
