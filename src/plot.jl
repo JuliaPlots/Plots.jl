@@ -163,7 +163,7 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
             cmdidx += 1
         end
     end
-    _add_plot_title!(plt)
+    _add_plot_title!(plt, plotattributes)
 
     # first apply any args for the subplots
     for (idx, sp) in enumerate(plt.subplots)

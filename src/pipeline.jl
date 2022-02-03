@@ -266,7 +266,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         sp_attrs[sp] = attr
     end
 
-    _add_plot_title!(plt)
+    _add_plot_title!(plt, plotattributes)
     # override subplot/axis args.  `sp_attrs` take precendence
     for (idx, sp) in enumerate(plt.subplots)
         attr = if !haskey(plotattributes, :subplot) || plotattributes[:subplot] == idx
@@ -287,7 +287,7 @@ function series_idx(kw_list::AVec{KW}, kw::AKW)
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
 end
 
-function _add_plot_title!(plt)
+function _add_plot_title!(plt, plotattributes)
     plot_title = plt[:plot_title]
 
     if plot_title != ""
@@ -308,6 +308,9 @@ function _add_plot_title!(plt)
             plt[:plot_titleindex] = subplot[:subplot_index]
             subplot[:framestyle] = :none
             subplot[:margin] = 0px
+            # prevents propagation (see JuliaPlots/Plots.jl/issues/4083)
+            pop!(plotattributes, :framestyle, nothing)
+            pop!(plotattributes, :margin, nothing)
             push!(plt.subplots, subplot)
         end
 

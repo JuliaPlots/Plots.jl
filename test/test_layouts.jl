@@ -25,3 +25,8 @@ end
     @test pl[:plot_title] == "My new title"
     @test pl[:plot_titleindex] == 5
 end
+
+@testset "Plots.jl/issues/4083" begin
+    p = plot(plot(1:2), plot(1:2); border = :grid, plot_title = "abc")
+    @test p.subplots[end][:framestyle] === :none
+end
