@@ -642,31 +642,55 @@ function axis_limits(
         !has_user_lims &&
         consider_aspect &&
         letter in (:x, :y) &&
-        !(sp[:aspect_ratio] in (:none, :auto) || RecipesPipeline.is3d(:sp))
+        sp[:aspect_ratio] in (:none, :auto)
     )
-        aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
-        plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
-        dist = amax - amin
+        if !RecipesPipeline.is3d(:sp)
+            aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
+            plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
+            dist = amax - amin
 
-        if letter == :x
-            yamin, yamax = axis_limits(sp, :y, default_should_widen(sp[:yaxis]), false)
-            ydist = yamax - yamin
-            axis_ratio = aspect_ratio * ydist / dist
-            factor = axis_ratio / plot_ratio
+            if letter == :x
+                yamin, yamax = axis_limits(sp, :y, default_should_widen(sp[:yaxis]), false)
+                ydist = yamax - yamin
+                axis_ratio = aspect_ratio * ydist / dist
+                factor = axis_ratio / plot_ratio
+            else
+                xamin, xamax = axis_limits(sp, :x, default_should_widen(sp[:xaxis]), false)
+                xdist = xamax - xamin
+                axis_ratio = aspect_ratio * dist / xdist
+                factor = plot_ratio / axis_ratio
+            end
+
+            if factor > 1
+                center = (amin + amax) / 2
+                amin = center + factor * (amin - center)
+                amax = center + factor * (amax - center)
+            end
         else
-            xamin, xamax = axis_limits(sp, :x, default_should_widen(sp[:xaxis]), false)
-            xdist = xamax - xamin
-            axis_ratio = aspect_ratio * dist / xdist
-            factor = plot_ratio / axis_ratio
-        end
-
-        if factor > 1
-            center = (amin + amax) / 2
-            amin = center + factor * (amin - center)
-            amax = center + factor * (amax - center)
         end
     end
-
+    if RecipesPipeline.is3d(:sp)
+        xs = sp[1][:x]
+        ys = sp[1][:y]
+        zs = sp[1][:z]
+        x12, y12, z12 = extrema(xs), extrema(ys), extrema(zs)
+        d = maximum([diff([x12...]),diff([y12...]),diff([z12...])])[1] / 2
+        xm, ym, zm = mean(x12),  mean(y12),  mean(z12)
+        amin = if letter == :x
+            xm-d
+        elseif letter == :y
+            ym-d
+        elseif letter ==:z
+            zm-d
+        end
+        amax = if letter == :x
+            xm+d
+        elseif letter == :y
+            ym+d
+        elseif letter ==:z
+            zm+d
+        end
+    end
     return amin, amax
 end
 
