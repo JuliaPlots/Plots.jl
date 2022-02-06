@@ -1342,11 +1342,8 @@ function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
     Base.eval(m, :(using Plots))
     map(exprs -> Base.eval(m, exprs), _examples[idx].exprs)
 
-    plt = current()
-    if disp
-        gui(plt)
-    end
-    plt
+    disp && Base.eval(m, :(gui(current())))
+    current()
 end
 
 # generate all plots and create a dict mapping idx --> plt
