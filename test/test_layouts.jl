@@ -28,5 +28,7 @@ end
 
 @testset "Plots.jl/issues/4083" begin
     p = plot(plot(1:2), plot(1:2); border = :grid, plot_title = "abc")
-    @test p.subplots[end][:framestyle] === :none
+    @test p[1][:framestyle] === :grid
+    @test p[2][:framestyle] === :grid
+    @test p[3][:framestyle] === :none
 end
