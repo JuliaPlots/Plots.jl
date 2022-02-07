@@ -98,7 +98,14 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         o = UnicodePlots.Plot(x, y, plot_3d ? z : nothing, _canvas_map[canvas]; kw...)
         for series in series_list(sp)
-            o = addUnicodeSeries!(sp, o, kw, series, sp[:legend_position] !== :none, plot_3d)
+            o = addUnicodeSeries!(
+                sp,
+                o,
+                kw,
+                series,
+                sp[:legend_position] !== :none,
+                plot_3d,
+            )
         end
 
         for ann in sp[:annotations]
@@ -135,7 +142,7 @@ function addUnicodeSeries!(
     kw,
     series,
     addlegend::Bool,
-    plot_3d::Bool
+    plot_3d::Bool,
 )
     st = series[:seriestype]
 
@@ -188,7 +195,8 @@ function addUnicodeSeries!(
         return UnicodePlots.surfaceplot(x, y, Array(series[:z]); kw...)
     elseif st === :mesh3d
         return UnicodePlots.lineplot!(
-            up, mesh3d_triangles(x, y, series[:z], series[:connections])...
+            up,
+            mesh3d_triangles(x, y, series[:z], series[:connections])...,
         )
     end
 
