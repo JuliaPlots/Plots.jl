@@ -37,19 +37,25 @@ end
     Plots.use_local_dependencies[] = temp
 end
 
-include("test_defaults.jl")
-include("test_pipeline.jl")
-include("test_axes.jl")
-include("test_layouts.jl")
-include("test_contours.jl")
-include("test_axis_letter.jl")
-include("test_components.jl")
-include("test_shorthands.jl")
-include("integration_dates.jl")
-include("test_recipes.jl")
-include("test_hdf5plots.jl")
-include("test_pgfplotsx.jl")
-include("test_plotly.jl")
+for fn in (
+    "test_defaults.jl"
+    "test_pipeline.jl"
+    "test_axes.jl"
+    "test_layouts.jl"
+    "test_contours.jl"
+    "test_axis_letter.jl"
+    "test_components.jl"
+    "test_shorthands.jl"
+    "integration_dates.jl"
+    "test_recipes.jl"
+    "test_hdf5plots.jl"
+    "test_pgfplotsx.jl"
+    "test_plotly.jl"
+)
+    @testset "$fn" begin
+        include(fn)
+    end
+end
 
 reference_dir(args...) =
     joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)

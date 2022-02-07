@@ -163,11 +163,11 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
             cmdidx += 1
         end
     end
-    _add_plot_title!(plt, plotattributes)
+    ttl_idx = _add_plot_title!(plt)
 
     # first apply any args for the subplots
     for (idx, sp) in enumerate(plt.subplots)
-        _update_subplot_args(plt, sp, plotattributes, idx, false)
+        _update_subplot_args(plt, sp, idx == ttl_idx ? KW() : plotattributes, idx, false)
     end
 
     # finish up
