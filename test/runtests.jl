@@ -38,19 +38,19 @@ end
 end
 
 for fn in (
-    "test_defaults.jl"
-    "test_pipeline.jl"
-    "test_axes.jl"
-    "test_layouts.jl"
-    "test_contours.jl"
-    "test_axis_letter.jl"
-    "test_components.jl"
-    "test_shorthands.jl"
-    "integration_dates.jl"
-    "test_recipes.jl"
-    "test_hdf5plots.jl"
-    "test_pgfplotsx.jl"
-    "test_plotly.jl"
+    "test_defaults.jl",
+    "test_pipeline.jl",
+    "test_axes.jl",
+    "test_layouts.jl",
+    "test_contours.jl",
+    "test_axis_letter.jl",
+    "test_components.jl",
+    "test_shorthands.jl",
+    "integration_dates.jl",
+    "test_recipes.jl",
+    "test_hdf5plots.jl",
+    "test_pgfplotsx.jl",
+    "test_plotly.jl",
 )
     @testset "$fn" begin
         include(fn)
