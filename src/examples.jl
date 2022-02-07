@@ -1302,7 +1302,6 @@ _backend_skips = Dict(
         6,  # embedded images unsupported
         16,  # nested layout unsupported
         21,  # custom markers unsupported
-        24,  # 3D unsupported
         26,  # nested layout unsupported
         27,  # polar plots unsupported
         29,  # nested layout unsupported
@@ -1311,12 +1310,9 @@ _backend_skips = Dict(
         37,  # ribbons / filled unsupported
         43,  # heatmap with DateTime
         45,  # error bars
-        47,  # mesh3D unsupported
         49,  # polar heatmap
-        50,  # 3D surface unsupported
         51,  # embedded images unsupported
-        52,  # 3D quiver unsupported
-        55,  # 3D unsupported
+        55,  # mirror unsupported, resolution too low
         56,  # barplots
     ],
     :gaston => [
@@ -1342,11 +1338,8 @@ function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
     Base.eval(m, :(using Plots))
     map(exprs -> Base.eval(m, exprs), _examples[idx].exprs)
 
-    plt = current()
-    if disp
-        gui(plt)
-    end
-    plt
+    disp && Base.eval(m, :(gui(current())))
+    current()
 end
 
 # generate all plots and create a dict mapping idx --> plt

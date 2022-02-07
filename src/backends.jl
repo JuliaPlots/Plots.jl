@@ -914,7 +914,7 @@ const _unicodeplots_attr = merge_with_base_supported([
     :annotations,
     :bins,
     :guide,
-    # :grid,
+    :grid,
     :label,
     :layout,
     :legend,
@@ -928,18 +928,27 @@ const _unicodeplots_attr = merge_with_base_supported([
     :seriesalpha,
     :seriescolor,
     :scale,
+    :flip,
     :title,
+    # :marker_z,
+    :line_z,
 ])
 const _unicodeplots_seriestype = [
     :path,
+    :path3d,
     :scatter,
+    :scatter3d,
     :straightline,
     # :bar,
     :shape,
     :histogram2d,
     :heatmap,
     :contour,
+    # :contour3d,
     :spy,
+    :surface,
+    :wireframe,
+    :mesh3d,
 ]
 const _unicodeplots_style = [:auto, :solid]
 const _unicodeplots_marker = [
@@ -971,9 +980,6 @@ const _unicodeplots_marker = [
     :x,
 ]
 const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
-
-# Additional constants
-const _up_colormap = Ref(:none)
 
 # ------------------------------------------------------------------------------
 # hdf5
