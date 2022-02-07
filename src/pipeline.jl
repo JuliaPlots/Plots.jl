@@ -289,6 +289,7 @@ end
 
 function _add_plot_title!(plt)
     plot_title = plt[:plot_title]
+    plot_titleindex = nothing
 
     if plot_title != ""
         # make new subplot for plot title
@@ -319,7 +320,7 @@ function _add_plot_title!(plt)
         end
     end
 
-    return nothing
+    return plot_titleindex
 end
 
 ## Series recipes
