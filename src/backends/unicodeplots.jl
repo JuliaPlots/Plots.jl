@@ -16,7 +16,6 @@ const _canvas_map = (
 # do all the magic here... build it all at once,
 # since we need to know about all the series at the very beginning
 function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
-    plt.attr[:warn_on_unsupported] = false
     plt.o = UnicodePlots.Plot[]
 
     has_layout = prod(size(plt.layout)) > 1
@@ -25,24 +24,26 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         yaxis = sp[:yaxis]
         xlim = collect(axis_limits(sp, :x))
         ylim = collect(axis_limits(sp, :y))
+        zlim = collect(axis_limits(sp, :z))
         F = float(eltype(xlim))
 
         # We set x/y to have a single point,
         # since we need to create the plot with some data.
         # Since this point is at the bottom left corner of the plot,
         # it should be hidden by consecutive plotting commands.
-        x = F[xlim[1]]
-        y = F[ylim[1]]
+        x = Vector{F}(xlim)
+        y = Vector{F}(ylim)
+        z = Vector{F}(zlim)
 
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
-        canvas = if (up_c = get(sp[:extra_kwargs], :canvas, :auto)) == :auto
+        canvas = if (up_c = get(sp[:extra_kwargs], :canvas, :auto)) === :auto
             isijulia() ? :ascii : :braille
         else
             up_c
         end
 
-        border = if (up_b = get(sp[:extra_kwargs], :border, :auto)) == :auto
+        border = if (up_b = get(sp[:extra_kwargs], :border, :auto)) === :auto
             isijulia() ? :ascii : :solid
         else
             up_b
@@ -52,6 +53,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         width = has_layout && isempty(series_list(sp)) ? 0 : UnicodePlots.DEFAULT_WIDTH[]
         height = UnicodePlots.DEFAULT_HEIGHT[]
 
+        plot_3d = is3d(sp)
         blend = get(sp[:extra_kwargs], :blend, true)
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
@@ -70,6 +72,8 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         grid &= !(quiver || contour)
         blend &= !(quiver || contour)
 
+        plot_3d && (xlim = ylim = (0, 0))  # determined using projection
+
         kw = (
             compact = true,
             title = texmath2unicode(sp[:title]),
@@ -84,11 +88,24 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             border = border,
             xlim = xlim,
             ylim = ylim,
+            # 3d
+            projection = plot_3d ? :orthographic : nothing,
+            up = sp[:zaxis][:flip] ? :mz : :pz,
+            # PyPlot: azimuth = -60 & elevation = 30
+            azimuth = -45,
+            elevation = 30,
         )
 
-        o = UnicodePlots.Plot(x, y, _canvas_map[canvas]; kw...)
+        o = UnicodePlots.Plot(x, y, plot_3d ? z : nothing, _canvas_map[canvas]; kw...)
         for series in series_list(sp)
-            o = addUnicodeSeries!(sp, o, kw, series, sp[:legend_position] != :none)
+            o = addUnicodeSeries!(
+                sp,
+                o,
+                kw,
+                series,
+                sp[:legend_position] !== :none,
+                plot_3d,
+            )
         end
 
         for ann in sp[:annotations]
@@ -125,6 +142,7 @@ function addUnicodeSeries!(
     kw,
     series,
     addlegend::Bool,
+    plot_3d::Bool,
 )
     st = series[:seriestype]
 
@@ -134,7 +152,7 @@ function addUnicodeSeries!(
     elseif st === :shape
         shape_data(series)
     else
-        float(series[:x]), float(series[:y])
+        series[:x], series[:y]
     end
 
     # special handling (src/interface)
@@ -142,12 +160,13 @@ function addUnicodeSeries!(
     if st === :histogram2d
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st === :spy
-        return UnicodePlots.spy(series[:z].surf; fix_ar = fix_ar, kw...)
-    elseif st in (:contour, :heatmap)
+        return UnicodePlots.spy(Array(series[:z]); fix_ar = fix_ar, kw...)
+    elseif st in (:contour, :heatmap)  # 2D
+        colormap = get(series[:extra_kwargs], :colormap, :none)
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
-            colormap = (cm = _up_colormap[] === :none) ? up_cmap(series) : cm,
+            colormap = colormap === :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
         )
         if st === :contour
@@ -156,21 +175,36 @@ function addUnicodeSeries!(
             return UnicodePlots.contourplot(
                 x,
                 y,
-                series[:z].surf;
+                Array(series[:z]);
                 kw...,
                 levels = series[:levels],
             )
         elseif st === :heatmap
-            return UnicodePlots.heatmap(series[:z].surf; fix_ar = fix_ar, kw...)
-            # zlim = collect(axis_limits(sp, :z))
+            return UnicodePlots.heatmap(Array(series[:z]); fix_ar = fix_ar, kw...)
         end
+    elseif st in (:surface, :wireframe)  # 3D
+        colormap = get(series[:extra_kwargs], :colormap, :none)
+        kw = (
+            kw...,
+            zlabel = sp[:colorbar_title],
+            colormap = colormap === :none ? up_cmap(series) : colormap,
+            colorbar = hascolorbar(sp),
+            color = st === :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
+            lines = st === :wireframe,
+        )
+        return UnicodePlots.surfaceplot(x, y, Array(series[:z]); kw...)
+    elseif st === :mesh3d
+        return UnicodePlots.lineplot!(
+            up,
+            mesh3d_triangles(x, y, series[:z], series[:connections])...,
+        )
     end
 
     # now use the ! functions to add to the plot
-    if st in (:path, :straightline, :shape)
+    if st in (:path, :path3d, :straightline, :shape, :mesh3d)
         func = UnicodePlots.lineplot!
         series_kw = (; head_tail = series[:arrow] isa Arrow ? series[:arrow].side : nothing)
-    elseif st === :scatter || series[:markershape] != :none
+    elseif st in (:scatter, :scatter3d) || series[:markershape] !== :none
         func = UnicodePlots.scatterplot!
         series_kw = (; marker = series[:markershape])
     else
@@ -185,7 +219,8 @@ function addUnicodeSeries!(
         up = func(
             up,
             x[rng],
-            y[rng];
+            y[rng],
+            plot_3d ? series[:z][rng] : nothing;
             color = up_color(lc),
             name = n == 1 ? label : "",
             series_kw...,

@@ -1302,7 +1302,6 @@ _backend_skips = Dict(
         6,  # embedded images unsupported
         16,  # nested layout unsupported
         21,  # custom markers unsupported
-        24,  # 3D unsupported
         26,  # nested layout unsupported
         27,  # polar plots unsupported
         29,  # nested layout unsupported
@@ -1311,12 +1310,9 @@ _backend_skips = Dict(
         37,  # ribbons / filled unsupported
         43,  # heatmap with DateTime
         45,  # error bars
-        47,  # mesh3D unsupported
         49,  # polar heatmap
-        50,  # 3D surface unsupported
         51,  # embedded images unsupported
-        52,  # 3D quiver unsupported
-        55,  # 3D unsupported
+        55,  # mirror unsupported, resolution too low
         56,  # barplots
     ],
     :gaston => [
