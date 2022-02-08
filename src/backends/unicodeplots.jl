@@ -73,6 +73,8 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         blend &= !(quiver || contour)
 
         plot_3d && (xlim = ylim = (0, 0))  # determined using projection
+        azimuth, elevation = sp[:camera]  # PyPlot: azimuth = -60 & elevation = 30
+        projection = plot_3d ? get(sp[:extra_kwargs], :projection, :orthographic) : nothing
 
         kw = (
             compact = true,
@@ -89,11 +91,10 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             xlim = xlim,
             ylim = ylim,
             # 3d
-            projection = plot_3d ? :orthographic : nothing,
-            up = sp[:zaxis][:flip] ? :mz : :pz,
-            # PyPlot: azimuth = -60 & elevation = 30
-            azimuth = -45,
-            elevation = 30,
+            projection = projection,
+            elevation = elevation,
+            azimuth = azimuth,
+            up = get(sp[:extra_kwargs], :up, :z),
         )
 
         o = UnicodePlots.Plot(x, y, plot_3d ? z : nothing, _canvas_map[canvas]; kw...)
@@ -184,13 +185,16 @@ function addUnicodeSeries!(
         end
     elseif st in (:surface, :wireframe)  # 3D
         colormap = get(series[:extra_kwargs], :colormap, :none)
+        lines = get(series[:extra_kwargs], :lines, st === :wireframe)
+        zscale = get(series[:extra_kwargs], :zscale, :identity)
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
             colormap = colormap === :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
             color = st === :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
-            lines = st === :wireframe,
+            zscale = zscale,
+            lines = lines,
         )
         return UnicodePlots.surfaceplot(x, y, Array(series[:z]); kw...)
     elseif st === :mesh3d
