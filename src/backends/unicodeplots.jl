@@ -265,7 +265,12 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
     elseif Sys.islinux()
         run(`clear`)
         gui(plt)
-        run(`import -window $(ENV["WINDOWID"]) $fn`)
+        win = if "WINDOWID" in keys(ENV)
+            ENV["WINDOWID"]
+        else
+            readchomp(`xdotool getactivewindow`)
+        end
+        run(`import -window $win $fn`)
         return
     end
 
