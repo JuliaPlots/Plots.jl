@@ -20,6 +20,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
     has_layout = prod(size(plt.layout)) > 1
     for sp in plt.subplots
+        sp_kw = sp[:extra_kwargs]
         xaxis = sp[:xaxis]
         yaxis = sp[:yaxis]
         xlim = collect(axis_limits(sp, :x))
@@ -37,13 +38,13 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
-        canvas = if (up_c = get(sp[:extra_kwargs], :canvas, :auto)) === :auto
+        canvas = if (up_c = get(sp_kw, :canvas, :auto)) === :auto
             isijulia() ? :ascii : :braille
         else
             up_c
         end
 
-        border = if (up_b = get(sp[:extra_kwargs], :border, :auto)) === :auto
+        border = if (up_b = get(sp_kw, :border, :auto)) === :auto
             isijulia() ? :ascii : :solid
         else
             up_b
@@ -54,7 +55,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         height = UnicodePlots.DEFAULT_HEIGHT[]
 
         plot_3d = is3d(sp)
-        blend = get(sp[:extra_kwargs], :blend, true)
+        blend = get(sp_kw, :blend, true)
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
         for series in series_list(sp)
@@ -74,7 +75,7 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
 
         plot_3d && (xlim = ylim = (0, 0))  # determined using projection
         azimuth, elevation = sp[:camera]  # PyPlot: azimuth = -60 & elevation = 30
-        projection = plot_3d ? get(sp[:extra_kwargs], :projection, :orthographic) : nothing
+        projection = plot_3d ? get(sp_kw, :projection, :orthographic) : nothing
 
         kw = (
             compact = true,
@@ -94,7 +95,8 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
             projection = projection,
             elevation = elevation,
             azimuth = azimuth,
-            up = get(sp[:extra_kwargs], :up, :z),
+            zoom = get(sp_kw, :zoom, 1),
+            up = get(sp_kw, :up, :z),
         )
 
         o = UnicodePlots.Plot(x, y, plot_3d ? z : nothing, _canvas_map[canvas]; kw...)
@@ -146,6 +148,7 @@ function addUnicodeSeries!(
     plot_3d::Bool,
 )
     st = series[:seriestype]
+    se_kw = series[:extra_kwargs]
 
     # get the series data and label
     x, y = if st === :straightline
@@ -157,13 +160,13 @@ function addUnicodeSeries!(
     end
 
     # special handling (src/interface)
-    fix_ar = get(series[:extra_kwargs], :fix_ar, true)
+    fix_ar = get(se_kw, :fix_ar, true)
     if st === :histogram2d
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st === :spy
         return UnicodePlots.spy(Array(series[:z]); fix_ar = fix_ar, kw...)
     elseif st in (:contour, :heatmap)  # 2D
-        colormap = get(series[:extra_kwargs], :colormap, :none)
+        colormap = get(se_kw, :colormap, :none)
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
@@ -184,9 +187,9 @@ function addUnicodeSeries!(
             return UnicodePlots.heatmap(Array(series[:z]); fix_ar = fix_ar, kw...)
         end
     elseif st in (:surface, :wireframe)  # 3D
-        colormap = get(series[:extra_kwargs], :colormap, :none)
-        lines = get(series[:extra_kwargs], :lines, st === :wireframe)
-        zscale = get(series[:extra_kwargs], :zscale, :identity)
+        colormap = get(se_kw, :colormap, :none)
+        lines = get(se_kw, :lines, st === :wireframe)
+        zscale = get(se_kw, :zscale, :identity)
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
