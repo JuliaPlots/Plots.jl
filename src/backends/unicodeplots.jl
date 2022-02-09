@@ -17,6 +17,9 @@ const _canvas_map = (
 # since we need to know about all the series at the very beginning
 function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
     plt.o = UnicodePlots.Plot[]
+    
+    up_width = UnicodePlots.DEFAULT_WIDTH[]
+    up_height = UnicodePlots.DEFAULT_HEIGHT[]
 
     has_layout = prod(size(plt.layout)) > 1
     for sp in plt.subplots
@@ -51,8 +54,8 @@ function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
         end
 
         # blank plots will not be shown
-        width = has_layout && isempty(series_list(sp)) ? 0 : UnicodePlots.DEFAULT_WIDTH[]
-        height = UnicodePlots.DEFAULT_HEIGHT[]
+        width = has_layout && isempty(series_list(sp)) ? 0 : get(sp_kw, :width, up_width)
+        height = get(sp_kw, :height, up_height)
 
         plot_3d = is3d(sp)
         blend = get(sp_kw, :blend, true)
