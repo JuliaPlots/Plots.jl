@@ -32,7 +32,7 @@ jobs:
           if out == ""
               exit(0)
           else
-              @error "Some files have not been formatted !!!"
+              @error "These files have not been formatted:\n$out"
               write(stdout, out)
               exit(1)
           end'
