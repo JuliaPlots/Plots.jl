@@ -76,6 +76,11 @@ end # testset
     @test p[1][:legend_background_color] == RGBA{Float64}(0.0, 1.0, 1.0, 1.0)
     @test p[1][:legend_foreground_color] == RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
 
+    #remember settings
+    plot(legend_font_pointsize = 20)
+    sp = plot!(label = "R")[1]
+    @test Plots.legendfont(sp).pointsize == 20
+
     #setting whole font
     sp = plot(
         1:5,

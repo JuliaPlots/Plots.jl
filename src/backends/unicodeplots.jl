@@ -17,7 +17,7 @@ const _canvas_map = (
 # since we need to know about all the series at the very beginning
 function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
     plt.o = UnicodePlots.Plot[]
-    
+
     up_width = UnicodePlots.DEFAULT_WIDTH[]
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
 
