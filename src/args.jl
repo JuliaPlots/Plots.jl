@@ -1059,13 +1059,13 @@ end
 
 """
 `default(key)` returns the current default value for that key.
-    
+
 `default(key, value)` sets the current default value for that key.
-    
+
 `default(; kw...)` will set the current default value for each key/value pair.
-    
+
 `default(plotattributes, key)` returns the key from plotattributes if it exists, otherwise `default(key)`.
-    
+
 """
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
@@ -1968,6 +1968,8 @@ function _update_subplot_legend(sp::Subplot, plotattributes_in)
                 haskey(_match_map, lk) ? sp[lk] :
                 haskey(plotattributes_in, :legend_font) ?
                 getproperty(plotattributes_in[:legend_font], k) :
+                haskey(sp.attr, :legend_font) ?
+                getproperty(sp.attr[:legend_font], k) :
                 default(plotattributes_in, lk)
         ) for k in (:family, :pointsize, :valign, :halign, :rotation, :color)
     )
