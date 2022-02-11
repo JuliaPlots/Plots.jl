@@ -1961,6 +1961,7 @@ function _update_subplot_legend(sp::Subplot, plotattributes_in)
         k in (:family, :pointsize, :valign, :halign, :rotation, :color) if
         haskey(plotattributes_in, Symbol(:legend_font_, k))
     )
+    #! format: off
     match_attr = NamedTuple(
         (
             lk = Symbol(:legend_font_, k);
@@ -1973,6 +1974,7 @@ function _update_subplot_legend(sp::Subplot, plotattributes_in)
                 default(plotattributes_in, lk)
         ) for k in (:family, :pointsize, :valign, :halign, :rotation, :color)
     )
+    #! format: on
     sp.attr[:legend_font] = font(; merge(match_attr, f_attr)...)
 end
 
