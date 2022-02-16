@@ -4,7 +4,7 @@
 
 #### Primary author: Patrick Kofod Mogensen (@pkofod)
 
-PlotThemes is a package to spice up the plots made with [Plots.jl](https://github.com/tbreloff/Plots.jl). To install:
+PlotThemes is a package to spice up the plots made with [Plots.jl](https://github.com/JuliaPlots/Plots.jl). To install:
 
 ```julia
 Pkg.add("PlotThemes")
@@ -38,7 +38,7 @@ When using Plots, a theme can be set using the `theme` function:
 using Plots
 theme(thm::Symbol; kwargs...)
 ```
-`theme` accepts any Plots [attribute](http://docs.juliaplots.org/attributes/) as keyword argument and sets its value as default for subsequent plots.
+`theme` accepts any Plots [attribute](https://docs.juliaplots.org/stable/attributes/) as keyword argument and sets its value as default for subsequent plots.
 
 Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 
@@ -97,7 +97,7 @@ Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 ![theme_dracula](https://user-images.githubusercontent.com/64332767/136754217-31d4348a-c873-4496-8b66-905e4d8a7e36.png)
 
 ## Contributing
-A theme specifies default values for different Plots [attributes](http://docs.juliaplots.org/attributes/).
+A theme specifies default values for different Plots [attributes](https://docs.juliaplots.org/stable/attributes/).
 At the moment these are typically colors, palettes and colorgradients, but any Plots attribute can be controlled by a theme in general.
 PRs for new themes very welcome! Adding a new theme (e.g. `mytheme`) is as easy as adding a new file (mytheme.jl) that contains at least the following line:
 ```julia
