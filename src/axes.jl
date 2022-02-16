@@ -677,7 +677,6 @@ end
 # we return (continuous_value, discrete_index)
 function discrete_value!(axis::Axis, dv)
     cv_idx = get(axis[:discrete_map], dv, -1)
-    # @show axis[:discrete_map], axis[:discrete_values], dv
     if cv_idx == -1
         ex = axis[:extrema]
         cv = NaNMath.max(0.5, ex.emax + 1.0)

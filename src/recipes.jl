@@ -1380,7 +1380,8 @@ function clamp_greys!(mat::AMat{<:Gray})
 end
 
 @recipe function f(mat::AMat{<:Gray})
-    n, m = axes(mat)
+    n, m = map(a -> range(0.5, stop = a.stop + 0.5), axes(mat))
+
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
@@ -1398,7 +1399,7 @@ end
 
 # images - colors
 @recipe function f(mat::AMat{T}) where {T<:Colorant}
-    n, m = axes(mat)
+    n, m = map(a -> range(0.5, stop = a.stop + 0.5), axes(mat))
 
     if is_seriestype_supported(:image)
         seriestype := :image

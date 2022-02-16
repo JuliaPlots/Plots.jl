@@ -849,7 +849,6 @@ const _examples = PlotExample[
         [
             quote
                 begin
-                    using Plots
                     default(
                         titlefont = (20, "times"),
                         legendfontsize = 18,
@@ -1071,7 +1070,6 @@ const _examples = PlotExample[
         "",
         [
             quote
-                using Plots
                 using TestImages
                 img = testimage("lighthouse")
 
@@ -1092,8 +1090,6 @@ const _examples = PlotExample[
         "3d quiver",
         "",
         [quote
-            using Plots
-
             ϕs = range(-π, π, length = 50)
             θs = range(0, π, length = 25)
             θqs = range(1, π - 1, length = 25)
