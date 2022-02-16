@@ -2,74 +2,65 @@
 defaultOutputFormat(plt::Plot) = "png"
 
 function png(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "png")
-    io = open(fn, "w")
-    show(io, MIME("image/png"), plt)
-    close(io)
+    open(addExtension(fn, "png"), "w") do io
+        show(io, MIME("image/png"), plt)
+    end
 end
 png(fn::AbstractString) = png(current(), fn)
 
 function svg(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "svg")
-    io = open(fn, "w")
-    show(io, MIME("image/svg+xml"), plt)
-    close(io)
+    open(addExtension(fn, "svg"), "w") do io
+        show(io, MIME("image/svg+xml"), plt)
+    end
 end
 svg(fn::AbstractString) = svg(current(), fn)
 
 function pdf(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "pdf")
-    io = open(fn, "w")
-    show(io, MIME("application/pdf"), plt)
-    close(io)
+    open(addExtension(fn, "pdf"), "w") do io
+        show(io, MIME("application/pdf"), plt)
+    end
 end
 pdf(fn::AbstractString) = pdf(current(), fn)
 
 function ps(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "ps")
-    io = open(fn, "w")
-    show(io, MIME("application/postscript"), plt)
-    close(io)
+    open(addExtension(fn, "ps"), "w") do io
+        show(io, MIME("application/postscript"), plt)
+    end
 end
 ps(fn::AbstractString) = ps(current(), fn)
 
 function eps(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "eps")
-    io = open(fn, "w")
-    show(io, MIME("image/eps"), plt)
-    close(io)
+    open(addExtension(fn, "eps"), "w") do io
+        show(io, MIME("image/eps"), plt)
+    end
 end
 eps(fn::AbstractString) = eps(current(), fn)
 
 function tex(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "tex")
-    io = open(fn, "w")
-    show(io, MIME("application/x-tex"), plt)
-    close(io)
+    open(addExtension(fn, "tex"), "w") do io
+        show(io, MIME("application/x-tex"), plt)
+    end
 end
 tex(fn::AbstractString) = tex(current(), fn)
 
 function json(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "json")
-    io = open(fn, "w")
-    show(io, MIME("application/vnd.plotly.v1+json"), plt)
-    close(io)
+    open(addExtension(fn, "json"), "w") do io
+        show(io, MIME("application/vnd.plotly.v1+json"), plt)
+    end
 end
 json(fn::AbstractString) = json(current(), fn)
 
 function html(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "html")
-    io = open(fn, "w")
-    show(io, MIME("text/html"), plt)
-    close(io)
+    open(addExtension(fn, "html"), "w") do io
+        show(io, MIME("text/html"), plt)
+    end
 end
 html(fn::AbstractString) = html(current(), fn)
 
-function txt(plt::Plot, fn::AbstractString)
-    fn = addExtension(fn, "txt")
-    io = open(fn, "w")
-    show(io, MIME("text/plain"), plt)
-    close(io)
+function txt(plt::Plot, fn::AbstractString; color::Bool = true)
+    open(addExtension(fn, "txt"), "w") do io
+        show(IOContext(io, :color => color), MIME("text/plain"), plt)
+    end
 end
 txt(fn::AbstractString) = txt(current(), fn)
 
