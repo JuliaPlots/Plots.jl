@@ -1748,15 +1748,17 @@ function slice_arg!(
     remove_pair::Bool,
 )
     v = get(plotattributes_in, k, plotattributes_out[k])
-    plotattributes_out[k] =
-        if haskey(plotattributes_in, k) &&
-           typeof(v) <: AMat &&
-           !isempty(v) &&
-           !(k in _plot_args)
+    plotattributes_out[k] = if haskey(plotattributes_in, k) && !(k in _plot_args)
+        if typeof(v) <: AMat && !isempty(v)
             slice_arg(v, idx)
+        elseif typeof(v) <: NTuple{2,AMat}
+            (slice_arg(v[1], idx), slice_arg(v[2], idx))
         else
             v
         end
+    else
+        v
+    end
     if remove_pair
         RecipesPipeline.reset_kw!(plotattributes_in, k)
     end

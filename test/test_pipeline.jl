@@ -32,5 +32,7 @@ end
             @test plot(data4; NamedTuple{tuple(attribute)}(Ref(mat))...)[1][i][attribute] ==
                   [2(i - 1) + 1, 2i]
         end
+        @test plot(data4, ribbon = (mat, mat))[1][i][:ribbon] ==
+              ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
     end
 end
