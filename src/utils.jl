@@ -417,7 +417,7 @@ ok(tup::Tuple) = ok(tup...)
 function make_fillrange_side(y::AVec, rib)
     frs = zeros(axes(y))
     for (i, yi) in pairs(y)
-        frs[i] = yi + _cycle(rib, i)
+        frs[i] = yi .+ _cycle(rib, i)
     end
     frs
 end
