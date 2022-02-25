@@ -95,7 +95,7 @@ end # testset
     @test Plots.legendfont(sp).color == sp[:foreground_color_subplot]
 
     # magic invocation
-    @test_nowarn sp = plot(;legendfont = 12)[1]
+    @test_nowarn sp = plot(; legendfont = 12)[1]
     @test sp[:legend_font_pointsize] == 12
     @test Plots.legendfont(sp).pointsize == 12
 end # testset

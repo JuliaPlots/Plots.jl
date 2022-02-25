@@ -1496,7 +1496,8 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
 
     # fonts
-    for fontname in (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
+    for fontname in
+        (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
