@@ -1347,7 +1347,12 @@ function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
     T = typeof(arg)
     if T <: Font
         plotattributes[Symbol(fontname, :family)] = arg.family
-        plotattributes[Symbol(fontname, :size)] = arg.pointsize
+        # TODO: this is neccessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
+        if in(Symbol(fontname, :size), _all_args)
+            plotattributes[Symbol(fontname, :size)] = arg.pointsize
+        else
+            plotattributes[Symbol(fontname, :_pointsize)] = arg.pointsize
+        end
         plotattributes[Symbol(fontname, :halign)] = arg.halign
         plotattributes[Symbol(fontname, :valign)] = arg.valign
         plotattributes[Symbol(fontname, :rotation)] = arg.rotation
@@ -1368,7 +1373,11 @@ function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
             plotattributes[Symbol(fontname, :family)] = string(arg)
         end
     elseif typeof(arg) <: Integer
-        plotattributes[Symbol(fontname, :size)] = arg
+        if in(Symbol(fontname, :size), _all_args)
+            plotattributes[Symbol(fontname, :size)] = arg
+        else
+            plotattributes[Symbol(fontname, :_pointsize)] = arg
+        end
     elseif typeof(arg) <: Real
         plotattributes[Symbol(fontname, :rotation)] = convert(Float64, arg)
     else
@@ -1487,7 +1496,8 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
 
     # fonts
-    for fontname in (:titlefont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
+    for fontname in
+        (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
@@ -1955,29 +1965,6 @@ function _update_subplot_colors(sp::Subplot)
     color_or_nothing!(sp.attr, :legend_foreground_color)
     color_or_nothing!(sp.attr, :foreground_color_title)
     return
-end
-
-function _update_subplot_legend(sp::Subplot, plotattributes_in)
-    f_attr = NamedTuple(
-        k => plotattributes_in[Symbol(:legend_font_, k)] for
-        k in (:family, :pointsize, :valign, :halign, :rotation, :color) if
-        haskey(plotattributes_in, Symbol(:legend_font_, k))
-    )
-    #! format: off
-    match_attr = NamedTuple(
-        (
-            lk = Symbol(:legend_font_, k);
-            k =>
-                haskey(_match_map, lk) ? sp[lk] :
-                haskey(plotattributes_in, :legend_font) ?
-                getproperty(plotattributes_in[:legend_font], k) :
-                haskey(sp.attr, :legend_font) ?
-                getproperty(sp.attr[:legend_font], k) :
-                default(plotattributes_in, lk)
-        ) for k in (:family, :pointsize, :valign, :halign, :rotation, :color)
-    )
-    #! format: on
-    sp.attr[:legend_font] = font(; merge(match_attr, f_attr)...)
 end
 
 function _update_axis(

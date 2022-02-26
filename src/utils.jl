@@ -986,7 +986,14 @@ titlefont(sp::Subplot) = font(;
     color = sp[:titlefontcolor],
 )
 
-legendfont(sp::Subplot) = sp[:legend_font]
+legendfont(sp::Subplot) = font(;
+    family = sp[:legend_font_family],
+    pointsize = sp[:legend_font_pointsize],
+    valign = sp[:legend_font_valign],
+    halign = sp[:legend_font_halign],
+    rotation = sp[:legend_font_rotation],
+    color = sp[:legend_font_color],
+)
 
 legendtitlefont(sp::Subplot) = font(;
     family = sp[:legend_title_font_family],
