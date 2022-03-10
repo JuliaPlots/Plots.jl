@@ -13,8 +13,12 @@ const _plots_project = Pkg.Types.read_project(normpath(@__DIR__, "..", "Project.
 const _current_plots_version = _plots_project.version
 const _plots_compats = _plots_project.compat
 function _check_compat(sim::Module)
+    sim_str = string(sim)
+    if !haskey(_plots_compats, sim_str)
+        return nothing
+    end
     be_v = Pkg.Types.read_project(joinpath(Base.pkgdir(sim), "Project.toml")).version
-    be_c = _plots_compats[string(sim)]
+    be_c = _plots_compats[sim_str]
     if isempty(intersect(be_v, be_c.val))
         @warn "$sim $be_v is not compatible with this version of Plots. The declared compatibility is $(be_c.str)."
     end
