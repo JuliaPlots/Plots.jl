@@ -317,7 +317,6 @@ function _initialize_backend(pkg::PlotlyBackend)
     end
 end
 
-
 # ------------------------------------------------------------------------------
 # gr
 
