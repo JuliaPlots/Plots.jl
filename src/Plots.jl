@@ -1,5 +1,7 @@
 module Plots
 
+using Pkg
+
 if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@optlevel"))
     @eval Base.Experimental.@optlevel 1
 end
@@ -7,17 +9,16 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
     @eval Base.Experimental.@max_methods 1
 end
 
-const _current_plots_version = VersionNumber(
-    split(
-        first(
-            filter(
-                line -> occursin("version", line),
-                readlines(normpath(@__DIR__, "..", "Project.toml")),
-            ),
-        ),
-        "\"",
-    )[2],
-)
+const _plots_project = Pkg.Types.read_project(normpath(@__DIR__, "..", "Project.toml"))
+const _current_plots_version = _plots_project.version
+const _plots_compats = _plots_project.compat
+function _check_compat(sim::Module)
+    be_v = Pkg.Types.read_project(joinpath(Base.pkgdir(sim), "Project.toml")).version
+    be_c = _plots_compats[string(sim)]
+    if isempty(intersect(be_v, be_c.val))
+        @warn "$sim $be_v is not compatible with this version of Plots. The declared compatibility is $(be_c.str)."
+    end
+end
 
 using Reexport
 
