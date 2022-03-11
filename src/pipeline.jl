@@ -427,7 +427,16 @@ function _add_the_series(plt, sp, plotattributes)
     warn_on_unsupported(plt.backend, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
-    push!(sp.series_list, series)
+    z_order = plotattributes[:z_order]
+    if z_order == :front
+        push!(sp.series_list, series)
+    elseif z_order == :back
+        pushfirst!(sp.series_list, series)
+    elseif z_order isa Integer
+        insert!(sp.series_list, z_order, series)
+    else
+        @error "Wrong type $(typeof(z_order)) for attribute z_order"
+    end
     _series_added(plt, series)
     _update_subplot_colorbars(sp)
 end
