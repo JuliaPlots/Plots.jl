@@ -300,10 +300,22 @@ function _initialize_backend(pkg::AbstractBackend)
     @eval Main begin
         import $sym
         export $sym
+        Plots._check_compat($sym)
     end
 end
 
 _initialize_backend(pkg::GRBackend) = nothing
+
+function _initialize_backend(pkg::PlotlyBackend)
+    try
+        @eval Main begin
+            import PlotlyBase
+        end
+        _check_compat(PlotlyBase)
+    catch
+        @info "For saving to png with the Plotly backend PlotlyBase has to be installed."
+    end
+end
 
 # ------------------------------------------------------------------------------
 # gr
@@ -422,16 +434,6 @@ is_marker_supported(::GRBackend, shape::Shape) = true
 
 # ------------------------------------------------------------------------------
 # plotly
-
-function _initialize_backend(pkg::PlotlyBackend)
-    try
-        @eval Main begin
-            import PlotlyBase
-        end
-    catch
-        @info "For saving to png with the Plotly backend PlotlyBase has to be installed."
-    end
-end
 
 const _plotly_attr = merge_with_base_supported([
     :annotations,
