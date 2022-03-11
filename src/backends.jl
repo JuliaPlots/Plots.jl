@@ -240,6 +240,7 @@ const _base_supported_args = [
     :discrete_values,
     :projection,
     :show_empty_bins,
+    :z_order,
 ]
 
 function merge_with_base_supported(v::AVec)

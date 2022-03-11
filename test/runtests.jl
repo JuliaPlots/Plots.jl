@@ -38,6 +38,7 @@ end
 end
 
 for fn in (
+    "test_args.jl",
     "test_defaults.jl",
     "test_pipeline.jl",
     "test_axes.jl",
