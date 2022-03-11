@@ -19,8 +19,14 @@ function _check_compat(sim::Module)
     end
     be_v = Pkg.Types.read_project(joinpath(Base.pkgdir(sim), "Project.toml")).version
     be_c = _plots_compats[sim_str]
-    if isempty(intersect(be_v, be_c.val))
-        @warn "$sim $be_v is not compatible with this version of Plots. The declared compatibility is $(be_c.str)."
+    if be_c isa String # julia 1.6
+        if be_v in Pkg.Types.semver_spec(be_c)
+            @warn "$sim $be_v is not compatible with this version of Plots. The declared compatibility is $(be_c)."
+        end
+    else
+        if isempty(intersect(be_v, be_c.val))
+            @warn "$sim $be_v is not compatible with this version of Plots. The declared compatibility is $(be_c.str)."
+        end
     end
 end
 
