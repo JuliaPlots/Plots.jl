@@ -38,7 +38,7 @@ function image_comparison_tests(
 
     # test function
     func = (fn, idx) -> begin
-        eval(:(rng=StableRNG(PLOTS_SEED)))
+        eval(:(rng = StableRNG(PLOTS_SEED)))
         for the_expr in example.exprs
             expr = Expr(:block)
             push!(expr.args, the_expr)
