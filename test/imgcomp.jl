@@ -13,7 +13,6 @@ function replace_rand!(ex::Expr)
 end
 function fix_rand!(ex)
     replace_rand!(ex)
-    pushfirst!(ex.args[1].args, :(rng = StableRNG(PLOTS_SEED)))
 end
 
 function image_comparison_tests(
@@ -39,10 +38,13 @@ function image_comparison_tests(
 
     # test function
     func = (fn, idx) -> begin
-        expr = Expr(:block)
-        append!(expr.args, example.exprs)
-        fix_rand!(expr)
-        eval(expr)
+        eval(:(rng=StableRNG(PLOTS_SEED)))
+        for the_expr in example.exprs
+            expr = Expr(:block)
+            push!(expr.args, the_expr)
+            fix_rand!(expr)
+            eval(expr)
+        end
         png(fn)
     end
 

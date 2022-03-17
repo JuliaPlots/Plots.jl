@@ -1278,7 +1278,7 @@ const _examples = PlotExample[
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [2, 31]
 _backend_skips = Dict(
-    :gr => [],
+    :gr => [30],
     :pyplot => [2, 25, 30, 31, 49, 55, 56],
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55, 56],
     :pgfplotsx => [
