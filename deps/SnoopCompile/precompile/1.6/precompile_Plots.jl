@@ -131,7 +131,6 @@ function _precompile_()
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:marker, :series_annotations, :seriestype), Tuple{Tuple{Int64, Float64, Symbol}, Vector{Any}, Symbol}},typeof(plot!),Plot{PlotlyBackend},StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:marker, :series_annotations, :seriestype), Tuple{Tuple{Int64, Float64, Symbol}, Vector{Any}, Symbol}},typeof(plot!),StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:markersize, :c, :seriestype), Tuple{Int64, Symbol, Symbol}},typeof(plot!),Plot{GRBackend},Vector{Float64}})
-    Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:markersize, :c, :seriestype), Tuple{Int64, Symbol, Symbol}},typeof(plot!),Plot{PlotlyBackend},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:markersize, :c, :seriestype), Tuple{Int64, Symbol, Symbol}},typeof(plot!),Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:seriestype, :inset), Tuple{Symbol, Tuple{Int64, BoundingBox{Tuple{Length{:w, Float64}, Length{:h, Float64}}, Tuple{Length{:w, Float64}, Length{:h, Float64}}}}}},typeof(plot!),Plot{GRBackend},Vector{Int64},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:seriestype, :inset), Tuple{Symbol, Tuple{Int64, BoundingBox{Tuple{Length{:w, Float64}, Length{:h, Float64}}, Tuple{Length{:w, Float64}, Length{:h, Float64}}}}}},typeof(plot!),Plot{PlotlyBackend},Vector{Int64},Vector{Float64}})
@@ -144,7 +143,7 @@ function _precompile_()
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:title,), Tuple{String}},typeof(plot!)})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:w,), Tuple{Int64}},typeof(plot!),Plot{GRBackend},Vector{Float64},Vector{Float64},Vararg{Any, N} where N})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:xgrid,), Tuple{Tuple{Symbol, Symbol, Int64, Symbol, Float64}}},typeof(plot!),Plot{GRBackend}})
-    Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:yaxis, :minorgrid), Tuple{Tuple{String, Symbol}, Bool}},typeof(plot!),Plot{PlotlyBackend}})
+    Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:yaxis, :minorgrid), Tuple{Tuple{String, Symbol}, Bool}},typeof(plot!),Plot{GRBackend}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:yaxis, :minorgrid), Tuple{Tuple{String, Symbol}, Bool}},typeof(plot!)})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:zcolor, :m, :ms, :lab, :seriestype), Tuple{Vector{Float64}, Tuple{Symbol, Float64, Stroke}, Vector{Float64}, String, Symbol}},typeof(plot!),Plot{GRBackend},Vector{Float64}})
     Base.precompile(Tuple{Core.kwftype(typeof(plot!)),NamedTuple{(:zcolor, :m, :ms, :lab, :seriestype), Tuple{Vector{Float64}, Tuple{Symbol, Float64, Stroke}, Vector{Float64}, String, Symbol}},typeof(plot!),Plot{PlotlyBackend},Vector{Float64}})
@@ -218,6 +217,7 @@ function _precompile_()
     Base.precompile(Tuple{Core.kwftype(typeof(plot)),NamedTuple{(:zcolor, :m, :leg, :cbar, :w), Tuple{StepRange{Int64, Int64}, Tuple{Int64, Float64, Symbol, Stroke}, Bool, Bool, Int64}},typeof(plot),Vector{Float64},Vector{Float64},UnitRange{Int64}})
     Base.precompile(Tuple{Core.kwftype(typeof(portfoliocomposition)),Any,typeof(portfoliocomposition),Any,Vararg{Any, N} where N})
     Base.precompile(Tuple{Core.kwftype(typeof(scatter!)),Any,typeof(scatter!),Any})
+    Base.precompile(Tuple{Core.kwftype(typeof(test_examples)),NamedTuple{(:skip, :disp), Tuple{Vector{Int64}, Bool}},typeof(test_examples),Symbol})
     Base.precompile(Tuple{Core.kwftype(typeof(test_examples)),NamedTuple{(:skip,), Tuple{Vector{Int64}}},typeof(test_examples),Symbol})
     Base.precompile(Tuple{Type{GridLayout},Int64,Vararg{Int64, N} where N})
     Base.precompile(Tuple{typeof(RecipesBase.apply_recipe),AbstractDict{Symbol, Any},AbstractVector{OHLC}})
@@ -266,7 +266,6 @@ function _precompile_()
     Base.precompile(Tuple{typeof(_plot!),Plot,Any,Any})
     Base.precompile(Tuple{typeof(_preprocess_barlike),DefaultsDict,Base.OneTo{Int64},Vector{Float64}})
     Base.precompile(Tuple{typeof(_preprocess_binlike),DefaultsDict,StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}},Vector{Float64}})
-    Base.precompile(Tuple{typeof(_replace_markershape),Vector{Symbol}})
     Base.precompile(Tuple{typeof(_update_min_padding!),GridLayout})
     Base.precompile(Tuple{typeof(_update_subplot_args),Plot{GRBackend},Subplot{GRBackend},Dict{Symbol, Any},Int64,Bool})
     Base.precompile(Tuple{typeof(_update_subplot_args),Plot{PlotlyBackend},Subplot{PlotlyBackend},Dict{Symbol, Any},Int64,Bool})
@@ -294,7 +293,6 @@ function _precompile_()
     Base.precompile(Tuple{typeof(get_ticks),Symbol,Vector{Float64},Vector{Any},Tuple{Int64, Float64},Vararg{Any, N} where N})
     Base.precompile(Tuple{typeof(get_ticks),Symbol,Vector{Float64},Vector{Any},Tuple{Int64, Int64},Vararg{Any, N} where N})
     Base.precompile(Tuple{typeof(get_ticks),UnitRange{Int64},Vector{Float64},Vector{Any},Tuple{Float64, Float64},Vararg{Any, N} where N})
-    Base.precompile(Tuple{typeof(get_xy),OHLC{Float64},Int64,Float64})
     Base.precompile(Tuple{typeof(get_xy),Vector{OHLC}})
     Base.precompile(Tuple{typeof(gr_add_legend),Subplot{GRBackend},NamedTuple{(:w, :h, :dy, :leftw, :textw, :rightw, :xoffset, :yoffset, :width_factor), NTuple{9, Float64}},Vector{Float64}})
     Base.precompile(Tuple{typeof(gr_add_legend),Subplot{GRBackend},NamedTuple{(:w, :h, :dy, :leftw, :textw, :rightw, :xoffset, :yoffset, :width_factor), Tuple{Int64, Int64, Int64, Float64, Int64, Float64, Float64, Float64, Float64}},Vector{Float64}})
@@ -303,7 +301,9 @@ function _precompile_()
     Base.precompile(Tuple{typeof(gr_draw_heatmap),Series,Vector{Float64},Vector{Float64},Matrix{Float64},Tuple{Float64, Float64}})
     Base.precompile(Tuple{typeof(gr_draw_marker),Series,Float64,Float64,Tuple{Float64, Float64},Int64,Float64,Float64,Symbol})
     Base.precompile(Tuple{typeof(gr_draw_marker),Series,Float64,Float64,Tuple{Float64, Float64},Int64,Int64,Int64,Shape{Float64, Float64}})
+    Base.precompile(Tuple{typeof(gr_draw_marker),Series,Float64,Float64,Tuple{Float64, Float64},Int64,Int64,Int64,Symbol})
     Base.precompile(Tuple{typeof(gr_draw_marker),Series,Int64,Float64,Tuple{Float64, Float64},Int64,Float64,Int64,Symbol})
+    Base.precompile(Tuple{typeof(gr_draw_marker),Series,Int64,Float64,Tuple{Float64, Float64},Int64,Int64,Int64,Symbol})
     Base.precompile(Tuple{typeof(gr_draw_marker),Series,Int64,Int64,Tuple{Float64, Float64},Int64,Int64,Int64,Symbol})
     Base.precompile(Tuple{typeof(gr_draw_segments),Series,Base.OneTo{Int64},UnitRange{Int64},Tuple{Vector{Float64}, Vector{Float64}},Tuple{Float64, Float64}})
     Base.precompile(Tuple{typeof(gr_draw_segments),Series,Base.OneTo{Int64},Vector{Float64},Int64,Tuple{Float64, Float64}})
@@ -322,6 +322,7 @@ function _precompile_()
     Base.precompile(Tuple{typeof(gr_polyline),Vector{Float64},Vector{Float64},Function})
     Base.precompile(Tuple{typeof(gr_set_gradient),PlotUtils.ContinuousColorGradient})
     Base.precompile(Tuple{typeof(gr_text),Float64,Float64,String})
+    Base.precompile(Tuple{typeof(gr_text_size),String})
     Base.precompile(Tuple{typeof(gr_update_viewport_legend!),Vector{Float64},Subplot{GRBackend},NamedTuple{(:w, :h, :dy, :leftw, :textw, :rightw, :xoffset, :yoffset, :width_factor), NTuple{9, Float64}}})
     Base.precompile(Tuple{typeof(gr_update_viewport_legend!),Vector{Float64},Subplot{GRBackend},NamedTuple{(:w, :h, :dy, :leftw, :textw, :rightw, :xoffset, :yoffset, :width_factor), Tuple{Int64, Int64, Int64, Float64, Int64, Float64, Float64, Float64, Float64}}})
     Base.precompile(Tuple{typeof(gr_viewport_from_bbox),Subplot{GRBackend},BoundingBox{Tuple{AbsoluteLength, AbsoluteLength}, Tuple{AbsoluteLength, AbsoluteLength}},AbsoluteLength,AbsoluteLength,Vector{Float64}})
@@ -332,7 +333,6 @@ function _precompile_()
     Base.precompile(Tuple{typeof(layout_args),Matrix{Any}})
     Base.precompile(Tuple{typeof(layout_args),NamedTuple{(:label, :blank), Tuple{Symbol, Bool}}})
     Base.precompile(Tuple{typeof(layout_args),NamedTuple{(:label, :width, :height), Tuple{Symbol, Symbol, Float64}}})
-    Base.precompile(Tuple{typeof(link_axes!),Axis})
     Base.precompile(Tuple{typeof(make_fillrange_side),UnitRange{Int64},LinRange{Float64}})
     Base.precompile(Tuple{typeof(optimal_ticks_and_labels),Nothing,Tuple{Float64, Float64},Symbol,Function})
     Base.precompile(Tuple{typeof(optimal_ticks_and_labels),Nothing,Tuple{Float64, Float64},Symbol,Symbol})
@@ -341,22 +341,22 @@ function _precompile_()
     Base.precompile(Tuple{typeof(optimal_ticks_and_labels),StepRange{Int64, Int64},Tuple{Int64, Int64},Symbol,Symbol})
     Base.precompile(Tuple{typeof(optimal_ticks_and_labels),UnitRange{Int64},Tuple{Float64, Float64},Symbol,Symbol})
     Base.precompile(Tuple{typeof(partialcircle),Int64,Float64,Int64})
+    Base.precompile(Tuple{typeof(plot!),Any})
+    Base.precompile(Tuple{typeof(plot!),Plot,Plot,Plot,Vararg{Plot, N} where N})
     Base.precompile(Tuple{typeof(plot),Any,Any})
     Base.precompile(Tuple{typeof(plot),Plot{GRBackend},Plot{GRBackend},Plot{GRBackend},Vararg{Plot{GRBackend}, N} where N})
     Base.precompile(Tuple{typeof(plot),Plot{GRBackend},Plot{GRBackend}})
+    Base.precompile(Tuple{typeof(plot),Plot{GRBackend}})
     Base.precompile(Tuple{typeof(plot),Plot{PlotlyBackend},Plot{PlotlyBackend},Plot{PlotlyBackend},Vararg{Plot{PlotlyBackend}, N} where N})
     Base.precompile(Tuple{typeof(plot),Plot{PlotlyBackend},Plot{PlotlyBackend}})
-    Base.precompile(Tuple{typeof(plotarea!),Subplot{GRBackend},BoundingBox{Tuple{AbsoluteLength, AbsoluteLength}, Tuple{AbsoluteLength, AbsoluteLength}}})
     Base.precompile(Tuple{typeof(processGridArg!),Dict{Symbol, Any},Symbol,Symbol})
     Base.precompile(Tuple{typeof(processLineArg),Dict{Symbol, Any},Matrix{Symbol}})
     Base.precompile(Tuple{typeof(processLineArg),Dict{Symbol, Any},Symbol})
-    Base.precompile(Tuple{typeof(processMarkerArg),Dict{Symbol, Any},Bool})
     Base.precompile(Tuple{typeof(processMarkerArg),Dict{Symbol, Any},Matrix{Symbol}})
     Base.precompile(Tuple{typeof(processMarkerArg),Dict{Symbol, Any},RGBA{Float64}})
     Base.precompile(Tuple{typeof(processMarkerArg),Dict{Symbol, Any},Shape{Float64, Float64}})
     Base.precompile(Tuple{typeof(processMarkerArg),Dict{Symbol, Any},Stroke})
     Base.precompile(Tuple{typeof(processMarkerArg),Dict{Symbol, Any},Symbol})
-    Base.precompile(Tuple{typeof(processMinorGridArg!),Dict{Symbol, Any},Bool,Symbol})
     Base.precompile(Tuple{typeof(process_annotation),Subplot{GRBackend},Int64,Float64,PlotText})
     Base.precompile(Tuple{typeof(process_annotation),Subplot{GRBackend},Int64,Float64,Tuple{String, Int64, Symbol, Symbol}})
     Base.precompile(Tuple{typeof(process_annotation),Subplot{GRBackend},Int64,Float64,Tuple{String, Symbol, Int64, String}})
@@ -366,12 +366,14 @@ function _precompile_()
     Base.precompile(Tuple{typeof(process_axis_arg!),Dict{Symbol, Any},StepRange{Int64, Int64},Symbol})
     Base.precompile(Tuple{typeof(process_axis_arg!),Dict{Symbol, Any},Symbol,Symbol})
     Base.precompile(Tuple{typeof(push!),Plot{GRBackend},Float64,Vector{Float64}})
+    Base.precompile(Tuple{typeof(reset_axis_defaults_byletter!)})
     Base.precompile(Tuple{typeof(resetfontsizes)})
     Base.precompile(Tuple{typeof(scalefontsizes),Float64})
     Base.precompile(Tuple{typeof(series_annotations),Vector{Any}})
     Base.precompile(Tuple{typeof(slice_arg),Base.ReshapedArray{Int64, 2, UnitRange{Int64}, Tuple{}},Int64})
     Base.precompile(Tuple{typeof(slice_arg),Matrix{AbsoluteLength},Int64})
     Base.precompile(Tuple{typeof(slice_arg),Matrix{Bool},Int64})
+    Base.precompile(Tuple{typeof(slice_arg),Matrix{Int64},Int64})
     Base.precompile(Tuple{typeof(slice_arg),Matrix{PlotUtils.ContinuousColorGradient},Int64})
     Base.precompile(Tuple{typeof(slice_arg),Matrix{RGBA{Float64}},Int64})
     Base.precompile(Tuple{typeof(slice_arg),Matrix{String},Int64})
@@ -379,18 +381,17 @@ function _precompile_()
     Base.precompile(Tuple{typeof(spy),Any})
     Base.precompile(Tuple{typeof(straightline_data),Tuple{Float64, Float64},Tuple{Float64, Float64},Vector{Float64},Vector{Float64},Int64})
     Base.precompile(Tuple{typeof(stroke),Int64,Vararg{Any, N} where N})
-    Base.precompile(Tuple{typeof(text),String,Symbol})
     Base.precompile(Tuple{typeof(title!),AbstractString})
-    Base.precompile(Tuple{typeof(update_clims),Float64,Float64,SubArray{Int64, 1, Vector{Int64}, Tuple{UnitRange{Int64}}, true},typeof(ignorenan_extrema)})
     Base.precompile(Tuple{typeof(vline!),Any})
     Base.precompile(Tuple{typeof(warn_on_attr_dim_mismatch),Series,Vector{Float64},Vector{Float64},Nothing,Base.Iterators.Flatten{Vector{Tuple{SeriesSegment}}}})
     Base.precompile(Tuple{typeof(xgrid!),Plot{GRBackend},Symbol,Vararg{Any, N} where N})
     Base.precompile(Tuple{typeof(xlims),Subplot{PlotlyBackend}})
-    isdefined(Plots, Symbol("#164#165")) && Base.precompile(Tuple{getfield(Plots, Symbol("#164#165")),Any})
-    isdefined(Plots, Symbol("#314#350")) && Base.precompile(Tuple{getfield(Plots, Symbol("#314#350"))})
-    isdefined(Plots, Symbol("#4#8")) && Base.precompile(Tuple{getfield(Plots, Symbol("#4#8")),UnitRange{Int64}})
-    isdefined(Plots, Symbol("#add_major_or_minor_segments#102")) && Base.precompile(Tuple{getfield(Plots, Symbol("#add_major_or_minor_segments#102")),Vector{Float64},Bool,Segments{Tuple{Float64, Float64}},Float64,Bool})
-    isdefined(Plots, Symbol("#add_major_or_minor_segments#103")) && Base.precompile(Tuple{getfield(Plots, Symbol("#add_major_or_minor_segments#103")),Vector{Float64},Bool,Segments{Tuple{Float64, Float64, Float64}},Float64,Bool})
+    isdefined(Plots, Symbol("#162#163")) && Base.precompile(Tuple{getfield(Plots, Symbol("#162#163")),Any})
+    isdefined(Plots, Symbol("#2#6")) && Base.precompile(Tuple{getfield(Plots, Symbol("#2#6")),UnitRange{Int64}})
+    isdefined(Plots, Symbol("#291#327")) && Base.precompile(Tuple{getfield(Plots, Symbol("#291#327"))})
+    isdefined(Plots, Symbol("#312#348")) && Base.precompile(Tuple{getfield(Plots, Symbol("#312#348"))})
+    isdefined(Plots, Symbol("#add_major_or_minor_segments#100")) && Base.precompile(Tuple{getfield(Plots, Symbol("#add_major_or_minor_segments#100")),Vector{Float64},Bool,Segments{Tuple{Float64, Float64}},Float64,Bool})
+    isdefined(Plots, Symbol("#add_major_or_minor_segments#101")) && Base.precompile(Tuple{getfield(Plots, Symbol("#add_major_or_minor_segments#101")),Vector{Float64},Bool,Segments{Tuple{Float64, Float64, Float64}},Float64,Bool})
     let fbody = try __lookup_kwbody__(which(font, (Font,Vararg{Any, N} where N,))) catch missing end
     if !ismissing(fbody)
         precompile(fbody, (Base.Iterators.Pairs{Union{}, Union{}, Tuple{}, NamedTuple{(), Tuple{}}},typeof(font),Font,Vararg{Any, N} where N,))
@@ -399,6 +400,16 @@ end
     let fbody = try __lookup_kwbody__(which(gr_polyline, (Vector{Float64},Vector{Float64},typeof(GR.fillarea),))) catch missing end
     if !ismissing(fbody)
         precompile(fbody, (Symbol,Symbol,typeof(gr_polyline),Vector{Float64},Vector{Float64},typeof(GR.fillarea),))
+    end
+end
+    let fbody = try __lookup_kwbody__(which(gr_set_font, (Font,Subplot{GRBackend},))) catch missing end
+    if !ismissing(fbody)
+        precompile(fbody, (Symbol,Symbol,RGBA{Float64},Float64,typeof(gr_set_font),Font,Subplot{GRBackend},))
+    end
+end
+    let fbody = try __lookup_kwbody__(which(pie, (Any,Vararg{Any, N} where N,))) catch missing end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(pie),Any,Vararg{Any, N} where N,))
     end
 end
     let fbody = try __lookup_kwbody__(which(plot!, (Any,))) catch missing end
@@ -411,6 +422,26 @@ end
         precompile(fbody, (Any,typeof(plot!),Any,Vararg{Any, N} where N,))
     end
 end
+    let fbody = try __lookup_kwbody__(which(plot!, (Plot,))) catch missing end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(plot!),Plot,))
+    end
+end
+    let fbody = try __lookup_kwbody__(which(plot!, (Plot,Plot,))) catch missing end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(plot!),Plot,Plot,))
+    end
+end
+    let fbody = try __lookup_kwbody__(which(plot!, (Plot,Plot,Plot,))) catch missing end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(plot!),Plot,Plot,Plot,))
+    end
+end
+    let fbody = try __lookup_kwbody__(which(plot!, (Plot,Plot,Plot,Vararg{Plot, N} where N,))) catch missing end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(plot!),Plot,Plot,Plot,Vararg{Plot, N} where N,))
+    end
+end
     let fbody = try __lookup_kwbody__(which(plot, (Any,))) catch missing end
     if !ismissing(fbody)
         precompile(fbody, (Any,typeof(plot),Any,))
@@ -421,9 +452,19 @@ end
         precompile(fbody, (Any,typeof(plot),Any,Vararg{Any, N} where N,))
     end
 end
+    let fbody = try __lookup_kwbody__(which(scatter, (Any,Vararg{Any, N} where N,))) catch missing end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(scatter),Any,Vararg{Any, N} where N,))
+    end
+end
     let fbody = try __lookup_kwbody__(which(title!, (AbstractString,))) catch missing end
     if !ismissing(fbody)
         precompile(fbody, (Any,typeof(title!),AbstractString,))
+    end
+end
+    let fbody = try __lookup_kwbody__(which(yaxis!, (Any,Vararg{Any, N} where N,))) catch missing end
+    if !ismissing(fbody)
+        precompile(fbody, (Any,typeof(yaxis!),Any,Vararg{Any, N} where N,))
     end
 end
 end
