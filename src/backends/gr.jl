@@ -1840,7 +1840,7 @@ function gr_add_series(sp, series)
         gr_draw_shapes(series, clims)
     elseif st in (:path3d, :scatter3d)
         gr_draw_segments_3d(series, x, y, z, clims)
-        if st === :scatter3d || series[:markershape] !== :none
+        if (st === :scatter3d || series[:markershape] !== :none) && !isempty(x)
             # TODO: Do we need to transform to 2d coordinates here?
             x2, y2 = RecipesPipeline.unzip(map(GR.wc3towc, x, y, z))
             gr_draw_markers(series, x2, y2, clims)
