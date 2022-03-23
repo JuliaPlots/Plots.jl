@@ -208,7 +208,7 @@ inverse_scale_func(scale::Symbol) =
 # ## Unzip
 # --------------------------------
 
-unzip(v::AVec{<:Tuple}) = tuple((([t[j] for t in v]) for j in 1:length(v[1]))...)
+unzip(v::AVec{<:Tuple}) = map(x->getfield.(v, x), fieldnames(eltype(v)))
 
 # --------------------------------
 # ## Map functions on vectors
