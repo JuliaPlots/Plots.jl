@@ -669,26 +669,18 @@ function axis_limits(
         else
         end
     end
-    if RecipesPipeline.is3d(:sp)
-        xs = sp[1][:x]
-        ys = sp[1][:y]
-        zs = sp[1][:z]
-        x12, y12, z12 = extrema(xs), extrema(ys), extrema(zs)
-        d = maximum([diff([x12...]),diff([y12...]),diff([z12...])])[1] / 2
-        xm, ym, zm = mean(x12),  mean(y12),  mean(z12)
-        amin = if letter == :x
-            xm-d
+    if RecipesPipeline.is3d(:sp) && consider_aspect == true
+        x12, y12, z12 = extrema(sp, :x), extrema(sp, :y), extrema(sp, :z)
+        d = maximum((x12[2] - x12[1], y12[2] - y12[1], z12[2] - z12[1])) / 2
+        amin, amax = if letter == :x
+            xm = mean(x12)
+            xm-d, xm+d
         elseif letter == :y
-            ym-d
+            ym = mean(y12)
+            ym-d, ym+d
         elseif letter ==:z
-            zm-d
-        end
-        amax = if letter == :x
-            xm+d
-        elseif letter == :y
-            ym+d
-        elseif letter ==:z
-            zm+d
+            zm = mean(z12)
+            zm-d, zm+d
         end
     end
     return amin, amax
