@@ -592,7 +592,7 @@ function axis_limits(
     sp,
     letter,
     should_widen = default_should_widen(sp[get_attr_symbol(letter, :axis)]),
-    consider_aspect = true,
+    consider_aspect = sp[:aspect_ratio] ∉ (:auto, :none),
 )
     axis = sp[get_attr_symbol(letter, :axis)]
     ex = axis[:extrema]
@@ -638,14 +638,17 @@ function axis_limits(
         amin, amax
     end
 
-    if (
-        !has_user_lims &&
-        consider_aspect &&
-        letter in (:x, :y) &&
-        sp[:aspect_ratio] in (:none, :auto)
-    )
-        if !RecipesPipeline.is3d(:sp)
-            aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
+    if !has_user_lims && consider_aspect
+        aspect_ratio = sp[:aspect_ratio]
+        aspect_ratio =
+            isa(aspect_ratio, Number) ? aspect_ratio :
+            aspect_ratio === :equal ? 1 :
+            throw(
+                ArgumentError(
+                    "Unsuppported value $aspect_ratio for keyword `aspect_ratio`.",
+                ),
+            )
+        if !RecipesPipeline.is3d(sp)
             plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
             dist = amax - amin
 
@@ -667,20 +670,21 @@ function axis_limits(
                 amax = center + factor * (amax - center)
             end
         else
-        end
-    end
-    if RecipesPipeline.is3d(:sp) && consider_aspect == true
-        x12, y12, z12 = extrema(sp, :x), extrema(sp, :y), extrema(sp, :z)
-        d = maximum((x12[2] - x12[1], y12[2] - y12[1], z12[2] - z12[1])) / 2
-        amin, amax = if letter == :x
-            xm = mean(x12)
-            xm-d, xm+d
-        elseif letter == :y
-            ym = mean(y12)
-            ym-d, ym+d
-        elseif letter ==:z
-            zm = mean(z12)
-            zm-d, zm+d
+            # TODO: support arbitrary box ratios
+            if aspect_ratio == 1
+                x12, y12, z12 = extrema(sp, :x), extrema(sp, :y), extrema(sp, :z)
+                d = maximum((x12[2] - x12[1], y12[2] - y12[1], z12[2] - z12[1])) / 2
+                amin, amax = if letter == :x
+                    xm = mean(x12)
+                    xm - d, xm + d
+                elseif letter == :y
+                    ym = mean(y12)
+                    ym - d, ym + d
+                elseif letter == :z
+                    zm = mean(z12)
+                    zm - d, zm + d
+                end
+            end
         end
     end
     return amin, amax
