@@ -254,36 +254,49 @@ end
 
 # ------------------------------------------------------------------------------------------
 
-# since this is such a hack, it's only callable using `png`...
-# should error during normal `show`
 function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
-    fn = addExtension(fn, "png")
-
-    @static if Sys.isapple()
-        # make some whitespace and show the plot
-        println("\n\n\n\n\n\n")
-        gui(plt)
-        sleep(0.5)
-        # use osx screen capture when my terminal is maximized
-        # and cursor starts at the bottom (I know, right?)
-        run(`screencapture -R50,600,700,420 $fn`)
-        return
-    elseif Sys.islinux()
-        run(`clear`)
-        gui(plt)
-        win = if "WINDOWID" in keys(ENV)
-            ENV["WINDOWID"]
-        else
-            readchomp(`xdotool getactivewindow`)
+    unicodeplots_rebuild(plt)
+    nr, nc = size(plt.layout)
+    s1 = zeros(Int, nr, nc)
+    s2 = zeros(Int, nr, nc)
+    canvas_type = nothing
+    imgs = []
+    sps = 0
+    for r in 1:nr
+        for c in 1:nc
+            if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
+                error("Plots(UnicodePlots): complex nested layout is currently unsupported")
+            else
+                img = UnicodePlots.png_image(plt.o[sps += 1])
+                canvas_type = eltype(img)
+                sz = size(img)
+                s1[r, c] = sz[1]
+                s2[r, c] = sz[2]
+                push!(imgs, img)
+            end
         end
-        run(`import -window $win $fn`)
-        return
     end
-
-    error(
-        "Can only savepng on MacOS or Linux with UnicodePlots " *
-        "(though even then I wouldn't do it)",
-    )
+    if canvas_type !== nothing
+        rows = maximum(sum(s1; dims = 1))
+        cols = maximum(sum(s2; dims = 2))
+        img = zeros(canvas_type, rows, cols)
+        m1 = maximum(s1; dims = 2)
+        m2 = maximum(s2; dims = 1)
+        sps = 0
+        n1 = 1
+        for r in 1:nr
+            n2 = 1
+            for c in 1:nc
+                sp = imgs[sps += 1]
+                sz = size(sp)
+                img[n1:(n1 + (sz[1] - 1)), n2:(n2 + (sz[2] - 1))] = sp
+                n2 += m2[c]
+            end
+            n1 += m1[r]
+        end
+        UnicodePlots.FileIO.save(fn, img)
+    end
+    nothing
 end
 
 # ------------------------------------------------------------------------------------------
@@ -301,7 +314,6 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
             i < n && println(io)
         end
     else
-        re_ansi = r"\e\[[0-9;]*[a-zA-Z]"  # m: color, [a-zA-Z]: all escape sequences
         have_color = Base.get_have_color()
         buf = IOContext(PipeBuffer(), :color => have_color)
         lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
@@ -312,9 +324,10 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
         for r in 1:nr
             lmax = 0
             for c in 1:nc
-                l = plt.layout[r, c]
-                if l isa GridLayout && size(l) != (1, 1)
-                    @error "Plots(UnicodePlots): complex nested layout is currently unsupported"
+                if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
+                    error(
+                        "Plots(UnicodePlots): complex nested layout is currently unsupported",
+                    )
                 else
                     if get(l.attr, :blank, false)
                         lines_colored[r, c] = lines_uncolored[r, c] = nothing
@@ -324,7 +337,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
                         colored = read(buf, String)
                         lines_colored[r, c] = lu = lc = split(colored, '\n')
                         if have_color
-                            uncolored = replace(colored, re_ansi => "")
+                            uncolored = UnicodePlots.nocolor_string(colored)
                             lines_uncolored[r, c] = lu = split(uncolored, '\n')
                         end
                         lmax = max(length(lc), lmax)
