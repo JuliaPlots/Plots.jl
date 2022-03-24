@@ -49,13 +49,14 @@ jobs:
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: |
           echo $GITHUB_REF
-          export JULIA_DEBUG=Documenter
+          export JULIA_DEBUG=Documenter,DemoCards
           export PLOTDOCS_ANSICOLOR=true
           export GKSwstype=nul  # Plots.jl/issues/3664
-          export UP_DEBUG_IO=$(mktemp)
+          export DOCUMENTER_DEBUG=true  # Democards.jl
+          # export UP_DEBUG_IO=$(mktemp)
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()'
           # xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"add Documenter#master"'
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"st -m"'
           xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl") do; include("docs/make.jl"); end'
-          cat $UP_DEBUG_IO | sed 's,\x1B,ESC,g'
-          rm $UP_DEBUG_IO
+          # cat $UP_DEBUG_IO | sed 's,\x1B,ESC,g'
+          # rm $UP_DEBUG_IO
