@@ -53,8 +53,3 @@ jobs:
         with:
           tool_name: JuliaProjectFormatter
           fail_on_error: true
-© 2022 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
