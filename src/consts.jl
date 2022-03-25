@@ -41,29 +41,27 @@ const _initial_fontsizes =
 const _internal_args =
     [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
 
-const _axis_args = sort(union(collect(keys(_axis_defaults))))
-const _series_args = sort(union(collect(keys(_series_defaults))))
-const _subplot_args = sort(union(collect(keys(_subplot_defaults))))
-const _plot_args = sort(union(collect(keys(_plot_defaults))))
+const _axis_args = Set(keys(_axis_defaults))
+const _series_args = Set(keys(_series_defaults))
+const _subplot_args = Set(keys(_subplot_defaults))
+const _plot_args = Set(keys(_plot_defaults))
 
 const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
 const _magic_subplot_args =
     [:title_font, :legend_font, :legend_title_font, :plot_title_font, :colorbar_titlefont]
 const _magic_series_args = [:line, :marker, :fill]
 const _all_magic_args =
-    sort(union(_magic_axis_args, _magic_series_args, _magic_subplot_args))
+    Set(union(_magic_axis_args, _magic_series_args, _magic_subplot_args))
 
-const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
-const _all_subplot_args = sort(union([_subplot_args; _magic_subplot_args]))
-const _all_series_args = sort(union([_series_args; _magic_series_args]))
+const _all_axis_args = union(_axis_args, _magic_axis_args)
+const _lettered_all_axis_args =
+    Set([Symbol(letter, kw) for letter in (:x, :y, :z) for kw in _all_axis_args])
+const _all_subplot_args = union(_subplot_args, _magic_subplot_args)
+const _all_series_args = union(_series_args, _magic_series_args)
 const _all_plot_args = _plot_args
 
-const _all_args = sort(union([
-    _all_axis_args
-    _all_subplot_args
-    _all_series_args
-    _all_plot_args
-]))
+const _all_args =
+    union(_lettered_all_axis_args, _all_subplot_args, _all_series_args, _all_plot_args)
 
 # add all pluralized forms to the _keyAliases dict
 for arg in _all_args

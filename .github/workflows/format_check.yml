@@ -1,37 +1,54 @@
 name: format
 
 on:
+  pull_request:
   push:
     branches:
       - 'master'
-    tags: '*'
-  pull_request:
 
 jobs:
-  check:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        julia-version: ['1']
-        julia-arch: [x64]
-        os: [ubuntu-latest]
+  code-style:
+    runs-on: ubuntu-latest
     steps:
-      - uses: julia-actions/setup-julia@latest
-        with:
-          version: ${{ matrix.julia-version }}
-
       - uses: actions/checkout@v2
-      - name: Install JuliaFormatter and format
+      - uses: julia-actions/setup-julia@v1
+      - name: Install dependencies
         run: |
-          julia -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter"))'
-          julia -e 'using JuliaFormatter; format(["src", "test"], verbose=true)'
-      - name: Format check
+          using Pkg
+          Pkg.add([
+              PackageSpec("JuliaFormatter"),
+              PackageSpec(url = "https://github.com/tkf/JuliaProjectFormatter.jl.git"),
+          ])
+        shell: julia --color=yes {0}
+
+      - name: Format Julia files
         run: |
-          julia -e '
-          out = Cmd(`git diff --name-only`) |> read |> String
-          if out == ""
-              exit(0)
-          else
-              @error "These files have not been formatted:\n$out"
-              exit(1)
-          end'
+          using JuliaFormatter
+          format(["src", "test"])
+        shell: julia --color=yes --compile=min -O0 {0}
+      - name: suggester / JuliaFormatter
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: JuliaFormatter
+          fail_on_error: true
+
+      # reviewdog/action-suggester not using `cleanup` flag?
+      - name: Cleanup
+        if: success() || failure()
+        run: |
+          git checkout -- .
+          git clean --force
+        shell: bash
+
+      - name: Format Julia project files
+        if: success() || failure()
+        run: |
+          using JuliaProjectFormatter
+          format_projects()
+        shell: julia --color=yes --compile=min -O0 {0}
+      - name: suggester / JuliaProjectFormatter
+        if: success() || failure()
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: JuliaProjectFormatter
+          fail_on_error: true
