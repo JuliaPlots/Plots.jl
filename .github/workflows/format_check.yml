@@ -9,5 +9,52 @@ on:
 jobs:
   code-style:
     runs-on: ubuntu-latest
+    using: "composite"
     steps:
-      - uses: tkf/julia-code-style-suggesters@v1
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+      - name: Install dependencies
+        run: |
+          using Pkg
+          Pkg.add([
+              PackageSpec("JuliaFormatter"),
+              PackageSpec(url = "https://github.com/tkf/JuliaProjectFormatter.jl.git"),
+          ])
+        shell: julia --color=yes {0}
+
+      - name: Format Julia files
+        run: |
+          using JuliaFormatter
+          format(["src", "test"])
+        shell: julia --color=yes --compile=min -O0 {0}
+      - name: suggester / JuliaFormatter
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: JuliaFormatter
+          fail_on_error: true
+
+      # reviewdog/action-suggester not using `cleanup` flag?
+      - name: Cleanup
+        if: success() || failure()
+        run: |
+          git checkout -- .
+          git clean --force
+        shell: bash
+
+      - name: Format Julia project files
+        if: success() || failure()
+        run: |
+          using JuliaProjectFormatter
+          format_projects()
+        shell: julia --color=yes --compile=min -O0 {0}
+      - name: suggester / JuliaProjectFormatter
+        if: success() || failure()
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: JuliaProjectFormatter
+          fail_on_error: true
+© 2022 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
