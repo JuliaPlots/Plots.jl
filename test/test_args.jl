@@ -10,7 +10,7 @@ using Plots, Test
 end
 
 @testset "Axis Attributes" begin
-    pl = @test_nowarn plot(; tickfont=font(10,"Times"))
+    pl = @test_nowarn plot(; tickfont = font(10, "Times"))
     for axis in (:xaxis, :yaxis, :zaxis)
         @test pl[1][axis][:tickfontsize] == 10
         @test pl[1][axis][:tickfontfamily] == "Times"

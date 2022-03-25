@@ -54,17 +54,14 @@ const _all_magic_args =
     Set(union(_magic_axis_args, _magic_series_args, _magic_subplot_args))
 
 const _all_axis_args = union(_axis_args, _magic_axis_args)
-const _lettered_all_axis_args = Set([Symbol(letter, kw) for letter in (:x, :y, :z) for kw in _all_axis_args])
+const _lettered_all_axis_args =
+    Set([Symbol(letter, kw) for letter in (:x, :y, :z) for kw in _all_axis_args])
 const _all_subplot_args = union(_subplot_args, _magic_subplot_args)
 const _all_series_args = union(_series_args, _magic_series_args)
 const _all_plot_args = _plot_args
 
-const _all_args = union(
-    _lettered_all_axis_args,
-    _all_subplot_args,
-    _all_series_args,
-    _all_plot_args,
-)
+const _all_args =
+    union(_lettered_all_axis_args, _all_subplot_args, _all_series_args, _all_plot_args)
 
 # add all pluralized forms to the _keyAliases dict
 for arg in _all_args
