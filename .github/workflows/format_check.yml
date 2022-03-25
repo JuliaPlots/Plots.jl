@@ -1,7 +1,5 @@
 name: format
 
-name: Code style
-
 on:
   pull_request:
   push:
