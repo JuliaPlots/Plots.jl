@@ -1,37 +1,15 @@
 name: format
 
+name: Code style
+
 on:
+  pull_request:
   push:
     branches:
       - 'master'
-    tags: '*'
-  pull_request:
 
 jobs:
-  check:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        julia-version: ['1']
-        julia-arch: [x64]
-        os: [ubuntu-latest]
+  code-style:
+    runs-on: ubuntu-latest
     steps:
-      - uses: julia-actions/setup-julia@latest
-        with:
-          version: ${{ matrix.julia-version }}
-
-      - uses: actions/checkout@v2
-      - name: Install JuliaFormatter and format
-        run: |
-          julia -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter"))'
-          julia -e 'using JuliaFormatter; format(["src", "test"], verbose=true)'
-      - name: Format check
-        run: |
-          julia -e '
-          out = Cmd(`git diff --name-only`) |> read |> String
-          if out == ""
-              exit(0)
-          else
-              @error "These files have not been formatted:\n$out"
-              exit(1)
-          end'
+      - uses: tkf/julia-code-style-suggesters@v1
