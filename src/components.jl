@@ -174,20 +174,19 @@ end
 
 translate(shape::Shape, x::Real, y::Real = x) = translate!(deepcopy(shape), x, y)
 
-rotate_x(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real) =
-    ((x - centerx) * cos(Θ) - (y - centery) * sin(Θ) + centerx)
+rotate_x(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
+    ((x - centerx) * cos(θ) - (y - centery) * sin(θ) + centerx)
 
-rotate_y(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real) =
-    ((y - centery) * cos(Θ) + (x - centerx) * sin(Θ) + centery)
+rotate_y(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
+    ((y - centery) * cos(θ) + (x - centerx) * sin(θ) + centery)
 
-rotate(x::Real, y::Real, θ::Real, c = center(shape)) =
-    (rotate_x(x, y, Θ, c...), rotate_y(x, y, Θ, c...))
+rotate(x::Real, y::Real, θ::Real, c) = (rotate_x(x, y, θ, c...), rotate_y(x, y, θ, c...))
 
-function rotate!(shape::Shape, Θ::Real, c = center(shape))
+function rotate!(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
     for i in eachindex(x)
-        xi = rotate_x(x[i], y[i], Θ, c...)
-        yi = rotate_y(x[i], y[i], Θ, c...)
+        xi = rotate_x(x[i], y[i], θ, c...)
+        yi = rotate_y(x[i], y[i], θ, c...)
         x[i], y[i] = xi, yi
     end
     shape

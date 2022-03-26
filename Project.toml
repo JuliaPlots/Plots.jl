@@ -68,10 +68,12 @@ julia = "1.6"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+Gaston = "4b11ee91-296f-5714-9832-002c20994614"
 Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d"
 LibGit2 = "76f85450-5226-5b5a-8eaa-529ad045b433"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925"
@@ -88,4 +90,4 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["Colors", "Distributions", "FileIO", "Gtk", "ImageMagick", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "HDF5", "RDatasets", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "VisualRegressionTests"]
+test = ["Colors", "Distributions", "FileIO", "Gaston", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "HDF5", "RDatasets", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "VisualRegressionTests"]

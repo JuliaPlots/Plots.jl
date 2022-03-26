@@ -3,7 +3,7 @@
 # significant contributions by: @pkofod
 
 # --------------------------------------------------------------------------------------
-
+# COV_EXCL_START
 const _pgfplots_linestyles = KW(
     :solid => "solid",
     :dash => "dashed",
@@ -740,3 +740,5 @@ function _display(plt::Plot{PGFPlotsBackend})
     # cleanup
     PGFPlots.cleanup(plt.o)
 end
+
+# COV_EXCL_STOP

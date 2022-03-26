@@ -3,6 +3,9 @@ using Plots, Test
 @testset "Shapes" begin
     @testset "Type" begin
         square = Shape([(0, 0.0), (1, 0.0), (1, 1.0), (0, 1.0)])
+        @test Plots.get_xs(square) == [0, 1, 1, 0]
+        @test Plots.get_ys(square) == [0, 0, 1, 1]
+        @test Plots.vertices(square) == [(0, 0), (1, 0), (1, 1), (0, 1)]
         @test isa(square, Shape{Int64,Float64})
         @test coords(square) isa Tuple{Vector{S},Vector{T}} where {T,S}
     end
@@ -58,6 +61,25 @@ using Plots, Test
         @test_nowarn p = plot(myshapes)
         @test p[1][1][:seriestype] == :shape
     end
+
+    @testset "Misc" begin
+        @test Plots.weave([1, 3], [2, 4]) == collect(1:4)
+        @test Plots.makeshape(3) isa Plots.Shape
+        @test Plots.makestar(3) isa Plots.Shape
+        @test Plots.makecross() isa Plots.Shape
+        @test Plots.makearrowhead(10.0) isa Plots.Shape
+
+        @test Plots.rotate(1.0, 2.0, 5.0, (0, 0)) isa Tuple
+
+        star = Plots.makestar(3)
+        star_scaled = Plots.scale(star, 0.5)
+
+        Plots.scale!(star, 0.5)
+        @test Plots.get_xs(star) == Plots.get_xs(star_scaled)
+        @test Plots.get_ys(star) == Plots.get_ys(star_scaled)
+
+        @test Plots.extrema_plus_buffer([1, 2], 0.1) == (0.9, 2.1)
+    end
 end
 
 @testset "Brush" begin
@@ -80,6 +102,39 @@ end
             brush(nothing)
         end
     end
+end
+
+@testset "Text" begin
+    t = Plots.PlotText("foo")
+    f = Plots.font()
+
+    @test Plots.PlotText(nothing).str == "nothing"
+    @test length(t) == 3
+    @test text(t).str == "foo"
+    @test text(t, f).str == "foo"
+    @test text("bar", f).str == "bar"
+    @test text(true).str == "true"
+end
+
+@testset "Annotations" begin
+    ann = Plots.series_annotations(missing)
+
+    @test Plots.series_annotations(["1" "2"; "3" "4"]) isa AbstractMatrix
+    @test Plots.series_annotations(10).strs[1].str == "10"
+    @test Plots.series_annotations(nothing) === nothing
+    @test Plots.series_annotations(ann) == ann
+
+    @test Plots.annotations(["1" "2"; "3" "4"]) isa AbstractMatrix
+    @test Plots.annotations(ann) == ann
+    @test Plots.annotations([ann]) == [ann]
+    @test Plots.annotations(nothing) == []
+
+    t = Plots.text("foo")
+    sp = plot(1)[1]
+    @test Plots.locate_annotation(sp, 1, 2, t) == (1, 2, t)
+    @test Plots.locate_annotation(sp, 1, 2, 3, t) == (1, 2, 3, t)
+    @test Plots.locate_annotation(sp, (0.1, 0.2), t) isa Tuple
+    @test Plots.locate_annotation(sp, (0.1, 0.2, 0.3), t) isa Tuple
 end
 
 @testset "Fonts" begin
@@ -157,4 +212,10 @@ end
     pos, txt = only(p.subplots[end][:annotations])
     @test pos == (0.1, 0.5)
     @test txt.str == "(a)"
+end
+
+@testset "Bezier" begin
+    curve = Plots.BezierCurve([Plots.P2(0.0, 0.0), Plots.P2(0.5, 1.0), Plots.P2(1.0, 0.0)])
+    @test curve(0.75) == Plots.P2(0.75, 0.375)
+    @test length(coords(curve, 10)) == 10
 end

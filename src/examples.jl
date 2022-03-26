@@ -169,7 +169,7 @@ const _examples = PlotExample[
         )],
     ),
     PlotExample( # 9
-        "",
+        "Build plot in pieces (continued)",
         "and add to it later.",
         [:(
             begin
@@ -314,7 +314,7 @@ const _examples = PlotExample[
         ],
     ),
     PlotExample( # 18
-        "",
+        "Adding to subplots (continued)",
         "",
         [:(
             begin

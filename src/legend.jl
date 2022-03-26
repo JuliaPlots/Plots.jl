@@ -4,8 +4,7 @@ legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax, inout)
 ```
 
 Return `(x,y)` at an angle `theta` degrees from
-`(xcenter,ycenter)` on a rectangle defined by (`xmin`,
-`xmax`, `ymin`, `ymax`).
+`(xcenter,ycenter)` on a rectangle defined by (`xmin`, `xmax`, `ymin`, `ymax`).
 """
 function legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
     (s, c) = sincosd(theta)
