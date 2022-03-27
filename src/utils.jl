@@ -377,8 +377,7 @@ nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
 function nansplit(v::AVec)
     vs = Vector{eltype(v)}[]
     while true
-        idx = findfirst(isnan, v)
-        if idx <= 0
+        if (idx = findfirst(isnan, v)) === nothing
             # no nans
             push!(vs, v)
             break

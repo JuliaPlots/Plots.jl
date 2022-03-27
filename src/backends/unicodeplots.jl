@@ -269,27 +269,25 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
             else
                 img = UnicodePlots.png_image(plt.o[sps += 1])
                 canvas_type = eltype(img)
-                sz = size(img)
-                s1[r, c] = sz[1]
-                s2[r, c] = sz[2]
+                h, w = size(img)
+                s1[r, c] = h
+                s2[r, c] = w
                 push!(imgs, img)
             end
         end
     end
     if canvas_type !== nothing
-        rows = maximum(sum(s1; dims = 1))
-        cols = maximum(sum(s2; dims = 2))
-        img = zeros(canvas_type, rows, cols)
         m1 = maximum(s1; dims = 2)
         m2 = maximum(s2; dims = 1)
+        img = zeros(canvas_type, sum(m1), sum(m2))
         sps = 0
         n1 = 1
         for r in 1:nr
             n2 = 1
             for c in 1:nc
                 sp = imgs[sps += 1]
-                sz = size(sp)
-                img[n1:(n1 + (sz[1] - 1)), n2:(n2 + (sz[2] - 1))] = sp
+                h, w = size(sp)
+                img[n1:(n1 + (h - 1)), n2:(n2 + (w - 1))] = sp
                 n2 += m2[c]
             end
             n1 += m1[r]

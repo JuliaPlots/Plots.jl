@@ -15,7 +15,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
       GKS_ENCODING: "utf8"
-      GKSwstype: "100"
+      GKSwstype: "nul"
 
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -55,19 +55,16 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
 
-      ## maybe required if we ever want to run graphical tests for plotly
-      # OS Dependencies
-      # - name: Ubuntu OS dependencies
-      #   if: startsWith(matrix.os,'ubuntu')
-      #   run: |
-      #    ./test/install_wkhtmltoimage.sh
-
       # TESTCMD
       - name: Default TESTCMD
         run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
-        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
+        run: |
+          echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
+          sudo apt-get -y update
+          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
+          sudo fc-cache -vr
 
       # Julia Dependencies
       - name: Install Julia dependencies
@@ -82,7 +79,9 @@ jobs:
 
       # Codecov
       - uses: julia-actions/julia-processcoverage@v1
+        if: startsWith(matrix.os,'ubuntu')
       - uses: codecov/codecov-action@v2
+        if: startsWith(matrix.os,'ubuntu')
         with:
           file: lcov.info
 
