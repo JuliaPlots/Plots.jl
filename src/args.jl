@@ -1626,7 +1626,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
             @warn(
-                "Keyword argument $k not supported with $pkg.  Choose from: $(sort(collect(supported_attrs(pkg))))"
+                "Keyword argument $k not supported with $pkg.  Choose from: $(join(sort(collect(supported_attrs(pkg))), ", "))"
             )
         end
     end
