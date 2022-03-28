@@ -1,8 +1,6 @@
-__precompile__(true)
-
 module PlotThemes
 
-using PlotUtils, Requires
+using PlotUtils
 
 export add_theme, theme_palette
 
@@ -35,11 +33,6 @@ function theme_palette(s::Symbol)
     end
 end
 
-const _themes = Dict{Symbol, PlotTheme}(:default => PlotTheme())
-
-function add_theme(s::Symbol, thm::PlotTheme)
-    _themes[s] = thm
-end
 
 # add themes
 include("dark.jl")
@@ -55,13 +48,32 @@ include("sheet.jl")
 include("dao.jl")
 include("dracula.jl")
 
-function __init__()
-    # need to do this here so PlotUtils picks up the change
-    for (s,thm) in _themes
-        add_theme(s, thm)
-    end
 
-    @require Juno = "e5e0dc1b-0480-54bc-9374-aad01c23163d" include("juno_smart.jl")
+const _themes = Dict{Symbol, PlotTheme}([
+    :default => PlotTheme(),
+    :dao => _dao,
+    :dark => _dark,
+    :ggplot2 => _ggplot2,
+    :gruvbox_light => _gruvbox_light,
+    :gruvbox_dark => _gruvbox_dark,
+    :solarized => _solarized,
+    :solarized_light => _solarized_light,
+    :sand => _sand,
+    :bright => _bright,
+    :vibrant => _vibrant,
+    :mute => _mute,
+    :wong => _wong,
+    :wong2 => _wong2,
+    :juno => _juno,
+    :lime => _lime,
+    :orange => _orange,
+    :dracula => _dracula
+])
+
+
+function add_theme(s::Symbol, thm::PlotTheme)
+    _themes[s] = thm
 end
+
 
 end # module

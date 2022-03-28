@@ -6,15 +6,15 @@ const lime_palette = reverse([colorant"#271924", # dark blue
                       colorant"#80D584", # green,
                       colorant"#EBFB73"]) # yellow
 
-black = lime_palette[6]
+const black = lime_palette[6]
 
-_themes[:lime] = PlotTheme(
-    bg = black,
-    bginside = black,
-    fg = lime_palette[1],
-    fgtext = lime_palette[2],
-    fgguide = lime_palette[2],
-    fglegend = lime_palette[2],
-    palette = expand_palette(black, lime_palette[1:4]),
-    colorgradient = :viridis
+const _lime = PlotTheme(Dict([
+    :bg => black,
+    :bginside => black,
+    :fg => lime_palette[1],
+    :fgtext => lime_palette[2],
+    :fgguide => lime_palette[2],
+    :fglegend => lime_palette[2],
+    :palette => expand_palette(black, lime_palette[1:4]),
+    :colorgradient => :viridis])
 )

@@ -1,7 +1,7 @@
 # https://github.com/altercation/solarized
 const _solarized_palette = (:red, :yellow, :blue, :green, :orange, :magenta, :violet, :cyan)
 
-const _solarized_colors = Dict(
+const _solarized_colors = Dict([
     :base03 => RGB255(0, 43, 54),
     :base02 => RGB255(7, 54, 66),
     :base01 => RGB255(88, 110, 117),
@@ -18,26 +18,26 @@ const _solarized_colors = Dict(
     :magenta=> RGB255(211, 54, 130),
     :violet => RGB255(108, 113, 196),
     :cyan   => RGB255(42, 161, 152)
+])
+
+const _solarized = PlotTheme(Dict([
+    :bg => _solarized_colors[:base03],
+    :bginside => _solarized_colors[:base02],
+    :fg => _solarized_colors[:base00],
+    :fgtext => _solarized_colors[:base01],
+    :fgguide => _solarized_colors[:base01],
+    :fglegend => _solarized_colors[:base01],
+    :palette => expand_palette(_solarized_colors[:base03], [_solarized_colors[c] for c in _solarized_palette]),
+    :colorgradient => :YlOrRd])
 )
 
-_themes[:solarized] = PlotTheme(
-    bg = _solarized_colors[:base03],
-    bginside = _solarized_colors[:base02],
-    fg = _solarized_colors[:base00],
-    fgtext = _solarized_colors[:base01],
-    fgguide = _solarized_colors[:base01],
-    fglegend = _solarized_colors[:base01],
-    palette = expand_palette(_solarized_colors[:base03], [_solarized_colors[c] for c in _solarized_palette]),
-    colorgradient = :YlOrRd
-)
-
-_themes[:solarized_light] = PlotTheme(
-    bg = _solarized_colors[:base3],
-    bginside = _solarized_colors[:base2],
-    fg = _solarized_colors[:base0],
-    fgtext = _solarized_colors[:base1],
-    fgguide = _solarized_colors[:base1],
-    fglegend = _solarized_colors[:base1],
-    palette = expand_palette(_solarized_colors[:base3], [_solarized_colors[c] for c in _solarized_palette]),
-    colorgradient = cgrad(:YlOrRd, rev = true)
+const _solarized_light = PlotTheme(Dict([
+    :bg => _solarized_colors[:base3],
+    :bginside => _solarized_colors[:base2],
+    :fg => _solarized_colors[:base0],
+    :fgtext => _solarized_colors[:base1],
+    :fgguide => _solarized_colors[:base1],
+    :fglegend => _solarized_colors[:base1],
+    :palette => expand_palette(_solarized_colors[:base3], [_solarized_colors[c] for c in _solarized_palette]),
+    :colorgradient => cgrad(:YlOrRd, rev = true)])
 )

@@ -8,15 +8,15 @@ const sand_palette = [
     colorant"#4B4844" # medium
 ]
 
-sand_bg = colorant"#F7F3EE"
+const sand_bg = colorant"#F7F3EE"
 
-_themes[:sand] = PlotTheme(
-    bg = sand_bg,
-    bginside = colorant"#E2DCD4",
-    fg = colorant"#CBBFAF",
-    fgtext = colorant"#725B61",
-    fgguide = colorant"#725B61",
-    fglegend = colorant"#725B61",
-    palette = expand_palette(sand_bg, sand_palette),
-    colorgradient = :dense
+const _sand = PlotTheme(Dict([
+    :bg => sand_bg,
+    :bginside => colorant"#E2DCD4",
+    :fg => colorant"#CBBFAF",
+    :fgtext => colorant"#725B61",
+    :fgguide => colorant"#725B61",
+    :fglegend => colorant"#725B61",
+    :palette => expand_palette(sand_bg, sand_palette),
+    :colorgradient => :dense])
 )

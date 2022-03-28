@@ -45,24 +45,24 @@ const _gruvbox_colors = Dict(
 	:faded_orange   => RGB255(175,58,3),
 )
 
-_themes[:gruvbox_dark] = PlotTheme(
-	bg = _gruvbox_colors[:dark2],
-	bginside = _gruvbox_colors[:dark0],
-	fg = _gruvbox_colors[:light3],
-	fgtext = _gruvbox_colors[:light3],
-	fgguide = _gruvbox_colors[:dark1],
-	fglegend = _gruvbox_colors[:light3],
-	palette = expand_palette(_gruvbox_colors[:dark3], [_gruvbox_colors[c] for c in _gruvbox_dark_palette]),
-    colorgradient = cgrad(:YlOrRd, rev = true)
+const _gruvbox_dark = PlotTheme(Dict([
+	:bg => _gruvbox_colors[:dark2],
+	:bginside => _gruvbox_colors[:dark0],
+	:fg => _gruvbox_colors[:light3],
+	:fgtext => _gruvbox_colors[:light3],
+	:fgguide => _gruvbox_colors[:dark1],
+	:fglegend => _gruvbox_colors[:light3],
+	:palette => expand_palette(_gruvbox_colors[:dark3], [_gruvbox_colors[c] for c in _gruvbox_dark_palette]),
+    :colorgradient => cgrad(:YlOrRd, rev = true) ])
 )
 
-_themes[:gruvbox_light] = PlotTheme(
-	bg = _gruvbox_colors[:light1],
-	bginside = _gruvbox_colors[:light0],
-	fg = _gruvbox_colors[:dark1],
-	fgtext = _gruvbox_colors[:dark1],
-	fgguide = _gruvbox_colors[:dark1],
-	fglegend = _gruvbox_colors[:dark1],
-	palette = expand_palette(_gruvbox_colors[:light3], [_gruvbox_colors[c] for c in _gruvbox_light_palette]),
-    colorgradient = cgrad(:YlOrRd, rev = true)
+const _gruvbox_light = PlotTheme(Dict([
+	:bg => _gruvbox_colors[:light1],
+	:bginside => _gruvbox_colors[:light0],
+	:fg => _gruvbox_colors[:dark1],
+	:fgtext => _gruvbox_colors[:dark1],
+	:fgguide => _gruvbox_colors[:dark1],
+	:fglegend => _gruvbox_colors[:dark1],
+	:palette => expand_palette(_gruvbox_colors[:light3], [_gruvbox_colors[c] for c in _gruvbox_light_palette]),
+    :colorgradient => cgrad(:YlOrRd, rev = true) ])
 )

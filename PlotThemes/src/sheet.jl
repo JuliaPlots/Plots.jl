@@ -1,14 +1,13 @@
-sheet_args = (
-    fglegend = plot_color(colorant"#225", 0.1),
-    bglegend = plot_color(:white, 0.9),
-    gridcolor = colorant"#225",
-    minorgridcolor = colorant"#225",
-    framestyle = :grid,
-    minorgrid = true,
-    linewidth = 1.2,
-    markersize = 6,
-    markerstrokewidth = 0,
-)
+const sheet_args = Dict{Symbol, Any}([
+    :fglegend => plot_color(colorant"#225", 0.1),
+    :bglegend => plot_color(:white, 0.9),
+    :gridcolor => colorant"#225",
+    :minorgridcolor => colorant"#225",
+    :framestyle => :grid,
+    :minorgrid => true,
+    :linewidth => 1.2,
+    :markersize => 6,
+    :markerstrokewidth => 0])
 
 #= NOTE ========================================================================
 Colors are taken from https://personal.sron.nl/~pault/
@@ -18,7 +17,7 @@ Colors are taken from https://personal.sron.nl/~pault/
 # Mute
 # ------------------------------------------------------------------------------
 
-mute_palette = [ # bright
+const mute_palette = [ # bright
     colorant"#c67", # rose
     colorant"#328", # indigo
     colorant"#dc7", # sand
@@ -31,7 +30,7 @@ mute_palette = [ # bright
     colorant"#ddd", # grey
 ]
 
-ylorbr_gradient = [
+const ylorbr_gradient = [
     colorant"#fefbe9",
     colorant"#fcf7d5",
     colorant"#f5f3c1",
@@ -57,17 +56,17 @@ ylorbr_gradient = [
     colorant"#46353a",
 ]
 
-_themes[:mute] = PlotTheme(;
-    palette = mute_palette,
-    colorgradient = reverse(ylorbr_gradient),
-    sheet_args...
+const _mute = PlotTheme(merge!(Dict{Symbol,Any}([
+    :palette => mute_palette,
+    :colorgradient => reverse(ylorbr_gradient)]),
+    sheet_args)
 )
 
 # ------------------------------------------------------------------------------
 # Vibrant
 # ------------------------------------------------------------------------------
 
-vibrant_palette = [ # vibrant
+const vibrant_palette = [ # vibrant
     colorant"#e73", # orange
     colorant"#07b", # blue
     colorant"#3be", # cyan
@@ -77,7 +76,7 @@ vibrant_palette = [ # vibrant
     colorant"#bbb", # grey
 ]
 
-sunset_gradient = [
+const sunset_gradient = [
     colorant"#364b9a",
     colorant"#4a7bb7",
     colorant"#6ea6cd",
@@ -91,7 +90,7 @@ sunset_gradient = [
     colorant"#a50026",
 ]
 
-_themes[:vibrant] = PlotTheme(;
+const _vibrant = PlotTheme(;
     palette = vibrant_palette,
     colorgradient = sunset_gradient,
     sheet_args...
@@ -101,7 +100,7 @@ _themes[:vibrant] = PlotTheme(;
 # Bright
 # ------------------------------------------------------------------------------
 
-bright_palette = [ # bright
+const bright_palette = [ # bright
     colorant"#47a", # blue
     colorant"#e67", # red
     colorant"#283", # green
@@ -111,7 +110,7 @@ bright_palette = [ # bright
     colorant"#bbb", # grey
 ]
 
-iridescent_gradient = [
+const iridescent_gradient = [
     colorant"#ffffe5",
     colorant"#fff7bc",
     colorant"#fee391",
@@ -123,8 +122,8 @@ iridescent_gradient = [
     colorant"#662506",
 ]
 
-_themes[:bright] = PlotTheme(;
-    palette = bright_palette,
-    colorgradient = reverse(iridescent_gradient),
-    sheet_args...
+const _bright = PlotTheme(merge!(Dict{Symbol,Any}([
+    :palette => bright_palette,
+    :colorgradient => reverse(iridescent_gradient)]),
+    sheet_args)
 )
