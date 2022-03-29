@@ -752,7 +752,7 @@ function plotly_series(plt::Plot, series::Series)
     end
 
     plotly_polar!(plotattributes_out, series)
-    plotly_hover!(plotattributes_out, series[:hover])
+    plotly_adjust_hover_label!(plotattributes_out, series[:hover])
 
     return [plotattributes_out]
 end
@@ -807,7 +807,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         end
         plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
         plotly_polar!(plotattributes_out, series)
-        plotly_hover!(plotattributes_out, _cycle(series[:hover], i))
+        plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], i))
         plotattributes_outs[k] = plotattributes_out
     end
     if series[:fill_z] !== nothing
@@ -931,7 +931,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         end
 
         plotly_polar!(plotattributes_out, series)
-        plotly_hover!(plotattributes_out, _cycle(series[:hover], rng))
+        plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], rng))
 
         if hasfillrange
             # if hasfillrange is true, return two dictionaries (one for original
@@ -1019,14 +1019,16 @@ function plotly_polar!(plotattributes_out::KW, series::Series)
     end
 end
 
-function plotly_hover!(plotattributes_out::KW, hover)
-    # hover text
-    if hover === nothing || all(in([:none, false]), hover)
+function plotly_adjust_hover_label!(plotattributes_out::KW, hover)
+    if hover === nothing
+        return nothing
+    elseif all(in([:none, false]), hover)
         plotattributes_out[:hoverinfo] = "none"
     elseif any(!isnothing, hover)
         plotattributes_out[:hoverinfo] = "text"
         plotattributes_out[:text] = hover
     end
+    return nothing
 end
 
 # get a list of dictionaries, each representing the series params
