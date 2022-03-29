@@ -1020,7 +1020,7 @@ function plotly_polar!(plotattributes_out::KW, series::Series)
 end
 
 function plotly_adjust_hover_label!(plotattributes_out::KW, hover)
-    if isnothing(hover)
+    if hover === nothing
         return nothing
     elseif all(in([:none, false]), hover)
         plotattributes_out[:hoverinfo] = "none"
