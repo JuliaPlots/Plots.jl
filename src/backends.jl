@@ -285,7 +285,7 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
         v = Symbol("_", bend, "_", s)
         @eval begin
             $f(::$bend_type, $s::Symbol) = $s in $v
-            $f2(::$bend_type) = $v
+            $f2(::$bend_type) = sort(collect($v))
         end
     end
 end
