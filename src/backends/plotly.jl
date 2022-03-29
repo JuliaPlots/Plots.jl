@@ -1020,13 +1020,15 @@ function plotly_polar!(plotattributes_out::KW, series::Series)
 end
 
 function plotly_hover!(plotattributes_out::KW, hover)
-    # hover text
-    if hover === nothing || all(in([:none, false]), hover)
+    if isnothing(hover)
+        return nothing
+    elseif all(in([:none, false]), hover)
         plotattributes_out[:hoverinfo] = "none"
     elseif any(!isnothing, hover)
         plotattributes_out[:hoverinfo] = "text"
         plotattributes_out[:text] = hover
     end
+    return nothing
 end
 
 # get a list of dictionaries, each representing the series params
