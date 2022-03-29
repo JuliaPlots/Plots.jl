@@ -21,16 +21,19 @@ end
     @test !haskey(axis.contents[1].options.dict, "fill")
 
     @testset "Legends" begin
-        legends_plot = plot(rand(5, 2), lab = ["1" ""])
+        legends_plot = plot(rand(5, 2), lab = ["1" ""], arrow = true)
         scatter!(legends_plot, rand(5))
         Plots._update_plot_object(legends_plot)
         axis_contents = Plots.pgfx_axes(legends_plot.o)[1].contents
         leg_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis_contents)
         series = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
         @test length(leg_entries) == 2
+        @test length(series) == 5
         @test !haskey(series[1].options.dict, "forget plot")
         @test haskey(series[2].options.dict, "forget plot")
-        @test !haskey(series[3].options.dict, "forget plot")
+        @test haskey(series[3].options.dict, "forget plot")
+        @test haskey(series[4].options.dict, "forget plot")
+        @test !haskey(series[5].options.dict, "forget plot")
     end # testset
 
     @testset "3D docs example" begin

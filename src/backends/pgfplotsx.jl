@@ -403,6 +403,11 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                     ),
                 ),
             )
+            if opt[:label] == ""
+                push!(arrow_opt,
+                    "forget plot" => nothing,
+                )
+            end
             if arrow.side == :head
                 x_arrow = opt[:x][rng][(end - 1):end]
                 y_arrow = opt[:y][rng][(end - 1):end]
@@ -426,6 +431,9 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 :v => [y_arrow[i] - y_arrow[i - 1] for i in 2:2:lastindex(y_arrow)],
             ])
             arrow_plot = series_func(merge(series_opt, arrow_opt), coordinates)
+            push!(series_opt,
+                "forget plot" => nothing,
+            )
             push!(axis, arrow_plot)
             coordinates = PGFPlotsX.Table(x_path, y_path)
             segment_plot = series_func(merge(series_opt, segment_opt), coordinates)
