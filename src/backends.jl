@@ -1320,7 +1320,6 @@ const _pgfplotsx_marker = [
     :pentagon,
     :hline,
     :vline,
-    Shape,
 ]
 const _pgfplotsx_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
