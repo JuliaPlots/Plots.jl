@@ -13,7 +13,7 @@ Add in functionality to Plots.jl:
     :aspect_ratio,
 =#
 
-# ---------------------------------------------------------------------------
+should_warn_on_unsupported(::InspectDRBackend) = false
 
 is_marker_supported(::InspectDRBackend, shape::Shape) = true
 
