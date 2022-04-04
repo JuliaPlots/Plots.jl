@@ -301,7 +301,7 @@ function _initialize_backend(pkg::AbstractBackend)
     @eval Main begin
         import $sym
         export $sym
-        Plots._check_compat($sym)
+        $(_check_compat)($sym)
     end
 end
 
