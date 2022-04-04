@@ -1,8 +1,6 @@
 # https://github.com/mbaz/Gaston.
 
-# --------------------------------------------
-# These functions are called by Plots
-# --------------------------------------------
+should_warn_on_unsupported(::GastonBackend) = false
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
