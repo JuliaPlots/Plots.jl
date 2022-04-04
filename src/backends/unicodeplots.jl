@@ -335,7 +335,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
                         colored = read(buf, String)
                         lines_colored[r, c] = lu = lc = split(colored, '\n')
                         if have_color
-                            uncolored = UnicodePlots.nocolor_string(colored)
+                            uncolored = UnicodePlots.no_ansi_escape(colored)
                             lines_uncolored[r, c] = lu = split(uncolored, '\n')
                         end
                         lmax = max(length(lc), lmax)
