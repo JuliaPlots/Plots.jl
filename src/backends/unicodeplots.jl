@@ -251,6 +251,7 @@ end
 # ------------------------------------------------------------------------------------------
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
+    prepare_output(plt)
     nr, nc = size(plt.layout)
     s1 = zeros(Int, nr, nc)
     s2 = zeros(Int, nr, nc)
@@ -294,13 +295,11 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
 end
 
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
-function Base.show(io::IO, plt::Plot{UnicodePlotsBackend})
-    prepare_output(plt)
-    _show(io, MIME("text/plain"), plt)
-end
+Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
+    prepare_output(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
         n = length(plt.o)
