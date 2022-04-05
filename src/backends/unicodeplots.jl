@@ -12,9 +12,8 @@ const _canvas_map = (
 
 should_warn_on_unsupported(::UnicodePlotsBackend) = false
 
-_create_backend_figure(plt::Plot{UnicodePlotsBackend}) = plt.o = UnicodePlots.Plot[]
-
 function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
+    plt.o = UnicodePlots.Plot[]
     up_width = UnicodePlots.DEFAULT_WIDTH[]
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
 
