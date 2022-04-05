@@ -9,7 +9,7 @@ on:
  
 jobs:
   Build_docs:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -29,17 +29,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y qt5-default \
+          sudo apt-get install -y \
+            texlive-{latex-{base,extra},binaries,pictures,luatex} \
             ttf-mscorefonts-installer \
             poppler-utils \
-            pdf2svg \
-            texlive-latex-base \
-            texlive-binaries \
-            texlive-pictures \
-            texlive-latex-extra \
-            texlive-luatex \
             ghostscript-x \
-            libgconf2-4 \
+            libgconf-2-4 \
+            qt5-default \
+            pdf2svg \
             gnuplot
       - name: Install fonts
         run: |
@@ -49,7 +46,6 @@ jobs:
           url="$repo/releases/download/$ver/JuliaMono-ttf.tar.gz"
           echo "downloading & extract url=$url"
           wget -q "$url" -O - | tar -xz -C ~/.fonts
-          ls ~/.fonts
           sudo fc-cache -vr
           fc-list | grep 'JuliaMono'
       - name: Build documentation

@@ -294,7 +294,10 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
 end
 
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
-Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
+function Base.show(io::IO, plt::Plot{UnicodePlotsBackend})
+    prepare_output(plt)
+    _show(io, MIME("text/plain"), plt)
+end
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
@@ -361,4 +364,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
 end
 
 # we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
-_display(plt::Plot{UnicodePlotsBackend}) = (show(stdout, plt); println(stdout))
+function _display(plt::Plot{UnicodePlotsBackend})
+    show(stdout, plt)
+    println(stdout)
+end
