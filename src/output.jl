@@ -79,6 +79,13 @@ const _savemap = Dict(
     "txt" => txt,
 )
 
+for out in Symbol.(unique(values(_savemap)))
+    @eval @doc """
+        $($out)([plot,], filename)
+    Save plot as $($out)-file.
+    """ $out
+end
+
 const _extension_map = Dict("tikz" => "tex")
 
 function addExtension(fn::AbstractString, ext::AbstractString)

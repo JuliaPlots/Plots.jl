@@ -247,6 +247,12 @@ function prepare_output(plt::Plot)
     _update_plot_object(plt)
 end
 
+"""
+    backend_object(plot)
+
+Returns the backend representation of a Plot object.
+Returns `nothing` if the backend does not support this.
+"""
 function backend_object(plt::Plot)
     prepare_output(plt)
     plt.o
