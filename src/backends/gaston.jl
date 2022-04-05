@@ -110,7 +110,7 @@ function gaston_saveopts(plt::Plot{GastonBackend})
 
     # Scale all plot elements to match Plots.jl DPI standard
     scaling = plt.attr[:dpi] / Plots.DPI
-    push!(saveopts, "fontscale $scaling lw $scaling dl $scaling ps $scaling")
+    push!(saveopts, "fontscale $scaling lw $scaling dl $scaling")  #  ps $scaling
 
     return join(saveopts, " ")
 end
