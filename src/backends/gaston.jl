@@ -244,10 +244,9 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
                 if (lx = length(x)) == 2 && lx != nc
                     x = collect(range(x[1], x[2], length = nc))
                 end
-            elseif st == :heatmap
-                length(x) == size(z, 2) + 1 && (x = @view x[1:(end - 1)])
-                length(y) == size(z, 1) + 1 && (y = @view y[1:(end - 1)])
             end
+            length(x) == size(z, 2) + 1 && (x = (x[1:(end - 1)] + x[2:end]) / 2)
+            length(y) == size(z, 1) + 1 && (y = (y[1:(end - 1)] + y[2:end]) / 2)
         end
         if st == :mesh3d
             x, y, z = mesh3d_triangles(x, y, z, series[:connections])
