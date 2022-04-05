@@ -21,44 +21,14 @@ jobs:
           cache-name: cache-artifacts
         with:
           path: ~/.julia/artifacts 
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          key: ${{runner.os}}-test-${{env.cache-name}}-${{hashFiles('**/Project.toml')}}
           restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-            texlive-{latex-{base,extra},binaries,pictures,luatex} \
-            ttf-mscorefonts-installer \
-            poppler-utils \
-            ghostscript-x \
-            libgconf-2-4 \
-            qt5-default \
-            pdf2svg \
-            gnuplot
-      - name: Install fonts
-        run: |
-          mkdir -p ~/.fonts
-          repo="https://github.com/cormullion/juliamono"
-          ver="$(git -c 'versionsort.suffix=-' ls-remote --tags --sort='v:refname' "$repo.git" | tail -n 1 | awk '{ print $2 }' | sed 's,refs/tags/,,')"
-          url="$repo/releases/download/$ver/JuliaMono-ttf.tar.gz"
-          echo "downloading & extract url=$url"
-          wget -q "$url" -O - | tar -xz -C ~/.fonts
-          sudo fc-cache -vr
-          fc-list | grep 'JuliaMono'
+            ${{runner.os}}-test-${{env.cache-name}}-
+            ${{runner.os}}-test-
+            ${{runner.os}}-
       - name: Build documentation
-        env: 
+        env:
           PYTHON: ""
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-        run: |
-          echo $GITHUB_REF
-          export JULIA_DEBUG=Documenter,PlotDocs,DemoCards
-          export PLOTDOCS_ANSICOLOR=true
-          export GKSwstype=nul  # Plots.jl/issues/3664
-          export DOCUMENTER_DEBUG=true  # Democards.jl
-          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()'
-          # xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"add Documenter#master"'
-          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"st -m"'
-          xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl") do; include("docs/make.jl"); end'
+          DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: bash docs/ci_build.sh
