@@ -753,13 +753,12 @@ function plotly_series(plt::Plot, series::Series)
 
     plotly_polar!(plotattributes_out, series)
     plotly_adjust_hover_label!(plotattributes_out, series[:hover])
-
     return [plotattributes_out]
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
     segments = series_segments(series; check = true)
-    plotattributes_outs = Vector{KW}(undef, length(segments))
+    plotattributes_outs = [KW() for _ in eachindex(segments)]
 
     # TODO: create a plotattributes_out for each polygon
     # x, y = series[:x], series[:y]
