@@ -24,6 +24,11 @@ elseif v"1.7.0-DEV" <= VERSION <= v"1.7.9"
         include("../deps/SnoopCompile/precompile//1.7/precompile_Plots.jl")
         _precompile_()
     end
+elseif v"1.8.0-DEV" <= VERSION <= v"1.8.9" 
+    @static if isfile(joinpath(@__DIR__, "../deps/SnoopCompile/precompile//1.8/precompile_Plots.jl"))
+        include("../deps/SnoopCompile/precompile//1.8/precompile_Plots.jl")
+        _precompile_()
+    end
 elseif v"1.9.0-DEV" <= VERSION <= v"1.9.9" 
     @static if isfile(joinpath(@__DIR__, "../deps/SnoopCompile/precompile//1.9/precompile_Plots.jl"))
         include("../deps/SnoopCompile/precompile//1.9/precompile_Plots.jl")
