@@ -18,13 +18,14 @@ jobs:
       GKS_ENCODING: "utf8"
       GKSwstype: "100"
       PLOTS_TEST: "true"
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{matrix.os}}
     strategy:
       fail-fast: false
       matrix:
         version:   # NOTE: the versions below should match those in your botconfig
           - '1.6'       # ⎤
           - '1.7'       # |
+          - '~1.8.0-0'  # |
           # - 'nightly'   # ⎦ <<< keep these versions in sync with deps/SnoopCompile/snoop_bot_config.jl
           # ^^^^^^^^^ for 'nightly', see github.com/JuliaPlots/Plots.jl/issues/4079
         os:        # NOTE: should match the os setting of your botconfig
@@ -36,7 +37,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{ matrix.version }}
+          version: ${{matrix.version}}
 
       - name: Install dependencies
         run: |
@@ -87,7 +88,6 @@ jobs:
             SnoopCompile
             no changelog
           branch: "Test_SnoopCompile_AutoPR_${{ github.ref }}"
-
 
   Skip:
     if: "contains(github.event.head_commit.message, '[skip ci]')"
