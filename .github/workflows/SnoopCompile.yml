@@ -16,7 +16,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
       GKS_ENCODING: "utf8"
-      GKSwstype: "100"
+      GKSwstype: "nul"
       PLOTS_TEST: "true"
     runs-on: ${{matrix.os}}
     strategy:
@@ -38,6 +38,11 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{matrix.version}}
+          
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10  # required (not enough memory on github actions virtual machine)
 
       - name: Install dependencies
         run: |
@@ -46,6 +51,8 @@ jobs:
           cat /proc/cpuinfo
           cat /proc/meminfo
           cat /proc/swaps
+          free
+          df -h
 
       # TESTCMD
       - name: Default TESTCMD
