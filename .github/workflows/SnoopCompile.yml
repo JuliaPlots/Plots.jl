@@ -45,6 +45,7 @@ jobs:
           julia -e 'using Pkg; Pkg.add(PackageSpec(name="CompileBot", version="1")); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep()'
           cat /proc/cpuinfo
           cat /proc/meminfo
+          cat /proc/swaps
 
       # TESTCMD
       - name: Default TESTCMD
