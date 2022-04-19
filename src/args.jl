@@ -1762,7 +1762,7 @@ function slice_arg!(
     idx::Int,
     remove_pair::Bool,
 )
-    v = get(plotattributes_in, k, plotattributes_out[k])
+    v = get(plotattributes_in, k, default(k))
     plotattributes_out[k] = if haskey(plotattributes_in, k) && !(k in _plot_args)
         if typeof(v) <: AMat && !isempty(v)
             slice_arg(v, idx)
@@ -2128,9 +2128,11 @@ function _replace_linewidth(plotattributes::AKW)
 end
 
 function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
+    series_kw = merge(_series_defaults, plotattributes)
     for k in keys(_series_defaults)
-        haskey(plotattributes, k) &&
-            slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
+        # k == :label && @show series_kw[:label], k, commandIndex
+        slice_arg!(series_kw, plotattributes, k, commandIndex, false)
+        # k == :label && @show plotattributes[:label]
     end
     return plotattributes
 end
