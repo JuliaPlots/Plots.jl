@@ -351,7 +351,8 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
     if plotattributes[:series_permutation] != :none
         letter1, letter2 = plotattributes[:series_permutation]
-        plotattributes[letter1], plotattributes[letter2] = plotattributes[letter2], plotattributes[letter1]
+        plotattributes[letter1], plotattributes[letter2] =
+            plotattributes[letter2], plotattributes[letter1]
     end
     _expand_subplot_extrema(sp, plotattributes, plotattributes[:seriestype])
     _update_series_attributes!(plotattributes, plt, sp)
