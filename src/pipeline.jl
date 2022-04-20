@@ -68,7 +68,7 @@ end
 function _preprocess_userrecipe(kw::AKW)
     _add_markershape(kw)
 
-    if get(kw,:series_permutation, default(:series_permutation)) != :none
+    if get(kw, :series_permutation, default(:series_permutation)) != :none
         l1, l2 = kw[:series_permutation]
         for k in _axis_args
             k1 = _attrsymbolcache[l1][k]
