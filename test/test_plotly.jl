@@ -55,4 +55,10 @@ using Plots, Test
             end
         end
     end
+    @testset "Extra kwargs" begin
+        pl = plot(1:5, test = "me")
+        @test Plots.plotly_series(pl)[1][:test] == "me"
+        pl = plot(1:5, test = "me", extra_kwargs = :plot)
+        @test Plots.plotly_layout(pl)[:test] == "me"
+    end
 end
