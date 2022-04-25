@@ -21,7 +21,7 @@ end
     pl = bar(["a", "b", "c"], [1, 2, 3])
     ppl = bar(["a", "b", "c"], [1, 2, 3], series_permutation = (:x, :y))
     @test xticks(ppl) == yticks(pl)
-    @test yticks(pl) == xticks(ppl)
+    @test yticks(ppl) == xticks(pl)
     @test filter(isfinite, pl[1][1][:x]) == filter(isfinite, ppl[1][1][:y])
     @test filter(isfinite, pl[1][1][:y]) == filter(isfinite, ppl[1][1][:x])
 end
