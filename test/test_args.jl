@@ -1,4 +1,4 @@
-using Plots, Test
+using Plots, Test, NaNMath
 
 @testset "Series Attributes" begin
     pl = plot([[1, 2, 3], [2, 3, 4]], lw = 5)
@@ -15,4 +15,13 @@ end
         @test pl[1][axis][:tickfontsize] == 10
         @test pl[1][axis][:tickfontfamily] == "Times"
     end
+end
+
+@testset "Permute recipes" begin
+    pl = bar(["a", "b", "c"], [1, 2, 3])
+    ppl = bar(["a", "b", "c"], [1, 2, 3], series_permutation = (:x, :y))
+    @test xticks(ppl) == yticks(pl)
+    @test yticks(pl) == xticks(ppl)
+    @test filter(isfinite, pl[1][1][:x]) == filter(isfinite, ppl[1][1][:y])
+    @test filter(isfinite, pl[1][1][:y]) == filter(isfinite, ppl[1][1][:x])
 end
