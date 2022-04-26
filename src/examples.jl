@@ -1318,6 +1318,7 @@ _backend_skips = Dict(
         21,  # custom markers unsupported
         26,  # nested layout unsupported
         29,  # nested layout unsupported
+        31,  # nested layout unsupported
         33,  # grid lines unsupported
         34,  # framestyle unsupported
         37,  # ribbons / filled unsupported
