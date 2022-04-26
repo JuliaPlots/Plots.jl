@@ -158,6 +158,10 @@ function addUnicodeSeries!(
         series[:x], series[:y]
     end
 
+    if ispolar(sp) || ispolar(series)
+        return UnicodePlots.polarplot(x, y)
+    end
+
     # special handling (src/interface)
     fix_ar = get(se_kw, :fix_ar, true)
     if st === :histogram2d
