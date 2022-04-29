@@ -49,6 +49,9 @@ function _ijulia_display_dict(plt::Plot)
         mime = "text/html"
         out[mime] = sprint(show, MIME(mime), plt)
         _ijulia__extra_mime_info!(plt, out)
+    elseif output_type == :pdf
+        mime = "application/pdf"
+        out[mime] = base64encode(show, MIME(mime), plt)
     else
         error("Unsupported output type $output_type")
     end
