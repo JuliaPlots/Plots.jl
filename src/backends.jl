@@ -348,6 +348,7 @@ const _gr_attr = merge_with_base_supported([
     :fillrange,
     :fillcolor,
     :fillalpha,
+    :fillstyle,
     :bins,
     :layout,
     :title,
