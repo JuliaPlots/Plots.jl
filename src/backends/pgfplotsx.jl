@@ -206,8 +206,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
 
             if hascolorbar(sp)
                 cticks = get_colorbar_ticks(sp)[2]
-                colorbar_style = PGFPlotsX.Options("ylabel" => sp[:colorbar_title])
                 if sp[:colorbar] === :top
+                    colorbar_style = PGFPlotsX.Options("xlabel" => sp[:colorbar_title])
                     push!(
                         colorbar_style,
                         "at" => string((0.5, 1.05)),
@@ -217,6 +217,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         "xticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     )
                 else
+                    colorbar_style = PGFPlotsX.Options("ylabel" => sp[:colorbar_title])
                     push!(
                         colorbar_style,
                         "ytick" => string("{", join(cticks, ","), "}"),
