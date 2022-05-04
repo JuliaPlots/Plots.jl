@@ -19,6 +19,7 @@ jobs:
       GKSwstype: "nul"
       PLOTS_TEST: "true"
     runs-on: ${{matrix.os}}
+    continue-on-error: ${{ matrix.version == '~1.8.0-0' }}
     strategy:
       fail-fast: false
       matrix:
