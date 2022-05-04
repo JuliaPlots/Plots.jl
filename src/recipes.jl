@@ -1140,6 +1140,13 @@ end
 # Error Bars
 
 function error_style!(plotattributes::AKW)
+    # errorbar color should soley determined by markerstrokecolor
+    if haskey(plotattributes, :marker_z)
+        reset_kw!(plotattributes, :marker_z)
+    end
+    if haskey(plotattributes, :line_z)
+        reset_kw!(plotattributes, :line_z)
+    end
     msc = plotattributes[:markerstrokecolor]
     msc = if msc === :match
         plotattributes[:subplot][:foreground_color_subplot]
