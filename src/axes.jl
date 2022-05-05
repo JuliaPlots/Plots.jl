@@ -676,8 +676,8 @@ end
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
 function discrete_value!(plotattributes, letter::Symbol, dv)
-    l = if plotattributes[:series_permutation] !== :none
-        only(filter(!=(letter), plotattributes[:series_permutation]))
+    l = if plotattributes[:permute] !== :none
+        only(filter(!=(letter), plotattributes[:permute]))
     else
         letter
     end

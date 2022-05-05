@@ -241,7 +241,7 @@ const _base_supported_args = [
     :projection,
     :show_empty_bins,
     :z_order,
-    :series_permutation,
+    :permute,
 ]
 
 function merge_with_base_supported(v::AVec)
@@ -949,7 +949,7 @@ const _unicodeplots_seriestype = [
     :heatmap,
     :contour,
     # :contour3d,
-    :series_permutation,
+    :permute,
     :spy,
     :surface,
     :wireframe,
@@ -1024,7 +1024,6 @@ const _hdf5_attr = merge_with_base_supported([
     :titlelocation,
     :titlefont,
     :window_title,
-    :series_permutation,
     :guide,
     :lims,
     :ticks,
@@ -1127,7 +1126,6 @@ const _inspectdr_attr = merge_with_base_supported([
     :window_title,
     :guide,
     :lims,
-    :series_permutation,
     :scale, #:ticks, :flip, :rotation,
     :titlefontfamily,
     :titlefontsize,
@@ -1231,7 +1229,6 @@ const _pgfplotsx_attr = merge_with_base_supported([
     :lims,
     :ticks,
     :scale,
-    :series_permutation,
     :flip,
     :titlefontfamily,
     :titlefontsize,

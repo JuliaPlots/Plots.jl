@@ -400,7 +400,7 @@ const _series_defaults = KW(
     :stride       => (1, 1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
     :connections  => nothing,  # tuple of arrays to specifiy connectivity of a 3d mesh
     :z_order      => :front, # one of :front, :back or integer in 1:length(sp.series_list)
-    :series_permutation => :none, # tuple of two symbols to be permuted
+    :permute => :none, # tuple of two symbols to be permuted
     :extra_kwargs => Dict(),
 )
 

@@ -19,7 +19,7 @@ end
 
 @testset "Permute recipes" begin
     pl = bar(["a", "b", "c"], [1, 2, 3])
-    ppl = bar(["a", "b", "c"], [1, 2, 3], series_permutation = (:x, :y))
+    ppl = bar(["a", "b", "c"], [1, 2, 3], permute = (:x, :y))
     @test xticks(ppl) == yticks(pl)
     @test yticks(ppl) == xticks(pl)
     @test filter(isfinite, pl[1][1][:x]) == filter(isfinite, ppl[1][1][:y])
