@@ -438,7 +438,7 @@ end
     procx, procy, xscale, yscale, baseline = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
     axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
-    cv = [discrete_value!(axis, xi)[1] for xi in procx]
+    cv = [discrete_value!(plotattributes, :x, xi)[1] for xi in procx]
     procx = if nx == ny
         cv
     elseif nx == ny + 1

@@ -675,6 +675,15 @@ end
 # these methods track the discrete (categorical) values which correspond to axis continuous values (cv)
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
+function discrete_value!(plotattributes, letter::Symbol, dv)
+    l = if plotattributes[:series_permutation] !== :none
+        only(filter(!=(letter), plotattributes[:series_permutation]))
+    else
+        letter
+    end
+    discrete_value!(plotattributes[:subplot][get_attr_symbol(l, :axis)], dv)
+end
+
 function discrete_value!(axis::Axis, dv)
     cv_idx = get(axis[:discrete_map], dv, -1)
     if cv_idx == -1
