@@ -400,6 +400,7 @@ const _series_defaults = KW(
     :stride       => (1, 1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
     :connections  => nothing,  # tuple of arrays to specifiy connectivity of a 3d mesh
     :z_order      => :front, # one of :front, :back or integer in 1:length(sp.series_list)
+    :permute      => :none, # tuple of two symbols to be permuted
     :extra_kwargs => Dict(),
 )
 
@@ -1611,7 +1612,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     already_warned = get!(_already_warned, bend, Set{Symbol}())
     extra_kwargs = Dict{Symbol,Any}()
     for k in keys(plotattributes)
-        is_attr_supported(pkg, k) && continue
+        is_attr_supported(pkg, k) && !(k in keys(_deprecated_attributes)) && continue
         k in _suppress_warnings && continue
         default_value = default(k)
         if ismissing(default_value)
@@ -1625,9 +1626,16 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
        get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
-            @warn(
-                "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
-            )
+            if k in keys(_deprecated_attributes)
+                @warn("""
+                Keyword argument `$k` is deprecated.
+                Please use `$(_deprecated_attributes[k])` instead.
+                """)
+            else
+                @warn(
+                    "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
+                )
+            end
         end
     end
     return extra_kwargs

@@ -68,6 +68,17 @@ end
 function _preprocess_userrecipe(kw::AKW)
     _add_markershape(kw)
 
+    if get(kw, :permute, default(:permute)) != :none
+        l1, l2 = kw[:permute]
+        for k in _axis_args
+            k1 = _attrsymbolcache[l1][k]
+            k2 = _attrsymbolcache[l2][k]
+            kwk = keys(kw)
+            if k1 in kwk || k2 in kwk
+                kw[k1], kw[k2] = get(kw, k2, default(k2)), get(kw, k1, default(k1))
+            end
+        end
+    end
     # map marker_z if it's a Function
     if isa(get(kw, :marker_z, default(:marker_z)), Function)
         # TODO: should this take y and/or z as arguments?
@@ -338,6 +349,19 @@ RecipesPipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported
 
 function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
+    if plotattributes[:permute] != :none
+        letter1, letter2 = plotattributes[:permute]
+        if plotattributes[:markershape] == :hline &&
+           (plotattributes[:permute] == (:x, :y) || plotattributes[:permute] == (:y, :x))
+            plotattributes[:markershape] = :vline
+        elseif plotattributes[:markershape] == :vline && (
+            plotattributes[:permute] == (:x, :y) || plotattributes[:permute] == (:y, :x)
+        )
+            plotattributes[:markershape] = :hline
+        end
+        plotattributes[letter1], plotattributes[letter2] =
+            plotattributes[letter2], plotattributes[letter1]
+    end
     _expand_subplot_extrema(sp, plotattributes, plotattributes[:seriestype])
     _update_series_attributes!(plotattributes, plt, sp)
     _add_the_series(plt, sp, plotattributes)

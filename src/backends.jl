@@ -241,6 +241,7 @@ const _base_supported_args = [
     :projection,
     :show_empty_bins,
     :z_order,
+    :permute,
 ]
 
 function merge_with_base_supported(v::AVec)
@@ -949,6 +950,7 @@ const _unicodeplots_seriestype = [
     :heatmap,
     :contour,
     # :contour3d,
+    :permute,
     :spy,
     :surface,
     :wireframe,
