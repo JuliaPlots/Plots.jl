@@ -1612,6 +1612,10 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     already_warned = get!(_already_warned, bend, Set{Symbol}())
     extra_kwargs = Dict{Symbol,Any}()
     for k in keys(plotattributes)
+        if k in keys(_deprecated_attributes)
+            k in already_warned || push!(_to_warn, k)
+            continue
+        end
         is_attr_supported(pkg, k) && continue
         k in _suppress_warnings && continue
         default_value = default(k)
@@ -1626,9 +1630,16 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
        get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
-            @warn(
-                "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
-            )
+            if k in keys(_deprecated_attributes)
+                @warn("""
+                Keyword argument `$k` is deprecated.
+                Please use `$(_deprecated_attributes[k])` instead.
+                """)
+            else
+                @warn(
+                    "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
+                )
+            end
         end
     end
     return extra_kwargs

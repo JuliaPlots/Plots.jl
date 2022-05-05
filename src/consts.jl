@@ -1,4 +1,5 @@
 
+const _deprecated_attributes = Dict{Symbol, Symbol}(:orientation => :series_permutation)
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 
 const _initial_defaults = deepcopy(_all_defaults)

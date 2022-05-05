@@ -1,4 +1,4 @@
-using Plots, Test, NaNMath
+using Plots, Test
 
 @testset "Series Attributes" begin
     pl = plot([[1, 2, 3], [2, 3, 4]], lw = 5)
