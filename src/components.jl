@@ -159,10 +159,15 @@ function scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shape
 end
 
+"""
+    scale(shape, x, y = x, c = center(shape))
+    scale!(shape, x, y = x, c = center(shape))
+
+Scale shape by a factor.
+"""
 scale(shape::Shape, x::Real, y::Real = x, c = center(shape)) =
     scale!(deepcopy(shape), x, y, c)
 
-"translate a Shape in space"
 function translate!(shape::Shape, x::Real, y::Real = x)
     sx, sy = coords(shape)
     for i in eachindex(sx)
@@ -172,6 +177,12 @@ function translate!(shape::Shape, x::Real, y::Real = x)
     shape
 end
 
+"""
+    translate(shape, x, y = x)
+    translate!(shape, x, y = x)
+
+Translate a Shape in space.
+"""
 translate(shape::Shape, x::Real, y::Real = x) = translate!(deepcopy(shape), x, y)
 
 rotate_x(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =

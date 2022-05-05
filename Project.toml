@@ -3,6 +3,7 @@ uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 author = ["Tom Breloff (@tbreloff)"]
 version = "1.29.0"
 
+
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 Contour = "d38c429a-6771-53c6-b99e-75d170b6e991"
@@ -47,7 +48,7 @@ Latexify = "0.14 - 0.15"
 Measures = "0.3"
 NaNMath = "0.3, 1"
 PGFPlotsX = "1"
-PlotThemes = "2"
+PlotThemes = "2, 3"
 PlotUtils = "1"
 PlotlyBase = "0.7"
 PlotlyJS = "0.18"

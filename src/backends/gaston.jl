@@ -1,8 +1,6 @@
 # https://github.com/mbaz/Gaston.
 
-# --------------------------------------------
-# These functions are called by Plots
-# --------------------------------------------
+should_warn_on_unsupported(::GastonBackend) = false
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
@@ -112,7 +110,7 @@ function gaston_saveopts(plt::Plot{GastonBackend})
 
     # Scale all plot elements to match Plots.jl DPI standard
     scaling = plt.attr[:dpi] / Plots.DPI
-    push!(saveopts, "fontscale $scaling lw $scaling dl $scaling ps $scaling")
+    push!(saveopts, "fontscale $scaling lw $scaling dl $scaling")  #  ps $scaling
 
     return join(saveopts, " ")
 end
@@ -246,10 +244,9 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
                 if (lx = length(x)) == 2 && lx != nc
                     x = collect(range(x[1], x[2], length = nc))
                 end
-            elseif st == :heatmap
-                length(x) == size(z, 2) + 1 && (x = @view x[1:(end - 1)])
-                length(y) == size(z, 1) + 1 && (y = @view y[1:(end - 1)])
             end
+            length(x) == size(z, 2) + 1 && (x = (x[1:(end - 1)] + x[2:end]) / 2)
+            length(y) == size(z, 1) + 1 && (y = (y[1:(end - 1)] + y[2:end]) / 2)
         end
         if st == :mesh3d
             x, y, z = mesh3d_triangles(x, y, z, series[:connections])

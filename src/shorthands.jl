@@ -478,4 +478,27 @@ xgrid!(args...; kw...) = plot!(; xgrid = args, kw...)
 yaxis!(args...; kw...) = plot!(; yaxis = args, kw...)
 ygrid!(args...; kw...) = plot!(; ygrid = args, kw...)
 
+@doc """
+   abline!([plot,] a, b; kwargs...)
+
+Adds ax+b... straight line over the current plot, without changing the axis limits
+""" abline!
+
+@doc """
+    areaplot([x,] y)
+    areaplot!([x,] y)
+
+Draw a stacked area plot of the matrix y.
+# Examples
+```julia-repl
+julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], fillalpha = [0.2 0.3 0.4])
+```
+""" areaplot
+
+@doc """
+    lens!([plot,] x, y, inset = (sp_index, bbox(x1, x2, y1, y2)))
+
+Magnify a region of a plot given by `x` and `y`.
+`sp_index` is the index of the subplot and `x1`, `x2`, `y1` and `y2` should be between `0` and `1`.
+""" lens!
 @specialize

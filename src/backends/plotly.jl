@@ -754,12 +754,12 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(plotattributes_out, series)
     plotly_adjust_hover_label!(plotattributes_out, series[:hover])
 
-    return [plotattributes_out]
+    return [merge(plotattributes_out, series[:extra_kwargs])]
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
     segments = series_segments(series; check = true)
-    plotattributes_outs = Vector{KW}(undef, length(segments))
+    plotattributes_outs = [KW() for _ in 1:length(segments)]
 
     # TODO: create a plotattributes_out for each polygon
     # x, y = series[:x], series[:y]
@@ -808,7 +808,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
         plotly_polar!(plotattributes_out, series)
         plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], i))
-        plotattributes_outs[k] = plotattributes_out
+        plotattributes_outs[k] = merge(plotattributes_out, series[:extra_kwargs])
     end
     if series[:fill_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
@@ -969,6 +969,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         else
             plotattributes_outs[k] = plotattributes_out
         end
+        plotattributes_outs[k] = merge(plotattributes_outs[k], series[:extra_kwargs])
     end
 
     if series[:line_z] !== nothing

@@ -1,8 +1,5 @@
 # https://github.com/JuliaPlots/UnicodePlots.jl
 
-should_warn_on_unsupported(::UnicodePlotsBackend) = false
-
-# ------------------------------------------------------------------------------------------
 const _canvas_map = (
     braille = UnicodePlots.BrailleCanvas,
     density = UnicodePlots.DensityCanvas,
@@ -13,11 +10,10 @@ const _canvas_map = (
     dot = UnicodePlots.DotCanvas,
 )
 
-# do all the magic here... build it all at once,
-# since we need to know about all the series at the very beginning
-function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
-    plt.o = UnicodePlots.Plot[]
+should_warn_on_unsupported(::UnicodePlotsBackend) = false
 
+function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
+    plt.o = UnicodePlots.Plot[]
     up_width = UnicodePlots.DEFAULT_WIDTH[]
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
 
@@ -162,6 +158,10 @@ function addUnicodeSeries!(
         series[:x], series[:y]
     end
 
+    if ispolar(sp) || ispolar(series)
+        return UnicodePlots.polarplot(x, y)
+    end
+
     # special handling (src/interface)
     fix_ar = get(se_kw, :fix_ar, true)
     if st === :histogram2d
@@ -254,8 +254,8 @@ end
 
 # ------------------------------------------------------------------------------------------
 
-function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
-    unicodeplots_rebuild(plt)
+function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
+    prepare_output(plt)
     nr, nc = size(plt.layout)
     s1 = zeros(Int, nr, nc)
     s2 = zeros(Int, nr, nc)
@@ -292,18 +292,18 @@ function png(plt::Plot{UnicodePlotsBackend}, fn::AbstractString)
             end
             n1 += m1[r]
         end
-        UnicodePlots.FileIO.save(fn, img)
+        stream = UnicodePlots.FileIO.Stream{UnicodePlots.FileIO.format"PNG"}(io)
+        UnicodePlots.FileIO.save(stream, img)
     end
     nothing
 end
 
-# ------------------------------------------------------------------------------------------
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
 Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
-    unicodeplots_rebuild(plt)
+    prepare_output(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
         n = length(plt.o)
@@ -335,7 +335,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
                         colored = read(buf, String)
                         lines_colored[r, c] = lu = lc = split(colored, '\n')
                         if have_color
-                            uncolored = UnicodePlots.nocolor_string(colored)
+                            uncolored = UnicodePlots.no_ansi_escape(colored)
                             lines_uncolored[r, c] = lu = split(uncolored, '\n')
                         end
                         lmax = max(length(lc), lmax)
@@ -367,4 +367,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
 end
 
 # we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
-_display(plt::Plot{UnicodePlotsBackend}) = (show(stdout, plt); println(stdout))
+function _display(plt::Plot{UnicodePlotsBackend})
+    show(stdout, plt)
+    println(stdout)
+end

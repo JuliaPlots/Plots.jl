@@ -302,7 +302,7 @@ function _initialize_backend(pkg::AbstractBackend)
     @eval Main begin
         import $sym
         export $sym
-        Plots._check_compat($sym)
+        $(_check_compat)($sym)
     end
 end
 
@@ -349,6 +349,7 @@ const _gr_attr = merge_with_base_supported([
     :fillrange,
     :fillcolor,
     :fillalpha,
+    :fillstyle,
     :bins,
     :layout,
     :title,

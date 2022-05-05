@@ -1140,6 +1140,13 @@ end
 # Error Bars
 
 function error_style!(plotattributes::AKW)
+    # errorbar color should soley determined by markerstrokecolor
+    if haskey(plotattributes, :marker_z)
+        reset_kw!(plotattributes, :marker_z)
+    end
+    if haskey(plotattributes, :line_z)
+        reset_kw!(plotattributes, :line_z)
+    end
     msc = plotattributes[:markerstrokecolor]
     msc = if msc === :match
         plotattributes[:subplot][:foreground_color_subplot]
@@ -1625,7 +1632,6 @@ end
 
 @nospecialize
 
-"Adds ax+b... straight line over the current plot, without changing the axis limits"
 abline!(plt::Plot, a, b; kw...) =
     plot!(plt, [0, 1], [b, b + a]; seriestype = :straightline, kw...)
 
@@ -1670,16 +1676,6 @@ end
     end
 end
 
-"""
-    areaplot([x,] y)
-    areaplot!([x,] y)
-
-Draw a stacked area plot of the matrix y.
-# Examples
-```julia-repl
-julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], fillalpha = [0.2 0.3 0.4])
-```
-"""
 @userplot AreaPlot
 
 @recipe function f(a::AreaPlot)

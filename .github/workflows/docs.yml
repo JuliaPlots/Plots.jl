@@ -9,7 +9,7 @@ on:
  
 jobs:
   Build_docs:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -21,42 +21,14 @@ jobs:
           cache-name: cache-artifacts
         with:
           path: ~/.julia/artifacts 
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          key: ${{runner.os}}-test-${{env.cache-name}}-${{hashFiles('**/Project.toml')}}
           restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y qt5-default \
-            ttf-mscorefonts-installer \
-            poppler-utils \
-            pdf2svg \
-            texlive-latex-base \
-            texlive-binaries \
-            texlive-pictures \
-            texlive-latex-extra \
-            texlive-luatex \
-            ghostscript-x \
-            libgconf2-4 \
-            gnuplot
-          sudo fc-cache -vr
-            
-      - name: build documentation
-        env: 
+            ${{runner.os}}-test-${{env.cache-name}}-
+            ${{runner.os}}-test-
+            ${{runner.os}}-
+      - name: Build documentation
+        env:
           PYTHON: ""
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-        run: |
-          echo $GITHUB_REF
-          export JULIA_DEBUG=Documenter,DemoCards
-          export PLOTDOCS_ANSICOLOR=true
-          export GKSwstype=nul  # Plots.jl/issues/3664
-          export DOCUMENTER_DEBUG=true  # Democards.jl
-          # export UP_DEBUG_IO=$(mktemp)
-          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()'
-          # xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"add Documenter#master"'
-          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; pkg"st -m"'
-          xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl") do; include("docs/make.jl"); end'
-          # cat $UP_DEBUG_IO | sed 's,\x1B,ESC,g'
-          # rm $UP_DEBUG_IO
+          DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: bash docs/ci_build.sh

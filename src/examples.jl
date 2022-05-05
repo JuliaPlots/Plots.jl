@@ -1273,6 +1273,24 @@ const _examples = PlotExample[
             end
         )],
     ),
+    PlotExample( # 58
+        "Stacked area chart",
+        """
+        `areaplot` draws stacked area plots.
+        """,
+        [
+            :(
+                begin
+                    areaplot(
+                        1:3,
+                        [1 2 3; 7 8 9; 4 5 6],
+                        seriescolor = [:red :green :blue],
+                        fillalpha = [0.2 0.3 0.4],
+                    )
+                end
+            ),
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -1299,8 +1317,8 @@ _backend_skips = Dict(
         16,  # nested layout unsupported
         21,  # custom markers unsupported
         26,  # nested layout unsupported
-        27,  # polar plots unsupported
         29,  # nested layout unsupported
+        31,  # nested layout unsupported
         33,  # grid lines unsupported
         34,  # framestyle unsupported
         37,  # ribbons / filled unsupported
