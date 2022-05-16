@@ -313,7 +313,6 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
         end
     else
         have_color = Base.get_have_color()
-        buf = IOContext(PipeBuffer(), :color => have_color)
         lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
         lines_uncolored = have_color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
@@ -331,8 +330,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
                         lines_colored[r, c] = lines_uncolored[r, c] = nothing
                     else
                         sp = plt.o[sps += 1]
-                        show(buf, sp)
-                        colored = read(buf, String)
+                        colored = string(sp; color = have_color)
                         lines_colored[r, c] = lu = lc = split(colored, '\n')
                         if have_color
                             uncolored = UnicodePlots.no_ansi_escape(colored)
