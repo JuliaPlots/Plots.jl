@@ -982,10 +982,12 @@ end
     aspect_ratio --> true
     s = sum(y)
     θ = 0
+    colors = plotattributes[:seriescolor]
     for i in eachindex(y)
         θ_new = θ + 2π * y[i] / s
         coords = [(0.0, 0.0); partialcircle(θ, θ_new, 50)]
         @series begin
+            seriescolor := _cycle(colors, i)
             seriestype := :shape
             label --> string(x[i])
             x := first.(coords)
