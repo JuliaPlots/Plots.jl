@@ -1192,7 +1192,7 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     X = zeros(eltype(x), 4length(ci))
     Y = zeros(eltype(y), 4length(cj))
     Z = zeros(eltype(z), 4length(ck))
-    @inbounds for I in 1:length(ci)
+    @inbounds for I in eachindex(ci)
         i = ci[I] + 1  # connections are 0-based
         j = cj[I] + 1
         k = ck[I] + 1
@@ -1217,7 +1217,7 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
-    @inbounds for I in 1:length(cns)
+    @inbounds for I in eachindex(cns)
         i = cns[I][1]  # connections are 1-based
         j = cns[I][2]
         k = cns[I][3]
