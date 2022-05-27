@@ -15,17 +15,7 @@ jobs:
         with:
           repository: JuliaPlots/PlotDocs.jl
       - uses: julia-actions/setup-julia@v1
-      - name: Cache artifacts
-        uses: actions/cache@v1
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts 
-          key: ${{runner.os}}-test-${{env.cache-name}}-${{hashFiles('**/Project.toml')}}
-          restore-keys: |
-            ${{runner.os}}-test-${{env.cache-name}}-
-            ${{runner.os}}-test-
-            ${{runner.os}}-
+      - uses: julia-actions/cache@v1
       - name: Build documentation
         env:
           PYTHON: ""
