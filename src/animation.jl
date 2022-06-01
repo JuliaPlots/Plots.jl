@@ -98,7 +98,7 @@ function buildanimation(
         else
             # generate a colorpalette first so ffmpeg does not have to guess it
             ffmpeg_exe(
-                `-v $verbose_level -i $(animdir)/%06d.png -vf "palettegen=stats_mode=diff" -y "$(animdir)/palette.bmp"`,
+                `-v $verbose_level -i $(animdir)/%06d.png -vf "palettegen=stats_mode=full" -y "$(animdir)/palette.bmp"`,
             )
             # then apply the palette to get better results
             ffmpeg_exe(
