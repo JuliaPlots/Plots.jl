@@ -203,6 +203,52 @@ end
               "1/$i"
     end
 
+    series_anns(p, series) = p.series_list[series].plotattributes[:series_annotations]
+    ann_strings(ann) = [s.str for s in ann.strs]
+    ann_pointsizes(ann) = [s.font.pointsize for s in ann.strs]
+
+    let p = plot(ones(3, 2), series_annotations = ["a" "d"; "b" "e"; "c" "f"])
+        ann1 = series_anns(p, 1)
+        @test ann_strings(ann1) == ["a", "b", "c"]
+
+        ann2 = series_anns(p, 2)
+        @test ann_strings(ann2) == ["d", "e", "f"]
+    end
+
+    let p = plot(ones(2, 2), series_annotations = (["a" "c"; "b" "d"], square))
+        ann1 = series_anns(p, 1)
+        @test ann_strings(ann1) == ["a", "b"]
+
+        ann2 = series_anns(p, 2)
+        @test ann_strings(ann2) == ["c", "d"]
+
+        @test ann1.baseshape == ann2.baseshape == square
+    end
+
+    let p = plot(
+            ones(3, 2),
+            series_annotations = (
+                permutedims([
+                    (["x", "y", "z"], [10, 20, 30], (14, 15), square),
+                    [("a", 42), "b", "c"],
+                ]),
+                (12, 13),
+            ),
+        )
+        ann1 = series_anns(p, 1)
+        @test ann1.baseshape == square
+        @test ann1.scalefactor == (14, 15)
+        @test ann_strings(ann1) == ["x", "y", "z"]
+        @test ann_pointsizes(ann1) == [10, 20, 30]
+
+        ann2 = series_anns(p, 2)
+        @test ann2.scalefactor == (12, 13)
+        @test ann_strings(ann2) == ["a", "b", "c"]
+        @test ann2.strs[1].font.pointsize == 42
+    end
+
+    @test_throws ArgumentError plot(ones(2, 2), series_annotations = [([1],) 2; 3 4])
+
     p = plot([1, 2], annotations = (1.5, 2, text("foo", :left)))
     x, y, txt = only(p.subplots[end][:annotations])
     @test (x, y) == (1.5, 2)
