@@ -467,10 +467,38 @@ _text_label(lab::Tuple, font) = text(lab[1], font, lab[2:end]...)
 _text_label(lab::PlotText, font) = lab
 _text_label(lab, font) = text(lab, font)
 
-series_annotations(anns::AMat) = map(series_annotations, anns)
 series_annotations(scalar) = series_annotations([scalar])
 series_annotations(anns::SeriesAnnotations) = anns
 series_annotations(::Nothing) = nothing
+
+function series_annotations(anns::AMat{SeriesAnnotations})
+    @assert size(anns, 1) == 1 "matrix of SeriesAnnotations must be a row vector"
+    return anns
+end
+
+function series_annotations(anns::AMat, outer_args...)
+    # Types that represent annotations for an entire series
+    whole_series = Union{AVec,Tuple{AVec,Vararg{Any}}}
+
+    # whole_series types can only be in a row vector
+    if size(anns, 1) > 1
+        for ann in Iterators.filter(ann -> ann isa whole_series, anns)
+            (throw ∘ ArgumentError)(
+                "Given series annotation must be the only element in its column:\n$ann",
+            )
+        end
+    end
+
+    ann_vec = map(eachcol(anns)) do col
+        ann = first(col) isa whole_series ? first(col) : col
+
+        # Override arguments from outer tuple with args from inner tuple
+        strs, inner_args = Iterators.peel(wraptuple(ann))
+        series_annotations(strs, outer_args..., inner_args...)
+    end
+
+    return permutedims(ann_vec)
+end
 
 function series_annotations(strs::AVec, args...)
     fnt = font()
