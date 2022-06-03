@@ -1191,6 +1191,12 @@ end
         return LaTeXString(s)
     end
 end
+@require UnitfulRecipes = "42071c24-d89e-48dd-8a24-8a12d9b8861f" begin
+    using .UnitfulRecipes
+    function pgfx_sanitize_string(s::UnitfulRecipes.UnitfulString)
+        UnitfulRecipes.UnitfulString(pgfx_sanitize_string(s.content), s.unit)
+    end
+end
 function pgfx_sanitize_plot!(plt)
     for (key, value) in plt.attr
         if value isa Union{AbstractString,AbstractVector{<:AbstractString}}
