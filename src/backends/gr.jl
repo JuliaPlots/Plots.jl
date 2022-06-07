@@ -1433,13 +1433,8 @@ function gr_draw_axes(sp, viewport_plotarea)
 
         camera = round.(Int, sp[:camera])
 
-        warn_invalid(val) =
-            if val < 0 || val > 90
-                @warn "camera: $(val)° ∉ [0°, 90°]"
-            end
-        warn_invalid.(camera)
-
-        GR.setspace(zmin, zmax, camera...)
+        GR.setwindow3d(xmin, xmax, ymin, ymax, zmin, zmax)
+        GR.setspace3d(-camera[1], camera[2], 30, 0)
 
         # fill the plot area
         gr_set_fill(plot_color(sp[:background_color_inside]))
