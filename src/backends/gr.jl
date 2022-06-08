@@ -1674,6 +1674,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
             -1 : 1
     end
 
+    GR.setwindow(-1, 1, -1, 1)
     for (cv, dv) in zip((cvs, dvs)...)
         xi, yi = gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...)
         sz_rot = gr_text_size(dv, rot)
