@@ -1839,11 +1839,13 @@ function gr_add_series(sp, series)
         if st === :scatter3d || series[:markershape] !== :none
             # TODO: Do we need to transform to 2d coordinates here?
             x2, y2 = RecipesPipeline.unzip(map(GR.wc3towc, x, y, z))
+            GR.setwindow(-1, 1, -1, 1)
             gr_draw_markers(series, x2, y2, clims)
         end
     elseif st === :contour
         gr_draw_contour(series, x, y, z, clims)
     elseif st in (:surface, :wireframe, :mesh3d)
+        GR.setwindow(-1, 1, -1, 1)
         gr_draw_surface(series, x, y, z, clims)
     elseif st === :volume
         sp[:legend_position] = :none
