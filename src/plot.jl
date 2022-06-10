@@ -141,6 +141,14 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
 
     # create the layout
     plt.layout, plt.subplots, plt.spmap = build_layout(layout, num_sp, copy(plts))
+    if layout === :auto
+        if plt.attr[:size][1] < plt.layout.attr[:width]
+            plt.attr[:size] = (plt.layout.attr[:width], plt.attr[:size][2])
+        end
+        if plt.attr[:size][2] < plt.layout.attr[:height]
+            plt.attr[:size] = (plt.attr[:size][1], plt.layout.attr[:height])
+        end
+    end
 
     # do we need to link any axes together?
     link_axes!(plt.layout, plt[:link])

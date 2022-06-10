@@ -434,6 +434,7 @@ const _plot_defaults = KW(
     :thickness_scaling   => 1,
     :display_type        => :auto,
     :warn_on_unsupported => true,
+    :plotarea => :auto,
     :extra_plot_kwargs   => Dict(),
     :extra_kwargs        => :series,    # directs collection of extra_kwargs
 )

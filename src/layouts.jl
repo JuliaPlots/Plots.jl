@@ -516,7 +516,9 @@ end
 
 layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) =
     layout_args(layout)
-
+layout_args(n_override::Integer, mode::Symbol) =
+    mode === :auto ? (mode, n_override) : error("unhandled layout mode $(typeof(mode)): $mode") # pass-through mode
+layout_args(mode::Symbol) = mode === :auto ? (mode, 1) : error("unhandled layout mode $(typeof(mode)): $mode") # pass-through mode
 layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 
 # ----------------------------------------------------------------------
@@ -577,6 +579,44 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
     end
 
     layout, subplots, spmap
+end
+
+# handle :auto mode, which produces a series of subplots in a square as large as necessary to accomodate them.
+function build_layout(layout::Symbol, n::Integer, plts::AVec{Plot})
+    layout === :auto || error("Unrecognized layout mode: $layout")
+
+    # step 1: collect minimum sizes for each subplot or apply a default if unspecified
+    minsizes = Vector{Union{Symbol, Tuple{Float64, Float64}}}(undef, length(plts))
+    minsizes .= get.(plts, :plotarea, Ref((150.0, 150.0)))
+    minsizes[minsizes .== :auto] .= Ref((150.0, 150.0))
+
+    plotcountx = Int(round(sqrt(length(plts))))
+    plotcounty = Int(ceil(length(plts) / plotcountx))
+
+    # compute the total size
+    plotwidth = 0.0
+    plotrowwidth = 0.0
+    plotrowheight = 0.0
+    plotheight = 0.0
+    xcount = 1
+    for i ∈ eachindex(minsizes)
+        plotrowwidth += minsizes[i][1]
+        plotrowheight = max(plotrowheight, minsizes[i][2])
+        if xcount == plotcountx
+            xcount = 1
+            plotheight += plotrowheight
+            plotwidth = max(plotwidth, plotrowwidth)
+            plotrowheight = 0.0
+            plotrowwidth = 0.0
+        else
+            xcount += 1
+        end
+    end
+
+    layout = GridLayout(plotcounty, plotcountx)
+    layout.attr[:width] = plotwidth
+    layout.attr[:height] = plotheight
+    build_layout(layout, n, plts)
 end
 
 # -------------------------------------------------------------------------
