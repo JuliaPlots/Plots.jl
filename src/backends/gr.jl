@@ -1434,7 +1434,7 @@ function gr_draw_axes(sp, viewport_plotarea)
         camera = round.(Int, sp[:camera])
 
         GR.setwindow3d(xmin, xmax, ymin, ymax, zmin, zmax)
-        GR.setspace3d(-camera[1], camera[2], 30, 0)
+        GR.setspace3d(-90+camera[1], 90-camera[2], 30, 0)
 
         # fill the plot area
         gr_set_fill(plot_color(sp[:background_color_inside]))
