@@ -25,6 +25,18 @@ function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float6
     return sp[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
+function update_clims(sp::Subplot, series::Series, op = process_clims(sp[:clims]))::Tuple{Float64,Float64}
+    zmin, zmax = get_clims(sp)
+    old_zmin, old_zmax = zmin, zmax
+    if series[:colorbar_entry]::Bool
+        zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
+    else
+        update_clims(series, op)
+    end
+    zmin == old_zmin || zmax == old_zmax && update_clims(sp)
+    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+end
+
 """
     update_clims(::Series, op=Plots.ignorenan_extrema)
 Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
@@ -102,4 +114,9 @@ end
 function _update_subplot_colorbars(sp::Subplot)
     # Dynamic callback from the pipeline if needed
     update_clims(sp)
+end
+
+function _update_subplot_colorbars(sp::Subplot, series::Series)
+    # Dynamic callback from the pipeline if needed
+    update_clims(sp, series)
 end
