@@ -33,7 +33,9 @@ function update_clims(sp::Subplot, series::Series, op = process_clims(sp[:clims]
     else
         update_clims(series, op)
     end
-    zmin == old_zmin && zmax == old_zmax || update_clims(sp)
+    isnan(zmin) && isnan(old_zmin) && isnan(zmax) && isnan(old_zmax) ||
+        zmin == old_zmin && zmax == old_zmax ||
+        update_clims(sp)
     return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
