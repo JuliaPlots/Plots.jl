@@ -2161,7 +2161,7 @@ label_to_string(label, series_plotindex) = string(label)  # Fallback to string p
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
-    plotIndex = _series_index(plotattributes, sp)
+    plotIndex = _series_index(plotattributes)
 
     aliasesAndAutopick(
         plotattributes,
@@ -2244,20 +2244,18 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes
 end
 
-function _series_index(plotattributes, sp)
+function update_series_indexes(sp)
     idx = 0
     for series in series_list(sp)
         if series[:primary]
             idx += 1
-        end
-        if series == plotattributes
-            return idx
+            series[:series_index] = idx
         end
     end
-    if get(plotattributes, :primary, true)
-        idx += 1
-    end
-    return idx
+end
+
+function _series_index(plotattributes)
+    return plotattributes[:series_index]
 end
 
 #--------------------------------------------------
