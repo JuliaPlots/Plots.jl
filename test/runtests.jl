@@ -365,7 +365,7 @@ default(show = false, reuse = true)  # don't actually show the plots
 is_ci() = get(ENV, "CI", "false") == "true"
 const PLOTS_IMG_TOL = parse(
     Float64,
-    get(ENV, "PLOTS_IMG_TOL", is_ci() ? Sys.iswindows() ? "2e-4" : "1e-4" : "1e-5"),
+    get(ENV, "PLOTS_IMG_TOL", is_ci() ? Sys.iswindows() ? "2e-3" : "1e-4" : "1e-5"),
 )
 
 ## Uncomment the following lines to update reference images for different backends
