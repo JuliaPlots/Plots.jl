@@ -1433,13 +1433,8 @@ function gr_draw_axes(sp, viewport_plotarea)
 
         camera = round.(Int, sp[:camera])
 
-        warn_invalid(val) =
-            if val < 0 || val > 90
-                @warn "camera: $(val)° ∉ [0°, 90°]"
-            end
-        warn_invalid.(camera)
-
-        GR.setspace(zmin, zmax, camera...)
+        GR.setwindow3d(xmin, xmax, ymin, ymax, zmin, zmax)
+        GR.setspace3d(-90 + camera[1], 90 - camera[2], 30, 0)
 
         # fill the plot area
         gr_set_fill(plot_color(sp[:background_color_inside]))
@@ -1679,6 +1674,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
             -1 : 1
     end
 
+    GR.setwindow(-1, 1, -1, 1)
     for (cv, dv) in zip((cvs, dvs)...)
         xi, yi = gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...)
         sz_rot = gr_text_size(dv, rot)
@@ -1843,11 +1839,13 @@ function gr_add_series(sp, series)
         if st === :scatter3d || series[:markershape] !== :none
             # TODO: Do we need to transform to 2d coordinates here?
             x2, y2 = RecipesPipeline.unzip(map(GR.wc3towc, x, y, z))
+            GR.setwindow(-1, 1, -1, 1)
             gr_draw_markers(series, x2, y2, clims)
         end
     elseif st === :contour
         gr_draw_contour(series, x, y, z, clims)
     elseif st in (:surface, :wireframe, :mesh3d)
+        GR.setwindow(-1, 1, -1, 1)
         gr_draw_surface(series, x, y, z, clims)
     elseif st === :volume
         sp[:legend_position] = :none
