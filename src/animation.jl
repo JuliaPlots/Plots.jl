@@ -61,9 +61,25 @@ end
 
 file_extension(fn) = Base.Filesystem.splitext(fn)[2][2:end]
 
+"""
+    gif(animation[, filename]; fps=20, loop=0, variable_palette=false, verbose=false, show_msg=true)
+Creates an animated .gif-file from an `Animation` object.
+"""
 gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim, fn; kw...)
+"""
+    mov(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
+Creates an .mov-file from an `Animation` object.
+"""
 mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim, fn, false; kw...)
+"""
+    mp4(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
+Creates an .mp4-file from an `Animation` object.
+"""
 mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim, fn, false; kw...)
+"""
+    webm(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
+Creates an .webm-file from an `Animation` object.
+"""
 webm(anim::Animation, fn = webmfn(); kw...) = buildanimation(anim, fn, false; kw...)
 
 ffmpeg_framerate(fps) = "$fps"
