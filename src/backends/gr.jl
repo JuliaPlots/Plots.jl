@@ -8,10 +8,10 @@ export GR
 
 # --------------------------------------------------------------------------------------
 function gr_is3d(st)
-    if st === :contour || st === :contourf || st === :heatmap
-        return false
-    end
-    gr_is3d(st)
+    # if st === :contour || st === :contourf || st === :heatmap
+    #     return false
+    # end
+    RecipesPipeline.is3d(st)
 end
 
 gr_linetype(k) = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)[k]
