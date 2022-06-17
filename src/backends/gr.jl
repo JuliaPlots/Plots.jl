@@ -7,6 +7,12 @@ import GR
 export GR
 
 # --------------------------------------------------------------------------------------
+function gr_is3d(st)
+    # if st === :contour || st === :contourf || st === :heatmap
+    #     return false
+    # end
+    RecipesPipeline.is3d(st)
+end
 
 gr_linetype(k) = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)[k]
 
@@ -438,7 +444,7 @@ function gr_viewport_from_bbox(
     viewport[3] = viewport_canvas[4] * (1.0 - bottom(bb) / h)
     viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
     if hascolorbar(sp)
-        viewport[2] -= 0.1 * (1 + RecipesPipeline.is3d(sp) / 2)
+        viewport[2] -= 0.1 * (1 + gr_is3d(sp) / 2)
     end
     viewport
 end
@@ -446,8 +452,8 @@ end
 # change so we're focused on the viewport area
 function gr_set_viewport_cmap(sp::Subplot, viewport_plotarea)
     GR.setviewport(
-        viewport_plotarea[2] + (RecipesPipeline.is3d(sp) ? 0.07 : 0.02),
-        viewport_plotarea[2] + (RecipesPipeline.is3d(sp) ? 0.10 : 0.05),
+        viewport_plotarea[2] + (gr_is3d(sp) ? 0.07 : 0.02),
+        viewport_plotarea[2] + (gr_is3d(sp) ? 0.10 : 0.05),
         viewport_plotarea[3],
         viewport_plotarea[4],
     )
@@ -792,7 +798,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         toppad += h
     end
 
-    if RecipesPipeline.is3d(sp)
+    if gr_is3d(sp)
         xaxis, yaxis, zaxis = sp[:xaxis], sp[:yaxis], sp[:zaxis]
         xticks, yticks, zticks =
             get_ticks(sp, xaxis), get_ticks(sp, yaxis), get_ticks(sp, zaxis)
@@ -1015,7 +1021,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # add annotations
     for ann in sp[:annotations]
         x, y, val = locate_annotation(sp, ann...)
-        x, y = if RecipesPipeline.is3d(sp)
+        x, y = if gr_is3d(sp)
             gr_w3tondc(x, y, z)
         else
             GR.wctondc(x, y)
@@ -1416,7 +1422,7 @@ function gr_set_window(sp, viewport_plotarea)
 end
 
 function gr_fill_plotarea(sp, viewport_plotarea)
-    if !RecipesPipeline.is3d(sp)
+    if !gr_is3d(sp)
         gr_fill_viewport(viewport_plotarea, plot_color(sp[:background_color_inside]))
     end
 end
@@ -1426,7 +1432,7 @@ end
 function gr_draw_axes(sp, viewport_plotarea)
     GR.setlinewidth(sp.plt[:thickness_scaling])
 
-    if RecipesPipeline.is3d(sp)
+    if gr_is3d(sp)
         # set space
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         zmin, zmax = gr_z_axislims(sp)
@@ -2001,6 +2007,7 @@ function gr_draw_shapes(series, clims)
 end
 
 function gr_draw_contour(series, x, y, z, clims)
+    GR.setprojectiontype(0)
     GR.setspace(clims[1], clims[2], 0, 90)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
     gr_set_transparency(get_fillalpha(series))
@@ -2088,6 +2095,7 @@ end
 
 function gr_draw_heatmap(series, x, y, z, clims)
     fillgrad = _as_gradient(series[:fillcolor])
+    GR.setprojectiontype(0)
     GR.setspace(clims..., 0, 90)
     w, h = length(x) - 1, length(y) - 1
     if !ispolar(series) && is_uniformly_spaced(x) && is_uniformly_spaced(y)
