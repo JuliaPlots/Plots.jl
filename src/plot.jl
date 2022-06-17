@@ -123,7 +123,7 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
     # TODO: replace this with proper processing from a merged user_attr KW
     # update plot args, first with existing plots, then override with plotattributes
     for p in plts
-        _update_plot_args(plt, copy(p.attr))
+        # _update_plot_args(plt, copy(p.attr))
         plt.n += p.n
     end
     _update_plot_args(plt, plotattributes)
