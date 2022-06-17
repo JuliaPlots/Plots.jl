@@ -2007,6 +2007,7 @@ function gr_draw_shapes(series, clims)
 end
 
 function gr_draw_contour(series, x, y, z, clims)
+    GR.setprojectiontype(0)
     GR.setspace(clims[1], clims[2], 0, 90)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
     gr_set_transparency(get_fillalpha(series))
@@ -2094,6 +2095,7 @@ end
 
 function gr_draw_heatmap(series, x, y, z, clims)
     fillgrad = _as_gradient(series[:fillcolor])
+    GR.setprojectiontype(0)
     GR.setspace(clims..., 0, 90)
     w, h = length(x) - 1, length(y) - 1
     if !ispolar(series) && is_uniformly_spaced(x) && is_uniformly_spaced(y)
