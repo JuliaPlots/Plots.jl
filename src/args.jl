@@ -2073,7 +2073,6 @@ function _update_subplot_args(
 
     _update_subplot_periphery(sp, anns)
     _update_subplot_colors(sp)
-    #_update_subplot_series_indexes(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
