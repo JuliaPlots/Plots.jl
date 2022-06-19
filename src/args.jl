@@ -2247,13 +2247,13 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 end
 
 function _series_index(plotattributes, sp)
-    haskey(plotattributes, :series_index) &&
+    if haskey(plotattributes, :series_index)
         return plotattributes[:series_index]::Int
-    
-    haskey(plotattributes, :primary) &&
+    elseif get(plotattributes, :primary, true)
         return sp[:max_series_index] = plotattributes[:series_index] = sp[:max_series_index]::Int + 1
-    
-    return plotattributes[:series_index] = sp[:max_series_index]::Int
+    else
+        return plotattributes[:series_index] = sp[:max_series_index]::Int
+    end
 end
 
 #--------------------------------------------------
