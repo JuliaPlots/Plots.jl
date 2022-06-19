@@ -393,7 +393,6 @@ const _series_defaults = KW(
     :contours           => false,     # add contours to 3d surface and wireframe plots
     :contour_labels     => false,
     :subplot            => :auto,     # which subplot(s) does this series belong to?
-    :series_index       => -1,
     :series_annotations => nothing,       # a list of annotations which apply to the coordinates of this series
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
     #     one logical series to be broken up (path and markers, for example)
@@ -550,6 +549,7 @@ const _suppress_warnings = Set{Symbol}([
     :subplot,
     :subplot_index,
     :series_plotindex,
+    :series_index,
     :link,
     :plot_object,
     :primary,
@@ -2164,6 +2164,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
     plotIndex = _series_index(plotattributes, sp)
+    println(plotIndex)
 
     aliasesAndAutopick(
         plotattributes,
@@ -2247,7 +2248,8 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 end
 
 function _series_index(plotattributes, sp)
-    haskey(plotattributes, :series_index) && return plotattributes[:series_index]::Int
+    haskey(plotattributes, :series_index) &&
+        return plotattributes[:series_index]::Int
     
     haskey(plotattributes, :primary) &&
         return sp[:max_series_index] = plotattributes[:series_index] = sp[:max_series_index]::Int + 1
