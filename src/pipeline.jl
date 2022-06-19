@@ -363,7 +363,6 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
             plotattributes[letter2], plotattributes[letter1]
     end
     _expand_subplot_extrema(sp, plotattributes, plotattributes[:seriestype])
-    plotattributes[:series_index] = 1
     _update_series_attributes!(plotattributes, plt, sp)
     _add_the_series(plt, sp, plotattributes)
 end

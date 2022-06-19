@@ -40,7 +40,7 @@ const _initial_fontsizes =
     merge(_initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes)
 
 const _internal_args =
-    [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
+    [:plot_object, :series_plotindex, :series_index, :markershape_to_add, :letter, :idxfilter]
 
 const _axis_args = Set(keys(_axis_defaults))
 const _series_args = Set(keys(_series_defaults))
