@@ -482,6 +482,7 @@ const _subplot_defaults = KW(
     :right_margin => :match,
     :bottom_margin => :match,
     :subplot_index => -1,
+    :max_series_index => 0,
     :colorbar_title => "",
     :colorbar_titlefontsize => 10,
     :colorbar_title_location => :center,           # also :left or :right
@@ -2072,6 +2073,7 @@ function _update_subplot_args(
 
     _update_subplot_periphery(sp, anns)
     _update_subplot_colors(sp)
+    #_update_subplot_series_indexes(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
@@ -2162,6 +2164,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
     plotIndex = _series_index(plotattributes)
+    plotIndex = _series_index(plotattributes, sp)
 
     aliasesAndAutopick(
         plotattributes,
@@ -2244,18 +2247,13 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes
 end
 
-function update_series_indexes(sp)
-    idx = 0
-    for series in series_list(sp)
-        if series[:primary]
-            idx += 1
-            series[:series_index] = idx
-        end
-    end
-end
-
-function _series_index(plotattributes)
-    return plotattributes[:series_index]
+function _series_index(plotattributes, sp)
+    haskey(plotattributes, :series_index) && return plotattributes[:series_index]::Int
+    
+    haskey(plotattributes, :primary) &&
+        return sp[:max_series_index] = plotattributes[:series_index] = sp[:max_series_index]::Int + 1
+    
+    return plotattributes[:series_index] = sp[:max_series_index]::Int
 end
 
 #--------------------------------------------------
