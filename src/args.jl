@@ -393,6 +393,7 @@ const _series_defaults = KW(
     :contours           => false,     # add contours to 3d surface and wireframe plots
     :contour_labels     => false,
     :subplot            => :auto,     # which subplot(s) does this series belong to?
+    :series_index       => -1,
     :series_annotations => nothing,       # a list of annotations which apply to the coordinates of this series
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
     #     one logical series to be broken up (path and markers, for example)
