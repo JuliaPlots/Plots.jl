@@ -155,7 +155,6 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
         end
         sp.plt = plt
         sp.attr[:subplot_index] = idx
-        update_series_indexes(sp)
         for series in serieslist
             merge!(series.plotattributes, series_attr)
             _slice_series_args!(series.plotattributes, plt, sp, cmdidx)
