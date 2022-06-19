@@ -2164,7 +2164,6 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
     plotIndex = _series_index(plotattributes, sp)
-    println(plotIndex)
 
     aliasesAndAutopick(
         plotattributes,
