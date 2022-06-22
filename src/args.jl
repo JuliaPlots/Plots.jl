@@ -2250,10 +2250,9 @@ function _series_index(plotattributes, sp)
     if haskey(plotattributes, :series_index)
         return plotattributes[:series_index]::Int
     elseif get(plotattributes, :primary, true)
-        return sp[:max_series_index] =
-            plotattributes[:series_index] = sp[:max_series_index]::Int + 1
+        return plotattributes[:series_index] = sp.primary_series_count += 1
     else
-        return plotattributes[:series_index] = sp[:max_series_index]::Int
+        return plotattributes[:series_index] = sp.primary_series_count
     end
 end
 
