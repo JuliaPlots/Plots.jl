@@ -34,6 +34,7 @@ attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
     series_list::Vector{Series}  # arguments for each series
+    primary_series_count::Int # Number of primary series in the series list
     minpad::Tuple # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox  # the canvas area which is available to this subplot
     plotarea::BoundingBox  # the part where the data goes

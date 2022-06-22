@@ -1,5 +1,11 @@
 using Plots, Test
 
+@testset "Subplot Attributes" begin
+    let pl = plot(rand(4, 4), layout = 2)
+        @test pl[1].primary_series_count == 2
+    end
+end
+
 @testset "Series Attributes" begin
     pl = plot([[1, 2, 3], [2, 3, 4]], lw = 5)
     @test hline!(deepcopy(pl), [1.75])[1].series_list[3][:label] ==
@@ -7,6 +13,10 @@ using Plots, Test
           "y3"
     @test hline!(deepcopy(pl), [1.75], z_order = :back)[1].series_list[1][:label] == "y3"
     @test hline!(deepcopy(pl), [1.75], z_order = 2)[1].series_list[2][:label] == "y3"
+    @test isempty(pl[1][1][:extra_kwargs])
+    @test pl[1][2][:series_index] == 2
+    @test pl[1][1][:seriescolor] == cgrad(default(:palette))[1]
+    @test pl[1][2][:seriescolor] == cgrad(default(:palette))[2]
 end
 
 @testset "Axis Attributes" begin

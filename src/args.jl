@@ -548,6 +548,7 @@ const _suppress_warnings = Set{Symbol}([
     :subplot,
     :subplot_index,
     :series_plotindex,
+    :series_index,
     :link,
     :plot_object,
     :primary,
@@ -2245,19 +2246,13 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 end
 
 function _series_index(plotattributes, sp)
-    idx = 0
-    for series in series_list(sp)
-        if series[:primary]
-            idx += 1
-        end
-        if series == plotattributes
-            return idx
-        end
+    if haskey(plotattributes, :series_index)
+        return plotattributes[:series_index]::Int
+    elseif get(plotattributes, :primary, true)
+        return plotattributes[:series_index] = sp.primary_series_count += 1
+    else
+        return plotattributes[:series_index] = sp.primary_series_count
     end
-    if get(plotattributes, :primary, true)
-        idx += 1
-    end
-    return idx
 end
 
 #--------------------------------------------------
