@@ -3,6 +3,7 @@ function Subplot(::T; parent = RootLayout()) where {T<:AbstractBackend}
     Subplot{T}(
         parent,
         Series[],
+        0,
         (20mm, 5mm, 2mm, 10mm),
         defaultbox,
         defaultbox,

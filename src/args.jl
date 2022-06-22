@@ -482,7 +482,6 @@ const _subplot_defaults = KW(
     :right_margin => :match,
     :bottom_margin => :match,
     :subplot_index => -1,
-    :max_series_index => 0,
     :colorbar_title => "",
     :colorbar_titlefontsize => 10,
     :colorbar_title_location => :center,           # also :left or :right
