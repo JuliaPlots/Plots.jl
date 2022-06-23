@@ -34,15 +34,15 @@ end
 end
 
 @testset "Allowed subplot counts" begin
-    p = plot(plot(1:2), layout = grid(2, 2), grid = true)
+    p = plot(plot(1:2); layout = grid(2, 2))
     @test length(p) == 1
-    p = plot(plot(1:2), plot(1:2), layout = grid(2, 2), grid = true)
+    p = plot(plot(1:2), plot(1:2); layout = grid(2, 2))
     @test length(p) == 2
-    p = plot(plot(1:2), plot(1:2), plot(1:2), layout = grid(2, 2), grid = true)
+    p = plot(plot(1:2), plot(1:2), plot(1:2); layout = grid(2, 2))
     @test length(p) == 3
-    p = plot(plot(1:2), plot(1:2), plot(1:2), plot(1:2), layout = grid(2, 2), grid = true)
+    p = plot(plot(1:2), plot(1:2), plot(1:2), plot(1:2); layout = grid(2, 2))
     @test length(p) == 4
-    @test_throws ErrorException plot(plot(1:2), plot(1:2), plot(1:2), plot(1:2), plot(1:2), layout = grid(2, 2), grid = true)
+    @test_throws ErrorException plot(plot(1:2), plot(1:2), plot(1:2), plot(1:2), plot(1:2); layout = grid(2, 2))
 end
 
 @testset "Coverage" begin
