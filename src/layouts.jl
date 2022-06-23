@@ -455,9 +455,9 @@ end
 
 function layout_args(plotattributes::AKW, n_override::Integer)
     layout, n = layout_args(n_override, get(plotattributes, :layout, n_override))
-    if n != n_override
+    if n < n_override
         error(
-            "When doing layout, n ($n) != n_override ($(n_override)).  You're probably trying to force existing plots into a layout that doesn't fit them.",
+            "When doing layout, n ($n) < n_override ($(n_override)).  You're probably trying to force existing plots into a layout that doesn't fit them.",
         )
     end
     layout, n

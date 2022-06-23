@@ -33,6 +33,26 @@ end
     @test p[3][:framestyle] === :none
 end
 
+@testset "Allowed subplot counts" begin
+    p = plot(plot(1:2); layout = grid(2, 2))
+    @test length(p) == 1
+    p = plot(plot(1:2), plot(1:2); layout = grid(2, 2))
+    @test length(p) == 2
+    p = plot(plot(1:2), plot(1:2), plot(1:2); layout = grid(2, 2))
+    @test length(p) == 3
+    @test length(plot!(p, plot(1:2))) == 4
+    p = plot(plot(1:2), plot(1:2), plot(1:2), plot(1:2); layout = grid(2, 2))
+    @test length(p) == 4
+    @test_throws ErrorException plot(
+        plot(1:2),
+        plot(1:2),
+        plot(1:2),
+        plot(1:2),
+        plot(1:2);
+        layout = grid(2, 2),
+    )
+end
+
 @testset "Coverage" begin
     p = plot((plot(i) for i in 1:4)..., layout = (2, 2))
 
