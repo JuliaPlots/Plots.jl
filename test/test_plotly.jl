@@ -1,4 +1,3 @@
-using Plots, Test
 
 @testset "Plotly" begin
     @testset "Basic" begin
@@ -6,7 +5,7 @@ using Plots, Test
         @test backend() == Plots.PlotlyBackend()
 
         p = plot(rand(10))
-        @test isa(p, Plots.Plot) == true
+        @test isa(p, Plots.Plot)
         @test_nowarn Plots.plotly_series(plot())
     end
 

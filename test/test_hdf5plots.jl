@@ -1,4 +1,4 @@
-using Plots, HDF5
+using HDF5
 
 @testset "HDF5_Plots" begin
     fname = "tmpplotsave.hdf5"
@@ -17,4 +17,4 @@ using Plots, HDF5
     @test psrc.subplots[1].series_list[1][:y] == pread.subplots[1].series_list[1][:y]
 
     #display(pread) #Don't display. Regression env might not support
-end #testset
+end

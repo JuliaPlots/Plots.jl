@@ -1,4 +1,3 @@
-using Plots, Test
 pgfplotsx()
 
 function create_plot(args...; kwargs...)
@@ -55,7 +54,7 @@ end
         pgfx_plot = plot!(pl, zeros(n), zeros(n), 1:n, w = 10)
         Plots._update_plot_object(pgfx_plot)
         if @test_nowarn(
-            haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar") == true
+            haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar")
         )
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
         end
@@ -178,7 +177,7 @@ end
         pgfx_plot = heatmap(xs, ys, z, aspect_ratio = 1)
         Plots._update_plot_object(pgfx_plot)
         if @test_nowarn(
-            haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar") == true
+            haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar")
         )
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colormap name"] == "plots1"

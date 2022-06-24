@@ -1,5 +1,3 @@
-using Plots, Test
-
 @testset "Subplot sclicing" begin
     pl = @test_nowarn plot(
         rand(4, 8),

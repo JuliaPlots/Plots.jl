@@ -52,6 +52,12 @@ end
         savefig(p, "$fn.txt")
         savefig("$fn.txt")
         @test isfile("$fn.txt")
+
+        Plots.png(p, fn)
+        Plots.png(fn)
+        savefig(p, "$fn.png")
+        savefig("$fn.png")
+        @test isfile("$fn.png")
     end
 end
 

@@ -702,9 +702,7 @@ function discrete_value!(axis::Axis, dv)
 end
 
 # continuous value... just pass back with axis negative index
-function discrete_value!(axis::Axis, cv::Number)
-    cv, -1
-end
+discrete_value!(axis::Axis, cv::Number) = (cv, -1)
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AVec)
@@ -728,9 +726,7 @@ function discrete_value!(axis::Axis, v::AMat)
     cmat, discrete_indices
 end
 
-function discrete_value!(axis::Axis, v::Surface)
-    map(Surface, discrete_value!(axis, v.surf))
-end
+discrete_value!(axis::Axis, v::Surface) = map(Surface, discrete_value!(axis, v.surf))
 
 # -------------------------------------------------------------------------
 
@@ -855,7 +851,7 @@ function axis_drawing_info(sp, letter)
     )
 end
 
-function sort_3d_axes(a, b, c, letter)
+sort_3d_axes(a, b, c, letter) =
     if letter === :x
         a, b, c
     elseif letter === :y
@@ -863,7 +859,6 @@ function sort_3d_axes(a, b, c, letter)
     else
         c, b, a
     end
-end
 
 function axis_drawing_info_3d(sp, letter)
     near_letter = letter in (:x, :z) ? :y : :x

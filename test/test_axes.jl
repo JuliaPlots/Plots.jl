@@ -1,5 +1,3 @@
-using Plots, Test
-
 @testset "Axes" begin
     p = plot()
     axis = p.subplots[1][:xaxis]
@@ -18,8 +16,8 @@ end
     for value in Plots._allShowaxisArgs
         @test plot(1:5, showaxis = value)[1][:yaxis][:showaxis] isa Bool
     end
-    @test plot(1:5, showaxis = :y)[1][:yaxis][:showaxis] == true
-    @test plot(1:5, showaxis = :y)[1][:xaxis][:showaxis] == false
+    @test plot(1:5, showaxis = :y)[1][:yaxis][:showaxis]
+    @test !plot(1:5, showaxis = :y)[1][:xaxis][:showaxis]
 end
 
 @testset "Magic axis" begin

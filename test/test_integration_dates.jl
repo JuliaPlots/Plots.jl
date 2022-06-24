@@ -1,5 +1,3 @@
-using Plots, Test, Dates
-
 @testset "Limits" begin
     y = [1.0 * i * i for i in 1:10]
     x = [Date(2019, 11, i) for i in 1:10]
@@ -17,10 +15,10 @@ using Plots, Test, Dates
     @static if haskey(ENV, "APPVEYOR")
         @info "Skipping display tests on AppVeyor"
     else
-        @test isa(display(p), Nothing) == true
+        @test isa(display(p), Nothing)
         closeall()
     end
-end # testset
+end
 
 @testset "Date xlims" begin
     y = [1.0 * i * i for i in 1:10]
@@ -36,10 +34,10 @@ end # testset
     @static if haskey(ENV, "APPVEYOR")
         @info "Skipping display tests on AppVeyor"
     else
-        @test isa(display(p), Nothing) == true
+        @test isa(display(p), Nothing)
         closeall()
     end
-end # testset
+end
 
 @testset "DateTime xlims" begin
     y = [1.0 * i * i for i in 1:10]
@@ -54,7 +52,7 @@ end # testset
     @static if haskey(ENV, "APPVEYOR")
         @info "Skipping display tests on AppVeyor"
     else
-        @test isa(display(p), Nothing) == true
+        @test isa(display(p), Nothing)
         closeall()
     end
-end # testset
+end

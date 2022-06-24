@@ -3,13 +3,12 @@ using Scratch
 
 const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 
-function _plots_defaults()
+_plots_defaults() = 
     if isdefined(Main, :PLOTS_DEFAULTS)
         copy(Dict{Symbol,Any}(Main.PLOTS_DEFAULTS))
     else
         Dict{Symbol,Any}()
     end
-end
 
 function __init__()
     user_defaults = _plots_defaults()
@@ -96,12 +95,10 @@ function __init__()
     if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == "true"
         global plotly_local_file_path[] =
             joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
-        if !isfile(plotly_local_file_path[])
-            Downloads.download(
-                "https://cdn.plot.ly/$(_plotly_min_js_filename)",
-                plotly_local_file_path[],
-            )
-        end
+        isfile(plotly_local_file_path[]) || Downloads.download(
+            "https://cdn.plot.ly/$(_plotly_min_js_filename)",
+            plotly_local_file_path[],
+        )
 
         use_local_plotlyjs[] = true
     end

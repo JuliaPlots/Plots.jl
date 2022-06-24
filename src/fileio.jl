@@ -13,10 +13,10 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     pdf(plt, fn)
 
     # load that pdf into a FileIO Stream
-    s = _fileio_load(fn * ".pdf")
+    s = _fileio_load("$fn.pdf")
 
     # save a png
-    pngfn = fn * ".png"
+    pngfn = "$fn.png"
     _fileio_save(pngfn, s)
 
     # now write from the file

@@ -1,4 +1,3 @@
-using Plots, Test
 using OffsetArrays
 
 @testset "User recipes" begin

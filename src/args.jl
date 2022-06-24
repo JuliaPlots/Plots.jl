@@ -1,16 +1,5 @@
-function makeplural(s::Symbol)
-    str = string(s)
-    if last(str) != 's'
-        return Symbol(string(s, "s"))
-    end
-    return s
-end
-
-function make_non_underscore(s::Symbol)
-    str = string(s)
-    str = replace(str, "_" => "")
-    return Symbol(str)
-end
+makeplural(s::Symbol) = last(string(s)) == 's' ? s : Symbol(string(s, "s"))
+make_non_underscore(s::Symbol) = Symbol(replace(string(s), "_" => ""))
 
 const _keyAliases = Dict{Symbol,Symbol}()
 
@@ -1791,22 +1780,8 @@ end
 
 # -----------------------------------------------------------------------------
 
-# # if the value is `:match` then we take whatever match_color is.
-# # this is mainly used for cascading defaults for foreground and background colors
-# function color_or_match!(plotattributes::AKW, k::Symbol, match_color)
-#     v = plotattributes[k]
-#     plotattributes[k] = if v == :match
-#         match_color
-#     elseif v === nothing
-#         plot_color(RGBA(0,0,0,0))
-#     else
-#         v
-#     end
-# end
-
 function color_or_nothing!(plotattributes, k::Symbol)
-    v = plotattributes[k]
-    plotattributes[k] = v == :match ? v : plot_color(v)
+    plotattributes[k] = (v = plotattributes[k]) == :match ? v : plot_color(v)
     return
 end
 
@@ -1859,8 +1834,7 @@ const _match_map2 = KW(
 
 # properly retrieve from plt.attr, passing `:match` to the correct key
 function Base.getindex(plt::Plot, k::Symbol)
-    v = plt.attr[k]
-    if v == :match
+    if (v = plt.attr[k]) == :match
         plt[_match_map[k]]
     else
         v
@@ -1869,8 +1843,7 @@ end
 
 # properly retrieve from sp.attr, passing `:match` to the correct key
 function Base.getindex(sp::Subplot, k::Symbol)
-    v = sp.attr[k]
-    if v == :match
+    if (v = sp.attr[k]) == :match
         if haskey(_match_map2, k)
             sp.plt[_match_map2[k]]
         else
@@ -1883,8 +1856,7 @@ end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
 function Base.getindex(axis::Axis, k::Symbol)
-    v = axis.plotattributes[k]
-    if v == :match
+    if (v = axis.plotattributes[k]) == :match
         if haskey(_match_map2, k)
             axis.sps[1][_match_map2[k]]
         else
@@ -1920,11 +1892,10 @@ function fg_color(plotattributes::AKW)
 end
 
 function fg_color_sp(plotattributes::AKW)
-    fgsp = get(plotattributes, :foreground_color_subplot, :match)
-    if fg == :match
+    if (fg = get(plotattributes, :foreground_color_subplot, :match)) == :match
         fg_color(plotattributes)
     else
-        plot_color(fgsp)
+        plot_color(fg)
     end
 end
 
@@ -2245,15 +2216,14 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes
 end
 
-function _series_index(plotattributes, sp)
+_series_index(plotattributes, sp) =
     if haskey(plotattributes, :series_index)
-        return plotattributes[:series_index]::Int
+        plotattributes[:series_index]::Int
     elseif get(plotattributes, :primary, true)
-        return plotattributes[:series_index] = sp.primary_series_count += 1
+        plotattributes[:series_index] = sp.primary_series_count += 1
     else
-        return plotattributes[:series_index] = sp.primary_series_count
+        plotattributes[:series_index] = sp.primary_series_count
     end
-end
 
 #--------------------------------------------------
 ## inspired by Base.@kwdef

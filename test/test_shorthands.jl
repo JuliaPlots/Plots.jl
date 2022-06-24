@@ -1,5 +1,3 @@
-using Plots, Test
-
 @testset "Shorthands" begin
     @testset "Set Lims" begin
         p = plot(rand(10))

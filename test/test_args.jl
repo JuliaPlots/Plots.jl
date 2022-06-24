@@ -1,4 +1,3 @@
-using Plots, Test
 import Plots: Font, @add_attributes, _subplot_defaults, add_aliases
 
 @testset "Subplot Attributes" begin

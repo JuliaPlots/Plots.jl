@@ -78,20 +78,18 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     init::Bool
 end
 
-function Plot()
-    Plot(
-        backend(),
-        0,
-        DefaultsDict(KW(), _plot_defaults),
-        Series[],
-        nothing,
-        Subplot[],
-        SubplotMap(),
-        EmptyLayout(),
-        Subplot[],
-        false,
-    )
-end
+Plot() = Plot(
+    backend(),
+    0,
+    DefaultsDict(KW(), _plot_defaults),
+    Series[],
+    nothing,
+    Subplot[],
+    SubplotMap(),
+    EmptyLayout(),
+    Subplot[],
+    false,
+)
 
 # -----------------------------------------------------------------------
 
