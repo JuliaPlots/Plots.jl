@@ -34,21 +34,18 @@ end
 @testset "Allowed subplot counts" begin
     p = plot(plot(1:2); layout = grid(2, 2))
     @test length(p) == 1
-    p = plot(plot(1:2), plot(1:2); layout = grid(2, 2))
+
+    p = plot((plot(1:2) for _ in 1:2)...; layout = grid(2, 2))
     @test length(p) == 2
-    p = plot(plot(1:2), plot(1:2), plot(1:2); layout = grid(2, 2))
+
+    p = plot((plot(1:2) for _ in 1:3)...; layout = grid(2, 2))
     @test length(p) == 3
     @test length(plot!(p, plot(1:2))) == 4
-    p = plot(plot(1:2), plot(1:2), plot(1:2), plot(1:2); layout = grid(2, 2))
+
+    p = plot((plot(1:2) for _ in 1:4)...; layout = grid(2, 2))
     @test length(p) == 4
-    @test_throws ErrorException plot(
-        plot(1:2),
-        plot(1:2),
-        plot(1:2),
-        plot(1:2),
-        plot(1:2);
-        layout = grid(2, 2),
-    )
+
+    @test_throws ErrorException plot((plot(1:2) for _ in 1:5)...; layout = grid(2, 2))
 end
 
 @testset "Coverage" begin
@@ -71,32 +68,33 @@ end
 
     @test size(p, 1) == 2
     @test size(p, 2) == 2
-    @test size(p) === (2, 2)
+    @test size(p) == (2, 2)
     @test ndims(p) == 2
 
     @test p[1][end] isa Plots.Series
-    show(devnull, p[1])
+    io = devnull
+    show(io, p[1])
 
     @test Plots.getplot(p) == p
     @test Plots.getattr(p) == p.attr
     @test Plots.backend_object(p) == p.o
     @test occursin("Plot", string(p))
-    print(devnull, p)
+    print(io, p)
 
     @test Plots.to_pixels(1Plots.mm) isa AbstractFloat
     @test Plots.ispositive(1Plots.mm)
     @test size(Plots.defaultbox) == (0Plots.mm, 0Plots.mm)
-    show(devnull, Plots.defaultbox)
-    show(devnull, p.layout)
+    show(io, Plots.defaultbox)
+    show(io, p.layout)
 
     @test Plots.make_measure_hor(1Plots.mm) == 1Plots.mm
     @test Plots.make_measure_vert(1Plots.mm) == 1Plots.mm
 
     @test Plots.parent(p.layout) isa Plots.RootLayout
-    show(devnull, Plots.parent_bbox(p.layout))
+    show(io, Plots.parent_bbox(p.layout))
 
     rl = Plots.RootLayout()
-    show(devnull, rl)
+    show(io, rl)
     @test parent(rl) === nothing
     @test Plots.parent_bbox(rl) == Plots.defaultbox
     @test Plots.bbox(rl) == Plots.defaultbox

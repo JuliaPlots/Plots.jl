@@ -1,29 +1,32 @@
-using Plots: guidefont, series_annotations, PLOTS_SEED, _current_plots_version
+import Plots: PLOTS_SEED, Plot, with
+import GeometryBasics
+import ImageMagick
+import LibGit2
+import JSON
 
 using VisualRegressionTests
 using RecipesPipeline
 using RecipesBase
-using StableRNGs
 using TestImages
-using LibGit2
-using Random
 using FileIO
 using Plots
 using Dates
-using JSON
 using Test
-using Gtk
+using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
-import GeometryBasics
-import ImageMagick
+# initial load - required for `should_warn_on_unsupported`
+unicodeplots()
+pgfplotsx()
+plotlyjs()
+plotly()
+hdf5()
+gr()
 
 for name in (
     "misc",
     "utils",
     "args",
     "defaults",
-    "pipeline",
-    "axis_letter",
     "dates",
     "axes",
     "layouts",
@@ -39,6 +42,7 @@ for name in (
     "backends",
 )
     @testset "$name" begin
+        gr()
         include("test_$name.jl")
     end
 end

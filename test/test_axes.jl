@@ -21,8 +21,8 @@ end
 end
 
 @testset "Magic axis" begin
-    @test plot(1, axis = nothing)[1][:xaxis][:ticks] == []
-    @test plot(1, axis = nothing)[1][:yaxis][:ticks] == []
+    @test isempty(plot(1, axis = nothing)[1][:xaxis][:ticks])
+    @test isempty(plot(1, axis = nothing)[1][:yaxis][:ticks])
 end
 
 @testset "Categorical ticks" begin
@@ -105,7 +105,7 @@ end
 end
 
 @testset "Aliases" begin
-    compare(p::Plots.Plot, s::Symbol, val, op) =
+    compare(p::Plot, s::Symbol, val, op) =
         op(p[1][:xaxis][s], val) && op(p[1][:yaxis][s], val) && op(p[1][:zaxis][s], val)
     p = plot(1:2, guide = "all labels")
     @test compare(p, :guide, "all labels", ===)

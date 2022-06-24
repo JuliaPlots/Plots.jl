@@ -22,48 +22,45 @@ end
 end
 
 @testset "NoFail" begin
-    # ensure backend with tested display
-    @test unicodeplots() == Plots.UnicodePlotsBackend()
-    @test backend() == Plots.UnicodePlotsBackend()
+    with(:unicodeplots) do
+        @test backend() == Plots.UnicodePlotsBackend()
 
-    dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
+        dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 
-    @testset "plot" begin
-        for plt in [
-            histogram([1, 0, 0, 0, 0, 0]),
-            plot([missing]),
-            plot([missing, missing]),
-            plot(fill(missing, 10)),
-            plot([missing; 1:4]),
-            plot([fill(missing, 10); 1:4]),
-            plot([1 1; 1 missing]),
-            plot(["a" "b"; missing "d"], [1 2; 3 4]),
-        ]
-            display(dsp, plt)
+        @testset "plot" begin
+            for plt in [
+                histogram([1, 0, 0, 0, 0, 0]),
+                plot([missing]),
+                plot([missing, missing]),
+                plot(fill(missing, 10)),
+                plot([missing; 1:4]),
+                plot([fill(missing, 10); 1:4]),
+                plot([1 1; 1 missing]),
+                plot(["a" "b"; missing "d"], [1 2; 3 4]),
+            ]
+                display(dsp, plt)
+            end
+            @test_nowarn plot(x -> x^2, 0, 2)
         end
-        @test_nowarn plot(x -> x^2, 0, 2)
-    end
 
-    @testset "bar" begin
-        p = bar([3, 2, 1], [1, 2, 3])
-        @test p isa Plots.Plot
-        @test display(dsp, p) isa Nothing
-    end
+        @testset "bar" begin
+            p = bar([3, 2, 1], [1, 2, 3])
+            @test p isa Plot
+            @test display(dsp, p) isa Nothing
+        end
 
-    @testset "gui" begin
-        open(tempname(), "w") do io
-            redirect_stdout(io) do
-                gui(plot())
+        @testset "gui" begin
+            open(tempname(), "w") do io
+                redirect_stdout(io) do
+                    gui(plot())
+                end
             end
         end
     end
-
-    gr()  # reset to default backend
 end
 
-@testset "themes" begin
-    p = showtheme(:dark)
-    @test p isa Plots.Plot
+@testset "Themes" begin
+    @test showtheme(:dark) isa Plot
 end
 
 @testset "plotattr" begin
@@ -95,11 +92,75 @@ end
 end
 
 @testset "Axis scales" begin
-    unicodeplots()
+    with(:unicodeplots) do
+        pl = plot(1:5, xscale = :log2, yscale = :ln)
+        @test pl[1][:xaxis][:scale] === :log2
+        @test pl[1][:yaxis][:scale] === :ln
+    end
+end
 
-    pl = plot(1:5, xscale = :log2, yscale = :ln)
-    @test pl[1][:xaxis][:scale] === :log2
-    @test pl[1][:yaxis][:scale] === :ln
+@testset "axis letter" begin
+    # a custom type for dispacthing the axis-letter-testing recipe
+    struct MyType <: Number
+        val::Float64
+    end
+    value(m::MyType) = m.val
+    data = MyType.(sort(randn(20)))
 
-    gr()
+    # A recipe that puts the axis letter in the title
+    @recipe function f(::Type{T}, m::T) where {T<:AbstractArray{<:MyType}}
+        title --> string(plotattributes[:letter])
+        value.(m)
+    end
+
+    @testset "orientation" begin
+        for f in (histogram, barhist, stephist, scatterhist), o in (:vertical, :horizontal)
+            @test f(data, orientation = o).subplots[1].attr[:title] ==
+                  (o == :vertical ? "x" : "y")
+        end
+    end
+
+    @testset "$f" for f in (hline, hspan)
+        @test f(data).subplots[1].attr[:title] == "y"
+    end
+
+    @testset "$f" for f in (vline, vspan)
+        @test f(data).subplots[1].attr[:title] == "x"
+    end
+end
+
+@testset "plot" begin
+    pl = plot(1:5)
+    pl2 = plot(pl, tex_output_standalone = true)
+    @test !pl[:tex_output_standalone]
+    @test pl2[:tex_output_standalone]
+    plot!(pl, tex_output_standalone = true)
+    @test pl[:tex_output_standalone]
+end
+
+@testset "get_axis_limits" begin
+    x = [0.1, 5]
+    p1 = plot(x, [5, 0.1], yscale = :log10)
+    p2 = plot!(identity)
+    @test all(RecipesPipeline.get_axis_limits(p1, :x) .== x)
+    @test all(RecipesPipeline.get_axis_limits(p2, :x) .== x)
+end
+
+@testset "Slicing" begin
+    @test plot(1:5, fillrange = 0)[1][1][:fillrange] == 0
+    data4 = rand(4, 4)
+    mat = reshape(1:8, 2, 4)
+    for i in axes(data4, 1)
+        for attribute in (:fillrange, :ribbon)
+            @test plot(data4; NamedTuple{tuple(attribute)}(0)...)[1][i][attribute] == 0
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1, 2]))...)[1][i][attribute] ==
+                  [1.0, 2.0]
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1 2]))...)[1][i][attribute] ==
+                  (iseven(i) ? 2 : 1)
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref(mat))...)[1][i][attribute] ==
+                  [2(i - 1) + 1, 2i]
+        end
+        @test plot(data4, ribbon = (mat, mat))[1][i][:ribbon] ==
+              ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
+    end
 end

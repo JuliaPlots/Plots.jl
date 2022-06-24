@@ -68,19 +68,21 @@
     @test xlims() isa Tuple
     @test ylims() isa Tuple
     @test zlims() isa Tuple
-end
 
-@testset "Misc" begin
     @test_throws ErrorException Plots.inline()
     @test_throws ErrorException Plots._do_plot_show(plot(), :inline)
     @test_throws ErrorException Plots.dumpcallstack()
+
+    @test plot(-1:10, xscale = :log10) isa Plot
 
     Plots.makekw(foo = 1, bar = 2) isa Dict
 
     Plots.debugplots(true)
     Plots.debugplots(false)
-    Plots.debugshow(devnull, nothing)
-    Plots.debugshow(devnull, [1])
+
+    io = PipeBuffer()
+    Plots.debugshow(io, nothing)
+    Plots.debugshow(io, [1])
 
     p = plot(1)
     push!(p, 1.5)
@@ -97,8 +99,10 @@ end
     @test Plots.xmax(p) == 3
     @test Plots.ignorenan_extrema(p) == (1, 3)
 
-    @test Plots.get_attr_symbol(:x, "lims") == :xlims
-    @test Plots.get_attr_symbol(:x, :lims) == :xlims
+    @test Plots.get_attr_symbol(:x, "lims") === :xlims
+    @test Plots.get_attr_symbol(:x, :lims) === :xlims
+
+    @test contains(Plots._document_argument("bar_position"), "bar_position")
 end
 
 @testset "NaN-separated Segments" begin
@@ -113,4 +117,22 @@ end
     @test segments([nan10; 1:5; nan10; 1:5; nan10]) == [11:15, 26:30]
     @test segments([NaN; 1], 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
     @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
+end
+
+@testset "Triangulation" begin
+    x = [0, 1, 2, 0]
+    y = [0, 0, 1, 2]
+    z = [0, 2, 0, 1]
+
+    i = [0, 0, 0, 1]
+    j = [1, 2, 3, 2]
+    k = [2, 3, 1, 3]
+
+    X, Y, Z = Plots.mesh3d_triangles(x, y, z, (i, j, k))
+    @test length(X) == length(Y) == length(Z) == 4length(i)
+
+    cns = [(1, 2, 3), (1, 3, 2), (1, 4, 2), (2, 3, 4)]
+
+    X, Y, Z = Plots.mesh3d_triangles(x, y, z, cns)
+    @test length(X) == length(Y) == length(Z) == 4length(i)
 end
