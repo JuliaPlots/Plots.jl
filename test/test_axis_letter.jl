@@ -14,7 +14,8 @@
 
     @testset "orientation" begin
         for f in (histogram, barhist, stephist, scatterhist), o in (:vertical, :horizontal)
-            @test f(data, orientation = o).subplots[1].attr[:title] == (o == :vertical ? "x" : "y")
+            @test f(data, orientation = o).subplots[1].attr[:title] ==
+                  (o == :vertical ? "x" : "y")
         end
     end
 

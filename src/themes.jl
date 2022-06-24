@@ -3,10 +3,7 @@
 
 Specify the colour theme for plots.
 """
-function theme(s::Symbol; kw...)
-    defaults = copy(PlotThemes._themes[s].defaults)
-    _theme(s, defaults; kw...)
-end
+theme(s::Symbol; kw...) = _theme(s, copy(PlotThemes._themes[s].defaults); kw...)
 
 function _theme(s::Symbol, defaults::AKW; kw...)
     # Reset to defaults to overwrite active theme

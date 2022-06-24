@@ -153,7 +153,8 @@ const _best_html_output_type =
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
 function _show(io::IO, ::MIME"text/html", plt::Plot)
-    if (output_type = Symbol(plt.attr[:html_output_format])) == :auto
+    output_type = Symbol(plt.attr[:html_output_format])
+    if output_type == :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
     end
     if output_type == :png
@@ -212,22 +213,6 @@ Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())
 
-# function html_output_format(fmt)
-#     if fmt == "png"
-#         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
-#             print(io, "<img src=\"data:image/png;base64,", base64(show, MIME("image/png"), plt), "\" />")
-#         end
-#     elseif fmt == "svg"
-#         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
-#             show(io, MIME("image/svg+xml"), plt)
-#         end
-#     else
-#         error("only png or svg allowed. got: $fmt")
-#     end
-# end
-#
-# html_output_format("svg")
-
 # ---------------------------------------------------------
 # Atom PlotPane
 # ---------------------------------------------------------
@@ -244,13 +229,12 @@ function showjuno(io::IO, m, plt)
     end
 end
 
-function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
+_showjuno(io::IO, m::MIME"image/svg+xml", plt) =
     if Symbol(plt.attr[:html_output_format]) ≠ :svg
         throw(MethodError(show, (typeof(m), typeof(plt))))
     else
         _show(io, m, plt)
     end
-end
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot) = false
 

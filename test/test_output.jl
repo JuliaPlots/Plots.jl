@@ -1,90 +1,48 @@
+macro test_save(fmt)
+    quote
+        let p = plot(1:10), fn = tempname()
+            getfield(Plots, $fmt)(p, fn)
+            getfield(Plots, $fmt)(fn)
+            fn_ext = string(fn, '.', $fmt)
+            savefig(p, fn_ext)
+            savefig(fn_ext)
+            @test isfile(fn_ext)
+            @test_throws ErrorException savefig(string(fn, ".foo"))
+        end
+    end |> esc
+end
+
 @testset "GR" begin
     gr()
 
     @test Plots.defaultOutputFormat(plot()) == "png"
     @test Plots.addExtension("foo", "bar") == "foo.bar"
 
-    p, fn = plot(1:10), tempname()
-
-    Plots.png(p, fn)
-    Plots.png(fn)
-    savefig(p, "$fn.png")
-    savefig("$fn.png")
-    @test isfile("$fn.png")
-
-    Plots.pdf(p, fn)
-    Plots.pdf(fn)
-    savefig(p, "$fn.pdf")
-    savefig("$fn.pdf")
-    @test isfile("$fn.pdf")
-
-    Plots.ps(p, fn)
-    Plots.ps(fn)
-    savefig(p, "$fn.ps")
-    savefig("$fn.ps")
-    @test isfile("$fn.ps")
-
-    Plots.svg(p, fn)
-    Plots.svg(fn)
-    savefig(p, "$fn.svg")
-    savefig("$fn.svg")
-    @test isfile("$fn.svg")
+    @test_save :png
+    @test_save :svg
+    @test_save :pdf
+    @test_save :ps
 end
 
 @testset "PGFPlotsx" begin
     pgfplotsx()
-    if Sys.islinux()
-        p, fn = plot(1:10), tempname()
-        Plots.tex(p, fn)
-        Plots.tex(fn)
-        savefig(p, "$fn.tex")
-        savefig("$fn.tex")
-        @test isfile("$fn.tex")
-    end
+    Sys.islinux() && @test_save :tex
 end
 
 @testset "UnicodePlots" begin
     unicodeplots()
-    p, fn = plot(1:10), tempname()
 
-    Plots.txt(p, fn)
-    Plots.txt(fn)
-    savefig(p, "$fn.txt")
-    savefig("$fn.txt")
-    @test isfile("$fn.txt")
-
-    Plots.png(p, fn)
-    Plots.png(fn)
-    savefig(p, "$fn.png")
-    savefig("$fn.png")
-    @test isfile("$fn.png")
+    @test_save :txt
+    @test_save :png
 end
 
 @testset "PlotlyJS" begin
     plotlyjs()
-    p, fn = plot(1:10), tempname()
 
-    # Plots.html(p, fn)
-    # Plots.html(fn)
-    # savefig(p, "$fn.html")
-    # savefig("$fn.html")
-    # @test isfile("$fn.html")
+    @test_save :html
+    @test_save :json
 
-    Plots.json(p, fn)
-    Plots.json(fn)
-    savefig(p, "$fn.json")
-    savefig("$fn.json")
-    @test isfile("$fn.json")
-
-    if Sys.islinux()
-        # Plots.eps(p, fn)
-        # Plots.eps(fn)
-        # savefig(p, "$fn.eps")
-        # savefig("$fn.eps")
-        # @test isfile("$fn.eps")
-    end
-
-    @test_throws ErrorException savefig("$fn.foo")
+    Sys.islinux() && @test_save :eps
 end
 
 gr()  # reset to default backend

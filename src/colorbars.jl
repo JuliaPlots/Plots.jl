@@ -120,4 +120,3 @@ end
 # Dynamic callback from the pipeline if needed
 _update_subplot_colorbars(sp::Subplot) = update_clims(sp)
 _update_subplot_colorbars(sp::Subplot, series::Series) = update_clims(sp, series)
-

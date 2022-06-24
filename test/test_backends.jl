@@ -1,6 +1,29 @@
+default(show = false, reuse = true)  # don't actually show the plots
 
+is_ci() = get(ENV, "CI", "false") == "true"
+const PLOTS_IMG_TOL = parse(
+    Float64,
+    get(ENV, "PLOTS_IMG_TOL", is_ci() ? (Sys.iswindows() ? "2e-3" : "1e-4") : "1e-5"),
+)
+
+const TEST_MODULE = Module(:TestModule)
+
+Base.eval(TEST_MODULE, quote
+    using Random, StableRNGs, Plots
+    rng = StableRNG($PLOTS_SEED)
+end)
+
+reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 reference_dir(args...) =
     joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+
+if !isdir(reference_dir())
+    mkpath(reference_dir())
+    LibGit2.clone(
+        "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
+        reference_dir(),
+    )
+end
 
 function reference_file(backend, i, version)
     refdir = reference_dir("Plots", string(backend))
@@ -16,25 +39,19 @@ function reference_file(backend, i, version)
     return reffn
 end
 
-if !isdir(reference_dir())
-    mkpath(reference_dir())
-    LibGit2.clone(
-        "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
-        reference_dir(),
-    )
-end
-
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
-replace_rand!(ex) = nothing
+replace_rand(ex) = ex
 
-function replace_rand!(ex::Expr)
+function replace_rand(ex::Expr)
+    expr = Expr(ex.head)
     for arg in ex.args
-        replace_rand!(arg)
+        push!(expr.args, replace_rand(arg))
     end
     if ex.head === :call && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
-        pushfirst!(ex.args, ex.args[1])
-        ex.args[2] = :rng
+        pushfirst!(expr.args, ex.args[1])
+        expr.args[2] = :rng
     end
+    expr
 end
 
 function image_comparison_tests(
@@ -45,34 +62,36 @@ function image_comparison_tests(
     sigma = [1, 1],
     tol = 1e-2,
 )
-    Plots._debugMode.on = debug
     example = Plots._examples[idx]
-    Plots.theme(:default)
     @info("Testing plot: $pkg:$idx:$(example.header)")
-    backend(pkg)
-    backend()
-    default(size = (500, 300))
 
-    fn = "ref$idx.png"
     reffn = reference_file(pkg, idx, _current_plots_version)
-    newfn = joinpath(reference_path(pkg, _current_plots_version), fn)
+    newfn = joinpath(reference_path(pkg, _current_plots_version), "ref$idx.png")
     @debug example.exprs
 
     # test function
-    func = (fn, idx) -> begin
-        eval(:(rng = StableRNG(PLOTS_SEED)))
-        for the_expr in example.exprs
-            expr = Expr(:block)
-            push!(expr.args, the_expr)
-            replace_rand!(expr)
-            eval(expr)
+    func =
+        fn -> begin
+            for ex in (
+                :(Plots._debugMode.on = $debug),
+                :(backend($(QuoteNode(pkg)))),
+                :(theme(:default)),
+                :(default(size = (500, 300))),
+                :(Random.seed!(rng, $PLOTS_SEED)),
+                replace_rand.(example.exprs)...,
+                :(png($fn)),
+            )
+                Base.eval(TEST_MODULE, ex)
+            end
         end
-        png(fn)
-    end
 
-    # the test
-    vtest = VisualTest(func, reffn, idx)
-    test_images(vtest, popup = popup, sigma = sigma, tol = tol, newfn = newfn)
+    test_images(
+        VisualTest(func, reffn),
+        newfn = newfn,
+        popup = popup,
+        sigma = sigma,
+        tol = tol,
+    )
 end
 
 function image_comparison_facts(
@@ -86,15 +105,12 @@ function image_comparison_facts(
     for i in 1:length(Plots._examples)
         i in skip && continue
         if only === nothing || i in only
-            @test image_comparison_tests(pkg, i, debug = debug, sigma = sigma, tol = tol) |>
-                  success == true
+            @test success(
+                image_comparison_tests(pkg, i, debug = debug, sigma = sigma, tol = tol),
+            )
         end
     end
 end
-
-Random.seed!(PLOTS_SEED)
-
-default(show = false, reuse = true)  # don't actually show the plots
 
 ## Uncomment the following lines to update reference images for different backends
 #=

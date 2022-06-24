@@ -1215,7 +1215,6 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     return X, Y, Z
 end
 
-
 function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))

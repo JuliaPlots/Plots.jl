@@ -25,13 +25,19 @@ end
 RecipesPipeline.splittable_attribute(plt::Plot, key, val::SeriesAnnotations, len) =
     RecipesPipeline.splittable_attribute(plt, key, val.strs, len)
 
-RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices) = 
-    return SeriesAnnotations(RecipesPipeline.split_attribute(plt, key, val.strs, indices), val.font, val.baseshape, val.scalefactor)
+RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices) =
+    return SeriesAnnotations(
+        RecipesPipeline.split_attribute(plt, key, val.strs, indices),
+        val.font,
+        val.baseshape,
+        val.scalefactor,
+    )
 
 ## Preprocessing attributes
 function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
     # Fix letter for seriestypes that are x only but data gets passed as y
-    if treats_y_as_x(get(plotattributes, :seriestype, :path)) && get(plotattributes, :orientation, :vertical) == :vertical
+    if treats_y_as_x(get(plotattributes, :seriestype, :path)) &&
+       get(plotattributes, :orientation, :vertical) == :vertical
         letter = :x
     end
 
@@ -404,10 +410,10 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
 end
 
 needs_any_3d_axes(sp::Subplot) = any(
-        RecipesPipeline.needs_3d_axes(
-            _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
-        ) for s in series_list(sp)
-    )
+    RecipesPipeline.needs_3d_axes(
+        _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
+    ) for s in series_list(sp)
+)
 
 function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
     # adjust extrema and discrete info

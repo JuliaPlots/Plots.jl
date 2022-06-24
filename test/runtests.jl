@@ -17,31 +17,25 @@ using Gtk
 import GeometryBasics
 import ImageMagick
 
-is_ci() = get(ENV, "CI", "false") == "true"
-const PLOTS_IMG_TOL = parse(
-    Float64,
-    get(ENV, "PLOTS_IMG_TOL", is_ci() ? (Sys.iswindows() ? "2e-3" : "1e-4") : "1e-5"),
-)
-
 for name in (
-    "misc",
-    "utils",
-    "args",
-    "defaults",
-    "pipeline",
-    "axis_letter",
-    "dates",
-    "axes",
-    "layouts",
-    "contours",
-    "components",
-    "shorthands",
-    "recipes",
-    "hdf5plots",
-    "pgfplotsx",
-    "plotly",
-    "animations",
-    "output",
+    # "misc",
+    # "utils",
+    # "args",
+    # "defaults",
+    # "pipeline",
+    # "axis_letter",
+    # "dates",
+    # "axes",
+    # "layouts",
+    # "contours",
+    # "components",
+    # "shorthands",
+    # "recipes",
+    # "hdf5plots",
+    # "pgfplotsx",
+    # "plotly",
+    # "animations",
+    # "output",
     "backends",
 )
     @testset "$name" begin

@@ -38,7 +38,7 @@ end
     @test p[1][:legend_title_font_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
     @test p[1][:legend_background_color] == RGBA{Float64}(1.0, 1.0, 1.0, 1.0)
     @test p[1][:legend_foreground_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
-
+end
 
 @testset "Legend API" begin
     p = plot(;

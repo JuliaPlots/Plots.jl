@@ -5,11 +5,11 @@ using HDF5
     hdf5()
 
     x = 1:10
-    psrc = plot(x, x .* x) #Create some plot
+    psrc = plot(x, x .^ 2)  # create some plot
     Plots.hdf5plot_write(psrc, fname)
 
     # read back file
-    gr() # choose some fast backend likely to work in test environment.
+    gr()  # choose some fast backend likely to work in test environment
     pread = Plots.hdf5plot_read(fname)
 
     # make sure data made it through

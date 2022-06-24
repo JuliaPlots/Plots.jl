@@ -14,9 +14,7 @@ const _current_plots_version = _plots_project.version
 const _plots_compats = _plots_project.compat
 function _check_compat(sim::Module)
     sim_str = string(sim)
-    if !haskey(_plots_compats, sim_str)
-        return nothing
-    end
+    haskey(_plots_compats, sim_str) || return nothing
     be_v = Pkg.Types.read_project(joinpath(Base.pkgdir(sim), "Project.toml")).version
     be_c = _plots_compats[sim_str]
     if be_c isa String # julia 1.6
@@ -147,13 +145,13 @@ export
 # ---------------------------------------------------------
 
 import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
-ignorenan_minimum(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.minimum(x)
+ignorenan_minimum(x::AbstractArray{<:AbstractFloat}) = NaNMath.minimum(x)
 ignorenan_minimum(x) = Base.minimum(x)
-ignorenan_maximum(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.maximum(x)
+ignorenan_maximum(x::AbstractArray{<:AbstractFloat}) = NaNMath.maximum(x)
 ignorenan_maximum(x) = Base.maximum(x)
-ignorenan_mean(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.mean(x)
+ignorenan_mean(x::AbstractArray{<:AbstractFloat}) = NaNMath.mean(x)
 ignorenan_mean(x) = Statistics.mean(x)
-ignorenan_extrema(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.extrema(x)
+ignorenan_extrema(x::AbstractArray{<:AbstractFloat}) = NaNMath.extrema(x)
 ignorenan_extrema(x) = Base.extrema(x)
 
 # ---------------------------------------------------------

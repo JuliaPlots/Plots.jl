@@ -33,7 +33,7 @@ end
         @test haskey(series[3].options.dict, "forget plot")
         @test haskey(series[4].options.dict, "forget plot")
         @test !haskey(series[5].options.dict, "forget plot")
-    end 
+    end
 
     @testset "3D docs example" begin
         n = 100
@@ -53,9 +53,7 @@ end
         )
         pgfx_plot = plot!(pl, zeros(n), zeros(n), 1:n, w = 10)
         Plots._update_plot_object(pgfx_plot)
-        if @test_nowarn(
-            haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar")
-        )
+        if @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar"))
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
         end
     end
@@ -184,9 +182,7 @@ end
         z = float((1:4) * reshape(1:10, 1, :))
         pgfx_plot = heatmap(xs, ys, z, aspect_ratio = 1)
         Plots._update_plot_object(pgfx_plot)
-        if @test_nowarn(
-            haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar")
-        )
+        if @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar"))
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colormap name"] == "plots1"
         end

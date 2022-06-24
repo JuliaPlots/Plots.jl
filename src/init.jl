@@ -3,7 +3,7 @@ using Scratch
 
 const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 
-_plots_defaults() = 
+_plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)
         copy(Dict{Symbol,Any}(Main.PLOTS_DEFAULTS))
     else
