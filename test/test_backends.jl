@@ -1,21 +1,19 @@
-default(show = false, reuse = true)  # don't actually show the plots
-
 is_ci() = get(ENV, "CI", "false") == "true"
+
+const TEST_MODULE = Module(:PlotsTestModule)
 const PLOTS_IMG_TOL = parse(
     Float64,
     get(ENV, "PLOTS_IMG_TOL", is_ci() ? (Sys.iswindows() ? "2e-3" : "1e-4") : "1e-5"),
 )
-
-const TEST_MODULE = Module(:TestModule)
 
 Base.eval(TEST_MODULE, quote
     using Random, StableRNGs, Plots
     rng = StableRNG($PLOTS_SEED)
 end)
 
-reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 reference_dir(args...) =
     joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 
 if !isdir(reference_dir())
     mkpath(reference_dir())
@@ -28,10 +26,9 @@ end
 function reference_file(backend, i, version)
     refdir = reference_dir("Plots", string(backend))
     fn = "ref$i.png"
-    versions = sort(VersionNumber.(readdir(refdir)), rev = true)
     reffn = joinpath(refdir, string(version), fn)
-    for v in versions
-        if (tmpfn = joinpath(refdir, string(v), fn)) |> isfile
+    for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
+        if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
             reffn = tmpfn
             break
         end
@@ -76,7 +73,7 @@ function image_comparison_tests(
                 :(Plots._debugMode.on = $debug),
                 :(backend($(QuoteNode(pkg)))),
                 :(theme(:default)),
-                :(default(size = (500, 300))),
+                :(default(size = (500, 300), show = false, reuse = true)),
                 :(Random.seed!(rng, $PLOTS_SEED)),
                 replace_rand.(example.exprs)...,
                 :(png($fn)),

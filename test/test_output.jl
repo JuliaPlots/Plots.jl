@@ -39,7 +39,7 @@ end
 @testset "PlotlyJS" begin
     plotlyjs()
 
-    @test_save :html
+    # @test_save :html
     @test_save :json
 
     Sys.islinux() && @test_save :eps
