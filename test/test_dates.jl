@@ -11,13 +11,6 @@
     ref_xlims = (x[1].instant.periods.value, x[end].instant.periods.value)
     @test Plots.ylims(p) == ref_ylims
     @test Plots.xlims(p) == ref_xlims
-    #@static if (haskey(ENV, "APPVEYOR") || haskey(ENV, "CI"))
-    @static if haskey(ENV, "APPVEYOR")
-        @info "Skipping display tests on AppVeyor"
-    else
-        @test isa(display(p), Nothing)
-        closeall()
-    end
 end
 
 @testset "Date xlims" begin
@@ -28,15 +21,6 @@ end
     ref_xlims = map(date -> date.instant.periods.value, span)
 
     p = plot(x, y, xlims = span, widen = false)
-
-    @test Plots.xlims(p) == ref_xlims
-    #@static if (haskey(ENV, "APPVEYOR") || haskey(ENV, "CI"))
-    @static if haskey(ENV, "APPVEYOR")
-        @info "Skipping display tests on AppVeyor"
-    else
-        @test isa(display(p), Nothing)
-        closeall()
-    end
 end
 
 @testset "DateTime xlims" begin
@@ -48,11 +32,4 @@ end
 
     p = plot(x, y, xlims = span, widen = false)
     @test Plots.xlims(p) == ref_xlims
-    #@static if (haskey(ENV, "APPVEYOR") || haskey(ENV, "CI"))
-    @static if haskey(ENV, "APPVEYOR")
-        @info "Skipping display tests on AppVeyor"
-    else
-        @test isa(display(p), Nothing)
-        closeall()
-    end
 end

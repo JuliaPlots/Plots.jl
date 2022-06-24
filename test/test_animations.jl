@@ -1,8 +1,7 @@
-
 @testset "Empty anim" begin
     anim = @animate for i in []
     end
-    @test_throws ArgumentError gif(anim)
+    @test_throws ArgumentError gif(anim, show_msg = false)
 end
 
 @userplot CirclePlot
@@ -26,10 +25,10 @@ end
     anim = @animate for i in 1:n
         circleplot(x, y, i)
     end
-    @test filesize(gif(anim).filename) > 10_000
-    @test filesize(mov(anim).filename) > 10_000
-    @test filesize(mp4(anim).filename) > 10_000
-    @test filesize(webm(anim).filename) > 10_000
+    @test filesize(gif(anim, show_msg = false).filename) > 10_000
+    @test filesize(mov(anim, show_msg = false).filename) > 10_000
+    @test filesize(mp4(anim, show_msg = false).filename) > 10_000
+    @test filesize(webm(anim, show_msg = false).filename) > 10_000
 
     @gif for i in 1:n
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
@@ -44,7 +43,7 @@ end
         frame(anim)
     end
 
-    agif = gif(anim)
+    agif = gif(anim, show_msg = false)
     html = tempname() * ".html"
     open(html, "w") do io
         show(io, MIME("text/html"), agif)
@@ -52,7 +51,7 @@ end
     @test filesize(html) > 10_000
     @test showable(MIME("image/gif"), agif)
 
-    agif = mp4(anim)
+    agif = mp4(anim, show_msg = false)
     html = tempname() * ".html"
     open(html, "w") do io
         show(io, MIME("text/html"), agif)

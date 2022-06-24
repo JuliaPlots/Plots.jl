@@ -1,5 +1,3 @@
-pgfplotsx()
-
 function create_plot(args...; kwargs...)
     pgfx_plot = plot(args...; kwargs...)
     return pgfx_plot, repr("application/x-tex", pgfx_plot)
@@ -10,7 +8,7 @@ function create_plot!(args...; kwargs...)
     return pgfx_plot, repr("application/x-tex", pgfx_plot)
 end
 
-@testset "PGFPlotsX" begin
+with(:pgfplotsx) do
     pgfx_plot = plot(1:5)
     Plots._update_plot_object(pgfx_plot)
     @test pgfx_plot.o.the_plot isa PGFPlotsX.TikzDocument
@@ -357,66 +355,74 @@ end
         legend_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis.contents)
         @test length(legend_entries) == 2
     end
-end
 
-@testset "Extra kwargs" begin
-    pl = plot(1:5, test = "me")
-    @test pl[1][1].plotattributes[:extra_kwargs][:test] == "me"
-    pl = plot(1:5, test = "me", extra_kwargs = :subplot)
-    @test pl[1].attr[:extra_kwargs][:test] == "me"
-    pl = plot(1:5, test = "me", extra_kwargs = :plot)
-    @test pl.attr[:extra_plot_kwargs][:test] == "me"
-    pl = plot(
-        1:5,
-        extra_kwargs = Dict(
-            :plot => Dict(:test => "me"),
-            :series => Dict(:and => "me too"),
-        ),
-    )
-    @test pl.attr[:extra_plot_kwargs][:test] == "me"
-    @test pl[1][1].plotattributes[:extra_kwargs][:and] == "me too"
-    pl = plot(
-        plot(1:5, title = "Line"),
-        scatter(
+    @testset "Extra kwargs" begin
+        pl = plot(1:5, test = "me")
+        @test pl[1][1].plotattributes[:extra_kwargs][:test] == "me"
+        pl = plot(1:5, test = "me", extra_kwargs = :subplot)
+        @test pl[1].attr[:extra_kwargs][:test] == "me"
+        pl = plot(1:5, test = "me", extra_kwargs = :plot)
+        @test pl.attr[:extra_plot_kwargs][:test] == "me"
+        pl = plot(
             1:5,
-            title = "Scatter",
-            extra_kwargs = Dict(:subplot => Dict("axis line shift" => "10pt")),
-        ),
-    )
-    Plots._update_plot_object(pl)
-    axes = Plots.pgfx_axes(pl.o)
-    @test !haskey(axes[1].options.dict, "axis line shift")
-    @test haskey(axes[2].options.dict, "axis line shift")
-    pl =
-        plot(x -> x, -1:1; add = raw"\node at (0,0.5) {\huge hi};", extra_kwargs = :subplot)
-    @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
-    Plots._update_plot_object(pl)
-    axes = Plots.pgfx_axes(pl.o)
-    @test filter(x -> x isa String, axes[1].contents)[1] ==
-          raw"\node at (0,0.5) {\huge hi};"
-    plot!(pl)
-    @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
-    Plots._update_plot_object(pl)
-    axes = Plots.pgfx_axes(pl.o)
-    @test filter(x -> x isa String, axes[1].contents)[1] ==
-          raw"\node at (0,0.5) {\huge hi};"
-end
+            extra_kwargs = Dict(
+                :plot => Dict(:test => "me"),
+                :series => Dict(:and => "me too"),
+            ),
+        )
+        @test pl.attr[:extra_plot_kwargs][:test] == "me"
+        @test pl[1][1].plotattributes[:extra_kwargs][:and] == "me too"
+        pl = plot(
+            plot(1:5, title = "Line"),
+            scatter(
+                1:5,
+                title = "Scatter",
+                extra_kwargs = Dict(:subplot => Dict("axis line shift" => "10pt")),
+            ),
+        )
+        Plots._update_plot_object(pl)
+        axes = Plots.pgfx_axes(pl.o)
+        @test !haskey(axes[1].options.dict, "axis line shift")
+        @test haskey(axes[2].options.dict, "axis line shift")
+        pl = plot(
+            x -> x,
+            -1:1;
+            add = raw"\node at (0,0.5) {\huge hi};",
+            extra_kwargs = :subplot,
+        )
+        @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
+        Plots._update_plot_object(pl)
+        axes = Plots.pgfx_axes(pl.o)
+        @test filter(x -> x isa String, axes[1].contents)[1] ==
+              raw"\node at (0,0.5) {\huge hi};"
+        plot!(pl)
+        @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
+        Plots._update_plot_object(pl)
+        axes = Plots.pgfx_axes(pl.o)
+        @test filter(x -> x isa String, axes[1].contents)[1] ==
+              raw"\node at (0,0.5) {\huge hi};"
+    end
 
-@testset "Titlefonts" begin
-    pl = plot(1:5, title = "Test me", titlefont = (2, :left))
-    @test pl[1][:title] == "Test me"
-    @test pl[1][:titlefontsize] == 2
-    @test pl[1][:titlefonthalign] == :left
-    Plots._update_plot_object(pl)
-    ax_opt = Plots.pgfx_axes(pl.o)[1].options
-    @test ax_opt["title"] == "Test me"
-    @test(haskey(ax_opt.dict, "title style")) isa Test.Pass
-    pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
-    @test pl[:plot_title] == "Test me"
-    @test pl[:plot_titlefontsize] == 2
-    @test pl[:plot_titlefonthalign] == :left
-    pl = heatmap(rand(3, 3), colorbar_title = "Test me", colorbar_titlefont = (12, :right))
-    @test pl[1][:colorbar_title] == "Test me"
-    @test pl[1][:colorbar_titlefontsize] == 12
-    @test pl[1][:colorbar_titlefonthalign] == :right
+    @testset "Titlefonts" begin
+        pl = plot(1:5, title = "Test me", titlefont = (2, :left))
+        @test pl[1][:title] == "Test me"
+        @test pl[1][:titlefontsize] == 2
+        @test pl[1][:titlefonthalign] == :left
+        Plots._update_plot_object(pl)
+        ax_opt = Plots.pgfx_axes(pl.o)[1].options
+        @test ax_opt["title"] == "Test me"
+        @test(haskey(ax_opt.dict, "title style")) isa Test.Pass
+        pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
+        @test pl[:plot_title] == "Test me"
+        @test pl[:plot_titlefontsize] == 2
+        @test pl[:plot_titlefonthalign] == :left
+        pl = heatmap(
+            rand(3, 3),
+            colorbar_title = "Test me",
+            colorbar_titlefont = (12, :right),
+        )
+        @test pl[1][:colorbar_title] == "Test me"
+        @test pl[1][:colorbar_titlefontsize] == 12
+        @test pl[1][:colorbar_titlefonthalign] == :right
+    end
 end

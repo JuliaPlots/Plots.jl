@@ -12,9 +12,7 @@ macro test_save(fmt)
     end |> esc
 end
 
-@testset "GR" begin
-    gr()
-
+with(:gr) do
     @test Plots.defaultOutputFormat(plot()) == "png"
     @test Plots.addExtension("foo", "bar") == "foo.bar"
 
@@ -24,25 +22,18 @@ end
     @test_save :ps
 end
 
-@testset "PGFPlotsx" begin
-    pgfplotsx()
+with(:pgfplotsx) do
     Sys.islinux() && @test_save :tex
 end
 
-@testset "UnicodePlots" begin
-    unicodeplots()
-
+with(:unicodeplots) do
     @test_save :txt
     @test_save :png
 end
 
-@testset "PlotlyJS" begin
-    plotlyjs()
-
+with(:plotlyjs) do
     # @test_save :html
     @test_save :json
 
-    Sys.islinux() && @test_save :eps
+    # Sys.islinux() && @test_save :eps
 end
-
-gr()  # reset to default backend

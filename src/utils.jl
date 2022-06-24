@@ -37,9 +37,7 @@ Float64[p[2] for p in segs.pts],
 Float64[p[3] for p in segs.pts]
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
-    if !isempty(segments.pts)
-        push!(segments.pts, to_nan(T))
-    end
+    isempty(segments.pts) || push!(segments.pts, to_nan(T))
     for v in vs
         push!(segments.pts, convert(T, v))
     end
@@ -47,9 +45,7 @@ function Base.push!(segments::Segments{T}, vs...) where {T}
 end
 
 function Base.push!(segments::Segments{T}, vs::AVec) where {T}
-    if !isempty(segments.pts)
-        push!(segments.pts, to_nan(T))
-    end
+    isempty(segments.pts) || push!(segments.pts, to_nan(T))
     for v in vs
         push!(segments.pts, convert(T, v))
     end
@@ -123,8 +119,8 @@ end
 function warn_on_attr_dim_mismatch(series, x, y, z, segments)
     isempty(segments) && return
     seg_range = UnitRange(
-        minimum(first(seg.range) for seg in segments),
-        maximum(last(seg.range) for seg in segments),
+        minimum(map(seg -> first(seg.range), segments)),
+        maximum(map(seg -> last(seg.range), segments)),
     )
     for attr in _segmenting_vector_attributes
         v = get(series, attr, nothing)
@@ -185,9 +181,6 @@ float_extended_type(x::AbstractArray{T}) where {T<:Real} = Float64
 
 nop() = nothing
 notimpl() = error("This has not been implemented yet")
-
-isnothing(x::Nothing) = true
-isnothing(x) = false
 
 _cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
 _cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
@@ -259,8 +252,7 @@ function replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symb
 end
 
 function replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol})
-    ks = collect(keys(plotattributes))
-    for k in ks
+    for k in collect(keys(plotattributes))
         replaceAlias!(plotattributes, k, aliases)
     end
 end
@@ -586,10 +578,10 @@ end
 
 function get_aspect_ratio(sp)
     aspect_ratio = sp[:aspect_ratio]
-    if aspect_ratio == :auto
+    if aspect_ratio === :auto
         aspect_ratio = :none
         for series in series_list(sp)
-            if series[:seriestype] == :image
+            if series[:seriestype] === :image
                 aspect_ratio = :equal
             end
         end
@@ -1149,8 +1141,8 @@ end
 construct_categorical_data(x::AbstractArray, axis::Axis) =
     (map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x))
 
-_fmt_paragraph(paragraph::AbstractString; kwargs...) =
-    _fmt_paragraph(IOBuffer(), paragraph, 0; kwargs...)
+_fmt_paragraph(paragraph::AbstractString; kw...) =
+    _fmt_paragraph(IOBuffer(), paragraph, 0; kw...)
 
 function _fmt_paragraph(
     io::IOBuffer,
@@ -1159,10 +1151,9 @@ function _fmt_paragraph(
     fillwidth = 60,
     leadingspaces = 0,
 )
-    kwargs = (fillwidth = fillwidth, leadingspaces = leadingspaces)
+    kw = (fillwidth = fillwidth, leadingspaces = leadingspaces)
 
-    m = match(r"(.*?) (.*)", remaining_text)
-    if isa(m, Nothing)
+    if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
         if column_count + length(remaining_text) ≤ fillwidth
             print(io, remaining_text)
         else
@@ -1172,10 +1163,10 @@ function _fmt_paragraph(
     else
         if column_count + length(m[1]) ≤ fillwidth
             print(io, "$(m[1]) ")
-            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kwargs...)
+            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kw...)
         else
             print(io, "\n" * " "^leadingspaces * "$(m[1]) ")
-            _fmt_paragraph(io, m[2], leadingspaces; kwargs...)
+            _fmt_paragraph(io, m[2], leadingspaces; kw...)
         end
     end
 end
@@ -1183,25 +1174,21 @@ end
 _document_argument(S::AbstractString) =
     _fmt_paragraph("`$S`: " * _arg_desc[Symbol(S)], leadingspaces = 6 + length(S))
 
-function fill_mesh3d_triangles!(cns, x, y, z, X, Y, Z, offset)
-    @inbounds for I in eachindex(cns)
-        i = ci[I] + offset  # connections are 0-based or 1-based
-        j = cj[I] + offset
-        k = ck[I] + offset
-        m = 4(I - 1) + 1
-        n = m + 1
-        o = m + 2
-        p = m + 3
-        X[m] = X[p] = x[i]
-        Y[m] = Y[p] = y[i]
-        Z[m] = Z[p] = z[i]
-        X[n] = x[j]
-        Y[n] = y[j]
-        Z[n] = z[j]
-        X[o] = x[k]
-        Y[o] = y[k]
-        Z[o] = z[k]
-    end
+function add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
+    m = 4(I - 1) + 1
+    n = m + 1
+    o = m + 2
+    p = m + 3
+    X[m] = X[p] = x[i]
+    Y[m] = Y[p] = y[i]
+    Z[m] = Z[p] = z[i]
+    X[n] = x[j]
+    Y[n] = y[j]
+    Z[n] = z[j]
+    X[o] = x[k]
+    Y[o] = y[k]
+    Z[o] = z[k]
+    nothing
 end
 
 function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
@@ -1211,7 +1198,9 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     X = zeros(eltype(x), 4length(ci))
     Y = zeros(eltype(y), 4length(cj))
     Z = zeros(eltype(z), 4length(ck))
-    fill_mesh3d_triangles!(x, y, z, X, Y, Z, 1)
+    @inbounds for I in eachindex(ci)  # connections are 0-based
+        add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
+    end
     return X, Y, Z
 end
 
@@ -1219,7 +1208,9 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
-    fill_mesh3d_triangles!(x, y, z, X, Y, Z, 0)
+    @inbounds for I in eachindex(cns)  # connections are 1-based
+        add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
+    end
     return X, Y, Z
 end
 

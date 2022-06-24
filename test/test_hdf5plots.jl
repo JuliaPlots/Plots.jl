@@ -1,5 +1,3 @@
-using HDF5
-
 @testset "HDF5_Plots" begin
     fname = "tmpplotsave.hdf5"
     hdf5()
