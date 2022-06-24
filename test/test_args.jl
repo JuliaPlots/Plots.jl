@@ -1,4 +1,5 @@
 using Plots, Test
+import Plots: Font, @add_attributes, _subplot_defaults, add_aliases
 
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
@@ -34,4 +35,22 @@ end
     @test yticks(ppl) == xticks(pl)
     @test filter(isfinite, pl[1][1][:x]) == filter(isfinite, ppl[1][1][:y])
     @test filter(isfinite, pl[1][1][:y]) == filter(isfinite, ppl[1][1][:x])
+end
+
+@testset "@add_attributes" begin
+    @add_attributes subplot struct Legend
+        background_color = :match
+        foreground_color = :match
+        position = :best
+        title = nothing
+        font::Font = font(8)
+        title_font::Font = font(11)
+        column = 1
+    end :match = (
+        :legend_font_family,
+        :legend_font_color,
+        :legend_title_font_family,
+        :legend_title_font_color,
+    )
+    @test true
 end

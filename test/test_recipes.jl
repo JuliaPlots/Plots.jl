@@ -59,3 +59,10 @@ end
         end
     end
 end
+
+@testset "coverage" begin
+    @test :surface in Plots.all_seriestypes()
+    @test Plots.seriestype_supported(Plots.UnicodePlotsBackend(), :surface) === :native
+    @test Plots.seriestype_supported(Plots.UnicodePlotsBackend(), :hspan) === :recipe
+    @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :no
+end

@@ -1,5 +1,19 @@
 using Plots, Test
 
+@testset "Axes" begin
+    p = plot()
+    axis = p.subplots[1][:xaxis]
+    @test typeof(axis) == Plots.Axis
+    @test Plots.discrete_value!(axis, "HI") == (0.5, 1)
+    @test Plots.discrete_value!(axis, :yo) == (1.5, 2)
+    @test Plots.ignorenan_extrema(axis) == (0.5, 1.5)
+    @test axis[:discrete_map] == Dict{Any,Any}(:yo => 2, "HI" => 1)
+
+    Plots.discrete_value!(axis, ["x$i" for i in 1:5])
+    Plots.discrete_value!(axis, ["x$i" for i in 0:2])
+    @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
+end
+
 @testset "Showaxis" begin
     for value in Plots._allShowaxisArgs
         @test plot(1:5, showaxis = value)[1][:yaxis][:showaxis] isa Bool
@@ -54,7 +68,7 @@ end
     @test ql[1][:projection] == "3d"
 end
 
-@testset "twinx" begin
+@testset "Twinx" begin
     pl = plot(1:10, margin = 2Plots.cm)
     twpl = twinx(pl)
     pl! = plot!(twinx(), -(1:10))
@@ -64,7 +78,7 @@ end
     @test twpl[:bottom_margin] == 2Plots.cm
 end
 
-@testset "axis-aliases" begin
+@testset "Axis-aliases" begin
     @test haskey(Plots._keyAliases, :xguideposition)
     @test haskey(Plots._keyAliases, :x_guide_position)
     @test !haskey(Plots._keyAliases, :xguide_position)
@@ -92,7 +106,7 @@ end
     @test p[1][:xaxis][:tick_direction] === :out
 end
 
-@testset "aliases" begin
+@testset "Aliases" begin
     compare(p::Plots.Plot, s::Symbol, val, op) =
         op(p[1][:xaxis][s], val) && op(p[1][:yaxis][s], val) && op(p[1][:zaxis][s], val)
     p = plot(1:2, guide = "all labels")

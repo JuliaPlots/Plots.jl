@@ -59,8 +59,14 @@ using Plots, Test
         xflip!(p)
         @test sp[:xaxis][:flip]
 
+        xflip!(false)
+        @test !sp[:xaxis][:flip]
+
         yflip!(p)
         @test sp[:yaxis][:flip]
+
+        yflip!(false)
+        @test !sp[:yaxis][:flip]
 
         xgrid!(p, true)
         @test sp[:xaxis][:grid]
@@ -68,15 +74,22 @@ using Plots, Test
         xgrid!(p, false)
         @test !sp[:xaxis][:grid]
 
+        xgrid!(true)
+        @test sp[:xaxis][:grid]
+
         ygrid!(p, true)
         @test sp[:yaxis][:grid]
 
         ygrid!(p, false)
         @test !sp[:yaxis][:grid]
 
+        ygrid!(true)
+        @test sp[:yaxis][:grid]
+
         ann = [(7, 3, "(7,3)"), (3, 7, text("hey", 14, :left, :top, :green))]
         annotate!(p, ann)
         annotate!(p, ann...)
+        annotate!(ann...)
 
         xaxis!(p, true)
         @test sp[:xaxis][:showaxis]
@@ -84,11 +97,17 @@ using Plots, Test
         xaxis!(p, false)
         @test !sp[:xaxis][:showaxis]
 
+        xaxis!(true)
+        @test sp[:xaxis][:showaxis]
+
         yaxis!(p, true)
         @test sp[:yaxis][:showaxis]
 
         yaxis!(p, false)
         @test !sp[:yaxis][:showaxis]
+
+        yaxis!(true)
+        @test sp[:yaxis][:showaxis]
 
         p = plot3d([1, 2], [1, 2], [1, 2])
         plot3d!(p, [3, 4], [3, 4], [3, 4])
