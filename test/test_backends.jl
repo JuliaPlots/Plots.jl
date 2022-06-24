@@ -25,7 +25,8 @@ if !isdir(reference_dir())
 end
 
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
-function replace_rand!(ex) end
+replace_rand!(ex) = nothing
+
 function replace_rand!(ex::Expr)
     for arg in ex.args
         replace_rand!(arg)
@@ -35,7 +36,6 @@ function replace_rand!(ex::Expr)
         ex.args[2] = :rng
     end
 end
-fix_rand!(ex) = replace_rand!(ex)
 
 function image_comparison_tests(
     pkg::Symbol,
@@ -64,7 +64,7 @@ function image_comparison_tests(
         for the_expr in example.exprs
             expr = Expr(:block)
             push!(expr.args, the_expr)
-            fix_rand!(expr)
+            replace_rand!(expr)
             eval(expr)
         end
         png(fn)
@@ -77,12 +77,12 @@ end
 
 function image_comparison_facts(
     pkg::Symbol;
-    skip = [],      # skip these examples (int index)
-    only = nothing, # limit to these examples (int index)
-    debug = false,  # print debug information?
-    sigma = [1, 1],  # number of pixels to "blur"
-    tol = 1e-2,
-)     # acceptable error (percent)
+    skip = [],          # skip these examples (int index)
+    only = nothing,     # limit to these examples (int index)
+    debug = false,      # print debug information?
+    sigma = [1, 1],     # number of pixels to "blur"
+    tol = 1e-2,         # acceptable error (percent)
+)
     for i in 1:length(Plots._examples)
         i in skip && continue
         if only === nothing || i in only

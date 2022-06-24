@@ -33,7 +33,7 @@ end
         @test haskey(series[3].options.dict, "forget plot")
         @test haskey(series[4].options.dict, "forget plot")
         @test !haskey(series[5].options.dict, "forget plot")
-    end # testset
+    end 
 
     @testset "3D docs example" begin
         n = 100
@@ -58,7 +58,8 @@ end
         )
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
         end
-    end # testset
+    end
+
     @testset "Color docs example" begin
         y = rand(100)
         plot(
@@ -86,7 +87,8 @@ end
         @test marker.options["mark"] == "*"
         @test marker.options["mark options"]["color"] == RGBA{Float64}(colorant"green", 0.8)
         @test marker.options["mark options"]["line width"] == 0.75 # 1px is 0.75pt
-    end # testset
+    end
+
     @testset "Plot in pieces" begin
         pic = plot(rand(100) / 3, reg = true, fill = (0, :green))
         scatter!(pic, rand(100), markersize = 6, c = :orange)
@@ -100,7 +102,8 @@ end
         @test !haskey(series[2].options.dict, "forget plot")
         @test haskey(series[3].options.dict, "forget plot")
         @test !haskey(series[4].options.dict, "forget plot")
-    end # testset
+    end
+
     @testset "Marker types" begin
         markers = filter((m -> begin
             m in Plots.supported_markers()
@@ -118,7 +121,8 @@ end
             xlim = (0, 10),
             ylim = (0, 10),
         )
-    end # testset
+    end
+
     @testset "Layout" begin
         plot(
             Plots.fakedata(100, 10),
@@ -126,12 +130,14 @@ end
             palette = [:grays :blues :hot :rainbow],
             bg_inside = [:orange :pink :darkblue :black],
         )
-    end # testset
+    end
+
     @testset "Polar plots" begin
         Θ = range(0, stop = 1.5π, length = 100)
         r = abs.(0.1 * randn(100) + sin.(3Θ))
         plot(Θ, r, proj = :polar, m = 2)
-    end # testset
+    end
+
     @testset "Drawing shapes" begin
         verts = [
             (-1.0, 1.0),
@@ -166,10 +172,12 @@ end
             ylim = (0, 1),
             leg = false,
         )
-    end # testset
+    end
+
     @testset "Histogram 2D" begin
         histogram2d(randn(10000), randn(10000), nbins = 20)
-    end # testset
+    end
+
     @testset "Heatmap-like" begin
         xs = [string("x", i) for i in 1:10]
         ys = [string("y", i) for i in 1:4]
@@ -185,7 +193,8 @@ end
 
         pgfx_plot = wireframe(xs, ys, z, aspect_ratio = 1)
         # TODO: clims are wrong
-    end # testset
+    end
+
     @testset "Contours" begin
         x = 1:0.5:20
         y = 1:0.5:10
@@ -199,7 +208,8 @@ end
         p1 = contour(x, y, f, fill = true)
         plot(p1, p2)
         # TODO: colorbar for filled contours
-    end # testset
+    end
+
     @testset "Varying colors" begin
         t = range(0, stop = 1, length = 100)
         θ = (6π) .* t
@@ -210,7 +220,8 @@ end
             x + y
         end), color = :bwr, legend = false)
         plot(p1, p2)
-    end # testset
+    end
+
     @testset "Framestyles" begin
         scatter(
             fill(randn(10), 6),
@@ -224,7 +235,8 @@ end
             ticks = -2:2,
         )
         # TODO: support :semi
-    end # testset
+    end
+
     @testset "Quiver" begin
         x = (-2pi):0.2:(2 * pi)
         y = sin.(x)
@@ -237,7 +249,8 @@ end
         # mktempdir() do path
         #    @test_nowarn savefig(arrow_plot, path*"arrow.pdf")
         # end
-    end # testset
+    end
+
     @testset "Annotations" begin
         y = rand(10)
         pgfx_plot =
@@ -300,7 +313,8 @@ end
             @test_nowarn open(file_path) do io
             end
         end
-    end # testset
+    end
+
     @testset "Ribbon" begin
         aa = rand(10)
         bb = rand(10)
@@ -316,7 +330,8 @@ end
         @test !haskey(plots[3].options.dict, "fill")
         @test ribbon_plot.o !== nothing
         @test ribbon_plot.o.the_plot !== nothing
-    end # testset
+    end
+
     @testset "Markers and Paths" begin
         pl = plot(
             5 .- ones(9),
@@ -328,7 +343,8 @@ end
         axis = Plots.pgfx_axes(pl.o)[1]
         plots = filter(x -> x isa PGFPlotsX.Plot, axis.contents)
         @test length(plots) == 9
-    end # testset
+    end
+
     @testset "Groups and Subplots" begin
         group = rand(map((i -> begin
             "group $(i)"
@@ -345,7 +361,7 @@ end
         legend_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis.contents)
         @test length(legend_entries) == 2
     end
-end # testset
+end
 
 @testset "Extra kwargs" begin
     pl = plot(1:5, test = "me")
@@ -388,7 +404,7 @@ end # testset
     axes = Plots.pgfx_axes(pl.o)
     @test filter(x -> x isa String, axes[1].contents)[1] ==
           raw"\node at (0,0.5) {\huge hi};"
-end # testset
+end
 
 @testset "Titlefonts" begin
     pl = plot(1:5, title = "Test me", titlefont = (2, :left))
@@ -407,4 +423,4 @@ end # testset
     @test pl[1][:colorbar_title] == "Test me"
     @test pl[1][:colorbar_titlefontsize] == 12
     @test pl[1][:colorbar_titlefonthalign] == :right
-end # testset
+end

@@ -17,7 +17,7 @@ end
     lens!(pl, [1, 2], [1, 2], inset = (1, bbox(0.0, 0.0, 0.2, 0.2)), colorbar = false)
     @test length(pl.series_list) == 4
     @test pl[2][:colorbar] == :none
-end # testset
+end
 
 @testset "vline, vspan" begin
     vl = vline([1], widen = false)
@@ -35,7 +35,7 @@ end # testset
     @test Plots.xlims(vsp) == (-2, 5)
     vsp = vspan([1, 3], ylims = (-2, 5), widen = false)
     @test Plots.ylims(vsp) == (-2, 5)
-end # testset
+end
 
 @testset "offset axes" begin
     tri = OffsetVector(vcat(1:5, 4:-1:1), 11:19)

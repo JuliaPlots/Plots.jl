@@ -23,7 +23,7 @@ end
 @testset "Magic axis" begin
     @test plot(1, axis = nothing)[1][:xaxis][:ticks] == []
     @test plot(1, axis = nothing)[1][:yaxis][:ticks] == []
-end # testset
+end
 
 @testset "Categorical ticks" begin
     p1 = plot('A':'M', 1:13)

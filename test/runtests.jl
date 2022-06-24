@@ -23,19 +23,19 @@ const PLOTS_IMG_TOL = parse(
     get(ENV, "PLOTS_IMG_TOL", is_ci() ? (Sys.iswindows() ? "2e-3" : "1e-4") : "1e-5"),
 )
 
-for nm in (
+for name in (
     "misc",
     "utils",
     "args",
     "defaults",
     "pipeline",
+    "axis_letter",
+    "dates",
     "axes",
     "layouts",
     "contours",
-    "axis_letter",
     "components",
     "shorthands",
-    "integration_dates",
     "recipes",
     "hdf5plots",
     "pgfplotsx",
@@ -44,7 +44,7 @@ for nm in (
     "output",
     "backends",
 )
-    @testset "$nm" begin
-        include("test_$(nm).jl")
+    @testset "$name" begin
+        include("test_$name.jl")
     end
 end

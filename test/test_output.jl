@@ -4,82 +4,87 @@
     @test Plots.defaultOutputFormat(plot()) == "png"
     @test Plots.addExtension("foo", "bar") == "foo.bar"
 
-    let p = plot(), fn = tempname()
-        Plots.png(p, fn)
-        Plots.png(fn)
-        savefig(p, "$fn.png")
-        savefig("$fn.png")
-        @test isfile("$fn.png")
+    p, fn = plot(1:10), tempname()
 
-        Plots.pdf(p, fn)
-        Plots.pdf(fn)
-        savefig(p, "$fn.pdf")
-        savefig("$fn.pdf")
-        @test isfile("$fn.pdf")
+    Plots.png(p, fn)
+    Plots.png(fn)
+    savefig(p, "$fn.png")
+    savefig("$fn.png")
+    @test isfile("$fn.png")
 
-        Plots.ps(p, fn)
-        Plots.ps(fn)
-        savefig(p, "$fn.ps")
-        savefig("$fn.ps")
-        @test isfile("$fn.ps")
+    Plots.pdf(p, fn)
+    Plots.pdf(fn)
+    savefig(p, "$fn.pdf")
+    savefig("$fn.pdf")
+    @test isfile("$fn.pdf")
 
-        Plots.svg(p, fn)
-        Plots.svg(fn)
-        savefig(p, "$fn.svg")
-        savefig("$fn.svg")
-        @test isfile("$fn.svg")
-    end
+    Plots.ps(p, fn)
+    Plots.ps(fn)
+    savefig(p, "$fn.ps")
+    savefig("$fn.ps")
+    @test isfile("$fn.ps")
+
+    Plots.svg(p, fn)
+    Plots.svg(fn)
+    savefig(p, "$fn.svg")
+    savefig("$fn.svg")
+    @test isfile("$fn.svg")
 end
 
 @testset "PGFPlotsx" begin
     pgfplotsx()
     if Sys.islinux()
-        let p = plot(), fn = tempname()
-            Plots.tex(p, fn)
-            Plots.tex(fn)
-            savefig(p, "$fn.tex")
-            savefig("$fn.tex")
-            @test isfile("$fn.tex")
-        end
+        p, fn = plot(1:10), tempname()
+        Plots.tex(p, fn)
+        Plots.tex(fn)
+        savefig(p, "$fn.tex")
+        savefig("$fn.tex")
+        @test isfile("$fn.tex")
     end
 end
 
 @testset "UnicodePlots" begin
     unicodeplots()
-    let p = plot(), fn = tempname()
-        Plots.txt(p, fn)
-        Plots.txt(fn)
-        savefig(p, "$fn.txt")
-        savefig("$fn.txt")
-        @test isfile("$fn.txt")
+    p, fn = plot(1:10), tempname()
 
-        Plots.png(p, fn)
-        Plots.png(fn)
-        savefig(p, "$fn.png")
-        savefig("$fn.png")
-        @test isfile("$fn.png")
-    end
+    Plots.txt(p, fn)
+    Plots.txt(fn)
+    savefig(p, "$fn.txt")
+    savefig("$fn.txt")
+    @test isfile("$fn.txt")
+
+    Plots.png(p, fn)
+    Plots.png(fn)
+    savefig(p, "$fn.png")
+    savefig("$fn.png")
+    @test isfile("$fn.png")
 end
 
 @testset "PlotlyJS" begin
     plotlyjs()
-    let p = plot(), fn = tempname()
-        Plots.html(p, fn)
-        Plots.html(fn)
-        savefig(p, "$fn.html")
-        savefig("$fn.html")
-        @test isfile("$fn.html")
+    p, fn = plot(1:10), tempname()
 
-        if Sys.islinux()
-            Plots.eps(p, fn)
-            Plots.eps(fn)
-            savefig(p, "$fn.eps")
-            savefig("$fn.eps")
-            @test isfile("$fn.eps")
-        end
+    # Plots.html(p, fn)
+    # Plots.html(fn)
+    # savefig(p, "$fn.html")
+    # savefig("$fn.html")
+    # @test isfile("$fn.html")
 
-        @test_throws ErrorException savefig("$fn.foo")
+    Plots.json(p, fn)
+    Plots.json(fn)
+    savefig(p, "$fn.json")
+    savefig("$fn.json")
+    @test isfile("$fn.json")
+
+    if Sys.islinux()
+        # Plots.eps(p, fn)
+        # Plots.eps(fn)
+        # savefig(p, "$fn.eps")
+        # savefig("$fn.eps")
+        # @test isfile("$fn.eps")
     end
+
+    @test_throws ErrorException savefig("$fn.foo")
 end
 
 gr()  # reset to default backend
