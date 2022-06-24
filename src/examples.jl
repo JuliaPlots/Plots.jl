@@ -1348,7 +1348,7 @@ function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
     backend()
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
-    m = Module(:PlotExampleModule)
+    m = Module(:PlotsExampleModule)
     Base.eval(m, :(using Plots))
     map(exprs -> Base.eval(m, exprs), _examples[idx].exprs)
 

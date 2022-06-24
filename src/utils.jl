@@ -734,9 +734,7 @@ debugshow(io, x::AbstractArray) = print(io, summary(x))
 function dumpdict(io::IO, plotattributes::AKW, prefix = "", alwaysshow = false)
     _debugMode.on || alwaysshow || return
     println(io)
-    if prefix != ""
-        println(io, prefix, ":")
-    end
+    prefix == "" || println(io, prefix, ":")
     for k in sort(collect(keys(plotattributes)))
         @printf("%14s: ", k)
         debugshow(io, plotattributes[k])
@@ -759,6 +757,7 @@ function getxy(plt::Plot, i::Integer)
     plotattributes = plt.series_list[i].plotattributes
     tovec(plotattributes[:x]), tovec(plotattributes[:y])
 end
+
 function getxyz(plt::Plot, i::Integer)
     plotattributes = plt.series_list[i].plotattributes
     tovec(plotattributes[:x]), tovec(plotattributes[:y]), tovec(plotattributes[:z])
@@ -771,6 +770,7 @@ function setxy!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y}
     reset_extrema!(sp)
     _series_updated(plt, series)
 end
+
 function setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z}
     series = plt.series_list[i]
     series.plotattributes[:x], series.plotattributes[:y], series.plotattributes[:z] = xyz
@@ -1165,11 +1165,10 @@ function _fmt_paragraph(
     if isa(m, Nothing)
         if column_count + length(remaining_text) ≤ fillwidth
             print(io, remaining_text)
-            String(take!(io))
         else
             print(io, "\n" * " "^leadingspaces * remaining_text)
-            String(take!(io))
         end
+        String(take!(io))
     else
         if column_count + length(m[1]) ≤ fillwidth
             print(io, "$(m[1]) ")
@@ -1184,18 +1183,11 @@ end
 _document_argument(S::AbstractString) =
     _fmt_paragraph("`$S`: " * _arg_desc[Symbol(S)], leadingspaces = 6 + length(S))
 
-function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
-    ci, cj, ck = cns
-    if !(length(ci) == length(cj) == length(ck))
-        throw(ArgumentError("Argument connections must consist of equally sized arrays."))
-    end
-    X = zeros(eltype(x), 4length(ci))
-    Y = zeros(eltype(y), 4length(cj))
-    Z = zeros(eltype(z), 4length(ck))
-    @inbounds for I in eachindex(ci)
-        i = ci[I] + 1  # connections are 0-based
-        j = cj[I] + 1
-        k = ck[I] + 1
+function fill_mesh3d_triangles!(cns, x, y, z, X, Y, Z, offset)
+    @inbounds for I in eachindex(cns)
+        i = ci[I] + offset  # connections are 0-based or 1-based
+        j = cj[I] + offset
+        k = ck[I] + offset
         m = 4(I - 1) + 1
         n = m + 1
         o = m + 2
@@ -1210,6 +1202,16 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
         Y[o] = y[k]
         Z[o] = z[k]
     end
+end
+
+function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
+    ci, cj, ck = cns
+    length(ci) == length(cj) == length(ck) ||
+        throw(ArgumentError("Argument connections must consist of equally sized arrays."))
+    X = zeros(eltype(x), 4length(ci))
+    Y = zeros(eltype(y), 4length(cj))
+    Z = zeros(eltype(z), 4length(ck))
+    fill_mesh3d_triangles!(x, y, z, X, Y, Z, 1)
     return X, Y, Z
 end
 
@@ -1217,24 +1219,7 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
-    @inbounds for I in eachindex(cns)
-        i = cns[I][1]  # connections are 1-based
-        j = cns[I][2]
-        k = cns[I][3]
-        m = 4(I - 1) + 1
-        n = m + 1
-        o = m + 2
-        p = m + 3
-        X[m] = X[p] = x[i]
-        Y[m] = Y[p] = y[i]
-        Z[m] = Z[p] = z[i]
-        X[n] = x[j]
-        Y[n] = y[j]
-        Z[n] = z[j]
-        X[o] = x[k]
-        Y[o] = y[k]
-        Z[o] = z[k]
-    end
+    fill_mesh3d_triangles!(x, y, z, X, Y, Z, 0)
     return X, Y, Z
 end
 

@@ -1,67 +1,67 @@
 
 defaultOutputFormat(plt::Plot) = "png"
 
-function png(plt::Plot, fn::AbstractString)
+png(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "png"), "w") do io
         show(io, MIME("image/png"), plt)
     end
-end
+
 png(fn::AbstractString) = png(current(), fn)
 
-function svg(plt::Plot, fn::AbstractString)
+svg(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "svg"), "w") do io
         show(io, MIME("image/svg+xml"), plt)
     end
-end
+
 svg(fn::AbstractString) = svg(current(), fn)
 
-function pdf(plt::Plot, fn::AbstractString)
+pdf(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "pdf"), "w") do io
         show(io, MIME("application/pdf"), plt)
     end
-end
+
 pdf(fn::AbstractString) = pdf(current(), fn)
 
-function ps(plt::Plot, fn::AbstractString)
+ps(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "ps"), "w") do io
         show(io, MIME("application/postscript"), plt)
     end
-end
+
 ps(fn::AbstractString) = ps(current(), fn)
 
-function eps(plt::Plot, fn::AbstractString)
+eps(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "eps"), "w") do io
         show(io, MIME("image/eps"), plt)
     end
-end
+
 eps(fn::AbstractString) = eps(current(), fn)
 
-function tex(plt::Plot, fn::AbstractString)
+tex(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "tex"), "w") do io
         show(io, MIME("application/x-tex"), plt)
     end
-end
+
 tex(fn::AbstractString) = tex(current(), fn)
 
-function json(plt::Plot, fn::AbstractString)
+json(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "json"), "w") do io
         show(io, MIME("application/vnd.plotly.v1+json"), plt)
     end
-end
+
 json(fn::AbstractString) = json(current(), fn)
 
-function html(plt::Plot, fn::AbstractString)
+html(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "html"), "w") do io
         show(io, MIME("text/html"), plt)
     end
-end
+
 html(fn::AbstractString) = html(current(), fn)
 
-function txt(plt::Plot, fn::AbstractString; color::Bool = true)
+txt(plt::Plot, fn::AbstractString; color::Bool = true) =
     open(addExtension(fn, "txt"), "w") do io
         show(IOContext(io, :color => color), MIME("text/plain"), plt)
     end
-end
+
 txt(fn::AbstractString) = txt(current(), fn)
 
 # ----------------------------------------------------------------
@@ -91,11 +91,7 @@ const _extension_map = Dict("tikz" => "tex")
 function addExtension(fn::AbstractString, ext::AbstractString)
     oldfn, oldext = splitext(fn)
     oldext = chop(oldext, head = 1, tail = 0)
-    if get(_extension_map, oldext, oldext) == ext
-        return fn
-    else
-        return string(fn, ".", ext)
-    end
+    get(_extension_map, oldext, oldext) == ext ? fn : string(fn, ".", ext)
 end
 
 """
@@ -111,9 +107,7 @@ function savefig(plt::Plot, fn::AbstractString)
     # get the extension
     _, ext = splitext(fn)
     ext = chop(ext, head = 1, tail = 0)
-    if isempty(ext)
-        ext = defaultOutputFormat(plt)
-    end
+    isempty(ext) && (ext = defaultOutputFormat(plt))
 
     # save it
     if haskey(_savemap, ext)
@@ -182,13 +176,9 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
 end
 
 # delegate showable to _show instead
-function Base.showable(m::M, plt::P) where {M<:MIME,P<:Plot}
-    return hasmethod(_show, Tuple{IO,M,P})
-end
+Base.showable(m::M, plt::P) where {M<:MIME,P<:Plot} = hasmethod(_show, Tuple{IO,M,P})
 
-function _display(plt::Plot)
-    @warn("_display is not defined for this backend.")
-end
+_display(plt::Plot) = @warn("_display is not defined for this backend.")
 
 Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback
@@ -223,31 +213,13 @@ Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())
 
-# function html_output_format(fmt)
-#     if fmt == "png"
-#         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
-#             print(io, "<img src=\"data:image/png;base64,", base64(show, MIME("image/png"), plt), "\" />")
-#         end
-#     elseif fmt == "svg"
-#         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
-#             show(io, MIME("image/svg+xml"), plt)
-#         end
-#     else
-#         error("only png or svg allowed. got: $fmt")
-#     end
-# end
-#
-# html_output_format("svg")
-
 # ---------------------------------------------------------
 # Atom PlotPane
 # ---------------------------------------------------------
 function showjuno(io::IO, m, plt)
     dpi = plt[:dpi]
 
-    jratio = get(io, :juno_dpi_ratio, 1)
-
-    plt[:dpi] = jratio * Plots.DPI
+    plt[:dpi] = get(io, :juno_dpi_ratio, 1) * Plots.DPI
 
     prepare_output(plt)
     try
@@ -257,13 +229,12 @@ function showjuno(io::IO, m, plt)
     end
 end
 
-function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
+_showjuno(io::IO, m::MIME"image/svg+xml", plt) =
     if Symbol(plt.attr[:html_output_format]) ≠ :svg
         throw(MethodError(show, (typeof(m), typeof(plt))))
     else
         _show(io, m, plt)
     end
-end
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot) = false
 

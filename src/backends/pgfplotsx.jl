@@ -1,6 +1,7 @@
 using Contour: Contour
-using UUIDs
 using Latexify
+using UUIDs
+
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -40,9 +41,7 @@ Base.@kwdef mutable struct PGFPlotsXPlot
 end
 
 ## end user utility functions
-function pgfx_axes(pgfx_plot::PGFPlotsXPlot)
-    return pgfx_plot.the_plot.elements[1].elements
-end
+pgfx_axes(pgfx_plot::PGFPlotsXPlot) = pgfx_plot.the_plot.elements[1].elements
 
 pgfx_preamble() = pgfx_preamble(current())
 function pgfx_preamble(pgfx_plot::Plot{PGFPlotsXBackend})
@@ -72,13 +71,11 @@ function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat,Surface})
 end
 surface_to_vecs(x::AVec, y::AVec, z::AVec) = x, y, z
 
-function Base.push!(pgfx_plot::PGFPlotsXPlot, item)
-    push!(pgfx_plot.the_plot, item)
-end
+Base.push!(pgfx_plot::PGFPlotsXPlot, item) = push!(pgfx_plot.the_plot, item)
 
-function pgfx_split_extra_opts(extra)
-    return (get(extra, :add, nothing), filter(x -> first(x) != :add, extra))
-end
+pgfx_split_extra_opts(extra) =
+    (get(extra, :add, nothing), filter(x -> first(x) != :add, extra))
+
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
         pgfx_sanitize_plot!(plt)
@@ -473,22 +470,17 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     end
 end
 
-function pgfx_add_series!(::Val{:scatter}, axis, series_opt, series, series_func, opt)
+function pgfx_add_series!(::Val{:scatter}, axis, series_opt, args...)
     push!(series_opt, "only marks" => nothing)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, args...)
 end
 
-function pgfx_add_series!(::Val{:straightline}, axis, series_opt, series, series_func, opt)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
-end
+pgfx_add_series!(::Val{:straightline}, args...) = pgfx_add_series!(Val(:path), args...)
+pgfx_add_series!(::Val{:path3d}, args...) = pgfx_add_series!(Val(:path), args...)
 
-function pgfx_add_series!(::Val{:path3d}, axis, series_opt, series, series_func, opt)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
-end
-
-function pgfx_add_series!(::Val{:scatter3d}, axis, series_opt, series, series_func, opt)
+function pgfx_add_series!(::Val{:scatter3d}, axis, series_opt, args...)
     push!(series_opt, "only marks" => nothing)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, args...)
 end
 
 function pgfx_add_series!(::Val{:surface}, axis, series_opt, series, series_func, opt)
@@ -644,29 +636,29 @@ function pgfx_add_series!(::Val{:shape}, axis, series_opt, series, series_func, 
     pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
 end
 
-function pgfx_add_series!(::Val{:steppre}, axis, series_opt, series, series_func, opt)
+function pgfx_add_series!(::Val{:steppre}, axis, series_opt, args...)
     push!(series_opt, "const plot mark right" => nothing)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, args...)
 end
 
-function pgfx_add_series!(::Val{:stepmid}, axis, series_opt, series, series_func, opt)
+function pgfx_add_series!(::Val{:stepmid}, axis, series_opt, args...)
     push!(series_opt, "const plot mark mid" => nothing)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, args...)
 end
 
-function pgfx_add_series!(::Val{:steppost}, axis, series_opt, series, series_func, opt)
+function pgfx_add_series!(::Val{:steppost}, axis, series_opt, args...)
     push!(series_opt, "const plot" => nothing)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, args...)
 end
 
-function pgfx_add_series!(::Val{:ysticks}, axis, series_opt, series, series_func, opt)
+function pgfx_add_series!(::Val{:ysticks}, axis, series_opt, args...)
     push!(series_opt, "ycomb" => nothing)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, args...)
 end
 
-function pgfx_add_series!(::Val{:xsticks}, axis, series_opt, series, series_func, opt)
+function pgfx_add_series!(::Val{:xsticks}, axis, series_opt, args...)
     push!(series_opt, "xcomb" => nothing)
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, args...)
 end
 
 function pgfx_add_legend!(axis, series, opt, i = 1)
@@ -912,35 +904,31 @@ end
 
 # Generates a colormap for pgfplots based on a ColorGradient
 pgfx_colormap(cl::PlotUtils.AbstractColorList) = pgfx_colormap(color_list(cl))
-function pgfx_colormap(v::Vector{<:Colorant})
-    join(map(v) do c
-        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
-    end, "\n")
-end
-function pgfx_colormap(cg::ColorGradient)
-    join(
-        map(1:length(cg)) do i
-            @sprintf(
-                "rgb(%.8f)=(%.8f,%.8f,%.8f)",
-                cg.values[i],
-                red(cg.colors[i]),
-                green(cg.colors[i]),
-                blue(cg.colors[i])
-            )
-        end,
-        "\n",
-    )
-end
+pgfx_colormap(v::Vector{<:Colorant}) = join(map(v) do c
+    @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
+end, "\n")
 
-function pgfx_framestyle(style::Symbol)
+pgfx_colormap(cg::ColorGradient) = join(
+    map(1:length(cg)) do i
+        @sprintf(
+            "rgb(%.8f)=(%.8f,%.8f,%.8f)",
+            cg.values[i],
+            red(cg.colors[i]),
+            green(cg.colors[i]),
+            blue(cg.colors[i])
+        )
+    end,
+    "\n",
+)
+
+pgfx_framestyle(style::Symbol) =
     if style in (:box, :axes, :origin, :zerolines, :grid, :none)
-        return style
+        style
     else
         default_style = get((semi = :box,), style, :axes)
         @warn "Framestyle :$style is not (yet) supported by the PGFPlotsX backend. :$default_style was chosen instead."
         default_style
     end
-end
 
 pgfx_thickness_scaling(plt::Plot) = plt[:thickness_scaling]
 pgfx_thickness_scaling(sp::Subplot) = pgfx_thickness_scaling(sp.plt)
@@ -985,9 +973,8 @@ end
 # If a particular fontsize parameter is `nothing`, produce a figure that doesn't specify the
 # font size, and therefore uses whatever fontsize is utilised by the doc in which the
 # figure is located.
-function pgfx_font(fontsize::Nothing, thickness_scaling = 1, font = "\\selectfont")
-    return string("{", font, "}")
-end
+pgfx_font(fontsize::Nothing, thickness_scaling = 1, font = "\\selectfont") =
+    string("{", font, "}")
 
 function pgfx_should_add_to_legend(series::Series)
     series.plotattributes[:primary] && !(
@@ -1175,9 +1162,7 @@ function pgfx_fillrange_args(fillrange, x, y, z)
     return PGFPlotsX.Coordinates(x_fill, y_fill, z_fill)
 end
 
-function pgfx_sanitize_string(p::PlotText)
-    PlotText(pgfx_sanitize_string(p.str), p.font)
-end
+pgfx_sanitize_string(p::PlotText) = PlotText(pgfx_sanitize_string(p.str), p.font)
 function pgfx_sanitize_string(s::AbstractString)
     s = replace(s, r"\\?\#" => "\\#")
     s = replace(s, r"\\?\%" => "\\%")
@@ -1486,17 +1471,11 @@ function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
     end
 end
 
-function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
-    plt.o = PGFPlotsXPlot()
-end
+_create_backend_figure(plt::Plot{PGFPlotsXBackend}) = plt.o = PGFPlotsXPlot()
 
-function _series_added(plt::Plot{PGFPlotsXBackend}, series::Series)
-    plt.o.is_created = false
-end
+_series_added(plt::Plot{PGFPlotsXBackend}, series::Series) = plt.o.is_created = false
 
-function _update_plot_object(plt::Plot{PGFPlotsXBackend})
-    plt.o(plt)
-end
+_update_plot_object(plt::Plot{PGFPlotsXBackend}) = plt.o(plt)
 
 for mime in ("application/pdf", "image/svg+xml")
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{PGFPlotsXBackend})

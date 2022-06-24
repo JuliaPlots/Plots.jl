@@ -117,12 +117,6 @@ function get_colorbar_ticks(sp::Subplot; update = true)
     return sp.attr[:colorbar_optimized_ticks]
 end
 
-function _update_subplot_colorbars(sp::Subplot)
-    # Dynamic callback from the pipeline if needed
-    update_clims(sp)
-end
-
-function _update_subplot_colorbars(sp::Subplot, series::Series)
-    # Dynamic callback from the pipeline if needed
-    update_clims(sp, series)
-end
+# Dynamic callback from the pipeline if needed
+_update_subplot_colorbars(sp::Subplot) = update_clims(sp)
+_update_subplot_colorbars(sp::Subplot, series::Series) = update_clims(sp, series)

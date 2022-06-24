@@ -1,6 +1,3 @@
-using Plots, Test
-import RecipesPipeline
-
 @testset "Contours" begin
     @testset "check_contour_levels" begin
         @test Plots.check_contour_levels(2) === nothing

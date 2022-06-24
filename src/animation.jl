@@ -4,10 +4,7 @@ struct Animation
     frames::Vector{String}
 end
 
-function Animation()
-    tmpdir = convert(String, mktempdir())
-    Animation(tmpdir, String[])
-end
+Animation() = Animation(convert(String, mktempdir()), String[])
 
 """
     frame(animation[, plot])
@@ -48,9 +45,8 @@ function animate(fitr::FrameIterator, fn = giffn(); kw...)
 end
 
 # most things will implement this
-function animate(obj, fn = giffn(); every = 1, fps = 20, loop = 0, kw...)
+animate(obj, fn = giffn(); every = 1, fps = 20, loop = 0, kw...) =
     animate(FrameIterator(obj, every, kw), fn; fps = fps, loop = loop)
-end
 
 # -----------------------------------------------
 
@@ -156,9 +152,8 @@ end
 # Only gifs can be shown via image/gif
 Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
 
-function Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif)
+Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
-end
 
 # -----------------------------------------------
 

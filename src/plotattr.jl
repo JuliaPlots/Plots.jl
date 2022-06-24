@@ -22,11 +22,9 @@ end
 Look up the properties of a Plots attribute, or specify an attribute type. Call `plotattr()` for options.
 The information is the same as that given on https://docs.juliaplots.org/latest/attributes/.
 """
-function plotattr()
-    println(
-        "Specify an attribute type to get a list of supported attributes. Options are $(attrtypes())",
-    )
-end
+plotattr() = println(
+    "Specify an attribute type to get a list of supported attributes. Options are $(attrtypes())",
+)
 
 function plotattr(attrtype::Symbol)
     in(attrtype, keys(_attribute_defaults)) || error("Viable options are $(attrtypes())")

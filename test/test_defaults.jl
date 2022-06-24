@@ -1,4 +1,4 @@
-using Plots, Test, Plots.Colors
+using Plots.Colors
 
 const PLOTS_DEFAULTS = Dict(:theme => :wong2, :fontfamily => :palantino)
 Plots.__init__()
@@ -38,7 +38,7 @@ end
     @test p[1][:legend_title_font_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
     @test p[1][:legend_background_color] == RGBA{Float64}(1.0, 1.0, 1.0, 1.0)
     @test p[1][:legend_foreground_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
-end # testset
+end
 
 @testset "Legend API" begin
     p = plot(;
@@ -98,4 +98,4 @@ end # testset
     @test_nowarn sp = plot(; legendfont = 12)[1]
     @test sp[:legend_font_pointsize] == 12
     @test Plots.legendfont(sp).pointsize == 12
-end # testset
+end

@@ -25,18 +25,20 @@ end
 RecipesPipeline.splittable_attribute(plt::Plot, key, val::SeriesAnnotations, len) =
     RecipesPipeline.splittable_attribute(plt, key, val.strs, len)
 
-function RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
-    split_strs = RecipesPipeline.split_attribute(plt, key, val.strs, indices)
-    return SeriesAnnotations(split_strs, val.font, val.baseshape, val.scalefactor)
-end
+RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices) =
+    return SeriesAnnotations(
+        RecipesPipeline.split_attribute(plt, key, val.strs, indices),
+        val.font,
+        val.baseshape,
+        val.scalefactor,
+    )
 
 ## Preprocessing attributes
 function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
     # Fix letter for seriestypes that are x only but data gets passed as y
-    if treats_y_as_x(get(plotattributes, :seriestype, :path))
-        if get(plotattributes, :orientation, :vertical) == :vertical
-            letter = :x
-        end
+    if treats_y_as_x(get(plotattributes, :seriestype, :path)) &&
+       get(plotattributes, :orientation, :vertical) == :vertical
+        letter = :x
     end
 
     plotattributes[:letter] = letter
@@ -293,9 +295,8 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     return nothing
 end
 
-function series_idx(kw_list::AVec{KW}, kw::AKW)
+series_idx(kw_list::AVec{KW}, kw::AKW) =
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
-end
 
 function _add_plot_title!(plt)
     plot_title = plt[:plot_title]
@@ -408,13 +409,11 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     st
 end
 
-function needs_any_3d_axes(sp::Subplot)
-    any(
-        RecipesPipeline.needs_3d_axes(
-            _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
-        ) for s in series_list(sp)
-    )
-end
+needs_any_3d_axes(sp::Subplot) = any(
+    RecipesPipeline.needs_3d_axes(
+        _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
+    ) for s in series_list(sp)
+)
 
 function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
     # adjust extrema and discrete info

@@ -15,13 +15,6 @@ compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angl
 struct Shape{X<:Number,Y<:Number}
     x::Vector{X}
     y::Vector{Y}
-    # function Shape(x::AVec, y::AVec)
-    #     # if x[1] != x[end] || y[1] != y[end]
-    #     #     new(vcat(x, x[1]), vcat(y, y[1]))
-    #     # else
-    #         new(x, y)
-    #     end
-    # end
 end
 
 """
@@ -692,12 +685,10 @@ struct ZValues
     zrange::Tuple{Float64,Float64}
 end
 
-function zvalues(
+zvalues(
     values::AVec{T},
     zrange::Tuple{T,T} = (ignorenan_minimum(values), ignorenan_maximum(values)),
-) where {T<:Real}
-    ZValues(collect(float(values)), map(Float64, zrange))
-end
+) where {T<:Real} = ZValues(collect(float(values)), map(Float64, zrange))
 
 # -----------------------------------------------------------------------
 

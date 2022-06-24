@@ -132,10 +132,10 @@ up_color(col::RGBA) =
     (c = convert(ARGB32, col); map(Int, (red(c).i, green(c).i, blue(c).i)))
 up_color(col) = :auto
 
-function up_cmap(series)
-    rng = range(0, 1, length = length(UnicodePlots.COLOR_MAP_DATA[:viridis]))
-    [(red(c), green(c), blue(c)) for c in get(get_colorgradient(series), rng)]
-end
+up_cmap(series) = map(
+    c -> (red(c), green(c), blue(c)),
+    get(get_colorgradient(series), range(0, 1, length = 256)),
+)
 
 # add a single series
 function addUnicodeSeries!(

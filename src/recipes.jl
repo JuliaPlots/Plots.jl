@@ -1,20 +1,14 @@
 
 const _series_recipe_deps = Dict()
 
-function series_recipe_dependencies(st::Symbol, deps::Symbol...)
-    _series_recipe_deps[st] = deps
-end
+series_recipe_dependencies(st::Symbol, deps::Symbol...) = _series_recipe_deps[st] = deps
 
-function seriestype_supported(st::Symbol)
-    seriestype_supported(backend(), st)
-end
+seriestype_supported(st::Symbol) = seriestype_supported(backend(), st)
 
 # returns :no, :native, or :recipe depending on how it's supported
 function seriestype_supported(pkg::AbstractBackend, st::Symbol)
     # is it natively supported
-    if is_seriestype_supported(pkg, st)
-        return :native
-    end
+    is_seriestype_supported(pkg, st) && return :native
 
     haskey(_series_recipe_deps, st) || return :no
 
@@ -1172,13 +1166,7 @@ function error_style!(plotattributes::AKW)
 end
 
 # if we're passed a tuple of vectors, convert to a vector of tuples
-function error_zipit(ebar)
-    if istuple(ebar)
-        collect(zip(ebar...))
-    else
-        ebar
-    end
-end
+error_zipit(ebar) = istuple(ebar) ? collect(zip(ebar...)) : ebar
 
 error_tuple(x) = x, x
 error_tuple(x::Tuple) = x
@@ -1198,10 +1186,7 @@ function error_coords(errorbar, errordata, otherdata...)
 end
 
 # clamp non-NaN values in an array to Base.eps(Float64) for log-scale plots
-function clamp_to_eps!(ary)
-    replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary)
-    nothing
-end
+clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); nothing)
 
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
@@ -1313,9 +1298,7 @@ function quiver_using_arrows(plotattributes::AKW)
         is_3d && nanappend!(z, [zi, zi + vz, NaN])
     end
     plotattributes[:x], plotattributes[:y] = x, y
-    if is_3d
-        plotattributes[:z] = z
-    end
+    is_3d && (plotattributes[:z] = z)
     # KW[plotattributes]
 end
 
