@@ -65,7 +65,7 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
             if st === :histogram2d
                 xlim = ylim = (0, 0)
             elseif st === :spy || st === :heatmap
-                width = height = 0
+                width = height = nothing
                 grid = false
             end
         end
