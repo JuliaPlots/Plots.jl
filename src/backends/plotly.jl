@@ -92,7 +92,7 @@ end
 
 function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
     aspect_ratio = get_aspect_ratio(sp)
-    if aspect_ratio != :none
+    if aspect_ratio !== :none
         if aspect_ratio === :equal
             aspect_ratio = 1.0
         end
@@ -128,7 +128,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     letter = axis[:letter]
     framestyle = sp[:framestyle]
     ax = KW(
-        :visible => framestyle != :none,
+        :visible => framestyle !== :none,
         :title => axis[:guide],
         :showgrid => axis[:grid],
         :gridcolor =>
@@ -155,7 +155,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     ax[:type] = plotly_scale(axis[:scale])
     lims = axis_limits(sp, letter)
 
-    if axis[:ticks] != :native || axis[:lims] != :auto
+    if axis[:ticks] !== :native || axis[:lims] !== :auto
         ax[:range] = map(RecipesPipeline.scale_func(axis[:scale]), lims)
     end
 
@@ -168,7 +168,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
         # ticks
-        if axis[:ticks] != :native
+        if axis[:ticks] !== :native
             ticks = get_ticks(sp, axis)
             ttype = ticksType(ticks)
             if ttype === :ticks
@@ -338,9 +338,9 @@ function plotly_layout(plt::Plot)
 end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
-    plotattributes_out[:showlegend] = sp[:legend_position] != :none
+    plotattributes_out[:showlegend] = sp[:legend_position] !== :none
     legend_position = plotly_legend_pos(sp[:legend_position])
-    if sp[:legend_position] != :none
+    if sp[:legend_position] !== :none
         plotattributes_out[:legend_position] = KW(
             :bgcolor => rgba_string(sp[:legend_background_color]),
             :bordercolor => rgba_string(sp[:legend_foreground_color]),
@@ -589,7 +589,7 @@ function plotly_series(plt::Plot, series::Series)
     plotattributes_out[:name] = series[:label]
 
     isscatter = st in (:scatter, :scatter3d, :scattergl)
-    hasmarker = isscatter || series[:markershape] != :none
+    hasmarker = isscatter || series[:markershape] !== :none
     hasline = st in (:path, :path3d, :straightline)
     hasfillrange =
         st in (:path, :scatter, :scattergl, :straightline) &&
@@ -827,7 +827,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
     st = series[:seriestype]
     sp = series[:subplot]
     isscatter = st in (:scatter, :scatter3d, :scattergl)
-    hasmarker = isscatter || series[:markershape] != :none
+    hasmarker = isscatter || series[:markershape] !== :none
     hasline = st in (:path, :path3d, :straightline)
     hasfillrange =
         st in (:path, :scatter, :scattergl, :straightline) &&

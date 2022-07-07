@@ -235,7 +235,7 @@ gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 
 function gr_inqtext(x, y, s::AbstractString)
     if (occursin('\\', s) || occursin("10^{", s)) &&
-       match(r".*\$[^\$]+?\$.*", String(s)) == nothing
+       match(r".*\$[^\$]+?\$.*", String(s)) === nothing
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -246,7 +246,7 @@ gr_text(x, y, s) = gr_text(x, y, string(s))
 
 function gr_text(x, y, s::AbstractString)
     if (occursin('\\', s) || occursin("10^{", s)) &&
-       match(r".*\$[^\$]+?\$.*", String(s)) == nothing
+       match(r".*\$[^\$]+?\$.*", String(s)) === nothing
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
@@ -960,7 +960,7 @@ function get_z_normalized(z, clims...)
 end
 
 function gr_clims(args...)
-    if args[1][:clims] != :auto
+    if args[1][:clims] !== :auto
         return get_clims(args[1])
     end
     lo, hi = get_clims(args...)
@@ -1106,7 +1106,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     end
                 end
 
-                if series[:markershape] != :none
+                if series[:markershape] !== :none
                     ms = first(series[:markersize])
                     msw = first(series[:markerstrokewidth])
                     s, sw = if ms > 0
@@ -1248,7 +1248,7 @@ end
 
 function gr_get_legend_geometry(viewport_plotarea, sp)
     legendn = legendw = dy = 0
-    if sp[:legend_position] != :none
+    if sp[:legend_position] !== :none
         GR.savestate()
         GR.selntran(0)
         GR.setcharup(0, 1)
@@ -1366,7 +1366,7 @@ end
 
 function gr_update_viewport_ratio!(viewport_plotarea, sp)
     ratio = get_aspect_ratio(sp)
-    if ratio != :none
+    if ratio !== :none
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         if ratio === :equal
             ratio = 1
@@ -1459,7 +1459,7 @@ function gr_draw_axes(sp, viewport_plotarea)
         #rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
         rmin, rmax = axis_limits(sp, :y)
         gr_polaraxes(rmin, rmax, sp)
-    elseif sp[:framestyle] != :none
+    elseif sp[:framestyle] !== :none
         for letter in (:x, :y)
             gr_draw_axis(sp, letter, viewport_plotarea)
         end
@@ -1953,7 +1953,7 @@ function gr_draw_markers(
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
 
     shapes = series[:markershape]
-    if shapes != :none
+    if shapes !== :none
         for segment in series_segments(series, :scatter)
             i = segment.attr_index
             rng = intersect(eachindex(x), segment.range)

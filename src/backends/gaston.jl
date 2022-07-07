@@ -398,7 +398,7 @@ function gaston_parse_axes_args(
             )
 
             # major tick locations
-            if axis[:ticks] != :native
+            if axis[:ticks] !== :native
                 if axis[:flip]
                     hi, lo = axis_limits(sp, letter)
                 else
@@ -409,7 +409,7 @@ function gaston_parse_axes_args(
                 ticks = get_ticks(sp, axis)
                 gaston_set_ticks!(axesconf, ticks, letter, "", "")
 
-                if axis[:minorticks] != :native
+                if axis[:minorticks] !== :native
                     minor_ticks = get_minor_ticks(sp, axis, ticks)
                     gaston_set_ticks!(axesconf, minor_ticks, letter, "m", "add")
                 end
@@ -423,7 +423,7 @@ function gaston_parse_axes_args(
         end
 
         ratio = get_aspect_ratio(sp)
-        if ratio != :none
+        if ratio !== :none
             ratio === :equal && (ratio = -1)
             push!(axesconf, "set size ratio $ratio")
         end

@@ -231,7 +231,7 @@ make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] != :none
+    if plotattributes[:markershape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -256,7 +256,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, true)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] != :none
+    if plotattributes[:markershape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -281,7 +281,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] != :none
+    if plotattributes[:markershape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -340,7 +340,7 @@ end
     end
 
     # create a primary series for the markers
-    if plotattributes[:markershape] != :none
+    if plotattributes[:markershape] !== :none
         primary := false
         @series begin
             seriestype := :scatter
@@ -724,7 +724,7 @@ end
     end
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] != :none
+    if plotattributes[:markershape] !== :none
         @series begin
             seriestype := :scatter
             x := _bin_centers(edge)

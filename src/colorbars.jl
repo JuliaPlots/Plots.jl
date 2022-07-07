@@ -92,7 +92,7 @@ function colorbar_style(series::Series)
     elseif iscontour(series)
         cbar_lines
     elseif series[:seriestype] ∈ (:heatmap, :surface) ||
-           any(series[z] !== nothing for z in [:marker_z, :line_z, :fill_z])
+           any(series[z] !== nothing for z in (:marker_z, :line_z, :fill_z))
         cbar_gradient
     else
         nothing
@@ -101,7 +101,7 @@ end
 
 hascolorbar(series::Series) = colorbar_style(series) !== nothing
 hascolorbar(sp::Subplot) =
-    sp[:colorbar] != :none && any(hascolorbar(s) for s in series_list(sp))
+    sp[:colorbar] !== :none && any(hascolorbar(s) for s in series_list(sp))
 
 function get_colorbar_ticks(sp::Subplot; update = true)
     if update || !haskey(sp.attr, :colorbar_optimized_ticks)

@@ -411,7 +411,7 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
         _inspectdr_mapptsize(xaxis[:tickfontsize]),
         color = _inspectdr_mapcolor(xaxis[:tickfontcolor]),
     )
-    l.enable_legend = (sp[:legend_position] != :none)
+    l.enable_legend = (sp[:legend_position] !== :none)
     #l.halloc_legend = 150 #TODO: compute???
     l.font_legend = InspectDR.Font(
         sp[:legend_font_family],

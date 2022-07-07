@@ -29,7 +29,7 @@ end
     @test p[1][:legend_font_rotation] == 0.0
     @test p[1][:legend_font_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
     @test p[1][:legend_position] === :best
-    @test p[1][:legend_title] == nothing
+    @test p[1][:legend_title] === nothing
     @test p[1][:legend_title_font_family] == "sans-serif"
     @test p[1][:legend_title_font_pointsize] == 11
     @test p[1][:legend_title_font_halign] === :hcenter

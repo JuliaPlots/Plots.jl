@@ -92,7 +92,7 @@ end
     end
     @testset "Alpha" begin
         @test brush(0.4).alpha == 0.4
-        @test brush(20).alpha == nothing
+        @test brush(20).alpha === nothing
     end
     @testset "Bad Argument" begin
         # using test_logs because test_warn seems to not work anymore

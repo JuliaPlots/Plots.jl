@@ -74,7 +74,7 @@ surface_to_vecs(x::AVec, y::AVec, z::AVec) = x, y, z
 Base.push!(pgfx_plot::PGFPlotsXPlot, item) = push!(pgfx_plot.the_plot, item)
 
 pgfx_split_extra_opts(extra) =
-    (get(extra, :add, nothing), filter(x -> first(x) != :add, extra))
+    (get(extra, :add, nothing), filter(x -> first(x) !== :add, extra))
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
@@ -163,7 +163,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             sp_width > 0 * mm ? push!(axis_opt, "width" => string(axis_width)) : nothing
             sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) : nothing
             for letter in (:x, :y, :z)
-                if letter != :z || RecipesPipeline.is3d(sp)
+                if letter !== :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
                 end
             end
@@ -347,7 +347,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
         i, rng = segment.attr_index, segment.range
         segment_opt = PGFPlotsX.Options()
         segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
-        if opt[:markershape] != :none
+        if opt[:markershape] !== :none
             marker = _cycle(opt[:markershape], i)
             if marker isa Shape
                 x = marker.x
@@ -389,7 +389,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 end
             end
             if i == 1 &&
-               series[:subplot][:legend_position] != :none &&
+               series[:subplot][:legend_position] !== :none &&
                pgfx_should_add_to_legend(series)
                 pgfx_filllegend!(series_opt, opt)
             end
@@ -662,7 +662,7 @@ function pgfx_add_series!(::Val{:xsticks}, axis, series_opt, args...)
 end
 
 function pgfx_add_legend!(axis, series, opt, i = 1)
-    if series[:subplot][:legend_position] != :none
+    if series[:subplot][:legend_position] !== :none
         leg_entry = if opt[:label] isa AVec
             get(opt[:label], i, "")
         elseif opt[:label] isa AbstractString
@@ -1314,7 +1314,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     # grid on or off
     push!(
         opt,
-        "$(letter)majorgrids" => axis[:grid] && framestyle != :none ? "true" : "false",
+        "$(letter)majorgrids" => axis[:grid] && framestyle !== :none ? "true" : "false",
     )
 
     # limits
@@ -1323,7 +1323,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         axis_limits(sp, letter)
     push!(opt, string(letter, :min) => lims[1], string(letter, :max) => lims[2])
 
-    if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
+    if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle !== :none
         # ticks
         ticks = get_ticks(sp, axis)
         # pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values

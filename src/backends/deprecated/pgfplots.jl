@@ -227,7 +227,7 @@ function pgf_series(sp::Subplot, series::Series)
             end
 
             # add to legend?
-            if i == 1 && sp[:legend_position] != :none && should_add_to_legend(series)
+            if i == 1 && sp[:legend_position] !== :none && should_add_to_legend(series)
                 if plotattributes[:fillrange] !== nothing
                     push!(style, "forget plot")
                     push!(series_collection, pgf_fill_legend_hack(plotattributes, args))
@@ -250,7 +250,7 @@ function pgf_series(sp::Subplot, series::Series)
             kw[:style] = join(style, ',')
 
             # add fillrange
-            if series[:fillrange] !== nothing && st != :shape
+            if series[:fillrange] !== nothing && st !== :shape
                 push!(
                     series_collection,
                     pgf_fillrange_series(
@@ -388,7 +388,7 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     # grid on or off
-    if axis[:grid] && framestyle != :none
+    if axis[:grid] && framestyle !== :none
         push!(style, "$(letter)majorgrids = true")
     else
         push!(style, "$(letter)majorgrids = false")
@@ -396,7 +396,7 @@ function pgf_axis(sp::Subplot, letter)
 
     # limits
     # TODO: support zlims
-    if letter != :z
+    if letter !== :z
         lims =
             ispolar(sp) && letter === :x ? rad2deg.(axis_limits(sp, :x)) :
             axis_limits(sp, letter)
@@ -404,7 +404,7 @@ function pgf_axis(sp::Subplot, letter)
         kw[get_attr_symbol(letter, :max)] = lims[2]
     end
 
-    if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
+    if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle !== :none
         ticks = get_ticks(sp, axis)
         #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values =
@@ -544,7 +544,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # add to style/kw for each axis
         for letter in (:x, :y, :z)
-            if letter != :z || RecipesPipeline.is3d(sp)
+            if letter !== :z || RecipesPipeline.is3d(sp)
                 axisstyle, axiskw = pgf_axis(sp, letter)
                 append!(style, axisstyle)
                 merge!(kw, axiskw)

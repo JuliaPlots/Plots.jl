@@ -551,19 +551,19 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
                 merge!(spmap, plt.spmap)
                 inc = length(plt.subplots)
             end
-            if get(l.attr, :width, :auto) != :auto
+            if get(l.attr, :width, :auto) !== :auto
                 layout.widths[c] = attr(l, :width)
             end
-            if get(l.attr, :height, :auto) != :auto
+            if get(l.attr, :height, :auto) !== :auto
                 layout.heights[r] = attr(l, :height)
             end
             i += inc
         elseif isa(l, GridLayout)
             # sub-grid
-            if get(l.attr, :width, :auto) != :auto
+            if get(l.attr, :width, :auto) !== :auto
                 layout.widths[c] = attr(l, :width)
             end
-            if get(l.attr, :height, :auto) != :auto
+            if get(l.attr, :height, :auto) !== :auto
                 layout.heights[r] = attr(l, :height)
             end
             l, sps, m = build_layout(l, n - i, plts)

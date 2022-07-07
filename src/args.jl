@@ -1385,7 +1385,7 @@ function _add_markershape(plotattributes::AKW)
     # add the markershape if it needs to be added... hack to allow "m=10" to add a shape,
     # and still allow overriding in _apply_recipe
     ms = pop!(plotattributes, :markershape_to_add, :none)
-    if !haskey(plotattributes, :markershape) && ms != :none
+    if !haskey(plotattributes, :markershape) && ms !== :none
         plotattributes[:markershape] = ms
     end
 end

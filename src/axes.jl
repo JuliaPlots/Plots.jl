@@ -443,9 +443,9 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             letter === :x ? :y : letter === :y ? :x : :z
         end]
         if (
-            letter != :z &&
+            letter !== :z &&
             plotattributes[:seriestype] === :straightline &&
-            any(series[:seriestype] != :straightline for series in series_list(sp)) &&
+            any(series[:seriestype] !== :straightline for series in series_list(sp)) &&
             data[1] != data[2]
         )
             data = [NaN]
@@ -752,14 +752,14 @@ function axis_drawing_info(sp, letter)
     minorgrid_segments = Segments(2)
     border_segments = Segments(2)
 
-    if sp[:framestyle] != :none
+    if sp[:framestyle] !== :none
         oa1, oa2 = if sp[:framestyle] in (:origin, :zerolines)
             0.0, 0.0
         else
             xor(ax[:mirror], oax[:flip]) ? (oamax, oamin) : (oamin, oamax)
         end
         if ax[:showaxis]
-            if sp[:framestyle] != :grid
+            if sp[:framestyle] !== :grid
                 push!(segments, reverse_if((amin, oa1), isy), reverse_if((amax, oa1), isy))
                 # don't show the 0 tick label for the origin framestyle
                 if (
@@ -882,7 +882,7 @@ function axis_drawing_info_3d(sp, letter)
     minorgrid_segments = Segments(3)
     border_segments = Segments(3)
 
-    if sp[:framestyle] != :none  # && letter === :x
+    if sp[:framestyle] !== :none  # && letter === :x
         na0, na1 = if sp[:framestyle] in (:origin, :zerolines)
             0, 0
         else
@@ -895,7 +895,7 @@ function axis_drawing_info_3d(sp, letter)
             reverse_if((famin, famax), xor(ax[:mirror], fax[:flip]))
         end
         if ax[:showaxis]
-            if sp[:framestyle] != :grid
+            if sp[:framestyle] !== :grid
                 push!(
                     segments,
                     sort_3d_axes(amin, na0, fa0, letter),

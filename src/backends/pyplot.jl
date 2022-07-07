@@ -528,7 +528,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     # add markers?
-    if series[:markershape] != :none &&
+    if series[:markershape] !== :none &&
        st in (:path, :scatter, :path3d, :scatter3d, :steppre, :stepmid, :steppost, :bar)
         for segment in series_segments(series, :scatter)
             i, rng = segment.attr_index, segment.range
@@ -850,7 +850,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # handle area filling
     fillrange = series[:fillrange]
-    if fillrange !== nothing && st != :contour
+    if fillrange !== nothing && st !== :contour
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
             f, dim1, dim2 = if isvertical(series)
@@ -1278,7 +1278,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             axis = sp[axissym]
             pyaxis = getproperty(ax, axissym)
 
-            if axis[:guide_position] != :auto && letter != :z
+            if axis[:guide_position] !== :auto && letter !== :z
                 pyaxis."set_label_position"(axis[:guide_position])
             end
 
@@ -1433,7 +1433,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
         # aspect ratio
         aratio = get_aspect_ratio(sp)
-        if aratio != :none
+        if aratio !== :none
             ax."set_aspect"(isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
         end
 
@@ -1567,7 +1567,7 @@ py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
     leg = sp[:legend_position]
-    if leg != :none
+    if leg !== :none
         # gotta do this to ensure both axes are included
         labels = []
         handles = []

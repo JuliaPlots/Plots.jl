@@ -70,7 +70,7 @@ end
 function _preprocess_userrecipe(kw::AKW)
     _add_markershape(kw)
 
-    if get(kw, :permute, default(:permute)) != :none
+    if get(kw, :permute, default(:permute)) !== :none
         l1, l2 = kw[:permute]
         for k in _axis_args
             k1 = _attrsymbolcache[l1][k]
@@ -350,7 +350,7 @@ RecipesPipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported
 
 function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
-    if plotattributes[:permute] != :none
+    if plotattributes[:permute] !== :none
         letter1, letter2 = plotattributes[:permute]
         if plotattributes[:markershape] === :hline &&
            (plotattributes[:permute] == (:x, :y) || plotattributes[:permute] == (:y, :x))

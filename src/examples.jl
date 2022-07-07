@@ -913,7 +913,7 @@ const _examples = PlotExample[
                         m::T,
                     ) where {T<:AbstractArray{<:Measurement}}
                         if !(
-                            get(plotattributes, :seriestype, :path) in [
+                            get(plotattributes, :seriestype, :path) in (
                                 :contour,
                                 :contourf,
                                 :contour3d,
@@ -921,7 +921,7 @@ const _examples = PlotExample[
                                 :surface,
                                 :wireframe,
                                 :image,
-                            ]
+                            )
                         )
                             error_sym = Symbol(plotattributes[:letter], :error)
                             plotattributes[error_sym] = uncertainty.(m)
