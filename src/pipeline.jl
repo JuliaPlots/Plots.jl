@@ -37,7 +37,7 @@ RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
 function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
     # Fix letter for seriestypes that are x only but data gets passed as y
     if treats_y_as_x(get(plotattributes, :seriestype, :path)) &&
-       get(plotattributes, :orientation, :vertical) == :vertical
+       get(plotattributes, :orientation, :vertical) === :vertical
         letter = :x
     end
 
@@ -157,7 +157,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
     err_inds =
         findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
     for ind in err_inds
-        if get(kw_list[ind - 1], :seriestype, :path) == :scatter
+        if get(kw_list[ind - 1], :seriestype, :path) === :scatter
             tmp = copy(kw_list[ind])
             kw_list[ind] = copy(kw_list[ind - 1])
             kw_list[ind - 1] = tmp
@@ -243,7 +243,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         sp = get_subplot(
             plt,
             _cycle(
-                sps == :auto ? plt.subplots : plt.subplots[sps],
+                sps === :auto ? plt.subplots : plt.subplots[sps],
                 series_idx(kw_list, kw),
             ),
         )
@@ -352,10 +352,10 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
     if plotattributes[:permute] != :none
         letter1, letter2 = plotattributes[:permute]
-        if plotattributes[:markershape] == :hline &&
+        if plotattributes[:markershape] === :hline &&
            (plotattributes[:permute] == (:x, :y) || plotattributes[:permute] == (:y, :x))
             plotattributes[:markershape] = :vline
-        elseif plotattributes[:markershape] == :vline && (
+        elseif plotattributes[:markershape] === :vline && (
             plotattributes[:permute] == (:x, :y) || plotattributes[:permute] == (:y, :x)
         )
             plotattributes[:markershape] = :hline
@@ -381,7 +381,7 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     # change to a 3d projection for this subplot?
     if (
         RecipesPipeline.needs_3d_axes(st) ||
-        (st == :quiver && plotattributes[:z] !== nothing)
+        (st === :quiver && plotattributes[:z] !== nothing)
     )
         sp.attr[:projection] = "3d"
     end
@@ -402,7 +402,7 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
             z !== nothing &&
             (size(plotattributes[:x]) == size(plotattributes[:y]) == size(z))
         )
-            st = (st == :scatter ? :scatter3d : :path3d)
+            st = (st === :scatter ? :scatter3d : :path3d)
             plotattributes[:seriestype] = st
         end
     end
@@ -417,7 +417,7 @@ needs_any_3d_axes(sp::Subplot) = any(
 
 function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
     # adjust extrema and discrete info
-    if st == :image
+    if st === :image
         xmin, xmax = ignorenan_extrema(plotattributes[:x])
         ymin, ymax = ignorenan_extrema(plotattributes[:y])
         expand_extrema!(sp[:xaxis], (xmin, xmax))
@@ -438,11 +438,11 @@ function _add_the_series(plt, sp, plotattributes)
         plt[:extra_plot_kwargs] = get(kw, :plot, KW())
         sp[:extra_kwargs] = get(kw, :subplot, KW())
         plotattributes[:extra_kwargs] = get(kw, :series, KW())
-    elseif plt[:extra_kwargs] == :plot
+    elseif plt[:extra_kwargs] === :plot
         plt[:extra_plot_kwargs] = extra_kwargs
-    elseif plt[:extra_kwargs] == :subplot
+    elseif plt[:extra_kwargs] === :subplot
         sp[:extra_kwargs] = extra_kwargs
-    elseif plt[:extra_kwargs] == :series
+    elseif plt[:extra_kwargs] === :series
         plotattributes[:extra_kwargs] = extra_kwargs
     else
         ArgumentError("Unsupported type for extra keyword arguments")
@@ -451,9 +451,9 @@ function _add_the_series(plt, sp, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
     z_order = plotattributes[:z_order]
-    if z_order == :front
+    if z_order === :front
         push!(sp.series_list, series)
-    elseif z_order == :back
+    elseif z_order === :back
         pushfirst!(sp.series_list, series)
     elseif z_order isa Integer
         insert!(sp.series_list, z_order, series)

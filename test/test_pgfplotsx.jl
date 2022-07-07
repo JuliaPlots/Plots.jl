@@ -407,7 +407,7 @@ with(:pgfplotsx) do
         pl = plot(1:5, title = "Test me", titlefont = (2, :left))
         @test pl[1][:title] == "Test me"
         @test pl[1][:titlefontsize] == 2
-        @test pl[1][:titlefonthalign] == :left
+        @test pl[1][:titlefonthalign] === :left
         Plots._update_plot_object(pl)
         ax_opt = Plots.pgfx_axes(pl.o)[1].options
         @test ax_opt["title"] == "Test me"
@@ -415,7 +415,7 @@ with(:pgfplotsx) do
         pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
         @test pl[:plot_title] == "Test me"
         @test pl[:plot_titlefontsize] == 2
-        @test pl[:plot_titlefonthalign] == :left
+        @test pl[:plot_titlefonthalign] === :left
         pl = heatmap(
             rand(3, 3),
             colorbar_title = "Test me",
@@ -423,6 +423,6 @@ with(:pgfplotsx) do
         )
         @test pl[1][:colorbar_title] == "Test me"
         @test pl[1][:colorbar_titlefontsize] == 12
-        @test pl[1][:colorbar_titlefonthalign] == :right
+        @test pl[1][:colorbar_titlefonthalign] === :right
     end
 end

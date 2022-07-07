@@ -87,7 +87,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             push!(the_plot, extra_plot...)
         end
         bgc =
-            plt.attr[:background_color_outside] == :match ? plt.attr[:background_color] :
+            plt.attr[:background_color_outside] === :match ? plt.attr[:background_color] :
             plt.attr[:background_color_outside]
         if bgc isa Colors.Colorant
             cstr = plot_color(bgc)
@@ -239,7 +239,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 azim, elev = sp[:camera]
                 push!(axis_opt, "view" => (azim, elev))
             end
-            axisf = if sp[:projection] == :polar
+            axisf = if sp[:projection] === :polar
                 # push!(axis_opt, "xmin" => 90)
                 # push!(axis_opt, "xmax" => 450)
                 PGFPlotsX.PolarAxis
@@ -285,7 +285,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 if (
                     RecipesPipeline.is3d(series) ||
                     st in (:heatmap, :contour) ||
-                    (st == :quiver && opt[:z] !== nothing)
+                    (st === :quiver && opt[:z] !== nothing)
                 )
                     series_func = PGFPlotsX.Plot3
                 else
@@ -410,17 +410,17 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
             if opt[:label] == ""
                 push!(arrow_opt, "forget plot" => nothing)
             end
-            if arrow.side == :head
+            if arrow.side === :head
                 x_arrow = opt[:x][rng][(end - 1):end]
                 y_arrow = opt[:y][rng][(end - 1):end]
                 x_path  = opt[:x][rng][1:(end - 1)]
                 y_path  = opt[:y][rng][1:(end - 1)]
-            elseif arrow.side == :tail
+            elseif arrow.side === :tail
                 x_arrow = opt[:x][rng][2:-1:1]
                 y_arrow = opt[:y][rng][2:-1:1]
                 x_path  = opt[:x][rng][2:end]
                 y_path  = opt[:y][rng][2:end]
-            elseif arrow.side == :both
+            elseif arrow.side === :both
                 x_arrow = opt[:x][rng][[2, 1, end - 1, end]]
                 y_arrow = opt[:y][rng][[2, 1, end - 1, end]]
                 x_path  = opt[:x][rng][2:(end - 1)]
@@ -695,9 +695,9 @@ function pgfx_series_arguments(series, opt)
         surface_to_vecs(opt[:x], opt[:y], opt[:z])
     elseif RecipesPipeline.is3d(st)
         opt[:x], opt[:y], opt[:z]
-    elseif st == :straightline
+    elseif st === :straightline
         straightline_data(series)
-    elseif st == :shape
+    elseif st === :shape
         shape_data(series)
     elseif ispolar(series)
         theta, r = opt[:x], opt[:y]
@@ -877,16 +877,16 @@ function pgfx_arrow(arr::Arrow, side = arr.side)
     components = String[]
     head = String[]
     push!(head, "{stealth[length = $(arr.headlength)pt, width = $(arr.headwidth)pt")
-    if arr.style == :open
+    if arr.style === :open
         push!(head, ", open")
     end
     push!(head, "]}")
     head = join(head, "")
-    if side == :both || side == :tail
+    if side === :both || side === :tail
         push!(components, head)
     end
     push!(components, "-")
-    if side == :both || side == :head
+    if side === :both || side === :head
         push!(components, head)
     end
     components = join(components, "")
@@ -954,7 +954,7 @@ function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = :solid)
     )
 end
 
-pgfx_legend_col(s::Symbol) = s == :horizontal ? -1 : 1
+pgfx_legend_col(s::Symbol) = s === :horizontal ? -1 : 1
 pgfx_legend_col(n) = n
 
 function pgfx_linestyle(plotattributes, i = 1)
@@ -1023,11 +1023,11 @@ function pgfx_marker(plotattributes, i = 1)
                 pgfx_thickness_scaling(plotattributes) *
                 0.75 *
                 _cycle(plotattributes[:markerstrokewidth], i),
-            "rotate" => if shape == :dtriangle
+            "rotate" => if shape === :dtriangle
                 180
-            elseif shape == :rtriangle
+            elseif shape === :rtriangle
                 270
-            elseif shape == :ltriangle
+            elseif shape === :ltriangle
                 90
             else
                 0
@@ -1196,7 +1196,7 @@ function pgfx_sanitize_plot!(plt)
     end
     for subplot in plt.subplots
         for (key, value) in subplot.attr
-            if key == :annotations && subplot.attr[:annotations] !== nothing
+            if key === :annotations && subplot.attr[:annotations] !== nothing
                 old_ann = subplot.attr[key]
                 for i in eachindex(old_ann)
                     subplot.attr[key][i] =
@@ -1215,7 +1215,7 @@ function pgfx_sanitize_plot!(plt)
     end
     for series in plt.series_list
         for (key, value) in series.plotattributes
-            if key == :series_annotations &&
+            if key === :series_annotations &&
                series.plotattributes[:series_annotations] !== nothing
                 old_ann = series.plotattributes[key].strs
                 for i in eachindex(old_ann)
@@ -1267,9 +1267,9 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 
     # axis label position
     labelpos = ""
-    if letter == :x
+    if letter === :x
         labelpos = pgfx_get_xguide_pos(axis[:guide_position])
-    elseif letter == :y
+    elseif letter === :y
         labelpos = pgfx_get_yguide_pos(axis[:guide_position])
     end
 
@@ -1301,11 +1301,11 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     is_log_scale = scale in (:ln, :log2, :log10)
     if is_log_scale
         push!(opt, string(letter, :mode) => "log")
-        scale == :ln || push!(opt, "log basis $letter" => "$(scale == :log2 ? 2 : 10)")
+        scale === :ln || push!(opt, "log basis $letter" => "$(scale === :log2 ? 2 : 10)")
     end
 
     # ticks on or off
-    if axis[:ticks] in (nothing, false, :none) || framestyle == :none
+    if axis[:ticks] in (nothing, false, :none) || framestyle === :none
         push!(opt, "$(letter)majorticks" => "false")
     elseif framestyle in (:grid, :zerolines)
         push!(opt, "$letter tick style" => PGFPlotsX.Options("draw" => "none"))
@@ -1319,7 +1319,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 
     # limits
     lims =
-        ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) :
+        ispolar(sp) && letter === :x ? rad2deg.(axis_limits(sp, :x)) :
         axis_limits(sp, letter)
     push!(opt, string(letter, :min) => lims[1], string(letter, :max) => lims[2])
 
@@ -1328,10 +1328,10 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         ticks = get_ticks(sp, axis)
         # pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values =
-            ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] :
+            ispolar(sp) && letter === :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] :
             ticks[1]
         push!(opt, string(letter, "tick") => string("{", join(tick_values, ","), "}"))
-        if axis[:showaxis] && is_log_scale && axis[:ticks] == :auto
+        if axis[:showaxis] && is_log_scale && axis[:ticks] === :auto
             tick_labels = wrap_power_labels(ticks[2])
             if tick_labels isa Vector{String}
                 push!(
@@ -1344,7 +1344,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             end
         elseif axis[:showaxis]
             tick_labels =
-                ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+                ispolar(sp) && letter === :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
             is_log_scale && (tick_labels = wrap_power_labels(tick_labels))
             if axis[:formatter] in (:scientific, :auto) && tick_labels isa Vector{String}
                 tick_labels = string.("\$", convert_sci_unicode.(tick_labels), "\$")
@@ -1363,7 +1363,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             push!(
                 opt,
                 string(letter, "tick align") =>
-                    (axis[:tick_direction] == :out ? "outside" : "inside"),
+                    (axis[:tick_direction] === :out ? "outside" : "inside"),
             )
         end
         push!(opt, string(letter, "ticklabel style") => pgfx_get_ticklabel_style(sp, axis))
@@ -1386,7 +1386,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         minor_ticks = get_minor_ticks(sp, axis, ticks)
         if minor_ticks !== nothing
             minor_ticks =
-                ispolar(sp) && letter == :x ? [rad2deg.(minor_ticks)[3:end]..., 360, 405] :
+                ispolar(sp) && letter === :x ? [rad2deg.(minor_ticks)[3:end]..., 360, 405] :
                 minor_ticks
             push!(
                 opt,
@@ -1414,7 +1414,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 
     # framestyle
     if framestyle in (:axes, :origin)
-        axispos = axis[:mirror] ? "right" : framestyle == :axes ? "left" : "middle"
+        axispos = axis[:mirror] ? "right" : framestyle === :axes ? "left" : "middle"
 
         if axis[:draw_arrow]
             push!(opt, string("axis ", letter, " line") => axispos)
@@ -1424,7 +1424,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         end
     end
 
-    if framestyle == :zerolines
+    if framestyle === :zerolines
         push!(opt, string("extra ", letter, " ticks") => "0")
         push!(opt, string("extra ", letter, " tick labels") => "")
         push!(

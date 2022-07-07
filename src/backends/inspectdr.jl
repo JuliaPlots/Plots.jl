@@ -19,7 +19,7 @@ is_marker_supported(::InspectDRBackend, shape::Shape) = true
 
 #Do we avoid Map to avoid possible pre-comile issues?
 function _inspectdr_mapglyph(s::Symbol)
-    s == :rect && return :square
+    s === :rect && return :square
     return s
 end
 
@@ -88,9 +88,9 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
     _xfrm(coord) = InspectDR.axis2aloc(Float64(coord), xfrm.spec) #Ensure Float64 - in case
 
     ttype = ticksType(ticks)
-    if ticks == :native
+    if ticks === :native
         #keep current
-    elseif ttype == :ticks_and_labels
+    elseif ttype === :ticks_and_labels
         pos = ticks[1]
         labels = ticks[2]
         nticks = length(ticks[1])
@@ -99,7 +99,7 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
         gridlines.major = newticks
         gridlines.minor = []
         gridlines.displayminor = false
-    elseif ttype == :ticks
+    elseif ttype === :ticks
         nticks = length(ticks)
         gridlines.major = Float64[_xfrm(t) for t in ticks]
         gridlines.minor = []
@@ -107,7 +107,7 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
     elseif isnothing(ticks)
         gridlines.major = []
         gridlines.minor = []
-    else #Assume ticks == :native
+    else #Assume ticks === :native
         #keep current
     end
 
@@ -234,7 +234,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     end
 
     _vectorize(v) = isa(v, Vector) ? v : collect(v) #InspectDR only supports vectors
-    x, y = if st == :straightline
+    x, y = if st === :straightline
         straightline_data(series)
     else
         _vectorize(series[:x]), _vectorize(series[:y])

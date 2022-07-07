@@ -4,10 +4,10 @@
         layout = 4,
         yscale = [:identity :identity :log10 :log10],
     )
-    @test pl[1][:yaxis][:scale] == :identity
-    @test pl[2][:yaxis][:scale] == :identity
-    @test pl[3][:yaxis][:scale] == :log10
-    @test pl[4][:yaxis][:scale] == :log10
+    @test pl[1][:yaxis][:scale] === :identity
+    @test pl[2][:yaxis][:scale] === :identity
+    @test pl[3][:yaxis][:scale] === :log10
+    @test pl[4][:yaxis][:scale] === :log10
 end
 
 @testset "Plot title" begin

@@ -1194,9 +1194,9 @@ const _examples = PlotExample[
                             wireframe(
                                 args...,
                                 title = "wire-flip-$ax",
-                                xflip = ax == :x,
-                                yflip = ax == :y,
-                                zflip = ax == :z;
+                                xflip = ax === :x,
+                                yflip = ax === :y,
+                                zflip = ax === :z;
                                 kwargs...,
                             ),
                         )
@@ -1208,9 +1208,9 @@ const _examples = PlotExample[
                             wireframe(
                                 args...,
                                 title = "wire-mirror-$ax",
-                                xmirror = ax == :x,
-                                ymirror = ax == :y,
-                                zmirror = ax == :z;
+                                xmirror = ax === :x,
+                                ymirror = ax === :y,
+                                zmirror = ax === :z;
                                 kwargs...,
                             ),
                         )

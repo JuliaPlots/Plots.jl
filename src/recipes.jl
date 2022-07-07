@@ -14,7 +14,7 @@ function seriestype_supported(pkg::AbstractBackend, st::Symbol)
 
     supported = true
     for dep in _series_recipe_deps[st]
-        if seriestype_supported(pkg, dep) == :no
+        if seriestype_supported(pkg, dep) === :no
             supported = false
         end
     end
@@ -207,11 +207,11 @@ function make_steps(x::AbstractArray, st, even)
     newx[1] = x[1]
     for i in 2:n
         idx = 2i - 1
-        if st == :mid
+        if st === :mid
             newx[idx] = newx[idx - 1] = (x[i] + x[i - 1]) / 2
         else
             newx[idx] = x[i]
-            newx[idx - 1] = x[st == :pre ? i : i - 1]
+            newx[idx - 1] = x[st === :pre ? i : i - 1]
         end
     end
     even && (newx[end] = x[end])
@@ -306,7 +306,7 @@ end
     if fr === nothing
         sp = plotattributes[:subplot]
         yaxis = sp[:yaxis]
-        fr = if yaxis[:scale] == :identity
+        fr = if yaxis[:scale] === :identity
             0.0
         else
             NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
@@ -332,7 +332,7 @@ end
     fillrange := nothing
     seriestype := :path
     if (
-        plotattributes[:linecolor] == :auto &&
+        plotattributes[:linecolor] === :auto &&
         plotattributes[:marker_z] !== nothing &&
         plotattributes[:line_z] === nothing
     )
@@ -774,21 +774,21 @@ function _auto_binning_nbins(
 
     v = vs[dim]
 
-    if mode == :auto
+    if mode === :auto
         mode = :fd
     end
 
-    if mode == :sqrt  # Square-root choice
+    if mode === :sqrt  # Square-root choice
         _cl(sqrt(n_samples))
-    elseif mode == :sturges  # Sturges' formula
+    elseif mode === :sturges  # Sturges' formula
         _cl(log2(n_samples) + 1)
-    elseif mode == :rice  # Rice Rule
+    elseif mode === :rice  # Rice Rule
         _cl(2 * nd)
-    elseif mode == :scott  # Scott's normal reference rule
+    elseif mode === :scott  # Scott's normal reference rule
         _cl(_span(v) / (3.5 * std(v) / nd))
-    elseif mode == :fd  # Freedman–Diaconis rule
+    elseif mode === :fd  # Freedman–Diaconis rule
         _cl(_span(v) / (2 * _iqr(v) / nd))
-    elseif mode == :wand
+    elseif mode === :wand
         wand_edges(v)  # this makes this function not type stable, but the type instability does not propagate
     else
         error("Unknown auto-binning mode $mode")
@@ -903,7 +903,7 @@ end
     )
     seriestype := get(st_map, plotattributes[:seriestype], plotattributes[:seriestype])
 
-    if plotattributes[:seriestype] == :scatterbins
+    if plotattributes[:seriestype] === :scatterbins
         # Workaround, error bars currently not set correctly by scatterbins
         edge, weights, xscale, yscale, baseline =
             _preprocess_binlike(plotattributes, h.edges[1], h.weights)
@@ -1013,7 +1013,7 @@ end
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)
     seriestype := :path3d
-    if plotattributes[:markershape] == :none
+    if plotattributes[:markershape] === :none
         markershape := :circle
     end
     linewidth := 0
@@ -1203,7 +1203,7 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
         plotattributes[:x], plotattributes[:y], plotattributes[:z] =
             error_coords(xerr, x, y, z)
     end
-    if :xscale ∈ keys(plotattributes) && plotattributes[:xscale] == :log10
+    if :xscale ∈ keys(plotattributes) && plotattributes[:xscale] === :log10
         clamp_to_eps!(plotattributes[:x])
     end
     ()
@@ -1220,7 +1220,7 @@ end
         plotattributes[:y], plotattributes[:x], plotattributes[:z] =
             error_coords(yerr, y, x, z)
     end
-    if :yscale ∈ keys(plotattributes) && plotattributes[:yscale] == :log10
+    if :yscale ∈ keys(plotattributes) && plotattributes[:yscale] === :log10
         clamp_to_eps!(plotattributes[:y])
     end
     ()
@@ -1235,7 +1235,7 @@ end
         plotattributes[:z], plotattributes[:x], plotattributes[:y] =
             error_coords(zerr, z, x, y)
     end
-    if :zscale ∈ keys(plotattributes) && plotattributes[:zscale] == :log10
+    if :zscale ∈ keys(plotattributes) && plotattributes[:zscale] === :log10
         clamp_to_eps!(plotattributes[:z])
     end
     ()
@@ -1480,7 +1480,7 @@ end
 
 # Special case for 4-tuples in :ohlc series
 @recipe f(xyuv::AVec{<:Tuple{R1,R2,R3,R4}}) where {R1,R2,R3,R4} =
-    get(plotattributes, :seriestype, :path) == :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
+    get(plotattributes, :seriestype, :path) === :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
     RecipesPipeline.unzip(xyuv)
 
 @specialize

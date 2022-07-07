@@ -565,7 +565,7 @@ function aliasesAndAutopick(
     options::AVec,
     plotIndex::Int,
 )
-    if plotattributes[sym] == :auto
+    if plotattributes[sym] === :auto
         plotattributes[sym] = autopick_ignore_none_auto(options, plotIndex)
     elseif haskey(aliases, plotattributes[sym])
         plotattributes[sym] = aliases[plotattributes[sym]]
@@ -1073,7 +1073,7 @@ function default(k::Symbol)
         letter, key = axis_k
         return _axis_defaults_byletter[letter][key]
     end
-    k == :letter && return k # for type recipe processing
+    k === :letter && return k # for type recipe processing
     return missing
 end
 
@@ -1121,7 +1121,7 @@ end
 # if arg is a valid color value, then set plotattributes[csym] and return true
 function handleColors!(plotattributes::AKW, arg, csym::Symbol)
     try
-        if arg == :auto
+        if arg === :auto
             plotattributes[csym] = :auto
         else
             # c = colorscheme(arg)
@@ -1147,7 +1147,7 @@ function processLineArg(plotattributes::AKW, arg)
         arg.width === nothing || (plotattributes[:linewidth] = arg.width)
         arg.color === nothing || (
             plotattributes[:linecolor] =
-                arg.color == :auto ? :auto : plot_color(arg.color)
+                arg.color === :auto ? :auto : plot_color(arg.color)
         )
         arg.alpha === nothing || (plotattributes[:linealpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:linestyle] = arg.style)
@@ -1156,7 +1156,7 @@ function processLineArg(plotattributes::AKW, arg)
         arg.size === nothing || (plotattributes[:fillrange] = arg.size)
         arg.color === nothing || (
             plotattributes[:fillcolor] =
-                arg.color == :auto ? :auto : plot_color(arg.color)
+                arg.color === :auto ? :auto : plot_color(arg.color)
         )
         arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
@@ -1191,7 +1191,7 @@ function processMarkerArg(plotattributes::AKW, arg)
         arg.width === nothing || (plotattributes[:markerstrokewidth] = arg.width)
         arg.color === nothing || (
             plotattributes[:markerstrokecolor] =
-                arg.color == :auto ? :auto : plot_color(arg.color)
+                arg.color === :auto ? :auto : plot_color(arg.color)
         )
         arg.alpha === nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:markerstrokestyle] = arg.style)
@@ -1200,7 +1200,7 @@ function processMarkerArg(plotattributes::AKW, arg)
         arg.size === nothing || (plotattributes[:markersize] = arg.size)
         arg.color === nothing || (
             plotattributes[:markercolor] =
-                arg.color == :auto ? :auto : plot_color(arg.color)
+                arg.color === :auto ? :auto : plot_color(arg.color)
         )
         arg.alpha === nothing || (plotattributes[:markeralpha] = arg.alpha)
 
@@ -1228,7 +1228,7 @@ function processFillArg(plotattributes::AKW, arg)
         arg.size === nothing || (plotattributes[:fillrange] = arg.size)
         arg.color === nothing || (
             plotattributes[:fillcolor] =
-                arg.color == :auto ? :auto : plot_color(arg.color)
+                arg.color === :auto ? :auto : plot_color(arg.color)
         )
         arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
@@ -1349,7 +1349,7 @@ function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
         plotattributes[Symbol(fontname, :valign)] = arg.valign
         plotattributes[Symbol(fontname, :rotation)] = arg.rotation
         plotattributes[Symbol(fontname, :color)] = arg.color
-    elseif arg == :center
+    elseif arg === :center
         plotattributes[Symbol(fontname, :halign)] = :hcenter
         plotattributes[Symbol(fontname, :valign)] = :vcenter
     elseif arg ∈ _haligns
@@ -1515,7 +1515,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     RecipesPipeline.reset_kw!(plotattributes, :marker)
     if haskey(plotattributes, :markershape)
         plotattributes[:markershape] = _replace_markershape(plotattributes[:markershape])
-        if plotattributes[:markershape] == :none &&
+        if plotattributes[:markershape] === :none &&
            get(plotattributes, :seriestype, :path) in
            (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
             plotattributes[:markershape] = :circle
@@ -1702,7 +1702,7 @@ function convertLegendValue(val::Symbol)
         :inline,
     )
         val
-    elseif val == :horizontal
+    elseif val === :horizontal
         -1
     else
         error("Invalid symbol for legend: $val")
@@ -1781,7 +1781,7 @@ end
 # -----------------------------------------------------------------------------
 
 function color_or_nothing!(plotattributes, k::Symbol)
-    plotattributes[k] = (v = plotattributes[k]) == :match ? v : plot_color(v)
+    plotattributes[k] = (v = plotattributes[k]) === :match ? v : plot_color(v)
     return
 end
 
@@ -1834,7 +1834,7 @@ const _match_map2 = KW(
 
 # properly retrieve from plt.attr, passing `:match` to the correct key
 function Base.getindex(plt::Plot, k::Symbol)
-    if (v = plt.attr[k]) == :match
+    if (v = plt.attr[k]) === :match
         plt[_match_map[k]]
     else
         v
@@ -1843,7 +1843,7 @@ end
 
 # properly retrieve from sp.attr, passing `:match` to the correct key
 function Base.getindex(sp::Subplot, k::Symbol)
-    if (v = sp.attr[k]) == :match
+    if (v = sp.attr[k]) === :match
         if haskey(_match_map2, k)
             sp.plt[_match_map2[k]]
         else
@@ -1856,7 +1856,7 @@ end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
 function Base.getindex(axis::Axis, k::Symbol)
-    if (v = axis.plotattributes[k]) == :match
+    if (v = axis.plotattributes[k]) === :match
         if haskey(_match_map2, k)
             axis.sps[1][_match_map2[k]]
         else
@@ -1883,7 +1883,7 @@ Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 
 function fg_color(plotattributes::AKW)
     fg = get(plotattributes, :foreground_color, :auto)
-    if fg == :auto
+    if fg === :auto
         bg = plot_color(get(plotattributes, :background_color, :white))
         fg = isdark(bg) ? colorant"white" : colorant"black"
     else
@@ -1892,7 +1892,7 @@ function fg_color(plotattributes::AKW)
 end
 
 function fg_color_sp(plotattributes::AKW)
-    if (fg = get(plotattributes, :foreground_color_subplot, :match)) == :match
+    if (fg = get(plotattributes, :foreground_color_subplot, :match)) === :match
         fg_color(plotattributes)
     else
         plot_color(fg)
@@ -1911,7 +1911,7 @@ function _update_plot_args(plt::Plot, plotattributes_in::AKW)
     plt[:foreground_color] = fg_color(plotattributes)
     # bg = plot_color(plt.attr[:background_color])
     # fg = plt.attr[:foreground_color]
-    # if fg == :auto
+    # if fg === :auto
     #     fg = isdark(bg) ? colorant"white" : colorant"black"
     # end
     # plt.attr[:background_color] = bg
@@ -1932,7 +1932,7 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # handle legend/colorbar
     sp.attr[:legend_position] = convertLegendValue(sp.attr[:legend_position])
     sp.attr[:colorbar] = convertLegendValue(sp.attr[:colorbar])
-    if sp.attr[:colorbar] == :legend
+    if sp.attr[:colorbar] === :legend
         sp.attr[:colorbar] = sp.attr[:legend_position]
     end
     return
@@ -2073,7 +2073,7 @@ has_black_border_for_default(st::Symbol) =
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
 function get_series_color(c, sp::Subplot, n::Int, seriestype)
-    if c == :auto
+    if c === :auto
         c = like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
         c = _cycle(sp[:color_palette], c)
@@ -2100,7 +2100,7 @@ end
 
 function _replace_linewidth(plotattributes::AKW)
     # get a good default linewidth... 0 for surface and heatmaps
-    if plotattributes[:linewidth] == :auto
+    if plotattributes[:linewidth] === :auto
         plotattributes[:linewidth] = (
             get(plotattributes, :seriestype, :path) in (:surface, :heatmap, :image) ? 0 : 1
         )
@@ -2120,9 +2120,9 @@ label_to_string(label::Bool, series_plotindex) =
 label_to_string(label::Nothing, series_plotindex) = ""
 label_to_string(label::Missing, series_plotindex) = ""
 function label_to_string(label::Symbol, series_plotindex)
-    if label == :auto
+    if label === :auto
         return string("y", series_plotindex)
-    elseif label == :none
+    elseif label === :none
         return ""
     else
         throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
@@ -2168,13 +2168,13 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     # update other colors
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
-        plotattributes[csym] = if plotattributes[csym] == :auto
-            plot_color(if has_black_border_for_default(stype) && s == :line
+        plotattributes[csym] = if plotattributes[csym] === :auto
+            plot_color(if has_black_border_for_default(stype) && s === :line
                 sp[:foreground_color_subplot]
             else
                 scolor
             end)
-        elseif plotattributes[csym] == :match
+        elseif plotattributes[csym] === :match
             plot_color(scolor)
         else
             get_series_color(plotattributes[csym], sp, plotIndex, stype)
@@ -2182,9 +2182,9 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     end
 
     # update markerstrokecolor
-    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] == :match
+    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] === :match
         plot_color(sp[:foreground_color_subplot])
-    elseif plotattributes[:markerstrokecolor] == :auto
+    elseif plotattributes[:markerstrokecolor] === :auto
         get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
     else
         get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
@@ -2204,7 +2204,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     # scatter plots don't have a line, but must have a shape
     if plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
         plotattributes[:linewidth] = 0
-        if plotattributes[:markershape] == :none
+        if plotattributes[:markershape] === :none
             plotattributes[:markershape] = :circle
         end
     end

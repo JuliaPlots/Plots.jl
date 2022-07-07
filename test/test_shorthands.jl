@@ -83,7 +83,7 @@ end
 
     p = plot3d([1, 2], [1, 2], [1, 2])
     plot3d!(p, [3, 4], [3, 4], [3, 4])
-    @test Plots.series_list(p[1])[1][:seriestype] == :path3d
+    @test Plots.series_list(p[1])[1][:seriestype] === :path3d
 end
 
 @testset "Set Ticks" begin

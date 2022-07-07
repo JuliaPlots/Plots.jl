@@ -85,7 +85,7 @@ function tick_padding(sp::Subplot, axis::Axis)
         longest_label = maximum(length(lab) for lab in labs)
 
         # generalize by "rotating" y labels
-        rot = axis[:rotation] + (axis[:letter] == :y ? 90 : 0)
+        rot = axis[:rotation] + (axis[:letter] === :y ? 90 : 0)
 
         # # we need to compute the size of the ticks generically
         # # this means computing the bounding box and then getting the width/height
@@ -160,7 +160,7 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
-    if CURRENT_BACKEND.sym == :none
+    if CURRENT_BACKEND.sym === :none
         _pick_default_backend()
     end
 
@@ -195,7 +195,7 @@ const _deprecated_backends =
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
-        if bsym == :pgfplots
+        if bsym === :pgfplots
             @warn("Backend $bsym has been deprecated. Use pgfplotsx instead.")
         else
             @warn("Backend $bsym has been deprecated.")

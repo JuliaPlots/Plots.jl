@@ -32,24 +32,24 @@ end
 
 function _ijulia_display_dict(plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
-    if output_type == :auto
+    if output_type === :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
     end
     out = Dict()
-    if output_type == :txt
+    if output_type === :txt
         mime = "text/plain"
         out[mime] = sprint(show, MIME(mime), plt)
-    elseif output_type == :png
+    elseif output_type === :png
         mime = "image/png"
         out[mime] = base64encode(show, MIME(mime), plt)
-    elseif output_type == :svg
+    elseif output_type === :svg
         mime = "image/svg+xml"
         out[mime] = sprint(show, MIME(mime), plt)
-    elseif output_type == :html
+    elseif output_type === :html
         mime = "text/html"
         out[mime] = sprint(show, MIME(mime), plt)
         _ijulia__extra_mime_info!(plt, out)
-    elseif output_type == :pdf
+    elseif output_type === :pdf
         mime = "application/pdf"
         out[mime] = base64encode(show, MIME(mime), plt)
     else

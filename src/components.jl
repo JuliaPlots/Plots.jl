@@ -252,7 +252,7 @@ function font(args...; kw...)
             valign = arg.valign
             rotation = arg.rotation
             color = arg.color
-        elseif arg == :center
+        elseif arg === :center
             halign = :hcenter
             valign = :vcenter
         elseif arg ∈ _haligns
@@ -277,21 +277,21 @@ function font(args...; kw...)
     end
 
     for sym in keys(kw)
-        if sym == :family
+        if sym === :family
             family = string(kw[sym])
-        elseif sym == :pointsize
+        elseif sym === :pointsize
             pointsize = kw[sym]
-        elseif sym == :halign
+        elseif sym === :halign
             halign = kw[sym]
-            halign == :center && (halign = :hcenter)
+            halign === :center && (halign = :hcenter)
             @assert halign ∈ _haligns
-        elseif sym == :valign
+        elseif sym === :valign
             valign = kw[sym]
-            valign == :center && (valign = :vcenter)
+            valign === :center && (valign = :vcenter)
             @assert valign ∈ _valigns
-        elseif sym == :rotation
+        elseif sym === :rotation
             rotation = kw[sym]
-        elseif sym == :color
+        elseif sym === :color
             color = parse(Colorant, kw[sym])
         else
             @warn "Unused font kwarg: $sym"
@@ -606,7 +606,7 @@ _annotationfont(sp::Subplot) = Plots.font(;
 
 _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwxyz") = (
     pos...,
-    lab == :auto ? text("($(alphabet[sp[:subplot_index]]))", font) : _text_label(lab, font),
+    lab === :auto ? text("($(alphabet[sp[:subplot_index]]))", font) : _text_label(lab, font),
 )
 
 # Expand arrays of coordinates, positions and labels into individual annotations
