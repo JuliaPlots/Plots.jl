@@ -606,7 +606,8 @@ _annotationfont(sp::Subplot) = Plots.font(;
 
 _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwxyz") = (
     pos...,
-    lab === :auto ? text("($(alphabet[sp[:subplot_index]]))", font) : _text_label(lab, font),
+    lab === :auto ? text("($(alphabet[sp[:subplot_index]]))", font) :
+    _text_label(lab, font),
 )
 
 # Expand arrays of coordinates, positions and labels into individual annotations
