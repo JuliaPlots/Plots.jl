@@ -39,7 +39,7 @@ jobs:
 
     steps:
       # Setup environment
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
@@ -68,9 +68,9 @@ jobs:
           $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")'
 
       # Codecov
-      - uses: julia-actions/julia-processcoverage@v1
+      - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os,'ubuntu')
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
         if: startsWith(matrix.os,'ubuntu')
         with:
           file: lcov.info
