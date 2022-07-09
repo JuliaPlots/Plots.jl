@@ -44,6 +44,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
 end
 
 Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
+Base.extrema(sp::Subplot, letter::Symbol) = minimum(minimum.(getindex.(sp.series_list, letter))), maximum(maximum.(getindex.(sp.series_list, letter)))
 
 # -----------------------------------------------------------
 

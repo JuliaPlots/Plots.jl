@@ -592,7 +592,7 @@ function axis_limits(
     sp,
     letter,
     should_widen = default_should_widen(sp[get_attr_symbol(letter, :axis)]),
-    consider_aspect = true,
+    consider_aspect = sp[:aspect_ratio] ∉ (:auto, :none),
 )
     axis = sp[get_attr_symbol(letter, :axis)]
     ex = axis[:extrema]
@@ -638,35 +638,55 @@ function axis_limits(
         amin, amax
     end
 
-    if (
-        !has_user_lims &&
-        consider_aspect &&
-        letter in (:x, :y) &&
-        !(sp[:aspect_ratio] in (:none, :auto) || RecipesPipeline.is3d(:sp))
-    )
-        aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
-        plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
-        dist = amax - amin
+    if !has_user_lims && consider_aspect
+        aspect_ratio = sp[:aspect_ratio]
+        aspect_ratio =
+            isa(aspect_ratio, Number) ? aspect_ratio :
+            aspect_ratio === :equal ? 1 :
+            throw(
+                ArgumentError(
+                    "Unsuppported value $aspect_ratio for keyword `aspect_ratio`.",
+                ),
+            )
+        if !RecipesPipeline.is3d(sp)
+            plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
+            dist = amax - amin
 
-        if letter == :x
-            yamin, yamax = axis_limits(sp, :y, default_should_widen(sp[:yaxis]), false)
-            ydist = yamax - yamin
-            axis_ratio = aspect_ratio * ydist / dist
-            factor = axis_ratio / plot_ratio
+            if letter == :x
+                yamin, yamax = axis_limits(sp, :y, default_should_widen(sp[:yaxis]), false)
+                ydist = yamax - yamin
+                axis_ratio = aspect_ratio * ydist / dist
+                factor = axis_ratio / plot_ratio
+            else
+                xamin, xamax = axis_limits(sp, :x, default_should_widen(sp[:xaxis]), false)
+                xdist = xamax - xamin
+                axis_ratio = aspect_ratio * dist / xdist
+                factor = plot_ratio / axis_ratio
+            end
+
+            if factor > 1
+                center = (amin + amax) / 2
+                amin = center + factor * (amin - center)
+                amax = center + factor * (amax - center)
+            end
         else
-            xamin, xamax = axis_limits(sp, :x, default_should_widen(sp[:xaxis]), false)
-            xdist = xamax - xamin
-            axis_ratio = aspect_ratio * dist / xdist
-            factor = plot_ratio / axis_ratio
-        end
-
-        if factor > 1
-            center = (amin + amax) / 2
-            amin = center + factor * (amin - center)
-            amax = center + factor * (amax - center)
+            # TODO: support arbitrary box ratios
+            if aspect_ratio == 1
+                x12, y12, z12 = extrema(sp, :x), extrema(sp, :y), extrema(sp, :z)
+                d = maximum((x12[2] - x12[1], y12[2] - y12[1], z12[2] - z12[1])) / 2
+                amin, amax = if letter == :x
+                    xm = mean(x12)
+                    xm - d, xm + d
+                elseif letter == :y
+                    ym = mean(y12)
+                    ym - d, ym + d
+                elseif letter == :z
+                    zm = mean(z12)
+                    zm - d, zm + d
+                end
+            end
         end
     end
-
     return amin, amax
 end
 
