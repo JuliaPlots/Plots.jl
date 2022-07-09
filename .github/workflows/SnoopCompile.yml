@@ -64,7 +64,7 @@ jobs:
 
       # Generate precompile files
       - name: Generating precompile files
-        run: timeout --preserve-status 1h $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bot.jl")'   # NOTE: must match path
+        run: timeout --preserve-status 30m $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bot.jl")'   # NOTE: must match path
 
       # Run benchmarks
       - name: Running Benchmark
