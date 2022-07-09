@@ -12,7 +12,7 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 [compat]
 NaNMath = "0.3, 1"
 PlotUtils = "0.6.5, 1"
-RecipesBase = "0.8, 1.0"
+RecipesBase = "0.8, 1"
 julia = "1"
 
 [extras]
