@@ -28,16 +28,15 @@ jobs:
           - x64
     steps:
       # Setup environment
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
 
       - name: Install dependencies
         run: |
-          julia --project -e 'using Pkg; Pkg.instantiate();'
-          julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep();'
-
+          julia --project -e 'using Pkg; Pkg.instantiate()'
+          julia -e 'using Pkg; Pkg.add(PackageSpec(name = "CompileBot", version = "1")); Pkg.develop(path=pwd()); using CompileBot; CompileBot.addtestdep()'
 
       # TESTCMD
       - name: Default TESTCMD
@@ -55,7 +54,7 @@ jobs:
         run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bench.jl")' # NOTE: optional, if have benchmark file
 
       - name: Upload all
-        uses: actions/upload-artifact@v2.0.1
+        uses: actions/upload-artifact@v3
         with:
           path: ./
 
@@ -64,9 +63,9 @@ jobs:
     needs: SnoopCompile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download all
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
 
       - name: CompileBot postprocess
         run: julia -e 'using Pkg; Pkg.add(PackageSpec(name = "CompileBot", version = "1")); using CompileBot; CompileBot.postprocess();'
