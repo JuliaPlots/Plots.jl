@@ -1,7 +1,7 @@
 name = "RecipesPipeline"
 uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 authors = ["Michael Krabbe Borregaard <mkborregaard@snm.ku.dk>"]
-version = "0.5.2"
+version = "0.6.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -13,7 +13,7 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 NaNMath = "0.3, 1"
 PlotUtils = "0.6.5, 1"
 RecipesBase = "0.8, 1"
-julia = "1"
+julia = "1.6"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
