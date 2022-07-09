@@ -174,14 +174,14 @@ function _animate(forloop::Expr, args...; callgif = false)
         # no filter... every iteration gets a frame
         true
 
-    elseif args[1] == :every
+    elseif args[1] === :every
         # filter every `freq` frames (starting with the first frame)
         @assert n == 2
         freq = args[2]
         freqassert = :(@assert isa($freq, Integer) && $freq > 0)
         :(mod1($countersym, $freq) == 1)
 
-    elseif args[1] == :when
+    elseif args[1] === :when
         # filter on custom expression
         @assert n == 2
         args[2]

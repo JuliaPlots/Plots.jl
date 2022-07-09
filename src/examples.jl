@@ -913,7 +913,7 @@ const _examples = PlotExample[
                         m::T,
                     ) where {T<:AbstractArray{<:Measurement}}
                         if !(
-                            get(plotattributes, :seriestype, :path) in [
+                            get(plotattributes, :seriestype, :path) in (
                                 :contour,
                                 :contourf,
                                 :contour3d,
@@ -921,7 +921,7 @@ const _examples = PlotExample[
                                 :surface,
                                 :wireframe,
                                 :image,
-                            ]
+                            )
                         )
                             error_sym = Symbol(plotattributes[:letter], :error)
                             plotattributes[error_sym] = uncertainty.(m)
@@ -1194,9 +1194,9 @@ const _examples = PlotExample[
                             wireframe(
                                 args...,
                                 title = "wire-flip-$ax",
-                                xflip = ax == :x,
-                                yflip = ax == :y,
-                                zflip = ax == :z;
+                                xflip = ax === :x,
+                                yflip = ax === :y,
+                                zflip = ax === :z;
                                 kwargs...,
                             ),
                         )
@@ -1208,9 +1208,9 @@ const _examples = PlotExample[
                             wireframe(
                                 args...,
                                 title = "wire-mirror-$ax",
-                                xmirror = ax == :x,
-                                ymirror = ax == :y,
-                                zmirror = ax == :z;
+                                xmirror = ax === :x,
+                                ymirror = ax === :y,
+                                zmirror = ax === :z;
                                 kwargs...,
                             ),
                         )

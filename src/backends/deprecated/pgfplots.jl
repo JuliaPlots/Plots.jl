@@ -135,12 +135,12 @@ function pgf_marker(plotattributes, i = 1)
     return string(
         "mark = $(get(_pgfplots_markers, shape, "*")),\n",
         "mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)),\n",
-        plotattributes[:seriestype] == :scatter ? "only marks,\n" : "",
+        plotattributes[:seriestype] === :scatter ? "only marks,\n" : "",
         "mark options = {
             color = $cstr_stroke, draw opacity = $a_stroke,
             fill = $cstr, fill opacity = $a,
             line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i)),
-            rotate = $(shape == :dtriangle ? 180 : 0),
+            rotate = $(shape === :dtriangle ? 180 : 0),
             $(get(_pgfplots_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid"))
         }",
     )
@@ -174,13 +174,13 @@ function pgf_series(sp::Subplot, series::Series)
     series_collection = PGFPlots.Plot[]
 
     # function args
-    args = if st == :contour
+    args = if st === :contour
         plotattributes[:z].surf, plotattributes[:x], plotattributes[:y]
     elseif RecipesPipeline.is3d(st)
         plotattributes[:x], plotattributes[:y], plotattributes[:z]
-    elseif st == :straightline
+    elseif st === :straightline
         straightline_data(series)
-    elseif st == :shape
+    elseif st === :shape
         shape_data(series)
     elseif ispolar(sp)
         theta, r = plotattributes[:x], plotattributes[:y]
@@ -204,7 +204,7 @@ function pgf_series(sp::Subplot, series::Series)
         push!(style, "forget plot")
 
         kw[:style] = join(style, ',')
-        func = if st == :histogram2d
+        func = if st === :histogram2d
             PGFPlots.Histogram2
         else
             kw[:labels] = series[:contour_labels]
@@ -222,18 +222,18 @@ function pgf_series(sp::Subplot, series::Series)
             push!(style, pgf_linestyle(plotattributes, i))
             push!(style, pgf_marker(plotattributes, i))
 
-            if st == :shape
+            if st === :shape
                 push!(style, pgf_fillstyle(plotattributes, i))
             end
 
             # add to legend?
-            if i == 1 && sp[:legend_position] != :none && should_add_to_legend(series)
+            if i == 1 && sp[:legend_position] !== :none && should_add_to_legend(series)
                 if plotattributes[:fillrange] !== nothing
                     push!(style, "forget plot")
                     push!(series_collection, pgf_fill_legend_hack(plotattributes, args))
                 else
                     kw[:legendentry] = plotattributes[:label]
-                    if st == :shape # || plotattributes[:fillrange] !== nothing
+                    if st === :shape # || plotattributes[:fillrange] !== nothing
                         push!(style, "area legend")
                     end
                 end
@@ -250,7 +250,7 @@ function pgf_series(sp::Subplot, series::Series)
             kw[:style] = join(style, ',')
 
             # add fillrange
-            if series[:fillrange] !== nothing && st != :shape
+            if series[:fillrange] !== nothing && st !== :shape
                 push!(
                     series_collection,
                     pgf_fillrange_series(
@@ -263,9 +263,9 @@ function pgf_series(sp::Subplot, series::Series)
             end
 
             # build/return the series object
-            func = if st == :path3d
+            func = if st === :path3d
                 PGFPlots.Linear3
-            elseif st == :scatter
+            elseif st === :scatter
                 PGFPlots.Scatter
             else
                 PGFPlots.Linear
@@ -318,9 +318,9 @@ function pgf_fill_legend_hack(plotattributes, args)
     kw[:legendentry] = plotattributes[:label]
     kw[:style] = join(style, ',')
     st = plotattributes[:seriestype]
-    func = if st == :path3d
+    func = if st === :path3d
         PGFPlots.Linear3
-    elseif st == :scatter
+    elseif st === :scatter
         PGFPlots.Scatter
     else
         PGFPlots.Linear
@@ -346,9 +346,9 @@ function pgf_axis(sp::Subplot, letter)
 
     # axis label position
     labelpos = ""
-    if letter == :x && axis[:guide_position] == :top
+    if letter === :x && axis[:guide_position] === :top
         labelpos = "at={(0.5,1)},above,"
-    elseif letter == :y && axis[:guide_position] == :right
+    elseif letter === :y && axis[:guide_position] === :right
         labelpos = "at={(1,0.5)},below,"
     end
 
@@ -379,16 +379,16 @@ function pgf_axis(sp::Subplot, letter)
     scale = axis[:scale]
     if scale in (:log2, :ln, :log10)
         kw[get_attr_symbol(letter, :mode)] = "log"
-        scale == :ln || push!(style, "log basis $letter=$(scale == :log2 ? 2 : 10)")
+        scale === :ln || push!(style, "log basis $letter=$(scale === :log2 ? 2 : 10)")
     end
 
     # ticks on or off
-    if axis[:ticks] in (nothing, false, :none) || framestyle == :none
+    if axis[:ticks] in (nothing, false, :none) || framestyle === :none
         push!(style, "$(letter)majorticks=false")
     end
 
     # grid on or off
-    if axis[:grid] && framestyle != :none
+    if axis[:grid] && framestyle !== :none
         push!(style, "$(letter)majorgrids = true")
     else
         push!(style, "$(letter)majorgrids = false")
@@ -396,22 +396,22 @@ function pgf_axis(sp::Subplot, letter)
 
     # limits
     # TODO: support zlims
-    if letter != :z
+    if letter !== :z
         lims =
-            ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) :
+            ispolar(sp) && letter === :x ? rad2deg.(axis_limits(sp, :x)) :
             axis_limits(sp, letter)
         kw[get_attr_symbol(letter, :min)] = lims[1]
         kw[get_attr_symbol(letter, :max)] = lims[2]
     end
 
-    if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
+    if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle !== :none
         ticks = get_ticks(sp, axis)
         #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values =
-            ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] :
+            ispolar(sp) && letter === :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] :
             ticks[1]
         push!(style, string(letter, "tick = {", join(tick_values, ","), "}"))
-        if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
+        if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] === :auto
             # wrap the power part of label with }
             tick_labels = Vector{String}(undef, length(ticks[2]))
             for (i, label) in enumerate(ticks[2])
@@ -425,7 +425,7 @@ function pgf_axis(sp::Subplot, letter)
             )
         elseif axis[:showaxis]
             tick_labels =
-                ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+                ispolar(sp) && letter === :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
             if axis[:formatter] in (:scientific, :auto)
                 tick_labels = string.("\$", convert_sci_unicode.(tick_labels), "\$")
                 tick_labels = replace.(tick_labels, Ref("×" => "\\times"))
@@ -439,7 +439,7 @@ function pgf_axis(sp::Subplot, letter)
             string(
                 letter,
                 "tick align = ",
-                (axis[:tick_direction] == :out ? "outside" : "inside"),
+                (axis[:tick_direction] === :out ? "outside" : "inside"),
             ),
         )
         cstr, α = pgf_color(plot_color(axis[:tickfontcolor]))
@@ -476,7 +476,7 @@ function pgf_axis(sp::Subplot, letter)
 
     # framestyle
     if framestyle in (:axes, :origin)
-        axispos = framestyle == :axes ? "left" : "middle"
+        axispos = framestyle === :axes ? "left" : "middle"
         if axis[:draw_arrow]
             push!(style, string("axis ", letter, " line = ", axispos))
         else
@@ -485,7 +485,7 @@ function pgf_axis(sp::Subplot, letter)
         end
     end
 
-    if framestyle == :zerolines
+    if framestyle === :zerolines
         push!(style, string("extra ", letter, " ticks = 0"))
         push!(style, string("extra ", letter, " tick labels = "))
         push!(
@@ -544,7 +544,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # add to style/kw for each axis
         for letter in (:x, :y, :z)
-            if letter != :z || RecipesPipeline.is3d(sp)
+            if letter !== :z || RecipesPipeline.is3d(sp)
                 axisstyle, axiskw = pgf_axis(sp, letter)
                 append!(style, axisstyle)
                 merge!(kw, axiskw)
@@ -617,7 +617,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             ),
         )
 
-        if any(s[:seriestype] == :contour for s in series_list(sp))
+        if any(s[:seriestype] === :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
             kw[:colorbar] = !(sp[:colorbar] in (:none, :off, :hide, false))
         elseif RecipesPipeline.is3d(sp)
@@ -626,7 +626,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         end
 
         axisf = PGFPlots.Axis
-        if sp[:projection] == :polar
+        if sp[:projection] === :polar
             axisf = PGFPlots.PolarAxis
             #make radial axis vertical
             kw[:xmin] = 90
@@ -651,7 +651,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
                         "colormap={plots}{$(pgf_colormap(series.plotattributes[col]))}",
                     )
 
-                    if sp[:colorbar] == :none
+                    if sp[:colorbar] === :none
                         kw[:colorbar] = "false"
                     else
                         kw[:colorbar] = "true"

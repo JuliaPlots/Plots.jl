@@ -99,7 +99,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
 
     segments = if has_attribute_segments(series)
         Iterators.flatten(map(nan_segments) do r
-                if seriestype == :shape
+                if seriestype === :shape
                     warn_on_inconsistent_shape_attr(series, x, y, z, r)
                     (SeriesSegment(r, first(r)),)
                 elseif seriestype in (:scatter, :scatter3d)
@@ -355,7 +355,7 @@ ticksType(ticks::Tuple{T,S}) where {T<:Union{AVec,Tuple},S<:Union{AVec,Tuple}} =
 ticksType(ticks) = :invalid
 
 limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real} = :limits
-limsType(lims::Symbol) = lims == :auto ? :auto : :invalid
+limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
 # recursively merge kw-dicts, e.g. for merging extra_kwargs / extra_plot_kwargs in plotly)
@@ -653,7 +653,7 @@ function with(f::Function, args...; kw...)
     end
 
     # save the backend
-    if CURRENT_BACKEND.sym == :none
+    if CURRENT_BACKEND.sym === :none
         _pick_default_backend()
     end
     oldbackend = CURRENT_BACKEND.sym

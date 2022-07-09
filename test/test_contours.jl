@@ -44,7 +44,7 @@ end
         @testset "$n contours" for n in (2, 5, 100)
             p = contour(x, y, z, levels = n)
             attr = p[1][1].plotattributes
-            @test attr[:seriestype] == :contour
+            @test attr[:seriestype] === :contour
             @test attr[:levels] == n
         end
     end

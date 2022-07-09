@@ -57,7 +57,7 @@
         @test coords(myshapes) isa Tuple{Vector{Vector{S}},Vector{Vector{T}}} where {T,S}
         local p
         @test_nowarn p = plot(myshapes)
-        @test p[1][1][:seriestype] == :shape
+        @test p[1][1][:seriestype] === :shape
     end
 
     @testset "Misc" begin
@@ -92,7 +92,7 @@ end
     end
     @testset "Alpha" begin
         @test brush(0.4).alpha == 0.4
-        @test brush(20).alpha == nothing
+        @test brush(20).alpha === nothing
     end
     @testset "Bad Argument" begin
         # using test_logs because test_warn seems to not work anymore

@@ -7,16 +7,16 @@ using OffsetArrays
         (1:3, 1:3)
     end
     pl = plot(LegendPlot(); legend = :right)
-    @test pl[1][:legend_position] == :right
+    @test pl[1][:legend_position] === :right
     pl = plot(LegendPlot())
-    @test pl[1][:legend_position] == :topleft
+    @test pl[1][:legend_position] === :topleft
 end
 
 @testset "lens!" begin
     pl = plot(1:5)
     lens!(pl, [1, 2], [1, 2], inset = (1, bbox(0.0, 0.0, 0.2, 0.2)), colorbar = false)
     @test length(pl.series_list) == 4
-    @test pl[2][:colorbar] == :none
+    @test pl[2][:colorbar] === :none
 end
 
 @testset "vline, vspan" begin

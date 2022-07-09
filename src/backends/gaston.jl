@@ -235,7 +235,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     else
         if z isa Surface
             z = z.surf
-            if st == :image
+            if st === :image
                 z = reverse(Float32.(Gray.(z)), dims = 1)  # flip y axis
                 nr, nc = size(z)
                 if (ly = length(y)) == 2 && ly != nr
@@ -248,7 +248,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
             length(x) == size(z, 2) + 1 && (x = (x[1:(end - 1)] + x[2:end]) / 2)
             length(y) == size(z, 1) + 1 && (y = (y[1:(end - 1)] + y[2:end]) / 2)
         end
-        if st == :mesh3d
+        if st === :mesh3d
             x, y, z = mesh3d_triangles(x, y, z, series[:connections])
         end
         for sc in gaston_seriesconf!(sp, series, 1, true)
@@ -309,45 +309,45 @@ function gaston_seriesconf!(
                 curveconf,
                 "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt",
             )
-        elseif series[:markershape] == :none  # simplepath
+        elseif series[:markershape] === :none  # simplepath
             push!(curveconf, "w lines lc $lc dt $dt lw $lw")
         else
             pt, ps, mc = gaston_mk_ms_mc(series, clims, i)
             push!(curveconf, "w lp lc $mc dt $dt lw $lw pt $pt ps $ps")
         end
-    elseif st == :shape
+    elseif st === :shape
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
         lc, _ = gaston_lc_ls_lw(series, clims, i)
         push!(curveconf, "w filledcurves fc $fc fs solid border lc $lc")
     elseif st ∈ (:steppre, :stepmid, :steppost)
-        step = if st == :steppre
+        step = if st === :steppre
             "fsteps"
-        elseif st == :stepmid
+        elseif st === :stepmid
             "histeps"
-        elseif st == :steppost
+        elseif st === :steppost
             "steps"
         end
         push!(curveconf, "w $step")
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         push!(extra, "w points lc $lc dt $dt lw $lw notitle")
-    elseif st == :image
+    elseif st === :image
         palette = gaston_palette(series[:seriescolor])
         gsp.axesconf *= "\nset palette model RGB defined $palette"
         push!(curveconf, "w image pixels")
     elseif st ∈ (:contour, :contour3d)
         push!(curveconf, "w lines")
-        st == :contour && (gsp.axesconf *= "\nset view map\nunset surface")  # 2D
+        st === :contour && (gsp.axesconf *= "\nset view map\nunset surface")  # 2D
         levels = join(map(string, collect(contour_levels(series, clims))), ", ")
         gsp.axesconf *= "\nset contour base\nset cntrparam levels discrete $levels"
     elseif st ∈ (:surface, :heatmap)
         push!(curveconf, "w pm3d")
         palette = gaston_palette(series[:seriescolor])
         gsp.axesconf *= "\nset palette model RGB defined $palette"
-        st == :heatmap && (gsp.axesconf *= "\nset view map")
+        st === :heatmap && (gsp.axesconf *= "\nset view map")
     elseif st ∈ (:wireframe, :mesh3d)
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         push!(curveconf, "w lines lc $lc dt $dt lw $lw")
-    elseif st == :quiver
+    elseif st === :quiver
         push!(curveconf, "w vectors filled")
     else
         @warn "Gaston: $st is not implemented yet"
@@ -368,7 +368,7 @@ function gaston_parse_axes_args(
     polar = ispolar(sp) && dims == 2  # cannot splot in polar coordinates
 
     for letter in (:x, :y, :z)
-        (letter == :z && dims == 2) && continue
+        (letter === :z && dims == 2) && continue
         axis = sp.attr[get_attr_symbol(letter, :axis)]
         # label names
         push!(
@@ -377,13 +377,13 @@ function gaston_parse_axes_args(
         )
         mirror = axis[:mirror] ? "mirror" : "nomirror"
 
-        if axis[:scale] == :identity
+        if axis[:scale] === :identity
             logscale, base = "nologscale", ""
-        elseif axis[:scale] == :log10
+        elseif axis[:scale] === :log10
             logscale, base = "logscale", "10"
-        elseif axis[:scale] == :log2
+        elseif axis[:scale] === :log2
             logscale, base = "logscale", "2"
-        elseif axis[:scale] == :ln
+        elseif axis[:scale] === :ln
             logscale, base = "logscale", "e"
         end
         push!(axesconf, "set $logscale $letter $base")
@@ -398,7 +398,7 @@ function gaston_parse_axes_args(
             )
 
             # major tick locations
-            if axis[:ticks] != :native
+            if axis[:ticks] !== :native
                 if axis[:flip]
                     hi, lo = axis_limits(sp, letter)
                 else
@@ -409,7 +409,7 @@ function gaston_parse_axes_args(
                 ticks = get_ticks(sp, axis)
                 gaston_set_ticks!(axesconf, ticks, letter, "", "")
 
-                if axis[:minorticks] != :native
+                if axis[:minorticks] !== :native
                     minor_ticks = get_minor_ticks(sp, axis, ticks)
                     gaston_set_ticks!(axesconf, minor_ticks, letter, "m", "add")
                 end
@@ -423,8 +423,8 @@ function gaston_parse_axes_args(
         end
 
         ratio = get_aspect_ratio(sp)
-        if ratio != :none
-            ratio == :equal && (ratio = -1)
+        if ratio !== :none
+            ratio === :equal && (ratio = -1)
             push!(axesconf, "set size ratio $ratio")
         end
     end
@@ -443,9 +443,9 @@ function gaston_parse_axes_args(
         tmin, tmax = axis_limits(sp, :x, false, false)
         rmin, rmax = axis_limits(sp, :y, false, false)
         rticks = get_ticks(sp, :y)
-        if (ttype = ticksType(rticks)) == :ticks
+        if (ttype = ticksType(rticks)) === :ticks
             gaston_ticks = string.(rticks)
-        elseif ttype == :ticks_and_labels
+        elseif ttype === :ticks_and_labels
             gaston_ticks = String["'$l' $t" for (t, l) in zip(rticks...)]
         end
         push!(
@@ -467,14 +467,14 @@ function gaston_parse_axes_args(
 end
 
 function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
-    ticks == :auto && return
+    ticks === :auto && return
     if ticks ∈ (:none, nothing, false)
         push!(axesconf, "unset $(maj_min)$(letter)tics")
         return
     end
 
     gaston_ticks = String[]
-    if (ttype = ticksType(ticks)) == :ticks
+    if (ttype = ticksType(ticks)) === :ticks
         tick_locs = @view ticks[:]
         for i in eachindex(tick_locs)
             tick = if maj_min == "m"
@@ -484,7 +484,7 @@ function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
             end
             push!(gaston_ticks, tick)
         end
-    elseif ttype == :ticks_and_labels
+    elseif ttype === :ticks_and_labels
         tick_locs = @view ticks[1][:]
         tick_labels = @view ticks[2][:]
         for i in eachindex(tick_locs)
@@ -504,7 +504,7 @@ end
 function gaston_set_legend!(axesconf, sp, any_label)
     leg = sp[:legend_position]
     if sp[:legend_position] ∉ (:none, :inline) && any_label
-        leg == :best && (leg = :topright)
+        leg === :best && (leg = :topright)
 
         push!(
             axesconf,
@@ -567,17 +567,17 @@ end
 function gaston_marker(marker, alpha)
     # NOTE: :rtriangle, :ltriangle, :hexagon, :heptagon, :octagon seems unsupported by gnuplot
     filled = gaston_alpha(alpha) == 0
-    marker == :none && return -1
-    marker == :pixel && return 0
+    marker === :none && return -1
+    marker === :pixel && return 0
     marker ∈ (:+, :cross) && return 1
     marker ∈ (:x, :xcross) && return 2
-    marker == :star5 && return 3
-    marker == :rect && return filled ? 5 : 4
-    marker == :circle && return filled ? 7 : 6
-    marker == :utriangle && return filled ? 9 : 8
-    marker == :dtriangle && return filled ? 11 : 10
-    marker == :diamond && return filled ? 13 : 12
-    marker == :pentagon && return filled ? 15 : 14
+    marker === :star5 && return 3
+    marker === :rect && return filled ? 5 : 4
+    marker === :circle && return filled ? 7 : 6
+    marker === :utriangle && return filled ? 9 : 8
+    marker === :dtriangle && return filled ? 11 : 10
+    marker === :diamond && return filled ? 13 : 12
+    marker === :pentagon && return filled ? 15 : 14
 
     @warn "Gaston: unsupported marker $marker"
     return 1
@@ -590,11 +590,11 @@ function gaston_color(col, alpha = 0)
 end
 
 function gaston_linestyle(style)
-    style == :solid && return "1"
-    style == :dash && return "2"
-    style == :dot && return "3"
-    style == :dashdot && return "4"
-    style == :dashdotdot && return "5"
+    style === :solid && return "1"
+    style === :dash && return "2"
+    style === :dot && return "3"
+    style === :dashdot && return "4"
+    style === :dashdotdot && return "5"
 end
 
 function gaston_enclose_tick_string(tick_string)

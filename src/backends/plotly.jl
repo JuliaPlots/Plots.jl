@@ -47,8 +47,8 @@ function plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "pa
         plotly_annotation_dict(x, y, ptxt.str; xref = xref, yref = yref),
         KW(
             :font => plotly_font(ptxt.font),
-            :xanchor => ptxt.font.halign == :hcenter ? :center : ptxt.font.halign,
-            :yanchor => ptxt.font.valign == :vcenter ? :middle : ptxt.font.valign,
+            :xanchor => ptxt.font.halign === :hcenter ? :center : ptxt.font.halign,
+            :yanchor => ptxt.font.valign === :vcenter ? :middle : ptxt.font.valign,
             :rotation => -ptxt.font.rotation,
         ),
     )
@@ -78,7 +78,7 @@ end
 # end
 
 function plotly_scale(scale::Symbol)
-    if scale == :log10
+    if scale === :log10
         "log"
     else
         "-"
@@ -92,8 +92,8 @@ end
 
 function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
     aspect_ratio = get_aspect_ratio(sp)
-    if aspect_ratio != :none
-        if aspect_ratio == :equal
+    if aspect_ratio !== :none
+        if aspect_ratio === :equal
             aspect_ratio = 1.0
         end
         xmin, xmax = axis_limits(sp, :x)
@@ -128,20 +128,20 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     letter = axis[:letter]
     framestyle = sp[:framestyle]
     ax = KW(
-        :visible => framestyle != :none,
+        :visible => framestyle !== :none,
         :title => axis[:guide],
         :showgrid => axis[:grid],
         :gridcolor =>
             rgba_string(plot_color(axis[:foreground_color_grid], axis[:gridalpha])),
         :gridwidth => axis[:gridlinewidth],
-        :zeroline => framestyle == :zerolines,
+        :zeroline => framestyle === :zerolines,
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
         :showline => framestyle in (:box, :axes) && axis[:showaxis],
         :linecolor => rgba_string(plot_color(axis[:foreground_color_axis])),
         :ticks =>
             axis[:tick_direction] === :out ? "outside" :
             axis[:tick_direction] === :in ? "inside" : "",
-        :mirror => framestyle == :box,
+        :mirror => framestyle === :box,
         :showticklabels => axis[:showaxis],
     )
     if anchor !== nothing
@@ -155,7 +155,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     ax[:type] = plotly_scale(axis[:scale])
     lims = axis_limits(sp, letter)
 
-    if axis[:ticks] != :native || axis[:lims] != :auto
+    if axis[:ticks] !== :native || axis[:lims] !== :auto
         ax[:range] = map(RecipesPipeline.scale_func(axis[:scale]), lims)
     end
 
@@ -168,13 +168,13 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
         # ticks
-        if axis[:ticks] != :native
+        if axis[:ticks] !== :native
             ticks = get_ticks(sp, axis)
             ttype = ticksType(ticks)
-            if ttype == :ticks
+            if ttype === :ticks
                 ax[:tickmode] = "array"
                 ax[:tickvals] = ticks
-            elseif ttype == :ticks_and_labels
+            elseif ttype === :ticks_and_labels
                 ax[:tickmode] = "array"
                 ax[:tickvals], ax[:ticktext] = ticks
             end
@@ -195,7 +195,7 @@ end
 function plotly_polaraxis(sp::Subplot, axis::Axis)
     ax = KW(:visible => axis[:showaxis], :showline => axis[:grid])
 
-    if axis[:letter] == :x
+    if axis[:letter] === :x
         ax[:range] = rad2deg.(axis_limits(sp, :x))
     else
         ax[:range] = axis_limits(sp, :y)
@@ -225,9 +225,9 @@ function plotly_layout(plt::Plot)
         if sp[:title] != ""
             bb = plotarea(sp)
             tpos = sp[:titlelocation]
-            xmm = if tpos == :left
+            xmm = if tpos === :left
                 left(bb)
-            elseif tpos == :right
+            elseif tpos === :right
                 right(bb)
             else
                 0.5 * (left(bb) + right(bb))
@@ -338,9 +338,9 @@ function plotly_layout(plt::Plot)
 end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
-    plotattributes_out[:showlegend] = sp[:legend_position] != :none
+    plotattributes_out[:showlegend] = sp[:legend_position] !== :none
     legend_position = plotly_legend_pos(sp[:legend_position])
-    if sp[:legend_position] != :none
+    if sp[:legend_position] !== :none
         plotattributes_out[:legend_position] = KW(
             :bgcolor => rgba_string(sp[:legend_background_color]),
             :bordercolor => rgba_string(sp[:legend_foreground_color]),
@@ -502,7 +502,7 @@ end
 function plotly_data(series::Series, letter::Symbol, data)
     axis = series[:subplot][get_attr_symbol(letter, :axis)]
 
-    data = if axis[:ticks] == :native && data !== nothing
+    data = if axis[:ticks] === :native && data !== nothing
         plotly_native_data(axis, data)
     else
         data
@@ -554,7 +554,7 @@ function plotly_series(plt::Plot, series::Series)
     sp = series[:subplot]
     clims = get_clims(sp, series)
 
-    if st == :shape
+    if st === :shape
         return plotly_series_shapes(plt, series, clims)
     end
 
@@ -574,7 +574,7 @@ function plotly_series(plt::Plot, series::Series)
     end
     plotattributes_out[:showlegend] = should_add_to_legend(series)
 
-    if st == :straightline
+    if st === :straightline
         x, y = straightline_data(series, 100)
         z = series[:z]
     else
@@ -589,7 +589,7 @@ function plotly_series(plt::Plot, series::Series)
     plotattributes_out[:name] = series[:label]
 
     isscatter = st in (:scatter, :scatter3d, :scattergl)
-    hasmarker = isscatter || series[:markershape] != :none
+    hasmarker = isscatter || series[:markershape] !== :none
     hasline = st in (:path, :path3d, :straightline)
     hasfillrange =
         st in (:path, :scatter, :scattergl, :straightline) &&
@@ -605,7 +605,7 @@ function plotly_series(plt::Plot, series::Series)
     if st in (:path, :scatter, :scattergl, :straightline, :path3d, :scatter3d)
         return plotly_series_segments(series, plotattributes_out, x, y, z, clims)
 
-    elseif st == :heatmap
+    elseif st === :heatmap
         x = heatmap_edges(x, sp[:xaxis][:scale])
         y = heatmap_edges(y, sp[:yaxis][:scale])
         plotattributes_out[:type] = "heatmap"
@@ -614,7 +614,7 @@ function plotly_series(plt::Plot, series::Series)
             plotly_colorscale(series[:fillcolor], series[:fillalpha])
         plotattributes_out[:showscale] = hascolorbar(sp)
 
-    elseif st == :contour
+    elseif st === :contour
         filled = isfilledcontour(series)
         plotattributes_out[:type] = "contour"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
@@ -653,7 +653,7 @@ function plotly_series(plt::Plot, series::Series)
     elseif st in (:surface, :wireframe)
         plotattributes_out[:type] = "surface"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-        if st == :wireframe
+        if st === :wireframe
             plotattributes_out[:hidesurface] = true
             wirelines = KW(
                 :show => true,
@@ -673,7 +673,7 @@ function plotly_series(plt::Plot, series::Series)
             end
             plotattributes_out[:showscale] = hascolorbar(sp)
         end
-    elseif st == :mesh3d
+    elseif st === :mesh3d
         plotattributes_out[:type] = "mesh3d"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
 
@@ -827,7 +827,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
     st = series[:seriestype]
     sp = series[:subplot]
     isscatter = st in (:scatter, :scatter3d, :scattergl)
-    hasmarker = isscatter || series[:markershape] != :none
+    hasmarker = isscatter || series[:markershape] !== :none
     hasline = st in (:path, :path3d, :straightline)
     hasfillrange =
         st in (:path, :scatter, :scattergl, :straightline) &&
@@ -847,7 +847,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
 
         # set the type
         if st in (:path, :scatter, :scattergl, :straightline)
-            plotattributes_out[:type] = st == :scattergl ? "scattergl" : "scatter"
+            plotattributes_out[:type] = st === :scattergl ? "scattergl" : "scatter"
             plotattributes_out[:mode] = if hasmarker
                 hasline ? "lines+markers" : "markers"
             else
@@ -917,11 +917,11 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     plot_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
                 ),
                 :width => get_linewidth(series, i),
-                :shape => if st == :steppre
+                :shape => if st === :steppre
                     "vh"
-                elseif st == :stepmid
+                elseif st === :stepmid
                     "hvh"
-                elseif st == :steppost
+                elseif st === :steppost
                     "hv"
                 else
                     "linear"

@@ -80,7 +80,7 @@ function resolve_mixed(mix::MixedMeasures, sp::Subplot, letter::Symbol)
     xy = mix.xy
     pct = mix.pct
     if mix.len != 0mm
-        f = (letter == :x ? width : height)
+        f = (letter === :x ? width : height)
         totlen = f(plotarea(sp))
         pct += mix.len / totlen
     end
@@ -113,7 +113,7 @@ function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
     orighor = :left
     origver = :top
     for oarg in oargs
-        if oarg == :center
+        if oarg === :center
             orighor = origver = oarg
         elseif oarg in (:left, :right, :hcenter)
             orighor = oarg
@@ -132,14 +132,14 @@ function bbox(x, y, width, height; h_anchor = :left, v_anchor = :top)
     y = make_measure_vert(y)
     width = make_measure_hor(width)
     height = make_measure_vert(height)
-    left = if h_anchor == :left
+    left = if h_anchor === :left
         x
     elseif h_anchor in (:center, :hcenter)
         0.5w - 0.5width + x
     else
         1w - x - width
     end
-    top = if v_anchor == :top
+    top = if v_anchor === :top
         y
     elseif v_anchor in (:center, :vcenter)
         0.5h - 0.5height + y
@@ -551,19 +551,19 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
                 merge!(spmap, plt.spmap)
                 inc = length(plt.subplots)
             end
-            if get(l.attr, :width, :auto) != :auto
+            if get(l.attr, :width, :auto) !== :auto
                 layout.widths[c] = attr(l, :width)
             end
-            if get(l.attr, :height, :auto) != :auto
+            if get(l.attr, :height, :auto) !== :auto
                 layout.heights[r] = attr(l, :height)
             end
             i += inc
         elseif isa(l, GridLayout)
             # sub-grid
-            if get(l.attr, :width, :auto) != :auto
+            if get(l.attr, :width, :auto) !== :auto
                 layout.widths[c] = attr(l, :width)
             end
-            if get(l.attr, :height, :auto) != :auto
+            if get(l.attr, :height, :auto) !== :auto
                 layout.heights[r] = attr(l, :height)
             end
             l, sps, m = build_layout(l, n - i, plts)
@@ -639,7 +639,7 @@ function link_axes!(layout::GridLayout, link::Symbol)
             link_axes!(layout.grid[r, :], :yaxis)
         end
     end
-    if link == :square
+    if link === :square
         sps = filter(l -> isa(l, Subplot), layout.grid)
         if !isempty(sps)
             base_axis = sps[1][:xaxis]
@@ -649,7 +649,7 @@ function link_axes!(layout::GridLayout, link::Symbol)
             end
         end
     end
-    if link == :all
+    if link === :all
         link_axes!(layout.grid, :xaxis)
         link_axes!(layout.grid, :yaxis)
     end
