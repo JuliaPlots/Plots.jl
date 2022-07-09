@@ -42,7 +42,7 @@ for name in (
     "backends",
 )
     @testset "$name" begin
-        gr()
+        gr()  # reset to default backend
         include("test_$name.jl")
     end
 end

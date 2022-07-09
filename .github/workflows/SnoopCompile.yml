@@ -35,7 +35,7 @@ jobs:
           - x64
     steps:
       # Setup environment
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{matrix.version}}
@@ -53,7 +53,7 @@ jobs:
           free
           df -h
           julia --project -e 'using Pkg; Pkg.instantiate()'
-          julia -e 'using Pkg; Pkg.add(PackageSpec(name="CompileBot", version="1")); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep()'
+          julia -e 'using Pkg; Pkg.add(PackageSpec(name="CompileBot", version="1")); Pkg.develop(path=pwd()); using CompileBot; CompileBot.addtestdep()'
 
       # TESTCMD
       - name: Default TESTCMD
@@ -64,14 +64,14 @@ jobs:
 
       # Generate precompile files
       - name: Generating precompile files
-        run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bot.jl")'   # NOTE: must match path
+        run: timeout --preserve-status 1h $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bot.jl")'   # NOTE: must match path
 
       # Run benchmarks
       - name: Running Benchmark
         run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bench.jl")' # NOTE: optional, if have benchmark file
 
       - name: Upload all
-        uses: actions/upload-artifact@v2.0.1
+        uses: actions/upload-artifact@v2
         with:
           path: ./
 
@@ -80,7 +80,7 @@ jobs:
     needs: SnoopCompile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download all
         uses: actions/download-artifact@v2
 
