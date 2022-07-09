@@ -69,15 +69,17 @@ jobs:
         uses: actions/download-artifact@v2
 
       - name: CompileBot postprocess
-        run: julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); using CompileBot; CompileBot.postprocess();'
+        run: julia -e 'using Pkg; Pkg.add(PackageSpec(name = "CompileBot", version = "1")); using CompileBot; CompileBot.postprocess();'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update precompile_*.jl file
-          title: "[AUTO] Update precompiles"
-          labels: SnoopCompile
+          title: "[AUTO] Update precompiles [skip ci]"
+          labels: |
+            SnoopCompile
+            no changelog
           branch: "SnoopCompile_AutoPR"
 
 
