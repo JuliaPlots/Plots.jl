@@ -219,11 +219,11 @@ should replace the current arguments.
 
 An example:
 
-```
+```julia
 using RecipesBase
 
 # Our custom type that we want to display
-type T end
+struct T end
 
 @recipe function plot{N<:Integer}(t::T, n::N = 1; customcolor = :green)
     markershape --> :auto, :require
@@ -301,7 +301,7 @@ end
 """
 Meant to be used inside a recipe to add additional RecipeData objects to the list:
 
-```
+```julia
 @recipe function f(::T)
     # everything get this setting
     linecolor --> :red
@@ -334,7 +334,7 @@ end
 
 """
 You can easily define your own plotting recipes with convenience methods:
-```
+```julia
 @userplot GroupHist
 
 @recipe function f(gh::GroupHist)

@@ -104,11 +104,11 @@ We have already seen an example for a user recipe in the syntax section above.
 User recipes can also be used to define a custom visualization without necessarily wishing to plot a custom type.
 For this purpose we can create a type to dispatch on.
 The [`@userplot`](@ref) macro is a convenient way to do this.
-```
+```julia
 @userplot MyPlot
 ```
 expands to
-```
+```julia
 mutable struct MyPlot
     args
 end
@@ -119,7 +119,7 @@ myplot!(args...; kw...) = plot!(MyPlot(args); kw...)
 
 To check `args` type, define a struct with type parameters.
 
-```
+```julia
 @userplot struct MyPlot{T<:Tuple{AbstractVector}}
     args::T
 end
@@ -259,11 +259,11 @@ We can define a seriestype `:yscaleplot`, that automatically shows data with a l
 end
 ```
 We can call it with `plot(...; ..., seriestype = :yscaleplot)` or we can define a shorthand with the [`@shorthands`](@ref) macro.
-```
+```julia
 @shorthands myseries
 ```
 expands to
-```
+```julia
 export myseries, myseries!
 myseries(args...; kw...) = plot(args...; kw..., seriestype = :myseries)
 myseries!(args...; kw...) = plot!(args...; kw..., seriestype = :myseries)

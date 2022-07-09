@@ -9,7 +9,7 @@ defines
 RecipesBase.apply_recipe(plotattributes, args...; kwargs...)
 ```
 returning a `Vector{RecipeData}` where `RecipeData` holds the `plotattributes` Dict and the arguments returned in [`@recipe`](@ref) or in [`@series`](@ref).
-```
+```julia
 struct RecipeData
     plotattributes::AbstractDict{Symbol,Any}
     args::Tuple
