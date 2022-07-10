@@ -8,6 +8,8 @@ png(plt::Plot, fn::AbstractString) =
 
 png(fn::AbstractString) = png(current(), fn)
 
+png(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("image/png"), plt); seekstart(io))
+
 svg(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "svg"), "w") do io
         show(io, MIME("image/svg+xml"), plt)
