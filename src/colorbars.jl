@@ -103,14 +103,13 @@ hascolorbar(series::Series) = colorbar_style(series) !== nothing
 hascolorbar(sp::Subplot) =
     sp[:colorbar] !== :none && any(hascolorbar(s) for s in series_list(sp))
 
-function get_colorbar_ticks(sp::Subplot; update = true)
+function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar_formatter])
     if update || !haskey(sp.attr, :colorbar_optimized_ticks)
         ticks = _transform_ticks(sp[:colorbar_ticks])
         cvals = sp[:colorbar_continuous_values]
         dvals = sp[:colorbar_discrete_values]
         clims = get_clims(sp)
         scale = sp[:colorbar_scale]
-        formatter = sp[:colorbar_formatter]
         sp.attr[:colorbar_optimized_ticks] =
             get_ticks(ticks, cvals, dvals, clims, scale, formatter)
     end

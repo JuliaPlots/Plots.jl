@@ -82,6 +82,10 @@ pgfx_split_extra_kw(extra) =
 
 curly(obj) = "{$(string(obj))}"
 
+# anything other than `Function`, `:plain` or `:latex` should map to `:latex` formatter instead
+latex_formatter(formatter::Symbol) = formatter in (:plain, :latex) ? formatter : :latex
+latex_formatter(formatter::Function) = formatter
+
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
         pgfx_sanitize_plot!(plt)
@@ -190,7 +194,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
 
             if hascolorbar(sp)
-                cticks = curly(join(get_colorbar_ticks(sp)[2], ','))
+                formatter = latex_formatter(sp[:colorbar_formatter])
+                cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
                 colorbar_style = if sp[:colorbar] === :top
                     push!(
                         Options("xlabel" => sp[:colorbar_title]),
@@ -1209,7 +1214,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
 
     if axis[:ticks] ∉ (nothing, false, :none, :native) && framestyle !== :none
         # ticks
-        ticks = get_ticks(sp, axis)
+        ticks = get_ticks(sp, axis, formatter = latex_formatter(axis[:formatter]))
         # pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values = if ispolar(sp) && letter === :x
             vcat(rad2deg.(ticks[1][3:end]), 360, 405)
