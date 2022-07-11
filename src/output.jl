@@ -8,7 +8,7 @@ png(plt::Plot, fn::AbstractString) =
 
 png(fn::AbstractString) = png(current(), fn)
 
-png(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("image/png"), plt); seekstart(io))
+png(plt::Plot, io::IO) = (seekstart(io); show(io, MIME("image/png"), plt); seekstart(io))
 
 svg(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "svg"), "w") do io
@@ -17,7 +17,7 @@ svg(plt::Plot, fn::AbstractString) =
 
 svg(fn::AbstractString) = svg(current(), fn)
 
-svg(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("image/svg"), plt); seekstart(io))
+svg(plt::Plot, io::IO) = (seekstart(io); show(io, MIME("image/svg"), plt); seekstart(io))
 
 pdf(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "pdf"), "w") do io
@@ -26,7 +26,7 @@ pdf(plt::Plot, fn::AbstractString) =
 
 pdf(fn::AbstractString) = pdf(current(), fn)
 
-pdf(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("application/pdf"), plt); seekstart(io))
+pdf(plt::Plot, io::IO) = (seekstart(io); show(io, MIME("application/pdf"), plt); seekstart(io))
 
 ps(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "ps"), "w") do io
@@ -35,7 +35,7 @@ ps(plt::Plot, fn::AbstractString) =
 
 ps(fn::AbstractString) = ps(current(), fn)
 
-ps(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("application/postscript"), plt); seekstart(io))
+ps(plt::Plot, io::IO) = (seekstart(io); show(io, MIME("application/postscript"), plt); seekstart(io))
 
 eps(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "eps"), "w") do io
@@ -44,7 +44,7 @@ eps(plt::Plot, fn::AbstractString) =
 
 eps(fn::AbstractString) = eps(current(), fn)
 
-eps(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("image/eps"), plt); seekstart(io))
+eps(plt::Plot, io::IO) = (seekstart(io); show(io, MIME("image/eps"), plt); seekstart(io))
 
 tex(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "tex"), "w") do io
@@ -52,6 +52,8 @@ tex(plt::Plot, fn::AbstractString) =
     end
 
 tex(fn::AbstractString) = tex(current(), fn)
+
+tex(plt::Plot, io::IO) = (seekstart(io); show(io, MIME("application/x-tex"), plt); seekstart(io))
 
 json(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "json"), "w") do io
@@ -67,12 +69,16 @@ html(plt::Plot, fn::AbstractString) =
 
 html(fn::AbstractString) = html(current(), fn)
 
+html(plt::Plot, io::IO) = (seekstart(io); show(io, MIME("text/html"), plt); seekstart(io))
+
 txt(plt::Plot, fn::AbstractString; color::Bool = true) =
     open(addExtension(fn, "txt"), "w") do io
         show(IOContext(io, :color => color), MIME("text/plain"), plt)
     end
 
 txt(fn::AbstractString) = txt(current(), fn)
+
+txt(plt::Plot, io::IO) = (seekstart(io); show(io, MIME("text/plain"), plt); seekstart(io))
 
 # ----------------------------------------------------------------
 
