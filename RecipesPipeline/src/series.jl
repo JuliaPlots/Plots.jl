@@ -10,9 +10,17 @@ _prepare_series_data(::Nothing) = nothing
 _prepare_series_data(t::Tuple{T, T}) where {T <: Number} = t
 _prepare_series_data(f::Function) = f
 _prepare_series_data(ar::AbstractRange{<:Number}) = ar
-function _prepare_series_data(a::AbstractArray{<:MaybeNumber})
-    f = isimmutable(a) ? replace : replace!
-    a = f(x -> ismissing(x) || isinf(x) ? NaN : x, map(float, a))
+function _prepare_series_data(a::AbstractArray{T}) where {T<:MaybeNumber}
+    # Get a non-missing AbstractFloat type for the array
+    # There may be a better way to do this?
+    F = typeof(float(zero(nonmissingtype(T))))
+    # Create a new array with this type to write to
+    float_a = similar(a, F)
+    # Replace missing and inf values with NaN
+    broadcast!(float_a, a) do x 
+        ismissing(x) || isinf(x) ? NaN : x 
+    end
+    return float_a
 end
 _prepare_series_data(a::AbstractArray{<:Missing}) = fill(NaN, axes(a))
 _prepare_series_data(a::AbstractArray{<:MaybeString}) =
