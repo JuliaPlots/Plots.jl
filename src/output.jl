@@ -17,9 +17,9 @@ svg(plt::Plot, fn::AbstractString) =
     end
 
 svg(fn::AbstractString) = svg(current(), fn)
-svg(io::IO) = svg(current(), io)
 
 svg(plt::Plot, io::IO) = show(io, MIME("image/svg"), plt)
+svg(io::IO) = svg(current(), io)
 
 pdf(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "pdf"), "w") do io
@@ -47,9 +47,9 @@ eps(plt::Plot, fn::AbstractString) =
     end
 
 eps(fn::AbstractString) = eps(current(), fn)
-eps(io::IO) = eps(current(), io)
 
 eps(plt::Plot, io::IO) = show(io, MIME("image/eps"), plt)
+eps(io::IO) = eps(current(), io)
 
 tex(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "tex"), "w") do io
@@ -67,6 +67,9 @@ json(plt::Plot, fn::AbstractString) =
     end
 
 json(fn::AbstractString) = json(current(), fn)
+
+json(plt::Plot, io::IO) = show(io, MIME("application/vnd.plotly.v1+json"), plt)
+json(io::IO) = json(current(), io)
 
 html(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "html"), "w") do io
