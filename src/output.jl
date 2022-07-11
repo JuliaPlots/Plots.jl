@@ -17,12 +17,16 @@ svg(plt::Plot, fn::AbstractString) =
 
 svg(fn::AbstractString) = svg(current(), fn)
 
+svg(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("image/svg"), plt); seekstart(io))
+
 pdf(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "pdf"), "w") do io
         show(io, MIME("application/pdf"), plt)
     end
 
 pdf(fn::AbstractString) = pdf(current(), fn)
+
+pdf(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("application/pdf"), plt); seekstart(io))
 
 ps(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "ps"), "w") do io
@@ -31,12 +35,16 @@ ps(plt::Plot, fn::AbstractString) =
 
 ps(fn::AbstractString) = ps(current(), fn)
 
+ps(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("application/postscript"), plt); seekstart(io))
+
 eps(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "eps"), "w") do io
         show(io, MIME("image/eps"), plt)
     end
 
 eps(fn::AbstractString) = eps(current(), fn)
+
+eps(plt::Plot, io::IOBuffer) = (seekstart(io); show(io, MIME("image/eps"), plt); seekstart(io))
 
 tex(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "tex"), "w") do io
