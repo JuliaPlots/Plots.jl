@@ -231,10 +231,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
             if RecipesPipeline.is3d(sp)
                 ar = sp[:aspect_ratio]
-                if ar !== :auto && ar !== :equal
-                    push!(axis_opt, "unit vector ratio" => join(ar, " "))
-                else
+                if ar === :auto
+                elseif ar === :equal
                     push!(axis_opt, "unit vector ratio" => 1)
+                else
+                    push!(axis_opt, "unit vector ratio" => join(ar, " "))
                 end
                 azim, elev = sp[:camera]
                 push!(axis_opt, "view" => (azim, elev))
