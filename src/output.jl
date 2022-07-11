@@ -9,6 +9,7 @@ png(plt::Plot, fn::AbstractString) =
 png(fn::AbstractString) = png(current(), fn)
 
 png(plt::Plot, io::IO) = show(io, MIME("image/png"), plt)
+png(io::IO) = png(current(), io)
 
 svg(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "svg"), "w") do io
@@ -16,6 +17,7 @@ svg(plt::Plot, fn::AbstractString) =
     end
 
 svg(fn::AbstractString) = svg(current(), fn)
+svg(io::IO) = svg(current(), io)
 
 svg(plt::Plot, io::IO) = show(io, MIME("image/svg"), plt)
 
@@ -27,6 +29,7 @@ pdf(plt::Plot, fn::AbstractString) =
 pdf(fn::AbstractString) = pdf(current(), fn)
 
 pdf(plt::Plot, io::IO) = show(io, MIME("application/pdf"), plt)
+pdf(io::IO) = pdf(current(), io)
 
 ps(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "ps"), "w") do io
@@ -36,6 +39,7 @@ ps(plt::Plot, fn::AbstractString) =
 ps(fn::AbstractString) = ps(current(), fn)
 
 ps(plt::Plot, io::IO) = show(io, MIME("application/postscript"), plt)
+ps(io::IO) = ps(current(), io)
 
 eps(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "eps"), "w") do io
@@ -43,6 +47,7 @@ eps(plt::Plot, fn::AbstractString) =
     end
 
 eps(fn::AbstractString) = eps(current(), fn)
+eps(io::IO) = eps(current(), io)
 
 eps(plt::Plot, io::IO) = show(io, MIME("image/eps"), plt)
 
@@ -54,6 +59,7 @@ tex(plt::Plot, fn::AbstractString) =
 tex(fn::AbstractString) = tex(current(), fn)
 
 tex(plt::Plot, io::IO) = show(io, MIME("application/x-tex"), plt)
+tex(io::IO) = tex(current(), io)
 
 json(plt::Plot, fn::AbstractString) =
     open(addExtension(fn, "json"), "w") do io
@@ -70,6 +76,7 @@ html(plt::Plot, fn::AbstractString) =
 html(fn::AbstractString) = html(current(), fn)
 
 html(plt::Plot, io::IO) = show(io, MIME("text/html"), plt)
+html(io::IO) = html(current(), io)
 
 txt(plt::Plot, fn::AbstractString; color::Bool = true) =
     open(addExtension(fn, "txt"), "w") do io
@@ -79,7 +86,7 @@ txt(plt::Plot, fn::AbstractString; color::Bool = true) =
 txt(fn::AbstractString) = txt(current(), fn)
 
 txt(plt::Plot, io::IO) = show(io, MIME("text/plain"), plt)
-
+txt(io::IO) = txt(current(), io)
 # ----------------------------------------------------------------
 
 const _savemap = Dict(
