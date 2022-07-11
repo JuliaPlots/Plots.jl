@@ -1,3 +1,4 @@
+import LaTeXStrings: LaTeXString
 import UUIDs: uuid4
 import Latexify
 import Contour
@@ -1064,25 +1065,20 @@ function pgfx_fillrange_args(fillrange, x, y, z)
 end
 
 pgfx_sanitize_string(p::PlotText) = PlotText(pgfx_sanitize_string(p.str), p.font)
+pgfx_sanitize_string(s::LaTeXString) = LaTeXString(replace(s, r"\\?([#%])" => s"\\\1"))
 function pgfx_sanitize_string(s::AbstractString)
-    s = replace(s, r"\\?\#" => "\\#")
-    s = replace(s, r"\\?\%" => "\\%")
-    s = replace(s, r"\\?\_" => "\\_")
-    s = replace(s, r"\\?\&" => "\\&")
-    s = replace(s, r"\\?\{" => "\\{")
-    s = replace(s, r"\\?\}" => "\\}")
-    join(map(c -> isascii(c) ? c : Latexify.latexify(c), split(s, "")))
-end
-@require LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f" begin
-    using .LaTeXStrings
-    function pgfx_sanitize_string(s::LaTeXString)
-        s = replace(s, r"\\?\#" => "\\#")
-        s = replace(s, r"\\?\%" => "\\%")
-        return LaTeXString(s)
-    end
+    # regular latex text with the following special characters won't compile if not sanitized (escaped)
+    sanitized = replace(s, r"\\?([#%_&\{\}\$])" => s"\\\1")
+    map(collect(sanitized)) do c
+        if isascii(c)
+            c
+        else
+            Latexify.latexify(c; parse = false)
+        end
+    end |> join |> LaTeXString
 end
 @require UnitfulRecipes = "42071c24-d89e-48dd-8a24-8a12d9b8861f" begin
-    using .UnitfulRecipes
+    import .UnitfulRecipes
     pgfx_sanitize_string(s::UnitfulRecipes.UnitfulString) =
         UnitfulRecipes.UnitfulString(pgfx_sanitize_string(s.content), s.unit)
 end

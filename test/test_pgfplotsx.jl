@@ -39,7 +39,7 @@ with(:pgfplotsx) do
         x = ts .* map(cos, ts)
         y = (0.1ts) .* map(sin, ts)
         z = 1:n
-        pl = plot(
+        p = plot(
             x,
             y,
             z,
@@ -49,7 +49,7 @@ with(:pgfplotsx) do
             cbar = true,
             w = 5,
         )
-        pgfx_plot = plot!(pl, zeros(n), zeros(n), 1:n, w = 10)
+        pgfx_plot = plot!(p, zeros(n), zeros(n), 1:n, w = 10)
         Plots._update_plot_object(pgfx_plot)
         if @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar"))
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
@@ -67,15 +67,15 @@ with(:pgfplotsx) do
             fill = 0,
             α = 0.6,
         )
-        pl = scatter!(
+        p = scatter!(
             y,
             zcolor = abs.(y .- 0.5),
             m = (:hot, 0.8, Plots.stroke(1, :green)),
             ms = 10 * abs.(y .- 0.5) .+ 4,
             lab = ["grad", "", "ient"],
         )
-        Plots._update_plot_object(pl)
-        axis = Plots.pgfx_axes(pl.o)[1]
+        Plots._update_plot_object(p)
+        axis = Plots.pgfx_axes(p.o)[1]
         @test count(x -> x isa PGFPlotsX.LegendEntry, axis.contents) == 6
         @test count(x -> x isa PGFPlotsX.Plot, axis.contents) == 108 # each marker is its own plot, fillranges create 2 plot-objects
         marker = axis.contents[15]
@@ -238,7 +238,7 @@ with(:pgfplotsx) do
         u = ones(length(x))
         v = cos.(x)
         arrow_plot = plot(x, y, quiver = (u, v), arrow = true)
-        # TODO: could adjust limits to fit arrows if too long, but how?
+        # TODO: could adjust limits to fit arrows if too long, but how ?
         # TODO: get latex available on CI
         # mktempdir() do path
         #    @test_nowarn savefig(arrow_plot, path*"arrow.pdf")
@@ -327,14 +327,14 @@ with(:pgfplotsx) do
     end
 
     @testset "Markers and Paths" begin
-        pl = plot(
+        p = plot(
             5 .- ones(9),
             markershape = [:utriangle, :rect],
             markersize = 8,
             color = [:red, :black],
         )
-        Plots._update_plot_object(pl)
-        axis = Plots.pgfx_axes(pl.o)[1]
+        Plots._update_plot_object(p)
+        axis = Plots.pgfx_axes(p.o)[1]
         plots = filter(x -> x isa PGFPlotsX.Plot, axis.contents)
         @test length(plots) == 9
     end
@@ -343,36 +343,36 @@ with(:pgfplotsx) do
         group = rand(map((i -> begin
             "group $(i)"
         end), 1:4), 100)
-        pl = plot(
+        p = plot(
             rand(100),
             layout = @layout([a b; c]),
             group = group,
             linetype = [:bar :scatter :steppre],
             linecolor = :match,
         )
-        Plots._update_plot_object(pl)
-        axis = Plots.pgfx_axes(pl.o)[1]
+        Plots._update_plot_object(p)
+        axis = Plots.pgfx_axes(p.o)[1]
         legend_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis.contents)
         @test length(legend_entries) == 2
     end
 
     @testset "Extra kwargs" begin
-        pl = plot(1:5, test = "me")
-        @test pl[1][1].plotattributes[:extra_kwargs][:test] == "me"
-        pl = plot(1:5, test = "me", extra_kwargs = :subplot)
-        @test pl[1].attr[:extra_kwargs][:test] == "me"
-        pl = plot(1:5, test = "me", extra_kwargs = :plot)
-        @test pl.attr[:extra_plot_kwargs][:test] == "me"
-        pl = plot(
+        p = plot(1:5, test = "me")
+        @test p[1][1].plotattributes[:extra_kwargs][:test] == "me"
+        p = plot(1:5, test = "me", extra_kwargs = :subplot)
+        @test p[1].attr[:extra_kwargs][:test] == "me"
+        p = plot(1:5, test = "me", extra_kwargs = :plot)
+        @test p.attr[:extra_plot_kwargs][:test] == "me"
+        p = plot(
             1:5,
             extra_kwargs = Dict(
                 :plot => Dict(:test => "me"),
                 :series => Dict(:and => "me too"),
             ),
         )
-        @test pl.attr[:extra_plot_kwargs][:test] == "me"
-        @test pl[1][1].plotattributes[:extra_kwargs][:and] == "me too"
-        pl = plot(
+        @test p.attr[:extra_plot_kwargs][:test] == "me"
+        @test p[1][1].plotattributes[:extra_kwargs][:and] == "me too"
+        p = plot(
             plot(1:5, title = "Line"),
             scatter(
                 1:5,
@@ -380,49 +380,68 @@ with(:pgfplotsx) do
                 extra_kwargs = Dict(:subplot => Dict("axis line shift" => "10pt")),
             ),
         )
-        Plots._update_plot_object(pl)
-        axes = Plots.pgfx_axes(pl.o)
+        Plots._update_plot_object(p)
+        axes = Plots.pgfx_axes(p.o)
         @test !haskey(axes[1].options.dict, "axis line shift")
         @test haskey(axes[2].options.dict, "axis line shift")
-        pl = plot(
+        p = plot(
             x -> x,
             -1:1;
             add = raw"\node at (0,0.5) {\huge hi};",
             extra_kwargs = :subplot,
         )
-        @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
-        Plots._update_plot_object(pl)
-        axes = Plots.pgfx_axes(pl.o)
+        @test p[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
+        Plots._update_plot_object(p)
+        axes = Plots.pgfx_axes(p.o)
         @test filter(x -> x isa String, axes[1].contents)[1] ==
               raw"\node at (0,0.5) {\huge hi};"
-        plot!(pl)
-        @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
-        Plots._update_plot_object(pl)
-        axes = Plots.pgfx_axes(pl.o)
+        plot!(p)
+        @test p[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
+        Plots._update_plot_object(p)
+        axes = Plots.pgfx_axes(p.o)
         @test filter(x -> x isa String, axes[1].contents)[1] ==
               raw"\node at (0,0.5) {\huge hi};"
     end
 
     @testset "Titlefonts" begin
-        pl = plot(1:5, title = "Test me", titlefont = (2, :left))
-        @test pl[1][:title] == "Test me"
-        @test pl[1][:titlefontsize] == 2
-        @test pl[1][:titlefonthalign] === :left
-        Plots._update_plot_object(pl)
-        ax_opt = Plots.pgfx_axes(pl.o)[1].options
+        p = plot(1:5, title = "Test me", titlefont = (2, :left))
+        @test p[1][:title] == "Test me"
+        @test p[1][:titlefontsize] == 2
+        @test p[1][:titlefonthalign] === :left
+        Plots._update_plot_object(p)
+        ax_opt = Plots.pgfx_axes(p.o)[1].options
         @test ax_opt["title"] == "Test me"
         @test(haskey(ax_opt.dict, "title style")) isa Test.Pass
-        pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
-        @test pl[:plot_title] == "Test me"
-        @test pl[:plot_titlefontsize] == 2
-        @test pl[:plot_titlefonthalign] === :left
-        pl = heatmap(
+        p = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
+        @test p[:plot_title] == "Test me"
+        @test p[:plot_titlefontsize] == 2
+        @test p[:plot_titlefonthalign] === :left
+        p = heatmap(
             rand(3, 3),
             colorbar_title = "Test me",
             colorbar_titlefont = (12, :right),
         )
-        @test pl[1][:colorbar_title] == "Test me"
-        @test pl[1][:colorbar_titlefontsize] == 12
-        @test pl[1][:colorbar_titlefonthalign] === :right
+        @test p[1][:colorbar_title] == "Test me"
+        @test p[1][:colorbar_titlefontsize] == 12
+        @test p[1][:colorbar_titlefonthalign] === :right
+    end
+
+    @testset "Latexify - LaTeXStrings" begin
+        @test Plots.pgfx_sanitize_string("A string, with 2 punctuation chars.") ==
+              "A string, with 2 punctuation chars."
+        @test Plots.pgfx_sanitize_string("Interpolação polinomial") ==
+              raw"Interpola$\textrm{\c{c}}$$\textrm{\~{a}}$o polinomial"
+        @test Plots.pgfx_sanitize_string("∫∞ ∂x") == raw"$\int$$\infty$ $\partial$x"
+
+        # special LaTeX characters
+        @test Plots.pgfx_sanitize_string("this is #3").s == raw"this is \#3"
+        @test Plots.pgfx_sanitize_string("10% increase").s == raw"10\% increase"
+        @test Plots.pgfx_sanitize_string("underscores _a_").s == raw"underscores \_a\_"
+        @test Plots.pgfx_sanitize_string("plot 1 & 2 & 3").s == raw"plot 1 \& 2 \& 3"
+        @test Plots.pgfx_sanitize_string("GDP in \$").s == raw"GDP in \$"
+        @test Plots.pgfx_sanitize_string("curly { test }").s == raw"curly \{ test \}"
+
+        @test Plots.pgfx_sanitize_string(L"this is #5").s == raw"$this is \#5$"
+        @test Plots.pgfx_sanitize_string(L"10% increase").s == raw"$10\% increase$"
     end
 end
