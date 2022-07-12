@@ -355,9 +355,10 @@ const _examples = PlotExample[
     PlotExample( # 20
         "Annotations",
         """
-        The `annotations` keyword is used for text annotations in data-coordinates.  Pass in a
-        tuple `(x, y, text)`, a vector of annotations, each of which is a tuple of `x`, `y`
-        and `text`. You can position annotations using relative coordinates with the syntax
+        The `annotations` keyword is used for text annotations in data-coordinates.  
+        Pass in a 3-tuple of vectors `(x, y, text)`, or a vector of annotations, 
+        each of which is a tuple of `x`, `y` and `text`. 
+        You can position annotations using relative coordinates with the syntax
         `((px, py), text)`, where for example `px=.25` positions the annotation at `25%` of
         the subplot's axis width.
         `text` may be a simple `String`, or a `PlotText` object, which can be built with the
@@ -366,7 +367,8 @@ const _examples = PlotExample[
         `text` may also be a tuple `(string, attrs...)` of arguments which are passed
         to `Plots.text`.
 
-        `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`.
+        `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`, 
+        and `annotate!(x, y, txt)` for `plot!(; annotation=(x,y,txt))`.
 
         Series annotations are used for annotating individual data points.
         They require only the annotation; x/y values are computed.  Series annotations
@@ -381,10 +383,13 @@ const _examples = PlotExample[
                         annotations = (3, y[3], Plots.text("this is #3", :left)),
                         leg = false,
                     )
+                    # single vector of annotation tuples
                     annotate!([
                         (5, y[5], ("this is #5", 16, :red, :center)),
                         (10, y[10], ("this is #10", :right, 20, "courier")),
                     ])
+                    # `x, y, text` vectors
+                    annotate!([2, 8], y[[2, 8]], ["#2", "#8"])
                     scatter!(
                         range(2, stop = 8, length = 6),
                         rand(6),
@@ -1286,6 +1291,30 @@ const _examples = PlotExample[
                         [1 2 3; 7 8 9; 4 5 6],
                         seriescolor = [:red :green :blue],
                         fillalpha = [0.2 0.3 0.4],
+                    )
+                end
+            ),
+        ],
+    ),
+    PlotExample( # 59
+        "Annotations at discrete locations",
+        """
+        """,
+        [
+            :(
+                begin
+                    x, y = ["a", "b", "c"], [1, 5, 15]
+                    p = scatter(
+                        ["a", "b"],
+                        ["q", "r"],
+                        ms = 8,
+                        legend = false,
+                        tickfontsize = 20,
+                    )
+                    annotate!(
+                        ["a", "b"],
+                        ["r", "q"],
+                        [text("ar", :top, :left, 50), text("bq", :bottom, :right, 20)],
                     )
                 end
             ),

@@ -2042,7 +2042,6 @@ function _update_subplot_args(
         slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
     end
 
-    _update_subplot_periphery(sp, anns)
     _update_subplot_colors(sp)
 
     lims_warned = false
@@ -2058,6 +2057,8 @@ function _update_subplot_args(
             lims_warned = true
         end
     end
+
+    _update_subplot_periphery(sp, anns)
 end
 
 # -----------------------------------------------------------------------------

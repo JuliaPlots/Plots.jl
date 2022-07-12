@@ -610,6 +610,9 @@ _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwx
     _text_label(lab, font),
 )
 
+assign_annotation_coord!(axis, x) = discrete_value!(axis, x)[1]
+assign_annotation_coord!(axis, x::TimeType) = assign_annotation_coord!(axis, Dates.value(x))
+
 # Expand arrays of coordinates, positions and labels into individual annotations
 # and make sure labels are of type PlotText
 function process_annotation(sp::Subplot, xs, ys, labs, font = _annotationfont(sp))
@@ -619,8 +622,8 @@ function process_annotation(sp::Subplot, xs, ys, labs, font = _annotationfont(sp
     ylength = length(methods(length, (typeof(ys),))) == 0 ? 1 : length(ys)
     for i in 1:max(xlength, ylength, length(labs))
         x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
-        x = typeof(x) <: TimeType ? Dates.value(x) : x
-        y = typeof(y) <: TimeType ? Dates.value(y) : y
+        x = assign_annotation_coord!(sp[:xaxis], x)
+        y = assign_annotation_coord!(sp[:yaxis], y)
         push!(anns, _annotation(sp, font, lab, x, y))
     end
     anns
