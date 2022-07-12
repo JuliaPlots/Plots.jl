@@ -17,6 +17,10 @@ Plots.__init__()
     @test Plots._series_defaults[:fillrange] == 0
     pl = plot(1:5)
     @test pl[1][1][:fillrange] == 0
+    default(label = ["Line a" "Line b"])
+    pl = plot(1:10, rand(10,2))
+    @test pl[1][1][:label] == "Line a"
+    @test pl[1][2][:label] == "Line b"
     default()
 end
 
