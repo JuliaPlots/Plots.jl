@@ -389,7 +389,7 @@ const _examples = PlotExample[
                         (10, y[10], ("this is #10", :right, 20, "courier")),
                     ])
                     # `x, y, text` vectors
-                    annotate!([2,8], y[[2,8]], ["#2", "#8"])
+                    annotate!([2, 8], y[[2, 8]], ["#2", "#8"])
                     scatter!(
                         range(2, stop = 8, length = 6),
                         rand(6),
