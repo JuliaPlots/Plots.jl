@@ -1,6 +1,6 @@
 @testset "Axes" begin
-    p = plot()
-    axis = p.subplots[1][:xaxis]
+    pl = plot()
+    axis = pl.subplots[1][:xaxis]
     @test typeof(axis) == Plots.Axis
     @test Plots.discrete_value!(axis, "HI") == (0.5, 1)
     @test Plots.discrete_value!(axis, :yo) == (1.5, 2)
@@ -39,9 +39,9 @@ end
     ticks2 = ([4, 5], ("e", "f"))
     p1 = plot(1:5, 1:5, 1:5, xticks = ticks1, yticks = ticks1, zticks = ticks1)
     p2 = plot(1:5, 1:5, 1:5, xticks = ticks2, yticks = ticks2, zticks = ticks2)
-    p = plot(p1, p2)
-    @test xticks(p) == yticks(p) == zticks(p) == [ticks1, ticks2]
-    @test xticks(p[1]) == yticks(p[1]) == zticks(p[1]) == ticks1
+    pl = plot(p1, p2)
+    @test xticks(pl) == yticks(pl) == zticks(pl) == [ticks1, ticks2]
+    @test xticks(pl[1]) == yticks(pl[1]) == zticks(pl[1]) == ticks1
 end
 
 @testset "Axis limits" begin
@@ -93,55 +93,55 @@ end
     @test haskey(Plots._keyAliases, :xguideposition)
     @test haskey(Plots._keyAliases, :x_guide_position)
     @test !haskey(Plots._keyAliases, :xguide_position)
-    p = plot(1:2, xl = "x label")
-    @test p[1][:xaxis][:guide] === "x label"
-    p = plot(1:2, xrange = (0, 3))
-    @test xlims(p) === (0, 3)
-    p = plot(1:2, xtick = [1.25, 1.5, 1.75])
-    @test p[1][:xaxis][:ticks] == [1.25, 1.5, 1.75]
-    p = plot(1:2, xlabelfontsize = 4)
-    @test p[1][:xaxis][:guidefontsize] == 4
-    p = plot(1:2, xgα = 0.07)
-    @test p[1][:xaxis][:gridalpha] ≈ 0.07
-    p = plot(1:2, xgridls = :dashdot)
-    @test p[1][:xaxis][:gridstyle] === :dashdot
-    p = plot(1:2, xgridcolor = :red)
-    @test p[1][:xaxis][:foreground_color_grid] === RGBA{Float64}(1.0, 0.0, 0.0, 1.0)
-    p = plot(1:2, xminorgridcolor = :red)
-    @test p[1][:xaxis][:foreground_color_minor_grid] === RGBA{Float64}(1.0, 0.0, 0.0, 1.0)
-    p = plot(1:2, xgrid_lw = 0.01)
-    @test p[1][:xaxis][:gridlinewidth] ≈ 0.01
-    p = plot(1:2, xminorgrid_lw = 0.01)
-    @test p[1][:xaxis][:minorgridlinewidth] ≈ 0.01
-    p = plot(1:2, xtickor = :out)
-    @test p[1][:xaxis][:tick_direction] === :out
+    pl = plot(1:2, xl = "x label")
+    @test pl[1][:xaxis][:guide] === "x label"
+    pl = plot(1:2, xrange = (0, 3))
+    @test xlims(pl) === (0, 3)
+    pl = plot(1:2, xtick = [1.25, 1.5, 1.75])
+    @test pl[1][:xaxis][:ticks] == [1.25, 1.5, 1.75]
+    pl = plot(1:2, xlabelfontsize = 4)
+    @test pl[1][:xaxis][:guidefontsize] == 4
+    pl = plot(1:2, xgα = 0.07)
+    @test pl[1][:xaxis][:gridalpha] ≈ 0.07
+    pl = plot(1:2, xgridls = :dashdot)
+    @test pl[1][:xaxis][:gridstyle] === :dashdot
+    pl = plot(1:2, xgridcolor = :red)
+    @test pl[1][:xaxis][:foreground_color_grid] === RGBA{Float64}(1.0, 0.0, 0.0, 1.0)
+    pl = plot(1:2, xminorgridcolor = :red)
+    @test pl[1][:xaxis][:foreground_color_minor_grid] === RGBA{Float64}(1.0, 0.0, 0.0, 1.0)
+    pl = plot(1:2, xgrid_lw = 0.01)
+    @test pl[1][:xaxis][:gridlinewidth] ≈ 0.01
+    pl = plot(1:2, xminorgrid_lw = 0.01)
+    @test pl[1][:xaxis][:minorgridlinewidth] ≈ 0.01
+    pl = plot(1:2, xtickor = :out)
+    @test pl[1][:xaxis][:tick_direction] === :out
 end
 
 @testset "Aliases" begin
-    compare(p::Plot, s::Symbol, val, op) =
-        op(p[1][:xaxis][s], val) && op(p[1][:yaxis][s], val) && op(p[1][:zaxis][s], val)
-    p = plot(1:2, guide = "all labels")
-    @test compare(p, :guide, "all labels", ===)
-    p = plot(1:2, label = "test")
-    @test compare(p, :guide, "", ===)
-    p = plot(1:2, lim = (0, 3))
-    @test xlims(p) === ylims(p) === zlims(p) === (0, 3)
-    p = plot(1:2, tick = [1.25, 1.5, 1.75])
-    @test compare(p, :ticks, [1.25, 1.5, 1.75], ==)
-    p = plot(1:2, labelfontsize = 4)
-    @test compare(p, :guidefontsize, 4, ==)
-    p = plot(1:2, gα = 0.07)
-    @test compare(p, :gridalpha, 0.07, ≈)
-    p = plot(1:2, gridls = :dashdot)
-    @test compare(p, :gridstyle, :dashdot, ===)
-    p = plot(1:2, gridcolor = :red)
-    @test compare(p, :foreground_color_grid, RGBA{Float64}(1.0, 0.0, 0.0, 1.0), ===)
-    p = plot(1:2, minorgridcolor = :red)
-    @test compare(p, :foreground_color_minor_grid, RGBA{Float64}(1.0, 0.0, 0.0, 1.0), ===)
-    p = plot(1:2, grid_lw = 0.01)
-    @test compare(p, :gridlinewidth, 0.01, ≈)
-    p = plot(1:2, minorgrid_lw = 0.01)
-    @test compare(p, :minorgridlinewidth, 0.01, ≈)
-    p = plot(1:2, tickor = :out)
-    @test compare(p, :tick_direction, :out, ===)
+    compare(pl::Plot, s::Symbol, val, op) =
+        op(pl[1][:xaxis][s], val) && op(pl[1][:yaxis][s], val) && op(pl[1][:zaxis][s], val)
+    pl = plot(1:2, guide = "all labels")
+    @test compare(pl, :guide, "all labels", ===)
+    pl = plot(1:2, label = "test")
+    @test compare(pl, :guide, "", ===)
+    pl = plot(1:2, lim = (0, 3))
+    @test xlims(pl) === ylims(pl) === zlims(pl) === (0, 3)
+    pl = plot(1:2, tick = [1.25, 1.5, 1.75])
+    @test compare(pl, :ticks, [1.25, 1.5, 1.75], ==)
+    pl = plot(1:2, labelfontsize = 4)
+    @test compare(pl, :guidefontsize, 4, ==)
+    pl = plot(1:2, gα = 0.07)
+    @test compare(pl, :gridalpha, 0.07, ≈)
+    pl = plot(1:2, gridls = :dashdot)
+    @test compare(pl, :gridstyle, :dashdot, ===)
+    pl = plot(1:2, gridcolor = :red)
+    @test compare(pl, :foreground_color_grid, RGBA{Float64}(1.0, 0.0, 0.0, 1.0), ===)
+    pl = plot(1:2, minorgridcolor = :red)
+    @test compare(pl, :foreground_color_minor_grid, RGBA{Float64}(1.0, 0.0, 0.0, 1.0), ===)
+    pl = plot(1:2, grid_lw = 0.01)
+    @test compare(pl, :gridlinewidth, 0.01, ≈)
+    pl = plot(1:2, minorgrid_lw = 0.01)
+    @test compare(pl, :minorgridlinewidth, 0.01, ≈)
+    pl = plot(1:2, tickor = :out)
+    @test compare(pl, :tick_direction, :out, ===)
 end

@@ -55,9 +55,9 @@
         ellipse(x, y, w, h) = Shape(w * sin.(ang) .+ x, h * cos.(ang) .+ y)
         myshapes = [ellipse(x, rand(), rand(), rand()) for x in 1:4]
         @test coords(myshapes) isa Tuple{Vector{Vector{S}},Vector{Vector{T}}} where {T,S}
-        local p
-        @test_nowarn p = plot(myshapes)
-        @test p[1][1][:seriestype] === :shape
+        local pl
+        @test_nowarn pl = plot(myshapes)
+        @test pl[1][1][:seriestype] === :shape
     end
 
     @testset "Misc" begin
@@ -171,7 +171,7 @@ end
 @testset "Series Annotations" begin
     square = Shape([(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
     @test_logs (:warn, "Unused SeriesAnnotations arg: triangle (Symbol)") begin
-        p = plot(
+        pl = plot(
             [1, 2, 3],
             series_annotations = (
                 ["a"],
@@ -182,7 +182,7 @@ end
                 :triangle,  # pass an incorrect argument
             ),
         )
-        sa = p.series_list[1].plotattributes[:series_annotations]
+        sa = pl.series_list[1].plotattributes[:series_annotations]
         @test only(sa.strs).str == "a"
         @test sa.font.family == "courier"
         @test sa.baseshape == square
@@ -201,29 +201,29 @@ end
               "1/$i"
     end
 
-    series_anns(p, series) = p.series_list[series].plotattributes[:series_annotations]
+    series_anns(pl, series) = pl.series_list[series].plotattributes[:series_annotations]
     ann_strings(ann) = [s.str for s in ann.strs]
     ann_pointsizes(ann) = [s.font.pointsize for s in ann.strs]
 
-    let p = plot(ones(3, 2), series_annotations = ["a" "d"; "b" "e"; "c" "f"])
-        ann1 = series_anns(p, 1)
+    let pl = plot(ones(3, 2), series_annotations = ["a" "d"; "b" "e"; "c" "f"])
+        ann1 = series_anns(pl, 1)
         @test ann_strings(ann1) == ["a", "b", "c"]
 
-        ann2 = series_anns(p, 2)
+        ann2 = series_anns(pl, 2)
         @test ann_strings(ann2) == ["d", "e", "f"]
     end
 
-    let p = plot(ones(2, 2), series_annotations = (["a" "c"; "b" "d"], square))
-        ann1 = series_anns(p, 1)
+    let pl = plot(ones(2, 2), series_annotations = (["a" "c"; "b" "d"], square))
+        ann1 = series_anns(pl, 1)
         @test ann_strings(ann1) == ["a", "b"]
 
-        ann2 = series_anns(p, 2)
+        ann2 = series_anns(pl, 2)
         @test ann_strings(ann2) == ["c", "d"]
 
         @test ann1.baseshape == ann2.baseshape == square
     end
 
-    let p = plot(
+    let pl = plot(
             ones(3, 2),
             series_annotations = (
                 permutedims([
@@ -233,13 +233,13 @@ end
                 (12, 13),
             ),
         )
-        ann1 = series_anns(p, 1)
+        ann1 = series_anns(pl, 1)
         @test ann1.baseshape == square
         @test ann1.scalefactor == (14, 15)
         @test ann_strings(ann1) == ["x", "y", "z"]
         @test ann_pointsizes(ann1) == [10, 20, 30]
 
-        ann2 = series_anns(p, 2)
+        ann2 = series_anns(pl, 2)
         @test ann2.scalefactor == (12, 13)
         @test ann_strings(ann2) == ["a", "b", "c"]
         @test ann2.strs[1].font.pointsize == 42
@@ -247,13 +247,13 @@ end
 
     @test_throws ArgumentError plot(ones(2, 2), series_annotations = [([1],) 2; 3 4])
 
-    p = plot([1, 2], annotations = (1.5, 2, text("foo", :left)))
-    x, y, txt = only(p.subplots[end][:annotations])
+    pl = plot([1, 2], annotations = (1.5, 2, text("foo", :left)))
+    x, y, txt = only(pl.subplots[end][:annotations])
     @test (x, y) == (1.5, 2)
     @test txt.str == "foo"
 
-    p = plot([1, 2], annotations = ((0.1, 0.5), :auto))
-    pos, txt = only(p.subplots[end][:annotations])
+    pl = plot([1, 2], annotations = ((0.1, 0.5), :auto))
+    pos, txt = only(pl.subplots[end][:annotations])
     @test pos == (0.1, 0.5)
     @test txt.str == "(a)"
 end

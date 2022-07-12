@@ -21,27 +21,27 @@ Plots.__init__()
 end
 
 @testset "Legend defaults" begin
-    p = plot()
-    @test p[1][:legend_font_family] == "sans-serif"
-    @test p[1][:legend_font_pointsize] == 8
-    @test p[1][:legend_font_halign] === :hcenter
-    @test p[1][:legend_font_valign] === :vcenter
-    @test p[1][:legend_font_rotation] == 0.0
-    @test p[1][:legend_font_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
-    @test p[1][:legend_position] === :best
-    @test p[1][:legend_title] === nothing
-    @test p[1][:legend_title_font_family] == "sans-serif"
-    @test p[1][:legend_title_font_pointsize] == 11
-    @test p[1][:legend_title_font_halign] === :hcenter
-    @test p[1][:legend_title_font_valign] === :vcenter
-    @test p[1][:legend_title_font_rotation] == 0.0
-    @test p[1][:legend_title_font_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
-    @test p[1][:legend_background_color] == RGBA{Float64}(1.0, 1.0, 1.0, 1.0)
-    @test p[1][:legend_foreground_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
+    pl = plot()
+    @test pl[1][:legend_font_family] == "sans-serif"
+    @test pl[1][:legend_font_pointsize] == 8
+    @test pl[1][:legend_font_halign] === :hcenter
+    @test pl[1][:legend_font_valign] === :vcenter
+    @test pl[1][:legend_font_rotation] == 0.0
+    @test pl[1][:legend_font_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
+    @test pl[1][:legend_position] === :best
+    @test pl[1][:legend_title] === nothing
+    @test pl[1][:legend_title_font_family] == "sans-serif"
+    @test pl[1][:legend_title_font_pointsize] == 11
+    @test pl[1][:legend_title_font_halign] === :hcenter
+    @test pl[1][:legend_title_font_valign] === :vcenter
+    @test pl[1][:legend_title_font_rotation] == 0.0
+    @test pl[1][:legend_title_font_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
+    @test pl[1][:legend_background_color] == RGBA{Float64}(1.0, 1.0, 1.0, 1.0)
+    @test pl[1][:legend_foreground_color] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
 end
 
 @testset "Legend API" begin
-    p = plot(;
+    pl = plot(;
         legendfontfamily = "serif",
         legendfontsize = 12,
         legendfonthalign = :left,
@@ -59,22 +59,23 @@ end
         background_color_legend = :cyan,
         foreground_color_legend = :green,
     )
-    @test p[1][:legend_font_family] == "serif"
-    @test p[1][:legend_font_pointsize] == 12
-    @test p[1][:legend_font_halign] === :left
-    @test p[1][:legend_font_valign] === :top
-    @test p[1][:legend_font_rotation] == 1.0
-    @test p[1][:legend_font_color] === :red
-    @test p[1][:legend_position] === :outertopleft
-    @test p[1][:legend_title] == "The legend"
-    @test p[1][:legend_title_font_family] == "helvetica"
-    @test p[1][:legend_title_font_pointsize] == 3
-    @test p[1][:legend_title_font_halign] === :right
-    @test p[1][:legend_title_font_valign] === :bottom
-    @test p[1][:legend_title_font_rotation] == -5.2
-    @test p[1][:legend_title_font_color] === :blue
-    @test p[1][:legend_background_color] == RGBA{Float64}(0.0, 1.0, 1.0, 1.0)
-    @test p[1][:legend_foreground_color] == RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
+    @test pl[1][:legend_font_family] == "serif"
+    @test pl[1][:legend_font_pointsize] == 12
+    @test pl[1][:legend_font_halign] === :left
+    @test pl[1][:legend_font_valign] === :top
+    @test pl[1][:legend_font_rotation] == 1.0
+    @test pl[1][:legend_font_color] === :red
+    @test pl[1][:legend_position] === :outertopleft
+    @test pl[1][:legend_title] == "The legend"
+    @test pl[1][:legend_title_font_family] == "helvetica"
+    @test pl[1][:legend_title_font_pointsize] == 3
+    @test pl[1][:legend_title_font_halign] === :right
+    @test pl[1][:legend_title_font_valign] === :bottom
+    @test pl[1][:legend_title_font_rotation] == -5.2
+    @test pl[1][:legend_title_font_color] === :blue
+    @test pl[1][:legend_background_color] == RGBA{Float64}(0.0, 1.0, 1.0, 1.0)
+    @test pl[1][:legend_foreground_color] ==
+          RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
 
     #remember settings
     plot(legend_font_pointsize = 20)

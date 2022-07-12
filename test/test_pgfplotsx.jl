@@ -39,7 +39,7 @@ with(:pgfplotsx) do
         x = ts .* map(cos, ts)
         y = (0.1ts) .* map(sin, ts)
         z = 1:n
-        p = plot(
+        pl = plot(
             x,
             y,
             z,
@@ -49,7 +49,7 @@ with(:pgfplotsx) do
             cbar = true,
             w = 5,
         )
-        pgfx_plot = plot!(p, zeros(n), zeros(n), 1:n, w = 10)
+        pgfx_plot = plot!(pl, zeros(n), zeros(n), 1:n, w = 10)
         Plots._update_plot_object(pgfx_plot)
         if @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar"))
             @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
@@ -67,15 +67,15 @@ with(:pgfplotsx) do
             fill = 0,
             α = 0.6,
         )
-        p = scatter!(
+        pl = scatter!(
             y,
             zcolor = abs.(y .- 0.5),
             m = (:hot, 0.8, Plots.stroke(1, :green)),
             ms = 10 * abs.(y .- 0.5) .+ 4,
             lab = ["grad", "", "ient"],
         )
-        Plots._update_plot_object(p)
-        axis = Plots.pgfx_axes(p.o)[1]
+        Plots._update_plot_object(pl)
+        axis = Plots.pgfx_axes(pl.o)[1]
         @test count(x -> x isa PGFPlotsX.LegendEntry, axis.contents) == 6
         @test count(x -> x isa PGFPlotsX.Plot, axis.contents) == 108 # each marker is its own plot, fillranges create 2 plot-objects
         marker = axis.contents[15]
@@ -327,14 +327,14 @@ with(:pgfplotsx) do
     end
 
     @testset "Markers and Paths" begin
-        p = plot(
+        pl = plot(
             5 .- ones(9),
             markershape = [:utriangle, :rect],
             markersize = 8,
             color = [:red, :black],
         )
-        Plots._update_plot_object(p)
-        axis = Plots.pgfx_axes(p.o)[1]
+        Plots._update_plot_object(pl)
+        axis = Plots.pgfx_axes(pl.o)[1]
         plots = filter(x -> x isa PGFPlotsX.Plot, axis.contents)
         @test length(plots) == 9
     end
@@ -343,36 +343,36 @@ with(:pgfplotsx) do
         group = rand(map((i -> begin
             "group $(i)"
         end), 1:4), 100)
-        p = plot(
+        pl = plot(
             rand(100),
             layout = @layout([a b; c]),
             group = group,
             linetype = [:bar :scatter :steppre],
             linecolor = :match,
         )
-        Plots._update_plot_object(p)
-        axis = Plots.pgfx_axes(p.o)[1]
+        Plots._update_plot_object(pl)
+        axis = Plots.pgfx_axes(pl.o)[1]
         legend_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis.contents)
         @test length(legend_entries) == 2
     end
 
     @testset "Extra kwargs" begin
-        p = plot(1:5, test = "me")
-        @test p[1][1].plotattributes[:extra_kwargs][:test] == "me"
-        p = plot(1:5, test = "me", extra_kwargs = :subplot)
-        @test p[1].attr[:extra_kwargs][:test] == "me"
-        p = plot(1:5, test = "me", extra_kwargs = :plot)
-        @test p.attr[:extra_plot_kwargs][:test] == "me"
-        p = plot(
+        pl = plot(1:5, test = "me")
+        @test pl[1][1].plotattributes[:extra_kwargs][:test] == "me"
+        pl = plot(1:5, test = "me", extra_kwargs = :subplot)
+        @test pl[1].attr[:extra_kwargs][:test] == "me"
+        pl = plot(1:5, test = "me", extra_kwargs = :plot)
+        @test pl.attr[:extra_plot_kwargs][:test] == "me"
+        pl = plot(
             1:5,
             extra_kwargs = Dict(
                 :plot => Dict(:test => "me"),
                 :series => Dict(:and => "me too"),
             ),
         )
-        @test p.attr[:extra_plot_kwargs][:test] == "me"
-        @test p[1][1].plotattributes[:extra_kwargs][:and] == "me too"
-        p = plot(
+        @test pl.attr[:extra_plot_kwargs][:test] == "me"
+        @test pl[1][1].plotattributes[:extra_kwargs][:and] == "me too"
+        pl = plot(
             plot(1:5, title = "Line"),
             scatter(
                 1:5,
@@ -380,50 +380,50 @@ with(:pgfplotsx) do
                 extra_kwargs = Dict(:subplot => Dict("axis line shift" => "10pt")),
             ),
         )
-        Plots._update_plot_object(p)
-        axes = Plots.pgfx_axes(p.o)
+        Plots._update_plot_object(pl)
+        axes = Plots.pgfx_axes(pl.o)
         @test !haskey(axes[1].options.dict, "axis line shift")
         @test haskey(axes[2].options.dict, "axis line shift")
-        p = plot(
+        pl = plot(
             x -> x,
             -1:1;
             add = raw"\node at (0,0.5) {\huge hi};",
             extra_kwargs = :subplot,
         )
-        @test p[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
-        Plots._update_plot_object(p)
-        axes = Plots.pgfx_axes(p.o)
+        @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
+        Plots._update_plot_object(pl)
+        axes = Plots.pgfx_axes(pl.o)
         @test filter(x -> x isa String, axes[1].contents)[1] ==
               raw"\node at (0,0.5) {\huge hi};"
-        plot!(p)
-        @test p[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
-        Plots._update_plot_object(p)
-        axes = Plots.pgfx_axes(p.o)
+        plot!(pl)
+        @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
+        Plots._update_plot_object(pl)
+        axes = Plots.pgfx_axes(pl.o)
         @test filter(x -> x isa String, axes[1].contents)[1] ==
               raw"\node at (0,0.5) {\huge hi};"
     end
 
     @testset "Titlefonts" begin
-        p = plot(1:5, title = "Test me", titlefont = (2, :left))
-        @test p[1][:title] == "Test me"
-        @test p[1][:titlefontsize] == 2
-        @test p[1][:titlefonthalign] === :left
-        Plots._update_plot_object(p)
-        ax_opt = Plots.pgfx_axes(p.o)[1].options
+        pl = plot(1:5, title = "Test me", titlefont = (2, :left))
+        @test pl[1][:title] == "Test me"
+        @test pl[1][:titlefontsize] == 2
+        @test pl[1][:titlefonthalign] === :left
+        Plots._update_plot_object(pl)
+        ax_opt = Plots.pgfx_axes(pl.o)[1].options
         @test ax_opt["title"] == "Test me"
         @test(haskey(ax_opt.dict, "title style")) isa Test.Pass
-        p = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
-        @test p[:plot_title] == "Test me"
-        @test p[:plot_titlefontsize] == 2
-        @test p[:plot_titlefonthalign] === :left
-        p = heatmap(
+        pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
+        @test pl[:plot_title] == "Test me"
+        @test pl[:plot_titlefontsize] == 2
+        @test pl[:plot_titlefonthalign] === :left
+        pl = heatmap(
             rand(3, 3),
             colorbar_title = "Test me",
             colorbar_titlefont = (12, :right),
         )
-        @test p[1][:colorbar_title] == "Test me"
-        @test p[1][:colorbar_titlefontsize] == 12
-        @test p[1][:colorbar_titlefonthalign] === :right
+        @test pl[1][:colorbar_title] == "Test me"
+        @test pl[1][:colorbar_titlefontsize] == 12
+        @test pl[1][:colorbar_titlefonthalign] === :right
     end
 
     @testset "Latexify - LaTeXStrings" begin

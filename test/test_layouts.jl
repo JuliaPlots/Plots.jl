@@ -34,73 +34,73 @@ end
 end
 
 @testset "Plots.jl/issues/4083" begin
-    p = plot(plot(1:2), plot(1:2); border = :grid, plot_title = "abc")
-    @test p[1][:framestyle] === :grid
-    @test p[2][:framestyle] === :grid
-    @test p[3][:framestyle] === :none
+    pl = plot(plot(1:2), plot(1:2); border = :grid, plot_title = "abc")
+    @test pl[1][:framestyle] === :grid
+    @test pl[2][:framestyle] === :grid
+    @test pl[3][:framestyle] === :none
 end
 
 @testset "Allowed subplot counts" begin
-    p = plot(plot(1:2); layout = grid(2, 2))
-    @test length(p) == 1
+    pl = plot(plot(1:2); layout = grid(2, 2))
+    @test length(pl) == 1
 
-    p = plot((plot(1:2) for _ in 1:2)...; layout = grid(2, 2))
-    @test length(p) == 2
+    pl = plot((plot(1:2) for _ in 1:2)...; layout = grid(2, 2))
+    @test length(pl) == 2
 
-    p = plot((plot(1:2) for _ in 1:3)...; layout = grid(2, 2))
-    @test length(p) == 3
-    @test length(plot!(p, plot(1:2))) == 4
+    pl = plot((plot(1:2) for _ in 1:3)...; layout = grid(2, 2))
+    @test length(pl) == 3
+    @test length(plot!(pl, plot(1:2))) == 4
 
-    p = plot((plot(1:2) for _ in 1:4)...; layout = grid(2, 2))
-    @test length(p) == 4
+    pl = plot((plot(1:2) for _ in 1:4)...; layout = grid(2, 2))
+    @test length(pl) == 4
 
     @test_throws ErrorException plot((plot(1:2) for _ in 1:5)...; layout = grid(2, 2))
 end
 
 @testset "Coverage" begin
-    p = plot((plot(i) for i in 1:4)..., layout = (2, 2))
+    pl = plot((plot(i) for i in 1:4)..., layout = (2, 2))
 
-    sp = p[end]
+    sp = pl[end]
     @test sp isa Plots.Subplot
     @test size(sp) == (1, 1)
     @test length(sp) == 1
     @test sp[1, 1] == sp
-    @test Plots.get_subplot(p, UInt32(4)) == sp
+    @test Plots.get_subplot(pl, UInt32(4)) == sp
     @test Plots.series_list(sp) |> first |> Plots.get_subplot isa Plots.Subplot
-    @test Plots.get_subplot(p, keys(p.spmap) |> first) isa Plots.Subplot
+    @test Plots.get_subplot(pl, keys(pl.spmap) |> first) isa Plots.Subplot
 
-    gl = p[2, 2]
+    gl = pl[2, 2]
     @test gl isa Plots.GridLayout
     @test length(gl) == 1
     @test size(gl) == (1, 1)
     @test Plots.layout_args(gl) == (gl, 1)
 
-    @test size(p, 1) == 2
-    @test size(p, 2) == 2
-    @test size(p) == (2, 2)
-    @test ndims(p) == 2
+    @test size(pl, 1) == 2
+    @test size(pl, 2) == 2
+    @test size(pl) == (2, 2)
+    @test ndims(pl) == 2
 
-    @test p[1][end] isa Plots.Series
+    @test pl[1][end] isa Plots.Series
     io = devnull
-    show(io, p[1])
+    show(io, pl[1])
 
-    @test Plots.getplot(p) == p
-    @test Plots.getattr(p) == p.attr
-    @test Plots.backend_object(p) == p.o
-    @test occursin("Plot", string(p))
-    print(io, p)
+    @test Plots.getplot(pl) == pl
+    @test Plots.getattr(pl) == pl.attr
+    @test Plots.backend_object(pl) == pl.o
+    @test occursin("Plot", string(pl))
+    print(io, pl)
 
     @test Plots.to_pixels(1Plots.mm) isa AbstractFloat
     @test Plots.ispositive(1Plots.mm)
     @test size(Plots.defaultbox) == (0Plots.mm, 0Plots.mm)
     show(io, Plots.defaultbox)
-    show(io, p.layout)
+    show(io, pl.layout)
 
     @test Plots.make_measure_hor(1Plots.mm) == 1Plots.mm
     @test Plots.make_measure_vert(1Plots.mm) == 1Plots.mm
 
-    @test Plots.parent(p.layout) isa Plots.RootLayout
-    show(io, Plots.parent_bbox(p.layout))
+    @test Plots.parent(pl.layout) isa Plots.RootLayout
+    show(io, Plots.parent_bbox(pl.layout))
 
     rl = Plots.RootLayout()
     show(io, rl)

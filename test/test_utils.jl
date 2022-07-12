@@ -64,7 +64,7 @@
     @test Plots.px2mm(1) isa AbstractFloat
     @test Plots.mm2px(1) isa AbstractFloat
 
-    p = plot()
+    pl = plot()
     @test xlims() isa Tuple
     @test ylims() isa Tuple
     @test zlims() isa Tuple
@@ -84,20 +84,20 @@
     Plots.debugshow(io, nothing)
     Plots.debugshow(io, [1])
 
-    p = plot(1)
-    push!(p, 1.5)
-    push!(p, 1, 1.5)
-    # append!(p, [1., 2.])
-    append!(p, 1, 2.5, 2.5)
-    push!(p, (1.5, 2.5))
-    push!(p, 1, (1.5, 2.5))
-    append!(p, (1.5, 2.5))
-    append!(p, 1, (1.5, 2.5))
+    pl = plot(1)
+    push!(pl, 1.5)
+    push!(pl, 1, 1.5)
+    # append!(pl, [1., 2.])
+    append!(pl, 1, 2.5, 2.5)
+    push!(pl, (1.5, 2.5))
+    push!(pl, 1, (1.5, 2.5))
+    append!(pl, (1.5, 2.5))
+    append!(pl, 1, (1.5, 2.5))
 
-    p = plot([1, 2, 3], [4, 5, 6])
-    @test Plots.xmin(p) == 1
-    @test Plots.xmax(p) == 3
-    @test Plots.ignorenan_extrema(p) == (1, 3)
+    pl = plot([1, 2, 3], [4, 5, 6])
+    @test Plots.xmin(pl) == 1
+    @test Plots.xmax(pl) == 3
+    @test Plots.ignorenan_extrema(pl) == (1, 3)
 
     @test Plots.get_attr_symbol(:x, "lims") === :xlims
     @test Plots.get_attr_symbol(:x, :lims) === :xlims
