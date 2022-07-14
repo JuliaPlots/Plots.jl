@@ -66,9 +66,12 @@ end
 
     for xlims in (0, 0.0, false, true, plot())
         pl = plot(1:5; xlims)
-        plims = @test_logs (:warn, r"Invalid limits for x axis") match_mode = :any Plots.xlims(pl)
+        plims =
+            @test_logs (:warn, r"Invalid limits for x axis") match_mode = :any Plots.xlims(
+                pl,
+            )
         @test plims == Plots.widen(1, 5)
-       end
+    end
 end
 
 @testset "3D Axis" begin
