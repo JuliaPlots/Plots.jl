@@ -568,7 +568,8 @@ function default_should_widen(axis::Axis)
         return axis[:widen]
     end
     # automatic behavior: widen if limits aren't specified and series type is appropriate
-    (is_2tuple(axis[:lims]) || axis[:lims] === :round) && return false
+    lims = process_limits(axis[:lims])
+    (lims isa Tuple || lims == :round) && return false
     for sp in axis.sps
         for series in series_list(sp)
             if series.plotattributes[:seriestype] in _widen_seriestypes
@@ -587,6 +588,17 @@ function round_limits(amin, amax, scale)
     amin, amax
 end
 
+process_limits(lims::Tuple{<:Real,<:Real}) = lims
+process_limits(lims::Symbol) = lims
+process_limits(lims::AVec) =
+    length(lims) == 2 && all(x isa Real for x in lims) ? Tuple(lims) : nothing
+process_limits(lims) = nothing
+
+warn_invalid_limits(lims, letter) = @warn """
+        Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
+        $(letter)lims = $lims
+        """
+
 # using the axis extrema and limit overrides, return the min/max value for this axis
 function axis_limits(
     sp,
@@ -597,8 +609,9 @@ function axis_limits(
     axis = sp[get_attr_symbol(letter, :axis)]
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
-    lims = axis[:lims]
-    has_user_lims = (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
+    lims = process_limits(axis[:lims])
+    lims === nothing && warn_invalid_limits(axis[:lims], letter)
+    has_user_lims = lims isa Tuple
     if has_user_lims
         lmin, lmax = lims
         if lmin === :auto
