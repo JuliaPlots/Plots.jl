@@ -1,9 +1,9 @@
 using Plots, Test
 
 @testset "Plotting plots" begin
-    pl = @test_nowarn plot(plot(1:2), plot(1:2, size=(1200,400)))
+    pl = @test_nowarn plot(plot(1:2), plot(1:2, size = (1200, 400)))
     @test pl[:size] == (1200, 400)
-    pl = @test_nowarn plot(plot(1:2), plot(1:2), size=(1200,400))
+    pl = @test_nowarn plot(plot(1:2), plot(1:2), size = (1200, 400))
     @test pl[:size] == (1200, 400)
 end
 
