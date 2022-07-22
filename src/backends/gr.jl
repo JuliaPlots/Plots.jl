@@ -18,6 +18,7 @@ gr_linetype(k) = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdo
 
 gr_markertype(k) = (
     auto = 1,
+    pixel = 1,
     none = -1,
     circle = -1,
     rect = -7,
