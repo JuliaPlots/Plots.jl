@@ -121,11 +121,12 @@ function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
     # TODO: build the user_attr dict by creating "Any matrices" for the args of each subplot
 
     # TODO: replace this with proper processing from a merged user_attr KW
-    # update plot args, first with existing plots, then override with plotattributes
+    # update plot args
     for p in plts
         # _update_plot_args(plt, copy(p.attr))
         plt.n += p.n
     end
+    plt[:size] = last(sort(getindex.(plts, :size), by = x -> x[1] * x[2]))
     _update_plot_args(plt, plotattributes)
 
     # pass new plot to the backend
