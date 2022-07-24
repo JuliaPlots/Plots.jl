@@ -135,35 +135,35 @@ end
         io = IOContext(IOBuffer(), :color => true)
 
         # lets just make sure it runs without error
-        p = plot(rand(10))
-        @test p isa Plot
-        @test show(io, p) isa Nothing
+        pl = plot(rand(10))
+        @test pl isa Plot
+        @test show(io, pl) isa Nothing
 
-        p = bar(randn(10))
-        @test p isa Plot
-        @test show(io, p) isa Nothing
+        pl = bar(randn(10))
+        @test pl isa Plot
+        @test show(io, pl) isa Nothing
 
-        p = plot([1, 2], [3, 4])
-        annotate!(p, [(1.5, 3.2, Plots.text("Test", :red, :center))])
-        hline!(p, [3.1])
-        @test p isa Plot
-        @test show(io, p) isa Nothing
+        pl = plot([1, 2], [3, 4])
+        annotate!(pl, [(1.5, 3.2, Plots.text("Test", :red, :center))])
+        hline!(pl, [3.1])
+        @test pl isa Plot
+        @test show(io, pl) isa Nothing
 
-        p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
-        hline!(p, [3.1])
-        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
-        @test p isa Plot
-        @test show(io, p) isa Nothing
+        pl = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
+        hline!(pl, [3.1])
+        annotate!(pl, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
+        @test pl isa Plot
+        @test show(io, pl) isa Nothing
 
-        p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
-        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, :auto)])
-        hline!(p, [3.1])
-        @test p isa Plot
-        @test show(io, p) isa Nothing
+        pl = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
+        annotate!(pl, [(Dates.Date(2019, 1, 15), 3.2, :auto)])
+        hline!(pl, [3.1])
+        @test pl isa Plot
+        @test show(io, pl) isa Nothing
 
-        p = plot((plot(i) for i in 1:4)..., layout = (2, 2))
-        @test p isa Plot
-        @test show(io, p) isa Nothing
+        pl = plot((plot(i) for i in 1:4)..., layout = (2, 2))
+        @test pl isa Plot
+        @test show(io, pl) isa Nothing
     end
 end
 
@@ -189,9 +189,9 @@ end
     with(:plotlyjs) do
         @test backend() == Plots.PlotlyJSBackend()
 
-        p = plot(rand(10))
-        @test p isa Plot
-        @test_broken display(p) isa Nothing
+        pl = plot(rand(10))
+        @test pl isa Plot
+        @test_broken display(pl) isa Nothing
     end
 end
 
@@ -211,9 +211,9 @@ end
         )
         for be in backends
             @info be
-            for (i, p) in Plots.test_examples(be, only = only, disp = false)
+            for (i, pl) in Plots.test_examples(be, only = only, disp = false)
                 fn = tempname() * ".png"
-                png(p, fn)
+                png(pl, fn)
                 @test filesize(fn) > 1_000
             end
         end

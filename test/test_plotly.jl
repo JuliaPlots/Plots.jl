@@ -2,8 +2,8 @@ with(:plotly) do
     @testset "Basic" begin
         @test backend() == Plots.PlotlyBackend()
 
-        p = plot(rand(10))
-        @test p isa Plot
+        pl = plot(rand(10))
+        @test pl isa Plot
         @test_nowarn Plots.plotly_series(plot())
     end
 
@@ -26,26 +26,26 @@ with(:plotly) do
         @testset "Contour values" begin
             @testset "Range" begin
                 levels = -1:0.5:1
-                p = contour(x, y, z, levels = levels)
-                @test p[1][1].plotattributes[:levels] == levels
-                @test Plots.plotly_series(p)[1][:contours][:start] == first(levels)
-                @test Plots.plotly_series(p)[1][:contours][:end] == last(levels)
-                @test Plots.plotly_series(p)[1][:contours][:size] == step(levels)
+                pl = contour(x, y, z, levels = levels)
+                @test pl[1][1].plotattributes[:levels] == levels
+                @test Plots.plotly_series(pl)[1][:contours][:start] == first(levels)
+                @test Plots.plotly_series(pl)[1][:contours][:end] == last(levels)
+                @test Plots.plotly_series(pl)[1][:contours][:size] == step(levels)
             end
 
             @testset "Set of contours" begin
                 levels = [-1, -0.25, 0, 0.25, 1]
                 levels_range =
                     range(first(levels), stop = last(levels), length = length(levels))
-                p = contour(x, y, z, levels = levels)
-                @test p[1][1].plotattributes[:levels] == levels
+                pl = contour(x, y, z, levels = levels)
+                @test pl[1][1].plotattributes[:levels] == levels
                 series_dict = @test_logs (
                     :warn,
                     "setting arbitrary contour levels with Plotly backend " *
                     "is not supported; use a range to set equally-spaced contours or an " *
                     "integer to set the approximate number of contours with the keyword " *
                     "`levels`. Setting levels to -1.0:0.5:1.0",
-                ) Plots.plotly_series(p)
+                ) Plots.plotly_series(pl)
                 @test series_dict[1][:contours][:start] == first(levels_range)
                 @test series_dict[1][:contours][:end] == last(levels_range)
                 @test series_dict[1][:contours][:size] == step(levels_range)

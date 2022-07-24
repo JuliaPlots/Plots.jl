@@ -6,6 +6,7 @@ import JSON
 
 using VisualRegressionTests
 using RecipesPipeline
+using LaTeXStrings
 using RecipesBase
 using TestImages
 using FileIO

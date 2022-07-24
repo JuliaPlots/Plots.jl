@@ -1,10 +1,10 @@
 macro test_save(fmt)
     quote
-        let p = plot(1:10), fn = tempname()
-            getfield(Plots, $fmt)(p, fn)
+        let pl = plot(1:10), fn = tempname()
+            getfield(Plots, $fmt)(pl, fn)
             getfield(Plots, $fmt)(fn)
             fn_ext = string(fn, '.', $fmt)
-            savefig(p, fn_ext)
+            savefig(pl, fn_ext)
             savefig(fn_ext)
             @test isfile(fn_ext)
             @test_throws ErrorException savefig(string(fn, ".foo"))

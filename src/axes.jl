@@ -220,7 +220,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
 end
 
 # return (continuous_values, discrete_values) for the ticks on this axis
-function get_ticks(sp::Subplot, axis::Axis; update = true)
+function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:formatter])
     if update || !haskey(axis.plotattributes, :optimized_ticks)
         dvals = axis[:discrete_values]
         ticks = _transform_ticks(axis[:ticks])
@@ -237,7 +237,6 @@ function get_ticks(sp::Subplot, axis::Axis; update = true)
                 cvals = axis[:continuous_values]
                 alims = axis_limits(sp, axis[:letter])
                 scale = axis[:scale]
-                formatter = axis[:formatter]
                 get_ticks(ticks, cvals, dvals, alims, scale, formatter)
             end
     end

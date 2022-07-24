@@ -36,10 +36,10 @@ end
 end
 
 @testset "html" begin
-    p = plot([sin, cos], zeros(0), leg = false, xlims = (0, 2π), ylims = (-1, 1))
+    pl = plot([sin, cos], zeros(0), leg = false, xlims = (0, 2π), ylims = (-1, 1))
     anim = Animation()
     for x in range(0, stop = 2π, length = 10)
-        push!(p, x, Float64[sin(x), cos(x)])
+        push!(pl, x, Float64[sin(x), cos(x)])
         frame(anim)
     end
 

@@ -1,103 +1,103 @@
 @testset "Set Lims" begin
-    p = plot(rand(10))
+    pl = plot(rand(10))
 
     xlims!((1, 20))
-    @test xlims(p) == (1, 20)
-    xlims!(p, (1, 21))
-    @test xlims(p) == (1, 21)
+    @test xlims(pl) == (1, 20)
+    xlims!(pl, (1, 21))
+    @test xlims(pl) == (1, 21)
     ylims!((-1, 1))
-    @test ylims(p) == (-1, 1)
-    ylims!(p, (-2, 2))
-    @test ylims(p) == (-2, 2)
+    @test ylims(pl) == (-1, 1)
+    ylims!(pl, (-2, 2))
+    @test ylims(pl) == (-2, 2)
     zlims!((-1, 1))
-    @test zlims(p) == (-1, 1)
-    zlims!(p, (-2, 2))
-    @test zlims(p) == (-2, 2)
+    @test zlims(pl) == (-1, 1)
+    zlims!(pl, (-2, 2))
+    @test zlims(pl) == (-2, 2)
     xlims!(-1, 11)
-    @test xlims(p) == (-1, 11)
-    xlims!(p, -2, 12)
-    @test xlims(p) == (-2, 12)
+    @test xlims(pl) == (-1, 11)
+    xlims!(pl, -2, 12)
+    @test xlims(pl) == (-2, 12)
     ylims!((-10, 10))
-    @test ylims(p) == (-10, 10)
-    ylims!(p, (-11, 9))
-    @test ylims(p) == (-11, 9)
+    @test ylims(pl) == (-10, 10)
+    ylims!(pl, (-11, 9))
+    @test ylims(pl) == (-11, 9)
     zlims!((-10, 10))
-    @test zlims(p) == (-10, 10)
-    zlims!(p, (-9, 8))
-    @test zlims(p) == (-9, 8)
+    @test zlims(pl) == (-10, 10)
+    zlims!(pl, (-9, 8))
+    @test zlims(pl) == (-9, 8)
 end
 
 @testset "Set Title / Labels" begin
-    p = plot()
-    title!(p, "Foo")
-    sp = p[1]
+    pl = plot()
+    title!(pl, "Foo")
+    sp = pl[1]
     @test sp[:title] == "Foo"
-    xlabel!(p, "xlabel")
+    xlabel!(pl, "xlabel")
     @test sp[:xaxis][:guide] == "xlabel"
-    ylabel!(p, "ylabel")
+    ylabel!(pl, "ylabel")
     @test sp[:yaxis][:guide] == "ylabel"
 end
 
 @testset "Misc" begin
-    p = plot()
-    sp = p[1]
+    pl = plot()
+    sp = pl[1]
 
-    xflip!(p)
+    xflip!(pl)
     @test sp[:xaxis][:flip]
     xflip!(false)
     @test !sp[:xaxis][:flip]
-    yflip!(p)
+    yflip!(pl)
     @test sp[:yaxis][:flip]
     yflip!(false)
     @test !sp[:yaxis][:flip]
-    xgrid!(p, true)
+    xgrid!(pl, true)
     @test sp[:xaxis][:grid]
-    xgrid!(p, false)
+    xgrid!(pl, false)
     @test !sp[:xaxis][:grid]
     xgrid!(true)
     @test sp[:xaxis][:grid]
-    ygrid!(p, true)
+    ygrid!(pl, true)
     @test sp[:yaxis][:grid]
-    ygrid!(p, false)
+    ygrid!(pl, false)
     @test !sp[:yaxis][:grid]
     ygrid!(true)
     @test sp[:yaxis][:grid]
 
     ann = [(7, 3, "(7,3)"), (3, 7, text("hey", 14, :left, :top, :green))]
-    annotate!(p, ann)
-    show(devnull, p)
-    annotate!(p, ann...)
-    show(devnull, p)
+    annotate!(pl, ann)
+    show(devnull, pl)
+    annotate!(pl, ann...)
+    show(devnull, pl)
     annotate!(ann...)
 
-    xaxis!(p, true)
+    xaxis!(pl, true)
     @test sp[:xaxis][:showaxis]
-    xaxis!(p, false)
+    xaxis!(pl, false)
     @test !sp[:xaxis][:showaxis]
     xaxis!(true)
     @test sp[:xaxis][:showaxis]
-    yaxis!(p, true)
+    yaxis!(pl, true)
     @test sp[:yaxis][:showaxis]
-    yaxis!(p, false)
+    yaxis!(pl, false)
     @test !sp[:yaxis][:showaxis]
     yaxis!(true)
     @test sp[:yaxis][:showaxis]
 
-    p = plot3d([1, 2], [1, 2], [1, 2])
-    plot3d!(p, [3, 4], [3, 4], [3, 4])
-    @test Plots.series_list(p[1])[1][:seriestype] === :path3d
+    pl = plot3d([1, 2], [1, 2], [1, 2])
+    plot3d!(pl, [3, 4], [3, 4], [3, 4])
+    @test Plots.series_list(pl[1])[1][:seriestype] === :path3d
 end
 
 @testset "Set Ticks" begin
-    p = plot([0, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    sp = p[1]
+    pl = plot([0, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    sp = pl[1]
 
     xticks = 2:6
     xticks!(xticks)
     @test sp.attr[:xaxis][:ticks] == xticks
 
     xticks = 1:5
-    xticks!(p, xticks)
+    xticks!(pl, xticks)
     @test sp.attr[:xaxis][:ticks] == xticks
 
     yticks = 0.2:0.1:0.7
@@ -105,7 +105,7 @@ end
     @test sp.attr[:yaxis][:ticks] == yticks
 
     yticks = 0.1:0.5
-    yticks!(p, yticks)
+    yticks!(pl, yticks)
     @test sp.attr[:yaxis][:ticks] == yticks
 
     xticks = [5, 6, 7.5]
@@ -115,7 +115,7 @@ end
 
     xticks = [5, 2]
     xlabels = ["b", "a"]
-    xticks!(p, xticks, xlabels)
+    xticks!(pl, xticks, xlabels)
     @test sp.attr[:xaxis][:ticks] == (xticks, xlabels)
 
     yticks = [0.5, 0.6, 0.75]
@@ -125,6 +125,6 @@ end
 
     yticks = [0.5, 0.1]
     ylabels = ["z", "y"]
-    yticks!(p, yticks, ylabels)
+    yticks!(pl, yticks, ylabels)
     @test sp.attr[:yaxis][:ticks] == (yticks, ylabels)
 end

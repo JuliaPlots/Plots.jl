@@ -238,7 +238,7 @@ with(:pgfplotsx) do
         u = ones(length(x))
         v = cos.(x)
         arrow_plot = plot(x, y, quiver = (u, v), arrow = true)
-        # TODO: could adjust limits to fit arrows if too long, but how?
+        # TODO: could adjust limits to fit arrows if too long, but how ?
         # TODO: get latex available on CI
         # mktempdir() do path
         #    @test_nowarn savefig(arrow_plot, path*"arrow.pdf")
@@ -424,5 +424,24 @@ with(:pgfplotsx) do
         @test pl[1][:colorbar_title] == "Test me"
         @test pl[1][:colorbar_titlefontsize] == 12
         @test pl[1][:colorbar_titlefonthalign] === :right
+    end
+
+    @testset "Latexify - LaTeXStrings" begin
+        @test Plots.pgfx_sanitize_string("A string, with 2 punctuation chars.") ==
+              "A string, with 2 punctuation chars."
+        @test Plots.pgfx_sanitize_string("Interpolação polinomial") ==
+              raw"Interpola$\textrm{\c{c}}$$\textrm{\~{a}}$o polinomial"
+        @test Plots.pgfx_sanitize_string("∫∞ ∂x") == raw"$\int$$\infty$ $\partial$x"
+
+        # special LaTeX characters
+        @test Plots.pgfx_sanitize_string("this is #3").s == raw"this is \#3"
+        @test Plots.pgfx_sanitize_string("10% increase").s == raw"10\% increase"
+        @test Plots.pgfx_sanitize_string("underscores _a_").s == raw"underscores \_a\_"
+        @test Plots.pgfx_sanitize_string("plot 1 & 2 & 3").s == raw"plot 1 \& 2 \& 3"
+        @test Plots.pgfx_sanitize_string("GDP in \$").s == raw"GDP in \$"
+        @test Plots.pgfx_sanitize_string("curly { test }").s == raw"curly \{ test \}"
+
+        @test Plots.pgfx_sanitize_string(L"this is #5").s == raw"$this is \#5$"
+        @test Plots.pgfx_sanitize_string(L"10% increase").s == raw"$10\% increase$"
     end
 end

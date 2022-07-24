@@ -4,13 +4,13 @@
 
     rx = [x[3], x[5]]
 
-    p = plot(x, y, widen = false)
-    vspan!(p, rx, label = "", alpha = 0.2)
+    pl = plot(x, y, widen = false)
+    vspan!(pl, rx, label = "", alpha = 0.2)
 
     ref_ylims = (y[1], y[end])
     ref_xlims = (x[1].instant.periods.value, x[end].instant.periods.value)
-    @test Plots.ylims(p) == ref_ylims
-    @test Plots.xlims(p) == ref_xlims
+    @test Plots.ylims(pl) == ref_ylims
+    @test Plots.xlims(pl) == ref_xlims
 end
 
 @testset "Date xlims" begin
@@ -20,7 +20,7 @@ end
 
     ref_xlims = map(date -> date.instant.periods.value, span)
 
-    p = plot(x, y, xlims = span, widen = false)
+    pl = plot(x, y, xlims = span, widen = false)
 end
 
 @testset "DateTime xlims" begin
@@ -30,6 +30,6 @@ end
 
     ref_xlims = map(date -> date.instant.periods.value, span)
 
-    p = plot(x, y, xlims = span, widen = false)
-    @test Plots.xlims(p) == ref_xlims
+    pl = plot(x, y, xlims = span, widen = false)
+    @test Plots.xlims(pl) == ref_xlims
 end
