@@ -431,7 +431,7 @@ const _gr_seriestype = [
     :shape,
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _gr_marker = _allMarkers
+const _gr_marker = vcat(_allMarkers, :pixel)
 const _gr_scale = [:identity, :log10]
 is_marker_supported(::GRBackend, shape::Shape) = true
 
