@@ -1283,7 +1283,6 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
                 ),
             )
         end
-        return nothing
     end
 
     # framestyle
@@ -1321,6 +1320,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
                 )
             end,
     )
+    nothing
 end
 
 # --------------------------------------------------------------------------------------
