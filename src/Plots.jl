@@ -30,7 +30,6 @@ end
 
 using Reexport
 
-import GeometryBasics
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random, Unzip
 using SparseArrays
 

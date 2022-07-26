@@ -259,7 +259,7 @@ end
 end
 
 @testset "Bezier" begin
-    curve = Plots.BezierCurve([Plots.P2(0.0, 0.0), Plots.P2(0.5, 1.0), Plots.P2(1.0, 0.0)])
-    @test curve(0.75) == Plots.P2(0.75, 0.375)
+    curve = Plots.BezierCurve([(0.0, 0.0), (0.5, 1.0), (1.0, 0.0)])
+    @test curve(0.75) == (0.75, 0.375)
     @test length(coords(curve, 10)) == 10
 end
