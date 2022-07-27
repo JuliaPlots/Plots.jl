@@ -550,7 +550,7 @@ function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
                 : missing, x)
         end
     elseif formatter == timeformatter
-        map(xi -> isfinite(xi) ? string(Dates.now(), " ", formatter(xi)) : missing, x)
+        map(xi -> isfinite(xi) ? string(Dates.today(), " ", formatter(xi)) : missing, x)
     else
         error(
             "Invalid DateTime formatter. Expected Plots.datetime/date/time formatter but got $formatter",
