@@ -530,30 +530,11 @@ function plotly_native_data(axis::Axis, data::AbstractArray)
 end
 plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
 
-function epochdays2datetime(fractionaldays::Real)::DateTime
-    days = floor(fractionaldays)
-    dayfraction = fractionaldays - days
-    missing_ms = Millisecond(round(Millisecond(Day(1)).value * dayfraction))
-    DateTime(Dates.epochdays2date(days)) + missing_ms
-end
-
-epochdays2epochms(x) = Dates.datetime2epochms(epochdays2datetime(x))
-
 function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
     if formatter == datetimeformatter
         map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
     elseif formatter == dateformatter
-        if all(isinteger, x)
-            map(xi -> string(formatter(xi), " 00:00:00"), x)
-        else
-            # deal with "fractional" epochdays (e.g. for xticks in `seriestype = :step` and `bar()`)
-            map(
-                xi ->
-                    isfinite(xi) ? replace(datetimeformatter(epochdays2epochms(x)), "T" => " ") :
-                    missing,
-                x,
-            )
-        end
+        map(xi -> isfinite(xi) ? replace(dateformatter(xi), "T" => " ") : missing, x)
     elseif formatter == timeformatter
         map(xi -> isfinite(xi) ? string(Dates.today(), " ", formatter(xi)) : missing, x)
     else
