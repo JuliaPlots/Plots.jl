@@ -544,8 +544,10 @@ function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
         if all(isinteger, x)
             map(xi -> string(formatter(xi), " 00:00:00"), x)
         else
-            # deal with "fracional" epochdays (e.g. from `seriestype = :step`` and `bar()``)
-            map(xi -> isfinite(xi) ? replace(string(datetimeformatter(Dates.datetime2epochms(epochdays2datetime(xi)))), "T" => " ") : missing, x)
+            # deal with "fractional" epochdays (e.g. from `seriestype = :step` and `bar()`)
+            map(xi -> isfinite(xi)
+                ? replace(string(datetimeformatter(Dates.datetime2epochms(epochdays2datetime(xi)))), "T" => " ")
+                : missing, x)
         end
     elseif formatter == timeformatter
         map(xi -> isfinite(xi) ?  string(Dates.Date(Dates.now()), " ", formatter(xi)) : missing, x)
