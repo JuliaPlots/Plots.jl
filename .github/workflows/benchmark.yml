@@ -19,7 +19,7 @@ jobs:
       - name: Install Plots dependencies
         uses: julia-actions/julia-buildpkg@latest
       - name: Install Benchmarking dependencies
-        run: julia -e 'using Pkg; Pkg.activate("benchmark/"); Pkg.instantiate()'
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"; Pkg.activate("benchmark/"); Pkg.instantiate()'
 
       - name: Run benchmarks
         run: $TESTCMD -e 'using Pkg; Pkg.activate("benchmark/"); using BenchmarkCI; BenchmarkCI.judge()'
