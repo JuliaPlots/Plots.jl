@@ -549,8 +549,8 @@ function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
             # deal with "fractional" epochdays (e.g. for xticks in `seriestype = :step` and `bar()`)
             map(
                 xi ->
-                    isfinite(xi) ?
-                    replace(string(datetimeformatter(epochdays2epochms(x))), "T" => " ") : missing,
+                    isfinite(xi) ? replace(datetimeformatter(epochdays2epochms(x)), "T" => " ") :
+                    missing,
                 x,
             )
         end
