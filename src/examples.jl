@@ -953,13 +953,29 @@ const _examples = PlotExample[
     PlotExample( # 46
         "Tuples and `Point`s as data",
         "",
-        [quote
-            using GeometryBasics
-            using Distributions
-            d = MvNormal([1.0 0.75; 0.75 2.0])
-            plot([(1, 2), (3, 2), (2, 1), (2, 3)])
-            scatter!(Point2.(eachcol(rand(d, 1000))), alpha = 0.25)
-        end],
+        [
+            quote
+                using GeometryBasics
+                using Distributions
+                using RecipesPipeline
+
+                RecipesPipeline.unzip(points::AbstractVector{<:GeometryBasics.Point}) =
+                    unzip(Tuple.(points))
+                RecipesPipeline.unzip(
+                    points::AbstractVector{GeometryBasics.Point{N,T}},
+                ) where {N,T} =
+                    isbitstype(T) && sizeof(T) > 0 ?
+                    unzip(reinterpret(NTuple{N,T}, points)) : unzip(Tuple.(points))
+
+                @recipe f(v::Plots.AVec{<:GeometryBasics.Point}) =
+                    RecipesPipeline.unzip(v)
+                @recipe f(p::GeometryBasics.Point) = [p]
+
+                d = MvNormal([1.0 0.75; 0.75 2.0])
+                plot([(1, 2), (3, 2), (2, 1), (2, 3)])
+                scatter!(Point2.(eachcol(rand(d, 1000))), alpha = 0.25)
+            end,
+        ],
     ),
     PlotExample( # 47
         "Mesh3d",
