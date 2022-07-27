@@ -781,7 +781,7 @@ mutable struct BezierCurve{T<:Tuple}
 end
 
 function (bc::BezierCurve)(t::Real)
-    p = (0.0,0.0)
+    p = (0.0, 0.0)
     n = length(bc.control_points) - 1
     for i in 0:n
         p = p .+ bc.control_points[i + 1] .* binomial(n, i) .* (1 - t)^(n - i) .* t^i
