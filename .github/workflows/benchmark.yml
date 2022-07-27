@@ -22,10 +22,10 @@ jobs:
         run: julia -e 'using Pkg; Pkg.activate("benchmark/"); Pkg.instantiate()'
 
       - name: Run benchmarks
-        run: $TESTCMD -e 'using BenchmarkCI; BenchmarkCI.judge()'
+        run: $TESTCMD -e 'using Pkg; Pkg.activate("benchmark/"); using BenchmarkCI; BenchmarkCI.judge()'
       - name: Print judgement
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
+        run: julia -e 'using Pkg; Pkg.activate("benchmark/"); using BenchmarkCI; BenchmarkCI.displayjudgement()'
       - name: Post results
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
+        run: julia -e 'using Pkg; Pkg.activate("benchmark/"); using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
