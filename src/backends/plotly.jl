@@ -530,13 +530,25 @@ function plotly_native_data(axis::Axis, data::AbstractArray)
 end
 plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
 
+function epochdays2datetime(fractionaldays::Real)::DateTime
+	days = floor(fractionaldays)
+	dayfraction = fractionaldays - days
+	missing_ms = Millisecond(round(Millisecond(Day(1)).value * dayfraction))
+	DateTime(Dates.epochdays2date(days)) + missing_ms
+end
+
 function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
     if formatter == datetimeformatter
-        map(xi -> replace(formatter(xi), "T" => " "), x)
+        map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
     elseif formatter == dateformatter
-        map(xi -> string(formatter(xi), " 00:00:00"), x)
+        if all(isinteger, x)
+            map(xi -> string(formatter(xi), " 00:00:00"), x)
+        else
+            # deal with "fracional" epochdays (e.g. from `seriestype = :step`` and `bar()``)
+            map(xi -> isfinite(xi) ? replace(string(datetimeformatter(Dates.datetime2epochms(epochdays2datetime(xi)))), "T" => " ") : missing, x)
+        end
     elseif formatter == timeformatter
-        map(xi -> string(Dates.Date(Dates.now()), " ", formatter(xi)), x)
+        map(xi -> isfinite(xi) ?  string(Dates.Date(Dates.now()), " ", formatter(xi)) : missing, x)
     else
         error(
             "Invalid DateTime formatter. Expected Plots.datetime/date/time formatter but got $formatter",
