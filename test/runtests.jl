@@ -1,4 +1,5 @@
 import Plots: PLOTS_SEED, Plot, with
+import GeometryBasics
 import ImageMagick
 import LibGit2
 import JSON
