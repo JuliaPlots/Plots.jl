@@ -537,6 +537,8 @@ function epochdays2datetime(fractionaldays::Real)::DateTime
     DateTime(Dates.epochdays2date(days)) + missing_ms
 end
 
+epochdays2epochms(x) = Dates.datetime2epochms(epochdays2datetime(x))
+
 function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
     if formatter == datetimeformatter
         map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
@@ -544,10 +546,13 @@ function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
         if all(isinteger, x)
             map(xi -> string(formatter(xi), " 00:00:00"), x)
         else
-            # deal with "fractional" epochdays (e.g. from `seriestype = :step` and `bar()`)
-            map(xi -> isfinite(xi)
-                ? replace(string(datetimeformatter(Dates.datetime2epochms(epochdays2datetime(xi)))), "T" => " ")
-                : missing, x)
+            # deal with "fractional" epochdays (e.g. for xticks in `seriestype = :step` and `bar()`)
+            map(
+                xi ->
+                    isfinite(xi) ?
+                    replace(string(datetimeformatter(epochdays2epochms(x))), "T" => " ") : missing,
+                x,
+            )
         end
     elseif formatter == timeformatter
         map(xi -> isfinite(xi) ? string(Dates.today(), " ", formatter(xi)) : missing, x)
