@@ -1663,10 +1663,20 @@ end
 
 @userplot AreaPlot
 
-@recipe function f(a::AreaPlot)
+@recipe function f(a::AreaPlot; steptype = :none)
     data = cumsum(a.args[end], dims = 2)
     x = length(a.args) == 1 ? (axes(data, 1)) : a.args[1]
-    seriestype := :line
+    if steptype === :none
+        seriestype := :line
+    elseif steptype === :pre
+        seriestype := :steppre
+    elseif steptype === :mid
+        seriestype := :stepmid
+    elseif steptype === :post
+        seriestype := :steppost
+    else
+        throw(ArgumentError("steptype must be one of :none, :pre, :mid, :post"))
+    end
     for i in axes(data, 2)
         @series begin
             fillrange := i > 1 ? data[:, i - 1] : 0
