@@ -29,6 +29,7 @@ end
     @test filesize(mov(anim, show_msg = false).filename) > 10_000
     @test filesize(mp4(anim, show_msg = false).filename) > 10_000
     @test filesize(webm(anim, show_msg = false).filename) > 10_000
+    @test filesize(png(anim, show_msg = false).filename) > 10_000
 
     @gif for i in 1:n
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)

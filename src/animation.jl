@@ -22,6 +22,7 @@ giffn() = (isijulia() ? "tmp.gif" : tempname() * ".gif")
 movfn() = (isijulia() ? "tmp.mov" : tempname() * ".mov")
 mp4fn() = (isijulia() ? "tmp.mp4" : tempname() * ".mp4")
 webmfn() = (isijulia() ? "tmp.webm" : tempname() * ".webm")
+pngfn() = (isijulia() ? "tmp.png" : tempname() * ".png")
 
 mutable struct FrameIterator
     itr
@@ -77,6 +78,11 @@ mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim, fn, false; kw..
 Creates an .webm-file from an `Animation` object.
 """
 webm(anim::Animation, fn = webmfn(); kw...) = buildanimation(anim, fn, false; kw...)
+"""
+    png(animation[, filename]; fps=20, loop=0, variable_palette=false, verbose=false, show_msg=true)
+Creates an animated .png-file from an `Animation` object.
+"""
+png(anim::Animation, fn = pngfn(); kw...) = buildanimation(anim, fn, false; kw...)
 
 ffmpeg_framerate(fps) = "$fps"
 ffmpeg_framerate(fps::Rational) = "$(fps.num)/$(fps.den)"
@@ -117,6 +123,11 @@ function buildanimation(
                 `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn`,
             )
         end
+    elseif file_extension(fn)=="png"
+        # FFMPEG specific command for APNG (Animated PNG) animations
+        ffmpeg_exe(
+            `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -f apng -loop $loop -y $fn`,
+        )
     else
         ffmpeg_exe(
             `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -vf format=yuv420p -loop $loop -y $fn`,
@@ -133,6 +144,11 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     if ext == "gif"
         html =
             "<img src=\"data:image/gif;base64," *
+            base64encode(read(agif.filename)) *
+            "\" />"
+    elseif ext == "png"
+        html =
+            "<img src=\"data:image/apng;base64," *
             base64encode(read(agif.filename)) *
             "\" />"
     elseif ext in ("mov", "mp4", "webm")
