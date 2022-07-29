@@ -3,8 +3,24 @@
 # -------------------------------------------------
 # ## Dates & Times
 
-dateformatter(dt) = string(Date(Dates.UTD(dt)))
-datetimeformatter(dt) = string(DateTime(Dates.UTM(dt)))
+function epochdays2datetime(fractionaldays::Real)::DateTime
+    days = floor(fractionaldays)
+    dayfraction = fractionaldays - days
+    missing_ms = Millisecond(round(Millisecond(Day(1)).value * dayfraction))
+    DateTime(Dates.epochdays2date(days)) + missing_ms
+end
+
+epochdays2epochms(x) = Dates.datetime2epochms(epochdays2datetime(x))
+
+function dateformatter(dt::Integer)
+    string(Date(Dates.UTD(dt)))
+end
+
+function dateformatter(dt::Real)
+    string(DateTime(Dates.UTM(epochdays2epochms(dt))))
+end
+
+datetimeformatter(dt) = string(DateTime(Dates.UTM(round(dt))))
 timeformatter(t) = string(Dates.Time(Dates.Nanosecond(round(t))))
 
 @recipe f(::Type{Date}, dt::Date) = (dt -> Dates.value(dt), dateformatter)
