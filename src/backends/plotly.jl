@@ -534,7 +534,7 @@ function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
     if formatter == datetimeformatter
         map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
     elseif formatter == dateformatter
-        map(xi -> isfinite(xi) ? replace(dateformatter(xi), "T" => " ") : missing, x)
+        map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
     elseif formatter == timeformatter
         map(xi -> isfinite(xi) ? string(Dates.today(), " ", formatter(xi)) : missing, x)
     else
