@@ -148,7 +148,7 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
             "\" />"
     elseif ext == "png"
         html =
-            "<img src=\"data:image/apng;base64," *
+            "<img src=\"data:image/png;base64," *
             base64encode(read(agif.filename)) *
             "\" />"
     elseif ext in ("mov", "mp4", "webm")
@@ -167,8 +167,12 @@ end
 
 # Only gifs can be shown via image/gif
 Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
+Base.showable(::MIME"image/png", agif::AnimatedGif) = file_extension(agif.filename) == "png"
 
 Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif) =
+    open(fio -> write(io, fio), agif.filename)
+
+Base.show(io::IO, ::MIME"image/png", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
 
 # -----------------------------------------------
