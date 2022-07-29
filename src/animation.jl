@@ -126,7 +126,7 @@ function buildanimation(
     elseif file_extension(fn)=="png"
         # FFMPEG specific command for APNG (Animated PNG) animations
         ffmpeg_exe(
-            `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -f apng -loop $loop -y $fn`,
+            `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -plays $loop -f apng  -y $fn`,
         )
     else
         ffmpeg_exe(
@@ -177,7 +177,7 @@ Base.show(io::IO, ::MIME"image/png", agif::AnimatedGif) =
 
 # -----------------------------------------------
 
-function _animate(forloop::Expr, args...; callgif = false)
+function _animate(forloop::Expr, args...; type::Symbol = :none)
     if forloop.head ∉ (:for, :while)
         error("@animate macro expects a for- or while-block. got: $(forloop.head)")
     end
@@ -218,7 +218,14 @@ function _animate(forloop::Expr, args...; callgif = false)
     push!(block.args, :($countersym += 1))
 
     # add a final call to `gif(anim)`?
-    retval = callgif ? :(Plots.gif($animsym)) : animsym
+    if type == :gif
+        retval = :(Plots.gif($animsym))
+    elseif type == :apng
+        retval = :(Plots.apng($animsym))
+    else
+        retval = animsym
+    end
+
 
     # full expression:
     esc(quote
@@ -244,7 +251,24 @@ Example:
 ```
 """
 macro gif(forloop::Expr, args...)
-    _animate(forloop, args...; callgif = true)
+    _animate(forloop, args...; type=:gif)
+end
+
+"""
+Builds an `Animation` using one frame per loop iteration, then create an animated PNG (APNG).
+
+Example:
+
+```
+  p = plot(1)
+  @apng for x=0:0.1:5
+    push!(p, 1, sin(x))
+  end
+```
+"""
+macro apng(forloop::Expr, args...)
+    _animate(forloop, args...; type=:apng)
+
 end
 
 """
@@ -261,5 +285,5 @@ gif(anim)
 ```
 """
 macro animate(forloop::Expr, args...)
-    _animate(forloop, args...)
+    _animate(forloop, args...; type=:none)
 end
