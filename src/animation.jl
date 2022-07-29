@@ -22,7 +22,7 @@ giffn() = (isijulia() ? "tmp.gif" : tempname() * ".gif")
 movfn() = (isijulia() ? "tmp.mov" : tempname() * ".mov")
 mp4fn() = (isijulia() ? "tmp.mp4" : tempname() * ".mp4")
 webmfn() = (isijulia() ? "tmp.webm" : tempname() * ".webm")
-pngfn() = (isijulia() ? "tmp.png" : tempname() * ".png")
+apngfn() = (isijulia() ? "tmp.png" : tempname() * ".png")
 
 mutable struct FrameIterator
     itr
@@ -79,10 +79,10 @@ Creates an .webm-file from an `Animation` object.
 """
 webm(anim::Animation, fn = webmfn(); kw...) = buildanimation(anim, fn, false; kw...)
 """
-    png(animation[, filename]; fps=20, loop=0, variable_palette=false, verbose=false, show_msg=true)
+    apng(animation[, filename]; fps=20, loop=0, variable_palette=false, verbose=false, show_msg=true)
 Creates an animated .png-file from an `Animation` object.
 """
-png(anim::Animation, fn = pngfn(); kw...) = buildanimation(anim, fn, false; kw...)
+apng(anim::Animation, fn = apngfn(); kw...) = buildanimation(anim, fn, false; kw...)
 
 ffmpeg_framerate(fps) = "$fps"
 ffmpeg_framerate(fps::Rational) = "$(fps.num)/$(fps.den)"
