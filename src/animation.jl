@@ -22,7 +22,7 @@ giffn() = (isijulia() ? "tmp.gif" : tempname() * ".gif")
 movfn() = (isijulia() ? "tmp.mov" : tempname() * ".mov")
 mp4fn() = (isijulia() ? "tmp.mp4" : tempname() * ".mp4")
 webmfn() = (isijulia() ? "tmp.webm" : tempname() * ".webm")
-apngfn() = (isijulia() ? "tmp.png" : tempname() * ".png")
+apngfn() = (isijulia() ? "tmp.apng" : tempname() * ".apng")
 
 mutable struct FrameIterator
     itr
@@ -123,7 +123,7 @@ function buildanimation(
                 `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn`,
             )
         end
-    elseif file_extension(fn) == "png"
+    elseif file_extension(fn) == "apng"
         # FFMPEG specific command for APNG (Animated PNG) animations
         ffmpeg_exe(
             `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -plays $loop -f apng  -y $fn`,
@@ -146,7 +146,7 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
             "<img src=\"data:image/gif;base64," *
             base64encode(read(agif.filename)) *
             "\" />"
-    elseif ext == "png"
+    elseif ext == "apng"
         html =
             "<img src=\"data:image/png;base64," *
             base64encode(read(agif.filename)) *
@@ -167,7 +167,8 @@ end
 
 # Only gifs can be shown via image/gif
 Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
-Base.showable(::MIME"image/png", agif::AnimatedGif) = file_extension(agif.filename) == "png"
+Base.showable(::MIME"image/png", agif::AnimatedGif) =
+    file_extension(agif.filename) == "apng"
 
 Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
