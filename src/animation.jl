@@ -123,7 +123,7 @@ function buildanimation(
                 `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn`,
             )
         end
-    elseif file_extension(fn)=="png"
+    elseif file_extension(fn) == "png"
         # FFMPEG specific command for APNG (Animated PNG) animations
         ffmpeg_exe(
             `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -plays $loop -f apng  -y $fn`,
@@ -226,7 +226,6 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
         animsym
     end
 
-
     # full expression:
     esc(quote
         $freqassert                     # if filtering, check frequency is an Integer > 0
@@ -251,7 +250,7 @@ Example:
 ```
 """
 macro gif(forloop::Expr, args...)
-    _animate(forloop, args...; type=:gif)
+    _animate(forloop, args...; type = :gif)
 end
 
 """
@@ -267,8 +266,7 @@ Example:
 ```
 """
 macro apng(forloop::Expr, args...)
-    _animate(forloop, args...; type=:apng)
-
+    _animate(forloop, args...; type = :apng)
 end
 
 """
@@ -285,5 +283,5 @@ gif(anim)
 ```
 """
 macro animate(forloop::Expr, args...)
-    _animate(forloop, args...; type=:none)
+    _animate(forloop, args...; type = :none)
 end
