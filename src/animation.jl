@@ -284,5 +284,5 @@ gif(anim)
 ```
 """
 macro animate(forloop::Expr, args...)
-    _animate(forloop, args...; type = :none)
+    _animate(forloop, args...)
 end
