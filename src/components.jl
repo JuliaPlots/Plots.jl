@@ -648,11 +648,11 @@ function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
 
     # !TODO Add more scales in the future (asinh, sqrt) ?
     if scale === :log || scale === :ln
-        exp(log(xmin) + pos.value * (log(xmax / xmin)))
+        exp(log(xmin) + pos.value * log(xmax / xmin))
     elseif scale === :log10
-        exp10(log10(xmin) + pos.value * (log10(xmax / xmin)))
+        exp10(log10(xmin) + pos.value * log10(xmax / xmin))
     elseif scale === :log2
-        exp2(log2(xmin) + pos.value * (log2(xmax / xmin)))
+        exp2(log2(xmin) + pos.value * log2(xmax / xmin))
     else # :identity (linear scale)
         xmin + pos.value * (xmax - xmin)
     end
