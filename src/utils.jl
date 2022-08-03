@@ -273,10 +273,14 @@ function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
     extra_max = (v[end] - v[end - 1]) / 2
     vcat(vmin - extra_min, 0.5 * (v[1:(end - 1)] + v[2:end]), vmax + extra_max)
 end
+function _heatmap_edges(v::AMat, isedges::Bool = false, ispolar::Bool = false)
+    # For now, don't handle edges here and just defer to the backend
+    v
+end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
 function heatmap_edges(
-    v::AVec,
+    v::Union{AVec,AMat},
     scale::Symbol = :identity,
     isedges::Bool = false,
     ispolar::Bool = false,
@@ -302,6 +306,32 @@ function heatmap_edges(
         error("""Length of x & y does not match the size of z.
                 Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
                 or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
+    end
+    x, y = heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
+    return x, y
+end
+
+function heatmap_edges(
+    x::AMat,
+    xscale::Symbol,
+    y::AMat,
+    yscale::Symbol,
+    z_size::Tuple{Int,Int},
+    ispolar::Bool = false,
+)
+    x_size = size(x)
+    y_size = size(y)
+    if x_size != y_size
+        error("""When x and y are 2d, they must have the same size""")
+    end
+    ismidpoints = z_size == x_size
+    isedges = (z_size[1] + 1, z_size[2] + 1) == x_size
+    if !ismidpoints && !isedges
+        println("z_size=$z_size, x_size=$x_size, y_size=$y_size")
+        println("x $(typeof(x)), y $(typeof(y))")
+        error("""Size of x & y does not match the size of z.
+                Must be either `size(z) == size(x) == size(y))` (x & y define midpoints)
+                or `(size(z)[1]+1,size(z)[2]+1) == size(x) == size(y)` (x & y define edges).""")
     end
     x, y = heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
     return x, y
