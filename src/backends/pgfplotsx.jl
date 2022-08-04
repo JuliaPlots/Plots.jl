@@ -200,6 +200,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 colorbar_style = if sp[:colorbar] === :top
                     push!(
                         Options("xlabel" => sp[:colorbar_title]),
+                        "xlabel style" => pgfx_get_colorbar_title_style(sp),
                         "at" => "(0.5, 1.05)",
                         "anchor" => "south",
                         "xtick" => cticks,
@@ -209,6 +210,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 else
                     push!(
                         Options("ylabel" => sp[:colorbar_title]),
+                        "ylabel style" => pgfx_get_colorbar_title_style(sp),
                         "ytick" => cticks,
                         "yticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     )
@@ -806,6 +808,15 @@ function pgfx_get_colorbar_ticklabel_style(sp)
         "color" => cstr,
         "draw opacity" => alpha(cstr),
         "rotate" => sp[:colorbar_tickfontrotation],
+    )
+end
+function pgfx_get_colorbar_title_style(sp)
+    cstr = plot_color(sp[:colorbar_titlefontcolor])
+    return Options(
+        "font" => pgfx_font(sp[:colorbar_titlefontsize], pgfx_thickness_scaling(sp)),
+        "color" => cstr,
+        "draw opacity" => alpha(cstr),
+        "rotate" => sp[:colorbar_titlefontrotation],
     )
 end
 
