@@ -329,9 +329,11 @@ function heatmap_edges(
     if !ismidpoints && !isedges
         println("z_size=$z_size, x_size=$x_size, y_size=$y_size")
         println("x $(typeof(x)), y $(typeof(y))")
-        error("""Size of x & y does not match the size of z.
-                Must be either `size(z) == size(x) == size(y))` (x & y define midpoints)
-                or `(size(z)[1]+1,size(z)[2]+1) == size(x) == size(y)` (x & y define edges).""")
+        error(
+            """Size of x & y does not match the size of z.
+              Must be either `size(z) == size(x) == size(y))` (x & y define midpoints)
+              or `(size(z)[1]+1,size(z)[2]+1) == size(x) == size(y)` (x & y define edges).""",
+        )
     end
     x, y = heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
     return x, y
