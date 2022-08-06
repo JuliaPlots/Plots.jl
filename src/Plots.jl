@@ -122,11 +122,9 @@ export
     mov,
     mp4,
     webm,
-    apng,
     animate,
     @animate,
     @gif,
-    @apng,
 
     test_examples,
     iter_segments,
