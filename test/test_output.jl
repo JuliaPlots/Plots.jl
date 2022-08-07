@@ -9,6 +9,12 @@ macro test_save(fmt)
             @test isfile(fn_ext)
             @test_throws ErrorException savefig(string(fn, ".foo"))
         end
+
+        let pl = plot(1:10), io = PipeBuffer()
+            getfield(Plots, $fmt)(pl, io)
+            getfield(Plots, $fmt)(io)
+            @test length(io.data) > 10
+        end
     end |> esc
 end
 
