@@ -14,22 +14,22 @@ elseif !ismultios && !ismultiversion
         _precompile_()
     end
 else
-    @static if v"1.6.0-DEV" <= VERSION <= v"1.6.9" 
+    @static if v"1.6.0-DEV" <= VERSION <= v"1.6.999"
     @static if isfile(joinpath(@__DIR__, "../deps/SnoopCompile/precompile//1.6/precompile_Plots.jl"))
         include("../deps/SnoopCompile/precompile//1.6/precompile_Plots.jl")
         _precompile_()
     end
-elseif v"1.7.0-DEV" <= VERSION <= v"1.7.9" 
+elseif v"1.7.0-DEV" <= VERSION <= v"1.7.999"
     @static if isfile(joinpath(@__DIR__, "../deps/SnoopCompile/precompile//1.7/precompile_Plots.jl"))
         include("../deps/SnoopCompile/precompile//1.7/precompile_Plots.jl")
         _precompile_()
     end
-elseif v"1.8.0-DEV" <= VERSION <= v"1.8.9" 
+elseif v"1.8.0-DEV" <= VERSION <= v"1.8.999"
     @static if isfile(joinpath(@__DIR__, "../deps/SnoopCompile/precompile//1.8/precompile_Plots.jl"))
         include("../deps/SnoopCompile/precompile//1.8/precompile_Plots.jl")
         _precompile_()
     end
-elseif v"1.9.0-DEV" <= VERSION <= v"1.9.9" 
+elseif v"1.9.0-DEV" <= VERSION <= v"1.9.999"
     @static if isfile(joinpath(@__DIR__, "../deps/SnoopCompile/precompile//1.9/precompile_Plots.jl"))
         include("../deps/SnoopCompile/precompile//1.9/precompile_Plots.jl")
         _precompile_()
