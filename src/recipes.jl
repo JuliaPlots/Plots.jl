@@ -1663,10 +1663,9 @@ end
 
 @userplot AreaPlot
 
-@recipe function f(a::AreaPlot)
+@recipe function f(a::AreaPlot; seriestype = :line)
     data = cumsum(a.args[end], dims = 2)
     x = length(a.args) == 1 ? (axes(data, 1)) : a.args[1]
-    seriestype := :line
     for i in axes(data, 2)
         @series begin
             fillrange := i > 1 ? data[:, i - 1] : 0
