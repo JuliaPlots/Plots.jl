@@ -63,7 +63,17 @@ end
     ygrid!(true)
     @test sp[:yaxis][:grid]
 
+    # multiple annotations
     ann = [(7, 3, "(7,3)"), (3, 7, text("hey", 14, :left, :top, :green))]
+    annotate!(pl, ann)
+    show(devnull, pl)
+    annotate!(pl, ann...)
+    show(devnull, pl)
+    annotate!(ann...)
+    show(devnull, pl)
+
+    # single annotation
+    ann = (3, 7, text("hey", 14, :left, :top, :green))
     annotate!(pl, ann)
     show(devnull, pl)
     annotate!(pl, ann...)
