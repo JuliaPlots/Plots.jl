@@ -17,7 +17,6 @@ macro test_save(fmt)
             @test isfile(fn_ext)
             @test isfile(fp_ext)
 
-
             @test_throws ErrorException savefig(string(fn, ".foo"))
             @test_throws ErrorException savefig(string(fp, ".foo"))
         end
