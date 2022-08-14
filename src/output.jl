@@ -112,11 +112,10 @@ const _extension_map = Dict("tikz" => "tex")
 Change filepath extension according to the extension map
 """
 function addExtension(fp, ext::AbstractString)
-    parent = dirname(fp)
-    fn = basename(fp)
-    oldfn, oldext = splitext(fn)
+    dn, fn = splitdir(fp)
+    _, oldext = splitext(fn)
     oldext = chop(oldext, head = 1, tail = 0)
-    get(_extension_map, oldext, oldext) == ext ? fp : joinpath(parent, string(fn, ".", ext))
+    get(_extension_map, oldext, oldext) == ext ? fp : joinpath(dn, string(fn, ".", ext))
 end
 
 """
@@ -126,7 +125,7 @@ Save a Plot (the current plot if `plot` is not passed) to file. The file
 type is inferred from the file extension. All backends support png and pdf
 file types, some also support svg, ps, eps, html and tex.
 """
-function savefig(plt::Plot, fn)
+function savefig(plt::Plot, fn) # fn might be an `AbstractString` or an `AbstractPath` from `FilePaths.jl`
     fn = abspath(expanduser(fn))
 
     # get the extension

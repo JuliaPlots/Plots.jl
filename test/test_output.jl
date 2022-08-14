@@ -1,6 +1,6 @@
 macro test_save(fmt)
     quote
-        let pl = plot(1:10), fn = tempname()
+        let pl = plot(1:10), fn = tmpname() # fn is an AbstractPath from FilePathsBase.jl
             getfield(Plots, $fmt)(pl, fn)
             getfield(Plots, $fmt)(fn)
             fn_ext = string(fn, '.', $fmt)
