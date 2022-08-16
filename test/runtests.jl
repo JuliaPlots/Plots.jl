@@ -10,6 +10,7 @@ using LaTeXStrings
 using RecipesBase
 using TestImages
 using FileIO
+using FilePathsBase
 using Plots
 using Dates
 using Test

@@ -1,13 +1,24 @@
 macro test_save(fmt)
     quote
-        let pl = plot(1:10), fn = tempname()
+        let pl = plot(1:10), fn = tempname(), fp = tmpname() # fp is an AbstractPath from FilePathsBase.jl
             getfield(Plots, $fmt)(pl, fn)
             getfield(Plots, $fmt)(fn)
+            getfield(Plots, $fmt)(fp)
+
             fn_ext = string(fn, '.', $fmt)
-            savefig(pl, fn_ext)
+            fp_ext = string(fp, '.', $fmt)
+
             savefig(fn_ext)
+            savefig(fp_ext)
+
+            savefig(pl, fn_ext)
+            savefig(pl, fp_ext)
+
             @test isfile(fn_ext)
+            @test isfile(fp_ext)
+
             @test_throws ErrorException savefig(string(fn, ".foo"))
+            @test_throws ErrorException savefig(string(fp, ".foo"))
         end
 
         let pl = plot(1:10), io = PipeBuffer()
