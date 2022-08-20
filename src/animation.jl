@@ -123,7 +123,7 @@ function buildanimation(
                 `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn`,
             )
         end
-    elseif file_extension(fn) == "png"
+    elseif file_extension(fn) in ["png", "apng"]
         # FFMPEG specific command for APNG (Animated PNG) animations
         ffmpeg_exe(
             `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -plays $loop -f apng  -y $fn`,
