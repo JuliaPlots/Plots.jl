@@ -22,7 +22,7 @@ giffn() = (isijulia() ? "tmp.gif" : tempname() * ".gif")
 movfn() = (isijulia() ? "tmp.mov" : tempname() * ".mov")
 mp4fn() = (isijulia() ? "tmp.mp4" : tempname() * ".mp4")
 webmfn() = (isijulia() ? "tmp.webm" : tempname() * ".webm")
-apngfn() = (isijulia() ? "tmp.apng" : tempname() * ".apng")
+apngfn() = (isijulia() ? "tmp.png" : tempname() * ".png")
 
 mutable struct FrameIterator
     itr
@@ -123,7 +123,7 @@ function buildanimation(
                 `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn`,
             )
         end
-    elseif file_extension(fn) == "apng"
+    elseif file_extension(fn) == "png"
         # FFMPEG specific command for APNG (Animated PNG) animations
         ffmpeg_exe(
             `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -plays $loop -f apng  -y $fn`,
