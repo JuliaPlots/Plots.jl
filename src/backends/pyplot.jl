@@ -368,11 +368,22 @@ end
 
 function py_init_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
     fig = plt.o
-    proj = sp[:projection]
-    proj = (proj in (nothing, :none) ? nothing : string(proj))
-
+    projection = (proj = sp[:projection]) in (nothing, :none) ? nothing : string(proj)
+    kw = if projection == "3d"
+        # PyPlot defaults to :perspective projection by default
+        (;
+            proj_type = (auto = "persp", orthographic = "ortho", perspective = "persp")[sp[:projection_type]]
+        )
+    else
+        (;)
+    end
     # add a new axis, and force it to create a new one by setting a distinct label
-    ax = fig."add_axes"([0, 0, 1, 1], label = string(gensym()), projection = proj)
+    ax = fig."add_axes"(
+        [0, 0, 1, 1];
+        label = string(gensym()),
+        projection = projection,
+        kw...,
+    )
     sp.o = ax
 end
 

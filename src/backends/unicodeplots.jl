@@ -74,7 +74,11 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
 
         plot_3d && (xlim = ylim = (0, 0))  # determined using projection
         azimuth, elevation = sp[:camera]  # PyPlot: azimuth = -60 & elevation = 30
-        projection = plot_3d ? get(sp_kw, :projection, :orthographic) : nothing
+        projection = if plot_3d
+            (pt = sp[:projection_type]) === :auto ? :orthographic : pt
+        else
+            nothing
+        end
 
         kw = (
             compact = true,

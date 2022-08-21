@@ -152,6 +152,10 @@ function gr_set_fillstyle(s::Symbol)
     GR.setfillstyle(get(((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6), s, 9))
 end
 
+function gr_set_projectiontype(sp)
+    proj_type = (auto = 0, orthographic = 1, perspective = 2)[sp[:projection_type]]
+    GR.setprojectiontype(proj_type)
+end
 # --------------------------------------------------------------------------------------
 
 # draw line segments, splitting x/y into contiguous/finite segments
@@ -265,7 +269,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(sp, yaxis, update = false)
 
-    #draw angular grid
+    # draw angular grid
     if xaxis[:grid]
         gr_set_line(
             xaxis[:gridlinewidth],
@@ -279,7 +283,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
         end
     end
 
-    #draw radial grid
+    # draw radial grid
     if yaxis[:grid]
         gr_set_line(
             yaxis[:gridlinewidth],
@@ -297,12 +301,12 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
         GR.drawarc(-1, 1, -1, 1, 0, 359)
     end
 
-    #prepare to draw ticks
+    # prepare to draw ticks
     gr_set_transparency(1)
     GR.setlinecolorind(90)
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
 
-    #draw angular ticks
+    # draw angular ticks
     if xaxis[:showaxis]
         GR.drawarc(-1, 1, -1, 1, 0, 359)
         for i in eachindex(α)
@@ -311,7 +315,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
         end
     end
 
-    #draw radial ticks
+    # draw radial ticks
     if yaxis[:showaxis]
         for i in eachindex(rtick_values)
             r = (rtick_values[i] - rmin) / (rmax - rmin)
@@ -1446,6 +1450,7 @@ function gr_draw_axes(sp, viewport_plotarea)
 
     if gr_is3d(sp)
         # set space
+        gr_set_projectiontype(sp)
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         zmin, zmax = gr_z_axislims(sp)
 
@@ -1866,6 +1871,7 @@ function gr_add_series(sp, series)
         GR.setwindow(-1, 1, -1, 1)
         gr_draw_surface(series, x, y, z, clims)
     elseif st === :volume
+        gr_set_projectiontype(series[:subplot])
         sp[:legend_position] = :none
         GR.gr3.clear()
         dmin, dmax = GR.gr3.volume(y.v, 0)
@@ -1940,6 +1946,7 @@ function gr_draw_segments(series, x, y, fillrange, clims)
 end
 
 function gr_draw_segments_3d(series, x, y, z, clims)
+    gr_set_projectiontype(series[:subplot])
     if series[:seriestype] === :path3d && length(x) > 1
         lz = series[:line_z]
         segments = series_segments(series, :path3d; check = true)
@@ -2039,6 +2046,7 @@ function gr_draw_contour(series, x, y, z, clims)
 end
 
 function gr_draw_surface(series, x, y, z, clims)
+    gr_set_projectiontype(series[:subplot])
     e_kwargs = series[:extra_kwargs]
     st = series[:seriestype]
     if st === :surface

@@ -495,17 +495,30 @@ const _examples = PlotExample[
                     x = ts .* map(cos, ts)
                     y = 0.1ts .* map(sin, ts)
                     z = 1:n
+
+                    plot_3d(; kw...) = begin
+                        p = plot(
+                            x,
+                            y,
+                            z;
+                            zcolor = reverse(z),
+                            m = (5, 0.8, :blues, Plots.stroke(0)),
+                            leg = false,
+                            w = 2,
+                            kw...,
+                        )
+                        plot!(p, zeros(n), zeros(n), 1:n, w = 4)
+                        p
+                    end
+
                     plot(
-                        x,
-                        y,
-                        z,
-                        zcolor = reverse(z),
-                        m = (10, 0.8, :blues, Plots.stroke(0)),
-                        leg = false,
-                        cbar = true,
-                        w = 5,
+                        plot_3d(
+                            projection_type = :orthographic,
+                            title = "orthographic",
+                            cbar = true,
+                        ),
+                        plot_3d(projection_type = :perspective, title = "perspective"),
                     )
-                    plot!(zeros(n), zeros(n), 1:n, w = 10)
                 end
             ),
         ],
@@ -1183,15 +1196,16 @@ const _examples = PlotExample[
                     x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
                     args = x, y, (x, y) -> sinc(norm([x, y]) / π)
-                    kwargs = Dict(
-                        :xlabel => "x",
-                        :ylabel => "y",
-                        :zlabel => "z",
-                        :grid => true,
-                        :minorgrid => true,
+                    kw = (
+                        xlabel = "x",
+                        ylabel = "y",
+                        zlabel = "z",
+                        grid = true,
+                        minorgrid = true,
+                        projection_type = :orthographic,
                     )
 
-                    plots = [wireframe(args..., title = "wire"; kwargs...)]
+                    plots = [wireframe(args..., title = "wire"; kw...)]
 
                     for ax in (:x, :y, :z)
                         push!(
@@ -1202,7 +1216,7 @@ const _examples = PlotExample[
                                 xflip = ax === :x,
                                 yflip = ax === :y,
                                 zflip = ax === :z;
-                                kwargs...,
+                                kw...,
                             ),
                         )
                     end
@@ -1216,7 +1230,7 @@ const _examples = PlotExample[
                                 xmirror = ax === :x,
                                 ymirror = ax === :y,
                                 zmirror = ax === :z;
-                                kwargs...,
+                                kw...,
                             ),
                         )
                     end

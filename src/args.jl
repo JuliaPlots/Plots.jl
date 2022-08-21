@@ -464,7 +464,8 @@ const _subplot_defaults = KW(
     :annotationrotation => 0.0,
     :annotationcolor => :match,
     :projection => :none,             # can also be :polar or :3d
-    :aspect_ratio => :auto,             # choose from :none or :equal
+    :projection_type => :auto,        # can also be :orthographic or :perspective
+    :aspect_ratio => :auto,           # choose from :none or :equal
     :margin => 1mm,
     :left_margin => :match,
     :top_margin => :match,
@@ -988,6 +989,7 @@ add_aliases(:show_empty_bins, :showemptybins, :showempty, :show_empty)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
+add_aliases(:projection_type, :proj_type)
 add_aliases(
     :titlelocation,
     :title_location,
