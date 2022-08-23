@@ -22,6 +22,7 @@ giffn() = (isijulia() ? "tmp.gif" : tempname() * ".gif")
 movfn() = (isijulia() ? "tmp.mov" : tempname() * ".mov")
 mp4fn() = (isijulia() ? "tmp.mp4" : tempname() * ".mp4")
 webmfn() = (isijulia() ? "tmp.webm" : tempname() * ".webm")
+apngfn() = (isijulia() ? "tmp.png" : tempname() * ".png")
 
 mutable struct FrameIterator
     itr
@@ -77,6 +78,11 @@ mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim, fn, false; kw..
 Creates an .webm-file from an `Animation` object.
 """
 webm(anim::Animation, fn = webmfn(); kw...) = buildanimation(anim, fn, false; kw...)
+"""
+    apng(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
+Creates an animated .apng-file from an `Animation` object.
+"""
+apng(anim::Animation, fn = apngfn(); kw...) = buildanimation(anim, fn, false; kw...)
 
 ffmpeg_framerate(fps) = "$fps"
 ffmpeg_framerate(fps::Rational) = "$(fps.num)/$(fps.den)"
@@ -117,6 +123,11 @@ function buildanimation(
                 `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn`,
             )
         end
+    elseif file_extension(fn) in ("png", "apng")
+        # FFMPEG specific command for APNG (Animated PNG) animations
+        ffmpeg_exe(
+            `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -plays $loop -f apng  -y $fn`,
+        )
     else
         ffmpeg_exe(
             `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -vf format=yuv420p -loop $loop -y $fn`,
@@ -135,6 +146,11 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
             "<img src=\"data:image/gif;base64," *
             base64encode(read(agif.filename)) *
             "\" />"
+    elseif ext == "apng"
+        html =
+            "<img src=\"data:image/png;base64," *
+            base64encode(read(agif.filename)) *
+            "\" />"
     elseif ext in ("mov", "mp4", "webm")
         mimetype = ext == "mov" ? "video/quicktime" : "video/$ext"
         html =
@@ -151,13 +167,18 @@ end
 
 # Only gifs can be shown via image/gif
 Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
+Base.showable(::MIME"image/png", agif::AnimatedGif) =
+    file_extension(agif.filename) == "apng"
 
 Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
 
+Base.show(io::IO, ::MIME"image/png", agif::AnimatedGif) =
+    open(fio -> write(io, fio), agif.filename)
+
 # -----------------------------------------------
 
-function _animate(forloop::Expr, args...; callgif = false)
+function _animate(forloop::Expr, args...; type::Symbol = :none)
     if forloop.head ∉ (:for, :while)
         error("@animate macro expects a for- or while-block. got: $(forloop.head)")
     end
@@ -198,7 +219,13 @@ function _animate(forloop::Expr, args...; callgif = false)
     push!(block.args, :($countersym += 1))
 
     # add a final call to `gif(anim)`?
-    retval = callgif ? :(Plots.gif($animsym)) : animsym
+    retval = if type === :gif
+        :(Plots.gif($animsym))
+    elseif type === :apng
+        :(Plots.apng($animsym))
+    else
+        animsym
+    end
 
     # full expression:
     esc(quote
@@ -224,7 +251,23 @@ Example:
 ```
 """
 macro gif(forloop::Expr, args...)
-    _animate(forloop, args...; callgif = true)
+    _animate(forloop, args...; type = :gif)
+end
+
+"""
+Builds an `Animation` using one frame per loop iteration, then create an animated PNG (APNG).
+
+Example:
+
+```
+  p = plot(1)
+  @apng for x=0:0.1:5
+    push!(p, 1, sin(x))
+  end
+```
+"""
+macro apng(forloop::Expr, args...)
+    _animate(forloop, args...; type = :apng)
 end
 
 """

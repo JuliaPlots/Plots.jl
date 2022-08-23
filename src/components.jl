@@ -644,7 +644,19 @@ function process_annotation(
     anns
 end
 
-_relative_position(xmin, xmax, pos::Length{:pct}) = xmin + pos.value * (xmax - xmin)
+function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
+
+    # !TODO Add more scales in the future (asinh, sqrt) ?
+    if scale === :log || scale === :ln
+        exp(log(xmin) + pos.value * log(xmax / xmin))
+    elseif scale === :log10
+        exp10(log10(xmin) + pos.value * log10(xmax / xmin))
+    elseif scale === :log2
+        exp2(log2(xmin) + pos.value * log2(xmax / xmin))
+    else # :identity (linear scale)
+        xmin + pos.value * (xmax - xmin)
+    end
+end
 
 # Give each annotation coordinates based on specified position
 function locate_annotation(
@@ -662,8 +674,16 @@ function locate_annotation(
 )
     x, y = position_multiplier[pos]
     (
-        _relative_position(axis_limits(sp, :x)..., x),
-        _relative_position(axis_limits(sp, :y)..., y),
+        _relative_position(
+            axis_limits(sp, :x)...,
+            x,
+            sp[get_attr_symbol(:x, :axis)][:scale],
+        ),
+        _relative_position(
+            axis_limits(sp, :y)...,
+            y,
+            sp[get_attr_symbol(:y, :axis)][:scale],
+        ),
         label,
     )
 end
@@ -671,14 +691,34 @@ locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
 locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
 
 locate_annotation(sp::Subplot, rel::NTuple{2,<:Number}, label::PlotText) = (
-    _relative_position(axis_limits(sp, :x)..., rel[1] * Plots.pct),
-    _relative_position(axis_limits(sp, :y)..., rel[2] * Plots.pct),
+    _relative_position(
+        axis_limits(sp, :x)...,
+        rel[1] * Plots.pct,
+        sp[get_attr_symbol(:x, :axis)][:scale],
+    ),
+    _relative_position(
+        axis_limits(sp, :y)...,
+        rel[2] * Plots.pct,
+        sp[get_attr_symbol(:y, :axis)][:scale],
+    ),
     label,
 )
 locate_annotation(sp::Subplot, rel::NTuple{3,<:Number}, label::PlotText) = (
-    _relative_position(axis_limits(sp, :x)..., rel[1] * Plots.pct),
-    _relative_position(axis_limits(sp, :y)..., rel[2] * Plots.pct),
-    _relative_position(axis_limits(sp, :z)..., rel[3] * Plots.pct),
+    _relative_position(
+        axis_limits(sp, :x)...,
+        rel[1] * Plots.pct,
+        sp[get_attr_symbol(:x, :axis)][:scale],
+    ),
+    _relative_position(
+        axis_limits(sp, :y)...,
+        rel[2] * Plots.pct,
+        sp[get_attr_symbol(:y, :axis)][:scale],
+    ),
+    _relative_position(
+        axis_limits(sp, :z)...,
+        rel[3] * Plots.pct,
+        sp[get_attr_symbol(:z, :axis)][:scale],
+    ),
     label,
 )
 # -----------------------------------------------------------------------

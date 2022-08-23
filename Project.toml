@@ -1,7 +1,7 @@
 name = "Plots"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 author = ["Tom Breloff (@tbreloff)"]
-version = "1.31.4"
+version = "1.31.7"
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -68,6 +68,7 @@ julia = "1.6"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
 Gaston = "4b11ee91-296f-5714-9832-002c20994614"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
@@ -91,4 +92,6 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["Colors", "Distributions", "FileIO", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "HDF5", "RDatasets", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "VisualRegressionTests"]
+test = ["Colors", "Distributions", "FilePathsBase", "FileIO", "Gaston", 
+GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "HDF5", "RDatasets", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "VisualRegressionTests"]
+

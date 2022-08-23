@@ -452,4 +452,14 @@ with(:pgfplotsx) do
         @test Plots.pgfx_sanitize_string(L"this is #5").s == raw"$this is \#5$"
         @test Plots.pgfx_sanitize_string(L"10% increase").s == raw"$10\% increase$"
     end
+
+    if Sys.islinux()
+        @testset "Issues - actually compile `.tex`" begin
+            # Plots.jl/issues/4308
+            fn = tempname() * ".pdf"
+            pl = plot((1:1000) .^ 2, (1:1000) .^ 2, xscale = :log10)
+            Plots.pdf(pl, fn)
+            @test isfile(fn)
+        end
+    end
 end

@@ -200,6 +200,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 colorbar_style = if sp[:colorbar] === :top
                     push!(
                         Options("xlabel" => sp[:colorbar_title]),
+                        "xlabel style" => pgfx_get_colorbar_title_style(sp),
                         "at" => "(0.5, 1.05)",
                         "anchor" => "south",
                         "xtick" => cticks,
@@ -209,6 +210,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 else
                     push!(
                         Options("ylabel" => sp[:colorbar_title]),
+                        "ylabel style" => pgfx_get_colorbar_title_style(sp),
                         "ytick" => cticks,
                         "yticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     )
@@ -808,6 +810,15 @@ function pgfx_get_colorbar_ticklabel_style(sp)
         "rotate" => sp[:colorbar_tickfontrotation],
     )
 end
+function pgfx_get_colorbar_title_style(sp)
+    cstr = plot_color(sp[:colorbar_titlefontcolor])
+    return Options(
+        "font" => pgfx_font(sp[:colorbar_titlefontsize], pgfx_thickness_scaling(sp)),
+        "color" => cstr,
+        "draw opacity" => alpha(cstr),
+        "rotate" => sp[:colorbar_titlefontrotation],
+    )
+end
 
 ## --------------------------------------------------------------------------------------
 pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
@@ -1124,11 +1135,13 @@ function pgfx_sanitize_plot!(plt)
 end
 
 # surround the power part of label with curly braces
-function wrap_power_labels(labels)
+wrap_power_labels(labels::AVec{LaTeXString}) = labels
+function wrap_power_labels(labels::AVec{<:AbstractString})
     new_labels = copy(labels)
     for (i, label) in enumerate(labels)
-        occursin("^", label) || continue
-        base, power = split(label, "^")
+        startswith(label, '$') && continue  # already in `mathmode` form
+        occursin('^', label) || continue
+        base, power = split(label, '^')
         new_labels[i] = "$base^$(curly(power))"
     end
     new_labels
@@ -1209,26 +1222,27 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
     push!(opt, "$(letter)min" => lims[1], "$(letter)max" => lims[2])
 
     if axis[:ticks] ∉ (nothing, false, :none, :native) && framestyle !== :none
-        # ticks
-        ticks = get_ticks(sp, axis, formatter = latex_formatter(axis[:formatter]))
-        # pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
+        vals, labs =
+            ticks = get_ticks(sp, axis, formatter = latex_formatter(axis[:formatter]))
+        # pgfplot ignores ticks with angles below `90` when `xmin = 90`, so shift values
         tick_values = if ispolar(sp) && letter === :x
-            vcat(rad2deg.(ticks[1][3:end]), 360, 405)
+            vcat(rad2deg.(vals[3:end]), 360, 405)
         else
-            ticks[1]
+            vals
         end
         tick_labels = if axis[:showaxis]
             if is_log_scale && axis[:ticks] === :auto
-                if (labels = wrap_power_labels(ticks[2])) isa Vector{String}
-                    '$' * join(labels, "\$,\$") * '$'
+                labels = wrap_power_labels(labs)
+                if (lab = first(labels)) isa LaTeXString || startswith(lab, '$')
+                    join(labels, ',')
                 else
-                    join(labels, ',')  # LaTeXStrings
+                    '$' * join(labels, "\$,\$") * '$'
                 end
             else
                 labels = if ispolar(sp) && letter === :x
-                    vcat(ticks[2][3:end], "0", "45")
+                    vcat(labs[3:end], "0", "45")
                 else
-                    ticks[2]
+                    labs
                 end
                 join(is_log_scale ? wrap_power_labels(labels) : labels, ',')
             end

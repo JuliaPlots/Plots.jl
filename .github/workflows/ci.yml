@@ -34,7 +34,8 @@ jobs:
           - x64
           # - x86
         include:
-          - version: 'nightly'
+          # - version: 'nightly'
+          - version: '~1.8.0-0'
             os: ubuntu-latest
 
     steps:

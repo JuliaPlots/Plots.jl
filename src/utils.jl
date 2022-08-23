@@ -295,8 +295,8 @@ function heatmap_edges(
     isedges = z_size == (ny - 1, nx - 1)
     if !ismidpoints && !isedges
         error("""Length of x & y does not match the size of z.
-                Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
-                or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
+              Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+              or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
     end
     x, y = heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
     return x, y

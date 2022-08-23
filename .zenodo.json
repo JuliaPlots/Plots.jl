@@ -461,6 +461,12 @@
             "orcid": "0000-0001-8390-0087"
         },
         {
+            "affiliation": "Université de Rennes",
+            "name": "Brian Sinquin",
+            "type": "Other",
+            "orcid": "0000-0001-8278-394X"
+        },
+        {
             "name": "Christina Lee",
             "type": "Other"
         },
@@ -719,6 +725,10 @@
         },
         {
             "name": "Nick OBrien",
+            "type": "Other"
+        },
+        {
+            "name": "Henning Labuhn",
             "type": "Other"
         }
     ],
