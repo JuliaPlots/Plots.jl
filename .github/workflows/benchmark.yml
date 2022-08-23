@@ -22,7 +22,7 @@ jobs:
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"; Pkg.activate("benchmark/"); Pkg.instantiate()'
 
       - name: Run benchmarks
-        run: $TESTCMD -e 'using Pkg; Pkg.activate("benchmark/"); using BenchmarkCI; BenchmarkCI.judge()'
+        run: $TESTCMD -e 'using Pkg; Pkg.activate("benchmark/"); Pkg.instantiate(); using BenchmarkCI; BenchmarkCI.judge()'
       - name: Print judgement
         run: julia -e 'using Pkg; Pkg.activate("benchmark/"); using BenchmarkCI; BenchmarkCI.displayjudgement()'
       - name: Post results
