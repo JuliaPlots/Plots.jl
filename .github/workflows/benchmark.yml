@@ -15,17 +15,17 @@ jobs:
 
       # Setup
       - name: Ubuntu TESTCMD
-        run: echo "TESTCMD=xvfb-run --auto-servernum julia --project=benchmark" >> $GITHUB_ENV
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
       - name: Install Plots dependencies
         uses: julia-actions/julia-buildpkg@latest
       - name: Install Benchmarking dependencies
         run: julia --project=benchmark -e 'using Pkg; pkg"add PkgBenchmark https://github.com/BeastyBlacksmith/BenchmarkCI.jl#bbs/robust_environments"'
 
       - name: Run benchmarks
-        run: $TESTCMD -e 'using BenchmarkCI; using BenchmarkCI; BenchmarkCI.judge()'
+        run: $TESTCMD --project=benchmark -e 'using BenchmarkCI; using BenchmarkCI; BenchmarkCI.judge()'
       - name: Print judgement
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
+        run: julia --project=benchmark -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
       - name: Post results
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
+        run: julia --project=benchmark -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
