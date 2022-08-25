@@ -1096,10 +1096,11 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                 if st in (:path, :straightline, :path3d)
                     gr_set_transparency(lc, get_linealpha(series))
                     # This is to prevent that linestyle is obscured by large markers. 
-                    # We are trying to get markers to not be larger than half the line width. 
-                    # 1 / leg.dy translates width_factor to width units (important in the context of size kwarg)
+                    # We are trying to get markers to not be larger than half the line length. 
+                    # 1 / leg.dy translates width_factor to line length units (important in the context of size kwarg)
                     # 4 is an empirical constant to translate between line length unit and marker size unit
-                    maxmarkersize = (leg.width_factor * 3.5 - leg.width_factor / 2) * 0.5 / leg.dy * 4
+                    maxmarkersize =
+                        (leg.width_factor * 3.5 - leg.width_factor / 2) * 0.5 / leg.dy * 4
                     if series[:fillrange] === nothing || series[:ribbon] !== nothing
                         GR.polyline(
                             [xpos - leg.width_factor * 3.5, xpos - leg.width_factor / 2],
@@ -1116,12 +1117,16 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                 if series[:markershape] !== :none
                     ms = first(series[:markersize])
                     msw = first(series[:markerstrokewidth])
-                    s, sw = min.(maxmarkersize, if ms > 0
-                        0.8 * sp[:legend_font_pointsize],
-                        0.8 * sp[:legend_font_pointsize] * msw / ms
-                    else
-                        0, 0.8 * sp[:legend_font_pointsize] * msw / 8
-                    end)
+                    s, sw =
+                        min.(
+                            maxmarkersize,
+                            if ms > 0
+                                0.8 * sp[:legend_font_pointsize],
+                                0.8 * sp[:legend_font_pointsize] * msw / ms
+                            else
+                                0, 0.8 * sp[:legend_font_pointsize] * msw / 8
+                            end,
+                        )
                     gr_draw_markers(series, xpos - leg.width_factor * 2, ypos, clims, s, sw)
                 end
 
