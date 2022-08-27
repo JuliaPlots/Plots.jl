@@ -152,11 +152,10 @@ function gr_set_fillstyle(s::Symbol)
     GR.setfillstyle(get(((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6), s, 9))
 end
 
-function gr_set_projectiontype(sp)
-    proj_type =
-        (auto = 0, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]]
-    GR.setprojectiontype(proj_type)
-end
+gr_set_projectiontype(sp) = GR.setprojectiontype(
+    (auto = 0, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]],
+)
+
 # --------------------------------------------------------------------------------------
 
 # draw line segments, splitting x/y into contiguous/finite segments

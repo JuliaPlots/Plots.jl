@@ -495,30 +495,17 @@ const _examples = PlotExample[
                     x = ts .* map(cos, ts)
                     y = 0.1ts .* map(sin, ts)
                     z = 1:n
-
-                    plot_3d(; kw...) = begin
-                        p = plot(
-                            x,
-                            y,
-                            z;
-                            zcolor = reverse(z),
-                            m = (5, 0.8, :blues, Plots.stroke(0)),
-                            leg = false,
-                            w = 2,
-                            kw...,
-                        )
-                        plot!(p, zeros(n), zeros(n), 1:n, w = 4)
-                        p
-                    end
-
                     plot(
-                        plot_3d(
-                            projection_type = :orthographic,
-                            title = "orthographic",
-                            cbar = true,
-                        ),
-                        plot_3d(projection_type = :perspective, title = "perspective"),
+                        x,
+                        y,
+                        z,
+                        zcolor = reverse(z),
+                        m = (10, 0.8, :blues, Plots.stroke(0)),
+                        leg = false,
+                        cbar = true,
+                        w = 5,
                     )
+                    plot!(zeros(n), zeros(n), 1:n, w = 10)
                 end
             ),
         ],
@@ -677,9 +664,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 33
         "Magic grid argument",
-        """
-        The grid lines can be modified individually for each axis with the magic `grid` argument.
-        """,
+        "The grid lines can be modified individually for each axis with the magic `grid` argument.",
         [
             :(
                 begin
@@ -749,9 +734,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 36
         "Portfolio Composition maps",
-        """
-        see: http://stackoverflow.com/a/37732384/5075246
-        """,
+        "see: https://stackoverflow.com/a/37732384",
         [:(
             begin
                 using Random
@@ -1281,9 +1264,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 57
         "Vertical and horizonal spans",
-        """
-        `vspan` and `hspan` can be used to shade horizontal and vertical ranges.
-        """,
+        "`vspan` and `hspan` can be used to shade horizontal and vertical ranges.",
         [:(
             begin
                 hspan([1, 2, 3, 4]; label = "hspan", legend = :topleft)
@@ -1294,9 +1275,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 58
         "Stacked area chart",
-        """
-        `areaplot` draws stacked area plots.
-        """,
+        "`areaplot` draws stacked area plots.",
         [
             :(
                 begin
@@ -1312,8 +1291,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 59
         "Annotations at discrete locations",
-        """
-        """,
+        "",
         [
             :(
                 begin
@@ -1329,6 +1307,79 @@ const _examples = PlotExample[
                         ["a", "b"],
                         ["r", "q"],
                         [text("ar", :top, :left, 50), text("bq", :bottom, :right, 20)],
+                    )
+                end
+            ),
+        ],
+    ),
+    PlotExample( # 60
+        "3D projection",
+        "3D plots projection: orthographic (isometric) and perspective (fps).",
+        [
+            :(
+                begin
+                    # 3d cube segments
+                    x = [
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, +1],
+                        [+1, +1],
+                        [+1, +1],
+                        [-1, -1],
+                        [-1, -1],
+                        [+1, +1],
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, +1],
+                        [+1, +1],
+                    ]
+                    y = [
+                        [+1, +1],
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, +1],
+                        [+1, +1],
+                        [+1, +1],
+                        [-1, -1],
+                        [-1, -1],
+                        [+1, +1],
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, +1],
+                    ]
+                    z = [
+                        [+1, +1],
+                        [+1, +1],
+                        [+1, +1],
+                        [+1, +1],
+                        [-1, +1],
+                        [-1, +1],
+                        [-1, +1],
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, -1],
+                        [-1, -1],
+                        [-1, -1],
+                    ]
+                    plot(
+                        plot(
+                            x,
+                            y,
+                            z,
+                            proj_type = :ortho,
+                            title = "orthographic (isometric)",
+                            label = :none,
+                            camera = (-45, round(atand(1 / √2); digits = 3)),
+                        ),
+                        plot(
+                            x,
+                            y,
+                            z,
+                            proj_type = :persp,
+                            title = "perspective (fps)",
+                            label = :none,
+                            camera = (0, 0),
+                        ),
                     )
                 end
             ),

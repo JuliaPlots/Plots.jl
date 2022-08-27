@@ -1,12 +1,12 @@
 
-# https://github.com/stevengj/PyPlot.jl
+# https://github.com/JuliaPy/PyPlot.jl
 
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 # --------------------------------------------------------------------------------------
 
 # problem: https://github.com/tbreloff/Plots.jl/issues/308
-# solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
+# solution: hack from @stevengj: https://github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
 otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
 append!(Base.Multimedia.displays, otherdisplays)
 pycolors = PyPlot.pyimport("matplotlib.colors")
@@ -449,7 +449,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # pass in an integer value as an arg, but a levels list as a keyword arg
     levels = series[:levels]
     levelargs = if isscalar(levels)
-        (levels)
+        levels
     elseif isvector(levels)
         extrakw[:levels] = levels
         ()
@@ -697,7 +697,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
 
         elseif typeof(z) <: AbstractVector
-            # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
+            # tri-surface plot (https://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
             handle = ax."plot_trisurf"(
                 x,
                 y,
@@ -1053,10 +1053,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
     # update subplots
     for sp in plt.subplots
-        ax = sp.o
-        if ax === nothing
-            continue
-        end
+        (ax = sp.o) === nothing && continue
 
         # add the annotations
         for ann in sp[:annotations]
@@ -1064,7 +1061,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         # title
-        if sp[:title] != ""
+        if !isempty(sp[:title])
             loc = lowercase(string(sp[:titlelocation]))
             func = if loc == "left"
                 :_left_title
@@ -1477,8 +1474,7 @@ end
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PyPlotBackend})
-    ax = sp.o
-    ax === nothing && return sp.minpad
+    (ax = sp.o) === nothing && return sp.minpad
     plotbb = py_bbox(ax)
 
     # TODO: this should initialize to the margin from sp.attr
@@ -1567,8 +1563,8 @@ function py_legend_pos(pos::Tuple{<:Real,Symbol})
         s = -s
         c = -c
     end
-    yanchors = ["lower", "center", "upper"]
-    xanchors = ["left", "center", "right"]
+    yanchors = ("lower", "center", "upper")
+    xanchors = ("left", "center", "right")
     return join([yanchors[legend_anchor_index(s)], xanchors[legend_anchor_index(c)]], ' ')
 end
 
@@ -1582,8 +1578,7 @@ end
 py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
-    leg = sp[:legend_position]
-    if leg !== :none
+    if (leg = sp[:legend_position]) !== :none
         # gotta do this to ensure both axes are included
         labels = []
         handles = []
