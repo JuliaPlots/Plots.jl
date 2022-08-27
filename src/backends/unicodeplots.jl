@@ -73,7 +73,9 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         blend &= !(quiver || contour)
 
         plot_3d && (xlim = ylim = (0, 0))  # determined using projection
-        azimuth, elevation = sp[:camera]  # PyPlot: azimuth = -60 & elevation = 30
+        azimuth, elevation = sp[:camera]
+        # use the same convention as `gr`, `PyPlot`, `PlotlyJS`, and wrap in range [-180, 180]
+        azimuth = mod(azimuth + 180 - 90, 360) - 180
         projection = if plot_3d
             (
                 auto = :ortho,

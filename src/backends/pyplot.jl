@@ -1461,9 +1461,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
         # camera/view angle
         if RecipesPipeline.is3d(sp)
-            #convert azimuthal to match GR behaviour
-            #view_init(elevation, azimuthal) so reverse :camera args
-            ax."view_init"((sp[:camera] .- (90, 0))[end:-1:1]...)
+            # convert azimuth to match GR behaviour
+            azimuth, elevation = sp[:camera] .- (90, 0)
+            # signature: view_init(elevation, azimuth), so reverse :camera args
+            ax."view_init"(elevation, azimuth)
         end
 
         # legend
