@@ -1490,10 +1490,10 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     # TODO: this should initialize to the margin from sp.attr
     # figure out how much the axis components and title "stick out" from the plot area
     # leftpad = toppad = rightpad = bottompad = 1mm
-    leftpad   = 0mm
-    toppad    = 0mm
-    rightpad  = 0mm
-    bottompad = 0mm
+    leftpad   = 2mm
+    toppad    = 2mm
+    rightpad  = 2mm
+    bottompad = 2mm
 
     for bb in (
         py_bbox_axis(ax, "x"),
@@ -1730,8 +1730,7 @@ end
 # position the subplot in the backend.
 function _update_plot_object(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
-        ax = sp.o
-        ax === nothing && return
+        (ax = sp.o) === nothing && return
         figw, figh = sp.plt[:size]
         figw, figh = figw * px, figh * px
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)

@@ -78,6 +78,8 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     init::Bool
 end
 
+struct PlaceHolder end
+
 Plot() = Plot(
     backend(),
     0,
@@ -90,6 +92,22 @@ Plot() = Plot(
     Subplot[],
     false,
 )
+
+function Plot(osp::Subplot)
+    plt = Plot()
+    plt.layout = GridLayout(1, 1)
+    @static if true
+        sp = deepcopy(osp)  # NOTE: fails `PlotlyJS`
+    else
+        sp = Subplot(plt.backend; parent = plt.layout)
+        sp.series_list = copy(osp.series_list)
+        sp.attr = copy(osp.attr)
+    end
+    plt.layout.grid[1, 1] = sp
+    sp.plt = plt  # change the enclosing plot
+    push!(plt.subplots, sp)
+    plt
+end
 
 # -----------------------------------------------------------------------
 
