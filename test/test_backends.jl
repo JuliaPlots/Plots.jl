@@ -3,7 +3,7 @@ is_ci() = get(ENV, "CI", "false") == "true"
 const TEST_MODULE = Module(:PlotsTestModule)
 const PLOTS_IMG_TOL = parse(
     Float64,
-    get(ENV, "PLOTS_IMG_TOL", is_ci() ? (Sys.iswindows() ? "2e-3" : "1e-4") : "1e-5"),
+    get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-3" : "1e-5"),  # (Sys.iswindows() ? "2e-3" : "1e-4")
 )
 
 Base.eval(TEST_MODULE, quote
