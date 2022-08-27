@@ -268,6 +268,13 @@ function plotly_layout(plt::Plot)
                             :y => sind(azim) * sind(theta) * 2.6,
                             :z => cosd(theta) * 2.6,
                         ),
+                        :projection => (
+                            auto = "perspective",
+                            ortho = "orthographic",
+                            orthographic = "orthographic",
+                            persp = "perspective",
+                            perspective = "perspective",
+                        )[sp[:projection_type]],
                     ),
                 )
             else

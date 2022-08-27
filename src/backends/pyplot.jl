@@ -370,9 +370,15 @@ function py_init_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
     fig = plt.o
     projection = (proj = sp[:projection]) in (nothing, :none) ? nothing : string(proj)
     kw = if projection == "3d"
-        # PyPlot defaults to :perspective projection by default
+        # PyPlot defaults to "persp" projection by default
         (;
-            proj_type = (auto = "persp", orthographic = "ortho", perspective = "persp")[sp[:projection_type]]
+            proj_type = (
+                auto = "persp",
+                ortho = "ortho",
+                orthographic = "ortho",
+                persp = "persp",
+                perspective = "persp",
+            )[sp[:projection_type]]
         )
     else
         (;)
