@@ -339,9 +339,7 @@ end
 # bounding box: legend
 py_bbox_legend(ax) = py_bbox(ax."get_legend"())
 
-function py_thickness_scale(plt::Plot{PyPlotBackend}, ptsz)
-    ptsz * plt[:thickness_scaling]
-end
+py_thickness_scale(plt::Plot{PyPlotBackend}, ptsz) = ptsz * plt[:thickness_scaling]
 
 # ---------------------------------------------------------------------------
 
@@ -979,17 +977,15 @@ function py_set_scale(ax, sp::Subplot, axis::Axis)
     py_set_scale(ax, sp, scale, letter)
 end
 
-function py_set_spine_color(spines, color)
+py_set_spine_color(spines, color) =
     for loc in spines
         getproperty(spines, loc)."set_color"(color)
     end
-end
 
-function py_set_spine_color(spines::Dict, color)
+py_set_spine_color(spines::Dict, color) =
     for (loc, spine) in spines
         spine."set_color"(color)
     end
-end
 
 function py_set_axis_colors(sp, ax, a::Axis)
     py_set_spine_color(ax.spines, py_color(a[:foreground_color_border]))

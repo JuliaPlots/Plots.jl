@@ -46,10 +46,9 @@ function PlotlyJS.WebIO.render(plt::Plot{PlotlyJSBackend})
     return PlotlyJS.WebIO.render(plotlyjs_syncplot(plt))
 end
 
-function closeall(::PlotlyJSBackend)
+closeall(::PlotlyJSBackend) =
     if !isplotnull() && isa(current().o, PlotlyJS.SyncPlot)
         close(current().o)
     end
-end
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyJSBackend}) = true

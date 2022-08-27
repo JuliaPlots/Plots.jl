@@ -77,13 +77,12 @@ end
 #     )
 # end
 
-function plotly_scale(scale::Symbol)
+plotly_scale(scale::Symbol) =
     if scale === :log10
         "log"
     else
         "-"
     end
-end
 
 function shrink_by(lo, sz, ratio)
     amt = 0.5 * (1.0 - ratio) * sz
@@ -434,9 +433,7 @@ function plotly_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
     )
 end
 
-function plotly_layout_json(plt::Plot)
-    JSON.json(plotly_layout(plt), 4)
-end
+plotly_layout_json(plt::Plot) = JSON.json(plotly_layout(plt), 4)
 
 plotly_colorscale(cg::ColorGradient, α = nothing) =
     [[v, rgba_string(plot_color(cg.colors[v], α))] for v in cg.values]
@@ -1125,10 +1122,6 @@ function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{Plotly
     plotly_show_js(io, plot)
 end
 
-function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
-    write(io, embeddable_html(plt))
-end
+_show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) = write(io, embeddable_html(plt))
 
-function _display(plt::Plot{PlotlyBackend})
-    standalone_html_window(plt)
-end
+_display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
