@@ -1381,12 +1381,9 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
 end
 
 function gr_update_viewport_ratio!(viewport_plotarea, sp)
-    ratio = get_aspect_ratio(sp)
-    if ratio !== :none
+    if (ratio = get_aspect_ratio(sp)) !== :none
+        ratio === :equal && (ratio = 1)
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
-        if ratio === :equal
-            ratio = 1
-        end
         viewport_ratio =
             (viewport_plotarea[2] - viewport_plotarea[1]) /
             (viewport_plotarea[4] - viewport_plotarea[3])
@@ -1415,11 +1412,11 @@ function gr_set_window(sp, viewport_plotarea)
     else
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         needs_3d = needs_any_3d_axes(sp)
-        if needs_3d
+        zok = if needs_3d
             zmin, zmax = gr_z_axislims(sp)
-            zok = zmax > zmin
+            zmax > zmin
         else
-            zok = true
+            true
         end
 
         scaleop = 0

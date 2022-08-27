@@ -1445,12 +1445,21 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         # aspect ratio
-        aratio = get_aspect_ratio(sp)
-        if aratio !== :none
-            ax."set_aspect"(isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
+        if (ratio = get_aspect_ratio(sp)) !== :none
+            if RecipesPipeline.is3d(sp)
+                if ratio === :auto
+                    nothing
+                elseif ratio === :equal
+                    ax."set_box_aspect"((1, 1, 1))
+                else
+                    ax."set_box_aspect"(ratio)
+                end
+            else
+                ax."set_aspect"(isa(ratio, Symbol) ? string(ratio) : ratio, anchor = "C")
+            end
         end
 
-        #camera/view angle
+        # camera/view angle
         if RecipesPipeline.is3d(sp)
             #convert azimuthal to match GR behaviour
             #view_init(elevation, azimuthal) so reverse :camera args

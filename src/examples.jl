@@ -1361,24 +1361,31 @@ const _examples = PlotExample[
                         [-1, -1],
                         [-1, -1],
                     ]
+                    kw = (
+                        aspect_ratio = :equal,
+                        label = :none,
+                        xlabel = "x",
+                        ylabel = "y",
+                        zlabel = "z",
+                    )
                     plot(
                         plot(
                             x,
                             y,
-                            z,
+                            z;
                             proj_type = :ortho,
                             title = "orthographic (isometric)",
-                            label = :none,
-                            camera = (-45, round(atand(1 / √2); digits = 3)),
+                            camera = (45, round(atand(1 / √2); digits = 3)),
+                            kw...,
                         ),
                         plot(
                             x,
                             y,
-                            z,
+                            z;
                             proj_type = :persp,
                             title = "perspective (fps)",
-                            label = :none,
                             camera = (0, 0),
+                            kw...,
                         ),
                     )
                 end
@@ -1404,7 +1411,8 @@ _backend_skips = Dict(
         51,  # image with custom axes
         56,  # custom bar plot
     ],
-    :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56],
+    :inspectdr =>
+        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60],
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images unsupported
@@ -1428,6 +1436,7 @@ _backend_skips = Dict(
         31,  # animations
         49,  # TODO: support polar
         50,  # TODO: 1D data not supported for pm3d
+        60,  # :perspective projection unsupported
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
