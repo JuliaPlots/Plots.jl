@@ -35,6 +35,8 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         y = Vector{F}(ylim)
         z = Vector{F}(zlim)
 
+        plot_3d = RecipesPipeline.is3d(sp)
+
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
         canvas = if (up_c = get(sp_kw, :canvas, :auto)) === :auto
@@ -44,7 +46,11 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         end
 
         border = if (up_b = get(sp_kw, :border, :auto)) === :auto
-            isijulia() ? :ascii : :solid
+            if plot_3d
+                :none  # no plots border in 3d (unification with other backends)
+            else
+                isijulia() ? :ascii : :solid
+            end
         else
             up_b
         end
@@ -53,7 +59,6 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         width = has_layout && isempty(series_list(sp)) ? 0 : get(sp_kw, :width, up_width)
         height = get(sp_kw, :height, up_height)
 
-        plot_3d = is3d(sp)
         blend = get(sp_kw, :blend, true)
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
