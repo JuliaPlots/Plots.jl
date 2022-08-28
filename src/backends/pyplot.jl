@@ -331,7 +331,7 @@ end
 function py_bbox_title(ax)
     bb = defaultbox
     for s in (:title, :_left_title, :_right_title)
-        bb = bb + py_bbox(getproperty(ax, s))
+        bb += py_bbox(getproperty(ax, s))
     end
     bb
 end
@@ -966,11 +966,7 @@ end
 function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     scale in supported_scales() || return @warn("Unhandled scale value in pyplot: $scale")
     func = getproperty(ax, Symbol("set_", letter, "scale"))
-    if PyPlot.version ≥ v"3.3" # https://matplotlib.org/3.3.0/api/api_changes.html
-        pyletter = Symbol("")
-    else
-        pyletter = letter
-    end
+    pyletter = PyPlot.version ≥ v"3.3" ? Symbol("") : letter  # https://matplotlib.org/3.3.0/api/api_changes.html
     kw = KW()
     arg = if scale === :identity
         "linear"
@@ -990,11 +986,8 @@ function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     func(arg; kw...)
 end
 
-function py_set_scale(ax, sp::Subplot, axis::Axis)
-    scale = axis[:scale]
-    letter = axis[:letter]
-    py_set_scale(ax, sp, scale, letter)
-end
+py_set_scale(ax, sp::Subplot, axis::Axis) =
+    py_set_scale(ax, sp, axis[:scale], axis[:letter])
 
 function py_set_spine_color(spines, color)
     for loc in spines
@@ -1033,7 +1026,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig."clear"()
-    dpi = plt[:dpi]
     fig."set_size_inches"(w / DPI, h / DPI, forward = true)
     getproperty(fig, set_facecolor_sym)(py_color(plt[:background_color_outside]))
     fig."set_dpi"(plt[:dpi])
@@ -1481,6 +1473,20 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     py_drawfig(fig)
 end
 
+expand_padding!(padding, bb, plotbb) =
+    if ispositive(width(bb)) && ispositive(height(bb))
+        padding[:] =
+            max.(
+                padding,
+                [
+                    left(plotbb) - left(bb),
+                    top(plotbb) - top(bb),
+                    right(bb) - right(plotbb),
+                    bottom(bb) - bottom(plotbb),
+                ],
+            )
+    end
+
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PyPlotBackend})
@@ -1489,11 +1495,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
 
     # TODO: this should initialize to the margin from sp.attr
     # figure out how much the axis components and title "stick out" from the plot area
-    # leftpad = toppad = rightpad = bottompad = 1mm
-    leftpad   = 2mm
-    toppad    = 2mm
-    rightpad  = 2mm
-    bottompad = 2mm
+    padding = [0mm, 0mm, 0mm, 0mm]  # leftpad, toppad, rightpad, bottompad
 
     for bb in (
         py_bbox_axis(ax, "x"),
@@ -1501,41 +1503,31 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
         py_bbox_title(ax),
         py_bbox_legend(ax),
     )
-        if ispositive(width(bb)) && ispositive(height(bb))
-            leftpad   = max(leftpad, left(plotbb) - left(bb))
-            toppad    = max(toppad, top(plotbb) - top(bb))
-            rightpad  = max(rightpad, right(bb) - right(plotbb))
-            bottompad = max(bottompad, bottom(bb) - bottom(plotbb))
-        end
+        expand_padding!(padding, bb, plotbb)
     end
 
     if haskey(sp.attr, :cbar_ax) # Treat colorbar the same way
         ax = sp.attr[:cbar_handle]."ax"
         for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
-            if ispositive(width(bb)) && ispositive(height(bb))
-                leftpad   = max(leftpad, left(plotbb) - left(bb))
-                toppad    = max(toppad, top(plotbb) - top(bb))
-                rightpad  = max(rightpad, right(bb) - right(plotbb))
-                bottompad = max(bottompad, bottom(bb) - bottom(plotbb))
-            end
+            expand_padding!(padding, bb, plotbb)
         end
     end
 
     # optionally add the width of colorbar labels and colorbar to rightpad
-    if RecipesPipeline.is3d(sp) && haskey(sp.attr, :cbar_ax)
-        bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
-        sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
+    if RecipesPipeline.is3d(sp)
+        expand_padding!(padding, py_bbox_axis(ax, "z"), plotbb)
+        if haskey(sp.attr, :cbar_ax)
+            bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
+            sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
+        end
     end
 
     # add in the user-specified margin
-    leftpad   += sp[:left_margin]
-    toppad    += sp[:top_margin]
-    rightpad  += sp[:right_margin]
-    bottompad += sp[:bottom_margin]
+    padding .+= [sp[:left_margin], sp[:top_margin], sp[:right_margin], sp[:bottom_margin]]
 
     dpi_factor = Plots.DPI / sp.plt[:dpi]
 
-    sp.minpad = Tuple(dpi_factor .* [leftpad, toppad, rightpad, bottompad])
+    sp.minpad = Tuple(dpi_factor .* padding)
 end
 
 # -----------------------------------------------------------------

@@ -5,6 +5,7 @@ to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
 const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
+const defaultminpad = 20mm, 5mm, 2mm, 10mm
 
 left(bbox::BoundingBox) = bbox.x0[1]
 top(bbox::BoundingBox) = bbox.x0[2]
@@ -248,7 +249,7 @@ function GridLayout(
     grid = Matrix{AbstractLayout}(undef, dims...)
     layout = GridLayout(
         parent,
-        (20mm, 5mm, 2mm, 10mm),
+        defaultminpad,
         defaultbox,
         grid,
         Measure[w * pct for w in widths],

@@ -1367,6 +1367,9 @@ const _examples = PlotExample[
                         xlabel = "x",
                         ylabel = "y",
                         zlabel = "z",
+                        xlims = (-1.1, 1.1),
+                        ylims = (-1.1, 1.1),
+                        zlims = (-1.1, 1.1),
                     )
                     plot(
                         plot(

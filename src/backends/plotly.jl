@@ -222,7 +222,7 @@ function plotly_layout(plt::Plot)
         x_idx, y_idx = multiple_subplots ? plotly_link_indicies(plt, sp) : ("", "")
         # add an annotation for the title... positioned horizontally relative to plotarea,
         # but vertically just below the top of the subplot bounding box
-        if sp[:title] != ""
+        if !isempty(sp[:title])
             bb = plotarea(sp)
             tpos = sp[:titlelocation]
             xmm = if tpos === :left
