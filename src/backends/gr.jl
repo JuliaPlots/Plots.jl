@@ -152,9 +152,25 @@ function gr_set_fillstyle(s::Symbol)
     GR.setfillstyle(get(((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6), s, 9))
 end
 
-gr_set_projectiontype(sp) = GR.setprojectiontype(
-    (auto = 0, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]],
-)
+function gr_set_projectiontype(sp)
+    GR.setprojectiontype(
+        # https://gr-framework.org/python-gr.html?highlight=setprojectiontype#gr.setprojectiontype
+        # PROJECTION_DEFAULT      0 default
+        # PROJECTION_ORTHOGRAPHIC 1 orthographic
+        # PROJECTION_PERSPECTIVE  2 perspective
+        (auto = 0, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]],
+    )
+    #=
+    GR.gr3.setprojectiontype(
+        # https://github.com/sciapp/gr/blob/master/lib/gr3/gr3.h
+        #define GR3_PROJECTION_PERSPECTIVE  0
+        #define GR3_PROJECTION_PARALLEL     1
+        #define GR3_PROJECTION_ORTHOGRAPHIC 2
+        (auto = 0, ortho = 2, orthographic = 2, persp = 0, perspective = 0)[sp[:projection_type]],
+    )
+    =#
+    nothing
+end
 
 # --------------------------------------------------------------------------------------
 
@@ -988,6 +1004,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     viewport_subplot = gr_viewport_from_bbox(sp, bbox(sp), w, h, viewport_canvas)
     viewport_plotarea = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
 
+    @show viewport_subplot viewport_plotarea
+
     # update viewport_plotarea
     leg = gr_get_legend_geometry(viewport_plotarea, sp)
     gr_update_viewport_legend!(viewport_plotarea, sp, leg)
@@ -1447,7 +1465,6 @@ function gr_draw_axes(sp, viewport_plotarea)
 
     if gr_is3d(sp)
         # set space
-        gr_set_projectiontype(sp)
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         zmin, zmax = gr_z_axislims(sp)
 
@@ -1455,6 +1472,7 @@ function gr_draw_axes(sp, viewport_plotarea)
 
         GR.setwindow3d(xmin, xmax, ymin, ymax, zmin, zmax)
         GR.setspace3d(-90 + camera[1], 90 - camera[2], 30, 0)
+        gr_set_projectiontype(sp)
 
         # fill the plot area
         gr_set_fill(plot_color(sp[:background_color_inside]))
@@ -1843,6 +1861,8 @@ function gr_add_series(sp, series)
     series_annotations_shapes!(series)
     # -------------------------------------------------------
 
+    gr_is3d(sp) && gr_set_projectiontype(sp)
+
     # draw the series
     if st in (:path, :scatter, :straightline)
         if st === :straightline
@@ -1868,7 +1888,6 @@ function gr_add_series(sp, series)
         GR.setwindow(-1, 1, -1, 1)
         gr_draw_surface(series, x, y, z, clims)
     elseif st === :volume
-        gr_set_projectiontype(series[:subplot])
         sp[:legend_position] = :none
         GR.gr3.clear()
         dmin, dmax = GR.gr3.volume(y.v, 0)
@@ -1943,7 +1962,6 @@ function gr_draw_segments(series, x, y, fillrange, clims)
 end
 
 function gr_draw_segments_3d(series, x, y, z, clims)
-    gr_set_projectiontype(series[:subplot])
     if series[:seriestype] === :path3d && length(x) > 1
         lz = series[:line_z]
         segments = series_segments(series, :path3d; check = true)
@@ -2043,7 +2061,6 @@ function gr_draw_contour(series, x, y, z, clims)
 end
 
 function gr_draw_surface(series, x, y, z, clims)
-    gr_set_projectiontype(series[:subplot])
     e_kwargs = series[:extra_kwargs]
     st = series[:seriestype]
     if st === :surface
