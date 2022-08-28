@@ -168,6 +168,8 @@ function addUnicodeSeries!(
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st === :spy
         return UnicodePlots.spy(Array(series[:z]); fix_ar = fix_ar, kw...)
+    elseif st === :image
+        return UnicodePlots.image(Array(series[:z]); kw...)
     elseif st in (:contour, :heatmap)  # 2D
         colormap = get(se_kw, :colormap, :none)
         kw = (

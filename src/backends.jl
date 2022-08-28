@@ -951,6 +951,7 @@ const _unicodeplots_seriestype = [
     :contour,
     # :contour3d,
     :permute,
+    :image,
     :spy,
     :surface,
     :wireframe,
