@@ -150,6 +150,7 @@ gr_set_fillstyle(::Nothing) = GR.setfillintstyle(GR.INTSTYLE_SOLID)
 function gr_set_fillstyle(s::Symbol)
     GR.setfillintstyle(GR.INTSTYLE_HATCH)
     GR.setfillstyle(get(((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6), s, 9))
+    nothing
 end
 
 function gr_set_projectiontype(sp)
@@ -1004,8 +1005,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     viewport_subplot = gr_viewport_from_bbox(sp, bbox(sp), w, h, viewport_canvas)
     viewport_plotarea = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
 
-    @show viewport_subplot viewport_plotarea
-
     # update viewport_plotarea
     leg = gr_get_legend_geometry(viewport_plotarea, sp)
     gr_update_viewport_legend!(viewport_plotarea, sp, leg)
@@ -1468,10 +1467,12 @@ function gr_draw_axes(sp, viewport_plotarea)
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         zmin, zmax = gr_z_axislims(sp)
 
-        camera = sp[:camera]
+        azimuth, elevation = sp[:camera]
 
         GR.setwindow3d(xmin, xmax, ymin, ymax, zmin, zmax)
-        GR.setspace3d(-90 + camera[1], 90 - camera[2], 30, 0)
+        fov = isortho(sp) ? NaN : 30
+        cam = isortho(sp) ? 0 : NaN
+        GR.setspace3d(-90 + azimuth, 90 - elevation, fov, cam)
         gr_set_projectiontype(sp)
 
         # fill the plot area
