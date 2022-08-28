@@ -93,6 +93,7 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
             title = texmath2unicode(sp[:title]),
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
+            labels = !plot_3d,  # guide labels and limits do not make sense in 3d
             grid = grid,
             blend = blend,
             height = height,
