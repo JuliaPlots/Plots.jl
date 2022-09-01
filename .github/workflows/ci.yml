@@ -16,6 +16,7 @@ jobs:
     env:
       GKS_ENCODING: "utf8"
       GKSwstype: "nul"
+      PYTHON: "Conda"  # for `PyPlot`
 
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -52,7 +53,7 @@ jobs:
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
         run: |
-          echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
+          echo "TESTCMD=xvfb-run --auto-servernum julia --color=yes" >> $GITHUB_ENV
           sudo apt-get -y update
           sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
           sudo fc-cache -vr
@@ -61,10 +62,23 @@ jobs:
       - name: Install Julia dependencies
         uses: julia-actions/julia-buildpkg@latest
 
+      - name: Build test dependencies
+        run: |
+          unset CONDA
+          $TESTCMD --project=@. -e '
+            @show ENV["PYTHON"]
+            using Pkg; Pkg.status(); Pkg.status(; mode=Pkg.PKGMODE_MANIFEST)
+            Pkg.add("Conda"); Pkg.build("Conda"; verbose=true)
+            Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
+            Pkg.add("PyPlot"); Pkg.build("PyPlot"; verbose=true)
+          '
+
       # Run tests
-      - name: Run Graphical test
+      - name: Run Graphical tests
+        uses: julia-actions/julia-runtest@latest
+
+      - name: Run downstream tests
         run:  |
-          $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true)'
           $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")'
           $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")'
 
