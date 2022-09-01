@@ -47,15 +47,14 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v1
 
-      - name: LaTeX dependencies
+      - name: Ubuntu LaTeX dependencies
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get -y update
           sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
           sudo fc-cache -vr
 
-      - name: Julia dependencies
-        uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-buildpkg@latest
 
       - name: PyPlot dependencies
         shell: julia --project=@. --color=yes {0}
@@ -66,8 +65,7 @@ jobs:
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
           using Conda; Conda.add("matplotlib")
 
-      - name: Run Graphical tests
-        uses: julia-actions/julia-runtest@latest
+      - uses: julia-actions/julia-runtest@latest
         with:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
 
