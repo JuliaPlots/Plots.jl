@@ -224,7 +224,7 @@ for mime in (
             showjuno(io, m, plt)
         else
             prepare_output(plt)
-            _show(io, m, plt)
+            Base.invokelatest(_show, io, m, plt)
         end
         return nothing
     end
