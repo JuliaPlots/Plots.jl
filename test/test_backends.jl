@@ -1,10 +1,7 @@
 is_ci() = get(ENV, "CI", "false") == "true"
 
 const TEST_MODULE = Module(:PlotsTestModule)
-const PLOTS_IMG_TOL = parse(
-    Float64,
-    get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-3" : "1e-5"),  # (Sys.iswindows() ? "2e-3" : "1e-4")
-)
+const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "1e-2" : "1e-5"))
 
 Base.eval(TEST_MODULE, quote
     using Random, StableRNGs, Plots
@@ -197,14 +194,7 @@ end
 
 @testset "Examples" begin
     if Sys.islinux()
-        backends = (
-            :unicodeplots,
-            :pgfplotsx,
-            :inspectdr,
-            :plotlyjs,
-            :gaston,
-            # :pyplot,  # FIXME: fails with system matplotlib
-        )
+        backends = (:unicodeplots, :pgfplotsx, :inspectdr, :plotlyjs, :gaston, :pyplot)
         only = setdiff(
             1:length(Plots._examples),
             (Plots._backend_skips[be] for be in backends)...,
