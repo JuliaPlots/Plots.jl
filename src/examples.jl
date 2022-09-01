@@ -1185,7 +1185,6 @@ const _examples = PlotExample[
                         zlabel = "z",
                         grid = true,
                         minorgrid = true,
-                        projection_type = :orthographic,
                     )
 
                     plots = [wireframe(args..., title = "wire"; kw...)]

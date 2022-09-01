@@ -47,7 +47,7 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
 
         border = if (up_b = get(sp_kw, :border, :auto)) === :auto
             if plot_3d
-                :none  # no plots border in 3d (unification with other backends)
+                :none  # no plots border in 3d (consistency with other backends)
             else
                 isijulia() ? :ascii : :solid
             end

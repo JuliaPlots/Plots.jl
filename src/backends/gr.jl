@@ -159,7 +159,7 @@ function gr_set_projectiontype(sp)
         # PROJECTION_DEFAULT      0 default
         # PROJECTION_ORTHOGRAPHIC 1 orthographic
         # PROJECTION_PERSPECTIVE  2 perspective
-        (auto = 0, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]],
+        (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]],
     )
     #=
     GR.gr3.setprojectiontype(
