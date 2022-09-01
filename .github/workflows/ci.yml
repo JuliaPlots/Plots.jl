@@ -16,6 +16,7 @@ jobs:
     env:
       GKS_ENCODING: "utf8"
       GKSwstype: "nul"
+      PYTHON: "Conda"  # for `PyPlot`
 
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -24,55 +25,61 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6' # LTS
-          - '1.7' # latest stable
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
+          - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
+          - '1.7'
+          - '1.8' # latest stable
+        os: [ubuntu-latest, windows-latest, macos-latest]
         arch:
           - x64
-          # - x86
         include:
-          # - version: 'nightly'
-          - version: '~1.8.0-0'
-            os: ubuntu-latest
+          - os: ubuntu-latest
+            prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
+        exclude:  # spare credits
+          - os: macos-latest
+            version: '1.7'
+          - os: windows-latest
+            version: '1.7'
 
     steps:
-      # Setup environment
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v1
 
-      # TESTCMD
-      - name: Default TESTCMD
-        run: echo "TESTCMD=julia" >> $GITHUB_ENV
-      - name: Ubuntu TESTCMD
-        if: startsWith(matrix.os,'ubuntu')
+      - name: LaTeX dependencies
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
-          echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
           sudo apt-get -y update
           sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
           sudo fc-cache -vr
 
-      # Julia Dependencies
-      - name: Install Julia dependencies
+      - name: Julia dependencies
         uses: julia-actions/julia-buildpkg@latest
 
-      # Run tests
-      - name: Run Graphical test
-        run:  |
-          $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true)'
-          $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")'
-          $TESTCMD -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")'
+      - name: PyPlot dependencies
+        shell: julia --project=@. --color=yes {0}
+        run: |
+          @show ENV["PYTHON"]
+          using Pkg
+          Pkg.add("Conda"); Pkg.build("Conda"; verbose=true)
+          Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
+          using Conda; Conda.add("matplotlib")
 
-      # Codecov
+      - name: Run Graphical tests
+        uses: julia-actions/julia-runtest@latest
+        with:
+          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
+
+      - name: Run downstream tests
+        run:  |
+          julia -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")'
+          julia -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")'
+
       - uses: julia-actions/julia-processcoverage@latest
-        if: startsWith(matrix.os,'ubuntu')
+        if: startsWith(matrix.os, 'ubuntu')
       - uses: codecov/codecov-action@v3
-        if: startsWith(matrix.os,'ubuntu')
+        if: startsWith(matrix.os, 'ubuntu')
         with:
           file: lcov.info
 
