@@ -1356,10 +1356,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
 
             if axis[:grid] && !(ticks in (:none, nothing, false))
-                fgcolor = py_color(axis[:foreground_color_grid])
                 pyaxis."grid"(
                     true,
-                    color = fgcolor,
+                    color = py_color(axis[:foreground_color_grid]),
                     linestyle = py_linestyle(:line, axis[:gridstyle]),
                     linewidth = py_thickness_scale(plt, axis[:gridlinewidth]),
                     alpha = axis[:gridalpha],
@@ -1396,7 +1395,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."grid"(
                     true,
                     which = "minor",
-                    color = fgcolor,
+                    color = py_color(axis[:foreground_color_grid]),
                     linestyle = py_linestyle(:line, axis[:minorgridstyle]),
                     linewidth = py_thickness_scale(plt, axis[:minorgridlinewidth]),
                     alpha = axis[:minorgridalpha],
