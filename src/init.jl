@@ -119,20 +119,15 @@ function __init__()
                 InspectDRBackend,
                 GastonBackend,
             )
-                # showable(MIME("image/png"), Plot{be}) || continue  # will only work for currently loaded backends
-                @eval function _display(plt::Plot{$be})
-                    I = findfirst(
-                        d -> d isa ImageInTerminal.TerminalGraphicDisplay,
-                        Base.Multimedia.displays,
-                    )
-                    dsp = if I === nothing
-                        ImageInTerminal.TerminalGraphicDisplay(stdout)
-                    else
-                        Base.Multimedia.displays[I]
-                    end
-                    buf = IOBuffer()
+                @eval function Base.display(::PlotsDisplay, plt::Plot{$be})
+                    prepare_output(plt)
+                    buf = PipeBuffer()
                     show(buf, MIME("image/png"), plt)
-                    display(dsp, MIME("image/png"), take!(buf))
+                    display(
+                        ImageInTerminal.TerminalGraphicDisplay(stdout),
+                        MIME("image/png"),
+                        read(buf),
+                    )
                 end
             end
         end
