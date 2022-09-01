@@ -105,6 +105,39 @@ function __init__()
 
     use_local_dependencies[] = use_local_plotlyjs[]
 
+    @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
+        if (
+            get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "true") == "true" &&
+            ImageInTerminal.Sixel.is_sixel_supported()
+        )
+            for be in (
+                PyPlotBackend,
+                # UnicodePlotsBackend,  # better as MIME("text/plain") in terminal
+                PlotlyJSBackend,
+                GRBackend,
+                PGFPlotsXBackend,
+                InspectDRBackend,
+                GastonBackend,
+            )
+                # showable(MIME("image/png"), Plot{be}) || continue  # will only work for currently loaded backends
+                @eval function _display(plt::Plot{$be})
+                    I = findfirst(
+                        d -> d isa ImageInTerminal.TerminalGraphicDisplay,
+                        Base.Multimedia.displays,
+                    )
+                    dsp = if I === nothing
+                        ImageInTerminal.TerminalGraphicDisplay(stdout)
+                    else
+                        Base.Multimedia.displays[I]
+                    end
+                    buf = IOBuffer()
+                    show(buf, MIME("image/png"), plt)
+                    display(dsp, MIME("image/png"), take!(buf))
+                end
+            end
+        end
+    end
+
     @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
         _show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) =
             _show_pdfbackends(io, mime, plt)
