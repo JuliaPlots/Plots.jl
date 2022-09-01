@@ -1843,7 +1843,7 @@ function gr_add_series(sp, series)
 
     GR.savestate()
 
-    x, y, z = (handle_surface(series[letter]) for letter in (:x, :y, :z))
+    x, y, z = map(letter -> handle_surface(series[letter]), (:x, :y, :z))
     xscale, yscale = sp[:xaxis][:scale], sp[:yaxis][:scale]
     frng = series[:fillrange]
 
@@ -2104,7 +2104,7 @@ function gr_draw_surface(series, x, y, z, clims)
                     ),
                 )
             end
-            cns = [([3, ci[i] + 1, cj[i] + 1, ck[i] + 1]) for i in eachindex(ci)]
+            cns = map(i -> ([3, ci[i] + 1, cj[i] + 1, ck[i] + 1]), eachindex(ci))
         else
             throw(
                 ArgumentError(
