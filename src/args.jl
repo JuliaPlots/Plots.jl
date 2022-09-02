@@ -1835,16 +1835,15 @@ const _match_map2 = KW(
 )
 
 # properly retrieve from plt.attr, passing `:match` to the correct key
-function Base.getindex(plt::Plot, k::Symbol)
+Base.getindex(plt::Plot, k::Symbol) =
     if (v = plt.attr[k]) === :match
         plt[_match_map[k]]
     else
         v
     end
-end
 
 # properly retrieve from sp.attr, passing `:match` to the correct key
-function Base.getindex(sp::Subplot, k::Symbol)
+Base.getindex(sp::Subplot, k::Symbol) =
     if (v = sp.attr[k]) === :match
         if haskey(_match_map2, k)
             sp.plt[_match_map2[k]]
@@ -1854,10 +1853,9 @@ function Base.getindex(sp::Subplot, k::Symbol)
     else
         v
     end
-end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
-function Base.getindex(axis::Axis, k::Symbol)
+Base.getindex(axis::Axis, k::Symbol) =
     if (v = axis.plotattributes[k]) === :match
         if haskey(_match_map2, k)
             axis.sps[1][_match_map2[k]]
@@ -1867,7 +1865,6 @@ function Base.getindex(axis::Axis, k::Symbol)
     else
         v
     end
-end
 
 Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]
 

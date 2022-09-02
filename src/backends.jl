@@ -181,14 +181,13 @@ function backend(pkg::AbstractBackend)
     pkg
 end
 
-function backend(sym::Symbol)
+backend(sym::Symbol) =
     if sym in _backends
         backend(_backend_instance(sym))
     else
         @warn("`:$sym` is not a supported backend.")
         backend()
     end
-end
 
 const _deprecated_backends =
     [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize, :pgfplots]
@@ -660,11 +659,9 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # plotlyjs
 
-function _initialize_backend(pkg::PlotlyJSBackend)
-    @eval Main begin
-        import PlotlyJS
-        export PlotlyJS
-    end
+_initialize_backend(pkg::PlotlyJSBackend) = @eval Main begin
+    import PlotlyJS
+    export PlotlyJS
 end
 
 const _plotlyjs_attr       = _plotly_attr
@@ -676,15 +673,13 @@ const _plotlyjs_scale      = _plotly_scale
 # ------------------------------------------------------------------------------
 # pyplot
 
-function _initialize_backend(::PyPlotBackend)
-    @eval Main begin
-        import PyPlot
+_initialize_backend(::PyPlotBackend) = @eval Main begin
+    import PyPlot
 
-        export PyPlot
+    export PyPlot
 
-        # we don't want every command to update the figure
-        PyPlot.ioff()
-    end
+    # we don't want every command to update the figure
+    PyPlot.ioff()
 end
 
 const _pyplot_attr = merge_with_base_supported([
@@ -808,11 +803,9 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # Gaston
 
-function _initialize_backend(::GastonBackend)
-    @eval Main begin
-        import Gaston
-        export Gaston
-    end
+_initialize_backend(::GastonBackend) = @eval Main begin
+    import Gaston
+    export Gaston
 end
 
 const _gaston_attr = merge_with_base_supported([

@@ -22,9 +22,7 @@ function standalone_html(
     """
 end
 
-function embeddable_html(plt::AbstractPlot)
-    html_head(plt) * html_body(plt)
-end
+embeddable_html(plt::AbstractPlot) = html_head(plt) * html_body(plt)
 
 function open_browser_window(filename::AbstractString)
     @static if Sys.isapple()

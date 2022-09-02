@@ -8,14 +8,13 @@ const _initial_axis_defaults = deepcopy(_axis_defaults)
 # add defaults for the letter versions
 const _axis_defaults_byletter = KW()
 
-function reset_axis_defaults_byletter!()
+reset_axis_defaults_byletter!() =
     for letter in (:x, :y, :z)
         _axis_defaults_byletter[letter] = KW()
         for (k, v) in _axis_defaults
             _axis_defaults_byletter[letter][k] = v
         end
     end
-end
 reset_axis_defaults_byletter!()
 
 # to be able to reset font sizes to initial values
