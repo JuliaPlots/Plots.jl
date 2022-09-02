@@ -1,12 +1,12 @@
 
-# https://github.com/stevengj/PyPlot.jl
+# https://github.com/JuliaPy/PyPlot.jl
 
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 # --------------------------------------------------------------------------------------
 
 # problem: https://github.com/tbreloff/Plots.jl/issues/308
-# solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
+# solution: hack from @stevengj: https://github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
 otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
 append!(Base.Multimedia.displays, otherdisplays)
 pycolors = PyPlot.pyimport("matplotlib.colors")
@@ -331,7 +331,7 @@ end
 function py_bbox_title(ax)
     bb = defaultbox
     for s in (:title, :_left_title, :_right_title)
-        bb = bb + py_bbox(getproperty(ax, s))
+        bb += py_bbox(getproperty(ax, s))
     end
     bb
 end
@@ -366,11 +366,29 @@ end
 
 function py_init_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
     fig = plt.o
-    proj = sp[:projection]
-    proj = (proj in (nothing, :none) ? nothing : string(proj))
-
+    projection = (proj = sp[:projection]) in (nothing, :none) ? nothing : string(proj)
+    kw = if projection == "3d"
+        # PyPlot defaults to "persp" projection by default, we choose to unify backends
+        # by using a default "ortho" proj when `:auto`
+        (;
+            proj_type = (
+                auto = "ortho",
+                ortho = "ortho",
+                orthographic = "ortho",
+                persp = "persp",
+                perspective = "persp",
+            )[sp[:projection_type]]
+        )
+    else
+        (;)
+    end
     # add a new axis, and force it to create a new one by setting a distinct label
-    ax = fig."add_axes"([0, 0, 1, 1], label = string(gensym()), projection = proj)
+    ax = fig."add_axes"(
+        [0, 0, 1, 1];
+        label = string(gensym()),
+        projection = projection,
+        kw...,
+    )
     sp.o = ax
 end
 
@@ -430,7 +448,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # pass in an integer value as an arg, but a levels list as a keyword arg
     levels = series[:levels]
     levelargs = if isscalar(levels)
-        (levels)
+        levels
     elseif isvector(levels)
         extrakw[:levels] = levels
         ()
@@ -678,7 +696,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
 
         elseif typeof(z) <: AbstractVector
-            # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
+            # tri-surface plot (https://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
             handle = ax."plot_trisurf"(
                 x,
                 y,
@@ -947,11 +965,7 @@ end
 function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     scale in supported_scales() || return @warn("Unhandled scale value in pyplot: $scale")
     func = getproperty(ax, Symbol("set_", letter, "scale"))
-    if PyPlot.version ≥ v"3.3" # https://matplotlib.org/3.3.0/api/api_changes.html
-        pyletter = Symbol("")
-    else
-        pyletter = letter
-    end
+    pyletter = PyPlot.version ≥ v"3.3" ? Symbol("") : letter  # https://matplotlib.org/3.3.0/api/api_changes.html
     kw = KW()
     arg = if scale === :identity
         "linear"
@@ -971,11 +985,8 @@ function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     func(arg; kw...)
 end
 
-function py_set_scale(ax, sp::Subplot, axis::Axis)
-    scale = axis[:scale]
-    letter = axis[:letter]
-    py_set_scale(ax, sp, scale, letter)
-end
+py_set_scale(ax, sp::Subplot, axis::Axis) =
+    py_set_scale(ax, sp, axis[:scale], axis[:letter])
 
 py_set_spine_color(spines, color) =
     for loc in spines
@@ -1012,7 +1023,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig."clear"()
-    dpi = plt[:dpi]
     fig."set_size_inches"(w / DPI, h / DPI, forward = true)
     getproperty(fig, set_facecolor_sym)(py_color(plt[:background_color_outside]))
     fig."set_dpi"(plt[:dpi])
@@ -1032,10 +1042,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
     # update subplots
     for sp in plt.subplots
-        ax = sp.o
-        if ax === nothing
-            continue
-        end
+        (ax = sp.o) === nothing && continue
 
         # add the annotations
         for ann in sp[:annotations]
@@ -1043,7 +1050,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         # title
-        if sp[:title] != ""
+        if !isempty(sp[:title])
             loc = lowercase(string(sp[:titlelocation]))
             func = if loc == "left"
                 :_left_title
@@ -1427,16 +1434,26 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         # aspect ratio
-        aratio = get_aspect_ratio(sp)
-        if aratio !== :none
-            ax."set_aspect"(isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
+        if (ratio = get_aspect_ratio(sp)) !== :none
+            if RecipesPipeline.is3d(sp)
+                if ratio === :auto
+                    nothing
+                elseif ratio === :equal
+                    ax."set_box_aspect"((1, 1, 1))
+                else
+                    ax."set_box_aspect"(ratio)
+                end
+            else
+                ax."set_aspect"(isa(ratio, Symbol) ? string(ratio) : ratio, anchor = "C")
+            end
         end
 
-        #camera/view angle
+        # camera/view angle
         if RecipesPipeline.is3d(sp)
-            #convert azimuthal to match GR behaviour
-            #view_init(elevation, azimuthal) so reverse :camera args
-            ax."view_init"((sp[:camera] .- (90, 0))[end:-1:1]...)
+            # convert azimuth to match GR behaviour
+            azimuth, elevation = sp[:camera] .- (90, 0)
+            # signature: view_init(elevation, azimuth), so reverse :camera args
+            ax."view_init"(elevation, azimuth)
         end
 
         # legend
@@ -1453,20 +1470,29 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     py_drawfig(fig)
 end
 
+expand_padding!(padding, bb, plotbb) =
+    if ispositive(width(bb)) && ispositive(height(bb))
+        padding[:] =
+            max.(
+                padding,
+                [
+                    left(plotbb) - left(bb),
+                    top(plotbb) - top(bb),
+                    right(bb) - right(plotbb),
+                    bottom(bb) - bottom(plotbb),
+                ],
+            )
+    end
+
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PyPlotBackend})
-    ax = sp.o
-    ax === nothing && return sp.minpad
+    (ax = sp.o) === nothing && return sp.minpad
     plotbb = py_bbox(ax)
 
     # TODO: this should initialize to the margin from sp.attr
     # figure out how much the axis components and title "stick out" from the plot area
-    # leftpad = toppad = rightpad = bottompad = 1mm
-    leftpad   = 0mm
-    toppad    = 0mm
-    rightpad  = 0mm
-    bottompad = 0mm
+    padding = [0mm, 0mm, 0mm, 0mm]  # leftpad, toppad, rightpad, bottompad
 
     for bb in (
         py_bbox_axis(ax, "x"),
@@ -1474,41 +1500,31 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
         py_bbox_title(ax),
         py_bbox_legend(ax),
     )
-        if ispositive(width(bb)) && ispositive(height(bb))
-            leftpad   = max(leftpad, left(plotbb) - left(bb))
-            toppad    = max(toppad, top(plotbb) - top(bb))
-            rightpad  = max(rightpad, right(bb) - right(plotbb))
-            bottompad = max(bottompad, bottom(bb) - bottom(plotbb))
-        end
+        expand_padding!(padding, bb, plotbb)
     end
 
     if haskey(sp.attr, :cbar_ax) # Treat colorbar the same way
         ax = sp.attr[:cbar_handle]."ax"
         for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
-            if ispositive(width(bb)) && ispositive(height(bb))
-                leftpad   = max(leftpad, left(plotbb) - left(bb))
-                toppad    = max(toppad, top(plotbb) - top(bb))
-                rightpad  = max(rightpad, right(bb) - right(plotbb))
-                bottompad = max(bottompad, bottom(bb) - bottom(plotbb))
-            end
+            expand_padding!(padding, bb, plotbb)
         end
     end
 
     # optionally add the width of colorbar labels and colorbar to rightpad
-    if RecipesPipeline.is3d(sp) && haskey(sp.attr, :cbar_ax)
-        bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
-        sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
+    if RecipesPipeline.is3d(sp)
+        expand_padding!(padding, py_bbox_axis(ax, "z"), plotbb)
+        if haskey(sp.attr, :cbar_ax)
+            bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
+            sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
+        end
     end
 
     # add in the user-specified margin
-    leftpad   += sp[:left_margin]
-    toppad    += sp[:top_margin]
-    rightpad  += sp[:right_margin]
-    bottompad += sp[:bottom_margin]
+    padding .+= [sp[:left_margin], sp[:top_margin], sp[:right_margin], sp[:bottom_margin]]
 
     dpi_factor = Plots.DPI / sp.plt[:dpi]
 
-    sp.minpad = Tuple(dpi_factor .* [leftpad, toppad, rightpad, bottompad])
+    sp.minpad = Tuple(dpi_factor .* padding)
 end
 
 # -----------------------------------------------------------------
@@ -1546,8 +1562,8 @@ function py_legend_pos(pos::Tuple{<:Real,Symbol})
         s = -s
         c = -c
     end
-    yanchors = ["lower", "center", "upper"]
-    xanchors = ["left", "center", "right"]
+    yanchors = ("lower", "center", "upper")
+    xanchors = ("left", "center", "right")
     return join([yanchors[legend_anchor_index(s)], xanchors[legend_anchor_index(c)]], ' ')
 end
 
@@ -1561,8 +1577,7 @@ end
 py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
-    leg = sp[:legend_position]
-    if leg !== :none
+    if (leg = sp[:legend_position]) !== :none
         # gotta do this to ensure both axes are included
         labels = []
         handles = []
@@ -1704,8 +1719,7 @@ end
 # position the subplot in the backend.
 function _update_plot_object(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
-        ax = sp.o
-        ax === nothing && return
+        (ax = sp.o) === nothing && return
         figw, figh = sp.plt[:size]
         figw, figh = figw * px, figh * px
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)
