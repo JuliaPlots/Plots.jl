@@ -11,24 +11,13 @@ const TicksArgs =
 
 struct PlotsDisplay <: AbstractDisplay end
 
-# -----------------------------------------------------------
-
 struct InputWrapper{T}
     obj::T
 end
-wrap(obj::T) where {T} = InputWrapper{T}(obj)
-Base.isempty(wrapper::InputWrapper) = false
-
-# -----------------------------------------------------------
 
 mutable struct Series
     plotattributes::DefaultsDict
 end
-
-attr(series::Series, k::Symbol) = series.plotattributes[k]
-attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
-
-# -----------------------------------------------------------
 
 # a single subplot
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
@@ -41,11 +30,19 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     attr::DefaultsDict  # args specific to this subplot
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
+
+    Subplot(::T; parent = RootLayout()) where {T<:AbstractBackend} = new{T}(
+        parent,
+        Series[],
+        0,
+        defaultminpad,
+        defaultbox,
+        defaultbox,
+        DefaultsDict(KW(), _subplot_defaults),
+        nothing,
+        nothing,
+    )
 end
-
-Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
-
-# -----------------------------------------------------------
 
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
 mutable struct Axis
@@ -56,14 +53,11 @@ end
 mutable struct Extrema
     emin::Float64
     emax::Float64
-end
-Extrema() = Extrema(Inf, -Inf)
 
-# -----------------------------------------------------------
+    Extrema() = new(Inf, -Inf)
+end
 
 const SubplotMap = Dict{Any,Subplot}
-
-# -----------------------------------------------------------
 
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
@@ -76,20 +70,73 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     layout::AbstractLayout
     inset_subplots::Vector{Subplot}  # list of inset subplots
     init::Bool
+
+    function Plot()
+        be = backend()
+        new{typeof(be)}(
+            be,
+            0,
+            DefaultsDict(KW(), _plot_defaults),
+            Series[],
+            nothing,
+            Subplot[],
+            SubplotMap(),
+            EmptyLayout(),
+            Subplot[],
+            false,
+        )
+    end
+
+    function Plot(osp::Subplot)
+        plt = Plot()
+        plt.layout = GridLayout(1, 1)
+        @static if true
+            sp = deepcopy(osp)  # NOTE: fails `PlotlyJS`
+        else
+            sp = Subplot(plt.backend; parent = plt.layout)
+            sp.series_list = copy(osp.series_list)
+            sp.attr = copy(osp.attr)
+        end
+        plt.layout.grid[1, 1] = sp
+        # reset some attributes
+        sp.minpad = defaultminpad
+        sp.bbox = defaultbox
+        sp.plotarea = defaultbox
+        sp.plt = plt  # change the enclosing plot
+        push!(plt.subplots, sp)
+        plt
+    end
 end
 
-Plot() = Plot(
-    backend(),
-    0,
-    DefaultsDict(KW(), _plot_defaults),
-    Series[],
-    nothing,
-    Subplot[],
-    SubplotMap(),
-    EmptyLayout(),
-    Subplot[],
-    false,
-)
+struct PlaceHolder end
+
+# -----------------------------------------------------------
+
+wrap(obj::T) where {T} = InputWrapper{T}(obj)
+Base.isempty(wrapper::InputWrapper) = false
+
+# -----------------------------------------------------------
+
+attr(series::Series, k::Symbol) = series.plotattributes[k]
+attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
+
+should_add_to_legend(series::Series) =
+    series.plotattributes[:primary] &&
+    series.plotattributes[:label] != "" &&
+    series.plotattributes[:seriestype] ∉ (
+        :hexbin,
+        :bins2d,
+        :histogram2d,
+        :hline,
+        :vline,
+        :contour,
+        :contourf,
+        :contour3d,
+        :surface,
+        :wireframe,
+        :heatmap,
+        :image,
+    )
 
 # -----------------------------------------------------------------------
 
@@ -109,3 +156,32 @@ Base.getindex(sp::Subplot, i::Integer) = series_list(sp)[i]
 Base.lastindex(sp::Subplot) = length(series_list(sp))
 
 # -----------------------------------------------------------------------
+
+Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
+
+"""
+    plotarea(subplot)
+
+Return the bounding box of a subplot.
+"""
+plotarea(sp::Subplot) = sp.plotarea
+plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
+
+Base.size(sp::Subplot) = (1, 1)
+Base.length(sp::Subplot) = 1
+Base.getindex(sp::Subplot, r::Int, c::Int) = sp
+
+leftpad(sp::Subplot)   = sp.minpad[1]
+toppad(sp::Subplot)    = sp.minpad[2]
+rightpad(sp::Subplot)  = sp.minpad[3]
+bottompad(sp::Subplot) = sp.minpad[4]
+
+get_subplot(plt::Plot, sp::Subplot) = sp
+get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
+get_subplot(plt::Plot, k) = plt.spmap[k]
+get_subplot(series::Series) = series.plotattributes[:subplot]
+
+get_subplot_index(plt::Plot, idx::Integer) = Int(idx)
+get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
+
+series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)

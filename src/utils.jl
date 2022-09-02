@@ -358,6 +358,10 @@ limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real} = :limits
 limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
+isautop(sp::Subplot) = sp[:projection_type] === :auto
+isortho(sp::Subplot) = sp[:projection_type] ∈ (:ortho, :orthographic)
+ispersp(sp::Subplot) = sp[:projection_type] ∈ (:persp, :perspective)
+
 # recursively merge kw-dicts, e.g. for merging extra_kwargs / extra_plot_kwargs in plotly)
 recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)
 # if values are not AbstractDicts, take the last definition (as does merge)

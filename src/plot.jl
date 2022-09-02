@@ -93,21 +93,27 @@ end
 
 # build a new plot from existing plots
 # note: we split into plt1, plt2 and plts_tail so we can dispatch correctly
-plot(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...) =
-    plot!(deepcopy(plt1), deepcopy(plt2), deepcopy.(plts_tail)...; kw...)
-function plot!(plt1::Plot, plt2::Plot, plts_tail::Plot...; kw...)
+plot(
+    plt1::Plot,
+    plt2::Union{PlaceHolder,Plot},
+    plts_tail::Union{PlaceHolder,Plot}...;
+    kw...,
+) = plot!(deepcopy(plt1), deepcopy(plt2), deepcopy.(plts_tail)...; kw...)
+function plot!(
+    plt1::Plot,
+    plt2::Union{PlaceHolder,Plot},
+    plts_tail::Union{PlaceHolder,Plot}...;
+    kw...,
+)
     @nospecialize
     plotattributes = KW(kw)
     RecipesPipeline.preprocess_attributes!(plotattributes)
 
     # build our plot vector from the args
-    n = length(plts_tail) + 2
-    plts = Array{Plot}(undef, n)
-    plts[1] = plt1
-    plts[2] = plt2
-    for (i, plt) in enumerate(plts_tail)
-        plts[i + 2] = plt
-    end
+    plts = Plot[plt1]
+    plt2 isa PlaceHolder || push!(plts, plt2)
+    foreach(p -> p isa PlaceHolder || push!(plts, p), plts_tail)
+    n = length(plts)
 
     # compute the layout
     layout = layout_args(plotattributes, n)[1]
@@ -191,6 +197,7 @@ end
 
 # this adds to a specific plot... most plot commands will flow through here
 plot(plt::Plot, args...; kw...) = plot!(deepcopy(plt), args...; kw...)
+
 function plot!(plt::Plot, args...; kw...)
     @nospecialize
     plotattributes = KW(kw)
@@ -260,13 +267,26 @@ function backend_object(plt::Plot)
 end
 
 # --------------------------------------------------------------------
-# plot to a Subplot
 
+"""
+Extract a subplot from an existing plot.
+
+# Examples
+```julia-repl
+julia> p1, p2 = plot(1:2), plot(10:20)
+julia> pl = plot(p1, p2)  # plot containing 2 subplots
+
+julia> plot(pl.subplots[1])  # extract 1st subplot as a standalone plot
+julia> plot(pl.subplots[2])  # extract 2nd subplot as a standalone plot
+```
+"""
 function plot(sp::Subplot, args...; kw...)
     @nospecialize
-    plt = sp.plt
-    plot(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
+    plt = Plots.Plot(sp)
+    plot(plt, PlaceHolder(), PlaceHolder(), args...; kw...)
 end
+
+# plot to a Subplot
 function plot!(sp::Subplot, args...; kw...)
     @nospecialize
     plt = sp.plt
