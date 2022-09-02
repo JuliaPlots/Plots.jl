@@ -53,9 +53,9 @@ end
 mutable struct Extrema
     emin::Float64
     emax::Float64
-
-    Extrema() = new(Inf, -Inf)
 end
+
+Extrema() = Extrema(Inf, -Inf)
 
 const SubplotMap = Dict{Any,Subplot}
 
