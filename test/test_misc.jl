@@ -164,3 +164,20 @@ end
               ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
     end
 end
+
+@testset "Extract subplot" begin  # JuliaPlots/Plots.jl/issues/4045
+    x1, y1 = -1:5, 4:10
+    x2, y2 = rand(10), rand(10)
+    p1, p2 = plot(x1, y1), plot(x2, y2)
+    pl = plot(p1, p2)  # full plot, with 2 subplots
+
+    pl1 = plot(pl.subplots[1])
+    series = first(first(pl1.subplots).series_list)
+    @test series[:x] == x1
+    @test series[:y] == y1
+
+    pl2 = plot(pl.subplots[2])
+    series = first(first(pl2.subplots).series_list)
+    @test series[:x] == x2
+    @test series[:y] == y2
+end

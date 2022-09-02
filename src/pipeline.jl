@@ -10,8 +10,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
 )
     pkeys = keys(plotattributes)
     for k in pkeys
-        dk = get(_keyAliases, k, nothing)
-        if dk !== nothing
+        if (dk = get(_keyAliases, k, nothing)) !== nothing
             kv = RecipesPipeline.pop_kw!(plotattributes, k)
             if dk ∉ pkeys
                 plotattributes[dk] = kv
@@ -350,14 +349,12 @@ RecipesPipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported
 
 function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
-    if plotattributes[:permute] !== :none
-        letter1, letter2 = plotattributes[:permute]
-        if plotattributes[:markershape] === :hline &&
-           (plotattributes[:permute] == (:x, :y) || plotattributes[:permute] == (:y, :x))
+    if (perm = plotattributes[:permute]) !== :none
+        letter1, letter2 = perm
+        ms = plotattributes[:markershape]
+        if ms === :hline && (perm == (:x, :y) || perm == (:y, :x))
             plotattributes[:markershape] = :vline
-        elseif plotattributes[:markershape] === :vline && (
-            plotattributes[:permute] == (:x, :y) || plotattributes[:permute] == (:y, :x)
-        )
+        elseif ms === :vline && (perm == (:x, :y) || perm == (:y, :x))
             plotattributes[:markershape] = :hline
         end
         plotattributes[letter1], plotattributes[letter2] =
@@ -396,13 +393,10 @@ end
 
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
-    if !RecipesPipeline.is3d(st) && !(st in (:contour, :contour3d, :quiver))
-        z = plotattributes[:z]
-        if (
-            z !== nothing &&
-            (size(plotattributes[:x]) == size(plotattributes[:y]) == size(z))
-        )
-            st = (st === :scatter ? :scatter3d : :path3d)
+    if !RecipesPipeline.is3d(st) && st ∉ (:contour, :contour3d, :quiver)
+        if (z = plotattributes[:z]) !== nothing &&
+           size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)
+            st = st === :scatter ? :scatter3d : :path3d
             plotattributes[:seriestype] = st
         end
     end
@@ -422,7 +416,7 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
         ymin, ymax = ignorenan_extrema(plotattributes[:y])
         expand_extrema!(sp[:xaxis], (xmin, xmax))
         expand_extrema!(sp[:yaxis], (ymin, ymax))
-    elseif !(st in (:histogram, :bins2d, :histogram2d))
+    elseif st ∉ (:histogram, :bins2d, :histogram2d)
         expand_extrema!(sp, plotattributes)
     end
     # expand for zerolines (axes through origin)
@@ -438,11 +432,11 @@ function _add_the_series(plt, sp, plotattributes)
         plt[:extra_plot_kwargs] = get(kw, :plot, KW())
         sp[:extra_kwargs] = get(kw, :subplot, KW())
         plotattributes[:extra_kwargs] = get(kw, :series, KW())
-    elseif plt[:extra_kwargs] === :plot
+    elseif kw === :plot
         plt[:extra_plot_kwargs] = extra_kwargs
-    elseif plt[:extra_kwargs] === :subplot
+    elseif kw === :subplot
         sp[:extra_kwargs] = extra_kwargs
-    elseif plt[:extra_kwargs] === :series
+    elseif kw === :series
         plotattributes[:extra_kwargs] = extra_kwargs
     else
         ArgumentError("Unsupported type for extra keyword arguments")
@@ -450,8 +444,7 @@ function _add_the_series(plt, sp, plotattributes)
     warn_on_unsupported(plt.backend, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
-    z_order = plotattributes[:z_order]
-    if z_order === :front
+    if (z_order = plotattributes[:z_order]) === :front
         push!(sp.series_list, series)
     elseif z_order === :back
         pushfirst!(sp.series_list, series)

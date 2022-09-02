@@ -24,9 +24,9 @@ jobs:
       fail-fast: false
       matrix:
         version:   # NOTE: the versions below should match those in your botconfig
-          - '1.6'       # ⎤
-          - '1.7'       # |
-          - '~1.8.0-0'  # |
+          - '1.6'         # ⎤
+          - '1.7'         # |
+          - '1.8'         # |
           # - 'nightly'   # ⎦ <<< keep these versions in sync with deps/SnoopCompile/snoop_bot_config.jl
           # ^^^^^^^^^ for 'nightly', see github.com/JuliaPlots/Plots.jl/issues/4079
         os:        # NOTE: should match the os setting of your botconfig
@@ -59,7 +59,7 @@ jobs:
       - name: Default TESTCMD
         run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
-        if: startsWith(matrix.os,'ubuntu')
+        if: startsWith(matrix.os, 'ubuntu')
         run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
 
       # Generate precompile files

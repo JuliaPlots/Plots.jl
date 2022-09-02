@@ -664,9 +664,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 33
         "Magic grid argument",
-        """
-        The grid lines can be modified individually for each axis with the magic `grid` argument.
-        """,
+        "The grid lines can be modified individually for each axis with the magic `grid` argument.",
         [
             :(
                 begin
@@ -736,9 +734,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 36
         "Portfolio Composition maps",
-        """
-        see: http://stackoverflow.com/a/37732384/5075246
-        """,
+        "see: https://stackoverflow.com/a/37732384",
         [:(
             begin
                 using Random
@@ -1199,15 +1195,15 @@ const _examples = PlotExample[
                     x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
                     args = x, y, (x, y) -> sinc(norm([x, y]) / π)
-                    kwargs = Dict(
-                        :xlabel => "x",
-                        :ylabel => "y",
-                        :zlabel => "z",
-                        :grid => true,
-                        :minorgrid => true,
+                    kw = (
+                        xlabel = "x",
+                        ylabel = "y",
+                        zlabel = "z",
+                        grid = true,
+                        minorgrid = true,
                     )
 
-                    plots = [wireframe(args..., title = "wire"; kwargs...)]
+                    plots = [wireframe(args..., title = "wire"; kw...)]
 
                     for ax in (:x, :y, :z)
                         push!(
@@ -1218,7 +1214,7 @@ const _examples = PlotExample[
                                 xflip = ax === :x,
                                 yflip = ax === :y,
                                 zflip = ax === :z;
-                                kwargs...,
+                                kw...,
                             ),
                         )
                     end
@@ -1232,7 +1228,7 @@ const _examples = PlotExample[
                                 xmirror = ax === :x,
                                 ymirror = ax === :y,
                                 zmirror = ax === :z;
-                                kwargs...,
+                                kw...,
                             ),
                         )
                     end
@@ -1283,9 +1279,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 57
         "Vertical and horizonal spans",
-        """
-        `vspan` and `hspan` can be used to shade horizontal and vertical ranges.
-        """,
+        "`vspan` and `hspan` can be used to shade horizontal and vertical ranges.",
         [:(
             begin
                 hspan([1, 2, 3, 4]; label = "hspan", legend = :topleft)
@@ -1296,9 +1290,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 58
         "Stacked area chart",
-        """
-        `areaplot` draws stacked area plots.
-        """,
+        "`areaplot` draws stacked area plots.",
         [
             :(
                 begin
@@ -1314,8 +1306,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 59
         "Annotations at discrete locations",
-        """
-        """,
+        "",
         [
             :(
                 begin
@@ -1331,6 +1322,89 @@ const _examples = PlotExample[
                         ["a", "b"],
                         ["r", "q"],
                         [text("ar", :top, :left, 50), text("bq", :bottom, :right, 20)],
+                    )
+                end
+            ),
+        ],
+    ),
+    PlotExample( # 60
+        "3D projection",
+        "3D plots projection: orthographic (isometric) and perspective (fps).",
+        [
+            :(
+                begin
+                    # 3d cube segments
+                    x = [
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, +1],
+                        [+1, +1],
+                        [+1, +1],
+                        [-1, -1],
+                        [-1, -1],
+                        [+1, +1],
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, +1],
+                        [+1, +1],
+                    ]
+                    y = [
+                        [+1, +1],
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, +1],
+                        [+1, +1],
+                        [+1, +1],
+                        [-1, -1],
+                        [-1, -1],
+                        [+1, +1],
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, +1],
+                    ]
+                    z = [
+                        [+1, +1],
+                        [+1, +1],
+                        [+1, +1],
+                        [+1, +1],
+                        [-1, +1],
+                        [-1, +1],
+                        [-1, +1],
+                        [-1, +1],
+                        [-1, -1],
+                        [-1, -1],
+                        [-1, -1],
+                        [-1, -1],
+                    ]
+                    kw = (
+                        aspect_ratio = :equal,
+                        label = :none,
+                        xlabel = "x",
+                        ylabel = "y",
+                        zlabel = "z",
+                        xlims = (-1.1, 1.1),
+                        ylims = (-1.1, 1.1),
+                        zlims = (-1.1, 1.1),
+                    )
+                    plot(
+                        plot(
+                            x,
+                            y,
+                            z;
+                            proj_type = :ortho,
+                            title = "orthographic (isometric)",
+                            camera = (45, round(atand(1 / √2); digits = 3)),
+                            kw...,
+                        ),
+                        plot(
+                            x,
+                            y,
+                            z;
+                            proj_type = :persp,
+                            title = "perspective (fps)",
+                            camera = (0, 0),
+                            kw...,
+                        ),
                     )
                 end
             ),
@@ -1355,7 +1429,8 @@ _backend_skips = Dict(
         51,  # image with custom axes
         56,  # custom bar plot
     ],
-    :inspectdr => [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56],
+    :inspectdr =>
+        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60],
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images unsupported
@@ -1379,6 +1454,7 @@ _backend_skips = Dict(
         31,  # animations
         49,  # TODO: support polar
         50,  # TODO: 1D data not supported for pm3d
+        60,  # :perspective projection unsupported
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
@@ -1403,11 +1479,9 @@ end
 
 # generate all plots and create a dict mapping idx --> plt
 """
-test_examples(pkgname[, idx]; debug = false, disp = true, sleep = nothing,
-                                        skip = [], only = nothing
+test_examples(pkgname[, idx]; debug=false, disp=true, sleep=nothing, skip=[], only=nothing)
 
-Run the `idx` test example for a given backend, or all examples if `idx`
-is not specified.
+Run the `idx` test example for a given backend, or all examples if `idx` is not specified.
 """
 function test_examples(
     pkgname::Symbol;
@@ -1420,7 +1494,7 @@ function test_examples(
     Plots._debugMode.on = debug
     plts = Dict()
     for i in eachindex(_examples)
-        only !== nothing && !(i in only) && continue
+        (only !== nothing && i ∉ only) && continue
         i in skip && continue
         try
             plt = test_examples(pkgname, i, debug = debug, disp = disp)

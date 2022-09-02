@@ -150,6 +150,28 @@ gr_set_fillstyle(::Nothing) = GR.setfillintstyle(GR.INTSTYLE_SOLID)
 function gr_set_fillstyle(s::Symbol)
     GR.setfillintstyle(GR.INTSTYLE_HATCH)
     GR.setfillstyle(get(((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6), s, 9))
+    nothing
+end
+
+function gr_set_projectiontype(sp)
+    GR.setprojectiontype(
+        # https://gr-framework.org/python-gr.html?highlight=setprojectiontype#gr.setprojectiontype
+        # PROJECTION_DEFAULT      0 default
+        # PROJECTION_ORTHOGRAPHIC 1 orthographic
+        # PROJECTION_PERSPECTIVE  2 perspective
+        # we choose to unify backends by using a default `orthographic` proj when `:auto`
+        (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]],
+    )
+    #=
+    GR.gr3.setprojectiontype(
+        # https://github.com/sciapp/gr/blob/master/lib/gr3/gr3.h
+        #define GR3_PROJECTION_PERSPECTIVE  0
+        #define GR3_PROJECTION_PARALLEL     1
+        #define GR3_PROJECTION_ORTHOGRAPHIC 2
+        (auto = 0, ortho = 2, orthographic = 2, persp = 0, perspective = 0)[sp[:projection_type]],
+    )
+    =#
+    nothing
 end
 
 # --------------------------------------------------------------------------------------
@@ -265,7 +287,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(sp, yaxis, update = false)
 
-    #draw angular grid
+    # draw angular grid
     if xaxis[:grid]
         gr_set_line(
             xaxis[:gridlinewidth],
@@ -279,7 +301,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
         end
     end
 
-    #draw radial grid
+    # draw radial grid
     if yaxis[:grid]
         gr_set_line(
             yaxis[:gridlinewidth],
@@ -297,12 +319,12 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
         GR.drawarc(-1, 1, -1, 1, 0, 359)
     end
 
-    #prepare to draw ticks
+    # prepare to draw ticks
     gr_set_transparency(1)
     GR.setlinecolorind(90)
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
 
-    #draw angular ticks
+    # draw angular ticks
     if xaxis[:showaxis]
         GR.drawarc(-1, 1, -1, 1, 0, 359)
         for i in eachindex(α)
@@ -311,7 +333,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
         end
     end
 
-    #draw radial ticks
+    # draw radial ticks
     if yaxis[:showaxis]
         for i in eachindex(rtick_values)
             r = (rtick_values[i] - rmin) / (rmax - rmin)
@@ -1377,12 +1399,9 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
 end
 
 function gr_update_viewport_ratio!(viewport_plotarea, sp)
-    ratio = get_aspect_ratio(sp)
-    if ratio !== :none
+    if (ratio = get_aspect_ratio(sp)) !== :none
+        ratio === :equal && (ratio = 1)
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
-        if ratio === :equal
-            ratio = 1
-        end
         viewport_ratio =
             (viewport_plotarea[2] - viewport_plotarea[1]) /
             (viewport_plotarea[4] - viewport_plotarea[3])
@@ -1411,11 +1430,11 @@ function gr_set_window(sp, viewport_plotarea)
     else
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         needs_3d = needs_any_3d_axes(sp)
-        if needs_3d
+        zok = if needs_3d
             zmin, zmax = gr_z_axislims(sp)
-            zok = zmax > zmin
+            zmax > zmin
         else
-            zok = true
+            true
         end
 
         scaleop = 0
@@ -1449,18 +1468,20 @@ function gr_draw_axes(sp, viewport_plotarea)
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         zmin, zmax = gr_z_axislims(sp)
 
-        camera = sp[:camera]
+        azimuth, elevation = sp[:camera]
 
         GR.setwindow3d(xmin, xmax, ymin, ymax, zmin, zmax)
-        GR.setspace3d(-90 + camera[1], 90 - camera[2], 30, 0)
+        fov = isortho(sp) || isautop(sp) ? NaN : 30
+        cam = isortho(sp) || isautop(sp) ? 0 : NaN
+        GR.setspace3d(-90 + azimuth, 90 - elevation, fov, cam)
+        gr_set_projectiontype(sp)
 
         # fill the plot area
         gr_set_fill(plot_color(sp[:background_color_inside]))
-        plot_area_x = [xmin, xmin, xmin, xmax, xmax, xmax, xmin]
-        plot_area_y = [ymin, ymin, ymax, ymax, ymax, ymin, ymin]
-        plot_area_z = [zmin, zmax, zmax, zmax, zmin, zmin, zmin]
-        x_bg, y_bg =
-            RecipesPipeline.unzip(GR.wc3towc.(plot_area_x, plot_area_y, plot_area_z))
+        area_x = [xmin, xmin, xmin, xmax, xmax, xmax, xmin]
+        area_y = [ymin, ymin, ymax, ymax, ymax, ymin, ymin]
+        area_z = [zmin, zmax, zmax, zmax, zmin, zmin, zmin]
+        x_bg, y_bg = RecipesPipeline.unzip(GR.wc3towc.(area_x, area_y, area_z))
         GR.fillarea(x_bg, y_bg)
 
         for letter in (:x, :y, :z)
@@ -1822,7 +1843,7 @@ function gr_add_series(sp, series)
 
     GR.savestate()
 
-    x, y, z = (handle_surface(series[letter]) for letter in (:x, :y, :z))
+    x, y, z = map(letter -> handle_surface(series[letter]), (:x, :y, :z))
     xscale, yscale = sp[:xaxis][:scale], sp[:yaxis][:scale]
     frng = series[:fillrange]
 
@@ -1840,6 +1861,8 @@ function gr_add_series(sp, series)
     # add custom frame shapes to markershape?
     series_annotations_shapes!(series)
     # -------------------------------------------------------
+
+    gr_is3d(sp) && gr_set_projectiontype(sp)
 
     # draw the series
     if st in (:path, :scatter, :straightline)
@@ -2081,7 +2104,7 @@ function gr_draw_surface(series, x, y, z, clims)
                     ),
                 )
             end
-            cns = [([3, ci[i] + 1, cj[i] + 1, ck[i] + 1]) for i in eachindex(ci)]
+            cns = map(i -> ([3, ci[i] + 1, cj[i] + 1, ck[i] + 1]), eachindex(ci))
         else
             throw(
                 ArgumentError(
