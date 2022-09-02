@@ -83,7 +83,7 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         azimuth = mod(azimuth + 180 - 90, 360) - 180
         projection = if plot_3d
             (
-                auto = :ortho,
+                auto = :ortho,  # we choose to unify backends by using `:ortho` proj when `:auto`
                 ortho = :ortho,
                 orthographic = :ortho,
                 persp = :persp,

@@ -159,6 +159,7 @@ function gr_set_projectiontype(sp)
         # PROJECTION_DEFAULT      0 default
         # PROJECTION_ORTHOGRAPHIC 1 orthographic
         # PROJECTION_PERSPECTIVE  2 perspective
+        # we choose to unify backends by using a default `orthographic` proj when `:auto`
         (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]],
     )
     #=
@@ -1470,18 +1471,17 @@ function gr_draw_axes(sp, viewport_plotarea)
         azimuth, elevation = sp[:camera]
 
         GR.setwindow3d(xmin, xmax, ymin, ymax, zmin, zmax)
-        fov = isortho(sp) ? NaN : 30
-        cam = isortho(sp) ? 0 : NaN
+        fov = isortho(sp) || isautop(sp) ? NaN : 30
+        cam = isortho(sp) || isautop(sp) ? 0 : NaN
         GR.setspace3d(-90 + azimuth, 90 - elevation, fov, cam)
         gr_set_projectiontype(sp)
 
         # fill the plot area
         gr_set_fill(plot_color(sp[:background_color_inside]))
-        plot_area_x = [xmin, xmin, xmin, xmax, xmax, xmax, xmin]
-        plot_area_y = [ymin, ymin, ymax, ymax, ymax, ymin, ymin]
-        plot_area_z = [zmin, zmax, zmax, zmax, zmin, zmin, zmin]
-        x_bg, y_bg =
-            RecipesPipeline.unzip(GR.wc3towc.(plot_area_x, plot_area_y, plot_area_z))
+        area_x = [xmin, xmin, xmin, xmax, xmax, xmax, xmin]
+        area_y = [ymin, ymin, ymax, ymax, ymax, ymin, ymin]
+        area_z = [zmin, zmax, zmax, zmax, zmin, zmin, zmin]
+        x_bg, y_bg = RecipesPipeline.unzip(GR.wc3towc.(area_x, area_y, area_z))
         GR.fillarea(x_bg, y_bg)
 
         for letter in (:x, :y, :z)

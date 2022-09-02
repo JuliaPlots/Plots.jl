@@ -269,7 +269,7 @@ function plotly_layout(plt::Plot)
                             :z => cosd(theta) * 2.6,
                         ),
                         :projection => (
-                            auto = "perspective",
+                            auto = "orthographic",  # we choose to unify backends by using a default "orthographic" proj when `:auto`
                             ortho = "orthographic",
                             orthographic = "orthographic",
                             persp = "perspective",

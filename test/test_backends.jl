@@ -9,7 +9,11 @@ Base.eval(TEST_MODULE, quote
 end)
 
 reference_dir(args...) =
-    joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+    if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) !== nothing
+        ref_dir
+    else
+        joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+    end
 reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 
 if !isdir(reference_dir())

@@ -1463,11 +1463,9 @@ end
 
 # generate all plots and create a dict mapping idx --> plt
 """
-test_examples(pkgname[, idx]; debug = false, disp = true, sleep = nothing,
-                                        skip = [], only = nothing
+test_examples(pkgname[, idx]; debug=false, disp=true, sleep=nothing, skip=[], only=nothing)
 
-Run the `idx` test example for a given backend, or all examples if `idx`
-is not specified.
+Run the `idx` test example for a given backend, or all examples if `idx` is not specified.
 """
 function test_examples(
     pkgname::Symbol;
@@ -1480,7 +1478,7 @@ function test_examples(
     Plots._debugMode.on = debug
     plts = Dict()
     for i in eachindex(_examples)
-        only !== nothing && !(i in only) && continue
+        (only !== nothing && i ∉ only) && continue
         i in skip && continue
         try
             plt = test_examples(pkgname, i, debug = debug, disp = disp)

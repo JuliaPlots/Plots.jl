@@ -358,6 +358,7 @@ limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real} = :limits
 limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
+isautop(sp::Subplot) = sp[:projection_type] === :auto
 isortho(sp::Subplot) = sp[:projection_type] ∈ (:ortho, :orthographic)
 ispersp(sp::Subplot) = sp[:projection_type] ∈ (:persp, :perspective)
 
