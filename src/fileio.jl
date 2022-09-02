@@ -23,5 +23,4 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     write(io, read(open(pngfn), String))
 end
 
-const PDFBackends =
-    Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
+const PDFBackends = Union{PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}

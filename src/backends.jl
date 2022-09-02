@@ -195,11 +195,7 @@ const _deprecated_backends =
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
-        if bsym === :pgfplots
-            @warn("Backend $bsym has been deprecated. Use pgfplotsx instead.")
-        else
-            @warn("Backend $bsym has been deprecated.")
-        end
+        @warn("Backend $bsym has been deprecated.")
     end
 end
 
@@ -261,7 +257,6 @@ end
 @init_backend Plotly
 @init_backend PlotlyJS
 @init_backend GR
-@init_backend PGFPlots
 @init_backend PGFPlotsX
 @init_backend InspectDR
 @init_backend HDF5
@@ -560,102 +555,6 @@ const _plotly_marker = [
 const _plotly_scale = [:identity, :log10]
 
 defaultOutputFormat(plt::Plot{Plots.PlotlyBackend}) = "html"
-
-# ------------------------------------------------------------------------------
-# pgfplots
-
-const _pgfplots_attr = merge_with_base_supported([
-    :annotations,
-    :legend_background_color,
-    :background_color_inside,
-    # :background_color_outside,
-    # :legend_foreground_color,
-    :foreground_color_grid,
-    :foreground_color_axis,
-    :foreground_color_text,
-    :foreground_color_border,
-    :label,
-    :seriescolor,
-    :seriesalpha,
-    :linecolor,
-    :linestyle,
-    :linewidth,
-    :linealpha,
-    :markershape,
-    :markercolor,
-    :markersize,
-    :markeralpha,
-    :markerstrokewidth,
-    :markerstrokecolor,
-    :markerstrokealpha,
-    :markerstrokestyle,
-    :fillrange,
-    :fillcolor,
-    :fillalpha,
-    :bins,
-    # :bar_width, :bar_edges,
-    :title,
-    # :window_title,
-    :guide,
-    :guide_position,
-    :lims,
-    :ticks,
-    :scale,
-    :flip,
-    :rotation,
-    :tickfont,
-    :guidefont,
-    :legendfont,
-    :grid,
-    :legend,
-    :colorbar,
-    :colorbar_title,
-    :fill_z,
-    :line_z,
-    :marker_z,
-    :levels,
-    # :ribbon, :quiver, :arrow,
-    # :orientation,
-    # :overwrite_figure,
-    :polar,
-    # :normalize, :weights, :contours,
-    :aspect_ratio,
-    :tick_direction,
-    :framestyle,
-    :camera,
-    :contour_labels,
-])
-const _pgfplots_seriestype = [
-    :path,
-    :path3d,
-    :scatter,
-    :steppre,
-    :stepmid,
-    :steppost,
-    :histogram2d,
-    :ysticks,
-    :xsticks,
-    :contour,
-    :shape,
-    :straightline,
-]
-const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _pgfplots_marker = [
-    :none,
-    :auto,
-    :circle,
-    :rect,
-    :diamond,
-    :utriangle,
-    :dtriangle,
-    :cross,
-    :xcross,
-    :star5,
-    :pentagon,
-    :hline,
-    :vline,
-] #vcat(_allMarkers, Shape)
-const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # plotlyjs

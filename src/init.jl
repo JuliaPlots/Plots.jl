@@ -50,11 +50,6 @@ function __init__()
         include(fn)
     end
 
-    @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
-        fn = joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")
-        include(fn)
-    end
-
     @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
         fn = joinpath(@__DIR__, "backends", "plotlybase.jl")
         include(fn)
