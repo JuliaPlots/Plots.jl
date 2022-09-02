@@ -1504,8 +1504,9 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     end
 
     if haskey(sp.attr, :cbar_ax) # Treat colorbar the same way
-        ax = sp.attr[:cbar_handle]."ax"
-        for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
+        cbar_ax = sp.attr[:cbar_handle]."ax"
+        for bb in
+            (py_bbox_axis(cbar_ax, "x"), py_bbox_axis(cbar_ax, "y"), py_bbox_title(cbar_ax))
             expand_padding!(padding, bb, plotbb)
         end
     end
