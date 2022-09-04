@@ -105,6 +105,33 @@ function __init__()
 
     use_local_dependencies[] = use_local_plotlyjs[]
 
+    @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
+        if get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "true") == "true" &&
+           ImageInTerminal.ENCODER_BACKEND[] == :Sixel
+            get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
+            for be in (
+                PyPlotBackend,
+                # UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
+                PlotlyJSBackend,
+                GRBackend,
+                PGFPlotsXBackend,
+                InspectDRBackend,
+                GastonBackend,
+            )
+                @eval function Base.display(::PlotsDisplay, plt::Plot{$be})
+                    prepare_output(plt)
+                    buf = PipeBuffer()
+                    show(buf, MIME("image/png"), plt)
+                    display(
+                        ImageInTerminal.TerminalGraphicDisplay(stdout),
+                        MIME("image/png"),
+                        read(buf),
+                    )
+                end
+            end
+        end
+    end
+
     @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
         _show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) =
             _show_pdfbackends(io, mime, plt)
