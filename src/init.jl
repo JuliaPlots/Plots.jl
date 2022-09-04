@@ -106,13 +106,12 @@ function __init__()
     use_local_dependencies[] = use_local_plotlyjs[]
 
     @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
-        if (
-            get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "true") == "true" &&
-            ImageInTerminal.Sixel.is_sixel_supported()
-        )
+        if get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "true") == "true" &&
+           ImageInTerminal.ENCODER_BACKEND[] == :Sixel
+            get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
             for be in (
                 PyPlotBackend,
-                # UnicodePlotsBackend,  # better as MIME("text/plain") in terminal
+                # UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
                 PlotlyJSBackend,
                 GRBackend,
                 PGFPlotsXBackend,
