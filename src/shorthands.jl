@@ -117,6 +117,22 @@ Make a line plot of a kernel density estimate of x.
 
 - `x`: AbstractVector of samples for probability density estimation
 
+# keyword arguments
+
+- `trim`::Bool :  Trim cuts off the tails of the distribution. 
+- `bandwidth`::Float64,Int64  : the smoothness of the density plot is defined from `bandwidth`. `banswidth` :is a real positive number. 
+- too small bandwidth --> undersmoothing
+- too big bandwidth --> oversmoothing
+# Examples
+```julia-repl
+
+julia> density(randn(100), bandwidth = -0.01, trim=false)
+output : ERROR: Bandwidth must be positive
+
+julia> density(randn(100), bandwidth = 0.1, trim=false) # a curve with extremity and undersmoothing 
+julia> density(randn(100), bandwidth = 10, trim=true) # a curve without extremity and oversmoothing
+```
+
 # Example
 ```julia-repl
 julia> using StatsPlots
