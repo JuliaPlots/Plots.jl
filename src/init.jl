@@ -106,7 +106,7 @@ function __init__()
     use_local_dependencies[] = use_local_plotlyjs[]
 
     @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
-        if get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "true") == "true" &&
+        if get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "false") == "true" &&
            ImageInTerminal.ENCODER_BACKEND[] == :Sixel
             get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
             for be in (
