@@ -1139,6 +1139,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                 if series[:markershape] !== :none
                     ms = first(series[:markersize])
                     msw = first(series[:markerstrokewidth])
+                    shape = Plots._cycle(series[:markershape], 1)
                     s, sw =
                         min.(
                             maxmarkersize,
@@ -1149,7 +1150,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                                 0, 0.8 * sp[:legend_font_pointsize] * msw / 8
                             end,
                         )
-                    gr_draw_markers(series, xpos - leg.width_factor * 2, ypos, clims, s, sw)
+                    gr_draw_marker(series, xpos - leg.width_factor * 2, ypos, clims, 1, s, sw, shape)
                 end
 
                 lab = series[:label]
