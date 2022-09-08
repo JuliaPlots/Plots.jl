@@ -1150,7 +1150,16 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                                 0, 0.8 * sp[:legend_font_pointsize] * msw / 8
                             end,
                         )
-                    gr_draw_marker(series, xpos - leg.width_factor * 2, ypos, clims, 1, s, sw, shape)
+                    gr_draw_marker(
+                        series,
+                        xpos - leg.width_factor * 2,
+                        ypos,
+                        clims,
+                        1,
+                        s,
+                        sw,
+                        shape,
+                    )
                 end
 
                 lab = series[:label]
