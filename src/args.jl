@@ -464,7 +464,8 @@ const _subplot_defaults = KW(
     :annotationrotation => 0.0,
     :annotationcolor => :match,
     :projection => :none,             # can also be :polar or :3d
-    :aspect_ratio => :auto,             # choose from :none or :equal
+    :projection_type => :auto,        # can also be :ortho(graphic) or :persp(ective)
+    :aspect_ratio => :auto,           # choose from :none or :equal
     :margin => 1mm,
     :left_margin => :match,
     :top_margin => :match,
@@ -988,6 +989,7 @@ add_aliases(:show_empty_bins, :showemptybins, :showempty, :show_empty)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
+add_aliases(:projection_type, :proj_type)
 add_aliases(
     :titlelocation,
     :title_location,
@@ -1833,16 +1835,15 @@ const _match_map2 = KW(
 )
 
 # properly retrieve from plt.attr, passing `:match` to the correct key
-function Base.getindex(plt::Plot, k::Symbol)
+Base.getindex(plt::Plot, k::Symbol) =
     if (v = plt.attr[k]) === :match
         plt[_match_map[k]]
     else
         v
     end
-end
 
 # properly retrieve from sp.attr, passing `:match` to the correct key
-function Base.getindex(sp::Subplot, k::Symbol)
+Base.getindex(sp::Subplot, k::Symbol) =
     if (v = sp.attr[k]) === :match
         if haskey(_match_map2, k)
             sp.plt[_match_map2[k]]
@@ -1852,10 +1853,9 @@ function Base.getindex(sp::Subplot, k::Symbol)
     else
         v
     end
-end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
-function Base.getindex(axis::Axis, k::Symbol)
+Base.getindex(axis::Axis, k::Symbol) =
     if (v = axis.plotattributes[k]) === :match
         if haskey(_match_map2, k)
             axis.sps[1][_match_map2[k]]
@@ -1865,7 +1865,6 @@ function Base.getindex(axis::Axis, k::Symbol)
     else
         v
     end
-end
 
 Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]
 

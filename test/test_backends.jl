@@ -1,10 +1,7 @@
 is_ci() = get(ENV, "CI", "false") == "true"
 
 const TEST_MODULE = Module(:PlotsTestModule)
-const PLOTS_IMG_TOL = parse(
-    Float64,
-    get(ENV, "PLOTS_IMG_TOL", is_ci() ? (Sys.iswindows() ? "2e-3" : "1e-4") : "1e-5"),
-)
+const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "2e-3" : "1e-5"))
 
 Base.eval(TEST_MODULE, quote
     using Random, StableRNGs, Plots
@@ -12,7 +9,11 @@ Base.eval(TEST_MODULE, quote
 end)
 
 reference_dir(args...) =
-    joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+    if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) !== nothing
+        ref_dir
+    else
+        joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+    end
 reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 
 if !isdir(reference_dir())
@@ -197,14 +198,7 @@ end
 
 @testset "Examples" begin
     if Sys.islinux()
-        backends = (
-            :unicodeplots,
-            :pgfplotsx,
-            :inspectdr,
-            :plotlyjs,
-            :gaston,
-            # :pyplot,  # FIXME: fails with system matplotlib
-        )
+        backends = (:unicodeplots, :pgfplotsx, :inspectdr, :plotlyjs, :gaston, :pyplot)
         only = setdiff(
             1:length(Plots._examples),
             (Plots._backend_skips[be] for be in backends)...,

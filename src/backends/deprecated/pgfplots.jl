@@ -697,9 +697,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
     end
 end
 
-function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
-    show(io, mime, plt.o)
-end
+_show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend}) = show(io, mime, plt.o)
 
 function _show(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsBackend})
     # prepare the object

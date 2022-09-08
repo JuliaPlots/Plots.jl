@@ -5,6 +5,7 @@ to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
 const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
+const defaultminpad = 20mm, 5mm, 2mm, 10mm
 
 left(bbox::BoundingBox) = bbox.x0[1]
 top(bbox::BoundingBox) = bbox.x0[2]
@@ -248,7 +249,7 @@ function GridLayout(
     grid = Matrix{AbstractLayout}(undef, dims...)
     layout = GridLayout(
         parent,
-        (20mm, 5mm, 2mm, 10mm),
+        defaultminpad,
         defaultbox,
         grid,
         Measure[w * pct for w in widths],
@@ -266,12 +267,8 @@ end
 Base.size(layout::GridLayout) = size(layout.grid)
 Base.length(layout::GridLayout) = length(layout.grid)
 Base.getindex(layout::GridLayout, r::Int, c::Int) = layout.grid[r, c]
-function Base.setindex!(layout::GridLayout, v, r::Int, c::Int)
-    layout.grid[r, c] = v
-end
-function Base.setindex!(layout::GridLayout, v, ci::CartesianIndex)
-    layout.grid[ci] = v
-end
+Base.setindex!(layout::GridLayout, v, r::Int, c::Int) = layout.grid[r, c] = v
+Base.setindex!(layout::GridLayout, v, ci::CartesianIndex) = layout.grid[ci] = v
 
 leftpad(layout::GridLayout)   = layout.minpad[1]
 toppad(layout::GridLayout)    = layout.minpad[2]
@@ -296,9 +293,7 @@ function _update_min_padding!(layout::GridLayout)
     )
 end
 
-function update_position!(layout::GridLayout)
-    map(update_position!, layout.grid)
-end
+update_position!(layout::GridLayout) = map(update_position!, layout.grid)
 
 # some lengths are fixed... we have to split up the free space among the list v
 function recompute_lengths(v)
@@ -449,9 +444,7 @@ end
 # constructors
 
 # pass the layout arg through
-function layout_args(plotattributes::AKW)
-    layout_args(plotattributes[:layout])
-end
+layout_args(plotattributes::AKW) = layout_args(plotattributes[:layout])
 
 function layout_args(plotattributes::AKW, n_override::Integer)
     layout, n = layout_args(n_override, get(plotattributes, :layout, n_override))

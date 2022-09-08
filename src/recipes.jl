@@ -915,13 +915,12 @@ end
     end
 end
 
-@recipe function f(hv::AbstractVector{H}) where {H<:StatsBase.Histogram}
+@recipe f(hv::AbstractVector{H}) where {H<:StatsBase.Histogram} =
     for h in hv
         @series begin
             h
         end
     end
-end
 
 # ---------------------------------------------------------------------------
 # Histogram 2D

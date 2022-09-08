@@ -35,6 +35,8 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         y = Vector{F}(ylim)
         z = Vector{F}(zlim)
 
+        plot_3d = RecipesPipeline.is3d(sp)
+
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
         canvas = if (up_c = get(sp_kw, :canvas, :auto)) === :auto
@@ -44,7 +46,11 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         end
 
         border = if (up_b = get(sp_kw, :border, :auto)) === :auto
-            isijulia() ? :ascii : :solid
+            if plot_3d
+                :none  # no plots border in 3d (consistency with other backends)
+            else
+                isijulia() ? :ascii : :solid
+            end
         else
             up_b
         end
@@ -53,7 +59,6 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         width = has_layout && isempty(series_list(sp)) ? 0 : get(sp_kw, :width, up_width)
         height = get(sp_kw, :height, up_height)
 
-        plot_3d = is3d(sp)
         blend = get(sp_kw, :blend, true)
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
@@ -73,14 +78,27 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         blend &= !(quiver || contour)
 
         plot_3d && (xlim = ylim = (0, 0))  # determined using projection
-        azimuth, elevation = sp[:camera]  # PyPlot: azimuth = -60 & elevation = 30
-        projection = plot_3d ? get(sp_kw, :projection, :orthographic) : nothing
+        azimuth, elevation = sp[:camera]
+        # use the same convention as `gr`, `PyPlot`, `PlotlyJS`, and wrap in range [-180, 180]
+        azimuth = mod(azimuth + 180 - 90, 360) - 180
+        projection = if plot_3d
+            (
+                auto = :ortho,  # we choose to unify backends by using `:ortho` proj when `:auto`
+                ortho = :ortho,
+                orthographic = :ortho,
+                persp = :persp,
+                perspective = :persp,
+            )[sp[:projection_type]]
+        else
+            nothing
+        end
 
         kw = (
             compact = true,
             title = texmath2unicode(sp[:title]),
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
+            labels = !plot_3d,  # guide labels and limits do not make sense in 3d
             grid = grid,
             blend = blend,
             height = height,
@@ -168,6 +186,8 @@ function addUnicodeSeries!(
         return UnicodePlots.densityplot(x, y; kw...)
     elseif st === :spy
         return UnicodePlots.spy(Array(series[:z]); fix_ar = fix_ar, kw...)
+    elseif st === :image
+        return UnicodePlots.imageplot(Array(series[:z]); kw...)
     elseif st in (:contour, :heatmap)  # 2D
         colormap = get(se_kw, :colormap, :none)
         kw = (

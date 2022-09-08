@@ -1,7 +1,18 @@
 using REPL
 using Scratch
+using RelocatableFolders
 
 const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+const BACKEND_PATH_GASTON = @path joinpath(@__DIR__, "backends", "gaston.jl")
+const BACKEND_PATH_HDF5 = @path joinpath(@__DIR__, "backends", "hdf5.jl")
+const BACKEND_PATH_INSPECTDR = @path joinpath(@__DIR__, "backends", "inspectdr.jl")
+const BACKEND_PATH_PLOTLYBASE = @path joinpath(@__DIR__, "backends", "plotlybase.jl")
+const BACKEND_PATH_PGFPLOTS =
+    @path joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")
+const BACKEND_PATH_PGFPLOTSX = @path joinpath(@__DIR__, "backends", "pgfplotsx.jl")
+const BACKEND_PATH_PLOTLYJS = @path joinpath(@__DIR__, "backends", "plotlyjs.jl")
+const BACKEND_PATH_PYPLOT = @path joinpath(@__DIR__, "backends", "pyplot.jl")
+const BACKEND_PATH_UNICODEPLOTS = @path joinpath(@__DIR__, "backends", "unicodeplots.jl")
 
 _plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -41,48 +52,39 @@ function __init__()
     )
 
     @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
-        fn = joinpath(@__DIR__, "backends", "hdf5.jl")
-        include(fn)
+        include(BACKEND_PATH_HDF5)
     end
 
     @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
-        fn = joinpath(@__DIR__, "backends", "inspectdr.jl")
-        include(fn)
+        include(BACKEND_PATH_INSPECTDR)
     end
 
     @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
-        fn = joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")
-        include(fn)
+        include(BACKEND_PATH_PGFPLOTS)
     end
 
     @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
-        fn = joinpath(@__DIR__, "backends", "plotlybase.jl")
-        include(fn)
+        include(BACKEND_PATH_PLOTLYBASE)
     end
 
     @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
-        fn = joinpath(@__DIR__, "backends", "pgfplotsx.jl")
-        include(fn)
+        include(BACKEND_PATH_PGFPLOTSX)
     end
 
     @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
-        fn = joinpath(@__DIR__, "backends", "plotlyjs.jl")
-        include(fn)
+        include(BACKEND_PATH_PLOTLYJS)
     end
 
     @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
-        fn = joinpath(@__DIR__, "backends", "pyplot.jl")
-        include(fn)
+        include(BACKEND_PATH_PYPLOT)
     end
 
     @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
-        fn = joinpath(@__DIR__, "backends", "unicodeplots.jl")
-        include(fn)
+        include(BACKEND_PATH_UNICODEPLOTS)
     end
 
     @require Gaston = "4b11ee91-296f-5714-9832-002c20994614" begin
-        fn = joinpath(@__DIR__, "backends", "gaston.jl")
-        include(fn)
+        include(BACKEND_PATH_GASTON)
     end
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
@@ -104,6 +106,33 @@ function __init__()
     end
 
     use_local_dependencies[] = use_local_plotlyjs[]
+
+    @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
+        if get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "false") == "true" &&
+           ImageInTerminal.ENCODER_BACKEND[] == :Sixel
+            get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
+            for be in (
+                PyPlotBackend,
+                # UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
+                PlotlyJSBackend,
+                GRBackend,
+                PGFPlotsXBackend,
+                InspectDRBackend,
+                GastonBackend,
+            )
+                @eval function Base.display(::PlotsDisplay, plt::Plot{$be})
+                    prepare_output(plt)
+                    buf = PipeBuffer()
+                    show(buf, MIME("image/png"), plt)
+                    display(
+                        ImageInTerminal.TerminalGraphicDisplay(stdout),
+                        MIME("image/png"),
+                        read(buf),
+                    )
+                end
+            end
+        end
+    end
 
     @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
         _show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) =

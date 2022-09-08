@@ -200,7 +200,8 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
 end
 
 # delegate showable to _show instead
-Base.showable(m::M, plt::P) where {M<:MIME,P<:Plot} = hasmethod(_show, Tuple{IO,M,P})
+Base.showable(m::M, ::P) where {M<:MIME,P<:Plot} = showable(m, P)
+Base.showable(::M, ::Type{P}) where {M<:MIME,P<:Plot} = hasmethod(_show, Tuple{IO,M,P})
 
 _display(plt::Plot) = @warn("_display is not defined for this backend.")
 
@@ -223,7 +224,7 @@ for mime in (
             showjuno(io, m, plt)
         else
             prepare_output(plt)
-            _show(io, m, plt)
+            Base.invokelatest(_show, io, m, plt)
         end
         return nothing
     end
