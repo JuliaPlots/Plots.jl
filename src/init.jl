@@ -64,7 +64,9 @@ function __init__()
     end
 
     @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
-        include(BACKEND_PATH_PLOTLYBASE)
+        @require PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c" begin
+            include(BACKEND_PATH_PLOTLYBASE)
+        end
     end
 
     @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
