@@ -119,8 +119,8 @@ Make a line plot of a kernel density estimate of x.
 
 # keyword arguments
 
-- `trim`::Bool :  Trim cuts off the tails of the distribution. 
-- `bandwidth`::Float64,Int64  : the smoothness of the density plot is defined from `bandwidth`. `banswidth` :is a real positive number. 
+- `trim`::Bool : trim cuts off the tails of the distribution. 
+- `bandwidth`::Number : the smoothness of the density plot is defined from `bandwidth` (real positive number). 
 - too small bandwidth --> undersmoothing
 - too big bandwidth --> oversmoothing
 # Examples
