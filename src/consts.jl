@@ -93,5 +93,5 @@ end
 add_non_underscore_aliases!(_keyAliases)
 
 function _generate_doclist(attributes)
-    replace(replace(join(sort(collect(attributes)), "\n- "), "_" => "\\_"))
+    replace(join(sort(collect(attributes)), "\n- "), "_" => "\\_")
 end
