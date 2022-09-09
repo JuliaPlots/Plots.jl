@@ -1340,17 +1340,17 @@ end
 function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
     T = typeof(arg)
     if T <: Font
-        plotattributes[Symbol(fontname, :family)] = arg.family
+        plotattributes[Symbol(fontname, :_family)] = arg.family
         # TODO: this is neccessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
         if in(Symbol(fontname, :size), _all_args)
             plotattributes[Symbol(fontname, :size)] = arg.pointsize
         else
             plotattributes[Symbol(fontname, :_pointsize)] = arg.pointsize
         end
-        plotattributes[Symbol(fontname, :halign)] = arg.halign
-        plotattributes[Symbol(fontname, :valign)] = arg.valign
-        plotattributes[Symbol(fontname, :rotation)] = arg.rotation
-        plotattributes[Symbol(fontname, :color)] = arg.color
+        plotattributes[Symbol(fontname, :_halign)] = arg.halign
+        plotattributes[Symbol(fontname, :_valign)] = arg.valign
+        plotattributes[Symbol(fontname, :_rotation)] = arg.rotation
+        plotattributes[Symbol(fontname, :_color)] = arg.color
     elseif arg === :center
         plotattributes[Symbol(fontname, :halign)] = :hcenter
         plotattributes[Symbol(fontname, :valign)] = :vcenter

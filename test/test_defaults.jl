@@ -1,3 +1,4 @@
+using Plots, Test
 using Plots.Colors
 
 const PLOTS_DEFAULTS = Dict(:theme => :wong2, :fontfamily => :palantino)
@@ -17,6 +18,9 @@ Plots.__init__()
     @test Plots._series_defaults[:fillrange] == 0
     pl = plot(1:5)
     @test pl[1][1][:fillrange] == 0
+    @test_nowarn default(legendfont = font(5))
+    pl = plot(1:5)
+    @test pl[1][:legend_font_pointsize] == 5
     default()
 end
 
