@@ -125,12 +125,11 @@ Make a line plot of a kernel density estimate of x.
 - too big bandwidth --> oversmoothing
 # Examples
 ```julia-repl
-
-julia> density(randn(100), bandwidth = -0.01, trim=false)
+julia> density(randn(100), bandwidth = -0.01, trim = false)
 output : ERROR: Bandwidth must be positive
 
-julia> density(randn(100), bandwidth = 0.1, trim=false) # a curve with extremity and undersmoothing 
-julia> density(randn(100), bandwidth = 10, trim=true) # a curve without extremity and oversmoothing
+julia> density(randn(100), bandwidth = 0.1, trim = false)  # a curve with extremity and undersmoothing 
+julia> density(randn(100), bandwidth = 10, trim = true)  # a curve without extremity and oversmoothing
 ```
 
 # Example
