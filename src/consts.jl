@@ -91,3 +91,7 @@ end
 
 # add all non_underscored forms to the _keyAliases
 add_non_underscore_aliases!(_keyAliases)
+
+function _generate_doclist(attributes)
+    replace(replace(join(sort(collect(attributes)), "\n- "), "_" => "\\_"))
+end
