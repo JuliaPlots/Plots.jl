@@ -119,8 +119,8 @@ Make a line plot of a kernel density estimate of x. The smoothness of the densit
 
 # Keyword arguments
 
-- `trim`::Bool : trim cuts off the tails of the distribution. 
-- `bandwidth`::Number : a low bandwidth induces under-smoothing, whilst a high bandwidth induces over-smoothing.
+- `trim`::Bool: enables cutting off the distribution tails. 
+- `bandwidth`::Number: a low bandwidth induces under-smoothing, whilst a high bandwidth induces over-smoothing.
 
 # Examples
 ```julia-repl
