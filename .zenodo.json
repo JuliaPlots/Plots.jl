@@ -730,6 +730,12 @@
         {
             "name": "Henning Labuhn",
             "type": "Other"
+        },
+        {
+            "affiliation": "Michigan State University",
+            "name": "Spencer Lee",
+            "type": "Other",
+            "orcid": "0000-0002-9262-4763"
         }
     ],
     "upload_type": "software"
