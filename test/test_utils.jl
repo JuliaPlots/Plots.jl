@@ -1,3 +1,4 @@
+using Plots, Test, GeometryBasics
 @testset "Utils" begin
     zipped = (
         [(1, 2)],
@@ -13,6 +14,10 @@
     )
     for z in zipped
         @test isequal(collect(zip(Plots.RecipesPipeline.unzip(z)...)), z)
+        @test isequal(
+            collect(zip(Plots.RecipesPipeline.unzip(GeometryBasics.Point.(z))...)),
+            z,
+        )
     end
     op1 = Plots.process_clims((1.0, 2.0))
     op2 = Plots.process_clims((1, 2.0))
@@ -69,7 +74,7 @@
     @test_throws ErrorException Plots._do_plot_show(plot(), :inline)
     @test_throws ErrorException Plots.dumpcallstack()
 
-    @test plot(-1:10, xscale = :log10) isa Plot
+    @test plot(-1:10, xscale = :log10) isa Plots.Plot
 
     Plots.makekw(foo = 1, bar = 2) isa Dict
 

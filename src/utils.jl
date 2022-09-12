@@ -209,7 +209,6 @@ maketuple(x::Real) = (x, x)
 maketuple(x::Tuple{T,S}) where {T,S} = x
 
 RecipesPipeline.unzip(v) = unzip(v)
-
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
     try

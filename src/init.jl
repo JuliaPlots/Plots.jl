@@ -109,4 +109,19 @@ function __init__()
         _show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) =
             _show_pdfbackends(io, mime, plt)
     end
+
+    @require GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326" begin
+        RecipesPipeline.unzip(points::AbstractVector{<:GeometryBasics.Point}) = unzip(Tuple.(points))
+        RecipesPipeline.unzip(points::AbstractVector{GeometryBasics.Point{N,T}}) where {N,T} =
+        isbitstype(T) && sizeof(T) > 0 ? unzip(reinterpret(NTuple{N,T}, points)) :
+        unzip(Tuple.(points))
+    # --------------------------------------------------------------------
+    # Lists of tuples and GeometryBasics.Points
+    # --------------------------------------------------------------------
+        @recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
+        @recipe f(p::GeometryBasics.Point) = [p]# Special case for 4-tuples in :ohlc series
+        @recipe f(xyuv::AVec{<:Tuple{R1,R2,R3,R4}}) where {R1,R2,R3,R4} =
+            get(plotattributes, :seriestype, :path) === :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
+            RecipesPipeline.unzip(xyuv)
+    end
 end

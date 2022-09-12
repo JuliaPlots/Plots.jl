@@ -1472,11 +1472,6 @@ end
     end
 end
 
-# Special case for 4-tuples in :ohlc series
-@recipe f(xyuv::AVec{<:Tuple{R1,R2,R3,R4}}) where {R1,R2,R3,R4} =
-    get(plotattributes, :seriestype, :path) === :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
-    RecipesPipeline.unzip(xyuv)
-
 @specialize
 
 # -------------------------------------------------

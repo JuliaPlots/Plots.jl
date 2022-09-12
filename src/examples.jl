@@ -355,9 +355,9 @@ const _examples = PlotExample[
     PlotExample( # 20
         "Annotations",
         """
-        The `annotations` keyword is used for text annotations in data-coordinates.  
-        Pass in a 3-tuple of vectors `(x, y, text)`, or a vector of annotations, 
-        each of which is a tuple of `x`, `y` and `text`. 
+        The `annotations` keyword is used for text annotations in data-coordinates.
+        Pass in a 3-tuple of vectors `(x, y, text)`, or a vector of annotations,
+        each of which is a tuple of `x`, `y` and `text`.
         You can position annotations using relative coordinates with the syntax
         `((px, py), text)`, where for example `px=.25` positions the annotation at `25%` of
         the subplot's axis width.
@@ -367,7 +367,7 @@ const _examples = PlotExample[
         `text` may also be a tuple `(string, attrs...)` of arguments which are passed
         to `Plots.text`.
 
-        `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`, 
+        `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`,
         and `annotate!(x, y, txt)` for `plot!(; annotation=(x,y,txt))`.
 
         Series annotations are used for annotating individual data points.
@@ -954,18 +954,6 @@ const _examples = PlotExample[
                 using GeometryBasics
                 using Distributions
                 using RecipesPipeline
-
-                RecipesPipeline.unzip(points::AbstractVector{<:GeometryBasics.Point}) =
-                    unzip(Tuple.(points))
-                RecipesPipeline.unzip(
-                    points::AbstractVector{GeometryBasics.Point{N,T}},
-                ) where {N,T} =
-                    isbitstype(T) && sizeof(T) > 0 ?
-                    unzip(reinterpret(NTuple{N,T}, points)) : unzip(Tuple.(points))
-
-                @recipe f(v::Plots.AVec{<:GeometryBasics.Point}) =
-                    RecipesPipeline.unzip(v)
-                @recipe f(p::GeometryBasics.Point) = [p]
 
                 d = MvNormal([1.0 0.75; 0.75 2.0])
                 plot([(1, 2), (3, 2), (2, 1), (2, 3)])
