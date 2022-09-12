@@ -78,6 +78,21 @@ There are lots of ways to pass in data, and lots of keyword arguments... just tr
 When you pass in matrices, it splits by columns. To see the list of available attributes, use the `plotattr(attr)`
 function, where `attr` is the symbol `:Series`, `:Subplot`, `:Plot`, or `:Axis`. Pass any attribute to `plotattr`
 as a String to look up its docstring, e.g., `plotattr("seriestype")`.
+
+# Extended help
+
+## Series attributes
+- $(_generate_doclist(_all_series_args))
+
+## Axis attributes
+Prepend these with the axis letter (x, y or z)
+- $(_generate_doclist(Plots._all_axis_args))
+
+## Subplot attributes
+- $(_generate_doclist(Plots._all_subplot_args))
+
+## Plot attributes
+- $(_generate_doclist(Plots._all_plot_args))
 """
 function plot(args...; kw...)
     @nospecialize
