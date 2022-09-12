@@ -1105,7 +1105,7 @@ function default(; reset = true, kw...)
         reset_defaults()
     end
     kw = KW(kw)
-    RecipesPipeline.preprocess_attributes!(kw)
+    Plots.preprocess_attributes!(kw)
     for (k, v) in kw
         default(k, v)
     end
@@ -1399,7 +1399,7 @@ function _add_markershape(plotattributes::AKW)
 end
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
-function RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW)
+function preprocess_attributes!(plotattributes::AKW)
     replaceAliases!(plotattributes, _keyAliases)
 
     # handle axis args common to all axis
@@ -1596,6 +1596,7 @@ function RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW)
     end
     return
 end
+RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) = Plots.preprocess_attributes!(plotattributes)
 
 # -----------------------------------------------------------------------------
 
