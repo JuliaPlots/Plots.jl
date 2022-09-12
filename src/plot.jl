@@ -94,11 +94,11 @@ Prepend these with the axis letter (x, y or z)
 ## Plot attributes
 - $(_generate_doclist(Plots._all_plot_args))
 """
-function plot(args...; kw...)
+function RecipesBase.plot(args...; kw...)
     @nospecialize
     # this creates a new plot with args/kw and sets it to be the current plot
     plotattributes = KW(kw)
-    RecipesPipeline.preprocess_attributes!(plotattributes)
+    Plots.preprocess_attributes!(plotattributes)
 
     # create an empty Plot then process
     plt = Plot()
@@ -122,7 +122,7 @@ function plot!(
 )
     @nospecialize
     plotattributes = KW(kw)
-    RecipesPipeline.preprocess_attributes!(plotattributes)
+    Plots.preprocess_attributes!(plotattributes)
 
     # build our plot vector from the args
     plts = Plot[plt1]
@@ -216,7 +216,7 @@ plot(plt::Plot, args...; kw...) = plot!(deepcopy(plt), args...; kw...)
 function plot!(plt::Plot, args...; kw...)
     @nospecialize
     plotattributes = KW(kw)
-    RecipesPipeline.preprocess_attributes!(plotattributes)
+    Plots.preprocess_attributes!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
     _plot!(plt, plotattributes, args)
 end

@@ -573,8 +573,9 @@ function aliasesAndAutopick(
     end
 end
 
+aliases(val) = aliases(_keyAliases, val)
 aliases(aliasMap::Dict{Symbol,Symbol}, val) =
-    sortedkeys(filter((k, v) -> v == val, aliasMap))
+    sortedkeys(filter((x) -> x.second == val, aliasMap))
 
 # -----------------------------------------------------------------------------
 # legend
@@ -1104,7 +1105,7 @@ function default(; reset = true, kw...)
         reset_defaults()
     end
     kw = KW(kw)
-    RecipesPipeline.preprocess_attributes!(kw)
+    Plots.preprocess_attributes!(kw)
     for (k, v) in kw
         default(k, v)
     end
@@ -1337,43 +1338,48 @@ function processMinorGridArg!(plotattributes::AKW, arg, letter)
     end
 end
 
-function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
+@attributes function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
     T = typeof(arg)
+    if fontname in (:legend_font,)
+        # TODO: this is neccessary while old and new font names coexist and should be standard after the transition
+        fontname = Symbol(fontname, :_)
+    end
     if T <: Font
-        plotattributes[Symbol(fontname, :family)] = arg.family
+        Symbol(fontname, :family) --> arg.family
+
         # TODO: this is neccessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
         if in(Symbol(fontname, :size), _all_args)
-            plotattributes[Symbol(fontname, :size)] = arg.pointsize
+            Symbol(fontname, :size) --> arg.pointsize
         else
-            plotattributes[Symbol(fontname, :_pointsize)] = arg.pointsize
+            Symbol(fontname, :pointsize) --> arg.pointsize
         end
-        plotattributes[Symbol(fontname, :halign)] = arg.halign
-        plotattributes[Symbol(fontname, :valign)] = arg.valign
-        plotattributes[Symbol(fontname, :rotation)] = arg.rotation
-        plotattributes[Symbol(fontname, :color)] = arg.color
+        Symbol(fontname, :halign) --> arg.halign
+        Symbol(fontname, :valign) --> arg.valign
+        Symbol(fontname, :rotation) --> arg.rotation
+        Symbol(fontname, :color) --> arg.color
     elseif arg === :center
-        plotattributes[Symbol(fontname, :halign)] = :hcenter
-        plotattributes[Symbol(fontname, :valign)] = :vcenter
+        Symbol(fontname, :halign) --> :hcenter
+        Symbol(fontname, :valign) --> :vcenter
     elseif arg ∈ _haligns
-        plotattributes[Symbol(fontname, :halign)] = arg
+        Symbol(fontname, :halign) --> arg
     elseif arg ∈ _valigns
-        plotattributes[Symbol(fontname, :valign)] = arg
+        Symbol(fontname, :valign) --> arg
     elseif T <: Colorant
-        plotattributes[Symbol(fontname, :color)] = arg
+        Symbol(fontname, :color) --> arg
     elseif T <: Symbol || T <: AbstractString
         try
-            plotattributes[Symbol(fontname, :color)] = parse(Colorant, string(arg))
+            Symbol(fontname, :color) --> parse(Colorant, string(arg))
         catch
-            plotattributes[Symbol(fontname, :family)] = string(arg)
+            Symbol(fontname, :family) --> string(arg)
         end
     elseif typeof(arg) <: Integer
         if in(Symbol(fontname, :size), _all_args)
-            plotattributes[Symbol(fontname, :size)] = arg
+            Symbol(fontname, :size) --> arg
         else
-            plotattributes[Symbol(fontname, :_pointsize)] = arg
+            Symbol(fontname, :pointsize) --> arg
         end
     elseif typeof(arg) <: Real
-        plotattributes[Symbol(fontname, :rotation)] = convert(Float64, arg)
+        Symbol(fontname, :rotation) --> convert(Float64, arg)
     else
         @warn("Skipped font arg: $arg ($(typeof(arg)))")
     end
@@ -1393,7 +1399,7 @@ function _add_markershape(plotattributes::AKW)
 end
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
-function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
+function preprocess_attributes!(plotattributes::AKW)
     replaceAliases!(plotattributes, _keyAliases)
 
     # handle axis args common to all axis
@@ -1590,6 +1596,8 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
     return
 end
+RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
+    Plots.preprocess_attributes!(plotattributes)
 
 # -----------------------------------------------------------------------------
 

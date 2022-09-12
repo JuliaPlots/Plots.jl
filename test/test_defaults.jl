@@ -1,3 +1,4 @@
+using Plots, Test
 using Plots.Colors
 
 const PLOTS_DEFAULTS = Dict(:theme => :wong2, :fontfamily => :palantino)
@@ -17,6 +18,9 @@ Plots.__init__()
     @test Plots._series_defaults[:fillrange] == 0
     pl = plot(1:5)
     @test pl[1][1][:fillrange] == 0
+    @test_nowarn default(legendfont = font(5))
+    pl = plot(1:5)
+    @test pl[1][:legend_font_pointsize] == 5
     default()
 end
 
@@ -92,8 +96,9 @@ end
     @test Plots.legendfont(sp).pointsize == 12
     @test Plots.legendfont(sp).halign === :left
     # match mechanism
-    @test sp[:legend_font_color] == sp[:foreground_color_subplot]
-    @test Plots.legendfont(sp).color == sp[:foreground_color_subplot]
+    @test sp[:legend_font_color] == colorant"black"
+    @test Plots.legendfont(sp).color == colorant"black"
+    @test sp[:foreground_color_subplot] == RGBA(colorant"red")
 
     # magic invocation
     @test_nowarn sp = plot(; legendfont = 12)[1]

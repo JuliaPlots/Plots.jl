@@ -840,7 +840,7 @@ extend_by_data!(v::AbstractVector, x::AbstractVector) =
 
 function attr!(series::Series; kw...)
     plotattributes = KW(kw)
-    RecipesPipeline.preprocess_attributes!(plotattributes)
+    Plots.preprocess_attributes!(plotattributes)
     for (k, v) in plotattributes
         if haskey(_series_defaults, k)
             series[k] = v
@@ -854,7 +854,7 @@ end
 
 function attr!(sp::Subplot; kw...)
     plotattributes = KW(kw)
-    RecipesPipeline.preprocess_attributes!(plotattributes)
+    Plots.preprocess_attributes!(plotattributes)
     for (k, v) in plotattributes
         if haskey(_subplot_defaults, k)
             sp[k] = v
@@ -1220,3 +1220,8 @@ get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyw
 
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))
+
+macro attributes(expr::Expr)
+    RecipesBase.process_recipe_body!(expr)
+    return expr
+end
