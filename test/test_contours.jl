@@ -10,18 +10,18 @@ end
 @testset "RecipesPipeline.preprocess_attributes!" begin
     function equal_after_pipeline(kw)
         kw′ = deepcopy(kw)
-        RecipesPipeline.preprocess_attributes!(kw′)
+        Plots.preprocess_attributes!(kw′)
         kw == kw′
     end
 
     @test equal_after_pipeline(KW(:levels => 1))
     @test equal_after_pipeline(KW(:levels => 1:10))
     @test equal_after_pipeline(KW(:levels => [1.0, 3.0, 5.0]))
-    @test_throws ArgumentError RecipesPipeline.preprocess_attributes!(KW(:levels => 1.0))
-    @test_throws ArgumentError RecipesPipeline.preprocess_attributes!(
+    @test_throws ArgumentError Plots.preprocess_attributes!(KW(:levels => 1.0))
+    @test_throws ArgumentError Plots.preprocess_attributes!(
         KW(:levels => (1, 2, 3)),
     )
-    @test_throws ArgumentError RecipesPipeline.preprocess_attributes!(KW(:levels => -3))
+    @test_throws ArgumentError Plots.preprocess_attributes!(KW(:levels => -3))
 end
 
 @testset "contour[f]" begin

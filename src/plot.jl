@@ -107,7 +107,7 @@ function plot!(
 )
     @nospecialize
     plotattributes = KW(kw)
-    RecipesPipeline.preprocess_attributes!(plotattributes)
+    Plots.preprocess_attributes!(plotattributes)
 
     # build our plot vector from the args
     plts = Plot[plt1]
@@ -201,7 +201,7 @@ plot(plt::Plot, args...; kw...) = plot!(deepcopy(plt), args...; kw...)
 function plot!(plt::Plot, args...; kw...)
     @nospecialize
     plotattributes = KW(kw)
-    RecipesPipeline.preprocess_attributes!(plotattributes)
+    Plots.preprocess_attributes!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
     _plot!(plt, plotattributes, args)
 end

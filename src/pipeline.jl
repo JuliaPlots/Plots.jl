@@ -44,9 +44,6 @@ function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter
     RecipesPipeline.preprocess_axis_args!(plt, plotattributes)
 end
 
-RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes) =
-    RecipesPipeline.preprocess_attributes!(plotattributes) # in src/args.jl
-
 RecipesPipeline.is_axis_attribute(plt::Plot, attr) = is_axis_attr_noletter(attr) # in src/args.jl
 
 RecipesPipeline.is_subplot_attribute(plt::Plot, attr) = is_subplot_attr(attr) # in src/args.jl
