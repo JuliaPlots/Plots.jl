@@ -7,7 +7,7 @@
     @test_throws ArgumentError Plots.check_contour_levels(-3)
 end
 
-@testset "RecipesPipeline.preprocess_attributes!" begin
+@testset "Plots.preprocess_attributes!" begin
     function equal_after_pipeline(kw)
         kw′ = deepcopy(kw)
         Plots.preprocess_attributes!(kw′)

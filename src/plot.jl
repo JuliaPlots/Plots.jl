@@ -79,11 +79,11 @@ When you pass in matrices, it splits by columns. To see the list of available at
 function, where `attr` is the symbol `:Series`, `:Subplot`, `:Plot`, or `:Axis`. Pass any attribute to `plotattr`
 as a String to look up its docstring, e.g., `plotattr("seriestype")`.
 """
-function plot(args...; kw...)
+function RecipesBase.plot(args...; kw...)
     @nospecialize
     # this creates a new plot with args/kw and sets it to be the current plot
     plotattributes = KW(kw)
-    RecipesPipeline.preprocess_attributes!(plotattributes)
+    Plots.preprocess_attributes!(plotattributes)
 
     # create an empty Plot then process
     plt = Plot()
