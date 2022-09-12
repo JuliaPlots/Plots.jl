@@ -19,5 +19,5 @@ for (mime, fmt) in (
     "image/eps" => "eps",
 )
     @eval _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend}) =
-        PlotlyBase.savefig(io, plotlybase_syncplot(plt), format = $fmt)
+        PlotlyKaleido.savefig(io, plotlybase_syncplot(plt), format = $fmt)
 end

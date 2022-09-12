@@ -311,10 +311,12 @@ function _initialize_backend(pkg::PlotlyBackend)
     try
         @eval Main begin
             import PlotlyBase
+            import PlotlyKaleido
         end
         _check_compat(PlotlyBase)
+        _check_compat(PlotlyKaleido)
     catch
-        @info "For saving to png with the Plotly backend PlotlyBase has to be installed."
+        @info "For saving to png with the Plotly backend PlotlyBase and PlotlyKaleido need to be installed."
     end
 end
 
