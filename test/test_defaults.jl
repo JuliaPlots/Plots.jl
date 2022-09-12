@@ -96,8 +96,9 @@ end
     @test Plots.legendfont(sp).pointsize == 12
     @test Plots.legendfont(sp).halign === :left
     # match mechanism
-    @test sp[:legend_font_color] == sp[:foreground_color_subplot]
-    @test Plots.legendfont(sp).color == sp[:foreground_color_subplot]
+    @test sp[:legend_font_color] == colorant"black"
+    @test Plots.legendfont(sp).color == colorant"black"
+    @test sp[:foreground_color_subplot] == RGBA(colorant"red")
 
     # magic invocation
     @test_nowarn sp = plot(; legendfont = 12)[1]
