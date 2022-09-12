@@ -1226,3 +1226,8 @@ get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyw
 
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))
+
+macro attributes(expr::Expr)
+    RecipesBase.process_recipe_body!(expr)
+    return expr
+end
