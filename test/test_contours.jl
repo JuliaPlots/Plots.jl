@@ -18,9 +18,7 @@ end
     @test equal_after_pipeline(KW(:levels => 1:10))
     @test equal_after_pipeline(KW(:levels => [1.0, 3.0, 5.0]))
     @test_throws ArgumentError Plots.preprocess_attributes!(KW(:levels => 1.0))
-    @test_throws ArgumentError Plots.preprocess_attributes!(
-        KW(:levels => (1, 2, 3)),
-    )
+    @test_throws ArgumentError Plots.preprocess_attributes!(KW(:levels => (1, 2, 3)))
     @test_throws ArgumentError Plots.preprocess_attributes!(KW(:levels => -3))
 end
 

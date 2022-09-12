@@ -1596,7 +1596,8 @@ function preprocess_attributes!(plotattributes::AKW)
     end
     return
 end
-RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) = Plots.preprocess_attributes!(plotattributes)
+RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
+    Plots.preprocess_attributes!(plotattributes)
 
 # -----------------------------------------------------------------------------
 
