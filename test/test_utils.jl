@@ -1,3 +1,4 @@
+using Plots, Test, GeometryBasics
 @testset "Utils" begin
     zipped = (
         [(1, 2)],
@@ -73,7 +74,7 @@
     @test_throws ErrorException Plots._do_plot_show(plot(), :inline)
     @test_throws ErrorException Plots.dumpcallstack()
 
-    @test plot(-1:10, xscale = :log10) isa Plot
+    @test plot(-1:10, xscale = :log10) isa Plots.Plot
 
     Plots.makekw(foo = 1, bar = 2) isa Dict
 

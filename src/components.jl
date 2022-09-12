@@ -1,13 +1,13 @@
-const P2 = GeometryBasics.Point2{Float64}
-const P3 = GeometryBasics.Point3{Float64}
+const P2 = NTuple{2,Float64}
+const P3 = NTuple{3,Float64}
 
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
 
-nanpush!(a::AVec{P2}, b) = (push!(a, P2(NaN, NaN)); push!(a, b))
-nanappend!(a::AVec{P2}, b) = (push!(a, P2(NaN, NaN)); append!(a, b))
-nanpush!(a::AVec{P3}, b) = (push!(a, P3(NaN, NaN, NaN)); push!(a, b))
-nanappend!(a::AVec{P3}, b) = (push!(a, P3(NaN, NaN, NaN)); append!(a, b))
+nanpush!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); push!(a, b))
+nanappend!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); append!(a, b))
+nanpush!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); push!(a, b))
+nanappend!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); append!(a, b))
 compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angle)
 
 # -------------------------------------------------------------
@@ -85,13 +85,13 @@ function makecross(; offset = -0.5, radius = 1.0)
     )
 end
 
-from_polar(angle, dist) = P2(dist * cos(angle), dist * sin(angle))
+from_polar(angle, dist) = (dist * cos(angle), dist * sin(angle))
 
 makearrowhead(angle; h = 2.0, w = 0.4, tip = from_polar(angle, h)) = Shape(
-    P2[
+    NTuple{2,Float64}[
         (0, 0),
-        from_polar(angle - 0.5π, w) - tip,
-        from_polar(angle + 0.5π, w) - tip,
+        from_polar(angle - 0.5π, w) .- tip,
+        from_polar(angle + 0.5π, w) .- tip,
         (0, 0),
     ],
 )
@@ -816,15 +816,15 @@ end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-mutable struct BezierCurve{T<:GeometryBasics.Point}
+mutable struct BezierCurve{T<:Tuple}
     control_points::Vector{T}
 end
 
 function (bc::BezierCurve)(t::Real)
-    p = zero(P2)
+    p = (0.0, 0.0)
     n = length(bc.control_points) - 1
     for i in 0:n
-        p += bc.control_points[i + 1] * binomial(n, i) * (1 - t)^(n - i) * t^i
+        p = p .+ bc.control_points[i + 1] .* binomial(n, i) .* (1 - t)^(n - i) .* t^i
     end
     p
 end
