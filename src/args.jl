@@ -1349,7 +1349,7 @@ end
 
         # TODO: this is neccessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
         if in(Symbol(fontname, :size), _all_args)
-            Symbol(fontname, :size) --> arg.size
+            Symbol(fontname, :size) --> arg.pointsize
         else
             Symbol(fontname, :pointsize) --> arg.pointsize
         end
