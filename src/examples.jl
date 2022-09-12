@@ -949,17 +949,15 @@ const _examples = PlotExample[
     PlotExample( # 46
         "Tuples and `Point`s as data",
         "",
-        [
-            quote
-                using GeometryBasics
-                using Distributions
-                using RecipesPipeline
+        [quote
+            using GeometryBasics
+            using Distributions
+            using RecipesPipeline
 
-                d = MvNormal([1.0 0.75; 0.75 2.0])
-                plot([(1, 2), (3, 2), (2, 1), (2, 3)])
-                scatter!(Point2.(eachcol(rand(d, 1000))), alpha = 0.25)
-            end,
-        ],
+            d = MvNormal([1.0 0.75; 0.75 2.0])
+            plot([(1, 2), (3, 2), (2, 1), (2, 3)])
+            scatter!(Point2.(eachcol(rand(d, 1000))), alpha = 0.25)
+        end],
     ),
     PlotExample( # 47
         "Mesh3d",
