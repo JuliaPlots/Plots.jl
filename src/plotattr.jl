@@ -19,12 +19,42 @@ end
 """
     plotattr([attr])
 
-Look up the properties of a Plots attribute, or specify an attribute type. Call `plotattr()` for options.
+Look up the properties of a Plots attribute, or specify an attribute type.
+Options are $(attrtypes()).
+Call `plotattr()` to search for an attribute via fuzzy finding.
 The information is the same as that given on https://docs.juliaplots.org/latest/attributes/.
 """
-plotattr() = println(
-    "Specify an attribute type to get a list of supported attributes. Options are $(attrtypes())",
-)
+function plotattr()
+    attr = Symbol(JLFzf.inter_fzf(collect(Plots._all_args), "--read0", "--height=80%"))
+    letter = ""
+    attrtype = if attr in _all_series_args
+        "Series"
+    elseif attr in _all_subplot_args
+        "Subplot"
+    elseif attr in _lettered_all_axis_args
+        if attr ∉ _all_axis_args
+            letters = collect(String(attr))
+            letter = first(letters)
+            attr = Symbol(join(letters[2:end]))
+        end
+        "Axis"
+    elseif attr in _all_plot_args
+        "Plot"
+    elseif attr in _all_magic_args
+        "Magic"
+    else
+        "Unkown"
+    end
+
+    d = default(attr)
+    print("""
+    # $letter$attr
+
+    - $attrtype attribute
+    - Default: $(d isa Symbol ? string(':', d) : d)
+    - $(get(Plots._arg_desc, attr, ""))
+    """)
+end
 
 function plotattr(attrtype::Symbol)
     in(attrtype, keys(_attribute_defaults)) || error("Viable options are $(attrtypes())")

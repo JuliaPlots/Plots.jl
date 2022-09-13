@@ -11,6 +11,7 @@ Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 FFMPEG = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
 FixedPointNumbers = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+JLFzf = "1019f520-868f-41f5-a6de-eb00f4b6a39c"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
@@ -97,4 +98,3 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
 test = ["Colors", "Distributions", "FileIO", "FilePathsBase", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PlotlyKaleido", "HDF5", "RDatasets", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "VisualRegressionTests"]
-
