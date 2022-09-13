@@ -952,7 +952,6 @@ const _examples = PlotExample[
         [quote
             using GeometryBasics
             using Distributions
-            using RecipesPipeline
 
             d = MvNormal([1.0 0.75; 0.75 2.0])
             plot([(1, 2), (3, 2), (2, 1), (2, 3)])
