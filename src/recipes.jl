@@ -1316,7 +1316,7 @@ function quiver_using_hack(plotattributes::AKW)
         # get the starting position
         xi = _cycle(xorig, i)
         yi = _cycle(yorig, i)
-        p = P2(xi, yi)
+        p = P2((xi, yi))
 
         # get the velocity
         vi = _cycle(velocity, i)
@@ -1329,22 +1329,21 @@ function quiver_using_hack(plotattributes::AKW)
         else
             error("unexpected vi type $(typeof(vi)) for quiver: $vi")
         end
-        v = P2(vx, vy)
+        v = P2((vx, vy))
 
         dist = norm(v)
         arrow_h = 0.1dist          # height of arrowhead
         arrow_w = 0.5arrow_h       # halfwidth of arrowhead
         U1 = v ./ dist             # vector of arrowhead height
-        U2 = P2(-U1[2], U1[1])     # vector of arrowhead halfwidth
-        U1 *= arrow_h
-        U2 *= arrow_w
+        U2 = P2((-U1[2], U1[1]))     # vector of arrowhead halfwidth
+        U1 = U1 .* arrow_h
+        U2 = U2 .* arrow_w
 
-        ppv = p + v
-        nanappend!(pts, P2[p, ppv - U1, ppv - U1 + U2, ppv, ppv - U1 - U2, ppv - U1])
+        ppv = p .+ v
+        nanappend!(pts, P2[p, ppv .- U1, ppv .- U1 .+ U2, ppv, ppv .- U1 .- U2, ppv .- U1])
     end
 
     plotattributes[:x], plotattributes[:y] = RecipesPipeline.unzip(pts[2:end])
-    # KW[plotattributes]
 end
 
 # function apply_series_recipe(plotattributes::AKW, ::Type{Val{:quiver}})
