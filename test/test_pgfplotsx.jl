@@ -454,10 +454,10 @@ with(:pgfplotsx) do
     end
 
     @testset "Setting correct plot titles" begin
-        plt1 = plot(rand(10, 5));
-        plt2 = plot(rand(10));
+        plt1 = plot(rand(10, 5))
+        plt2 = plot(rand(10))
 
-        @test plot(plt1, plt2, layout=(1,2), plot_titles=["(a)" "(b)"]) !== nothing
+        @test plot(plt1, plt2, layout = (1, 2), plot_titles=["(a)" "(b)"]) !== nothing
     end
 
     if Sys.islinux()
