@@ -117,8 +117,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             dx, dy = bb2.x0
             sp_w, sp_h = width(bb2), height(bb2)
             if sp[:subplot_index] == plt[:plot_titleindex]
-                x = dx + sp_width / 2 - 10mm  # FIXME: get rid of magic constant
-                y = dy + sp_height / 2
+                x = dx + sp_w / 2 - 10mm  # FIXME: get rid of magic constant
+                y = dy + sp_h / 2
                 pgfx_add_annotation!(
                     the_plot,
                     x,
