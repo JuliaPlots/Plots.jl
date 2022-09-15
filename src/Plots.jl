@@ -45,6 +45,7 @@ import StatsBase
 import Downloads
 import Showoff
 import JSON
+import JLFzf
 
 using Requires
 
