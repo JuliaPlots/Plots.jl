@@ -272,7 +272,13 @@ using SnoopPrecompile
             $func() = begin  # evaluate each example in a local scope
                 # @show $i  # debug
                 $(_examples[i].exprs)
-                $i == 1 && gui()
+                if $i == 1  # only for one example
+                    fn = tempname()
+                    pl = current()
+                    gui(pl)
+                    savefig(pl, "$fn.png")
+                    savefig(pl, "$fn.pdf")
+                end
                 nothing
             end
             $func()
