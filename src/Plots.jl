@@ -258,6 +258,34 @@ yaxis!(plt::PlotOrSubplot, args...; kw...)                                      
 const CURRENT_BACKEND = CurrentBackend(:none)
 const PLOTS_SEED = 1234
 
-include("precompile_includer.jl")
+using SnoopPrecompile
 
-end # module
+@precompile_setup begin
+    n = length(_examples)
+    imports = sizehint!(Expr[], n)
+    examples = sizehint!(Expr[], 10n)
+    for i in setdiff(1:n, _backend_skips[:gr])
+        _examples[i].external && continue
+        (imp = _examples[i].imports) === nothing || push!(imports, imp)
+        func = gensym(string(i))
+        push!(examples, quote
+            $func() = begin  # evaluate each example in a local scope
+                # @show $i  # debug
+                $(_examples[i].exprs)
+                $i == 1 && gui()
+                nothing
+            end
+            $func()
+        end)
+    end
+    withenv("GKSwstype" => "nul") do
+        @precompile_all_calls begin
+            eval.(imports)
+            gr()
+            eval.(examples)
+            # eventually eval for another backend ...
+        end
+    end
+end
+
+end
