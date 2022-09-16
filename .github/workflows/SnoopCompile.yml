@@ -53,7 +53,7 @@ jobs:
           free
           df -h
           julia --project -e 'using Pkg; Pkg.instantiate()'
-          julia --project -e 'using Pkg; Pkg.add(PackageSpec(name="CompileBot", version="1")); Pkg.develop(path=pwd()); using CompileBot; CompileBot.addtestdep()'
+          julia --project -e 'using Pkg; Pkg.add(PackageSpec(name="CompileBot", version="1")); using CompileBot; CompileBot.addtestdep()'
 
       # TESTCMD
       - name: Default TESTCMD
