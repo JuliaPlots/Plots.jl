@@ -63,7 +63,9 @@ jobs:
           using Pkg
           Pkg.add("Conda"); Pkg.build("Conda"; verbose=true)
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
-          using Conda; Conda.add("matplotlib")
+          using Conda
+          Conda.add("matplotlib"); Conda.add("libstdcxx-ng")
+          Conda.list()
 
       - uses: julia-actions/julia-runtest@latest
         with:
