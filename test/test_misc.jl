@@ -69,7 +69,7 @@ end
         redirect_stdout(io) do
             plotattr("seriestype")
             plotattr(:Plot)
-            plotattr()
+            # plotattr()  # interactive (JLFzf)
         end
     end
     str = join(readlines(tmp), "")
