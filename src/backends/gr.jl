@@ -511,11 +511,9 @@ function gr_update_colorbar!(cbar::GRColorbar, series::Series)
 end
 
 function gr_contour_levels(series::Series, clims)
-    levels = contour_levels(series, clims)
-    if isfilledcontour(series)
-        # GR implicitly uses the maximal z value as the highest level
-        levels = levels[1:(end - 1)]
-    end
+    levels = collect(contour_levels(series, clims))
+    # GR implicitly uses the maximal z value as the highest level
+    isfilledcontour(series) && pop!(levels)
     levels
 end
 
@@ -565,11 +563,12 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
         gr_set_transparency(_cbar_unique(get_fillalpha.(series), "fill alpha"))
         levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         # GR implicitly uses the maximal z value as the highest level
-        if levels[end] < clims[2]
+        if last(levels) < clims[2]
             @warn "GR: highest contour level less than maximal z value is not supported."
-            # replace levels, rather than assign to levels[end], to ensure type
+            # replace levels, rather than assign to last(levels), to ensure type
             # promotion in case levels is an integer array
-            levels = [levels[1:(end - 1)]; clims[2]]
+            pop!(levels)
+            push!(levels, clims[2])
         end
         colors = gr_colorbar_colors(last(series), clims)
         for (from, to, color) in zip(levels[1:(end - 1)], levels[2:end], colors)
@@ -598,9 +597,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
 
     ztick = 0.5 * GR.tick(zmin, zmax)
     gr_set_line(1, :solid, plot_color(:black), sp)
-    if sp[:colorbar_scale] === :log10
-        GR.setscale(2)
-    end
+    sp[:colorbar_scale] === :log10 && GR.setscale(GR.OPTION_Y_LOG)
     GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
 
     title = if isa(sp[:colorbar_title], PlotText)
@@ -970,8 +967,8 @@ function _update_min_padding!(sp::Subplot{GRBackend})
 end
 
 function is_equally_spaced(v)
-    d = collect(v[2:end] .- v[1:(end - 1)])
-    all(d .≈ d[1])
+    d = diff(v)
+    all(d .≈ first(d))
 end
 
 remap(x, lo, hi) = (x - lo) / (hi - lo)
@@ -1198,9 +1195,7 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
     end
     s isa Symbol || return gr_legend_pos(s, viewport_plotarea)
     str = string(s)
-    if str == "best"
-        str = "topright"
-    end
+    str == "best" && (str = "topright")
     if occursin("outer", str)
         xaxis, yaxis = sp[:xaxis], sp[:yaxis]
         xmirror =
@@ -1317,7 +1312,7 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
             dy = max(dy, t - b)
         end
 
-        GR.setscale(1)
+        GR.setscale(GR.OPTION_X_LOG)
         GR.selntran(1)
         GR.restorestate()
     end
@@ -2102,13 +2097,12 @@ function gr_draw_surface(series, x, y, z, clims)
                 ),
             )
         end
-        fillalpha = get_fillalpha(series)
-        n_polygons = length(cns)
         facecolor = if series[:fillcolor] isa AbstractArray
             series[:fillcolor]
         else
-            fill(series[:fillcolor], n_polygons)
+            fill(series[:fillcolor], length(cns))
         end
+        fillalpha = get_fillalpha(series)
         facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
         GR.setborderwidth(get_linewidth(series))
         GR.setbordercolorind(gr_getcolorind(get_linecolor(series)))
