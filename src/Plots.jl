@@ -74,20 +74,7 @@ export
     plot3d!,
 
     title!,
-    xlabel!,
-    ylabel!,
-    xlims!,
-    ylims!,
-    zlims!,
-    xticks!,
-    yticks!,
     annotate!,
-    xflip!,
-    yflip!,
-    xaxis!,
-    yaxis!,
-    xgrid!,
-    ygrid!,
 
     xlims,
     ylims,
@@ -226,32 +213,8 @@ include("backends/plotly.jl")
 include("backends/gr.jl")
 include("backends/web.jl")
 
-include("shorthands.jl")
-
 const PlotOrSubplot = Union{Plot,Subplot}
-
-title!(plt::PlotOrSubplot, s::AbstractString; kw...)                                    = plot!(plt; title = s, kw...)
-xlabel!(plt::PlotOrSubplot, s::AbstractString; kw...)                                   = plot!(plt; xlabel = s, kw...)
-ylabel!(plt::PlotOrSubplot, s::AbstractString; kw...)                                   = plot!(plt; ylabel = s, kw...)
-xlims!(plt::PlotOrSubplot, lims::Tuple{<:Real,<:Real}; kw...)                           = plot!(plt; xlims = lims, kw...)
-ylims!(plt::PlotOrSubplot, lims::Tuple{<:Real,<:Real}; kw...)                           = plot!(plt; ylims = lims, kw...)
-zlims!(plt::PlotOrSubplot, lims::Tuple{<:Real,<:Real}; kw...)                           = plot!(plt; zlims = lims, kw...)
-xlims!(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...)                               = plot!(plt; xlims = (xmin, xmax), kw...)
-ylims!(plt::PlotOrSubplot, ymin::Real, ymax::Real; kw...)                               = plot!(plt; ylims = (ymin, ymax), kw...)
-zlims!(plt::PlotOrSubplot, zmin::Real, zmax::Real; kw...)                               = plot!(plt; zlims = (zmin, zmax), kw...)
-xticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...)                                    = plot!(plt; xticks = ticks, kw...)
-yticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...)                                    = plot!(plt; yticks = ticks, kw...)
-xticks!(plt::PlotOrSubplot, ticks::AVec{<:Real}, labels::AVec{<:AbstractString}; kw...) = plot!(plt; xticks = (ticks, labels), kw...)
-yticks!(plt::PlotOrSubplot, ticks::AVec{<:Real}, labels::AVec{<:AbstractString}; kw...) = plot!(plt; yticks = (ticks, labels), kw...)
-xgrid!(plt::PlotOrSubplot, args...; kw...)                                              = plot!(plt; xgrid = args, kw...)
-ygrid!(plt::PlotOrSubplot, args...; kw...)                                              = plot!(plt; ygrid = args, kw...)
-annotate!(plt::PlotOrSubplot, anns...; kw...)                                           = plot!(plt; annotations = anns, kw...)
-annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...)                                    = plot!(plt; annotations = collect(anns), kw...)
-annotate!(plt::PlotOrSubplot, anns::AVec{<:Tuple}; kw...)                               = plot!(plt; annotations = anns, kw...)
-xflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                                    = plot!(plt; xflip = flip, kw...)
-yflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                                    = plot!(plt; yflip = flip, kw...)
-xaxis!(plt::PlotOrSubplot, args...; kw...)                                              = plot!(plt; xaxis = args, kw...)
-yaxis!(plt::PlotOrSubplot, args...; kw...)                                              = plot!(plt; yaxis = args, kw...)
+include("shorthands.jl")
 
 # ---------------------------------------------------------
 
