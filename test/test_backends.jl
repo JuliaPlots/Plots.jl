@@ -75,7 +75,7 @@ function image_comparison_tests(
                 :(theme(:default)),
                 :(default(size = (500, 300), show = false, reuse = true)),
                 :(Random.seed!(rng, $PLOTS_SEED)),
-                replace_rand.(example.exprs)...,
+                replace_rand(example.exprs),
                 :(png($fn)),
             )
                 Base.eval(TEST_MODULE, ex)
