@@ -1196,6 +1196,9 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
     error_style!(plotattributes)
     markershape := :vline
     xerr = error_zipit(plotattributes[:xerror])
+    if haskey(plotattributes, :xerrorstyle) && !isnothing(plotattributes[:xerrorstyle])
+        plotattributes[:linestyle] = plotattributes[:xerrorstyle]
+    end
     if z === nothing
         plotattributes[:x], plotattributes[:y] = error_coords(xerr, x, y)
     else
@@ -1213,6 +1216,9 @@ end
     error_style!(plotattributes)
     markershape := :hline
     yerr = error_zipit(plotattributes[:yerror])
+    if haskey(plotattributes, :yerrorstyle) && !isnothing(plotattributes[:yerrorstyle])
+        plotattributes[:linestyle] = plotattributes[:yerrorstyle]
+    end
     if z === nothing
         plotattributes[:y], plotattributes[:x] = error_coords(yerr, y, x)
     else
