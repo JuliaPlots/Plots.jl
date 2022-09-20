@@ -373,6 +373,8 @@ const _series_defaults = KW(
     :xerror             => nothing,
     :yerror             => nothing,
     :zerror             => nothing,
+    :xerrorstyle        => nothing,
+    :yerrorstyle        => nothing,
     :ribbon             => nothing,
     :quiver             => nothing,
     :arrow              => nothing,   # allows for adding arrows to line/path... call `arrow(args...)`
@@ -982,7 +984,9 @@ add_aliases(:show, :gui, :display)
 add_aliases(:color_palette, :palette)
 add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
 add_aliases(:xerror, :xerr, :xerrorbar)
+add_aliases(:xerrorstyle, :xerrstyle, :xerrorbarstyle)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
+add_aliases(:yerrorstyle, :yerrstyle, :yerrorbarstyle, :errstyle, :errorbarstyle)
 add_aliases(:zerror, :zerr, :zerrorbar)
 add_aliases(:quiver, :velocity, :quiver2d, :gradient, :vectorfield)
 add_aliases(:normalize, :norm, :normed, :normalized)
