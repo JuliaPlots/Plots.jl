@@ -99,8 +99,9 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     # handle error bars by creating new recipedata data... these will have
     # the same recipedata index as the recipedata they are copied from
     st = get(kw, :seriestype, :none)
-    if st === :none
-        for esym in (:xerror, :yerror, :zerror)
+    errors = (:xerror, :yerror, :zerror)
+    if st ∉ errors
+        for esym in errors
             if get(kw, esym, nothing) !== nothing
                 # we make a copy of the KW and apply an errorbar recipe
                 errkw = copy(kw)
