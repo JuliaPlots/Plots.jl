@@ -32,14 +32,12 @@ jobs:
         include:
           - os: ubuntu-latest
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-          - if: github.event_name == 'pull_request'
-            os: ubuntu-latest
+          - os: ubuntu-latest
             prefix: xvfb-run
             version: '1.7'
-          - if: github.event_name == 'pull_request'
-            os: ubuntu-latest
-            prefix: xvfb-run
-            version: 'nightly'
+          # - os: ubuntu-latest
+          #   prefix: xvfb-run
+          #  version: 'nightly'
 
     steps:
       - uses: actions/checkout@v3
@@ -85,7 +83,7 @@ jobs:
           file: lcov.info
 
   Skip:
-    if: "contains(github.event.head_commit.message, '[skip ci]')"
+    if: contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
     steps:
       - name: Skip CI 🚫
