@@ -119,7 +119,7 @@ Make a line plot of a kernel density estimate of x. The smoothness of the densit
 
 # Keyword arguments
 
-- `trim`::Bool: enables cutting off the distribution tails. 
+- `trim`::Bool: enables cutting off the distribution tails.
 - `bandwidth`::Number: a low bandwidth induces under-smoothing, whilst a high bandwidth induces over-smoothing.
 
 # Examples
@@ -127,7 +127,7 @@ Make a line plot of a kernel density estimate of x. The smoothness of the densit
 julia> density(randn(100), bandwidth = -0.01, trim = false)
 output : ERROR: Bandwidth must be positive
 
-julia> density(randn(100), bandwidth = 0.1, trim = false)  # a curve with extremity and under-smoothing 
+julia> density(randn(100), bandwidth = 0.1, trim = false)  # a curve with extremity and under-smoothing
 julia> density(randn(100), bandwidth = 10, trim = true)  # a curve without extremity and over-smoothing
 ```
 
@@ -424,37 +424,71 @@ plot3d(args...; kw...) = plot(args...; kw..., seriestype = :path3d)
 plot3d!(args...; kw...) = plot!(args...; kw..., seriestype = :path3d)
 
 "Add title to an existing plot"
+title!(plt::PlotOrSubplot, s::AbstractString; kw...) = plot!(plt; title = s, kw...)
 title!(s::AbstractString; kw...) = plot!(; title = s, kw...)
 
-"Add xlabel to an existing plot"
-xlabel!(s::AbstractString; kw...) = plot!(; xlabel = s, kw...)
+for letter in ("x", "y", "z")
+    @eval begin
+        """Add $($(letter))label to an existing plot"""
+        $(Symbol(letter, :label!))(s::AbstractString; kw...) =
+            plot!(; $(Symbol(letter, :label)) = s, kw...)
+        $(Symbol(letter, :label!))(plt::PlotOrSubplot, s::AbstractString; kw...) =
+            plot!(plt; $(Symbol(letter, :label)) = s, kw...)
+        export $(Symbol(letter, :label!))
 
-"Add ylabel to an existing plot"
-ylabel!(s::AbstractString; kw...) = plot!(; ylabel = s, kw...)
+        "Set $($letter)lims for an existing plot"
+        $(Symbol(letter, :lims!))(lims::Tuple; kw...) =
+            plot!(; $(Symbol(letter, :lims)) = lims, kw...)
+        $(Symbol(letter, :lims!))(xmin::Real, xmax::Real; kw...) =
+            plot!(; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
+        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, lims::Tuple{<:Real,<:Real}; kw...) =
+            plot!(plt; $(Symbol(letter, :lims)) = lims, kw...)
+        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...) =
+            plot!(plt; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
+        export $(Symbol(letter, :lims!))
 
-"Set xlims for an existing plot"
-xlims!(lims::Tuple; kw...) = plot!(; xlims = lims, kw...)
+        "Set $($letter)ticks for an existing plot"
+        $(Symbol(letter, :ticks!))(v::TicksArgs; kw...) =
+            plot!(; $(Symbol(letter, :ticks)) = v, kw...)
+        $(Symbol(letter, :ticks!))(
+            ticks::AVec{T},
+            labels::AVec{S};
+            kw...,
+        ) where {T<:Real,S<:AbstractString} =
+            plot!(; $(Symbol(letter, :ticks)) = (ticks, labels), kw...)
+        $(Symbol(letter, :ticks!))(plt::PlotOrSubplot, v::TicksArgs; kw...) =
+            plot!(plt; $(Symbol(letter, :ticks)) = v, kw...)
+        $(Symbol(letter, :ticks!))(
+            plt::PlotOrSubplot,
+            ticks::AVec{T},
+            labels::AVec{S};
+            kw...,
+        ) where {T<:Real,S<:AbstractString} =
+            plot!(plt; $(Symbol(letter, :ticks)) = (ticks, labels), kw...)
+        export $(Symbol(letter, :ticks!))
 
-"Set ylims for an existing plot"
-ylims!(lims::Tuple; kw...) = plot!(; ylims = lims, kw...)
+        "Flip the current plots' $($letter) axis"
+        $(Symbol(letter, :flip!))(flip::Bool = true; kw...) =
+            plot!(; $(Symbol(letter, :flip)) = flip, kw...)
+        $(Symbol(letter, :flip!))(plt::PlotOrSubplot, flip::Bool = true; kw...) =
+            plot!(plt; $(Symbol(letter, :flip)) = flip, kw...)
+        export $(Symbol(letter, :flip!))
 
-"Set zlims for an existing plot"
-zlims!(lims::Tuple; kw...) = plot!(; zlims = lims, kw...)
+        "Specify $($letter) axis attributes for an existing plot"
+        $(Symbol(letter, :axis!))(args...; kw...) =
+            plot!(; $(Symbol(letter, :axis)) = args, kw...)
+        $(Symbol(letter, :axis!))(plt::PlotOrSubplot, args...; kw...) =
+            plot!(plt; $(Symbol(letter, :axis)) = args, kw...)
+        export $(Symbol(letter, :axis!))
 
-xlims!(xmin::Real, xmax::Real; kw...) = plot!(; xlims = (xmin, xmax), kw...)
-ylims!(ymin::Real, ymax::Real; kw...) = plot!(; ylims = (ymin, ymax), kw...)
-zlims!(zmin::Real, zmax::Real; kw...) = plot!(; zlims = (zmin, zmax), kw...)
-
-"Set xticks for an existing plot"
-xticks!(v::TicksArgs; kw...) = plot!(; xticks = v, kw...)
-
-"Set yticks for an existing plot"
-yticks!(v::TicksArgs; kw...) = plot!(; yticks = v, kw...)
-
-xticks!(ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString} =
-    plot!(; xticks = (ticks, labels), kw...)
-yticks!(ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString} =
-    plot!(; yticks = (ticks, labels), kw...)
+        "Specify $($letter) grid attributes for an existing plot"
+        $(Symbol(letter, :grid!))(args...; kw...) =
+            plot!(; $(Symbol(letter, :grid)) = args, kw...)
+        $(Symbol(letter, :grid!))(plt::PlotOrSubplot, args...; kw...) =
+            plot!(plt; $(Symbol(letter, :grid)) = args, kw...)
+        export $(Symbol(letter, :grid!))
+    end
+end
 
 """
     annotate!(anns)
@@ -476,22 +510,11 @@ julia> annotate!([2,5], [6,3], ["text at (2,6)", "text at (5,3)"])
 ```
 """
 annotate!(anns...; kw...) = plot!(; annotation = anns, kw...)
-annotate!(anns::Tuple...; kw...)      = plot!(; annotation = collect(anns), kw...)
-annotate!(anns::AVec{<:Tuple}; kw...) = plot!(; annotation = anns, kw...)
-
-"Flip the current plots' x axis"
-xflip!(flip::Bool = true; kw...) = plot!(; xflip = flip, kw...)
-
-"Flip the current plots' y axis"
-yflip!(flip::Bool = true; kw...) = plot!(; yflip = flip, kw...)
-
-"Specify x axis attributes for an existing plot"
-xaxis!(args...; kw...) = plot!(; xaxis = args, kw...)
-xgrid!(args...; kw...) = plot!(; xgrid = args, kw...)
-
-"Specify y axis attributes for an existing plot"
-yaxis!(args...; kw...) = plot!(; yaxis = args, kw...)
-ygrid!(args...; kw...) = plot!(; ygrid = args, kw...)
+annotate!(anns::Tuple...; kw...)                          = plot!(; annotation = collect(anns), kw...)
+annotate!(anns::AVec{<:Tuple}; kw...)                     = plot!(; annotation = anns, kw...)
+annotate!(plt::PlotOrSubplot, anns...; kw...)             = plot!(plt; annotations = anns, kw...)
+annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...)      = plot!(plt; annotations = collect(anns), kw...)
+annotate!(plt::PlotOrSubplot, anns::AVec{<:Tuple}; kw...) = plot!(plt; annotations = anns, kw...)
 
 @doc """
    abline!([plot,] a, b; kwargs...)
