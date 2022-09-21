@@ -1157,14 +1157,17 @@ end
     end
 
     mss = plotattributes[:markerstrokestyle]
-    if mss !== :match && !isnothing(mss)
-        plotattributes[:linestyle] = mss
+    mss = if mss !== :match && !isnothing(mss)
+        mss
+    else
+        plotattributes[:linestyle]
     end
 
     seriestype := :path
     markerstrokecolor --> msc
     markercolor --> msc
     linecolor --> msc
+    linestyle --> mss
     linewidth --> plotattributes[:markerstrokewidth]
     label --> ""
 end
