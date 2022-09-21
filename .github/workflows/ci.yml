@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   CI:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
@@ -12,6 +16,7 @@ jobs:
       GKS_ENCODING: "utf8"
       GKSwstype: "nul"
       PYTHON: "Conda"  # for `PyPlot`
+
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
@@ -36,12 +41,47 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/plots-tests
-        if: ${{ !(github.event_name == 'push' && matrix.version == 'nightly') }}
+      - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
-          prefix: ${{ matrix.prefix }}
-          os: ${{ matrix.os }}
+      - uses: julia-actions/cache@v1
+
+      - name: Ubuntu LaTeX dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
+          sudo fc-cache -vr
+
+      - uses: julia-actions/julia-buildpkg@latest
+
+      - name: PyPlot dependencies
+        shell: julia --project=@. --color=yes {0}
+        run: |
+          @show ENV["PYTHON"]
+          using Pkg
+          Pkg.add("Conda"); Pkg.build("Conda"; verbose=true)
+          Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
+          using Conda; Conda.add("matplotlib")
+          Conda.list()
+
+      - uses: julia-actions/julia-runtest@latest
+        if: "!(github.event_name == 'push' && matrix.version == 'nightly')"
+        with:
+          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
+
+      - name: Run downstream tests
+        if: startsWith(matrix.os, 'ubuntu') && !(github.event_name == 'push' && matrix.version == 'nightly')
+        run:  |
+          xvfb-run julia -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")'
+          xvfb-run julia -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")'
+
+      - uses: julia-actions/julia-processcoverage@latest
+        if: startsWith(matrix.os, 'ubuntu')
+      - uses: codecov/codecov-action@v3
+        if: startsWith(matrix.os, 'ubuntu')
+        with:
+          file: lcov.info
 
   Skip:
     if: "contains(github.event.head_commit.message, '[skip ci]')"
