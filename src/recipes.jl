@@ -1134,7 +1134,7 @@ end
 # ---------------------------------------------------------------------------
 # Error Bars
 
-function error_style!(plotattributes::AKW)
+@attributes function error_style!(plotattributes::AKW)
     # errorbar color should soley determined by markerstrokecolor
     if haskey(plotattributes, :marker_z)
         reset_kw!(plotattributes, :marker_z)
@@ -1156,12 +1156,12 @@ function error_style!(plotattributes::AKW)
         msc
     end
 
-    plotattributes[:seriestype] = :path
-    plotattributes[:markerstrokecolor] = msc
-    plotattributes[:markercolor] = msc
-    plotattributes[:linecolor] = msc
-    plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
-    plotattributes[:label] = ""
+    seriestype := :path
+    markerstrokecolor --> msc
+    markercolor --> msc
+    linecolor --> msc
+    linewidth --> plotattributes[:markerstrokewidth]
+    label --> ""
 end
 
 # if we're passed a tuple of vectors, convert to a vector of tuples
@@ -1194,7 +1194,7 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(plotattributes)
-    markershape := :vline
+    markershape --> :vline
     xerr = error_zipit(plotattributes[:xerror])
     if z === nothing
         plotattributes[:x], plotattributes[:y] = error_coords(xerr, x, y)
@@ -1211,7 +1211,7 @@ end
 
 @recipe function f(::Type{Val{:yerror}}, x, y, z)
     error_style!(plotattributes)
-    markershape := :hline
+    markershape --> :hline
     yerr = error_zipit(plotattributes[:yerror])
     if z === nothing
         plotattributes[:y], plotattributes[:x] = error_coords(yerr, y, x)
@@ -1228,7 +1228,7 @@ end
 
 @recipe function f(::Type{Val{:zerror}}, x, y, z)
     error_style!(plotattributes)
-    markershape := :hline
+    markershape --> :hline
     if z !== nothing
         zerr = error_zipit(plotattributes[:zerror])
         plotattributes[:z], plotattributes[:x], plotattributes[:y] =

@@ -10,16 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
-        with:
-          version: '1.7'
-
-      # Setup
+  
       - name: Ubuntu TESTCMD
         run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
       - name: Install Plots dependencies
         uses: julia-actions/julia-buildpkg@latest
       - name: Install Benchmarking dependencies
-        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI"'
 
       - name: Run benchmarks
         run: $TESTCMD -e 'using BenchmarkCI; BenchmarkCI.judge()'
