@@ -487,6 +487,16 @@ for letter in ("x", "y", "z")
         $(Symbol(letter, :grid!))(plt::PlotOrSubplot, args...; kw...) =
             plot!(plt; $(Symbol(letter, :grid)) = args, kw...)
         export $(Symbol(letter, :grid!))
+
+        """
+            $($letter)error(x, y [, z]; $($letter)error = vals)
+            $($letter)error!(x, y [, z]; $($letter)error = vals)
+
+        Create or add a series of $($letter)errorbars at the positions defined by `x`, `y` and `z` with the lenghts defined in `vals`.
+
+        Markerstrokecolor will color the whole errorbars if not specified otherwise.
+        """
+        @shorthands $(Symbol(letter, :error))
     end
 end
 

@@ -1134,7 +1134,7 @@ end
 # ---------------------------------------------------------------------------
 # Error Bars
 
-function error_style!(plotattributes::AKW)
+@attributes function error_style!(plotattributes::AKW)
     # errorbar color should soley determined by markerstrokecolor
     if haskey(plotattributes, :marker_z)
         reset_kw!(plotattributes, :marker_z)
@@ -1156,12 +1156,12 @@ function error_style!(plotattributes::AKW)
         msc
     end
 
-    plotattributes[:seriestype] = :path
-    plotattributes[:markerstrokecolor] = msc
-    plotattributes[:markercolor] = msc
-    plotattributes[:linecolor] = msc
-    plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
-    plotattributes[:label] = ""
+    seriestype := :path
+    markerstrokecolor --> msc
+    markercolor --> msc
+    linecolor --> msc
+    linewidth --> plotattributes[:markerstrokewidth]
+    label --> ""
 end
 
 # if we're passed a tuple of vectors, convert to a vector of tuples
