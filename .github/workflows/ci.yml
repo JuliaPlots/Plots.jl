@@ -26,7 +26,6 @@ jobs:
       matrix:
         version:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
-          - '1.7'
           - '1.8' # latest stable
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch:
@@ -34,11 +33,12 @@ jobs:
         include:
           - os: ubuntu-latest
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-        exclude:  # spare credits
-          - os: macos-latest
+          - os: ubuntu-latest
+            prefix: xvfb-run
             version: '1.7'
-          - os: windows-latest
-            version: '1.7'
+          - os: ubuntu-latest
+            prefix: xvfb-run
+            version: 'nightly'
 
     steps:
       - uses: actions/checkout@v3
