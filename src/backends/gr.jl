@@ -1909,11 +1909,11 @@ function gr_add_series(sp, series)
         gr_set_font(legendfont(sp), sp)
         gr_set_textcolor(plot_color(sp[:legend_font_color]))
         if sp[:yaxis][:mirror]
-            (_, i) = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
+            _, i = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
             GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
             offset = -0.01
         else
-            (_, i) = sp[:xaxis][:flip] ? findmin(x) : findmax(x)
+            _, i = sp[:xaxis][:flip] ? findmin(x) : findmax(x)
             GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
             offset = 0.01
         end
