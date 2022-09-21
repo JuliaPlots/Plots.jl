@@ -2,8 +2,7 @@ name: ci
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
 
 defaults:
@@ -33,10 +32,12 @@ jobs:
         include:
           - os: ubuntu-latest
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-          - os: ubuntu-latest
+          - if: ${{ github.event_name == 'pull_request' }}
+            os: ubuntu-latest
             prefix: xvfb-run
             version: '1.7'
-          - os: ubuntu-latest
+          - if: ${{ github.event_name == 'pull_request' }}
+            os: ubuntu-latest
             prefix: xvfb-run
             version: 'nightly'
 
