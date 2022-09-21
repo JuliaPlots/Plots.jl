@@ -1156,6 +1156,11 @@ function error_style!(plotattributes::AKW)
         msc
     end
 
+    mss = plotattributes[:markerstrokestyle]
+    if mss !== :match && !isnothing(mss)
+        plotattributes[:linestyle] = mss
+    end
+
     plotattributes[:seriestype] = :path
     plotattributes[:markerstrokecolor] = msc
     plotattributes[:markercolor] = msc
@@ -1196,9 +1201,6 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
     error_style!(plotattributes)
     markershape := :vline
     xerr = error_zipit(plotattributes[:xerror])
-    if haskey(plotattributes, :xerror_linestyle) && !isnothing(plotattributes[:xerror_linestyle])
-        plotattributes[:linestyle] = plotattributes[:xerror_linestyle]
-    end
     if z === nothing
         plotattributes[:x], plotattributes[:y] = error_coords(xerr, x, y)
     else
@@ -1216,9 +1218,6 @@ end
     error_style!(plotattributes)
     markershape := :hline
     yerr = error_zipit(plotattributes[:yerror])
-    if haskey(plotattributes, :yerror_linestyle) && !isnothing(plotattributes[:yerror_linestyle])
-        plotattributes[:linestyle] = plotattributes[:yerror_linestyle]
-    end
     if z === nothing
         plotattributes[:y], plotattributes[:x] = error_coords(yerr, y, x)
     else

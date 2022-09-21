@@ -218,8 +218,6 @@ const _base_supported_args = [
     :smooth,
     :xerror,
     :yerror,
-    :xerror_linestyle,
-    :yerror_linestyle,
     :zerror,
     :subplot,
     :x,
