@@ -32,11 +32,11 @@ jobs:
         include:
           - os: ubuntu-latest
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-          - if: ${{ github.event_name == 'pull_request' }}
+          - if: github.event_name == 'pull_request'
             os: ubuntu-latest
             prefix: xvfb-run
             version: '1.7'
-          - if: ${{ github.event_name == 'pull_request' }}
+          - if: github.event_name == 'pull_request'
             os: ubuntu-latest
             prefix: xvfb-run
             version: 'nightly'
