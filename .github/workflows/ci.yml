@@ -27,6 +27,7 @@ jobs:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
           - '1.8' # latest stable
         os: [ubuntu-latest, windows-latest, macos-latest]
+        optional: [false]
         arch:
           - x64
         include:
@@ -35,9 +36,11 @@ jobs:
           - os: ubuntu-latest
             prefix: xvfb-run
             version: '1.7'
+            optional: true
           - os: ubuntu-latest
             prefix: xvfb-run
             version: 'nightly'
+            optional: true
 
     steps:
       - uses: actions/checkout@v3
@@ -66,12 +69,12 @@ jobs:
           Conda.list()
 
       - uses: julia-actions/julia-runtest@latest
-        if: "!(github.event_name == 'push' && matrix.version == 'nightly')"
+        if: "!(github.event_name == 'push' && matrix.optional)"
         with:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
 
       - name: Run downstream tests
-        if: startsWith(matrix.os, 'ubuntu') && !(github.event_name == 'push' && matrix.version == 'nightly')
+        if: startsWith(matrix.os, 'ubuntu') && !(github.event_name == 'push' && matrix.optional)
         run:  |
           xvfb-run julia -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")'
           xvfb-run julia -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")'
