@@ -45,11 +45,13 @@ end
 end
 
 @testset "Axis limits" begin
+    default_widen(from, to) = Plots.scale_lims(from, to, Plots.default_widen_factor)
+
     pl = plot(1:5, xlims = :symmetric, widen = false)
     @test Plots.xlims(pl) == (-5, 5)
 
     pl = plot(1:3)
-    @test Plots.xlims(pl) == Plots.widen(1, 3)
+    @test Plots.xlims(pl) == default_widen(1, 3)
 
     pl = plot([1.05, 2.0, 2.95], ylims = :round)
     @test Plots.ylims(pl) == (1, 3)
@@ -58,7 +60,7 @@ end
         pl = plot(x; xlims)
         @test Plots.xlims(pl) == (1, 5)
         pl = plot(x; xlims, widen = true)
-        @test Plots.xlims(pl) == Plots.widen(1, 5)
+        @test Plots.xlims(pl) == default_widen(1, 5)
     end
 
     pl = plot(1:5, lims = :symmetric, widen = false)
@@ -70,7 +72,7 @@ end
             @test_logs (:warn, r"Invalid limits for x axis") match_mode = :any Plots.xlims(
                 pl,
             )
-        @test plims == Plots.widen(1, 5)
+        @test plims == default_widen(1, 5)
     end
 end
 

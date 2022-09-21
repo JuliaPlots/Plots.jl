@@ -186,8 +186,11 @@ const _arg_desc = KW(
     :tick_direction              => "Symbol.  Direction of the ticks. `:in`, `:out` or `:none`",
     :showaxis                    => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`",
     :widen                       => """
-                                    Bool or :auto. Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
-                                    Defaults to `:auto`, which widens unless limits were manually set.
+                                    Bool, Number or :auto. Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
+                                    If set to `true`, scale the axis limits by the default factor of 1.06. 
+                                    A different factor may be specified by setting `widen` to a number.
+                                    Defaults to `:auto`, which widens by the default factor unless limits were manually set.
+                                    See also the `scale_limits!` function for scaling axis limits in an existing plot.
                                     """,
     :draw_arrow                  => "Bool. Draw arrow at the end of the axis.",
 )
