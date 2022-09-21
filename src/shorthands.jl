@@ -424,51 +424,71 @@ plot3d(args...; kw...) = plot(args...; kw..., seriestype = :path3d)
 plot3d!(args...; kw...) = plot!(args...; kw..., seriestype = :path3d)
 
 "Add title to an existing plot"
-title!(plt::PlotOrSubplot, s::AbstractString; kw...)                                    = plot!(plt; title = s, kw...)
+title!(plt::PlotOrSubplot, s::AbstractString; kw...) = plot!(plt; title = s, kw...)
 title!(s::AbstractString; kw...) = plot!(; title = s, kw...)
 
 for letter in ("x", "y", "z")
     @eval begin
         """Add $($(letter))label to an existing plot"""
-        $(Symbol(letter, :label!))(s::AbstractString; kw...) = plot!(; $(Symbol(letter, :label)) = s, kw...)
-        $(Symbol(letter, :label!))(plt::PlotOrSubplot, s::AbstractString; kw...) = plot!(plt; $(Symbol(letter, :label)) = s, kw...)
+        $(Symbol(letter, :label!))(s::AbstractString; kw...) =
+            plot!(; $(Symbol(letter, :label)) = s, kw...)
+        $(Symbol(letter, :label!))(plt::PlotOrSubplot, s::AbstractString; kw...) =
+            plot!(plt; $(Symbol(letter, :label)) = s, kw...)
         export $(Symbol(letter, :label!))
 
         "Set $($letter)lims for an existing plot"
-        $(Symbol(letter, :lims!))(lims::Tuple; kw...) = plot!(; $(Symbol(letter, :lims)) = lims, kw...)
-        $(Symbol(letter, :lims!))(xmin::Real, xmax::Real; kw...) = plot!(; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
-        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, lims::Tuple{<:Real, <:Real}; kw...) = plot!(plt; $(Symbol(letter, :lims)) = lims, kw...)
-        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...) = plot!(plt; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
+        $(Symbol(letter, :lims!))(lims::Tuple; kw...) =
+            plot!(; $(Symbol(letter, :lims)) = lims, kw...)
+        $(Symbol(letter, :lims!))(xmin::Real, xmax::Real; kw...) =
+            plot!(; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
+        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, lims::Tuple{<:Real,<:Real}; kw...) =
+            plot!(plt; $(Symbol(letter, :lims)) = lims, kw...)
+        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...) =
+            plot!(plt; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
         export $(Symbol(letter, :lims!))
 
         "Set $($letter)ticks for an existing plot"
-        $(Symbol(letter, :ticks!))(v::TicksArgs; kw...) = plot!(; $(Symbol(letter, :ticks)) = v, kw...)
-        $(Symbol(letter, :ticks!))(ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString} =
+        $(Symbol(letter, :ticks!))(v::TicksArgs; kw...) =
+            plot!(; $(Symbol(letter, :ticks)) = v, kw...)
+        $(Symbol(letter, :ticks!))(
+            ticks::AVec{T},
+            labels::AVec{S};
+            kw...,
+        ) where {T<:Real,S<:AbstractString} =
             plot!(; $(Symbol(letter, :ticks)) = (ticks, labels), kw...)
-        $(Symbol(letter, :ticks!))(plt::PlotOrSubplot, v::TicksArgs; kw...) = plot!(plt; $(Symbol(letter, :ticks)) = v, kw...)
-        $(Symbol(letter, :ticks!))(plt::PlotOrSubplot, ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString} =
+        $(Symbol(letter, :ticks!))(plt::PlotOrSubplot, v::TicksArgs; kw...) =
+            plot!(plt; $(Symbol(letter, :ticks)) = v, kw...)
+        $(Symbol(letter, :ticks!))(
+            plt::PlotOrSubplot,
+            ticks::AVec{T},
+            labels::AVec{S};
+            kw...,
+        ) where {T<:Real,S<:AbstractString} =
             plot!(plt; $(Symbol(letter, :ticks)) = (ticks, labels), kw...)
         export $(Symbol(letter, :ticks!))
 
         "Flip the current plots' $($letter) axis"
-        $(Symbol(letter, :flip!))(flip::Bool = true; kw...) = plot!(; $(Symbol(letter, :flip)) = flip, kw...)
-        $(Symbol(letter, :flip!))(plt::PlotOrSubplot, flip::Bool = true; kw...) = plot!(plt; $(Symbol(letter, :flip)) = flip, kw...)
+        $(Symbol(letter, :flip!))(flip::Bool = true; kw...) =
+            plot!(; $(Symbol(letter, :flip)) = flip, kw...)
+        $(Symbol(letter, :flip!))(plt::PlotOrSubplot, flip::Bool = true; kw...) =
+            plot!(plt; $(Symbol(letter, :flip)) = flip, kw...)
         export $(Symbol(letter, :flip!))
 
         "Specify $($letter) axis attributes for an existing plot"
-        $(Symbol(letter, :axis!))(args...; kw...) = plot!(; $(Symbol(letter, :axis)) = args, kw...)
-        $(Symbol(letter, :axis!))(plt::PlotOrSubplot, args...; kw...) = plot!(plt; $(Symbol(letter, :axis)) = args, kw...)
+        $(Symbol(letter, :axis!))(args...; kw...) =
+            plot!(; $(Symbol(letter, :axis)) = args, kw...)
+        $(Symbol(letter, :axis!))(plt::PlotOrSubplot, args...; kw...) =
+            plot!(plt; $(Symbol(letter, :axis)) = args, kw...)
         export $(Symbol(letter, :axis!))
 
         "Specify $($letter) grid attributes for an existing plot"
-        $(Symbol(letter, :grid!))(args...; kw...) = plot!(; $(Symbol(letter, :grid)) = args, kw...)
-        $(Symbol(letter, :grid!))(plt::PlotOrSubplot, args...; kw...) = plot!(plt; $(Symbol(letter, :grid)) = args, kw...)
+        $(Symbol(letter, :grid!))(args...; kw...) =
+            plot!(; $(Symbol(letter, :grid)) = args, kw...)
+        $(Symbol(letter, :grid!))(plt::PlotOrSubplot, args...; kw...) =
+            plot!(plt; $(Symbol(letter, :grid)) = args, kw...)
         export $(Symbol(letter, :grid!))
-
     end
 end
-
-
 
 """
     annotate!(anns)
@@ -490,11 +510,11 @@ julia> annotate!([2,5], [6,3], ["text at (2,6)", "text at (5,3)"])
 ```
 """
 annotate!(anns...; kw...) = plot!(; annotation = anns, kw...)
-annotate!(anns::Tuple...; kw...)      = plot!(; annotation = collect(anns), kw...)
-annotate!(anns::AVec{<:Tuple}; kw...) = plot!(; annotation = anns, kw...)
-annotate!(plt::PlotOrSubplot, anns...; kw...)                                           = plot!(plt; annotations = anns, kw...)
-annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...)                                    = plot!(plt; annotations = collect(anns), kw...)
-annotate!(plt::PlotOrSubplot, anns::AVec{<:Tuple}; kw...)                               = plot!(plt; annotations = anns, kw...)
+annotate!(anns::Tuple...; kw...)                          = plot!(; annotation = collect(anns), kw...)
+annotate!(anns::AVec{<:Tuple}; kw...)                     = plot!(; annotation = anns, kw...)
+annotate!(plt::PlotOrSubplot, anns...; kw...)             = plot!(plt; annotations = anns, kw...)
+annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...)      = plot!(plt; annotations = collect(anns), kw...)
+annotate!(plt::PlotOrSubplot, anns::AVec{<:Tuple}; kw...) = plot!(plt; annotations = anns, kw...)
 
 @doc """
    abline!([plot,] a, b; kwargs...)
