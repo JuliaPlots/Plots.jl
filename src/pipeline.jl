@@ -98,14 +98,18 @@ end
 function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     # handle error bars by creating new recipedata data... these will have
     # the same recipedata index as the recipedata they are copied from
-    for esym in (:xerror, :yerror, :zerror)
-        if get(kw, esym, nothing) !== nothing
-            # we make a copy of the KW and apply an errorbar recipe
-            errkw = copy(kw)
-            errkw[:seriestype] = esym
-            errkw[:label] = ""
-            errkw[:primary] = false
-            push!(kw_list, errkw)
+    st = get(kw, :seriestype, :none)
+    errors = (:xerror, :yerror, :zerror)
+    if st ∉ errors
+        for esym in errors
+            if get(kw, esym, nothing) !== nothing
+                # we make a copy of the KW and apply an errorbar recipe
+                errkw = copy(kw)
+                errkw[:seriestype] = esym
+                errkw[:label] = ""
+                errkw[:primary] = false
+                push!(kw_list, errkw)
+            end
         end
     end
 end
@@ -138,7 +142,7 @@ RecipesPipeline.get_axis_limits(plt::Plot, letter) = axis_limits(plt[1], letter,
 
 ## Plot recipes
 
-RecipesPipeline.type_alias(plt::Plot) = get(_typeAliases, st, st)
+RecipesPipeline.type_alias(plt::Plot, st) = get(_typeAliases, st, st)
 
 ## Plot setup
 
@@ -153,7 +157,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
     err_inds =
         findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
     for ind in err_inds
-        if get(kw_list[ind - 1], :seriestype, :path) === :scatter
+        if ind > 1 && get(kw_list[ind - 1], :seriestype, :path) === :scatter
             tmp = copy(kw_list[ind])
             kw_list[ind] = copy(kw_list[ind - 1])
             kw_list[ind - 1] = tmp

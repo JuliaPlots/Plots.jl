@@ -65,3 +65,16 @@ end
     @test Plots.seriestype_supported(Plots.UnicodePlotsBackend(), :hspan) === :recipe
     @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :no
 end
+
+@testset "error bars" begin
+    x = y = 1:10
+    yerror = fill(1, length(y))
+    xerror = fill(0.2, length(x))
+    p = Plots.xerror(x, y; xerror, linestyle = :solid)
+    plot!(p, x, y; linestyle = :dash)
+    yerror!(p, x, y; yerror, linestyle = :dot)
+    @test length(p.series_list) == 3
+    @test p[1][1][:linestyle] == :solid
+    @test p[1][2][:linestyle] == :dash
+    @test p[1][3][:linestyle] == :dot
+end
