@@ -592,9 +592,9 @@ const _widen_seriestypes = (
 const default_widen_factor = 1.06
 
 # facor to widen axis limits by, or `nothing` if axis widening should be skipped
-function widen_factor(axis::Axis)
+function widen_factor(axis::Axis; factor = default_widen_factor)
     widen = axis[:widen]
-    widen isa Bool   && return widen ? default_widen_factor : nothing
+    widen isa Bool   && return widen ? factor : nothing
     widen isa Number && return widen
     widen == :auto   || @warn "Invalid value specified for `widen`: $widen"
 
@@ -604,7 +604,7 @@ function widen_factor(axis::Axis)
     for sp in axis.sps
         for series in series_list(sp)
             if series.plotattributes[:seriestype] in _widen_seriestypes
-                return default_widen_factor
+                return factor
             end
         end
     end
