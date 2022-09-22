@@ -342,13 +342,16 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
     pad_right[end]  = max(pad_right[end], minimum_perimeter[3])
     pad_bottom[end] = max(pad_bottom[end], minimum_perimeter[4])
 
-    # scale this up to the total padding in each direction
-    total_pad_horizontal = sum(pad_left + pad_right)
-    total_pad_vertical   = sum(pad_top + pad_bottom)
+    # scale this up to the total padding in each direction, and limit padding to 95%
+    total_pad_horizontal = min(0.95width(layout), sum(pad_left + pad_right))
+    total_pad_vertical   = min(0.95height(layout), sum(pad_top + pad_bottom))
 
     # now we can compute the total plot area in each direction
     total_plotarea_horizontal = width(layout) - total_pad_horizontal
     total_plotarea_vertical   = height(layout) - total_pad_vertical
+
+    @assert total_plotarea_horizontal > 0mm
+    @assert total_plotarea_vertical > 0mm
 
     # recompute widths/heights
     layout.widths = recompute_lengths(layout.widths)
@@ -371,10 +374,9 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
         plotarea_top    = child_top + pad_top[r]
         plotarea_width  = total_plotarea_horizontal * layout.widths[c]
         plotarea_height = total_plotarea_vertical * layout.heights[r]
-        plotarea!(
-            child,
-            BoundingBox(plotarea_left, plotarea_top, plotarea_width, plotarea_height),
-        )
+
+        bb = BoundingBox(plotarea_left, plotarea_top, plotarea_width, plotarea_height)
+        plotarea!(child, bb)
 
         # compute child bbox
         child_width  = pad_left[c] + plotarea_width + pad_right[c]

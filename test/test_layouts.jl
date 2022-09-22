@@ -57,6 +57,12 @@ end
     @test_throws ErrorException plot((plot(1:2) for _ in 1:5)...; layout = grid(2, 2))
 end
 
+@testset "Invalid viewport" begin
+    # github.com/JuliaPlots/Plots.jl/issues/2804
+    pl = plot(1, layout = (10, 2))
+    show(devnull, pl)
+end
+
 @testset "Coverage" begin
     pl = plot((plot(i) for i in 1:4)..., layout = (2, 2))
 

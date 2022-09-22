@@ -464,11 +464,9 @@ function gr_viewport_from_bbox(
     viewport = zeros(4)
     viewport[1] = viewport_canvas[2] * (left(bb) / w)
     viewport[2] = viewport_canvas[2] * (right(bb) / w)
-    viewport[3] = viewport_canvas[4] * (1.0 - bottom(bb) / h)
-    viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
-    if hascolorbar(sp)
-        viewport[2] -= 0.1 * (1 + gr_is3d(sp) / 2)
-    end
+    viewport[3] = viewport_canvas[4] * (1 - bottom(bb) / h)
+    viewport[4] = viewport_canvas[4] * (1 - top(bb) / h)
+    hascolorbar(sp) && (viewport[2] -= 0.1 * (1 + gr_is3d(sp) / 2))
     viewport
 end
 
@@ -1457,11 +1455,9 @@ function gr_set_window(sp, viewport_plotarea)
     end
 end
 
-function gr_fill_plotarea(sp, viewport_plotarea)
-    if !gr_is3d(sp)
-        gr_fill_viewport(viewport_plotarea, plot_color(sp[:background_color_inside]))
-    end
-end
+gr_fill_plotarea(sp, viewport_plotarea) =
+    gr_is3d(sp) ||
+    gr_fill_viewport(viewport_plotarea, plot_color(sp[:background_color_inside]))
 
 ## Axes
 
