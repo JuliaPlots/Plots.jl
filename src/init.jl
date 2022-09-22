@@ -158,4 +158,12 @@ function __init__()
             get(plotattributes, :seriestype, :path) === :ohlc ?
             OHLC[OHLC(t...) for t in xyuv] : RecipesPipeline.unzip(xyuv)
     end
+
+    @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" begin
+        try
+            @eval Main using UnitfulRecipes
+        catch
+            @debug "Plotting Unitful quantities requires to have UnitfulRecipes installed."
+        end
+    end
 end
