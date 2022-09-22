@@ -10,6 +10,7 @@ using FilePathsBase
 using LaTeXStrings
 using RecipesBase
 using TestImages
+using Unitful
 using FileIO
 using Plots
 using Dates
@@ -36,6 +37,7 @@ for name in (
     "components",
     "shorthands",
     "recipes",
+    "unitful",
     "hdf5plots",
     "pgfplotsx",
     "plotly",
