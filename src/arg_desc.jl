@@ -187,7 +187,7 @@ const _arg_desc = KW(
     :showaxis                    => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`",
     :widen                       => """
                                     Bool, Number or :auto. Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
-                                    If set to `true`, scale the axis limits by the default factor of 1.06. 
+                                    If set to `true`, scale the axis limits by the default factor of $(default_widen_factor). 
                                     A different factor may be specified by setting `widen` to a number.
                                     Defaults to `:auto`, which widens by the default factor unless limits were manually set.
                                     See also the `scale_limits!` function for scaling axis limits in an existing plot.
