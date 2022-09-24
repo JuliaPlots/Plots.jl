@@ -28,11 +28,10 @@ function _check_compat(sim::Module)
     end
 end
 
-using Base.Meta
-
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random, Unzip
 using SnoopPrecompile
 using SparseArrays
+using Base.Meta
 using Requires
 using Reexport
 using FFMPEG
@@ -41,6 +40,25 @@ using FFMPEG
 @reexport using PlotUtils
 
 import RecipesBase: plot, plot!, animate, is_explicit, grid
+import RecipesPipeline
+import RecipesPipeline:
+    SliceIt,
+    DefaultsDict,
+    Formatted,
+    AbstractSurface,
+    Surface,
+    Volume,
+    is3d,
+    is_surface,
+    needs_3d_axes,
+    group_as_matrix, # for StatsPlots
+    reset_kw!,
+    pop_kw!,
+    scale_func,
+    inverse_scale_func,
+    dateformatter,
+    datetimeformatter,
+    timeformatter
 import UnicodeFun
 import StatsBase
 import Downloads
@@ -160,26 +178,6 @@ include("plotmeasures.jl")
 using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
-
-import RecipesPipeline
-import RecipesPipeline:
-    SliceIt,
-    DefaultsDict,
-    Formatted,
-    AbstractSurface,
-    Surface,
-    Volume,
-    is3d,
-    is_surface,
-    needs_3d_axes,
-    group_as_matrix, # for StatsPlots
-    reset_kw!,
-    pop_kw!,
-    scale_func,
-    inverse_scale_func,
-    dateformatter,
-    datetimeformatter,
-    timeformatter
 
 # Use fixed version of Plotly instead of the latest one for stable dependency
 # Ref: https://github.com/JuliaPlots/Plots.jl/pull/2779
