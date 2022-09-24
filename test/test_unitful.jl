@@ -1,7 +1,5 @@
 using Unitful: m, s, cm, DimensionError
 
-testfile = "test.png"
-
 # Some helper functions to access the subplot labels and the series inside each test plot
 xguide(plt, idx = length(plt.subplots)) =
     plt.subplots[idx].attr[:xaxis].plotattributes[:guide]
@@ -317,6 +315,7 @@ end
 end
 
 @testset "Aspect ratio" begin
+    testfile = tempname() * ".png"
     plt = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = :equal)
     savefig(plt, testfile) # Force a render, to make it evaluate aspect ratio
     @test abs(-(ylims(plt)...)) > 50

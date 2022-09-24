@@ -161,6 +161,6 @@ function __init__()
 
     @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" begin
         include("unitful.jl")
-        using .UnitfulRecipes
+        @reexport using .UnitfulRecipes
     end
 end

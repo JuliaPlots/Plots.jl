@@ -1,13 +1,13 @@
 module Plots
 
-using Pkg
-
 if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@optlevel"))
     @eval Base.Experimental.@optlevel 1
 end
 if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_methods"))
     @eval Base.Experimental.@max_methods 1
 end
+
+using Pkg
 
 const _plots_project = Pkg.Types.read_project(normpath(@__DIR__, "..", "Project.toml"))
 const _current_plots_version = _plots_project.version
@@ -28,26 +28,24 @@ function _check_compat(sim::Module)
     end
 end
 
-using Reexport
+using Base.Meta
 
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random, Unzip
 using SparseArrays
-
+using Requires
+using Reexport
 using FFMPEG
-
 @reexport using RecipesBase
-import RecipesBase: plot, plot!, animate, is_explicit, grid
-using Base.Meta
-@reexport using PlotUtils
 @reexport using PlotThemes
+@reexport using PlotUtils
+
+import RecipesBase: plot, plot!, animate, is_explicit, grid
 import UnicodeFun
 import StatsBase
 import Downloads
 import Showoff
 import JSON
 import JLFzf
-
-using Requires
 
 #! format: off
 export

@@ -3,9 +3,7 @@ import UUIDs: uuid4
 import Latexify
 import Contour
 
-# FIXME: cannot use `import PGFPlotsX: ...` with @require
-const Options = PGFPlotsX.Options
-const Table = PGFPlotsX.Table
+import .PGFPlotsX: Options, Table
 
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false

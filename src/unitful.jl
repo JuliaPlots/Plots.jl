@@ -1,7 +1,10 @@
 module UnitfulRecipes
 
+# previously https://github.com/jw3126/UnitfulRecipes.jl
+# authors: Benoit Pasquier (@briochemc) - Jan Weidner (@jw3126)
+
 using RecipesBase
-using Unitful: Quantity, unit, ustrip, Unitful, dimension, Units
+using .Unitful: Quantity, unit, ustrip, Unitful, dimension, Units
 export @P_str
 
 const clims_types = (:contour, :contourf, :heatmap, :surface)
