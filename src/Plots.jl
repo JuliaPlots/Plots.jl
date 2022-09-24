@@ -29,12 +29,15 @@ function _check_compat(sim::Module)
 end
 
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random, Unzip
+using RelocatableFolders
 using SnoopPrecompile
 using SparseArrays
 using Base.Meta
 using Requires
 using Reexport
+using Scratch
 using FFMPEG
+using REPL
 @reexport using RecipesBase
 @reexport using PlotThemes
 @reexport using PlotUtils

@@ -1,7 +1,3 @@
-using REPL
-using Scratch
-using RelocatableFolders
-
 const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 const BACKEND_PATH_GASTON = @path joinpath(@__DIR__, "backends", "gaston.jl")
 const BACKEND_PATH_HDF5 = @path joinpath(@__DIR__, "backends", "hdf5.jl")
@@ -159,7 +155,7 @@ function __init__()
         # Lists of tuples and GeometryBasics.Points
         # --------------------------------------------------------------------
         @recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
-        @recipe f(p::GeometryBasics.Point) = [p]# Special case for 4-tuples in :ohlc series
+        @recipe f(p::GeometryBasics.Point) = [p]  # Special case for 4-tuples in :ohlc series
         @recipe f(xyuv::AVec{<:Tuple{R1,R2,R3,R4}}) where {R1,R2,R3,R4} =
             get(plotattributes, :seriestype, :path) === :ohlc ?
             OHLC[OHLC(t...) for t in xyuv] : RecipesPipeline.unzip(xyuv)
