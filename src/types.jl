@@ -109,6 +109,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
 end
 
 struct PlaceHolder end
+const PlotOrSubplot = Union{Plot,Subplot}
 
 # -----------------------------------------------------------
 

@@ -332,3 +332,10 @@ end
     plot!(pl, (1:3)m)
     @test yguide(pl) == "m"
 end
+
+# https://github.com/jw3126/UnitfulRecipes.jl/issues/79
+@testset "Annotate" begin
+    pl = plot([0, 1]u"s", [0, 1]u"m")
+    annotate!(pl, [0.25]u"s", [0.5]u"m", text("annotation"))
+    @test show(devnull, pl) isa Nothing
+end

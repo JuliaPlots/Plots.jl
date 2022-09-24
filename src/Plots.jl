@@ -213,7 +213,6 @@ include("backends/plotly.jl")
 include("backends/gr.jl")
 include("backends/web.jl")
 
-const PlotOrSubplot = Union{Plot,Subplot}
 include("shorthands.jl")
 
 # ---------------------------------------------------------

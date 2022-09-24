@@ -7,14 +7,15 @@ using ..Unitful: Quantity, unit, ustrip, Unitful, dimension, Units
 using ..RecipesBase
 export @P_str
 
-const AVec = AbstractVector
-const AMat = AbstractMatrix
+import ..locate_annotation, ..PlotText, ..Subplot, ..AVec, ..AMat
+
+const MissingOrQuantity = Union{Missing,<:Quantity}
 
 #==========
 Main recipe
 ==========#
 
-@recipe function f(::Type{T}, x::T) where {T<:AbstractArray{<:Union{Missing,<:Quantity}}}
+@recipe function f(::Type{T}, x::T) where {T<:AbstractArray{<:MissingOrQuantity}}
     axisletter = plotattributes[:letter]   # x, y, or z
     clims_types = (:contour, :contourf, :heatmap, :surface)
     if axisletter === :z && get(plotattributes, :seriestype, :nothing) ∈ clims_types
@@ -72,9 +73,9 @@ end
 end
 
 # Recipe for vectors of vectors
-@recipe function f(::Type{T}, x::T) where {T<:AVec{<:AVec{<:Union{Missing,<:Quantity}}}}
+@recipe function f(::Type{T}, x::T) where {T<:AVec{<:AVec{<:MissingOrQuantity}}}
     axisletter = plotattributes[:letter]   # x, y, or z
-    [fixaxis!(plotattributes, x, axisletter) for x in x]
+    map(x -> fixaxis!(plotattributes, x, axisletter), x)
 end
 
 # Recipe for bare units
@@ -84,25 +85,21 @@ end
 end
 
 # Recipes for functions
-@recipe f(f::Function, x::T) where {T<:AVec{<:Union{Missing,<:Quantity}}} = x, f.(x)
-@recipe f(x::T, f::Function) where {T<:AVec{<:Union{Missing,<:Quantity}}} = x, f.(x)
-@recipe function f(x::T, y::AVec, f::Function) where {T<:AVec{<:Union{Missing,<:Quantity}}}
-    x, y, f.(x', y)
-end
-@recipe function f(x::AVec, y::T, f::Function) where {T<:AVec{<:Union{Missing,<:Quantity}}}
-    x, y, f.(x', y)
-end
+@recipe f(f::Function, x::T) where {T<:AVec{<:MissingOrQuantity}} = x, f.(x)
+@recipe f(x::T, f::Function) where {T<:AVec{<:MissingOrQuantity}} = x, f.(x)
+@recipe f(x::T, y::AVec, f::Function) where {T<:AVec{<:MissingOrQuantity}} = x, y, f.(x', y)
+@recipe f(x::AVec, y::T, f::Function) where {T<:AVec{<:MissingOrQuantity}} = x, y, f.(x', y)
 @recipe function f(
     x::T1,
     y::T2,
     f::Function,
-) where {T1<:AVec{<:Union{Missing,<:Quantity}},T2<:AVec{<:Union{Missing,<:Quantity}}}
+) where {T1<:AVec{<:MissingOrQuantity},T2<:AVec{<:MissingOrQuantity}}
     x, y, f.(x', y)
 end
 @recipe function f(f::Function, u::Units)
     uf = UnitFunction(f, [u])
     recipedata = RecipesBase.apply_recipe(plotattributes, uf)
-    (_, xmin, xmax) = recipedata[1].args
+    _, xmin, xmax = recipedata[1].args
     return f, xmin * u, xmax * u
 end
 
@@ -273,5 +270,24 @@ const UNIT_FORMATS = Dict(
 )
 
 format_unit_label(l, u, f::Symbol) = format_unit_label(l, u, UNIT_FORMATS[f])
+
+#==============
+Fix annotations
+===============#
+locate_annotation(
+    sp::Subplot,
+    x::MissingOrQuantity,
+    y::MissingOrQuantity,
+    label::PlotText,
+) = (ustrip(x), ustrip(y), label)
+locate_annotation(
+    sp::Subplot,
+    x::MissingOrQuantity,
+    y::MissingOrQuantity,
+    z::MissingOrQuantity,
+    label::PlotText,
+) = (ustrip(x), ustrip(y), ustrip(z), label)
+locate_annotation(sp::Subplot, rel::NTuple{N,<:MissingOrQuantity}, label) where {N} =
+    locate_annotation(sp, ustrip.(rel), label)
 
 end
