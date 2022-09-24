@@ -1225,37 +1225,3 @@ macro attributes(expr::Expr)
     RecipesBase.process_recipe_body!(expr)
     return expr
 end
-
-const UNIT_FORMATS = Dict(
-    :round => ('(', ')'),
-    :square => ('[', ']'),
-    :curly => ('{', '}'),
-    :angle => ('<', '>'),
-    :slash => '/',
-    :slashround => (" / (", ")"),
-    :slashsquare => (" / [", "]"),
-    :slashcurly => (" / {", "}"),
-    :slashangle => (" / <", ">"),
-    :verbose => " in units of ",
-)
-
-abstract type AbstractProtectedString <: AbstractString end
-struct ProtectedString{S} <: AbstractProtectedString
-    content::S
-end
-
-"""
-    P_str(s)
-
-Creates a string that will be Protected from recipe passes.
-
-Example:
-```julia
-julia> plot(rand(10)*u"m", xlabel=P"This label is protected")
-
-julia> plot(rand(10)*u"m", xlabel=P"This label is not")
-```
-"""
-macro P_str(s)
-    return ProtectedString(s)
-end

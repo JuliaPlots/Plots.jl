@@ -109,7 +109,6 @@ export
     mp4,
     webm,
     animate,
-    @P_str,
     @animate,
     @gif,
 
