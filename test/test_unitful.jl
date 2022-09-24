@@ -1,15 +1,15 @@
 using Unitful: m, s, cm, DimensionError
 
 # Some helper functions to access the subplot labels and the series inside each test plot
-xguide(plt, idx = length(plt.subplots)) =
-    plt.subplots[idx].attr[:xaxis].plotattributes[:guide]
-yguide(plt, idx = length(plt.subplots)) =
-    plt.subplots[idx].attr[:yaxis].plotattributes[:guide]
-zguide(plt, idx = length(plt.subplots)) =
-    plt.subplots[idx].attr[:zaxis].plotattributes[:guide]
-xseries(plt, idx = length(plt.series_list)) = plt.series_list[idx].plotattributes[:x]
-yseries(plt, idx = length(plt.series_list)) = plt.series_list[idx].plotattributes[:y]
-zseries(plt, idx = length(plt.series_list)) = plt.series_list[idx].plotattributes[:z]
+xguide(pl, idx = length(pl.subplots)) =
+    pl.subplots[idx].attr[:xaxis].plotattributes[:guide]
+yguide(pl, idx = length(pl.subplots)) =
+    pl.subplots[idx].attr[:yaxis].plotattributes[:guide]
+zguide(pl, idx = length(pl.subplots)) =
+    pl.subplots[idx].attr[:zaxis].plotattributes[:guide]
+xseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:x]
+yseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:y]
+zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:z]
 
 macro isplot(ex) # @isplot macro to streamline tests
     :(@test $(esc(ex)) isa Plot)
@@ -250,37 +250,36 @@ end
     x1 = rand(10) * u"m"
     x2 = rand(10) * u"cm"
     x3 = rand(10) * u"s"
-    plt = plot(x1)
-    plt = plot!(plt, x2)
-    @test yguide(plt) == "m"
-    @test yseries(plt) ≈ ustrip.(x2) / 100
-    @test_throws DimensionError plot!(plt, x3) # can't place seconds on top of meters!
+    pl = plot(x1)
+    pl = plot!(pl, x2)
+    @test yguide(pl) == "m"
+    @test yseries(pl) ≈ ustrip.(x2) / 100
+    @test_throws DimensionError plot!(pl, x3) # can't place seconds on top of meters!
 end
 
 @testset "Bare units" begin
-    plt = plot(u"m", u"s")
-    @test xguide(plt) == "m"
-    @test yguide(plt) == "s"
-    @test iszero(length(plt.series_list[1].plotattributes[:y]))
-    hline!(plt, [1u"hr"])
-    @test yguide(plt) == "s"
+    pl = plot(u"m", u"s")
+    @test xguide(pl) == "m"
+    @test yguide(pl) == "s"
+    @test iszero(length(pl.series_list[1].plotattributes[:y]))
+    hline!(pl, [1u"hr"])
+    @test yguide(pl) == "s"
 end
 
 @testset "Inset subplots" begin
     x1 = rand(10) * u"m"
     x2 = rand(10) * u"s"
-    plt = plot(x1)
-    plt = plot!(x2, inset = bbox(0.5, 0.5, 0.3, 0.3), subplot = 2)
-    @test yguide(plt, 1) == "m"
-    @test yguide(plt, 2) == "s"
+    pl = plot(x1)
+    pl = plot!(x2, inset = bbox(0.5, 0.5, 0.3, 0.3), subplot = 2)
+    @test yguide(pl, 1) == "m"
+    @test yguide(pl, 2) == "s"
 end
 
 @testset "Missing values" begin
     x = 1:5
     y = [1.0 * u"s", 2.0 * u"s", missing, missing, missing]
-    @show typeof(y)
-    plt = plot(x, y)
-    @test yguide(plt, 1) == "s"
+    pl = plot(x, y)
+    @test yguide(pl, 1) == "s"
 end
 
 @testset "Errors" begin
@@ -288,43 +287,43 @@ end
     ex = rand(10) * u"μm"
     y = rand(10) * u"s"
     ey = rand(10) * u"ms"
-    plt = plot(x, y, xerr = ex, yerr = ey)
-    @test plt isa Plot
-    @test xguide(plt) == "mm"
-    @test yguide(plt) == "s"
+    pl = plot(x, y, xerr = ex, yerr = ey)
+    @test pl isa Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
 end
 
 @testset "Ribbon" begin
     x = rand(10) * u"mm"
     y = rand(10) * u"s"
     ribbon = rand(10) * u"ms"
-    plt = plot(x, y, ribbon = ribbon)
-    @test plt isa Plot
-    @test xguide(plt) == "mm"
-    @test yguide(plt) == "s"
+    pl = plot(x, y, ribbon = ribbon)
+    @test pl isa Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
 end
 
 @testset "Fillrange" begin
     x = rand(10) * u"mm"
     y = rand(10) * u"s"
     fillrange = rand(10) * u"ms"
-    plt = plot(x, y, fillrange = fillrange)
-    @test plt isa Plot
-    @test xguide(plt) == "mm"
-    @test yguide(plt) == "s"
+    pl = plot(x, y, fillrange = fillrange)
+    @test pl isa Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
 end
 
 @testset "Aspect ratio" begin
     testfile = tempname() * ".png"
-    plt = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = :equal)
-    savefig(plt, testfile) # Force a render, to make it evaluate aspect ratio
-    @test abs(-(ylims(plt)...)) > 50
-    plt = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = 2)
-    savefig(plt, testfile)
-    @test 25 < abs(-(ylims(plt)...)) < 50
-    plt = plot((1:10)u"m", (1:10)u"s"; aspect_ratio = 1u"m/s")
-    savefig(plt, testfile)
-    @test 7.5 < abs(-(ylims(plt)...)) < 12.5
+    pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = :equal)
+    savefig(pl, testfile) # Force a render, to make it evaluate aspect ratio
+    @test abs(-(ylims(pl)...)) > 50
+    pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = 2)
+    savefig(pl, testfile)
+    @test 25 < abs(-(ylims(pl)...)) < 50
+    pl = plot((1:10)u"m", (1:10)u"s"; aspect_ratio = 1u"m/s")
+    savefig(pl, testfile)
+    @test 7.5 < abs(-(ylims(pl)...)) < 12.5
     @test_throws DimensionError savefig(
         plot((1:10)u"m", (1:10)u"s"; aspect_ratio = :equal),
         testfile,
@@ -333,7 +332,7 @@ end
 
 # https://github.com/jw3126/UnitfulRecipes.jl/issues/60
 @testset "Start with empty plot" begin
-    plt = plot()
-    plot!(plt, (1:3)m)
-    @test yguide(plt) == "m"
+    pl = plot()
+    plot!(pl, (1:3)m)
+    @test yguide(pl) == "m"
 end

@@ -57,8 +57,6 @@ function fixaxis!(attr, x, axisletter)
 end
 
 # Recipe for (x::AVec, y::AVec, z::Surface) types
-const AVec = AbstractVector
-const AMat{T} = AbstractArray{T,2} where {T}
 @recipe function f(x::AVec, y::AVec, z::AMat{T}) where {T<:Quantity}
     u = get(plotattributes, :zunit, unit(eltype(z)))
     ustripattribute!(plotattributes, :clims, u)
@@ -71,7 +69,7 @@ end
 @recipe function f(
     ::Type{T},
     x::T,
-) where {T<:AbstractVector{<:AbstractVector{<:Union{Missing,<:Quantity}}}}
+) where {T<:AVec{<:AVec{<:Union{Missing,<:Quantity}}}}
     axisletter = plotattributes[:letter]   # x, y, or z
     [fixaxis!(plotattributes, x, axisletter) for x in x]
 end
