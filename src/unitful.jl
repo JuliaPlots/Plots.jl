@@ -1,5 +1,5 @@
 # previously https://github.com/jw3126/UnitfulRecipes.jl
-# authors: Benoit Pasquier (@briochemc) - Jan Weidner (@jw3126)
+# authors: Benoit Pasquier (@briochemc) - David Gustavsson (@gustaphe) - Jan Weidner (@jw3126)
 
 module UnitfulRecipes
 
