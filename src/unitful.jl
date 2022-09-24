@@ -1,13 +1,8 @@
-module UnitfulRecipes
-
 # previously https://github.com/jw3126/UnitfulRecipes.jl
 # authors: Benoit Pasquier (@briochemc) - Jan Weidner (@jw3126)
 
-using RecipesBase
 using .Unitful: Quantity, unit, ustrip, Unitful, dimension, Units
 export @P_str
-
-const clims_types = (:contour, :contourf, :heatmap, :surface)
 
 #==========
 Main recipe
@@ -15,7 +10,8 @@ Main recipe
 
 @recipe function f(::Type{T}, x::T) where {T<:AbstractArray{<:Union{Missing,<:Quantity}}}
     axisletter = plotattributes[:letter]   # x, y, or z
-    if (axisletter == :z) && get(plotattributes, :seriestype, :nothing) ∈ clims_types
+    clims_types = (:contour, :contourf, :heatmap, :surface)
+    if axisletter === :z && get(plotattributes, :seriestype, :nothing) ∈ clims_types
         u = get(plotattributes, :zunit, unit(eltype(x)))
         ustripattribute!(plotattributes, :clims, u)
         append_unit_if_needed!(plotattributes, :colorbar_title, u)
@@ -48,7 +44,7 @@ function fixaxis!(attr, x, axisletter)
     ustripattribute!(attr, axislims, u)
     ustripattribute!(attr, axisticks, u)
     ustripattribute!(attr, err, u)
-    if (axisletter == :y)
+    if axisletter === :y
         ustripattribute!(attr, :ribbon, u)
         ustripattribute!(attr, :fillrange, u)
     end
@@ -276,5 +272,3 @@ const UNIT_FORMATS = Dict(
 )
 
 format_unit_label(l, u, f::Symbol) = format_unit_label(l, u, UNIT_FORMATS[f])
-
-end
