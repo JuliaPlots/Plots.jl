@@ -185,3 +185,8 @@ get_subplot_index(plt::Plot, idx::Integer) = Int(idx)
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
 
 series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)
+
+abstract type AbstractProtectedString <: AbstractString end
+struct ProtectedString{S} <: AbstractProtectedString
+    content::S
+end
