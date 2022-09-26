@@ -235,7 +235,7 @@ using SnoopPrecompile
             $func() = begin  # evaluate each example in a local scope
                 # @show $i  # debug
                 $(_examples[i].exprs)
-                if $i == 1  # only for one example
+                if $i == 1 && !Sys.iswindows()  # only for one example
                     fn = tempname()
                     pl = current()
                     gui(pl)
