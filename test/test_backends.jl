@@ -18,7 +18,7 @@ reference_path(backend, version) = reference_dir("Plots", string(backend), strin
 
 if !isdir(reference_dir())
     mkpath(reference_dir())
-    for i ∈ 1:6
+    for i in 1:6
         try
             LibGit2.clone(
                 "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
