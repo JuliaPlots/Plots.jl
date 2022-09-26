@@ -72,6 +72,26 @@ end
             )
         @test plims == Plots.widen(1, 5)
     end
+
+    @testset "JuliaPlots/Plots.jl/issues/4379" begin
+        for ylims in ((-5, :auto), [-5, :auto])
+            pl = plot([-2, 3], ylims = ylims, widen = false)
+            @test Plots.ylims(pl) == (-5.0, 3.0)
+        end
+        for ylims in ((:auto, 4), [:auto, 4])
+            pl = plot([-2, 3], ylims = ylims, widen = false)
+            @test Plots.ylims(pl) == (-2.0, 4.0)
+        end
+
+        for xlims in ((-3, :auto), [-3, :auto])
+            pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
+            @test Plots.xlims(pl) == (-3.0, 3.0)
+        end
+        for xlims in ((:auto, 4), [:auto, 4])
+            pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
+            @test Plots.xlims(pl) == (-2.0, 4.0)
+        end
+    end
 end
 
 @testset "3D Axis" begin
