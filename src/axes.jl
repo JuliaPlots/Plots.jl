@@ -585,7 +585,7 @@ function round_limits(amin, amax, scale)
     amin, amax
 end
 
-process_limits(lims::Tuple{<:Real,<:Real}) = lims
+process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}) = lims
 process_limits(lims::Symbol) = lims
 process_limits(lims::AVec) =
     length(lims) == 2 && all(x isa Real for x in lims) ? Tuple(lims) : nothing
@@ -612,10 +612,14 @@ function axis_limits(
     if has_user_lims
         lmin, lmax = lims
         if lmin === :auto
+        elseif lmax isa Symbol
+            @warn "Invalid min limit" lmin
         elseif isfinite(lmin)
             amin = lmin
         end
         if lmax === :auto
+        elseif lmax isa Symbol
+            @warn "Invalid max limit" lmax
         elseif isfinite(lmax)
             amax = lmax
         end

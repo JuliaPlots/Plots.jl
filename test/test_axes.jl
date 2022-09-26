@@ -72,6 +72,18 @@ end
             )
         @test plims == Plots.widen(1, 5)
     end
+
+    pl = plot([-2, 3], ylims = (-5, :auto), widen = false)
+    @test Plots.ylims(pl) == (-5, 3)
+
+    pl = plot([-2, 3], ylims = (:auto, 4), widen = false)
+    @test Plots.ylims(pl) == (-2, 4)
+
+    pl = plot([-2, 3], [-1, 1], xlims = (-3, :auto), widen = false)
+    @test Plots.xlims(pl) == (-3, 3)
+
+    pl = plot([-2, 3], [-1, 1], xlims = (:auto, 4), widen = false)
+    @test Plots.xlims(pl) == (-2, 4)
 end
 
 @testset "3D Axis" begin
