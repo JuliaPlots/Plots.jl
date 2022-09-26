@@ -74,20 +74,20 @@ end
     end
 
     @testset "JuliaPlots/Plots.jl/issues/4379" begin
-        for ylims ∈ ((-5, :auto), [-5, :auto])
+        for ylims in ((-5, :auto), [-5, :auto])
             pl = plot([-2, 3], ylims = ylims, widen = false)
             @test Plots.ylims(pl) == (-5.0, 3.0)
         end
-        for ylims ∈ ((:auto, 4), [:auto, 4])
+        for ylims in ((:auto, 4), [:auto, 4])
             pl = plot([-2, 3], ylims = ylims, widen = false)
             @test Plots.ylims(pl) == (-2.0, 4.0)
         end
 
-        for xlims ∈ ((-3, :auto), [-3, :auto])
+        for xlims in ((-3, :auto), [-3, :auto])
             pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
             @test Plots.xlims(pl) == (-3.0, 3.0)
         end
-        for xlims ∈ ((:auto, 4), [:auto, 4])
+        for xlims in ((:auto, 4), [:auto, 4])
             pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
             @test Plots.xlims(pl) == (-2.0, 4.0)
         end

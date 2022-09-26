@@ -588,7 +588,8 @@ end
 process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}) = lims
 process_limits(lims::Symbol) = lims
 process_limits(lims::AVec) =
-    length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) : nothing
+    length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) :
+    nothing
 process_limits(lims) = nothing
 
 warn_invalid_limits(lims, letter) = @warn """
