@@ -213,9 +213,9 @@ Creates a string that will be Protected from recipe passes.
 
 Example:
 ```julia
-julia> plot(rand(10)*u"m", xlabel=P"This label is protected")
+julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel=P"This label will NOT display units")
 
-julia> plot(rand(10)*u"m", xlabel=P"This label is not")
+julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel="This label will display units")
 ```
 """
 macro P_str(s)
