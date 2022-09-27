@@ -10,6 +10,12 @@
     Plots.discrete_value!(axis, ["x$i" for i in 1:5])
     Plots.discrete_value!(axis, ["x$i" for i in 0:2])
     @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
+
+    # JuliaPlots/Plots.jl/issues/4375
+    for lab in ("foo", :foo)
+        pl = plot(1:2, xlabel = lab, ylabel = lab, title = lab)
+        show(devnull, pl)
+    end
 end
 
 @testset "Showaxis" begin
