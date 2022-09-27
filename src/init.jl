@@ -1,3 +1,7 @@
+using RelocatableFolders
+using Scratch
+using REPL
+
 const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 const BACKEND_PATH_GASTON = @path joinpath(@__DIR__, "backends", "gaston.jl")
 const BACKEND_PATH_HDF5 = @path joinpath(@__DIR__, "backends", "hdf5.jl")

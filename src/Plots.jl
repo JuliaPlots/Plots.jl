@@ -12,6 +12,7 @@ using Pkg
 const _plots_project = Pkg.Types.read_project(normpath(@__DIR__, "..", "Project.toml"))
 const _current_plots_version = _plots_project.version
 const _plots_compats = _plots_project.compat
+
 function _check_compat(sim::Module)
     sim_str = string(sim)
     haskey(_plots_compats, sim_str) || return nothing
@@ -28,16 +29,12 @@ function _check_compat(sim::Module)
     end
 end
 
-using Dates, Printf, Statistics, Base64, LinearAlgebra, Random, Unzip
-using RelocatableFolders
-using SnoopPrecompile
+using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
 using SparseArrays
 using Base.Meta
 using Requires
 using Reexport
-using Scratch
-using FFMPEG
-using REPL
+using Unzip
 @reexport using RecipesBase
 @reexport using PlotThemes
 @reexport using PlotUtils
@@ -45,29 +42,29 @@ using REPL
 import RecipesBase: plot, plot!, animate, is_explicit, grid
 import RecipesPipeline
 import RecipesPipeline:
-    SliceIt,
-    DefaultsDict,
-    Formatted,
-    AbstractSurface,
-    Surface,
-    Volume,
-    is3d,
-    is_surface,
-    needs_3d_axes,
-    group_as_matrix, # for StatsPlots
-    reset_kw!,
-    pop_kw!,
-    scale_func,
     inverse_scale_func,
-    dateformatter,
     datetimeformatter,
-    timeformatter
+    AbstractSurface,
+    group_as_matrix, # for StatsPlots
+    dateformatter,
+    timeformatter,
+    needs_3d_axes,
+    DefaultsDict,
+    scale_func,
+    is_surface,
+    Formatted,
+    reset_kw!,
+    SliceIt,
+    Surface,
+    pop_kw!,
+    Volume,
+    is3d
 import UnicodeFun
 import StatsBase
 import Downloads
 import Showoff
-import JSON
 import JLFzf
+import JSON
 
 #! format: off
 export
@@ -162,29 +159,11 @@ ignorenan_extrema(x::AbstractArray{<:AbstractFloat}) = NaNMath.extrema(x)
 ignorenan_extrema(x) = Base.extrema(x)
 
 # ---------------------------------------------------------
-
-# to cater for block matrices, Base.transpose is recursive.
-# This makes it impossible to create row vectors of String and Symbol with the transpose operator.
-# This solves this issue, internally in Plots at least.
-
-# commented out on the insistence of the METADATA maintainers
-
-#Base.transpose(x::Symbol) = x
-#Base.transpose(x::String) = x
-
-# ---------------------------------------------------------
-
 import Measures
-
 include("plotmeasures.jl")
-
 using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
-
-# Use fixed version of Plotly instead of the latest one for stable dependency
-# Ref: https://github.com/JuliaPlots/Plots.jl/pull/2779
-const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 
 include("types.jl")
 include("utils.jl")
@@ -192,6 +171,7 @@ include("colorbars.jl")
 include("axes.jl")
 include("args.jl")
 include("components.jl")
+include("legend.jl")
 include("consts.jl")
 include("themes.jl")
 include("plot.jl")
@@ -206,54 +186,20 @@ include("backends.jl")
 include("output.jl")
 include("ijulia.jl")
 include("fileio.jl")
-include("init.jl")
-include("legend.jl")
 
-include("backends/plotly.jl")
-include("backends/gr.jl")
-include("backends/web.jl")
-
-include("shorthands.jl")
-
-# ---------------------------------------------------------
-
+# Use fixed version of Plotly instead of the latest one for stable dependency
+# Ref: https://github.com/JuliaPlots/Plots.jl/pull/2779
+const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 const CURRENT_BACKEND = CurrentBackend(:none)
 const PLOTS_SEED = 1234
 
-if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
-    @precompile_setup begin
-        n = length(_examples)
-        imports = sizehint!(Expr[], n)
-        examples = sizehint!(Expr[], 10n)
-        for i in setdiff(1:n, _backend_skips[:gr])
-            _examples[i].external && continue
-            (imp = _examples[i].imports) === nothing || push!(imports, imp)
-            func = gensym(string(i))
-            push!(examples, quote
-                $func() = begin  # evaluate each example in a local scope
-                    # @show $i  # debug
-                    $(_examples[i].exprs)
-                    if $i == 1  # only for one example
-                        fn = tempname()
-                        pl = current()
-                        gui(pl)
-                        savefig(pl, "$fn.png")
-                        savefig(pl, "$fn.pdf")
-                    end
-                    nothing
-                end
-                $func()
-            end)
-        end
-        withenv("GKSwstype" => "nul") do
-            @precompile_all_calls begin
-                eval.(imports)
-                gr()
-                eval.(examples)
-                # eventually eval for another backend ...
-            end
-        end
-    end
-end
+include("init.jl")
+
+include("backends/plotly.jl")
+include("backends/web.jl")
+include("backends/gr.jl")
+
+include("shorthands.jl")
+include("precompilation.jl")
 
 end
