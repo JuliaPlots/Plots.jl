@@ -769,7 +769,7 @@ function gr_axis_height(sp, axis)
         ticks in (nothing, false, :none) ? 0 :
         last(gr_get_ticks_size(ticks, axis[:rotation]))
     )
-    if !isempty(axis[:guide])
+    if axis[:guide] != ""
         gr_set_font(guidefont(axis), sp)
         h += last(gr_text_size(axis[:guide]))
     end
@@ -785,7 +785,7 @@ function gr_axis_width(sp, axis)
         ticks in (nothing, false, :none) ? 0 :
         first(gr_get_ticks_size(ticks, axis[:rotation]))
     )
-    if !isempty(axis[:guide])
+    if axis[:guide] != ""
         gr_set_font(guidefont(axis), sp)
         w += last(gr_text_size(axis[:guide]))
     end
@@ -807,7 +807,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     rightpad  = 2mm + sp[:right_margin]
     bottompad = 2mm + sp[:bottom_margin]
     # Add margin for title
-    if !isempty(sp[:title])
+    if sp[:title] != ""
         gr_set_font(titlefont(sp), sp)
         l = last(last(gr_text_size(sp[:title])))
         h = 1mm + get_size(sp)[2] * l * px
@@ -871,12 +871,12 @@ function _update_min_padding!(sp::Subplot{GRBackend})
 
         # Add margin for x or y label
         h = 0mm
-        if !isempty(xaxis[:guide])
+        if xaxis[:guide] != ""
             gr_set_font(guidefont(sp[:xaxis]), sp)
             l = last(gr_text_size(sp[:xaxis][:guide]))
             h = max(h, 1mm + get_size(sp)[2] * l * px)
         end
-        if !isempty(yaxis[:guide])
+        if yaxis[:guide] != ""
             gr_set_font(guidefont(sp[:yaxis]), sp)
             l = last(gr_text_size(sp[:yaxis][:guide]))
             h = max(h, 1mm + get_size(sp)[2] * l * px)
@@ -892,7 +892,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             end
         end
         # Add margin for z label
-        if !isempty(zaxis[:guide])
+        if zaxis[:guide] != ""
             gr_set_font(guidefont(sp[:zaxis]), sp)
             l = last(gr_text_size(sp[:zaxis][:guide]))
             w = 1mm + get_size(sp)[2] * l * px
@@ -930,7 +930,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
 
         # Add margin for x label
-        if !isempty(sp[:xaxis][:guide])
+        if sp[:xaxis][:guide] != ""
             gr_set_font(guidefont(sp[:xaxis]), sp)
             l = last(gr_text_size(sp[:xaxis][:guide]))
             h = 1mm + get_size(sp)[2] * l * px
@@ -944,7 +944,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             end
         end
         # Add margin for y label
-        if !isempty(sp[:yaxis][:guide])
+        if sp[:yaxis][:guide] != ""
             gr_set_font(guidefont(sp[:yaxis]), sp)
             l = last(gr_text_size(sp[:yaxis][:guide]))
             w = 1mm + get_size(sp)[2] * l * px
@@ -958,7 +958,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             end
         end
     end
-    if !isempty(sp[:colorbar_title])
+    if sp[:colorbar_title] != ""
         rightpad += 4mm
     end
     sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
@@ -1728,7 +1728,7 @@ function gr_label_axis(sp, letter, viewport_plotarea)
     axis = sp[get_attr_symbol(letter, :axis)]
     mirror = axis[:mirror]
     # guide
-    if !isempty(axis[:guide])
+    if axis[:guide] != ""
         GR.savestate()
         gr_set_font(guidefont(axis), sp)
         guide_position = axis[:guide_position]
@@ -1770,7 +1770,7 @@ end
 
 function gr_label_axis_3d(sp, letter)
     ax = sp[get_attr_symbol(letter, :axis)]
-    if !isempty(ax[:guide])
+    if ax[:guide] != ""
         near_letter = letter in (:x, :z) ? :y : :x
         far_letter = letter in (:x, :y) ? :z : :x
 
@@ -1811,7 +1811,7 @@ function gr_label_axis_3d(sp, letter)
 end
 
 function gr_add_title(sp, viewport_plotarea, viewport_subplot)
-    if !isempty(sp[:title])
+    if sp[:title] != ""
         GR.savestate()
         gr_set_font(titlefont(sp), sp)
         loc = sp[:titlelocation]
