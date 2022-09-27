@@ -61,8 +61,8 @@ jobs:
           @show ENV["PYTHON"]
           using Pkg
           Pkg.add("Conda"); Pkg.build("Conda"; verbose=true)
-          using Conda
-          Conda.runconda(`config --set auto_update_conda False --file $(Conda.conda_rc(Conda.ROOTENV)) --force`, Conda.ROOTENV)
+          using Conda; env, rc = Conda.ROOTENV, Conda.conda_rc(Conda.ROOTENV)
+          Conda.runconda(`config --set auto_update_conda False --file $rc --force`, env)
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
           Conda.add("matplotlib")
           Conda.list()
