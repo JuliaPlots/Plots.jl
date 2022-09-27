@@ -1,8 +1,5 @@
-using Plots, Test
-using Plots.Colors
-
 const PLOTS_DEFAULTS = Dict(:theme => :wong2, :fontfamily => :palantino)
-Plots.__init__()
+Plots._plots_theme_defaults()
 
 @testset "Loading theme" begin
     pl = plot(1:5)
@@ -11,7 +8,7 @@ Plots.__init__()
 end
 
 empty!(PLOTS_DEFAULTS)
-Plots.__init__()
+Plots._plots_theme_defaults()
 
 @testset "default" begin
     default(fillrange = 0)

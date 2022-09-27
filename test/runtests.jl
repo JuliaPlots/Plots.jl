@@ -1,3 +1,4 @@
+import Unitful: m, s, cm, DimensionError
 import Plots: PLOTS_SEED, Plot, with
 import GeometryBasics
 import ImageMagick
@@ -10,6 +11,7 @@ using FilePathsBase
 using LaTeXStrings
 using RecipesBase
 using TestImages
+using Unitful
 using FileIO
 using Plots
 using Dates
@@ -36,6 +38,7 @@ for name in (
     "components",
     "shorthands",
     "recipes",
+    "unitful",
     "hdf5plots",
     "pgfplotsx",
     "plotly",

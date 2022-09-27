@@ -1,3 +1,5 @@
+using FFMPEG
+
 "Represents an animation object"
 struct Animation
     dir::String

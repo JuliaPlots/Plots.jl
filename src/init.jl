@@ -1,6 +1,6 @@
-using REPL
-using Scratch
 using RelocatableFolders
+using Scratch
+using REPL
 
 const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 const BACKEND_PATH_GASTON = @path joinpath(@__DIR__, "backends", "gaston.jl")
@@ -21,13 +21,30 @@ _plots_defaults() =
         Dict{Symbol,Any}()
     end
 
-function __init__()
+function _plots_theme_defaults()
     user_defaults = _plots_defaults()
     if haskey(user_defaults, :theme)
         theme(pop!(user_defaults, :theme); user_defaults...)
     else
         default(; user_defaults...)
     end
+end
+
+function _plots_plotly_defaults()
+    if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == "true"
+        global plotly_local_file_path[] =
+            joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
+        isfile(plotly_local_file_path[]) || Downloads.download(
+            "https://cdn.plot.ly/$(_plotly_min_js_filename)",
+            plotly_local_file_path[],
+        )
+        use_local_plotlyjs[] = true
+    end
+    use_local_dependencies[] = use_local_plotlyjs[]
+end
+
+function __init__()
+    _plots_theme_defaults()
 
     insert!(
         Base.Multimedia.displays,
@@ -77,6 +94,8 @@ function __init__()
         include(BACKEND_PATH_PLOTLYJS)
     end
 
+    _plots_plotly_defaults()
+
     @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
         include(BACKEND_PATH_PYPLOT)
     end
@@ -95,19 +114,6 @@ function __init__()
             IJulia.display_dict(plt::Plot) = _ijulia_display_dict(plt)
         end
     end
-
-    if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == "true"
-        global plotly_local_file_path[] =
-            joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
-        isfile(plotly_local_file_path[]) || Downloads.download(
-            "https://cdn.plot.ly/$(_plotly_min_js_filename)",
-            plotly_local_file_path[],
-        )
-
-        use_local_plotlyjs[] = true
-    end
-
-    use_local_dependencies[] = use_local_plotlyjs[]
 
     @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
         if get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "false") == "true" &&
@@ -153,9 +159,14 @@ function __init__()
         # Lists of tuples and GeometryBasics.Points
         # --------------------------------------------------------------------
         @recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
-        @recipe f(p::GeometryBasics.Point) = [p]# Special case for 4-tuples in :ohlc series
+        @recipe f(p::GeometryBasics.Point) = [p]  # Special case for 4-tuples in :ohlc series
         @recipe f(xyuv::AVec{<:Tuple{R1,R2,R3,R4}}) where {R1,R2,R3,R4} =
             get(plotattributes, :seriestype, :path) === :ohlc ?
             OHLC[OHLC(t...) for t in xyuv] : RecipesPipeline.unzip(xyuv)
+    end
+
+    @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" begin
+        include("unitful.jl")
+        @reexport using .UnitfulRecipes
     end
 end
