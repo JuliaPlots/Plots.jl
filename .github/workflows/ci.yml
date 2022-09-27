@@ -61,8 +61,10 @@ jobs:
           @show ENV["PYTHON"]
           using Pkg
           Pkg.add("Conda"); Pkg.build("Conda"; verbose=true)
+          using Conda
+          Conda.runconda(`config --set auto_update_conda False --file $(Conda.conda_rc(Conda.ROOTENV)) --force`, Conda.ROOTENV)
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
-          using Conda; Conda.add("matplotlib")
+          Conda.add("matplotlib")
           Conda.list()
 
       - uses: julia-actions/julia-runtest@latest
