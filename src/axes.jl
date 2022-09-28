@@ -421,7 +421,7 @@ function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:
     ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
     ex
 end
-function expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
+function expand_extrema!(axis::Axis, v::Union{AVec{N},AMat{N}}) where {N<:Number}
     ex = axis[:extrema]
     for vi in v
         expand_extrema!(ex, vi)
@@ -513,6 +513,10 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
     if plotattributes[:seriestype] === :heatmap
         for letter in (:x, :y)
             data = plotattributes[letter]
+            if typeof(data) <: Surface
+                # Was given 2d coordinates, need to extract from Surface struct
+                data = data.surf
+            end
             axis = sp[get_attr_symbol(letter, :axis)]
             scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
             expand_extrema!(axis, heatmap_edges(data, scale))
