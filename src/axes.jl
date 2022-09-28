@@ -594,9 +594,9 @@ const default_widen_factor = 1.06
 # facor to widen axis limits by, or `nothing` if axis widening should be skipped
 function widen_factor(axis::Axis; factor = default_widen_factor)
     widen = axis[:widen]
-    widen isa Bool   && return widen ? factor : nothing
+    widen isa Bool && return widen ? factor : nothing
     widen isa Number && return widen
-    widen == :auto   || @warn "Invalid value specified for `widen`: $widen"
+    widen == :auto || @warn "Invalid value specified for `widen`: $widen"
 
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims])
