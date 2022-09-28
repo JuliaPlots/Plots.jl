@@ -614,12 +614,12 @@ function axis_limits(
         lmin, lmax = lims
         if lmin isa Number && isfinite(lmin)
             amin = lmin
-        else
-            lmin === :auto || @warn "Invalid min limit" lmin
+        elseif lmin isa Symbol
+            lmin === :auto || @warn "Invalid min $(letter)limit" lmin
         end
         if lmax isa Number && isfinite(lmax)
             amax = lmax
-        else
+        elseif lmax isa Symbol
             lmax === :auto || @warn "Invalid max $(letter)limit" lmax
         end
     end
