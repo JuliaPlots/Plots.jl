@@ -66,6 +66,7 @@ jobs:
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
           Conda.add("matplotlib")
           Conda.list()
+          Pkg.develop(url="https://github.com/jheinen/GR.jl")
 
       - uses: julia-actions/julia-runtest@latest
         with:
