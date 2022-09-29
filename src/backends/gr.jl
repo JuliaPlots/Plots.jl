@@ -2027,17 +2027,13 @@ function gr_draw_contour(series, x, y, z, clims)
     GR.setspace(clims[1], clims[2], 0, 90)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
     gr_set_transparency(get_fillalpha(series))
-    is_lc_black = let black = plot_color(:black)
-        plot_color(series[:linecolor]) in (black, [black])
-    end
     h = gr_contour_levels(series, clims)
     if series[:fillrange] !== nothing
-        if series[:fillcolor] != series[:linecolor] && !is_lc_black
-            @warn "GR: filled contour only supported with black contour lines"
-        end
         GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
     else
-        coff = is_lc_black ? 0 : 1000
+        coff = let black = plot_color(:black)
+            plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1000
+        end
         GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
     end
 end
