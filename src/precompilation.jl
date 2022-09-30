@@ -5,7 +5,7 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
         n = length(_examples)
         imports = sizehint!(Expr[], n)
         examples = sizehint!(Expr[], 10n)
-        for i in setdiff(1:n, _backend_skips[:gr])
+        for i in setdiff(1:n, _backend_skips[:gr], _animation_examples)
             _examples[i].external && continue
             (imp = _examples[i].imports) === nothing || push!(imports, imp)
             func = gensym(string(i))
@@ -17,8 +17,8 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
                         fn = tempname()
                         pl = current()
                         gui(pl)
-                        Sys.iswindows() || savefig(pl, "$fn.png")
-                        Sys.iswindows() || savefig(pl, "$fn.pdf")
+                        savefig(pl, "$fn.png")
+                        savefig(pl, "$fn.pdf")
                     end
                     nothing
                 end
