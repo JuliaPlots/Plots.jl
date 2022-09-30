@@ -654,10 +654,8 @@ function gr_set_gradient(series::Series)
 end
 
 # this is our new display func... set up the viewport_canvas, compute bounding boxes, and display each subplot
-function gr_display(plt::Plot, fmt = "")
+function gr_display(plt::Plot, dpi_factor = 1)
     GR.clearws()
-
-    dpi_factor = fmt == "png" ? plt[:dpi] / Plots.DPI : 1
 
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px =
@@ -2169,43 +2167,44 @@ for (mime, fmt) in (
     "image/svg+xml" => "svg",
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
-        ENV["GKS_ENCODING"] = "utf8"
         GR.emergencyclosegks()
+        dpi_factor = $fmt == "png" ? plt[:dpi] / Plots.DPI : 1
         filepath = tempname() * "." * $fmt
-        env = get(ENV, "GKSwstype", "0")
-        ENV["GKSwstype"] = $fmt
-        ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt, $fmt)
-        GR.emergencyclosegks()
+        withenv(
+            "GKS_FILEPATH" => filepath,
+            "GKS_ENCODING" => "utf8",
+            "GKSwstype" => $fmt,
+        ) do
+            gr_display(plt, dpi_factor)
+            GR.emergencyclosegks()
+        end
         write(io, read(filepath, String))
         rm(filepath)
-        if env != "0"
-            ENV["GKSwstype"] = env
-        else
-            pop!(ENV, "GKSwstype")
-        end
     end
 end
 
 function _display(plt::Plot{GRBackend})
-    ENV["GKS_ENCODING"] = "utf8"
     if plt[:display_type] === :inline
         GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
-        ENV["GKSwstype"] = "pdf"
-        ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt)
-        GR.emergencyclosegks()
-        content = string(
+        withenv(
+            "GKS_FILEPATH" => filepath,
+            "GKS_ENCODING" => "utf8",
+            "GKSwstype" => "pdf",
+        ) do
+            gr_display(plt)
+            GR.emergencyclosegks()
+        end
+        println(
             "\033]1337;File=inline=1;preserveAspectRatio=0:",
             base64encode(open(read, filepath)),
             "\a",
         )
-        println(content)
         rm(filepath)
     else
-        ENV["GKS_DOUBLE_BUF"] = true
-        gr_display(plt)
+        withenv("GKS_ENCODING" => "utf8", "GKS_DOUBLE_BUF" => true) do
+            gr_display(plt)
+        end
     end
 end
 
