@@ -1759,7 +1759,7 @@ function slice_arg(v::AMat, idx::Int)
     size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
-slice_arg(v::NTuple{2, AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
+slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
 slice_arg(v, idx) = v
 
 # given an argument key (k), extract the argument value for this index,
