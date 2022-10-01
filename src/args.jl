@@ -1753,11 +1753,13 @@ end
 # InputWrapper just gives the contents
 # anything else is returned as-is
 function slice_arg(v::AMat, idx::Int)
+    isempty(v) && return v
     c = mod1(idx, size(v, 2))
     m, n = axes(v)
     size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
+slice_arg(v::NTuple{2, AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
 slice_arg(v, idx) = v
 
 # given an argument key (k), extract the argument value for this index,
@@ -1772,13 +1774,7 @@ function slice_arg!(
 )
     v = get(plotattributes_in, k, plotattributes_out[k])
     plotattributes_out[k] = if haskey(plotattributes_in, k) && !(k in _plot_args)
-        if typeof(v) <: AMat && !isempty(v)
-            slice_arg(v, idx)
-        elseif typeof(v) <: NTuple{2,AMat}
-            (slice_arg(v[1], idx), slice_arg(v[2], idx))
-        else
-            v
-        end
+        slice_arg(v, idx)
     else
         v
     end
