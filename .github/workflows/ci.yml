@@ -37,7 +37,7 @@ jobs:
             version: '1.7'
           # - os: ubuntu-latest
           #   prefix: xvfb-run
-          #  version: 'nightly'
+          #   version: 'nightly'
 
     steps:
       - uses: actions/checkout@v3
@@ -54,6 +54,12 @@ jobs:
           sudo fc-cache -vr
 
       - uses: julia-actions/julia-buildpkg@latest
+
+      - uses: julia-actions/julia-runtest@latest
+        working-directory: RecipesBase
+
+      - uses: julia-actions/julia-runtest@latest
+        working-directory: RecipesPipeline   
 
       - name: PyPlot dependencies
         shell: julia --project=@. --color=yes {0}
