@@ -1,7 +1,3 @@
-using Test
-using BenchmarkTools
-using RecipesPipeline
-
 function _extract_group_attributes_old_slow_known_good_implementation(v, args...; legend_entry = string)
     group_labels = collect(unique(sort(v)))
     n = length(group_labels)
@@ -17,7 +13,7 @@ mc = rand([ "xx"*"$(i%6)" for i in 1:6],300)
 mp = rand([ "xx"*"$(i%73)" for i in 1:73],1000)
 lp = [ "xx"*"$(i%599)" for i in 1:2000]
 
-@testset "All" begin
+@testset "Group" begin
     @testset "Correctness" begin
         res1 = _extract_group_attributes_old_slow_known_good_implementation(sc)
         res2 = RecipesPipeline._extract_group_attributes(sc)

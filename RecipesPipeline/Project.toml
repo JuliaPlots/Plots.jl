@@ -17,23 +17,7 @@ julia = "1.6"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
-FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
-Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
 
 [targets]
-test = ["Distributions", "FileIO", "GeometryBasics", "Images", "ImageMagick", "OffsetArrays", "Plots", "Random", "RDatasets", "SparseArrays", "StaticArrays", "Statistics", "StatsPlots", "Test", "TestImages", "LinearAlgebra", "Downloads", "BenchmarkTools"]
+test = ["BenchmarkTools", "Test"]
