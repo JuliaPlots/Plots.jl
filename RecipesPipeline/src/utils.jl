@@ -33,9 +33,7 @@ function Base.delete!(dd::DefaultsDict, k)
 end
 Base.length(dd::DefaultsDict) = length(union(keys(dd.explicit), keys(dd.defaults)))
 function Base.iterate(dd::DefaultsDict)
-    exp_keys = keys(dd.explicit)
-    def_keys = setdiff(keys(dd.defaults), exp_keys)
-    key_list = collect(Iterators.flatten((exp_keys, def_keys)))
+    key_list = union!(collect(keys(dd.explicit)), keys(dd.defaults))
     iterate(dd, (key_list, 1))
 end
 function Base.iterate(dd::DefaultsDict, (key_list, i))
