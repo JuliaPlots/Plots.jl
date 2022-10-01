@@ -219,20 +219,28 @@ function plotly_layout(plt::Plot)
     for sp in plt.subplots
         spidx = multiple_subplots ? sp[:subplot_index] : ""
         x_idx, y_idx = multiple_subplots ? plotly_link_indicies(plt, sp) : ("", "")
-        # add an annotation for the title... positioned horizontally relative to plotarea,
-        # but vertically just below the top of the subplot bounding box
+
+        # add an annotation for the title
         if sp[:title] != ""
             bb = plotarea(sp)
             tpos = sp[:titlelocation]
-            xmm = if tpos === :left
-                left(bb)
+            if tpos === :left
+                xmm, ymm = left(bb), top(bbox(sp))
+                halign, valign = :left, :top
+            elseif tpos === :center
+                xmm, ymm = 0.5 * (left(bb) + right(bb)), top(bbox(sp))
+                halign, valign = :hcenter, :top
             elseif tpos === :right
-                right(bb)
+                xmm, ymm = right(bb), top(bbox(sp))
+                halign, valign = :right, :top
             else
-                0.5 * (left(bb) + right(bb))
+                xmm = left(bb) + tpos[1]*width(bb)
+                # inverting to make consistent with GR
+                ymm = bottom(bb) - tpos[2]*height(bb)
+                halign, valign = sp[:titlefonthalign], sp[:titlefontvalign]
             end
-            titlex, titley = xy_mm_to_pcts(xmm, top(bbox(sp)), w * px, h * px)
-            title_font = font(titlefont(sp), :top)
+            titlex, titley = xy_mm_to_pcts(xmm, ymm, w * px, h * px)
+            title_font = font(titlefont(sp), halign=halign, valign=valign)
             push!(
                 plotattributes_out[:annotations],
                 plotly_annotation_dict(titlex, titley, text(sp[:title], title_font)),
