@@ -43,14 +43,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v1
-
-      - name: Ubuntu LaTeX dependencies
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get -y update
-          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
-          sudo fc-cache -vr
-
       - uses: julia-actions/julia-buildpkg@latest
 
       - name: test RecipesBase
@@ -74,6 +66,13 @@ jobs:
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
           Conda.add("matplotlib")
           Conda.list()
+
+      - name: Ubuntu LaTeX dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
+          sudo fc-cache -vr
 
       - uses: julia-actions/julia-runtest@latest
         with:
