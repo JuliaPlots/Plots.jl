@@ -1609,9 +1609,11 @@ should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsuppor
 function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     empty!(_to_warn)
     bend = backend_name(pkg)
-    already_warned = get!(_already_warned, bend, Set{Symbol}())
+    already_warned = get!(_already_warned, bend) do
+        Set{Symbol}()
+    end
     extra_kwargs = Dict{Symbol,Any}()
-    for k in keys(plotattributes)
+    for k in explicitkeys(plotattributes)
         is_attr_supported(pkg, k) && !(k in keys(_deprecated_attributes)) && continue
         k in _suppress_warnings && continue
         default_value = default(k)
