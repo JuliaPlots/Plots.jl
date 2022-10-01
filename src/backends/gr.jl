@@ -800,10 +800,10 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
     end
     # Add margin given by the user
-    leftpad   = 2mm + sp[:left_margin]
-    toppad    = 2mm + sp[:top_margin]
-    rightpad  = 2mm + sp[:right_margin]
-    bottompad = 2mm + sp[:bottom_margin]
+    leftpad   = sp[:left_margin]
+    toppad    = sp[:top_margin]
+    rightpad  = sp[:right_margin]
+    bottompad = sp[:bottom_margin]
     # Add margin for title
     if sp[:title] != ""
         gr_set_font(titlefont(sp), sp)
