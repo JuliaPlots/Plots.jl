@@ -60,6 +60,8 @@ reset_kw!(d::AKW, k) = delete!(d, k)
 pop_kw!(d::AKW, k) = pop!(d, k)
 pop_kw!(d::AKW, k, default) = pop!(d, k, default)
 
+explicitkeys(dd::DefaultsDict) = keys(dd.explicit)
+defaultkeys(dd::DefaultsDict) = keys(dd.defaults)
 
 # --------------------------------
 # ## 3D types

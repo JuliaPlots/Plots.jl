@@ -26,7 +26,9 @@ export SliceIt,
     unzip,
     dateformatter,
     datetimeformatter,
-    timeformatter
+    timeformatter,
+    explicitkeys,
+    defaultkeys
 # API
 export warn_on_recipe_aliases,
     splittable_attribute,
