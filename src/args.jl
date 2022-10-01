@@ -1611,7 +1611,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend) do
         Set{Symbol}()
-   end
+    end
     extra_kwargs = Dict{Symbol,Any}()
     for k in explicitkeys(plotattributes)
         is_attr_supported(pkg, k) && !(k in keys(_deprecated_attributes)) && continue
