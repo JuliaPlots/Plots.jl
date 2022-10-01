@@ -1829,14 +1829,14 @@ function gr_add_title(sp, viewport_plotarea, viewport_subplot)
             valign = sp[:titlefontvalign]
             if halign == :left
                 halign = GR.TEXT_HALIGN_LEFT
-            elseif halign == :hcenter
+            elseif halign == :hcenter || halign == :center
                 halign = GR.TEXT_HALIGN_CENTER
             elseif halign == :right
                 halign = GR.TEXT_HALIGN_RIGHT
             end
             if valign == :top
                 valign = GR.TEXT_VALIGN_TOP
-            elseif valign == :vcenter
+            elseif valign == :vcenter || valign == :center
                 valign = GR.TEXT_VALIGN_HALF
             elseif valign == :bottom
                 valign = GR.TEXT_VALIGN_BOTTOM
