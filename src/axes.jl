@@ -422,7 +422,7 @@ function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:
     ex
 end
 function expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
-    ex = axis[:extrema]
+    ex = axis[:extrema]::Extrema
     for vi in v
         expand_extrema!(ex, vi)
     end
