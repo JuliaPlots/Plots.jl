@@ -9,14 +9,85 @@ defaults:
   run:
     shell: bash
 
+env:
+  GKS_ENCODING: "utf8"
+  GKSwstype: "nul"
+
 jobs:
+  #################################### RecipesBase ####################################
+  RB:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: RecipesBase
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.6'  # lowest declared compat in `Project.toml` - latest LTS
+          - '1.8'
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        arch: [x64]
+        include:
+          - os: ubuntu-latest
+            prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
+    steps:
+      - uses: actions/checkout@v3
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/cache@v1
+      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-runtest@latest
+        with:
+          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
+      - uses: julia-actions/julia-processcoverage@latest
+      - uses: codecov/codecov-action@v3
+        with:
+          file: lcov.info
+  #################################### RecipesPipeline ####################################
+  RP:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    needs: RB
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: RecipesPipeLine
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.6'  # lowest declared compat in `Project.toml` - latest LTS
+          - '1.8'
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        arch: [x64]
+        include:
+          - os: ubuntu-latest
+            prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
+    steps:
+      - uses: actions/checkout@v3
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/cache@v1
+      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-runtest@latest
+        with:
+          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
+      - uses: julia-actions/julia-processcoverage@latest
+      - uses: codecov/codecov-action@v3
+        with:
+          file: lcov.info
   CI:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    needs: [RB, RP]
     env:
-      GKS_ENCODING: "utf8"
-      GKSwstype: "nul"
       PYTHON: "Conda"  # for `PyPlot`
-
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
@@ -54,12 +125,6 @@ jobs:
           sudo fc-cache -vr
 
       - uses: julia-actions/julia-buildpkg@latest
-
-      - uses: julia-actions/julia-runtest@latest
-        working-directory: RecipesBase
-
-      - uses: julia-actions/julia-runtest@latest
-        working-directory: RecipesPipeline   
 
       - name: PyPlot dependencies
         shell: julia --project=@. --color=yes {0}
