@@ -1825,22 +1825,8 @@ function gr_add_title(sp, viewport_plotarea, viewport_subplot)
         else
             xpos = gr_view_xposition(viewport_plotarea, loc[1])
             ypos = gr_view_yposition(viewport_plotarea, loc[2])
-            halign = sp[:titlefonthalign]
-            valign = sp[:titlefontvalign]
-            if halign == :left
-                halign = GR.TEXT_HALIGN_LEFT
-            elseif halign == :hcenter || halign == :center
-                halign = GR.TEXT_HALIGN_CENTER
-            elseif halign == :right
-                halign = GR.TEXT_HALIGN_RIGHT
-            end
-            if valign == :top
-                valign = GR.TEXT_VALIGN_TOP
-            elseif valign == :vcenter || valign == :center
-                valign = GR.TEXT_VALIGN_HALF
-            elseif valign == :bottom
-                valign = GR.TEXT_VALIGN_BOTTOM
-            end
+            halign = gr_halign(sp[:titlefonthalign])
+            valign = gr_valign(sp[:titlefontvalign])
         end
         GR.settextalign(halign, valign)
         gr_text(xpos, ypos, sp[:title])
