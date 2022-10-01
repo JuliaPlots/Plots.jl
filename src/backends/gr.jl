@@ -41,8 +41,10 @@ gr_markertype(k) = (
     hline = -31,
 )[k]
 
-gr_halign(k) = (left = 1, hcenter = 2, right = 3)[k]
-gr_valign(k) = (top = 1, vcenter = 3, bottom = 5)[k]
+gr_halign(k) = (left = GR.TEXT_HALIGN_LEFT, hcenter = GR.TEXT_HALIGN_CENTER,
+                center = GR.TEXT_HALIGN_CENTER, right = GR.TEXT_HALIGN_RIGHT)[k]
+gr_valign(k) = (top = GR.TEXT_VALIGN_TOP, vcenter = GR.TEXT_VALIGN_HALF,
+                center = GR.TEXT_VALIGN_HALF, bottom = GR.TEXT_VALIGN_BOTTOM)[k]
 
 const gr_font_family = Dict(
     # compat
