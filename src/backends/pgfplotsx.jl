@@ -85,6 +85,8 @@ curly(obj) = "{$(string(obj))}"
 latex_formatter(formatter::Symbol) = formatter in (:plain, :latex) ? formatter : :latex
 latex_formatter(formatter::Function) = formatter
 
+pgfx_halign(k) = (left = "left", hcenter = "center", center = "center", right = "right")[k]
+
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
         pgfx_sanitize_plot!(plt)
@@ -138,14 +140,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             title_cstr = plot_color(sp[:titlefontcolor])
             bgc_inside = plot_color(sp[:background_color_inside])
             update_clims(sp)
-            title_halign = sp[:titlefonthalign]
-            if title_halign === :left
-                title_halign = "left"
-            elseif title_halign === :hcenter || title_halign === :center
-                title_halign = "center"
-            elseif title_halign === :right
-                title_halign = "right"
-            end
             axis_opt = Options(
                 "point meta max" => get_clims(sp)[2],
                 "point meta min" => get_clims(sp)[1],
@@ -158,7 +152,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "color" => title_cstr,
                     "draw opacity" => alpha(title_cstr),
                     "rotate" => sp[:titlefontrotation],
-                    "align" => title_halign,
+                    "align" => pgfx_halign(sp[:titlefonthalign]),
                 ),
                 "legend style" => pgfx_get_legend_style(sp),
                 "axis background/.style" =>
