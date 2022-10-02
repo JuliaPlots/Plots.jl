@@ -425,6 +425,7 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
         expand_extrema!(sp[:xaxis], 0.0)
         expand_extrema!(sp[:yaxis], 0.0)
     end
+    return nothing
 end
 
 function _add_the_series(plt, sp, plotattributes)
