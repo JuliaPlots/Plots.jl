@@ -226,7 +226,7 @@ using RecipesBase
 # Our custom type that we want to display
 struct T end
 
-@recipe function plot{N<:Integer}(t::T, n::N = 1; customcolor = :green)
+@recipe function plot(t::T, n::Integer = 1; customcolor = :green)
     markershape --> :auto, :require
     markercolor --> customcolor, :force
     xrotation --> 5
@@ -579,7 +579,7 @@ You can use the `_` character (underscore) to ignore plots in the layout (blank 
 
 # Examples
 
-```jldoctest
+```julia-repl
 julia> @layout [a b; c]
 2×1 Matrix{Any}:
  Any[(label = :a, blank = false) (label = :b, blank = false)]
