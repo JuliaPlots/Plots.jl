@@ -234,13 +234,13 @@ function plotly_layout(plt::Plot)
                 xmm, ymm = right(bb), top(bbox(sp))
                 halign, valign = :right, :top
             else
-                xmm = left(bb) + tpos[1]*width(bb)
+                xmm = left(bb) + tpos[1] * width(bb)
                 # inverting to make consistent with GR
-                ymm = bottom(bb) - tpos[2]*height(bb)
+                ymm = bottom(bb) - tpos[2] * height(bb)
                 halign, valign = sp[:titlefonthalign], sp[:titlefontvalign]
             end
             titlex, titley = xy_mm_to_pcts(xmm, ymm, w * px, h * px)
-            title_font = font(titlefont(sp), halign=halign, valign=valign)
+            title_font = font(titlefont(sp), halign = halign, valign = valign)
             push!(
                 plotattributes_out[:annotations],
                 plotly_annotation_dict(titlex, titley, text(sp[:title], title_font)),
