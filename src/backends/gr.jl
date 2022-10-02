@@ -41,8 +41,18 @@ gr_markertype(k) = (
     hline = -31,
 )[k]
 
-gr_halign(k) = (left = 1, hcenter = 2, right = 3)[k]
-gr_valign(k) = (top = 1, vcenter = 3, bottom = 5)[k]
+gr_halign(k) = (
+    left = GR.TEXT_HALIGN_LEFT,
+    hcenter = GR.TEXT_HALIGN_CENTER,
+    center = GR.TEXT_HALIGN_CENTER,
+    right = GR.TEXT_HALIGN_RIGHT,
+)[k]
+gr_valign(k) = (
+    top = GR.TEXT_VALIGN_TOP,
+    vcenter = GR.TEXT_VALIGN_HALF,
+    center = GR.TEXT_VALIGN_HALF,
+    bottom = GR.TEXT_VALIGN_BOTTOM,
+)[k]
 
 const gr_font_family = Dict(
     # compat
@@ -1814,17 +1824,22 @@ function gr_add_title(sp, viewport_plotarea, viewport_subplot)
         gr_set_font(titlefont(sp), sp)
         loc = sp[:titlelocation]
         if loc === :left
-            xpos = viewport_plotarea[1]
-            halign = GR.TEXT_HALIGN_LEFT
+            xpos, ypos = viewport_plotarea[1], viewport_subplot[4]
+            halign, valign = GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_TOP
+        elseif loc === :center
+            xpos, ypos = +(viewport_plotarea[1:2]...) / 2, viewport_subplot[4]
+            halign, valign = GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP
         elseif loc === :right
-            xpos = viewport_plotarea[2]
-            halign = GR.TEXT_HALIGN_RIGHT
+            xpos, ypos = viewport_plotarea[2], viewport_subplot[4]
+            halign, valign = GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_TOP
         else
-            xpos = gr_view_xcenter(viewport_plotarea)
-            halign = GR.TEXT_HALIGN_CENTER
+            xpos = gr_view_xposition(viewport_plotarea, loc[1])
+            ypos = gr_view_yposition(viewport_plotarea, loc[2])
+            halign = gr_halign(sp[:titlefonthalign])
+            valign = gr_valign(sp[:titlefontvalign])
         end
-        GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
-        gr_text(xpos, viewport_subplot[4], sp[:title])
+        GR.settextalign(halign, valign)
+        gr_text(xpos, ypos, sp[:title])
         GR.restorestate()
     end
 end
