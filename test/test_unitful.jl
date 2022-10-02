@@ -7,6 +7,8 @@ xseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:
 yseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:y]
 zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:z]
 
+testfile = tempname() * ".png"
+
 macro isplot(ex) # @isplot macro to streamline tests
     :(@test $(esc(ex)) isa Plot)
 end
@@ -46,6 +48,25 @@ end
         @test all(ylims(plot(y, ylims = (-1m, 3m))) .≈ (-1, 3))
         @test all(ylims(plot(y, ylims = (-100cm, 300cm))) .≈ (-1, 3))
         @test all(ylims(plot(y, ylims = (-100cm, 3m))) .≈ (-1, 3))
+        @test all(ylims(plot!(; ylims = (-2cm, 1cm))) .≈ (-0.02, 0.01))
+        @test_throws DimensionError begin
+            pl = plot(y)
+            plot!(pl; ylims = (-1s, 5s))
+            savefig(pl, testfile)
+        end
+    end
+
+    @testset "yticks" begin
+        compare_yticks(pl, expected_ticks) = all(first(first(yticks(pl))) .≈ expected_ticks)
+        encompassing_ylims = (-1m, 6m)
+        @test compare_yticks(plot(y; ylims = encompassing_ylims, yticks = (1:5)m), 1:5)
+        @test compare_yticks(plot(y; ylims = encompassing_ylims, yticks = [1cm, 3cm]), [0.01, 0.03])
+        @test compare_yticks(plot!(; ylims = encompassing_ylims, yticks = [-1cm, 4cm]), [-0.01, 0.04])
+        @test_throws DimensionError begin
+            pl = plot(y)
+            plot!(pl; yticks = (1:5)s)
+            savefig(pl, testfile)
+        end
     end
 
     @testset "keyword combinations" begin
@@ -310,7 +331,6 @@ end
 end
 
 @testset "Aspect ratio" begin
-    testfile = tempname() * ".png"
     pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = :equal)
     savefig(pl, testfile) # Force a render, to make it evaluate aspect ratio
     @test abs(-(ylims(pl)...)) > 50

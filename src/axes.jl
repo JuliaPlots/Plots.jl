@@ -223,7 +223,7 @@ end
 function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:formatter])
     if update || !haskey(axis.plotattributes, :optimized_ticks)
         dvals = axis[:discrete_values]
-        ticks = _transform_ticks(axis[:ticks])
+        ticks = _transform_ticks(axis[:ticks], axis)
         axis.plotattributes[:optimized_ticks] =
             if (
                 ticks isa Symbol &&
@@ -334,9 +334,9 @@ get_ticks(ticks::Bool, args...) =
     ticks ? get_ticks(:auto, args...) : get_ticks(nothing, args...)
 get_ticks(::T, args...) where {T} = error("Unknown ticks type in get_ticks: $T")
 
-_transform_ticks(ticks) = ticks
-_transform_ticks(ticks::AbstractArray{T}) where {T<:Dates.TimeType} = Dates.value.(ticks)
-_transform_ticks(ticks::NTuple{2,Any}) = (_transform_ticks(ticks[1]), ticks[2])
+_transform_ticks(ticks, axis) = ticks
+_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} = Dates.value.(ticks)
+_transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
 function get_minor_ticks(sp, axis, ticks)
     axis[:minorticks] ∈ (:none, nothing, false) && !axis[:minorgrid] && return nothing
@@ -565,7 +565,7 @@ function default_should_widen(axis::Axis)
         return axis[:widen]
     end
     # automatic behavior: widen if limits aren't specified and series type is appropriate
-    lims = process_limits(axis[:lims])
+    lims = process_limits(axis[:lims], axis)
     (lims isa Tuple || lims == :round) && return false
     for sp in axis.sps
         for series in series_list(sp)
@@ -585,12 +585,12 @@ function round_limits(amin, amax, scale)
     amin, amax
 end
 
-process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}) = lims
-process_limits(lims::Symbol) = lims
-process_limits(lims::AVec) =
+process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
+process_limits(lims::Symbol, axis) = lims
+process_limits(lims::AVec, axis) =
     length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) :
     nothing
-process_limits(lims) = nothing
+process_limits(lims, axis) = nothing
 
 warn_invalid_limits(lims, letter) = @warn """
         Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
@@ -607,7 +607,7 @@ function axis_limits(
     axis = sp[get_attr_symbol(letter, :axis)]
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
-    lims = process_limits(axis[:lims])
+    lims = process_limits(axis[:lims], axis)
     lims === nothing && warn_invalid_limits(axis[:lims], letter)
     has_user_lims = lims isa Tuple
     if has_user_lims
