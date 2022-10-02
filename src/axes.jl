@@ -335,7 +335,8 @@ get_ticks(ticks::Bool, args...) =
 get_ticks(::T, args...) where {T} = error("Unknown ticks type in get_ticks: $T")
 
 _transform_ticks(ticks, axis) = ticks
-_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} = Dates.value.(ticks)
+_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
+    Dates.value.(ticks)
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
 function get_minor_ticks(sp, axis, ticks)
