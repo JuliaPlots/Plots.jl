@@ -60,8 +60,14 @@ end
         compare_yticks(pl, expected_ticks) = all(first(first(yticks(pl))) .≈ expected_ticks)
         encompassing_ylims = (-1m, 6m)
         @test compare_yticks(plot(y; ylims = encompassing_ylims, yticks = (1:5)m), 1:5)
-        @test compare_yticks(plot(y; ylims = encompassing_ylims, yticks = [1cm, 3cm]), [0.01, 0.03])
-        @test compare_yticks(plot!(; ylims = encompassing_ylims, yticks = [-1cm, 4cm]), [-0.01, 0.04])
+        @test compare_yticks(
+            plot(y; ylims = encompassing_ylims, yticks = [1cm, 3cm]),
+            [0.01, 0.03],
+        )
+        @test compare_yticks(
+            plot!(; ylims = encompassing_ylims, yticks = [-1cm, 4cm]),
+            [-0.01, 0.04],
+        )
         @test_throws DimensionError begin
             pl = plot(y)
             plot!(pl; yticks = (1:5)s)
