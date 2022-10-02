@@ -226,7 +226,7 @@ using RecipesBase
 # Our custom type that we want to display
 struct T end
 
-@recipe function plot{N<:Integer}(t::T, n::N = 1; customcolor = :green)
+@recipe function plot(t::T, n::Integer = 1; customcolor = :green)
     markershape --> :auto, :require
     markercolor --> customcolor, :force
     xrotation --> 5
