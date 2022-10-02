@@ -579,7 +579,7 @@ You can use the `_` character (underscore) to ignore plots in the layout (blank 
 
 # Examples
 
-```jldoctest
+```julia-repl
 julia> @layout [a b; c]
 2×1 Matrix{Any}:
  Any[(label = :a, blank = false) (label = :b, blank = false)]
