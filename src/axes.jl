@@ -416,13 +416,13 @@ expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
-    ex = axis[:extrema]
+    ex = axis[:extrema]::Extrema
     ex.emin = isfinite(v[1]) ? min(v[1], ex.emin) : ex.emin
     ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
     ex
 end
 function expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
-    ex = axis[:extrema]
+    ex = axis[:extrema]::Extrema
     for vi in v
         expand_extrema!(ex, vi)
     end
