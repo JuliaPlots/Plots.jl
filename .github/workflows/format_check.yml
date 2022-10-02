@@ -3,8 +3,11 @@ name: format
 on:
   pull_request:
   push:
-    branches:
-      - 'master'
+    branches: [master]
+      
+concurrency: 
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
