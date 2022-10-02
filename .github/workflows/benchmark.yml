@@ -3,6 +3,10 @@ name: benchmarks
 on:
   pull_request:
 
+concurrency: 
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   Benchmark:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
