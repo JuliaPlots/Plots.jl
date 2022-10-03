@@ -3,11 +3,12 @@
 
 module UnitfulRecipes
 
-using ..Unitful: Quantity, unit, ustrip, Unitful, dimension, Units
+using ..Unitful: Quantity, unit, ustrip, Unitful, dimension, Units, NoUnits
 using ..RecipesBase
 export @P_str
 
-import ..locate_annotation, ..PlotText, ..Subplot, ..AVec, ..AMat
+import ..locate_annotation,
+    ..PlotText, ..Subplot, ..AVec, ..AMat, ..Axis, .._transform_ticks, ..process_limits
 
 const MissingOrQuantity = Union{Missing,<:Quantity}
 
@@ -40,16 +41,12 @@ function fixaxis!(attr, x, axisletter)
     sp = get(attr, :subplot, 1)
     if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
         label = attr[:plot_object][sp][axis][:guide]
-        if label isa UnitfulString
-            u = label.unit
-        end
+        u = getaxisunit(label)
         # If label was not given as an argument, reuse
         get!(attr, axislabel, label)
     end
     # Fix the attributes: labels, lims, ticks, marker/line stuff, etc.
     append_unit_if_needed!(attr, axislabel, u)
-    ustripattribute!(attr, axislims, u)
-    ustripattribute!(attr, axisticks, u)
     ustripattribute!(attr, err, u)
     if axisletter === :y
         ustripattribute!(attr, :ribbon, u)
@@ -271,6 +268,10 @@ const UNIT_FORMATS = Dict(
 
 format_unit_label(l, u, f::Symbol) = format_unit_label(l, u, UNIT_FORMATS[f])
 
+getaxisunit(::AbstractString) = NoUnits
+getaxisunit(s::UnitfulString) = s.unit
+getaxisunit(a::Axis) = getaxisunit(a[:guide])
+
 #==============
 Fix annotations
 ===============#
@@ -289,5 +290,15 @@ locate_annotation(
 ) = (ustrip(x), ustrip(y), ustrip(z), label)
 locate_annotation(sp::Subplot, rel::NTuple{N,<:MissingOrQuantity}, label) where {N} =
     locate_annotation(sp, ustrip.(rel), label)
+
+#==================#
+# ticks and limits #
+#==================#
+_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Quantity} =
+    ustrip.(getaxisunit(axis), ticks)
+process_limits(lims::AbstractArray{T}, axis) where {T<:Quantity} =
+    ustrip.(getaxisunit(axis), lims)
+process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
+    ustrip.(getaxisunit(axis), lims)
 
 end

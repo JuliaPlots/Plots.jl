@@ -105,7 +105,7 @@ hascolorbar(sp::Subplot) =
 
 function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar_formatter])
     if update || !haskey(sp.attr, :colorbar_optimized_ticks)
-        ticks = _transform_ticks(sp[:colorbar_ticks])
+        ticks = _transform_ticks(sp[:colorbar_ticks], sp[:colorbar_title])
         cvals = sp[:colorbar_continuous_values]
         dvals = sp[:colorbar_discrete_values]
         clims = get_clims(sp)
