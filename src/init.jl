@@ -23,11 +23,7 @@ _plots_defaults() =
 
 function _plots_theme_defaults()
     user_defaults = _plots_defaults()
-    if haskey(user_defaults, :theme)
-        theme(pop!(user_defaults, :theme); user_defaults...)
-    else
-        default(; user_defaults...)
-    end
+    theme(pop!(user_defaults, :theme, :default); user_defaults...)
 end
 
 function _plots_plotly_defaults()
