@@ -1,0 +1,90 @@
+name: SnoopCompile
+
+on:
+  push:
+    branches:
+      - 'master'  # NOTE: to run the bot only on pushes to master
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  SnoopCompile:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    env:
+      GKS_ENCODING: "utf8"
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:   # NOTE: the versions below should match those in your botconfig
+          - '1.6'  # ⎤
+          - '1.7'  # ⎦ <<< keep these versions in sync with deps/SnoopCompile/snoop_bot_config.jl
+        os:        # NOTE: should match the os setting of your botconfig
+          - ubuntu-latest
+        arch:
+          - x64
+    steps:
+      # Setup environment
+      - uses: actions/checkout@v3
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+
+      - name: Install dependencies
+        run: |
+          julia --project -e 'using Pkg; Pkg.instantiate()'
+          julia -e 'using Pkg; Pkg.add(PackageSpec(name = "CompileBot", version = "1")); Pkg.develop(path=pwd()); using CompileBot; CompileBot.addtestdep()'
+
+      # TESTCMD
+      - name: Default TESTCMD
+        run: echo "TESTCMD=julia" >> $GITHUB_ENV
+      - name: Ubuntu TESTCMD
+        if: startsWith(matrix.os,'ubuntu')
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
+
+      # Generate precompile files
+      - name: Generating precompile files
+        run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bot.jl")'   # NOTE: must match path
+
+      # Run benchmarks
+      - name: Running Benchmark
+        run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bench.jl")' # NOTE: optional, if have benchmark file
+
+      - name: Upload all
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./
+
+  Create_PR:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    needs: SnoopCompile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download all
+        uses: actions/download-artifact@v3
+
+      - name: CompileBot postprocess
+        run: julia -e 'using Pkg; Pkg.add(PackageSpec(name = "CompileBot", version = "1")); using CompileBot; CompileBot.postprocess();'
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update precompile_*.jl file
+          title: "[AUTO] Update precompiles [skip ci]"
+          labels: |
+            SnoopCompile
+            no changelog
+          branch: "SnoopCompile_AutoPR"
+
+
+  Skip:
+    if: "contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip CI 🚫
+        run: echo skip ci
