@@ -35,11 +35,3 @@ end
 @testset "group" begin
     include("test_group.jl")
 end
-
-@testset "plots" begin
-    for i in eachindex(Plots._examples)
-        if i ∉ Plots._backend_skips[:gr]
-            @test Plots.test_examples(:gr, i, disp=false) isa Plots.Plot
-        end
-    end
-end
