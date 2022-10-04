@@ -18,10 +18,18 @@ reference_path(backend, version) = reference_dir("Plots", string(backend), strin
 
 if !isdir(reference_dir())
     mkpath(reference_dir())
-    LibGit2.clone(
-        "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
-        reference_dir(),
-    )
+    for i in 1:6
+        try
+            LibGit2.clone(
+                "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
+                reference_dir(),
+            )
+            break
+        catch err
+            @warn err
+            sleep(20i)
+        end
+    end
 end
 
 function reference_file(backend, i, version)

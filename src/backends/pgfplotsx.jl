@@ -3,9 +3,7 @@ import UUIDs: uuid4
 import Latexify
 import Contour
 
-# FIXME: cannot use `import PGFPlotsX: ...` with @require
-const Options = PGFPlotsX.Options
-const Table = PGFPlotsX.Table
+import .PGFPlotsX: Options, Table
 
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
@@ -87,6 +85,8 @@ curly(obj) = "{$(string(obj))}"
 latex_formatter(formatter::Symbol) = formatter in (:plain, :latex) ? formatter : :latex
 latex_formatter(formatter::Function) = formatter
 
+pgfx_halign(k) = (left = "left", hcenter = "center", center = "center", right = "right")[k]
+
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
         pgfx_sanitize_plot!(plt)
@@ -152,6 +152,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "color" => title_cstr,
                     "draw opacity" => alpha(title_cstr),
                     "rotate" => sp[:titlefontrotation],
+                    "align" => pgfx_halign(sp[:titlefonthalign]),
                 ),
                 "legend style" => pgfx_get_legend_style(sp),
                 "axis background/.style" =>

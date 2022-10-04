@@ -775,7 +775,6 @@ setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z<:AbstractMatrix} 
 # -------------------------------------------------------
 # indexing notation
 
-# Base.getindex(plt::Plot, i::Integer) = getxy(plt, i)
 Base.setindex!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y} =
     (setxy!(plt, xy, i); plt)
 Base.setindex!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z} =

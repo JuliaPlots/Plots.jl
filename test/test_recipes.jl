@@ -43,14 +43,17 @@ end
     @test length(sticks) == 1
 end
 
+# NOTE: the following test seems to trigger these deprecated warnings:
+# WARNING: importing deprecated binding Colors.RGB1 into PlotUtils.
+# WARNING: importing deprecated binding Colors.RGB1 into Plots.
 @testset "framestyle axes" begin
     pl = plot(-1:1, -1:1, -1:1)
     sp = pl.subplots[1]
     defaultret = Plots.axis_drawing_info_3d(sp, :x)
-    for letter in [:x, :y, :z]
-        for fr in [:box :semi :origin :zerolines :grid :none]
+    for letter in (:x, :y, :z)
+        for framestyle in [:box :semi :origin :zerolines :grid :none]
             prevha = UInt64(0)
-            push!(sp.attr, :framestyle => fr)
+            push!(sp.attr, :framestyle => framestyle)
             ret = Plots.axis_drawing_info_3d(sp, letter)
             ha = hash(string(ret))
             @test ha != prevha

@@ -109,6 +109,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
 end
 
 struct PlaceHolder end
+const PlotOrSubplot = Union{Plot,Subplot}
 
 # -----------------------------------------------------------
 
@@ -140,7 +141,7 @@ should_add_to_legend(series::Series) =
 
 # -----------------------------------------------------------------------
 
-Base.getindex(plt::Plot, i::Integer) = plt.subplots[i]
+Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
 Base.length(plt::Plot) = length(plt.subplots)
 Base.lastindex(plt::Plot) = length(plt)
 
@@ -152,7 +153,7 @@ Base.ndims(plt::Plot) = 2
 # attr(plt::Plot, k::Symbol) = plt.attr[k]
 # attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 
-Base.getindex(sp::Subplot, i::Integer) = series_list(sp)[i]
+Base.getindex(sp::Subplot, i::Union{Vector{<:Integer},Integer}) = series_list(sp)[i]
 Base.lastindex(sp::Subplot) = length(series_list(sp))
 
 # -----------------------------------------------------------------------

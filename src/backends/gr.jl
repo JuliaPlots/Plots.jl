@@ -41,8 +41,18 @@ gr_markertype(k) = (
     hline = -31,
 )[k]
 
-gr_halign(k) = (left = 1, hcenter = 2, right = 3)[k]
-gr_valign(k) = (top = 1, vcenter = 3, bottom = 5)[k]
+gr_halign(k) = (
+    left = GR.TEXT_HALIGN_LEFT,
+    hcenter = GR.TEXT_HALIGN_CENTER,
+    center = GR.TEXT_HALIGN_CENTER,
+    right = GR.TEXT_HALIGN_RIGHT,
+)[k]
+gr_valign(k) = (
+    top = GR.TEXT_VALIGN_TOP,
+    vcenter = GR.TEXT_VALIGN_HALF,
+    center = GR.TEXT_VALIGN_HALF,
+    bottom = GR.TEXT_VALIGN_BOTTOM,
+)[k]
 
 const gr_font_family = Dict(
     # compat
@@ -464,11 +474,9 @@ function gr_viewport_from_bbox(
     viewport = zeros(4)
     viewport[1] = viewport_canvas[2] * (left(bb) / w)
     viewport[2] = viewport_canvas[2] * (right(bb) / w)
-    viewport[3] = viewport_canvas[4] * (1.0 - bottom(bb) / h)
-    viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
-    if hascolorbar(sp)
-        viewport[2] -= 0.1 * (1 + gr_is3d(sp) / 2)
-    end
+    viewport[3] = viewport_canvas[4] * (1 - bottom(bb) / h)
+    viewport[4] = viewport_canvas[4] * (1 - top(bb) / h)
+    hascolorbar(sp) && (viewport[2] -= 0.1 * (1 + gr_is3d(sp) / 2))
     viewport
 end
 
@@ -656,10 +664,8 @@ function gr_set_gradient(series::Series)
 end
 
 # this is our new display func... set up the viewport_canvas, compute bounding boxes, and display each subplot
-function gr_display(plt::Plot, fmt = "")
+function gr_display(plt::Plot, dpi_factor = 1)
     GR.clearws()
-
-    dpi_factor = fmt == "png" ? plt[:dpi] / Plots.DPI : 1
 
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px =
@@ -771,7 +777,7 @@ function gr_axis_height(sp, axis)
         ticks in (nothing, false, :none) ? 0 :
         last(gr_get_ticks_size(ticks, axis[:rotation]))
     )
-    if !isempty(axis[:guide])
+    if axis[:guide] != ""
         gr_set_font(guidefont(axis), sp)
         h += last(gr_text_size(axis[:guide]))
     end
@@ -787,7 +793,7 @@ function gr_axis_width(sp, axis)
         ticks in (nothing, false, :none) ? 0 :
         first(gr_get_ticks_size(ticks, axis[:rotation]))
     )
-    if !isempty(axis[:guide])
+    if axis[:guide] != ""
         gr_set_font(guidefont(axis), sp)
         w += last(gr_text_size(axis[:guide]))
     end
@@ -809,7 +815,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     rightpad  = 2mm + sp[:right_margin]
     bottompad = 2mm + sp[:bottom_margin]
     # Add margin for title
-    if !isempty(sp[:title])
+    if sp[:title] != ""
         gr_set_font(titlefont(sp), sp)
         l = last(last(gr_text_size(sp[:title])))
         h = 1mm + get_size(sp)[2] * l * px
@@ -873,12 +879,12 @@ function _update_min_padding!(sp::Subplot{GRBackend})
 
         # Add margin for x or y label
         h = 0mm
-        if !isempty(xaxis[:guide])
+        if xaxis[:guide] != ""
             gr_set_font(guidefont(sp[:xaxis]), sp)
             l = last(gr_text_size(sp[:xaxis][:guide]))
             h = max(h, 1mm + get_size(sp)[2] * l * px)
         end
-        if !isempty(yaxis[:guide])
+        if yaxis[:guide] != ""
             gr_set_font(guidefont(sp[:yaxis]), sp)
             l = last(gr_text_size(sp[:yaxis][:guide]))
             h = max(h, 1mm + get_size(sp)[2] * l * px)
@@ -894,7 +900,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             end
         end
         # Add margin for z label
-        if !isempty(zaxis[:guide])
+        if zaxis[:guide] != ""
             gr_set_font(guidefont(sp[:zaxis]), sp)
             l = last(gr_text_size(sp[:zaxis][:guide]))
             w = 1mm + get_size(sp)[2] * l * px
@@ -932,7 +938,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
 
         # Add margin for x label
-        if !isempty(sp[:xaxis][:guide])
+        if sp[:xaxis][:guide] != ""
             gr_set_font(guidefont(sp[:xaxis]), sp)
             l = last(gr_text_size(sp[:xaxis][:guide]))
             h = 1mm + get_size(sp)[2] * l * px
@@ -946,7 +952,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             end
         end
         # Add margin for y label
-        if !isempty(sp[:yaxis][:guide])
+        if sp[:yaxis][:guide] != ""
             gr_set_font(guidefont(sp[:yaxis]), sp)
             l = last(gr_text_size(sp[:yaxis][:guide]))
             w = 1mm + get_size(sp)[2] * l * px
@@ -960,7 +966,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             end
         end
     end
-    if !isempty(sp[:colorbar_title])
+    if sp[:colorbar_title] != ""
         rightpad += 4mm
     end
     sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
@@ -1457,11 +1463,9 @@ function gr_set_window(sp, viewport_plotarea)
     end
 end
 
-function gr_fill_plotarea(sp, viewport_plotarea)
-    if !gr_is3d(sp)
-        gr_fill_viewport(viewport_plotarea, plot_color(sp[:background_color_inside]))
-    end
-end
+gr_fill_plotarea(sp, viewport_plotarea) =
+    gr_is3d(sp) ||
+    gr_fill_viewport(viewport_plotarea, plot_color(sp[:background_color_inside]))
 
 ## Axes
 
@@ -1732,7 +1736,7 @@ function gr_label_axis(sp, letter, viewport_plotarea)
     axis = sp[get_attr_symbol(letter, :axis)]
     mirror = axis[:mirror]
     # guide
-    if !isempty(axis[:guide])
+    if axis[:guide] != ""
         GR.savestate()
         gr_set_font(guidefont(axis), sp)
         guide_position = axis[:guide_position]
@@ -1774,7 +1778,7 @@ end
 
 function gr_label_axis_3d(sp, letter)
     ax = sp[get_attr_symbol(letter, :axis)]
-    if !isempty(ax[:guide])
+    if ax[:guide] != ""
         near_letter = letter in (:x, :z) ? :y : :x
         far_letter = letter in (:x, :y) ? :z : :x
 
@@ -1815,22 +1819,27 @@ function gr_label_axis_3d(sp, letter)
 end
 
 function gr_add_title(sp, viewport_plotarea, viewport_subplot)
-    if !isempty(sp[:title])
+    if sp[:title] != ""
         GR.savestate()
         gr_set_font(titlefont(sp), sp)
         loc = sp[:titlelocation]
         if loc === :left
-            xpos = viewport_plotarea[1]
-            halign = GR.TEXT_HALIGN_LEFT
+            xpos, ypos = viewport_plotarea[1], viewport_subplot[4]
+            halign, valign = GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_TOP
+        elseif loc === :center
+            xpos, ypos = +(viewport_plotarea[1:2]...) / 2, viewport_subplot[4]
+            halign, valign = GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP
         elseif loc === :right
-            xpos = viewport_plotarea[2]
-            halign = GR.TEXT_HALIGN_RIGHT
+            xpos, ypos = viewport_plotarea[2], viewport_subplot[4]
+            halign, valign = GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_TOP
         else
-            xpos = gr_view_xcenter(viewport_plotarea)
-            halign = GR.TEXT_HALIGN_CENTER
+            xpos = gr_view_xposition(viewport_plotarea, loc[1])
+            ypos = gr_view_yposition(viewport_plotarea, loc[2])
+            halign = gr_halign(sp[:titlefonthalign])
+            valign = gr_valign(sp[:titlefontvalign])
         end
-        GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
-        gr_text(xpos, viewport_subplot[4], sp[:title])
+        GR.settextalign(halign, valign)
+        gr_text(xpos, ypos, sp[:title])
         GR.restorestate()
     end
 end
@@ -2031,17 +2040,13 @@ function gr_draw_contour(series, x, y, z, clims)
     GR.setspace(clims[1], clims[2], 0, 90)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
     gr_set_transparency(get_fillalpha(series))
-    is_lc_black = let black = plot_color(:black)
-        plot_color(series[:linecolor]) in (black, [black])
-    end
     h = gr_contour_levels(series, clims)
     if series[:fillrange] !== nothing
-        if series[:fillcolor] != series[:linecolor] && !is_lc_black
-            @warn "GR: filled contour only supported with black contour lines"
-        end
         GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
     else
-        coff = is_lc_black ? 0 : 1000
+        coff = let black = plot_color(:black)
+            plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1000
+        end
         GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
     end
 end
@@ -2177,43 +2182,44 @@ for (mime, fmt) in (
     "image/svg+xml" => "svg",
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
-        ENV["GKS_ENCODING"] = "utf8"
         GR.emergencyclosegks()
+        dpi_factor = $fmt == "png" ? plt[:dpi] / Plots.DPI : 1
         filepath = tempname() * "." * $fmt
-        env = get(ENV, "GKSwstype", "0")
-        ENV["GKSwstype"] = $fmt
-        ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt, $fmt)
-        GR.emergencyclosegks()
+        withenv(
+            "GKS_FILEPATH" => filepath,
+            "GKS_ENCODING" => "utf8",
+            "GKSwstype" => $fmt,
+        ) do
+            gr_display(plt, dpi_factor)
+            GR.emergencyclosegks()
+        end
         write(io, read(filepath, String))
         rm(filepath)
-        if env != "0"
-            ENV["GKSwstype"] = env
-        else
-            pop!(ENV, "GKSwstype")
-        end
     end
 end
 
 function _display(plt::Plot{GRBackend})
-    ENV["GKS_ENCODING"] = "utf8"
     if plt[:display_type] === :inline
         GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
-        ENV["GKSwstype"] = "pdf"
-        ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt)
-        GR.emergencyclosegks()
-        content = string(
+        withenv(
+            "GKS_FILEPATH" => filepath,
+            "GKS_ENCODING" => "utf8",
+            "GKSwstype" => "pdf",
+        ) do
+            gr_display(plt)
+            GR.emergencyclosegks()
+        end
+        println(
             "\033]1337;File=inline=1;preserveAspectRatio=0:",
             base64encode(open(read, filepath)),
             "\a",
         )
-        println(content)
         rm(filepath)
     else
-        ENV["GKS_DOUBLE_BUF"] = true
-        gr_display(plt)
+        withenv("GKS_ENCODING" => "utf8", "GKS_DOUBLE_BUF" => true) do
+            gr_display(plt)
+        end
     end
 end
 

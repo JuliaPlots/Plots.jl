@@ -223,7 +223,7 @@ end
 function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:formatter])
     if update || !haskey(axis.plotattributes, :optimized_ticks)
         dvals = axis[:discrete_values]
-        ticks = _transform_ticks(axis[:ticks])
+        ticks = _transform_ticks(axis[:ticks], axis)
         axis.plotattributes[:optimized_ticks] =
             if (
                 ticks isa Symbol &&
@@ -334,9 +334,10 @@ get_ticks(ticks::Bool, args...) =
     ticks ? get_ticks(:auto, args...) : get_ticks(nothing, args...)
 get_ticks(::T, args...) where {T} = error("Unknown ticks type in get_ticks: $T")
 
-_transform_ticks(ticks) = ticks
-_transform_ticks(ticks::AbstractArray{T}) where {T<:Dates.TimeType} = Dates.value.(ticks)
-_transform_ticks(ticks::NTuple{2,Any}) = (_transform_ticks(ticks[1]), ticks[2])
+_transform_ticks(ticks, axis) = ticks
+_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
+    Dates.value.(ticks)
+_transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
 function get_minor_ticks(sp, axis, ticks)
     axis[:minorticks] ∈ (:none, nothing, false) && !axis[:minorgrid] && return nothing
@@ -416,13 +417,13 @@ expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
-    ex = axis[:extrema]
+    ex = axis[:extrema]::Extrema
     ex.emin = isfinite(v[1]) ? min(v[1], ex.emin) : ex.emin
     ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
     ex
 end
 function expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
-    ex = axis[:extrema]
+    ex = axis[:extrema]::Extrema
     for vi in v
         expand_extrema!(ex, vi)
     end
@@ -591,7 +592,7 @@ const _widen_seriestypes = (
 
 const default_widen_factor = 1.06
 
-# facor to widen axis limits by, or `nothing` if axis widening should be skipped
+# factor to widen axis limits by, or `nothing` if axis widening should be skipped
 function widen_factor(axis::Axis; factor = default_widen_factor)
     widen = axis[:widen]
     widen isa Bool && return widen ? factor : nothing
@@ -599,7 +600,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor)
     widen == :auto || @warn "Invalid value specified for `widen`: $widen"
 
     # automatic behavior: widen if limits aren't specified and series type is appropriate
-    lims = process_limits(axis[:lims])
+    lims = process_limits(axis[:lims], axis)
     (lims isa Tuple || lims == :round) && return nothing
     for sp in axis.sps
         for series in series_list(sp)
@@ -619,11 +620,12 @@ function round_limits(amin, amax, scale)
     amin, amax
 end
 
-process_limits(lims::Tuple{<:Real,<:Real}) = lims
-process_limits(lims::Symbol) = lims
-process_limits(lims::AVec) =
-    length(lims) == 2 && all(x isa Real for x in lims) ? Tuple(lims) : nothing
-process_limits(lims) = nothing
+process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
+process_limits(lims::Symbol, axis) = lims
+process_limits(lims::AVec, axis) =
+    length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) :
+    nothing
+process_limits(lims, axis) = nothing
 
 warn_invalid_limits(lims, letter) = @warn """
         Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
@@ -640,18 +642,20 @@ function axis_limits(
     axis = get_axis(sp, letter)
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
-    lims = process_limits(axis[:lims])
+    lims = process_limits(axis[:lims], axis)
     lims === nothing && warn_invalid_limits(axis[:lims], letter)
     has_user_lims = lims isa Tuple
     if has_user_lims
         lmin, lmax = lims
-        if lmin === :auto
-        elseif isfinite(lmin)
+        if lmin isa Number && isfinite(lmin)
             amin = lmin
+        elseif lmin isa Symbol
+            lmin === :auto || @warn "Invalid min $(letter)limit" lmin
         end
-        if lmax === :auto
-        elseif isfinite(lmax)
+        if lmax isa Number && isfinite(lmax)
             amax = lmax
+        elseif lmax isa Symbol
+            lmax === :auto || @warn "Invalid max $(letter)limit" lmax
         end
     end
     if lims === :symmetric

@@ -11,7 +11,7 @@ end
     @test Plots.plotly_local_file_path[] === nothing
     temp = Plots.use_local_dependencies[]
     withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
-        Plots.__init__()
+        Plots._plots_plotly_defaults()
         @test Plots.plotly_local_file_path[] isa String
         @test isfile(Plots.plotly_local_file_path[])
         @test Plots.use_local_dependencies[] = true
