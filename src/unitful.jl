@@ -123,7 +123,7 @@ Attribute fixing
 ===============#
 # Aspect ratio
 function fixaspectratio!(attr, u, axisletter)
-    aspect_ratio = get!(attr, :aspect_ratio, :auto)
+    aspect_ratio = get(attr, :aspect_ratio, :auto)
     if aspect_ratio in (:auto, :none)
         # Keep the default behavior (let Plots figure it out)
         return

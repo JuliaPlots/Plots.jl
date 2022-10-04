@@ -340,6 +340,8 @@ end
     pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = :equal)
     savefig(pl, testfile) # Force a render, to make it evaluate aspect ratio
     @test abs(-(ylims(pl)...)) > 50
+    plot!(pl, (3:4)u"m", (4:5)u"m")
+    @test first(pl.subplots)[:aspect_ratio] == 1 // 10 # This is what "equal" means when yunit==xunit/10
     pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = 2)
     savefig(pl, testfile)
     @test 25 < abs(-(ylims(pl)...)) < 50
