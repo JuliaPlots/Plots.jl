@@ -528,14 +528,43 @@ end
 
 # -------------------------------------------------------------------------
 
-# push the limits out slightly
-function widen(lmin, lmax, scale = :identity)
-    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
-    span = f(lmax) - f(lmin)
-    # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
-    eps = NaNMath.max(1e-16, 0.03span)
-    invf(f(lmin) - eps), invf(f(lmax) + eps)
+function scale_lims(from, to, factor)
+    mid, span = (from + to) / 2, (to - from) / 2
+    mid .+ (-span, span) .* factor
 end
+
+function scale_lims(from, to, factor, scale)
+    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
+    invf.(scale_lims(f(from), f(to), factor))
+end
+
+"""
+    scale_lims!([plt], [letter], factor)
+
+Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by the
+given `factor` around the limits' middle point. 
+If `letter` is omitted, all axes are affected.
+"""
+function scale_lims!(sp::Subplot, letter, factor)
+    axis = Plots.get_axis(sp, letter)
+    scale = axis[:scale]
+    from, to = Plots.get_sp_lims(sp, letter)
+    axis[:lims] = scale_lims(from, to, factor, scale)
+end
+function scale_lims!(plt::Plot, letter, factor)
+    for subplot in plt.subplots
+        scale_lims!(subplot, letter, factor)
+    end
+    plt
+end
+scale_lims!(letter::Symbol, factor) = scale_lims!(current(), letter, factor)
+function scale_lims!(plt::Union{Plot,Subplot}, factor)
+    for letter in (:x, :y, :z)
+        scale_lims!(plt, letter, factor)
+    end
+    plt
+end
+scale_lims!(factor::Number) = scale_lims!(current(), factor)
 
 # figure out if widening is a good idea.
 const _widen_seriestypes = (
@@ -561,21 +590,26 @@ const _widen_seriestypes = (
     :scatter3d,
 )
 
-function default_should_widen(axis::Axis)
-    if axis[:widen] isa Bool
-        return axis[:widen]
-    end
+const default_widen_factor = 1.06
+
+# factor to widen axis limits by, or `nothing` if axis widening should be skipped
+function widen_factor(axis::Axis; factor = default_widen_factor)
+    widen = axis[:widen]
+    widen isa Bool && return widen ? factor : nothing
+    widen isa Number && return widen
+    widen == :auto || @warn "Invalid value specified for `widen`: $widen"
+
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims == :round) && return false
+    (lims isa Tuple || lims == :round) && return nothing
     for sp in axis.sps
         for series in series_list(sp)
             if series.plotattributes[:seriestype] in _widen_seriestypes
-                return true
+                return factor
             end
         end
     end
-    false
+    nothing
 end
 
 function round_limits(amin, amax, scale)
@@ -602,10 +636,10 @@ warn_invalid_limits(lims, letter) = @warn """
 function axis_limits(
     sp,
     letter,
-    should_widen = default_should_widen(sp[get_attr_symbol(letter, :axis)]),
+    lims_factor = widen_factor(get_axis(sp, letter)),
     consider_aspect = true,
 )
-    axis = sp[get_attr_symbol(letter, :axis)]
+    axis = get_axis(sp, letter)
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = process_limits(axis[:lims], axis)
@@ -644,8 +678,8 @@ function axis_limits(
         else
             amin, amax
         end
-    elseif should_widen
-        widen(amin, amax, axis[:scale])
+    elseif lims_factor !== nothing
+        scale_lims(amin, amax, lims_factor, axis[:scale])
     elseif lims === :round
         round_limits(amin, amax, axis[:scale])
     else
@@ -663,12 +697,12 @@ function axis_limits(
         dist = amax - amin
 
         if letter === :x
-            yamin, yamax = axis_limits(sp, :y, default_should_widen(sp[:yaxis]), false)
+            yamin, yamax = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false)
             ydist = yamax - yamin
             axis_ratio = aspect_ratio * ydist / dist
             factor = axis_ratio / plot_ratio
         else
-            xamin, xamax = axis_limits(sp, :x, default_should_widen(sp[:xaxis]), false)
+            xamin, xamax = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false)
             xdist = xamax - xamin
             axis_ratio = aspect_ratio * dist / xdist
             factor = plot_ratio / axis_ratio

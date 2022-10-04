@@ -484,7 +484,7 @@ end
     end
 
     # widen limits out a bit
-    expand_extrema!(axis, widen(ignorenan_extrema(xseg.pts)...))
+    expand_extrema!(axis, scale_lims(ignorenan_extrema(xseg.pts)..., default_widen_factor))
 
     # switch back
     if !isvertical(plotattributes)
@@ -1568,8 +1568,10 @@ end
     yflip := true
     aspect_ratio := 1
     rs, cs, zs = Plots.findnz(z.surf)
-    xlims := widen(ignorenan_extrema(cs)..., get(plotattributes, :xscale, :identity))
-    ylims := widen(ignorenan_extrema(rs)..., get(plotattributes, :yscale, :identity))
+    xlims := ignorenan_extrema(cs)
+    ylims := ignorenan_extrema(rs)
+    widen --> true
+
     markershape --> :circle
     markersize --> 1
     markerstrokewidth := 0
