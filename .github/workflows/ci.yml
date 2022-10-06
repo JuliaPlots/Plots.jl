@@ -14,7 +14,7 @@ defaults:
     shell: bash
 
 jobs:
-  CI:
+  ci:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
       GKS_ENCODING: "utf8"
@@ -49,12 +49,12 @@ jobs:
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@latest
 
-      - name: test upstream RecipesBase
+      - name: Test upstream RecipesBase
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg; Pkg.develop(path="RecipesBase"); Pkg.test("RecipesBase")
 
-      - name: test upstream RecipesPipeline
+      - name: Test upstream RecipesPipeline
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg; Pkg.develop(path="RecipesPipeline"); Pkg.test("RecipesPipeline")
