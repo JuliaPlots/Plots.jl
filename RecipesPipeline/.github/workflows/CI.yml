@@ -1,0 +1,85 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  CI:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    env:
+      GKS_ENCODING: "utf8"
+      GKSwstype: "nul"
+
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.version == 'nightly' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.6' # LTS
+          - '1.8' # latest stable
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        arch:
+          - x64
+          # - x86
+        include:
+          - version: 'nightly'
+            os: ubuntu-latest
+
+    steps:
+
+      # Setup environment
+      - uses: actions/checkout@v3
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+      - name: Cache artifacts
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+
+      # TESTCMD
+      - name: Default TESTCMD
+        run: echo "TESTCMD=julia" >> $GITHUB_ENV
+      - name: Ubuntu TESTCMD
+        if: startsWith(matrix.os,'ubuntu')
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
+
+      # Julia Dependencies
+      - name: Install Julia dependencies
+        uses: julia-actions/julia-buildpkg@latest
+
+      # Run tests
+      - name: Run tests
+        run: $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true)'
+
+      # Codecov
+      - uses: julia-actions/julia-processcoverage@latest
+      - uses: codecov/codecov-action@v3
+        with:
+          file: lcov.info
+
+  Skip:
+    if: "contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip CI 🚫
+        run: echo skip ci
