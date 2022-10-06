@@ -1,0 +1,33 @@
+name: Invalidations
+on: pull_request
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: julia-actions/setup-julia@v1
+      with:
+        version: '1'
+    - uses: actions/checkout@v2
+    - uses: julia-actions/julia-buildpkg@latest
+    - uses: julia-actions/julia-invalidations@v1
+      id: invs_pr
+    
+    - uses: actions/checkout@v2
+      with:
+        ref: 'master'
+    - uses: julia-actions/julia-buildpkg@latest
+    - uses: julia-actions/julia-invalidations@v1
+      id: invs_master
+    
+    - name: Report invalidation counts
+      run: |
+        echo "Invalidations on master: ${{ steps.invs_master.outputs.total }} (${{ steps.invs_master.outputs.deps }} via deps)"
+        echo "This branch: ${{ steps.invs_pr.outputs.total }} (${{ steps.invs_pr.outputs.deps }} via deps)"
+      shell: bash
+    - name: PR doesn't increase number of invalidations
+      run: |
+        if (( ${{ steps.invs_pr.outputs.total }} > ${{ steps.invs_master.outputs.total }} )); then
+            exit 1
+        fi
+      shell: bash
