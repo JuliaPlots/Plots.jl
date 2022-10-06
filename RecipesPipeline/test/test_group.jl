@@ -1,7 +1,3 @@
-using Test
-using BenchmarkTools
-using RecipesPipeline
-
 function _extract_group_attributes_old_slow_known_good_implementation(v, args...; legend_entry = string)
     group_labels = collect(unique(sort(v)))
     n = length(group_labels)
