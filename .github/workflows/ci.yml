@@ -20,7 +20,6 @@ jobs:
       GKS_ENCODING: "utf8"
       GKSwstype: "nul"
       PYTHON: "Conda"  # for `PyPlot`
-
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
@@ -31,17 +30,16 @@ jobs:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
           - '1.8' # latest stable
         os: [ubuntu-latest, windows-latest, macos-latest]
-        arch:
-          - x64
+        arch: [x64]
         include:
           - os: ubuntu-latest
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '1.7'
+            version: '1.7'  # only test intermediate relase on `ubuntu`
           # - os: ubuntu-latest
           #   prefix: xvfb-run
-          #  version: 'nightly'
+          #   version: 'nightly'
 
     steps:
       - uses: actions/checkout@v3
@@ -49,15 +47,17 @@ jobs:
         with:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v1
-
-      - name: Ubuntu LaTeX dependencies
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get -y update
-          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
-          sudo fc-cache -vr
-
       - uses: julia-actions/julia-buildpkg@latest
+
+      - name: test upstream RecipesBase
+        shell: julia --project=@. --color=yes {0}
+        run: |
+          using Pkg; Pkg.develop(path="RecipesBase"); Pkg.test("RecipesBase")
+
+      - name: test upstream RecipesPipeline
+        shell: julia --project=@. --color=yes {0}
+        run: |
+          using Pkg; Pkg.develop(path="RecipesPipeline"); Pkg.test("RecipesPipeline")
 
       - name: PyPlot dependencies
         shell: julia --project=@. --color=yes {0}
@@ -71,15 +71,23 @@ jobs:
           Conda.add("matplotlib")
           Conda.list()
 
+      - name: Ubuntu LaTeX dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
+          sudo fc-cache -vr
+
       - uses: julia-actions/julia-runtest@latest
         with:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
 
       - name: Run downstream tests
         if: startsWith(matrix.os, 'ubuntu')
-        run:  |
-          xvfb-run julia -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")'
-          xvfb-run julia -e 'using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")'
+        shell: xvfb-run julia --project=@. --color=yes {0}
+        run: |
+          using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")
+          using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")
 
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
