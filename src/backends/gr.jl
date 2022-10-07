@@ -2247,8 +2247,8 @@ for (mime, fmt) in (
             GR.emergencyclosegks()
             @show filepath
         end
-        open(filepath, "w") do f
-        end # creating an empty file allows precompilation to proceed
+        #open(filepath, "w") do f
+        #end # creating an empty file allows precompilation to proceed
         write(io, read(filepath, String))
         rm(filepath)
     end
