@@ -703,6 +703,59 @@ function gr_display(plt::Plot, dpi_factor = 1)
     GR.updatews()
 end
 
+# A stream.jl change in Base between 1.8.1 and 1.8.2 ?
+function Base.uv_readcb(handle::Ptr{Cvoid}, nread::Cssize_t, buf::Ptr{Cvoid})
+    stream_unknown_type = Base.@handle_as handle Base.LibuvStream
+    nrequested = ccall(:jl_uv_buf_len, Csize_t, (Ptr{Cvoid},), buf)
+    function readcb_specialized(stream::Base.LibuvStream, nread::Int, nrequested::UInt)
+        lock(stream.cond)
+        if nread < 0
+            if nread == Base.UV_ENOBUFS && nrequested == 0
+                # remind the client that stream.buffer is full
+                notify(stream.cond)
+            elseif nread == Base.UV_EOF # libuv called uv_stop_reading already
+                if stream.status != Base.StatusClosing
+                    stream.status = Base.StatusEOF
+                    if stream isa Base.TTY # TODO: || ccall(:uv_is_writable, Cint, (Ptr{Cvoid},), stream.handle) != 0
+                        # stream can still be used either by reseteof # TODO: or write
+                        notify(stream.cond)
+                    else
+                        # underlying stream is no longer useful: begin finalization
+                        ccall(:jl_close_uv, Cvoid, (Ptr{Cvoid},), stream.handle)
+                        stream.status = Base.StatusClosing
+                    end
+                end
+            else
+                stream.readerror = Base._UVError("read", nread)
+                # This is a fatal connection error
+                ccall(:jl_close_uv, Cvoid, (Ptr{Cvoid},), stream.handle)
+                stream.status = Base.StatusClosing
+            end
+        else
+            Base.notify_filled(stream.buffer, nread)
+            notify(stream.cond)
+        end
+        unlock(stream.cond)
+
+        # Stop background reading when
+        # 1) there's nobody paying attention to the data we are reading
+        # 2) we have accumulated a lot of unread data OR
+        # 3) we have an alternate buffer that has reached its limit.
+        if stream.status == Base.StatusPaused ||
+           (stream.status == Base.StatusActive &&
+            ((bytesavailable(stream.buffer) >= stream.throttle) ||
+             (bytesavailable(stream.buffer) >= stream.buffer.maxsize)))
+            # save cycles by stopping kernel notifications from arriving
+            ccall(:uv_read_stop, Cint, (Ptr{Cvoid},), stream)
+            stream.status = Base.StatusOpen
+        end
+        nothing
+    end
+    readcb_specialized(stream_unknown_type, Int(nread), UInt(nrequested))
+    nothing
+end
+
+
 function gr_set_tickfont(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
     gr_set_font(
@@ -2192,6 +2245,7 @@ for (mime, fmt) in (
         ) do
             gr_display(plt, dpi_factor)
             GR.emergencyclosegks()
+            @show filepath
         end
         open(filepath, "w") do f
         end # creating an empty file allows precompilation to proceed
