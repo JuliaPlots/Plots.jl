@@ -7,7 +7,7 @@ examples/meetup/.ipynb_checkpoints/*
 deps/plotly-*
 deps/build.log
 deps/deps.jl
-Manifest.toml
+#Manifest.toml
 dev/
 test/tmpplotsave.hdf5
 /.benchmarkci
