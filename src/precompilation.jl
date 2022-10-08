@@ -1,6 +1,6 @@
 using SnoopPrecompile
 
-if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
+#=if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
     @precompile_setup begin
         n = length(_examples)
         imports = sizehint!(Expr[], n)
@@ -34,4 +34,4 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
             end
         end
     end
-end
+end=#
