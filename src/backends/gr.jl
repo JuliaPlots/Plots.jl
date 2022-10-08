@@ -2244,7 +2244,7 @@ for (mime, fmt) in (
             "GKSwstype" => $fmt,
         ) do
             gr_display(plt, dpi_factor)
-            GR.emergencyclosegks()
+            #GR.emergencyclosegks()
             @show filepath
         end
         #open(filepath, "w") do f
