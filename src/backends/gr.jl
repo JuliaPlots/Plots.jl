@@ -755,6 +755,46 @@ function Base.uv_readcb(handle::Ptr{Cvoid}, nread::Cssize_t, buf::Ptr{Cvoid})
     nothing
 end
 
+function Base.create_expr_cache(pkg::Base.PkgId, input::String, output::String, concrete_deps::typeof(_concrete_dependencies), internal_stderr::IO = stderr, internal_stdout::IO = stdout)
+    @nospecialize internal_stderr internal_stdout
+    rm(output, force=true)   # Remove file if it exists
+    depot_path = map(abspath, DEPOT_PATH)
+    dl_load_path = map(abspath, DL_LOAD_PATH)
+    load_path = map(abspath, Base.load_path())
+    path_sep = Sys.iswindows() ? ';' : ':'
+    any(path -> path_sep in path, load_path) &&
+        error("LOAD_PATH entries cannot contain $(repr(path_sep))")
+
+    deps_strs = String[]
+    function pkg_str(_pkg::PkgId)
+        if _pkg.uuid === nothing
+            "Base.PkgId($(repr(_pkg.name)))"
+        else
+            "Base.PkgId(Base.UUID(\"$(_pkg.uuid)\"), $(repr(_pkg.name)))"
+        end
+    end
+    for (pkg, build_id) in concrete_deps
+        push!(deps_strs, "$(pkg_str(pkg)) => $(repr(build_id))")
+    end
+    deps_eltype = sprint(show, eltype(concrete_deps); context = :module=>nothing)
+    deps = deps_eltype * "[" * join(deps_strs, ",") * "]"
+    trace = isassigned(PRECOMPILE_TRACE_COMPILE) ? `--trace-compile=$(PRECOMPILE_TRACE_COMPILE[])` : ``
+    io = open(pipeline(`$(julia_cmd()::Cmd) -O0
+                       --output-ji $output --output-incremental=yes
+                       --startup-file=no --history-file=no --warn-overwrite=yes
+                       --color=$(have_color === nothing ? "auto" : have_color ? "yes" : "no")
+                       $trace
+                       -`, stderr = internal_stderr, stdout = internal_stdout),
+              "w", stdout)
+    # write data over stdin to avoid the (unlikely) case of exceeding max command line size
+    write(io.in, """
+        Base.include_package_for_output($(pkg_str(pkg)), $(repr(abspath(input))), $(repr(depot_path)), $(repr(dl_load_path)),
+            $(repr(load_path)), $deps, $(repr(source_path(nothing))))
+        """)
+    close(io.in)
+    return io
+end
+
 
 function gr_set_tickfont(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
@@ -2234,7 +2274,7 @@ for (mime, fmt) in (
     "application/postscript" => "ps",
     "image/svg+xml" => "svg",
 )
-    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
+    @eval function Plots._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
         dpi_factor = $fmt == "png" ? plt[:dpi] / Plots.DPI : 1
         filepath = tempname() * "." * $fmt
@@ -2245,7 +2285,7 @@ for (mime, fmt) in (
         ) do
             gr_display(plt, dpi_factor)
             #GR.emergencyclosegks()
-            @show filepath
+            @debug filepath
         end
         #open(filepath, "w") do f
         #end # creating an empty file allows precompilation to proceed
