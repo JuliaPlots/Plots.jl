@@ -17,8 +17,8 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
                         fn = tempname()
                         pl = current()
                         gui(pl)
-                        savefig(pl, "$fn.png")
-                        savefig(pl, "$fn.pdf")
+                        #savefig(pl, "$fn.png")
+                        #savefig(pl, "$fn.pdf")
                     end
                     nothing
                 end
