@@ -27,16 +27,13 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
           - '1.8' # latest stable
-        os: [ubuntu-latest, windows-latest, macos-latest]
+          - 'nightly'
+        os: [ubuntu-latest, windows-latest]
         arch: [x64]
         include:
           - os: ubuntu-latest
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-          - os: ubuntu-latest
-            prefix: xvfb-run
-            version: '1.7'  # only test intermediate relase on `ubuntu`
           # - os: ubuntu-latest
           #   prefix: xvfb-run
           #   version: 'nightly'
@@ -49,35 +46,6 @@ jobs:
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@latest
 
-      - name: Test upstream RecipesBase
-        shell: julia --project=@. --color=yes {0}
-        run: |
-          using Pkg; Pkg.develop(path="RecipesBase"); Pkg.test("RecipesBase")
-
-      - name: Test upstream RecipesPipeline
-        shell: julia --project=@. --color=yes {0}
-        run: |
-          using Pkg; Pkg.develop(path="RecipesPipeline"); Pkg.test("RecipesPipeline")
-
-      - name: PyPlot dependencies
-        shell: julia --project=@. --color=yes {0}
-        run: |
-          @show ENV["PYTHON"]
-          using Pkg
-          Pkg.add("Conda"); Pkg.build("Conda"; verbose=true)
-          using Conda; env, rc = Conda.ROOTENV, Conda.conda_rc(Conda.ROOTENV)
-          Conda.runconda(`config --set auto_update_conda False --file $rc --force`, env)
-          Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
-          Conda.add("matplotlib")
-          Conda.list()
-
-      - name: Ubuntu LaTeX dependencies
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get -y update
-          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
-          sudo fc-cache -vr
-
       - uses: julia-actions/julia-runtest@latest
         with:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
@@ -85,20 +53,6 @@ jobs:
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
-
-      - name: Run downstream tests
-        if: startsWith(matrix.os, 'ubuntu')
-        shell: xvfb-run julia --project=@. --color=yes {0}
-        run: |
-          using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("StatsPlots"); Pkg.test("StatsPlots")
-          using Pkg; Pkg.activate(tempdir()); Pkg.develop(path=abspath(".")); Pkg.add("GraphRecipes"); Pkg.test("GraphRecipes")
-
-      - uses: julia-actions/julia-processcoverage@latest
-        if: startsWith(matrix.os, 'ubuntu')
-      - uses: codecov/codecov-action@v3
-        if: startsWith(matrix.os, 'ubuntu')
-        with:
-          file: lcov.info
 
   Skip:
     if: contains(github.event.head_commit.message, '[skip ci]')
