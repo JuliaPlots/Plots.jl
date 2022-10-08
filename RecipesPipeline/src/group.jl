@@ -41,7 +41,7 @@ end
 
 # expecting a mapping of "group label" to "group indices"
 function _extract_group_attributes(idxmap::Dict{T,V}, args...) where {T,V<:AVec{Int}}
-    group_labels = sortedkeys(idxmap)
+    group_labels = (sort ∘ collect ∘ keys)(idxmap)
     group_indices = Vector{Int}[collect(idxmap[k]) for k in group_labels]
     GroupBy(group_labels, group_indices)
 end
@@ -108,8 +108,7 @@ group_as_matrix(t) = false
             end
             last_args = g.args
         else
-            x = g.args[1]
-            last_args = g.args[2:end]
+            x, last_args... = g.args
         end
         x_u = unique(sort(x))
         x_ind = Dict(zip(x_u, eachindex(x_u)))
