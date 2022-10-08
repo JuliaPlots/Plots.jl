@@ -1,12 +1,8 @@
 # RecipesPipeline
-[travis-img]: https://travis-ci.com/JuliaPlots/RecipesPipeline.jl.svg?branch=master
-[travis-url]: https://travis-ci.com/JuliaPlots/RecipesPipeline.jl
 
-[docs-img]: https://img.shields.io/badge/docs-dev-blue.svg
-[docs-url]: http://juliaplots.org/RecipesPipeline.jl/dev/
-
-[![][travis-img]][travis-url]
-[![][docs-img]][docs-url]
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/stable/RecipesPipeline)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://docs.juliaplots.org/dev/RecipesPipeline)
+[![CI](https://github.com/JuliaPlots/Plots.jl/workflows/ci/badge.svg?branch=master)](https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml)
 [![Codecov](https://codecov.io/gh/JuliaPlots/RecipesPipeline.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/RecipesPipeline.jl)
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 
