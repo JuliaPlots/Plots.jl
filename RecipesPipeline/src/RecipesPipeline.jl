@@ -1,11 +1,12 @@
 # # RecipesPipeline
 module RecipesPipeline
 
+using NaNMath
+using Dates
+
 import RecipesBase
 import RecipesBase: @recipe, @series, RecipeData, is_explicit
 import PlotUtils # tryrange and adapted_grid
-using Dates
-using NaNMath
 
 export recipe_pipeline!
 # Plots relies on these:
@@ -104,6 +105,45 @@ function recipe_pipeline!(plt, plotattributes, args)
     return plt
 end
 
-include("precompile_includer.jl")
+using SnoopPrecompile
+@precompile_setup begin
+    plotattributes = Dict{Symbol, Any}[
+        Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path),
+        Dict(:x => 1, :y => "", :z => nothing, :seriestype => :surface),
+    ]
+    __func1(x) = x
+    __func2(x, y) = x + y
+    @precompile_all_calls begin
+        _compute_xyz(__func1, 1:2, 1:2)
+        _compute_xyz(1:2, __func1, 1:2)
+        _compute_xyz(1:2, 1:2, __func2)
+        _compute_xyz(1:2, 1:2, [1 2;3 4])
+        _extract_group_attributes([1, 2])
+        _extract_group_attributes(([1], [2]))
+        _extract_group_attributes((; a = [1], b = [2]))
+        _extract_group_attributes(Dict("a" => [1], "b" => [2]))
+        mats = (Int[1 2;3 4], Float64[1 2;3 4])
+        surfs = Surface.(mats)
+        vols = Volume(ones(Int, 1, 2, 3)), Volume(ones(Float64, 1, 2, 3))
+        for pl_attr ∈ plotattributes 
+            _series_data_vector(1, pl_attr)
+            _series_data_vector([1], pl_attr)
+            _series_data_vector(["a"], pl_attr)
+            _series_data_vector([1 2], pl_attr)
+            _series_data_vector(["a" "b"], pl_attr)
+            _series_data_vector.(surfs, Ref(pl_attr))
+            _apply_type_recipe.(Ref(pl_attr), surfs, Ref(:x))
+            _apply_type_recipe.(Ref(pl_attr), mats, Ref(:x))
+            _map_funcs(identity, [1, 2])
+            _map_funcs([identity, identity], [1, 2])
+            unzip([(1.0, 1.0)])
+            unzip([(1, 1)])
+            unzip([(1, 1.0)])
+            unzip([([1.0], [2.0])])
+            # _process_seriesrecipe(nothing, pl_attr)
+            # recipe_pipeline!(plt, [1, 2], ["foo", "bar"])
+        end
+    end
+end
 
 end
