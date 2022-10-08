@@ -28,8 +28,9 @@ jobs:
       matrix:
         version:
           - '1.8' # latest stable
+          - '1.8.1' # known good
           - 'nightly'
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
         arch: [x64]
         include:
           - os: ubuntu-latest
