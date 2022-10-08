@@ -16,8 +16,8 @@ function _extract_group_attributes(v::AVec, args...; legend_entry = string)
             res[label] = [i]
         end
     end
-    group_labels = sort(collect(keys(res)))
-    group_indices = [res[i] for i in group_labels]
+    group_labels = (sort ∘ collect ∘ keys)(res)
+    group_indices = getindex.(Ref(res), group_labels)
 
     GroupBy(map(legend_entry, group_labels), group_indices)
 end
