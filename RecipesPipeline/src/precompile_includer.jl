@@ -1,6 +1,5 @@
 should_precompile = true
 
-
 # Don't edit the following! Instead change the script for `snoop_bot`.
 ismultios = false
 ismultiversion = true
@@ -37,5 +36,4 @@ else
         end
     else
     end
-
 end # precompile_enclosure

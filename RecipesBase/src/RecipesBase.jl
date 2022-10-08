@@ -2,8 +2,7 @@ module RecipesBase
 
 using SnoopPrecompile
 
-export
-    @recipe,
+export @recipe,
     @series,
     @userplot,
     @shorthands,
@@ -53,9 +52,7 @@ apply_recipe(plotattributes::AbstractDict{Symbol,Any}) = ()
 is_explicit(d::AbstractDict{Symbol,Any}, k) = haskey(d, k)
 
 const _debug_recipes = Bool[false]
-function debug(v::Bool = true)
-    _debug_recipes[1] = v
-end
+debug(v::Bool = true) = _debug_recipes[1] = v
 
 # --------------------------------------------------------------------------
 
@@ -75,20 +72,17 @@ end
 
 # check for flags as part of the `-->` expression
 function _is_arrow_tuple(expr::Expr)
-    expr.head == :tuple && !isempty(expr.args) &&
+    expr.head == :tuple &&
+        !isempty(expr.args) &&
         isa(expr.args[1], Expr) &&
         expr.args[1].head == :(-->)
 end
 
-function _equals_symbol(arg::Symbol, sym::Symbol)
-    arg == sym
-end
+_equals_symbol(arg::Symbol, sym::Symbol) = arg == sym
 function _equals_symbol(arg::Expr, sym::Symbol) #not sure this method is necessary anymore on 0.7
     arg.head == :quote && arg.args[1] == sym
 end
-function _equals_symbol(arg::QuoteNode, sym::Symbol)
-    arg.value == sym
-end
+_equals_symbol(arg::QuoteNode, sym::Symbol) = arg.value == sym
 _equals_symbol(x, sym::Symbol) = false
 
 # build an apply_recipe function header from the recipe function header
@@ -97,14 +91,20 @@ function get_function_def(func_signature::Expr, args::Vector)
     if func_signature.head == :where
         Expr(:where, get_function_def(front, args), esc.(func_signature.args[2:end])...)
     elseif func_signature.head == :call
-        func = Expr(:call, :(RecipesBase.apply_recipe), esc.([:(plotattributes::AbstractDict{Symbol, Any}); args])...)
+        func = Expr(
+            :call,
+            :(RecipesBase.apply_recipe),
+            esc.([:(plotattributes::AbstractDict{Symbol,Any}); args])...,
+        )
         if isa(front, Expr) && front.head == :curly
             Expr(:where, func, esc.(front.args[2:end])...)
         else
             func
         end
     else
-        error("Expected `func_signature = ...` with func_signature as a call or where Expr... got: $func_signature")
+        error(
+            "Expected `func_signature = ...` with func_signature as a call or where Expr... got: $func_signature",
+        )
     end
 end
 
@@ -121,10 +121,18 @@ function create_kw_body(func_signature::Expr)
             k, v = kwpair.args
             if isa(k, Expr) && k.head == :(::)
                 k = k.args[1]
-                @warn("Type annotations on keyword arguments not currently supported in recipes. Type information has been discarded")
+                @warn(
+                    "Type annotations on keyword arguments not currently supported in recipes. Type information has been discarded"
+                )
             end
             push!(kw_body.args, :($k = get!(plotattributes, $(QuoteNode(k)), $v)))
-            push!(cleanup_body.args, :(RecipesBase.is_key_supported($(QuoteNode(k))) || delete!(plotattributes, $(QuoteNode(k)))))
+            push!(
+                cleanup_body.args,
+                :(
+                    RecipesBase.is_key_supported($(QuoteNode(k))) ||
+                    delete!(plotattributes, $(QuoteNode(k)))
+                ),
+            )
         end
         args = args[2:end]
     end
@@ -133,16 +141,16 @@ end
 
 # process the body of the recipe recursively.
 # when we see the series macro, we split that block off:
-    # let
-    #   d2 = copy(d)
-    #   <process_recipe_body on d2>
-    #   RecipeData(d2, block_return)
-    # end
+# let
+#   d2 = copy(d)
+#   <process_recipe_body on d2>
+#   RecipeData(d2, block_return)
+# end
 # and we push this block onto the series_blocks list.
 # then at the end we push the main body onto the series list
 function process_recipe_body!(expr::Expr)
-    for (i,e) in enumerate(expr.args)
-        if isa(e,Expr)
+    for (i, e) in enumerate(expr.args)
+        if isa(e, Expr)
 
             # process trailing flags, like:
             #   a --> b, :quiet, :force
@@ -188,7 +196,14 @@ function process_recipe_body!(expr::Expr)
                     :(RecipesBase.is_key_supported($k) ? $set_expr : nothing)
                 elseif require
                     # error when not supported by the backend
-                    :(RecipesBase.is_key_supported($k) ? $set_expr : error("In recipe: required keyword ", $k, " is not supported by backend $(backend_name())"))
+                    :(
+                        RecipesBase.is_key_supported($k) ? $set_expr :
+                        error(
+                            "In recipe: required keyword ",
+                            $k,
+                            " is not supported by backend $(backend_name())",
+                        )
+                    )
                 else
                     set_expr
                 end
@@ -263,7 +278,9 @@ macro recipe(funcexpr::Expr)
         error("Must wrap a valid function call!")
     end
     if !(isa(func_signature, Expr) && func_signature.head in (:call, :where))
-        error("Expected `func_signature = ...` with func_signature as a call or where Expr... got: $func_signature")
+        error(
+            "Expected `func_signature = ...` with func_signature as a call or where Expr... got: $func_signature",
+        )
     end
     if length(func_signature.args) < 2
         error("Missing function arguments... need something to dispatch on!")
@@ -279,23 +296,34 @@ macro recipe(funcexpr::Expr)
 
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
-    funcdef = Expr(:function, func, esc(quote
-        @nospecialize
-        if RecipesBase._debug_recipes[1]
-            println("apply_recipe args: ", $args)
-        end
-        $kw_body
-        $cleanup_body
-        series_list = RecipesBase.RecipeData[]
-        func_return = $func_body
-        if func_return != nothing
-            push!(series_list, RecipesBase.RecipeData(plotattributes, RecipesBase.wrap_tuple(func_return)))
-        end
-        series_list
-    end))
+    funcdef = Expr(
+        :function,
+        func,
+        esc(
+            quote
+                @nospecialize
+                if RecipesBase._debug_recipes[1]
+                    println("apply_recipe args: ", $args)
+                end
+                $kw_body
+                $cleanup_body
+                series_list = RecipesBase.RecipeData[]
+                func_return = $func_body
+                if func_return != nothing
+                    push!(
+                        series_list,
+                        RecipesBase.RecipeData(
+                            plotattributes,
+                            RecipesBase.wrap_tuple(func_return),
+                        ),
+                    )
+                end
+                series_list
+            end,
+        ),
+    )
     funcdef
 end
-
 
 # --------------------------------------------------------------------------
 
@@ -322,13 +350,18 @@ end
 ```
 """
 macro series(expr::Expr)
-    esc(quote
-        let plotattributes = copy(plotattributes)
-            args = $expr
-            push!(series_list, RecipesBase.RecipeData(plotattributes, RecipesBase.wrap_tuple(args)))
-            nothing
-        end
-    end)
+    esc(
+        quote
+            let plotattributes = copy(plotattributes)
+                args = $expr
+                push!(
+                    series_list,
+                    RecipesBase.RecipeData(plotattributes, RecipesBase.wrap_tuple(args)),
+                )
+                nothing
+            end
+        end,
+    )
 end
 
 # --------------------------------------------------------------------------
@@ -359,20 +392,23 @@ function _userplot(expr::Expr)
     funcname2 = Symbol(funcname, "!")
 
     # return a code block with the type definition and convenience plotting methods
-    esc(quote
-        $expr
-        export $funcname, $funcname2
-        Core.@__doc__ $funcname(args...; kw...) = RecipesBase.plot($typename(args); kw...)
-        Core.@__doc__ $funcname2(args...; kw...) = RecipesBase.plot!($typename(args); kw...)
-        Core.@__doc__ $funcname2(plt::RecipesBase.AbstractPlot, args...; kw...) = RecipesBase.plot!(plt, $typename(args); kw...)
-    end)
+    esc(
+        quote
+            $expr
+            export $funcname, $funcname2
+            Core.@__doc__ $funcname(args...; kw...) =
+                RecipesBase.plot($typename(args); kw...)
+            Core.@__doc__ $funcname2(args...; kw...) =
+                RecipesBase.plot!($typename(args); kw...)
+            Core.@__doc__ $funcname2(plt::RecipesBase.AbstractPlot, args...; kw...) =
+                RecipesBase.plot!(plt, $typename(args); kw...)
+        end,
+    )
 end
 
-function _userplot(sym::Symbol)
-    _userplot(:(mutable struct $sym
-            args
-    end))
-end
+_userplot(sym::Symbol) = _userplot(:(mutable struct $sym
+    args
+end))
 
 gettypename(sym::Symbol) = sym
 
@@ -406,11 +442,15 @@ Plot my series type!
 """
 macro shorthands(funcname::Symbol)
     funcname2 = Symbol(funcname, "!")
-    esc(quote
-        export $funcname, $funcname2
-        Core.@__doc__ $funcname(args...; kw...) = RecipesBase.plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
-        Core.@__doc__ $funcname2(args...; kw...) = RecipesBase.plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
-    end)
+    esc(
+        quote
+            export $funcname, $funcname2
+            Core.@__doc__ $funcname(args...; kw...) =
+                RecipesBase.plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
+            Core.@__doc__ $funcname2(args...; kw...) =
+                RecipesBase.plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
+        end,
+    )
 end
 
 #----------------------------------------------------------------------------
@@ -438,7 +478,7 @@ GroupedBar((1:10, rand(10, 2)))
 """
 recipetype(s, args...) = recipetype(Val(s), args...)
 
-function recipetype(s::Val{T}, args...) where T
+function recipetype(s::Val{T}, args...) where {T}
     error("No type recipe defined for type $T. You may need to load StatsPlots")
 end
 
@@ -566,9 +606,7 @@ function create_grid_curly(expr::Expr)
     end
 end
 
-function create_grid(s::Symbol)
-    :((label = $(QuoteNode(s)), blank = $(s == :_)))
-end
+create_grid(s::Symbol) = :((label = $(QuoteNode(s)), blank = $(s == :_)))
 
 """
     @layout mat

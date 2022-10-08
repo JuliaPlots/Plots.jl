@@ -28,14 +28,16 @@ function _process_userrecipes!(plt, plotattributes, args)
         # recipedata should be of type RecipeData.
         # if it's not then the inputs must not have been fully processed by recipes
         if !(typeof(next_series) <: RecipeData)
-            error("Inputs couldn't be processed... expected RecipeData but got: $next_series")
+            error(
+                "Inputs couldn't be processed... expected RecipeData but got: $next_series",
+            )
         end
         if isempty(next_series.args)
             _finish_userrecipe!(plt, kw_list, next_series)
         else
             rd_list =
                 RecipesBase.apply_recipe(next_series.plotattributes, next_series.args...)
-                warn_on_recipe_aliases!(plt, rd_list, :user, next_series.args)
+            warn_on_recipe_aliases!(plt, rd_list, :user, next_series.args)
             prepend!(still_to_process, rd_list)
         end
     end
@@ -44,7 +46,6 @@ function _process_userrecipes!(plt, plotattributes, args)
     plotattributes[:smooth] = false
     kw_list
 end
-
 
 # TODO Move this to api.jl?
 
@@ -94,7 +95,6 @@ function _expand_seriestype_array(plotattributes, args)
     end
 end
 
-
 function _finish_userrecipe!(plt, kw_list, recipedata)
     # when the arg tuple is empty, that means there's nothing left to recursively
     # process... finish up and add to the kw_list
@@ -104,7 +104,6 @@ function _finish_userrecipe!(plt, kw_list, recipedata)
     _filter_input_data!(kw)
     process_userrecipe!(plt, kw_list, kw)
 end
-
 
 # --------------------------------
 # Fallback user recipes
@@ -174,7 +173,6 @@ end
     newargs
 end
 
-
 # helper function to ensure relevant attributes are wrapped by Surface
 function wrap_surfaces!(plotattributes, args...) end
 wrap_surfaces!(plotattributes, x::AMat, y::AMat, z::AMat) = wrap_surfaces!(plotattributes)
@@ -182,15 +180,13 @@ wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::AMat) = wrap_surfaces!(plota
 function wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::Surface)
     wrap_surfaces!(plotattributes)
 end
-function wrap_surfaces!(plotattributes)
+wrap_surfaces!(plotattributes) =
     if haskey(plotattributes, :fill_z)
         v = plotattributes[:fill_z]
         if !isa(v, Surface)
             plotattributes[:fill_z] = Surface(v)
         end
     end
-end
-
 
 # --------------------------------
 # Special Cases
@@ -199,26 +195,24 @@ end
 # --------------------------------
 # 1 argument
 
-@recipe function f(n::Integer)
+@recipe f(n::Integer) =
     if is3d(plotattributes)
         SliceIt, n, n, n
     else
         SliceIt, n, n, nothing
     end
-end
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
-@recipe function f(mat::AMat)
+@recipe f(mat::AMat) =
     if is3d(plotattributes)
         n, m = axes(mat)
         m, n, Surface(mat)
     else
         nothing, mat, nothing
     end
-end
 
 # if a matrix is wrapped by Formatted, do similar logic, but wrap data with Surface
-@recipe function f(fmt::Formatted{<:AMat})
+@recipe f(fmt::Formatted{<:AMat}) =
     if is3d(plotattributes)
         mat = fmt.data
         n, m = axes(mat)
@@ -226,10 +220,9 @@ end
     else
         nothing, fmt, nothing
     end
-end
 
 # assume this is a Volume, so construct one
-@recipe function f(vol::AbstractArray{<:MaybeNumber, 3}, args...)
+@recipe function f(vol::AbstractArray{<:MaybeNumber,3}, args...)
     seriestype := :volume
     SliceIt, nothing, Volume(vol, args...), nothing
 end
@@ -240,7 +233,7 @@ end
     collect(keys(d)), collect(values(d))
 end
 # function without range... use the current range of the x-axis
-@recipe function f(f::FuncOrFuncs{F}) where {F <: Function}
+@recipe function f(f::FuncOrFuncs{F}) where {F<:Function}
     plt = plotattributes[:plot_object]
     xmin, xmax = if haskey(plotattributes, :xlims)
         plotattributes[:xlims]
@@ -256,19 +249,17 @@ end
     f, xmin, xmax
 end
 
-
 # --------------------------------
 # 2 arguments
 
 # if functions come first, just swap the order (not to be confused with parametric
 # functions... as there would be more than one function passed in)
-@recipe function f(f::FuncOrFuncs{F}, x) where {F <: Function}
+@recipe function f(f::FuncOrFuncs{F}, x) where {F<:Function}
     F2 = typeof(x)
     @assert !(F2 <: Function || (F2 <: AbstractArray && F2.parameters[1] <: Function))
     # otherwise we'd hit infinite recursion here
     x, f
 end
-
 
 # --------------------------------
 # 3 arguments
@@ -292,22 +283,19 @@ end
     xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
     _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
 end
-@recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where {F <: Function}
+@recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where {F<:Function}
     xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
     unzip(_scaled_adapted_grid.(vec(fs), xscale, yscale, xmin, xmax))
 end
-@recipe f(
-    fx::FuncOrFuncs{F},
-    fy::FuncOrFuncs{G},
-    u::AVec,
-) where {F <: Function, G <: Function} = _map_funcs(fx, u), _map_funcs(fy, u)
+@recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function} =
+    _map_funcs(fx, u), _map_funcs(fy, u)
 @recipe f(
     fx::FuncOrFuncs{F},
     fy::FuncOrFuncs{G},
     umin::Number,
     umax::Number,
     n = 200,
-) where {F <: Function, G <: Function} = fx, fy, range(umin, stop = umax, length = n)
+) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
 
 # special handling... 3D parametric function(s)
 @recipe function f(
@@ -315,7 +303,7 @@ end
     fy::FuncOrFuncs{G},
     fz::FuncOrFuncs{H},
     u::AVec,
-) where {F <: Function, G <: Function, H <: Function}
+) where {F<:Function,G<:Function,H<:Function}
     _map_funcs(fx, u), _map_funcs(fy, u), _map_funcs(fz, u)
 end
 @recipe function f(
@@ -325,7 +313,7 @@ end
     umin::Number,
     umax::Number,
     numPoints = 200,
-) where {F <: Function, G <: Function, H <: Function}
+) where {F<:Function,G<:Function,H<:Function}
     fx, fy, fz, range(umin, stop = umax, length = numPoints)
 end
 
@@ -334,12 +322,12 @@ end
 @recipe f(tup::Tuple) = [tup]
 
 # list of NamedTuples
-@recipe function f(ntv::AVec{<:NamedTuple{K, Tuple{S, T}}}) where {K, S, T}
+@recipe function f(ntv::AVec{<:NamedTuple{K,Tuple{S,T}}}) where {K,S,T}
     xguide --> string(K[1])
     yguide --> string(K[2])
     return Tuple.(ntv)
 end
-@recipe function f(ntv::AVec{<:NamedTuple{K, Tuple{R, S, T}}}) where {K, R, S, T}
+@recipe function f(ntv::AVec{<:NamedTuple{K,Tuple{R,S,T}}}) where {K,R,S,T}
     xguide --> string(K[1])
     yguide --> string(K[2])
     zguide --> string(K[3])
@@ -349,7 +337,8 @@ end
 @specialize
 
 function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
-    (xf, xinv), (yf, yinv) = ((scale_func(s), inverse_scale_func(s)) for s in (xscale, yscale))
+    (xf, xinv), (yf, yinv) =
+        ((scale_func(s), inverse_scale_func(s)) for s in (xscale, yscale))
     xs, ys = PlotUtils.adapted_grid(yf ∘ f ∘ xinv, xf.((xmin, xmax)))
     xinv.(xs), yinv.(ys)
 end

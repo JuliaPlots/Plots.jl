@@ -2,14 +2,14 @@
 
 const AVec = AbstractVector
 const AMat = AbstractMatrix
-const KW = Dict{Symbol, Any}
-const AKW = AbstractDict{Symbol, Any}
+const KW = Dict{Symbol,Any}
+const AKW = AbstractDict{Symbol,Any}
 
 # --------------------------------
 # ## DefaultsDict
 # --------------------------------
 
-struct DefaultsDict <: AbstractDict{Symbol, Any}
+struct DefaultsDict <: AbstractDict{Symbol,Any}
     explicit::KW
     defaults::KW
 end
@@ -74,7 +74,7 @@ defaultkeys(dd::DefaultsDict) = keys(dd.defaults)
 abstract type AbstractSurface end
 
 "represents a contour or surface mesh"
-struct Surface{M <: AMat} <: AbstractSurface
+struct Surface{M<:AMat} <: AbstractSurface
     surf::M
 end
 
@@ -88,18 +88,17 @@ end
 Base.copy(surf::Surface) = Surface(copy(surf.surf))
 Base.eltype(surf::Surface{T}) where {T} = eltype(T)
 
-
 struct Volume{T}
-    v::Array{T, 3}
-    x_extents::Tuple{T, T}
-    y_extents::Tuple{T, T}
-    z_extents::Tuple{T, T}
+    v::Array{T,3}
+    x_extents::Tuple{T,T}
+    y_extents::Tuple{T,T}
+    z_extents::Tuple{T,T}
 end
 
 default_extents(::Type{T}) where {T} = (zero(T), one(T))
 
 function Volume(
-    v::Array{T, 3},
+    v::Array{T,3},
     x_extents = default_extents(T),
     y_extents = default_extents(T),
     z_extents = default_extents(T),
@@ -114,7 +113,6 @@ end
 Base.copy(vol::Volume{T}) where {T} =
     Volume{T}(copy(vol.v), vol.x_extents, vol.y_extents, vol.z_extents)
 Base.eltype(vol::Volume{T}) where {T} = T
-
 
 # --------------------------------
 # ## Formatting
@@ -148,14 +146,13 @@ for st in (
     :surface,
     :volume,
     :wireframe,
-    :mesh3d
+    :mesh3d,
 )
     @eval is3d(::Type{Val{Symbol($(string(st)))}}) = true
 end
 is3d(st::Symbol) = is3d(Val{st})
 is3d(plt, stv::AbstractArray) = all(st -> is3d(plt, st), stv)
 is3d(plotattributes::AbstractDict) = is3d(get(plotattributes, :seriestype, :path))
-
 
 """
     is_surface(::Type{Val{:myseriestype}})
@@ -171,22 +168,13 @@ is_surface(plt, stv::AbstractArray) = all(st -> is_surface(plt, st), stv)
 is_surface(plotattributes::AbstractDict) =
     is_surface(get(plotattributes, :seriestype, :path))
 
-
 """
     needs_3d_axes(::Type{Val{:myseriestype}})
 
 Returns `true` if `myseriestype` needs 3d axes, `false` otherwise.
 """
 needs_3d_axes(st) = false
-for st in (
-    :contour3d,
-    :path3d,
-    :scatter3d,
-    :surface,
-    :volume,
-    :wireframe,
-    :mesh3d
-)
+for st in (:contour3d, :path3d, :scatter3d, :surface, :volume, :wireframe, :mesh3d)
     @eval needs_3d_axes(::Type{Val{Symbol($(string(st)))}}) = true
 end
 needs_3d_axes(st::Symbol) = needs_3d_axes(Val{st})
@@ -194,33 +182,34 @@ needs_3d_axes(plt, stv::AbstractArray) = all(st -> needs_3d_axes(plt, st), stv)
 needs_3d_axes(plotattributes::AbstractDict) =
     needs_3d_axes(get(plotattributes, :seriestype, :path))
 
-
 # --------------------------------
 # ## Scales
 # --------------------------------
 
-const SCALE_FUNCTIONS = Dict{Symbol, Function}(:log10 => NaNMath.log10, :log2 => NaNMath.log2, :ln => NaNMath.log)
+const SCALE_FUNCTIONS = Dict{Symbol,Function}(
+    :log10 => NaNMath.log10,
+    :log2 => NaNMath.log2,
+    :ln => NaNMath.log,
+)
 const INVERSE_SCALE_FUNCTIONS =
-    Dict{Symbol, Function}(:log10 => exp10, :log2 => exp2, :ln => exp)
+    Dict{Symbol,Function}(:log10 => exp10, :log2 => exp2, :ln => exp)
 
 scale_func(scale::Symbol) = x -> get(SCALE_FUNCTIONS, scale, identity)(Float64(x))
 inverse_scale_func(scale::Symbol) =
     x -> get(INVERSE_SCALE_FUNCTIONS, scale, identity)(Float64(x))
 
-
 # --------------------------------
 # ## Unzip
 # --------------------------------
 
-unzip(v::AVec{<:Tuple}) = map(x->getfield.(v, x), fieldnames(eltype(v)))
+unzip(v::AVec{<:Tuple}) = map(x -> getfield.(v, x), fieldnames(eltype(v)))
 
 # --------------------------------
 # ## Map functions on vectors
 # --------------------------------
 
 _map_funcs(f::Function, u::AVec) = map(f, u)
-_map_funcs(fs::AVec{F}, u::AVec) where {F <: Function} = [map(f, u) for f in fs]
-
+_map_funcs(fs::AVec{F}, u::AVec) where {F<:Function} = [map(f, u) for f in fs]
 
 # --------------------------------
 # ## Signature strings
@@ -228,10 +217,8 @@ _map_funcs(fs::AVec{F}, u::AVec) where {F <: Function} = [map(f, u) for f in fs]
 
 @nospecialize
 
-function userrecipe_signature_string(args)
-    return string("(::", join(string.(typeof.(args)), ", ::"), ")")
-end
-typerecipe_signature_string(::T) where T = "(::Type{$T}, ::$T)"
+userrecipe_signature_string(args) = string("(::", join(string.(typeof.(args)), ", ::"), ")")
+typerecipe_signature_string(::T) where {T} = "(::Type{$T}, ::$T)"
 plotrecipe_signature_string(st) = "(::Type{Val{:$st}}, ::AbstractPlot)"
 seriesrecipe_signature_string(st) = "(::Type{Val{:$st}}, x, y, z)"
 

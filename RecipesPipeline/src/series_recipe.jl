@@ -55,7 +55,9 @@ function _process_seriesrecipe(plt, plotattributes)
             if isa(data, RecipeData)
                 preprocess_attributes!(plt, data.plotattributes)
                 if data.plotattributes[:seriestype] == st
-                    error("The seriestype didn't change in series recipe $st. This will cause a StackOverflow.")
+                    error(
+                        "The seriestype didn't change in series recipe $st. This will cause a StackOverflow.",
+                    )
                 end
                 _process_seriesrecipe(plt, data.plotattributes)
             else

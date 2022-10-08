@@ -20,7 +20,6 @@ function _process_plotrecipes!(plt, kw_list)
     return kw_list
 end
 
-
 function _process_plotrecipe(plt, kw, kw_list, still_to_process)
     if !isa(get(kw, :seriestype, nothing), Symbol)
         # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
@@ -35,7 +34,9 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
         for data in datalist
             preprocess_attributes!(plt, data.plotattributes)
             if data.plotattributes[:seriestype] == st
-                error("Plot recipe $st returned the same seriestype: $(data.plotattributes)")
+                error(
+                    "Plot recipe $st returned the same seriestype: $(data.plotattributes)",
+                )
             end
             push!(still_to_process, data.plotattributes)
         end

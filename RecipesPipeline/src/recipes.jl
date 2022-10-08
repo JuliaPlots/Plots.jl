@@ -12,20 +12,15 @@ end
 
 epochdays2epochms(x) = Dates.datetime2epochms(epochdays2datetime(x))
 
-function dateformatter(dt::Integer)
-    string(Date(Dates.UTD(dt)))
-end
+dateformatter(dt::Integer) = string(Date(Dates.UTD(dt)))
 
-function dateformatter(dt::Real)
-    string(DateTime(Dates.UTM(epochdays2epochms(dt))))
-end
+dateformatter(dt::Real) = string(DateTime(Dates.UTM(epochdays2epochms(dt))))
 
 datetimeformatter(dt) = string(DateTime(Dates.UTM(round(dt))))
 timeformatter(t) = string(Dates.Time(Dates.Nanosecond(round(t))))
 
 @recipe f(::Type{Date}, dt::Date) = (dt -> Dates.value(dt), dateformatter)
-@recipe f(::Type{DateTime}, dt::DateTime) =
-    (dt -> Dates.value(dt), datetimeformatter)
+@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> Dates.value(dt), datetimeformatter)
 @recipe f(::Type{Dates.Time}, t::Dates.Time) = (t -> Dates.value(t), timeformatter)
 @recipe f(::Type{P}, t::P) where {P<:Dates.Period} =
     (t -> Dates.value(t), t -> string(P(round(t))))

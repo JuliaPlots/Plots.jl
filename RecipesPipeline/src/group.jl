@@ -9,39 +9,38 @@ end
 # this is when given a vector-type of values to group by
 function _extract_group_attributes(v::AVec, args...; legend_entry = string)
     res = Dict{eltype(v),Vector{Int}}()
-    for (i,label) in enumerate(v)
-        if haskey(res,label)
-            push!(res[label],i)
+    for (i, label) in enumerate(v)
+        if haskey(res, label)
+            push!(res[label], i)
         else
             res[label] = [i]
         end
     end
     group_labels = sort(collect(keys(res)))
     group_indices = [res[i] for i in group_labels]
-    
+
     GroupBy(map(legend_entry, group_labels), group_indices)
 end
 legend_entry_from_tuple(ns::Tuple) = join(ns, ' ')
 
 # this is when given a tuple of vectors of values to group by
 function _extract_group_attributes(vs::Tuple, args...)
-    isempty(vs) && return GroupBy([""], [axes(args[1],1)])
+    isempty(vs) && return GroupBy([""], [axes(args[1], 1)])
     v = map(tuple, vs...)
     _extract_group_attributes(v, args...; legend_entry = legend_entry_from_tuple)
 end
 
 # allow passing NamedTuples for a named legend entry
-legend_entry_from_tuple(ns::NamedTuple) =
-    join(["$k = $v" for (k, v) in pairs(ns)], ", ")
+legend_entry_from_tuple(ns::NamedTuple) = join(["$k = $v" for (k, v) in pairs(ns)], ", ")
 
 function _extract_group_attributes(vs::NamedTuple, args...)
-    isempty(vs) && return GroupBy([""], [axes(args[1],1)])
-    v = map(NamedTuple{keys(vs)}∘tuple, values(vs)...)
+    isempty(vs) && return GroupBy([""], [axes(args[1], 1)])
+    v = map(NamedTuple{keys(vs)} ∘ tuple, values(vs)...)
     _extract_group_attributes(v, args...; legend_entry = legend_entry_from_tuple)
 end
 
 # expecting a mapping of "group label" to "group indices"
-function _extract_group_attributes(idxmap::Dict{T,V}, args...) where {T, V<:AVec{Int}}
+function _extract_group_attributes(idxmap::Dict{T,V}, args...) where {T,V<:AVec{Int}}
     group_labels = sortedkeys(idxmap)
     group_indices = Vector{Int}[collect(idxmap[k]) for k in group_labels]
     GroupBy(group_labels, group_indices)
