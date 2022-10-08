@@ -755,18 +755,18 @@ function Base.uv_readcb(handle::Ptr{Cvoid}, nread::Cssize_t, buf::Ptr{Cvoid})
     nothing
 end
 
-function Base.create_expr_cache(pkg::Base.PkgId, input::String, output::String, concrete_deps::typeof(_concrete_dependencies), internal_stderr::IO = stderr, internal_stdout::IO = stdout)
+function Base.create_expr_cache(pkg::Base.PkgId, input::String, output::String, concrete_deps::typeof(Base._concrete_dependencies), internal_stderr::IO = stderr, internal_stdout::IO = stdout)
     @nospecialize internal_stderr internal_stdout
     rm(output, force=true)   # Remove file if it exists
-    depot_path = map(abspath, DEPOT_PATH)
-    dl_load_path = map(abspath, DL_LOAD_PATH)
+    depot_path = map(abspath, Base.DEPOT_PATH)
+    dl_load_path = map(abspath, Base.DL_LOAD_PATH)
     load_path = map(abspath, Base.load_path())
     path_sep = Sys.iswindows() ? ';' : ':'
     any(path -> path_sep in path, load_path) &&
         error("LOAD_PATH entries cannot contain $(repr(path_sep))")
 
     deps_strs = String[]
-    function pkg_str(_pkg::PkgId)
+    function pkg_str(_pkg::Base.PkgId)
         if _pkg.uuid === nothing
             "Base.PkgId($(repr(_pkg.name)))"
         else
@@ -778,18 +778,18 @@ function Base.create_expr_cache(pkg::Base.PkgId, input::String, output::String, 
     end
     deps_eltype = sprint(show, eltype(concrete_deps); context = :module=>nothing)
     deps = deps_eltype * "[" * join(deps_strs, ",") * "]"
-    trace = isassigned(PRECOMPILE_TRACE_COMPILE) ? `--trace-compile=$(PRECOMPILE_TRACE_COMPILE[])` : ``
-    io = open(pipeline(`$(julia_cmd()::Cmd) -O0
+    trace = isassigned(Base.PRECOMPILE_TRACE_COMPILE) ? `--trace-compile=$(PRECOMPILE_TRACE_COMPILE[])` : ``
+    io = open(pipeline(`$(Base.julia_cmd()::Cmd) -O0
                        --output-ji $output --output-incremental=yes
                        --startup-file=no --history-file=no --warn-overwrite=yes
-                       --color=$(have_color === nothing ? "auto" : have_color ? "yes" : "no")
+                       --color=$(Base.have_color === nothing ? "auto" : Base.have_color ? "yes" : "no")
                        $trace
                        -`, stderr = internal_stderr, stdout = internal_stdout),
               "w", stdout)
     # write data over stdin to avoid the (unlikely) case of exceeding max command line size
     write(io.in, """
         Base.include_package_for_output($(pkg_str(pkg)), $(repr(abspath(input))), $(repr(depot_path)), $(repr(dl_load_path)),
-            $(repr(load_path)), $deps, $(repr(source_path(nothing))))
+            $(repr(load_path)), $deps, $(repr(Base.source_path(nothing))))
         """)
     close(io.in)
     return io
