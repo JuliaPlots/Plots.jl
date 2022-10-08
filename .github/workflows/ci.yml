@@ -27,17 +27,11 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.8' # latest stable
+          - '1.8.2' # latest stable
           - '1.8.1' # known good
           - 'nightly'
         os: [windows-latest]
         arch: [x64]
-        include:
-          - os: ubuntu-latest
-            prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-          # - os: ubuntu-latest
-          #   prefix: xvfb-run
-          #   version: 'nightly'
 
     steps:
       - uses: actions/checkout@v3
@@ -52,7 +46,7 @@ jobs:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
 
       - name: Setup tmate session
-        if: ${{ failure() }}
+        if: ${{ failure() && matrix.version == '1.8.2' }}
         uses: mxschmitt/action-tmate@v3
 
   Skip:
