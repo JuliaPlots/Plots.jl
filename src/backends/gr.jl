@@ -691,7 +691,7 @@ function gr_display(plt::Plot, dpi_factor = 1)
         viewport_canvas[1] *= ratio
         viewport_canvas[2] *= ratio
     end
-
+    @debug viewport_canvas
     # fill in the viewport_canvas background
     gr_fill_viewport(viewport_canvas, plt[:background_color_outside])
 
