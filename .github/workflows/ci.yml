@@ -83,6 +83,7 @@ jobs:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
 
       - name: Setup tmate session
+        if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
 
       - name: Run downstream tests

@@ -1,6 +1,6 @@
 using SnoopPrecompile
 
-#=if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
+if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
     @precompile_setup begin
         n = length(_examples)
         imports = sizehint!(Expr[], n)
@@ -17,8 +17,8 @@ using SnoopPrecompile
                         fn = tempname()
                         pl = current()
                         gui(pl)
-                        #savefig(pl, "$fn.png")
-                        #savefig(pl, "$fn.pdf")
+                        savefig(pl, "$fn.png")
+                        savefig(pl, "$fn.pdf")
                     end
                     nothing
                 end
@@ -34,4 +34,4 @@ using SnoopPrecompile
             end
         end
     end
-end=#
+end
