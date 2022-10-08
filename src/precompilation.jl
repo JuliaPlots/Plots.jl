@@ -29,7 +29,7 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
             @precompile_all_calls begin
                 eval.(imports)
                 gr()
-                eval.(examples)
+                eval.(examples[1:1])
                 # eventually eval for another backend ...
             end
         end
