@@ -1052,5 +1052,3 @@ end
 
 reverse_if(x, cond) = cond ? reverse(x) : x
 axis_tuple(x, y, letter) = reverse_if((x, y), letter === :y)
-
-axes_shift(t, i) = i % 3 == 0 ? t : i % 3 == 1 ? (t[3], t[1], t[2]) : (t[2], t[3], t[1])

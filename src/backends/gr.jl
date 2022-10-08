@@ -1664,8 +1664,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     famin, famax = axis_limits(sp, far_letter)
     n0, n1 = isy ? (namax, namin) : (namin, namax)
 
-    i = isx ? 1 : (isy ? 2 : 3)
-    letters = axes_shift((:x, :y, :z), 1 - i)
+    letters = circshift([:x, :y, :z], isx ? 0 : (isy ? -1 : -2))
     asyms = get_attr_symbol.(letters, :axis)
 
     # get axis objects, ticks and minor ticks
