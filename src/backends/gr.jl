@@ -2283,6 +2283,7 @@ for (mime, fmt) in (
             "GKS_ENCODING" => "utf8",
             "GKSwstype" => $fmt,
         ) do
+            @debug ENV["GKS_FILEPATH"]
             gr_display(plt, dpi_factor)
             GR.emergencyclosegks()
             @debug filepath
