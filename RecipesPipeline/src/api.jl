@@ -8,16 +8,30 @@
 Warn if an alias is dedected in `plotattributes` after a recipe of type `recipe_type` is
 applied to 'args'. `recipe_type` is either `:user`, `:type`, `:plot` or `:series`.
 """
-function warn_on_recipe_aliases!(plt, plotattributes::AKW, recipe_type::Symbol, @nospecialize(args)) end
-function warn_on_recipe_aliases!(plt, v::AbstractVector, recipe_type::Symbol, @nospecialize(args))
+function warn_on_recipe_aliases!(
+    plt,
+    plotattributes::AKW,
+    recipe_type::Symbol,
+    @nospecialize(args)
+) end
+function warn_on_recipe_aliases!(
+    plt,
+    v::AbstractVector,
+    recipe_type::Symbol,
+    @nospecialize(args)
+)
     for x in v
         warn_on_recipe_aliases!(plt, x, recipe_type, args)
     end
 end
-function warn_on_recipe_aliases!(plt, rd::RecipeData, recipe_type::Symbol, @nospecialize(args))
+function warn_on_recipe_aliases!(
+    plt,
+    rd::RecipeData,
+    recipe_type::Symbol,
+    @nospecialize(args)
+)
     warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args)
 end
-
 
 # ## Grouping
 
@@ -33,7 +47,6 @@ splittable_attribute(plt, key, val::AbstractArray, len) =
 splittable_attribute(plt, key, val::Tuple, len) =
     all(v -> splittable_attribute(plt, key, v, len), val)
 
-
 """
     split_attribute(plt, key, val, indices)
 
@@ -43,7 +56,6 @@ split_attribute(plt, key, val::AbstractArray, indices) =
     val[indices, fill(Colon(), ndims(val) - 1)...]
 split_attribute(plt, key, val::Tuple, indices) =
     Tuple(split_attribute(plt, key, v, indices) for v in val)
-
 
 # ## Preprocessing attributes
 
@@ -130,9 +142,7 @@ Do plotting package specific post-processing and add series attributes to attrib
 For example, Plots increases the number of series in `plt`, sets `:series_plotindex` in
 attributes and possible adds new series attributes for errorbars or smooth.
 """
-function process_userrecipe!(plt, attributes_list, attributes)
-    push!(attributes_list, attributes)
-end
+process_userrecipe!(plt, attributes_list, attributes) = push!(attributes_list, attributes)
 
 """
     get_axis_limits(plt, letter)
@@ -142,7 +152,6 @@ errors, `tryrange` from PlotUtils is used.
 """
 get_axis_limits(plt, letter) = throw(ErrorException("Axis limits not defined."))
 
-
 # ## Plot recipes
 
 """
@@ -151,7 +160,6 @@ get_axis_limits(plt, letter) = throw(ErrorException("Axis limits not defined."))
 Return the seriestype alias for `st`.
 """
 type_alias(plt, st) = st
-
 
 # ## Plot setup
 
@@ -163,7 +171,6 @@ For example, Plots creates the backend figure, initializes subplots, expands ext
 links subplot axes.
 """
 function plot_setup!(plt, plotattributes, kw_list) end
-
 
 # ## Series recipes
 
@@ -187,7 +194,7 @@ function process_sliced_series_attributes!(plt, kw_list) end
 
 Returns a `Dict` storing the defaults for series attributes.
 """
-series_defaults(plt) = Dict{Symbol, Any}()
+series_defaults(plt) = Dict{Symbol,Any}()
 
 # TODO: Add a more sensible fallback including e.g. path, scatter, ...
 

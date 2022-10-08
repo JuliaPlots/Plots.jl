@@ -6,8 +6,9 @@
 @recipe f(::Type{T}, v::T) where {T} = v
 
 # this should catch unhandled "series recipes" and error with a nice message
-@recipe f(::Type{V}, x, y, z) where {V <: Val} =
-    error("The backend must not support the series type $V, and there isn't a series recipe defined.")
+@recipe f(::Type{V}, x, y, z) where {V<:Val} = error(
+    "The backend must not support the series type $V, and there isn't a series recipe defined.",
+)
 
 """
     _apply_type_recipe(plotattributes, v::T, letter)
@@ -53,7 +54,7 @@ end
 # special handling for Surface... need to properly unwrap and re-wrap
 _apply_type_recipe(
     plotattributes,
-    v::Surface{<:AMat{<:Union{AbstractFloat, Integer, AbstractString, Missing}}},
+    v::Surface{<:AMat{<:Union{AbstractFloat,Integer,AbstractString,Missing}}},
     letter,
 ) = v
 function _apply_type_recipe(plotattributes, v::Surface, letter)
@@ -68,7 +69,7 @@ end
 # don't do anything for datapoints or nothing
 _apply_type_recipe(
     plotattributes,
-    v::AbstractArray{<:Union{AbstractFloat, Integer, AbstractString, Missing}},
+    v::AbstractArray{<:Union{AbstractFloat,Integer,AbstractString,Missing}},
     letter,
 ) = v
 _apply_type_recipe(plotattributes, v::Nothing, letter) = v

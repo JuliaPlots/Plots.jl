@@ -51,7 +51,6 @@ include("plot_recipe.jl")
 include("series_recipe.jl")
 include("recipes.jl")
 
-
 """
     recipe_pipeline!(plt, plotattributes, args)
 

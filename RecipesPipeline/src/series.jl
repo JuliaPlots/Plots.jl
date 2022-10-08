@@ -1,13 +1,13 @@
 # # Series handling
 
-const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
-const MaybeNumber = Union{Number, Missing}
-const MaybeString = Union{AbstractString, Missing}
-const DataPoint = Union{MaybeNumber, MaybeString}
+const FuncOrFuncs{F} = Union{F,Vector{F},Matrix{F}}
+const MaybeNumber = Union{Number,Missing}
+const MaybeString = Union{AbstractString,Missing}
+const DataPoint = Union{MaybeNumber,MaybeString}
 
 _prepare_series_data(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
 _prepare_series_data(::Nothing) = nothing
-_prepare_series_data(t::Tuple{T, T}) where {T <: Number} = t
+_prepare_series_data(t::Tuple{T,T}) where {T<:Number} = t
 _prepare_series_data(f::Function) = f
 _prepare_series_data(ar::AbstractRange{<:Number}) = ar
 function _prepare_series_data(a::AbstractArray{T}) where {T<:MaybeNumber}
@@ -17,8 +17,8 @@ function _prepare_series_data(a::AbstractArray{T}) where {T<:MaybeNumber}
     # Create a new array with this type to write to
     float_a = similar(a, F)
     # Replace missing and inf values with NaN
-    broadcast!(float_a, a) do x 
-        ismissing(x) || isinf(x) ? NaN : x 
+    broadcast!(float_a, a) do x
+        ismissing(x) || isinf(x) ? NaN : x
     end
     return float_a
 end
@@ -60,7 +60,6 @@ function _series_data_vector(v::AMat{<:DataPoint}, plotattributes)
     end
 end
 
-
 # --------------------------------------------------------------------
 
 _compute_x(x::Nothing, y::Nothing, z) = axes(z, 1)
@@ -81,26 +80,27 @@ _nobigs(v::AVec{BigFloat}) = map(Float64, v)
 _nobigs(v::AVec{BigInt}) = map(Int64, v)
 _nobigs(v) = v
 
-@noinline function _compute_xyz(x, y, z, nice_error=false)
+@noinline function _compute_xyz(x, y, z, nice_error = false)
     x = _compute_x(x, y, z)
     y = _compute_y(x, y, z)
     z = _compute_z(x, y, z)
     if nice_error && isnothing(z) # don't touch 3D plots
-        n = size(x,1)
-        !isnothing(y) && size(y,1) != n && error("Expects $n elements in each col of y, found $(size(y,1)).")
+        n = size(x, 1)
+        !isnothing(y) &&
+            size(y, 1) != n &&
+            error("Expects $n elements in each col of y, found $(size(y,1)).")
     end
     _nobigs(x), _nobigs(y), _nobigs(z)
 end
 
 # not allowed
-_compute_xyz(x::Nothing, y::FuncOrFuncs{F}, z) where {F <: Function} =
+_compute_xyz(x::Nothing, y::FuncOrFuncs{F}, z) where {F<:Function} =
     error("If you want to plot the function `$y`, you need to define the x values!")
-_compute_xyz(x::Nothing, y::Nothing, z::FuncOrFuncs{F}) where {F <: Function} =
+_compute_xyz(x::Nothing, y::Nothing, z::FuncOrFuncs{F}) where {F<:Function} =
     error("If you want to plot the function `$z`, you need to define x and y values!")
 _compute_xyz(x::Nothing, y::Nothing, z::Nothing) = error("x/y/z are all nothing!")
 
 # --------------------------------------------------------------------
-
 
 # we are going to build recipes to do the processing and splitting of the args
 
@@ -134,7 +134,6 @@ struct SliceIt end
     xs = _series_data_vector(x, plotattributes)
     ys = _series_data_vector(y, plotattributes)
     zs = _series_data_vector(z, plotattributes)
-
 
     mx = length(xs)
     my = length(ys)
