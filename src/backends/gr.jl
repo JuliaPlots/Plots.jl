@@ -2284,9 +2284,10 @@ for (mime, fmt) in (
             "GKSwstype" => $fmt,
         ) do
             gr_display(plt, dpi_factor)
-            #GR.emergencyclosegks()
+            GR.emergencyclosegks()
             @debug filepath
         end
+        sleep(5)
         #open(filepath, "w") do f
         #end # creating an empty file allows precompilation to proceed
         write(io, read(filepath, String))
