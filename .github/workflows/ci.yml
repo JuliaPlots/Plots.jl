@@ -82,6 +82,10 @@ jobs:
         with:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
 
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        
       - name: Run downstream tests
         if: startsWith(matrix.os, 'ubuntu')
         shell: xvfb-run julia --project=@. --color=yes {0}
