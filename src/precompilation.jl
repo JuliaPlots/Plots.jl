@@ -17,19 +17,19 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
                         fn = tempname()
                         pl = current()
                         gui(pl)
-                        try
-                            # During precompilation on the Windows GitHub CI in Julia 1.8.2+,
-                            # can fail here due to GR potentially failing to write out the
-                            # temporary file. Pending a fix, swallow the error and continue.
-                            savefig(pl, "$fn.png")
-                            savefig(pl, "$fn.pdf")
-                        catch
-                            @warn "Plots: Failed a trial save during precompilation"
-                        end
+                        savefig(pl, "$fn.png")
+                        savefig(pl, "$fn.pdf")
                     end
                     nothing
                 end
-                $func()
+                try
+                    # During precompilation on the Windows GitHub CI in Julia 1.8.2+,
+                    # can fail here due to GR potentially failing to write out the
+                    # temporary file. Pending a fix, swallow the error and continue.
+                    $func()
+                catch
+                    @warn "Plots: Failed a trial save during precompilation"
+                end
             end)
         end
         withenv("GKSwstype" => "nul") do
