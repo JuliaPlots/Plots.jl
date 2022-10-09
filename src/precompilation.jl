@@ -5,7 +5,7 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
         n = length(_examples)
         imports = sizehint!(Expr[], n)
         examples = sizehint!(Expr[], 10n)
-        for i in setdiff(1:n, _backend_skips[:gr], _animation_examples)
+        for i in setdiff(1:n, _backend_skips[:gr])
             _examples[i].external && continue
             (imp = _examples[i].imports) === nothing || push!(imports, imp)
             func = gensym(string(i))
@@ -17,8 +17,15 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
                         fn = tempname()
                         pl = current()
                         gui(pl)
-                        Sys.iswindows() || savefig(pl, "$fn.png")
-                        Sys.iswindows() || savefig(pl, "$fn.pdf")
+                        try
+                            # During precompilation on the Windows GitHub CI in Julia 1.8.2+,
+                            # can fail here due to GR potentially failing to write out the
+                            # temporary file. Pending a fix, swallow the error and continue.
+                            savefig(pl, "$fn.png")
+                            savefig(pl, "$fn.pdf")
+                        catch
+                            @warn "Plots: Failed a trial save during precompilation"
+                        end
                     end
                     nothing
                 end
