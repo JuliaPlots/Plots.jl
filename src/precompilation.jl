@@ -32,7 +32,8 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
                     catch
                         @warn "Plots: Failed a trial save during precompilation"
                     end
-                end)
+                end,
+            )
         end
         withenv("GKSwstype" => "nul") do
             @precompile_all_calls begin
