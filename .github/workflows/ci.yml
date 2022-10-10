@@ -55,6 +55,8 @@ jobs:
       # surface errors during precompilation
       # auto-precompile in build step suppresses errors currently.
       - name: Precompile
+        env:
+          JULIA_DEBUG: Plots
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg; Pkg.precompile()

@@ -30,7 +30,7 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
                         # temporary file. Pending a fix, swallow the error and continue.
                         $func()
                     catch
-                        @warn "Plots: Failed a trial save during precompilation"
+                        @debug "Plots: Failed a trial save during precompilation"
                     end
                 end,
             )
