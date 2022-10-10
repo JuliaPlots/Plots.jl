@@ -64,12 +64,12 @@ jobs:
       - name: Test upstream RecipesBase
         shell: julia --project=@. --color=yes {0}
         run: |
-          using Pkg; Pkg.develop(path="RecipesBase"); Pkg.test("RecipesBase")
+          using Pkg; Pkg.develop(path="RecipesBase"); Pkg.test("RecipesBase"; coverage=true)
 
       - name: Test upstream RecipesPipeline
         shell: julia --project=@. --color=yes {0}
         run: |
-          using Pkg; Pkg.develop(path="RecipesPipeline"); Pkg.test("RecipesPipeline")
+          using Pkg; Pkg.develop(path="RecipesPipeline"); Pkg.test("RecipesPipeline"; coverage=true)
 
       - name: PyPlot dependencies
         shell: julia --project=@. --color=yes {0}
@@ -103,6 +103,8 @@ jobs:
 
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
+        with:
+          directories: src,RecipesBase/src,RecipesPipeline/src
       - uses: codecov/codecov-action@v3
         if: startsWith(matrix.os, 'ubuntu')
         with:
