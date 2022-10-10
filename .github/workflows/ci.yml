@@ -49,7 +49,8 @@ jobs:
       - uses: julia-actions/cache@v1
 
       - uses: julia-actions/julia-buildpkg@latest
-        env: JULIA_PKG_PRECOMPILE_AUTO: 0
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
       
       # surface errors during precompilation
       # auto-precompile in build step suppresses errors currently.
