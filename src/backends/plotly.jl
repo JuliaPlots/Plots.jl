@@ -900,24 +900,28 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             mcolor = rgba_string(
                 plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
             )
-            mcolor_next = rgba_string(
-                plot_color(
-                    get_markercolor(series, clims, i + 1),
-                    get_markeralpha(series, i + 1),
-                ),
-            )
+            if i === length(segments)
+                mcolor_next = rgba_string(
+                    plot_color(
+                        get_markercolor(series, clims, i + 1),
+                        get_markeralpha(series, i + 1),
+                    ),
+                )
+            end
             lcolor = rgba_string(
                 plot_color(
                     get_markerstrokecolor(series, i),
                     get_markerstrokealpha(series, i),
                 ),
             )
-            lcolor_next = rgba_string(
-                plot_color(
-                    get_markerstrokecolor(series, i + 1),
-                    get_markerstrokealpha(series, i + 1),
-                ),
-            )
+            if i === length(segments)
+                lcolor_next = rgba_string(
+                    plot_color(
+                        get_markerstrokecolor(series, i + 1),
+                        get_markerstrokealpha(series, i + 1),
+                    ),
+                )
+            end
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
                     _cycle(series[:markershape], i),
