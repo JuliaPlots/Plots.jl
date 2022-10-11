@@ -2,7 +2,7 @@ module PlotThemes
 
 using PlotUtils
 
-export add_theme, theme_palette
+export add_theme, theme_palette, PlotTheme
 
 _255_to_1(c::Symbol, colors) = RGBA(map(x-> x/255,colors[c])...)
 RGB255(r,g,b) = RGB(r/255, g/255, b/255)
