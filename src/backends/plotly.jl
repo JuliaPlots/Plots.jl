@@ -901,7 +901,10 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
             )
             mcolor_next = rgba_string(
-                plot_color(get_markercolor(series, clims, i+1), get_markeralpha(series, i+1)),
+                plot_color(
+                    get_markercolor(series, clims, i + 1),
+                    get_markeralpha(series, i + 1),
+                ),
             )
             lcolor = rgba_string(
                 plot_color(
@@ -911,8 +914,8 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             )
             lcolor_next = rgba_string(
                 plot_color(
-                    get_markerstrokecolor(series, i+1),
-                    get_markerstrokealpha(series, i+1),
+                    get_markerstrokecolor(series, i + 1),
+                    get_markerstrokealpha(series, i + 1),
                 ),
             )
             plotattributes_out[:marker] = KW(
@@ -922,17 +925,19 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 ),
                 # :opacity => needs_scatter_fix ? [1, 0] : 1,
                 :size => 2 * _cycle(series[:markersize], i),
-                :color => needs_scatter_fix ?
-                    (i === length(segments) ?
-                        [mcolor, mcolor_next] :
-                        [mcolor, "rgba(0, 0, 0, 0.000)"]) : 
-                    mcolor,
+                :color =>
+                    needs_scatter_fix ?
+                    (
+                        i === length(segments) ? [mcolor, mcolor_next] :
+                        [mcolor, "rgba(0, 0, 0, 0.000)"]
+                    ) : mcolor,
                 :line => KW(
-                    :color => needs_scatter_fix ? 
-                        (i === length(segments) ?
-                            [lcolor, lcolor_next] :
-                            [lcolor, "rgba(0, 0, 0, 0.000)"]) : 
-                        lcolor,
+                    :color =>
+                        needs_scatter_fix ?
+                        (
+                            i === length(segments) ? [lcolor, lcolor_next] :
+                            [lcolor, "rgba(0, 0, 0, 0.000)"]
+                        ) : lcolor,
                     :width => _cycle(series[:markerstrokewidth], i),
                 ),
             )
