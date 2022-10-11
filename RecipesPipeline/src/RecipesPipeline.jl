@@ -105,7 +105,9 @@ function recipe_pipeline!(plt, plotattributes, args)
     return plt
 end
 
+# COV_EXCL_START
 using SnoopPrecompile
+
 @precompile_setup begin
     plotattributes = Dict{Symbol, Any}[
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path),
@@ -145,5 +147,6 @@ using SnoopPrecompile
         end
     end
 end
+# COV_EXCL_STOP
 
 end
