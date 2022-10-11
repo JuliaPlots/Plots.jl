@@ -640,6 +640,7 @@ macro layout(mat::Expr)
     create_grid(mat)
 end
 
+# COV_EXCL_START
 @precompile_setup begin
     struct __RecipesBasePrecompileType end
     @precompile_all_calls begin
@@ -660,5 +661,5 @@ end
         end
     end
 end
-
+# COV_EXCL_STOP
 end
