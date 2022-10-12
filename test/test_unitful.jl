@@ -7,7 +7,7 @@ xseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:
 yseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:y]
 zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:z]
 
-testfile = tempname() * ".png"
+forcedraw(pl) = savefig(pl, tempname() * ".png")
 
 macro isplot(ex) # @isplot macro to streamline tests
     :(@test $(esc(ex)) isa Plot)
@@ -41,6 +41,7 @@ end
     @testset "yunit" begin
         @test yguide(plot(y, yunit = cm)) == "cm"
         @test yseries(plot(y, yunit = cm)) ≈ ustrip.(cm, y)
+        @test getaxisunit(plot(y, yunit = cm).subplots[1][:yaxis]) == cm
     end
 
     @testset "ylims" begin # Using all(lims .≈ lims) because of uncontrolled type conversions?
@@ -52,7 +53,7 @@ end
         @test_throws DimensionError begin
             pl = plot(y)
             plot!(pl; ylims = (-1s, 5s))
-            savefig(pl, testfile)
+            forcedraw(pl)
         end
     end
 
@@ -62,15 +63,15 @@ end
         pl = plot(y; ylims = encompassing_ylims, yticks = (1:5)m)
         @test compare_yticks(pl, 1:5)
         pl = plot(y; ylims = encompassing_ylims, yticks = [1cm, 3cm])
-        savefig(pl, testfile)
+        forcedraw(pl)
         @test compare_yticks(pl, [0.01, 0.03])
         pl = plot!(; ylims = encompassing_ylims, yticks = [-1cm, 4cm])
-        savefig(pl, testfile)
+        forcedraw(pl)
         @test compare_yticks(pl, [-0.01, 0.04])
         @test_throws DimensionError begin
             pl = plot(y)
             plot!(pl; yticks = (1:5)s)
-            savefig(pl, testfile)
+            forcedraw(pl)
         end
     end
 
@@ -337,19 +338,18 @@ end
 
 @testset "Aspect ratio" begin
     pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = :equal)
-    savefig(pl, testfile) # Force a render, to make it evaluate aspect ratio
+    forcedraw(pl)
     @test abs(-(ylims(pl)...)) > 50
     plot!(pl, (3:4)u"m", (4:5)u"m")
     @test first(pl.subplots)[:aspect_ratio] == 1 // 10 # This is what "equal" means when yunit==xunit/10
     pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = 2)
-    savefig(pl, testfile)
+    forcedraw(pl)
     @test 25 < abs(-(ylims(pl)...)) < 50
     pl = plot((1:10)u"m", (1:10)u"s"; aspect_ratio = 1u"m/s")
-    savefig(pl, testfile)
+    forcedraw(pl)
     @test 7.5 < abs(-(ylims(pl)...)) < 12.5
-    @test_throws DimensionError savefig(
+    @test_throws DimensionError forcedraw(
         plot((1:10)u"m", (1:10)u"s"; aspect_ratio = :equal),
-        testfile,
     )
 end
 

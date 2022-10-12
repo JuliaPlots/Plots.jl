@@ -21,7 +21,6 @@ function _apply_type_recipe(plotattributes, v, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
     warn_on_recipe_aliases!(plotattributes[:plot_object], plotattributes, :type, v)
     postprocess_axis_args!(plt, plotattributes, letter)
-    isnothing(rdvec) && return nothing
     return rdvec[1].args[1]
 end
 

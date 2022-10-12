@@ -1,4 +1,5 @@
 import Unitful: m, s, cm, DimensionError
+import Plots.UnitfulRecipes: getaxisunit
 import Plots: PLOTS_SEED, Plot, with
 import GeometryBasics
 import ImageMagick
