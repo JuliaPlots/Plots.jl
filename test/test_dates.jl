@@ -16,19 +16,20 @@ end
 @testset "Date xlims" begin
     y = [1.0 * i * i for i in 1:10]
     x = [Date(2019, 11, i) for i in 1:10]
-    span = (Date(2019, 10, 31), Date(2019, 11, 11))
+    span = [Date(2019, 10, 31), Date(2019, 11, 11)]
 
-    ref_xlims = map(date -> date.instant.periods.value, span)
+    ref_xlims = Tuple(map(date -> date.instant.periods.value, span))
 
     pl = plot(x, y, xlims = span, widen = false)
+    @test Plots.xlims(pl) == ref_xlims
 end
 
 @testset "DateTime xlims" begin
     y = [1.0 * i * i for i in 1:10]
     x = [DateTime(2019, 11, i, 11) for i in 1:10]
-    span = (DateTime(2019, 10, 31, 11, 59, 59), DateTime(2019, 11, 11, 12, 01, 15))
+    span = [DateTime(2019, 10, 31, 11, 59, 59), DateTime(2019, 11, 11, 12, 01, 15)]
 
-    ref_xlims = map(date -> date.instant.periods.value, span)
+    ref_xlims = Tuple(map(date -> date.instant.periods.value, span))
 
     pl = plot(x, y, xlims = span, widen = false)
     @test Plots.xlims(pl) == ref_xlims

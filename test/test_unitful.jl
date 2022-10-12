@@ -59,15 +59,14 @@ end
     @testset "yticks" begin
         compare_yticks(pl, expected_ticks) = all(first(first(yticks(pl))) .≈ expected_ticks)
         encompassing_ylims = (-1m, 6m)
-        @test compare_yticks(plot(y; ylims = encompassing_ylims, yticks = (1:5)m), 1:5)
-        @test compare_yticks(
-            plot(y; ylims = encompassing_ylims, yticks = [1cm, 3cm]),
-            [0.01, 0.03],
-        )
-        @test compare_yticks(
-            plot!(; ylims = encompassing_ylims, yticks = [-1cm, 4cm]),
-            [-0.01, 0.04],
-        )
+        pl = plot(y; ylims = encompassing_ylims, yticks = (1:5)m)
+        @test compare_yticks(pl, 1:5)
+        pl = plot(y; ylims = encompassing_ylims, yticks = [1cm, 3cm])
+        savefig(pl, testfile)
+        @test compare_yticks(pl, [0.01, 0.03])
+        pl = plot!(; ylims = encompassing_ylims, yticks = [-1cm, 4cm])
+        savefig(pl, testfile)
+        @test compare_yticks(pl, [-0.01, 0.04])
         @test_throws DimensionError begin
             pl = plot(y)
             plot!(pl; yticks = (1:5)s)
@@ -190,7 +189,7 @@ end
             @test plot(x * m, ylims = (-1, 1)) isa Plot
             @test plot(x * m, ylims = (-1, 1) .* m) isa Plot
             @test plot(x * m, yunit = u"km") isa Plot
-            @test plot(x * m, xticks = (1:3) * m) isa Plot
+            @test plot(x * m, yticks = (1:3) * m) isa Plot
         end
 
         @testset "Two arrays" begin
