@@ -81,7 +81,7 @@ end
 function attr!(axis::Axis, args...; kw...)
     # first process args
     plotattributes = axis.plotattributes
-    dummy_attributes = Dict{Symbol, Any}(:plot_object=>first(axis.sps).plt)
+    dummy_attributes = Dict{Symbol,Any}(:plot_object => first(axis.sps).plt)
     for arg in args
         process_axis_arg!(plotattributes, arg)
     end
@@ -331,12 +331,8 @@ get_ticks(::T, args...) where {T} = error("Unknown ticks type in get_ticks: $T")
 
 _transform_ticks(ticks, axis) = ticks
 function _transform_ticks(ticks::AbstractArray, axis)
-    dummy_attributes = Dict{Symbol, Any}(:plot_object=>first(axis.sps).plt)
-    return RecipesPipeline._apply_type_recipe(
-                                              Dict{Symbol, Any}(:plot_object=>first(axis.sps).plt),
-                                              ticks,
-                                              axis[:letter]
-                                             )
+    dummy_attributes = Dict{Symbol,Any}(:plot_object => first(axis.sps).plt)
+    return RecipesPipeline._apply_type_recipe(dummy_attributes, ticks, axis[:letter])
 end
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
@@ -624,20 +620,16 @@ function round_limits(amin, amax, scale)
     amin, amax
 end
 
-#process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
 process_limits(lims::Symbol, axis) = lims
 process_limits(lims::Tuple, axis) = process_limits([lims...], axis)
 function process_limits(lims::AVec, axis)
-    lims = RecipesPipeline._apply_type_recipe(
-                                              Dict{Symbol, Any}(:plot_object=>first(axis.sps).plt),
-                                              lims,
-                                              axis[:letter]
-                                             )
+    dummy_attributes = Dict{Symbol,Any}(:plot_object => first(axis.sps).plt)
+    lims = RecipesPipeline._apply_type_recipe(dummy_attributes, lims, axis[:letter])
     if lims isa Formatted
         lims = lims.data
     end
     length(lims) == 2 || return nothing
-    all(x -> x isa Union{Symbol, Real}, lims) || return nothing
+    all(x -> x isa Union{Symbol,Real}, lims) || return nothing
     return Tuple(lims)
 end
 process_limits(lims, axis) = nothing

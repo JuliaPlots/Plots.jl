@@ -7,8 +7,7 @@ using ..Unitful: Quantity, unit, ustrip, Unitful, dimension, Units, NoUnits
 using ..RecipesBase
 export @P_str
 
-import ..locate_annotation,
-    ..PlotText, ..Subplot, ..AVec, ..AMat, ..Axis
+import ..locate_annotation, ..PlotText, ..Subplot, ..AVec, ..AMat, ..Axis
 
 const MissingOrQuantity = Union{Missing,<:Quantity}
 
