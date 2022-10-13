@@ -742,6 +742,12 @@
             "affiliation": "University of Nottingham",
             "name": "Jamie Mair",
             "type": "Other"
+        },
+        {
+            "affiliation": "Chulalongkorn University",
+            "name": "Puripant Ruchikachorn",
+            "type": "Other",
+            "orcid": "0000-0002-2721-6915"
         }
     ],
     "upload_type": "software"
