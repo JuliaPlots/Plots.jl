@@ -7,7 +7,6 @@ import RecipesPipeline: _prepare_series_data
 @testset "DefaultsDict" begin
     dd = DefaultsDict(Dict(:foo => 1, :bar => missing), Dict(:foo => nothing, :baz => 'x'))
 
-    @show typeof(explicitkeys(dd))
     @test all(explicitkeys(dd) .== [:bar, :foo])
     @test all(defaultkeys(dd) .== [:baz, :foo])
 
