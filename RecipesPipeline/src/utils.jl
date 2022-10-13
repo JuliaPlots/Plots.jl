@@ -47,7 +47,7 @@ end
 Base.copy(dd::DefaultsDict) = DefaultsDict(copy(dd.explicit), dd.defaults)
 
 RecipesBase.is_explicit(dd::DefaultsDict, k) = haskey(dd.explicit, k)
-is_default(dd::DefaultsDict, k) = !is_explicit(dd, k) && haskey(dd.defaults, k)
+RecipesBase.is_default(dd::DefaultsDict, k) = !is_explicit(dd, k) && haskey(dd.defaults, k)
 
 Base.setindex!(dd::DefaultsDict, v, k) = dd.explicit[k] = v
 

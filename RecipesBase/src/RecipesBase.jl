@@ -50,6 +50,7 @@ apply_recipe(plotattributes::AbstractDict{Symbol,Any}) = ()
 # Is a key explicitly provided by the user?
 # Should be overridden for subtypes representing plot attributes.
 is_explicit(d::AbstractDict{Symbol,Any}, k) = haskey(d, k)
+function is_default end
 
 const _debug_recipes = Ref(false)
 debug(v::Bool = true) = _debug_recipes[] = v
@@ -372,7 +373,7 @@ You can easily define your own plotting recipes with convenience methods:
     # set some attributes, add some series, using gh.args as input
 end
 # now you can plot like:
-grouphist(rand(1000,4))
+grouphist(rand(1_000, 4))
 ```
 """
 macro userplot(expr)
@@ -474,9 +475,8 @@ GroupedBar((1:10, rand(10, 2)))
 """
 recipetype(s, args...) = recipetype(Val(s), args...)
 
-function recipetype(s::Val{T}, args...) where {T}
+recipetype(s::Val{T}, args...) where {T} =
     error("No type recipe defined for type $T. You may need to load StatsPlots")
-end
 
 # ----------------------------------------------------------------------
 # @layout macro
