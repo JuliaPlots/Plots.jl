@@ -81,3 +81,18 @@ end
     @test p[1][2][:linestyle] == :dash
     @test p[1][3][:linestyle] == :dot
 end
+
+@testset "lims and ticks" begin
+    struct DoubleNumber
+        x
+    end
+    @recipe f(::Type{T}, v::T) where {T<:AbstractArray{DoubleNumber}} = [2 * x.x for x in v]
+
+    p = plot(
+        1:3;
+        ylims = DoubleNumber.([0.5, 2.0]),
+        yticks = DoubleNumber.([0.4, 0.8, 1.2]),
+    )
+    @test ylims(p) == (1.0, 4.0)
+    @test first(first(yticks(p))) == [1.6, 2.4]
+end

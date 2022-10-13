@@ -21,6 +21,7 @@ end
     ref_xlims = map(date -> date.instant.periods.value, span)
 
     pl = plot(x, y, xlims = span, widen = false)
+    @test Plots.xlims(pl) == ref_xlims
 end
 
 @testset "DateTime xlims" begin

@@ -81,6 +81,7 @@ end
 function attr!(axis::Axis, args...; kw...)
     # first process args
     plotattributes = axis.plotattributes
+    dummy_attributes = Dict{Symbol,Any}(:plot_object => first(axis.sps).plt)
     for arg in args
         process_axis_arg!(plotattributes, arg)
     end
@@ -96,12 +97,6 @@ function attr!(axis::Axis, args...; kw...)
                 for vi in v
                     discrete_value!(axis, vi)
                 end
-                #could perhaps use TimeType here, as Date and DateTime are both subtypes of TimeType
-                # or could perhaps check if dateformatter or datetimeformatter is in use
-            elseif k === :lims && isa(v, Tuple{Date,Date})
-                plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
-            elseif k === :lims && isa(v, Tuple{DateTime,DateTime})
-                plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
             else
                 plotattributes[k] = v
             end
@@ -335,8 +330,10 @@ get_ticks(ticks::Bool, args...) =
 get_ticks(::T, args...) where {T} = error("Unknown ticks type in get_ticks: $T")
 
 _transform_ticks(ticks, axis) = ticks
-_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
-    Dates.value.(ticks)
+function _transform_ticks(ticks::AbstractArray, axis)
+    dummy_attributes = Dict{Symbol,Any}(:plot_object => first(axis.sps).plt)
+    return RecipesPipeline._apply_type_recipe(dummy_attributes, ticks, axis[:letter])
+end
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
 function get_minor_ticks(sp, axis, ticks)
@@ -542,7 +539,7 @@ end
     scale_lims!([plt], [letter], factor)
 
 Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by the
-given `factor` around the limits' middle point. 
+given `factor` around the limits' middle point.
 If `letter` is omitted, all axes are affected.
 """
 function scale_lims!(sp::Subplot, letter, factor)
@@ -623,11 +620,18 @@ function round_limits(amin, amax, scale)
     amin, amax
 end
 
-process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
 process_limits(lims::Symbol, axis) = lims
-process_limits(lims::AVec, axis) =
-    length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) :
-    nothing
+process_limits(lims::Tuple, axis) = process_limits([lims...], axis)
+function process_limits(lims::AVec, axis)
+    dummy_attributes = Dict{Symbol,Any}(:plot_object => first(axis.sps).plt)
+    lims = RecipesPipeline._apply_type_recipe(dummy_attributes, lims, axis[:letter])
+    if lims isa Formatted
+        lims = lims.data
+    end
+    length(lims) == 2 || return nothing
+    all(x -> x isa Union{Symbol,Real}, lims) || return nothing
+    return Tuple(lims)
+end
 process_limits(lims, axis) = nothing
 
 warn_invalid_limits(lims, letter) = @warn """

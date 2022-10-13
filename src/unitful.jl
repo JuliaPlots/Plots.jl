@@ -7,8 +7,7 @@ using ..Unitful: Quantity, unit, ustrip, Unitful, dimension, Units, NoUnits
 using ..RecipesBase
 export @P_str
 
-import ..locate_annotation,
-    ..PlotText, ..Subplot, ..AVec, ..AMat, ..Axis, .._transform_ticks, ..process_limits
+import ..locate_annotation, ..PlotText, ..Subplot, ..AVec, ..AMat, ..Axis
 
 const MissingOrQuantity = Union{Missing,<:Quantity}
 
@@ -290,15 +289,5 @@ locate_annotation(
 ) = (ustrip(x), ustrip(y), ustrip(z), label)
 locate_annotation(sp::Subplot, rel::NTuple{N,<:MissingOrQuantity}, label) where {N} =
     locate_annotation(sp, ustrip.(rel), label)
-
-#==================#
-# ticks and limits #
-#==================#
-_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Quantity} =
-    ustrip.(getaxisunit(axis), ticks)
-process_limits(lims::AbstractArray{T}, axis) where {T<:Quantity} =
-    ustrip.(getaxisunit(axis), lims)
-process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
-    ustrip.(getaxisunit(axis), lims)
 
 end
