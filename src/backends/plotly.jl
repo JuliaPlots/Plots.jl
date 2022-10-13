@@ -914,14 +914,14 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     get_markerstrokealpha(series, i),
                 ),
             )
-            lcolor_next =
-                (i + 1 <= length(series[:markerstrokecolor])) ?
-                rgba_string(
-                    plot_color(
-                        get_markerstrokecolor(series, i + 1),
-                        get_markerstrokealpha(series, i + 1),
-                    ),
-                ) : lcolor
+            lcolor_next = if i + 1 <= length(series[:markerstrokecolor])
+                plot_color(
+                    get_markerstrokecolor(series, i + 1),
+                    get_markerstrokealpha(series, i + 1),
+                ) |> rgba_string
+            else
+                lcolor
+            end
 
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
@@ -930,19 +930,9 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 ),
                 # :opacity => needs_scatter_fix ? [1, 0] : 1,
                 :size => 2 * _cycle(series[:markersize], i),
-                :color =>
-                    needs_scatter_fix ?
-                    (
-                        i === length(segments) ? [mcolor, mcolor_next] :
-                        [mcolor, "rgba(0, 0, 0, 0.000)"]
-                    ) : mcolor,
+                :color => needs_scatter_fix ? [mcolor, mcolor_next] : mcolor,
                 :line => KW(
-                    :color =>
-                        needs_scatter_fix ?
-                        (
-                            i === length(segments) ? [lcolor, lcolor_next] :
-                            [lcolor, "rgba(0, 0, 0, 0.000)"]
-                        ) : lcolor,
+                    :color => needs_scatter_fix ? [lcolor, lcolor_next] : lcolor,
                     :width => _cycle(series[:markerstrokewidth], i),
                 ),
             )
