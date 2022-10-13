@@ -14,19 +14,20 @@ struct DefaultsDict <: AbstractDict{Symbol,Any}
     defaults::KW
 end
 
-function Base.getindex(dd::DefaultsDict, k)
-    return haskey(dd.explicit, k) ? dd.explicit[k] : dd.defaults[k]
-end
+Base.getindex(dd::DefaultsDict, k) =
+    if haskey(dd.explicit, k)
+        dd.explicit[k]
+    else
+        dd.defaults[k]
+    end
 Base.haskey(dd::DefaultsDict, k) = haskey(dd.explicit, k) || haskey(dd.defaults, k)
 Base.get(dd::DefaultsDict, k, default) = haskey(dd, k) ? dd[k] : default
-function Base.get!(dd::DefaultsDict, k, default)
-    v = if haskey(dd, k)
+Base.get!(dd::DefaultsDict, k, default) =
+    if haskey(dd, k)
         dd[k]
     else
         dd.defaults[k] = default
     end
-    return v
-end
 function Base.delete!(dd::DefaultsDict, k)
     haskey(dd.explicit, k) && delete!(dd.explicit, k)
     haskey(dd.defaults, k) && delete!(dd.defaults, k)
@@ -46,7 +47,7 @@ end
 Base.copy(dd::DefaultsDict) = DefaultsDict(copy(dd.explicit), dd.defaults)
 
 RecipesBase.is_explicit(dd::DefaultsDict, k) = haskey(dd.explicit, k)
-isdefault(dd::DefaultsDict, k) = !is_explicit(dd, k) && haskey(dd.defaults, k)
+is_default(dd::DefaultsDict, k) = !is_explicit(dd, k) && haskey(dd.defaults, k)
 
 Base.setindex!(dd::DefaultsDict, v, k) = dd.explicit[k] = v
 
