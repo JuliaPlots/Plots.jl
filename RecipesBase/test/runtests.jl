@@ -14,6 +14,10 @@ for t in map(i -> Symbol(:T, i), 1:5)
     @eval struct $t end
 end
 
+struct Dummy end
+
+RecipesBase.@recipe function plot(t::Dummy, args...) end
+
 @testset "coverage" begin
     @test !RecipesBase.group_as_matrix(nothing)
     @test RecipesBase.apply_recipe(KW(:foo => 1)) == ()
@@ -27,6 +31,16 @@ end
 
     @test RecipesBase.gettypename(:x) ≡ :x
     @test RecipesBase.gettypename(:(Foo{T})) ≡ :Foo
+
+    RecipesBase.recipetype(::Val{:Dummy}, args...) = nothing
+    @test RecipesBase.recipetype(:Dummy, 1:10) isa Nothing
+    @test_throws ErrorException RecipesBase.recipetype(:NotDefined)
+end
+
+@testset "layout" begin
+    @test RecipesBase.@layout([a b; c]) isa Matrix
+    @test RecipesBase.@layout([a{0.3w}; b{0.2h}]) isa Matrix
+    @test RecipesBase.@layout([_ ° _; ° ° °; ° ° °]) isa Matrix
 end
 
 @testset "@recipe" begin
@@ -172,5 +186,5 @@ RecipesBase.@userplot MyPlot
     @test typeof(myplot!) <: Function
     @test length(methods(myplot!)) == 2
     m = MyPlot(:my_arg)
-    @test m.args == :my_arg
+    @test m.args ≡ :my_arg
 end

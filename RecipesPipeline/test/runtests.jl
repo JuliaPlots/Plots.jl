@@ -1,8 +1,10 @@
 using RecipesPipeline
 using BenchmarkTools
+using StableRNGs
 using Test
 
 import RecipesPipeline: _prepare_series_data
+import RecipesBase
 
 @testset "DefaultsDict" begin
     dd = DefaultsDict(Dict(:foo => 1, :bar => missing), Dict(:foo => nothing, :baz => 'x'))
@@ -11,7 +13,8 @@ import RecipesPipeline: _prepare_series_data
     @test all(defaultkeys(dd) .== [:baz, :foo])
 
     @test copy(dd) isa DefaultsDict
-    @test RecipesPipeline.is_default(dd, :baz)
+    @test RecipesBase.is_explicit(dd, :foo)
+    @test RecipesBase.is_default(dd, :baz)
     @test dd[:foo] == 1
     @test dd[:bar] ≡ missing
     @test dd[:baz] == 'x'
@@ -41,7 +44,7 @@ end
     @test !is_axis_attribute(plt, :foo)
 
     @test process_userrecipe!(plt, [:foo], :bar) == [:foo, :bar]
-    @test type_alias(plt, :wireframe) == :wireframe
+    @test type_alias(plt, :wireframe) ≡ :wireframe
 
     @test plot_setup!(plt, plotattributes, kw_list) isa Nothing
     @test slice_series_attributes!(plt, kw_list, kw) isa Nothing
@@ -59,14 +62,32 @@ end
     @test copy(volume) isa Volume
     @test Array(volume) |> size == (1, 2, 3)
     @test eltype(volume) == Float32
+
+    @test RecipesPipeline._compute_x(nothing, nothing, zeros(2, 3, 4)) == 1:2
+    @test RecipesPipeline._compute_x(x -> 2x, 1:3, missing) == [2, 4, 6]
+
+    @test RecipesPipeline._compute_y(nothing, nothing, zeros(2, 3, 4)) == 1:3
+
+    @test RecipesPipeline._compute_z(1:2, 3:4, [5 7; 8 0]) isa Surface
+
+    @test RecipesPipeline._nobigs(zeros(BigFloat, 2)) |> eltype == Float64
+    @test RecipesPipeline._nobigs(zeros(BigInt, 2)) |> eltype == Int64
+
+    @test dateformatter(1) == "0001-01-01"
+    @test dateformatter(1.0) == "0001-01-01T00:00:00"
+    @test datetimeformatter(1) == "0000-12-31T00:00:00.001"
+    @test timeformatter(1) == "00:00:00.000000001"
+    @test RecipesPipeline.epochdays2epochms(1) == 86_400_000
+
+    @test RecipesBase.is_key_supported("key")
 end
 
 @testset "_prepare_series_data" begin
     @test_throws ErrorException _prepare_series_data(:test)
-    @test _prepare_series_data(nothing) === nothing
-    @test _prepare_series_data((1.0, 2.0)) === (1.0, 2.0)
-    @test _prepare_series_data(identity) === identity
-    @test _prepare_series_data(1:5:10) === 1:5:10
+    @test _prepare_series_data(nothing) ≡ nothing
+    @test _prepare_series_data((1.0, 2.0)) ≡ (1.0, 2.0)
+    @test _prepare_series_data(identity) ≡ identity
+    @test _prepare_series_data(1:5:10) ≡ 1:5:10
     a = ones(Union{Missing,Float64}, 100, 100)
     sd = _prepare_series_data(a)
     @test sd == a
