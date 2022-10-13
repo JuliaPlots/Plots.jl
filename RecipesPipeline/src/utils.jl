@@ -152,7 +152,6 @@ for st in (
     @eval is3d(::Type{Val{Symbol($(string(st)))}}) = true
 end
 is3d(st::Symbol) = is3d(Val{st})
-is3d(plt, stv::AbstractArray) = all(st -> is3d(plt, st), stv)
 is3d(plotattributes::AbstractDict) = is3d(get(plotattributes, :seriestype, :path))
 
 """
@@ -165,7 +164,6 @@ for st in (:contour, :contourf, :contour3d, :image, :heatmap, :surface, :wirefra
     @eval is_surface(::Type{Val{Symbol($(string(st)))}}) = true
 end
 is_surface(st::Symbol) = is_surface(Val{st})
-is_surface(plt, stv::AbstractArray) = all(st -> is_surface(plt, st), stv)
 is_surface(plotattributes::AbstractDict) =
     is_surface(get(plotattributes, :seriestype, :path))
 
@@ -179,7 +177,6 @@ for st in (:contour3d, :path3d, :scatter3d, :surface, :volume, :wireframe, :mesh
     @eval needs_3d_axes(::Type{Val{Symbol($(string(st)))}}) = true
 end
 needs_3d_axes(st::Symbol) = needs_3d_axes(Val{st})
-needs_3d_axes(plt, stv::AbstractArray) = all(st -> needs_3d_axes(plt, st), stv)
 needs_3d_axes(plotattributes::AbstractDict) =
     needs_3d_axes(get(plotattributes, :seriestype, :path))
 

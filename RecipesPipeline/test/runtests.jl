@@ -27,10 +27,10 @@ end
     @test RecipesPipeline.userrecipe_signature_string((missing, 1)) ==
           "(::Missing, ::Int64)"
     @test RecipesPipeline.typerecipe_signature_string(1) == "(::Type{Int64}, ::Int64)"
-    @test RecipesPipeline.plotrecipe_signature_string(:Wireframe) ==
-          "(::Type{Val{:Wireframe}}, ::AbstractPlot)"
-    @test RecipesPipeline.seriesrecipe_signature_string(:Wireframe) ==
-          "(::Type{Val{:Wireframe}}, x, y, z)"
+    @test RecipesPipeline.plotrecipe_signature_string(:wireframe) ==
+          "(::Type{Val{:wireframe}}, ::AbstractPlot)"
+    @test RecipesPipeline.seriesrecipe_signature_string(:wireframe) ==
+          "(::Type{Val{:wireframe}}, x, y, z)"
 
     plt = nothing
     plotattributes = Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path)
@@ -41,15 +41,24 @@ end
     @test !is_axis_attribute(plt, :foo)
 
     @test process_userrecipe!(plt, [:foo], :bar) == [:foo, :bar]
-    @test type_alias(plt, :Wireframe) == :Wireframe
+    @test type_alias(plt, :wireframe) == :wireframe
 
     @test plot_setup!(plt, plotattributes, kw_list) isa Nothing
     @test slice_series_attributes!(plt, kw_list, kw) isa Nothing
     @test process_sliced_series_attributes!(plt, kw_list) isa Nothing
 
     @test RecipesPipeline.series_defaults(plt) == Dict{Symbol,Any}()
-    @test !RecipesPipeline.is_seriestype_supported(plt, :Wireframe)
+    @test !RecipesPipeline.is_seriestype_supported(plt, :wireframe)
     @test RecipesPipeline.add_series!(plt, kw) isa Nothing
+
+    surface = Surface(zeros(Float32, 1, 2))
+    @test copy(surface) isa Surface
+    @test eltype(surface) == Float32
+
+    volume = Volume(zeros(Float32, 1, 2, 3))
+    @test copy(volume) isa Volume
+    @test Array(volume) |> size == (1, 2, 3)
+    @test eltype(volume) == Float32
 end
 
 @testset "_prepare_series_data" begin
