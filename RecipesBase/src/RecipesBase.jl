@@ -51,8 +51,8 @@ apply_recipe(plotattributes::AbstractDict{Symbol,Any}) = ()
 # Should be overridden for subtypes representing plot attributes.
 is_explicit(d::AbstractDict{Symbol,Any}, k) = haskey(d, k)
 
-const _debug_recipes = Bool[false]
-debug(v::Bool = true) = _debug_recipes[1] = v
+const _debug_recipes = Ref(false)
+debug(v::Bool = true) = _debug_recipes[] = v
 
 # --------------------------------------------------------------------------
 
@@ -72,31 +72,28 @@ end
 
 # check for flags as part of the `-->` expression
 function _is_arrow_tuple(expr::Expr)
-    expr.head == :tuple &&
+    expr.head ≡ :tuple &&
         !isempty(expr.args) &&
         isa(expr.args[1], Expr) &&
         expr.args[1].head == :(-->)
 end
 
-_equals_symbol(arg::Symbol, sym::Symbol) = arg == sym
-function _equals_symbol(arg::Expr, sym::Symbol) #not sure this method is necessary anymore on 0.7
-    arg.head == :quote && arg.args[1] == sym
-end
-_equals_symbol(arg::QuoteNode, sym::Symbol) = arg.value == sym
+_equals_symbol(x::Symbol, sym::Symbol) = x == sym
+_equals_symbol(x::QuoteNode, sym::Symbol) = x.value == sym
 _equals_symbol(x, sym::Symbol) = false
 
 # build an apply_recipe function header from the recipe function header
 function get_function_def(func_signature::Expr, args::Vector)
     front = func_signature.args[1]
-    if func_signature.head == :where
+    if func_signature.head ≡ :where
         Expr(:where, get_function_def(front, args), esc.(func_signature.args[2:end])...)
-    elseif func_signature.head == :call
+    elseif func_signature.head ≡ :call
         func = Expr(
             :call,
             :(RecipesBase.apply_recipe),
             esc.([:(plotattributes::AbstractDict{Symbol,Any}); args])...,
         )
-        if isa(front, Expr) && front.head == :curly
+        if isa(front, Expr) && front.head ≡ :curly
             Expr(:where, func, esc.(front.args[2:end])...)
         else
             func
@@ -111,12 +108,12 @@ end
 function create_kw_body(func_signature::Expr)
     # get the arg list, stripping out any keyword parameters into a
     # bunch of get!(kw, key, value) lines
-    func_signature.head == :where && return create_kw_body(func_signature.args[1])
+    func_signature.head ≡ :where && return create_kw_body(func_signature.args[1])
     args = func_signature.args[2:end]
     kw_body = Expr(:block)
     cleanup_body = Expr(:block)
     arg1 = args[1]
-    if isa(arg1, Expr) && arg1.head == :parameters
+    if isa(arg1, Expr) && arg1.head ≡ :parameters
         for kwpair in arg1.args
             k, v = kwpair.args
             if isa(k, Expr) && k.head == :(::)
@@ -208,11 +205,11 @@ function process_recipe_body!(expr::Expr)
                     set_expr
                 end
 
-            elseif e.head == :return
+            elseif e.head ≡ :return
                 # To allow `return` in recipes just extract the returned arguments.
                 expr.args[i] = first(e.args)
 
-            elseif e.head != :call
+            elseif e.head ≢ :call
                 # we want to recursively replace the arrows, but not inside function calls
                 # as this might include things like Dict(1=>2)
                 process_recipe_body!(e)
@@ -302,7 +299,7 @@ macro recipe(funcexpr::Expr)
         esc(
             quote
                 @nospecialize
-                if RecipesBase._debug_recipes[1]
+                if RecipesBase._debug_recipes[]
                     println("apply_recipe args: ", $args)
                 end
                 $kw_body
@@ -383,9 +380,8 @@ macro userplot(expr)
 end
 
 function _userplot(expr::Expr)
-    if expr.head != :struct
-        error("Must call userplot on a [mutable] struct expression.  Got: $expr")
-    end
+    expr.head ≡ :struct ||
+        error("Must call userplot on a [mutable] struct expression. Got: $expr")
 
     typename = gettypename(expr.args[2])
     funcname = Symbol(lowercase(string(typename)))
@@ -413,7 +409,7 @@ end))
 gettypename(sym::Symbol) = sym
 
 function gettypename(expr::Expr)
-    expr.head == :curly || @error "Unexpected struct name: $expr"
+    expr.head ≡ :curly || @error "Unexpected struct name: $expr"
     expr.args[1]
 end
 
@@ -488,13 +484,13 @@ end
 function add_layout_pct!(kw::AKW, v::Expr, idx::Integer, nidx::Integer)
     # dump(v)
     # something like {0.2w}?
-    if v.head == :call && v.args[1] == :*
+    if v.head ≡ :call && v.args[1] ≡ :*
         num = v.args[2]
         if length(v.args) == 3 && isa(num, Number)
             units = v.args[3]
-            if units == :h
+            if units ≡ :h
                 return kw[:h] = num
-            elseif units == :w
+            elseif units ≡ :w
                 return kw[:w] = num
             elseif units in (:pct, :px, :mm, :cm, :inch)
                 idx == 1 && (kw[:w] = v)
@@ -513,7 +509,7 @@ function add_layout_pct!(kw::AKW, v::Number, idx::Integer)
 end
 
 isrow(v) = isa(v, Expr) && v.head in (:hcat, :row)
-iscol(v) = isa(v, Expr) && v.head == :vcat
+iscol(v) = isa(v, Expr) && v.head ≡ :vcat
 rowsize(v) = isrow(v) ? length(v.args) : 1
 
 function create_grid(expr::Expr)
@@ -532,7 +528,7 @@ function create_grid(expr::Expr)
             end
         )
 
-    elseif expr.head == :curly
+    elseif expr.head ≡ :curly
         create_grid_curly(expr)
     else
         # if it's something else, just return that (might be an existing layout?)
@@ -550,8 +546,7 @@ function create_grid_vcat(expr::Expr)
         nc = rmin
         body = Expr(:block)
         for r in 1:nr
-            arg = expr.args[r]
-            if isrow(arg)
+            if (arg = expr.args[r]) |> isrow
                 for (c, item) in enumerate(arg.args)
                     push!(body.args, :(cell[$r, $c] = $(create_grid(item))))
                 end
@@ -587,7 +582,7 @@ function create_grid_curly(expr::Expr)
         add_layout_pct!(kw, arg, i, length(expr.args) - 1)
     end
     s = expr.args[1]
-    if isa(s, Expr) && s.head == :call && s.args[1] == :grid
+    if isa(s, Expr) && s.head ≡ :call && s.args[1] ≡ :grid
         create_grid(
             :(grid(
                 $(s.args[2:end]...),
@@ -606,7 +601,7 @@ function create_grid_curly(expr::Expr)
     end
 end
 
-create_grid(s::Symbol) = :((label = $(QuoteNode(s)), blank = $(s == :_)))
+create_grid(s::Symbol) = :((label = $(QuoteNode(s)), blank = $(s ≡ :_)))
 
 """
     @layout mat

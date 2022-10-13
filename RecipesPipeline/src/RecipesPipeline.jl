@@ -109,7 +109,7 @@ end
 using SnoopPrecompile
 
 @precompile_setup begin
-    plotattributes = Dict{Symbol, Any}[
+    plotattributes = Dict{Symbol,Any}[
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path),
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :surface),
     ]
@@ -119,15 +119,15 @@ using SnoopPrecompile
         _compute_xyz(__func1, 1:2, 1:2)
         _compute_xyz(1:2, __func1, 1:2)
         _compute_xyz(1:2, 1:2, __func2)
-        _compute_xyz(1:2, 1:2, [1 2;3 4])
+        _compute_xyz(1:2, 1:2, [1 2; 3 4])
         _extract_group_attributes([1, 2])
         _extract_group_attributes(([1], [2]))
         _extract_group_attributes((; a = [1], b = [2]))
         _extract_group_attributes(Dict("a" => [1], "b" => [2]))
-        mats = (Int[1 2;3 4], Float64[1 2;3 4])
+        mats = (Int[1 2; 3 4], Float64[1 2; 3 4])
         surfs = Surface.(mats)
         vols = Volume(ones(Int, 1, 2, 3)), Volume(ones(Float64, 1, 2, 3))
-        for pl_attr ∈ plotattributes 
+        for pl_attr in plotattributes
             _series_data_vector(1, pl_attr)
             _series_data_vector([1], pl_attr)
             _series_data_vector(["a"], pl_attr)

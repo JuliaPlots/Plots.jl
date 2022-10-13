@@ -14,19 +14,20 @@ struct DefaultsDict <: AbstractDict{Symbol,Any}
     defaults::KW
 end
 
-function Base.getindex(dd::DefaultsDict, k)
-    return haskey(dd.explicit, k) ? dd.explicit[k] : dd.defaults[k]
-end
+Base.getindex(dd::DefaultsDict, k) =
+    if haskey(dd.explicit, k)
+        dd.explicit[k]
+    else
+        dd.defaults[k]
+    end
 Base.haskey(dd::DefaultsDict, k) = haskey(dd.explicit, k) || haskey(dd.defaults, k)
 Base.get(dd::DefaultsDict, k, default) = haskey(dd, k) ? dd[k] : default
-function Base.get!(dd::DefaultsDict, k, default)
-    v = if haskey(dd, k)
+Base.get!(dd::DefaultsDict, k, default) =
+    if haskey(dd, k)
         dd[k]
     else
         dd.defaults[k] = default
     end
-    return v
-end
 function Base.delete!(dd::DefaultsDict, k)
     haskey(dd.explicit, k) && delete!(dd.explicit, k)
     haskey(dd.defaults, k) && delete!(dd.defaults, k)
@@ -46,7 +47,7 @@ end
 Base.copy(dd::DefaultsDict) = DefaultsDict(copy(dd.explicit), dd.defaults)
 
 RecipesBase.is_explicit(dd::DefaultsDict, k) = haskey(dd.explicit, k)
-isdefault(dd::DefaultsDict, k) = !is_explicit(dd, k) && haskey(dd.defaults, k)
+is_default(dd::DefaultsDict, k) = !is_explicit(dd, k) && haskey(dd.defaults, k)
 
 Base.setindex!(dd::DefaultsDict, v, k) = dd.explicit[k] = v
 
@@ -151,7 +152,6 @@ for st in (
     @eval is3d(::Type{Val{Symbol($(string(st)))}}) = true
 end
 is3d(st::Symbol) = is3d(Val{st})
-is3d(plt, stv::AbstractArray) = all(st -> is3d(plt, st), stv)
 is3d(plotattributes::AbstractDict) = is3d(get(plotattributes, :seriestype, :path))
 
 """
@@ -164,7 +164,6 @@ for st in (:contour, :contourf, :contour3d, :image, :heatmap, :surface, :wirefra
     @eval is_surface(::Type{Val{Symbol($(string(st)))}}) = true
 end
 is_surface(st::Symbol) = is_surface(Val{st})
-is_surface(plt, stv::AbstractArray) = all(st -> is_surface(plt, st), stv)
 is_surface(plotattributes::AbstractDict) =
     is_surface(get(plotattributes, :seriestype, :path))
 
@@ -178,7 +177,6 @@ for st in (:contour3d, :path3d, :scatter3d, :surface, :volume, :wireframe, :mesh
     @eval needs_3d_axes(::Type{Val{Symbol($(string(st)))}}) = true
 end
 needs_3d_axes(st::Symbol) = needs_3d_axes(Val{st})
-needs_3d_axes(plt, stv::AbstractArray) = all(st -> needs_3d_axes(plt, st), stv)
 needs_3d_axes(plotattributes::AbstractDict) =
     needs_3d_axes(get(plotattributes, :seriestype, :path))
 
