@@ -201,6 +201,6 @@ include("backends/web.jl")
 include("backends/gr.jl")
 
 include("shorthands.jl")
-include("precompilation.jl")
+include("precompile.jl")
 
 end

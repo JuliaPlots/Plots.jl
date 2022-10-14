@@ -1495,7 +1495,7 @@ end
 
 # get the joined vector
 function get_xy(v::AVec{OHLC}, x = eachindex(v))
-    xdiff = 0.3 * ignorenan_mean(abs.(diff(x)))
+    xdiff = 0.3ignorenan_mean(abs.(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
     for (i, ohlc) in enumerate(v)
         ox, oy = get_xy(ohlc, x[i], xdiff)

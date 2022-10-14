@@ -25,7 +25,7 @@ macro init_backend(s)
     str = lowercase(package_str)
     sym = Symbol(str)
     T = Symbol(string(s) * "Backend")
-    esc(quote
+    quote
         struct $T <: AbstractBackend end
         export $sym
         $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
@@ -35,7 +35,7 @@ macro init_backend(s)
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
         _backend_packages[Symbol($str)] = Symbol($package_str)
-    end)
+    end |> esc
 end
 
 # include("backends/web.jl")
@@ -160,10 +160,7 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
-    if CURRENT_BACKEND.sym === :none
-        _pick_default_backend()
-    end
-
+    CURRENT_BACKEND.sym === :none && _pick_default_backend()
     CURRENT_BACKEND.pkg
 end
 
@@ -307,8 +304,6 @@ end
 
 # ------------------------------------------------------------------------------
 # gr
-
-_initialize_backend(pkg::GRBackend) = nothing
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
@@ -664,11 +659,6 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # plotlyjs
 
-_initialize_backend(pkg::PlotlyJSBackend) = @eval Main begin
-    import PlotlyJS
-    export PlotlyJS
-end
-
 const _plotlyjs_attr       = _plotly_attr
 const _plotlyjs_seriestype = _plotly_seriestype
 const _plotlyjs_style      = _plotly_style
@@ -681,6 +671,7 @@ const _plotlyjs_scale      = _plotly_scale
 _initialize_backend(::PyPlotBackend) = @eval Main begin
     import PyPlot
     export PyPlot
+    _check_compat(PyPlot)
 
     # we don't want every command to update the figure
     PyPlot.ioff()
@@ -807,11 +798,6 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # Gaston
-
-_initialize_backend(::GastonBackend) = @eval Main begin
-    import Gaston
-    export Gaston
-end
 
 const _gaston_attr = merge_with_base_supported([
     :annotations,
@@ -1203,7 +1189,11 @@ function _initialize_backend(pkg::PGFPlotsXBackend)
         @eval Main begin
             import Latexify
             import Contour
+            import PGFPlotsX
         end
+        _check_compat(Latexify)
+        _check_compat(Contour)
+        _check_compat(PGFPlotsX)
     catch err
         @warn "The `PGFPlotsX` backend requires `Latexify` and `Contour` to be installed." err
     end

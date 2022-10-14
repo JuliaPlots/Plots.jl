@@ -72,12 +72,11 @@ end
 @inline wrap_tuple(v) = (v,)
 
 # check for flags as part of the `-->` expression
-function _is_arrow_tuple(expr::Expr)
+_is_arrow_tuple(expr::Expr) =
     expr.head ≡ :tuple &&
-        !isempty(expr.args) &&
-        isa(expr.args[1], Expr) &&
-        expr.args[1].head == :(-->)
-end
+    !isempty(expr.args) &&
+    isa(expr.args[1], Expr) &&
+    expr.args[1].head == :(-->)
 
 _equals_symbol(x::Symbol, sym::Symbol) = x == sym
 _equals_symbol(x::QuoteNode, sym::Symbol) = x.value == sym
@@ -567,7 +566,7 @@ function create_grid_curly(expr::Expr)
                     width = $(get(kw, :w, QuoteNode(:auto))),
                     height = $(get(kw, :h, QuoteNode(:auto))),
                 )
-            end
+            end,
         )
     elseif isa(s, Symbol)
         quote

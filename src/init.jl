@@ -82,8 +82,12 @@ function __init__()
         end
     end
 
-    @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
-        include(BACKEND_PATH_PGFPLOTSX)
+    @require Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316" begin
+        @require Contour = "d38c429a-6771-53c6-b99e-75d170b6e991" begin
+            @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
+                include(BACKEND_PATH_PGFPLOTSX)
+            end
+        end
     end
 
     @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
