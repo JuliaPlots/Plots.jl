@@ -172,7 +172,7 @@ Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
-    if !(sym in _initialized_backends)
+    if sym ∉ _initialized_backends
         _initialize_backend(pkg)
         push!(_initialized_backends, sym)
     end
@@ -305,23 +305,10 @@ function _initialize_backend(pkg::AbstractBackend)
     end
 end
 
-_initialize_backend(pkg::GRBackend) = nothing
-
-function _initialize_backend(pkg::PlotlyBackend)
-    try
-        @eval Main begin
-            import PlotlyBase
-            import PlotlyKaleido
-        end
-        _check_compat(PlotlyBase)
-        _check_compat(PlotlyKaleido)
-    catch
-        @info "For saving to png with the Plotly backend PlotlyBase and PlotlyKaleido need to be installed."
-    end
-end
-
 # ------------------------------------------------------------------------------
 # gr
+
+_initialize_backend(pkg::GRBackend) = nothing
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
@@ -439,6 +426,19 @@ is_marker_supported(::GRBackend, shape::Shape) = true
 
 # ------------------------------------------------------------------------------
 # plotly
+
+function _initialize_backend(pkg::PlotlyBackend)
+    try
+        @eval Main begin
+            import PlotlyBase
+            import PlotlyKaleido
+        end
+        _check_compat(PlotlyBase)
+        _check_compat(PlotlyKaleido)
+    catch err
+        @warn "For saving to png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed." err
+    end
+end
 
 const _plotly_attr = merge_with_base_supported([
     :annotations,
@@ -680,7 +680,6 @@ const _plotlyjs_scale      = _plotly_scale
 
 _initialize_backend(::PyPlotBackend) = @eval Main begin
     import PyPlot
-
     export PyPlot
 
     # we don't want every command to update the figure
@@ -1198,6 +1197,17 @@ const _inspectdr_marker = Symbol[
 const _inspectdr_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # pgfplotsx
+
+function _initialize_backend(pkg::PGFPlotsXBackend)
+    try
+        @eval Main begin
+            import Latexify
+            import Contour
+        end
+    catch err
+        @warn "The `PGFPlotsX` backend requires `Latexify` and `Contour` to be installed." err
+    end
+end
 
 const _pgfplotsx_attr = merge_with_base_supported([
     :annotations,

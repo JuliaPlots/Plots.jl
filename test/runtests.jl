@@ -3,6 +3,7 @@ import Plots: PLOTS_SEED, Plot, with
 import GeometryBasics
 import ImageMagick
 import LibGit2
+import Aqua
 import JSON
 
 using VisualRegressionTests
@@ -27,6 +28,7 @@ hdf5()
 gr()
 
 for name in (
+    "quality",
     "misc",
     "utils",
     "args",

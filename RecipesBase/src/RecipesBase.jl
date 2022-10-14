@@ -111,8 +111,7 @@ function create_kw_body(func_signature::Expr)
     # bunch of get!(kw, key, value) lines
     func_signature.head ≡ :where && return create_kw_body(func_signature.args[1])
     args = func_signature.args[2:end]
-    kw_body = Expr(:block)
-    cleanup_body = Expr(:block)
+    kw_body, cleanup_body = map(_ -> Expr(:block), 1:2)
     arg1 = args[1]
     if isa(arg1, Expr) && arg1.head ≡ :parameters
         for kwpair in arg1.args
@@ -149,7 +148,6 @@ end
 function process_recipe_body!(expr::Expr)
     for (i, e) in enumerate(expr.args)
         if isa(e, Expr)
-
             # process trailing flags, like:
             #   a --> b, :quiet, :force
             quiet, require, force = false, false, false
@@ -272,12 +270,10 @@ number of series to display.  User-defined keyword arguments are passed through,
 macro recipe(funcexpr::Expr)
     func_signature, func_body = funcexpr.args
 
-    if !(funcexpr.head in (:(=), :function))
-        error("Must wrap a valid function call!")
-    end
+    funcexpr.head in (:(=), :function) || error("Must wrap a valid function call!")
     if !(isa(func_signature, Expr) && func_signature.head in (:call, :where))
         error(
-            "Expected `func_signature = ...` with func_signature as a call or where Expr... got: $func_signature",
+            "Expected `func_signature = ...` with func_signature as a call or where Expr...got: $func_signature",
         )
     end
     if length(func_signature.args) < 2
@@ -287,6 +283,8 @@ macro recipe(funcexpr::Expr)
     args, kw_body, cleanup_body = create_kw_body(func_signature)
     func = get_function_def(func_signature, args)
 
+    @debug "$(__source__.file):$(__source__.line)" func args kw_body cleanup_body
+
     # this is where the receipe func_body is processed
     # replace all the key => value lines with argument setting logic
     # and break up by series.
@@ -294,33 +292,23 @@ macro recipe(funcexpr::Expr)
 
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
-    funcdef = Expr(
+    return Expr(
         :function,
         func,
-        esc(
-            quote
-                @nospecialize
-                if RecipesBase._debug_recipes[]
-                    println("apply_recipe args: ", $args)
-                end
-                $kw_body
-                $cleanup_body
-                series_list = RecipesBase.RecipeData[]
-                func_return = $func_body
-                if func_return != nothing
-                    push!(
-                        series_list,
-                        RecipesBase.RecipeData(
-                            plotattributes,
-                            RecipesBase.wrap_tuple(func_return),
-                        ),
-                    )
-                end
-                series_list
-            end,
-        ),
+        quote
+            @nospecialize
+            RecipesBase._debug_recipes[] && println("apply_recipe args: ", $args)
+            $kw_body
+            $cleanup_body
+            series_list = RecipesBase.RecipeData[]
+            func_return = $func_body
+            func_return === nothing || push!(
+                series_list,
+                RecipesBase.RecipeData(plotattributes, RecipesBase.wrap_tuple(func_return)),
+            )
+            series_list
+        end |> esc,
     )
-    funcdef
 end
 
 # --------------------------------------------------------------------------
@@ -512,29 +500,22 @@ isrow(v) = isa(v, Expr) && v.head in (:hcat, :row)
 iscol(v) = isa(v, Expr) && v.head ≡ :vcat
 rowsize(v) = isrow(v) ? length(v.args) : 1
 
-function create_grid(expr::Expr)
+create_grid(expr::Expr) =
     if iscol(expr)
         create_grid_vcat(expr)
     elseif isrow(expr)
-        :(
+        sub(x) = :(cell[1, $(first(x))] = $(create_grid(last(x))))
+        quote
             let cell = Matrix(undef, 1, $(length(expr.args)))
-                $(
-                    [
-                        :(cell[1, $i] = $(create_grid(v))) for
-                        (i, v) in enumerate(expr.args)
-                    ]...
-                )
+                $(map(sub, enumerate(expr.args))...)
                 cell
             end
-        )
-
+        end
     elseif expr.head ≡ :curly
         create_grid_curly(expr)
     else
-        # if it's something else, just return that (might be an existing layout?)
-        esc(expr)
+        esc(expr)  # if it's something else, just return that (might be an existing layout?)
     end
-end
 
 function create_grid_vcat(expr::Expr)
     rowsizes = map(rowsize, expr.args)
@@ -554,25 +535,21 @@ function create_grid_vcat(expr::Expr)
                 push!(body.args, :(cell[$r, 1] = $(create_grid(arg))))
             end
         end
-        :(
+        quote
             let cell = Matrix(undef, $nr, $nc)
                 $body
                 cell
             end
-        )
+        end
     else
         # otherwise just build one row at a time
-        :(
+        sub(x) = :(cell[$(first(x)), 1] = $(create_grid(last(x))))
+        quote
             let cell = Matrix(undef, $(length(expr.args)), 1)
-                $(
-                    [
-                        :(cell[$i, 1] = $(create_grid(v))) for
-                        (i, v) in enumerate(expr.args)
-                    ]...
-                )
+                $(map(sub, enumerate(expr.args))...)
                 cell
             end
-        )
+        end
     end
 end
 
@@ -584,18 +561,22 @@ function create_grid_curly(expr::Expr)
     s = expr.args[1]
     if isa(s, Expr) && s.head ≡ :call && s.args[1] ≡ :grid
         create_grid(
-            :(grid(
-                $(s.args[2:end]...),
-                width = $(get(kw, :w, QuoteNode(:auto))),
-                height = $(get(kw, :h, QuoteNode(:auto))),
-            )),
+            quote
+                grid(
+                    $(s.args[2:end]...),
+                    width = $(get(kw, :w, QuoteNode(:auto))),
+                    height = $(get(kw, :h, QuoteNode(:auto))),
+                )
+            end
         )
     elseif isa(s, Symbol)
-        :((
-            label = $(QuoteNode(s)),
-            width = $(get(kw, :w, QuoteNode(:auto))),
-            height = $(get(kw, :h, QuoteNode(:auto))),
-        ))
+        quote
+            (
+                label = $(QuoteNode(s)),
+                width = $(get(kw, :w, QuoteNode(:auto))),
+                height = $(get(kw, :h, QuoteNode(:auto))),
+            )
+        end
     else
         error("Unknown use of curly brackets: $expr")
     end

@@ -16,6 +16,7 @@ function seriestype_supported(pkg::AbstractBackend, st::Symbol)
     for dep in _series_recipe_deps[st]
         if seriestype_supported(pkg, dep) === :no
             supported = false
+            break
         end
     end
     supported ? :recipe : :no
@@ -32,7 +33,7 @@ function all_seriestypes()
         btype = _backendType[bsym]
         sts = union(sts, Set{Symbol}(supported_seriestypes(btype())))
     end
-    sort(collect(sts))
+    sts |> collect |> sort
 end
 
 # ----------------------------------------------------------------------------------
@@ -129,7 +130,7 @@ end
 @recipe function f(::Type{Val{:hspan}}, x, y, z)
     n = div(length(y), 2)
     newx = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
-    newy = vcat([[y[2i - 1], y[2i - 1], y[2i], y[2i], NaN] for i in 1:n]...)
+    newy = vcat(map(i -> [y[2i - 1], y[2i - 1], y[2i], y[2i], NaN], 1:n)...)
     linewidth --> 0
     x := newx
     y := newy
@@ -140,7 +141,7 @@ end
 
 @recipe function f(::Type{Val{:vspan}}, x, y, z)
     n = div(length(y), 2)
-    newx = vcat([[y[2i - 1], y[2i - 1], y[2i], y[2i], NaN] for i in 1:n]...)
+    newx = vcat(map(i -> [y[2i - 1], y[2i - 1], y[2i], y[2i], NaN], 1:n)...)
     newy = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
     linewidth --> 0
     x := newx
@@ -446,13 +447,13 @@ end
     # compute half-width of bars
     bw = plotattributes[:bar_width]
     hw = if bw === nothing
-        if nx > 1
-            0.5 * _bar_width * ignorenan_minimum(filter(x -> x > 0, diff(sort(procx))))
+        0.5 * _bar_width * if nx > 1
+            ignorenan_minimum(filter(x -> x > 0, diff(sort(procx))))
         else
-            0.5 * _bar_width
+            1
         end
     else
-        Float64[0.5 * _cycle(bw, i) for i in eachindex(procx)]
+        map(i -> 0.5_cycle(bw, i), eachindex(procx))
     end
 
     # make fillto a vector... default fills to 0
@@ -572,25 +573,23 @@ _is_positive(x) = (x > 0) && !(x ≈ 0)
 
 _positive_else_nan(::Type{T}, x::Real) where {T} = _is_positive(x) ? T(x) : T(NaN)
 
-function _scale_adjusted_values(
+_scale_adjusted_values(
     ::Type{T},
     V::AbstractVector,
     scale::Symbol,
-) where {T<:AbstractFloat}
+) where {T<:AbstractFloat} = 
     if scale in _logScales
         [_positive_else_nan(T, x) for x in V]
     else
         [T(x) for x in V]
     end
-end
 
-function _binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real}
-    if (scale in _logScales)
-        !isnan(min_value) ? min_value / T(_logScaleBases[scale]^log10(2)) : T(1E-3)
+_binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real} =
+    if scale in _logScales
+        isnan(min_value) ? T(1E-3) : min_value / T(_logScaleBases[scale]^log10(2))
     else
         zero(T)
     end
-end
 
 function _preprocess_binbarlike_weights(
     ::Type{T},
@@ -803,12 +802,12 @@ _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) 
     binning
 
 _hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N,Any}) where {N} =
-    map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...,))
+    map(dim -> _hist_edge(vs, dim, binning[dim]), Tuple(1:N))
 
 _hist_edges(
     vs::NTuple{N,AbstractVector},
     binning::Union{Integer,Symbol,AbstractVector},
-) where {N} = map(dim -> _hist_edge(vs, dim, binning), (1:N...,))
+) where {N} = map(dim -> _hist_edge(vs, dim, binning), Tuple(1:N))
 
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
@@ -1512,18 +1511,12 @@ end
 
 @nospecialize
 
-# to squash ambiguity warnings...
-@recipe f(x::AVec{Function}, v::AVec{OHLC}) = error()
-@recipe f(
-    x::AVec{Function},
-    v::AVec{Tuple{R1,R2,R3,R4}},
-) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = error()
+@recipe f(x::AVec, ohlc::AVec{NTuple{N,<:Number}}) where {N} =
+    x, map(t -> OHLC(t...), ohlc)
 
-# this must be OHLC?
-@recipe f(
-    x::AVec,
-    ohlc::AVec{Tuple{R1,R2,R3,R4}},
-) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = x, OHLC[OHLC(t...) for t in ohlc]
+@recipe f(xyuv::AVec{NTuple}) =
+    get(plotattributes, :seriestype, :path) === :ohlc ?
+    map(t -> OHLC(t...), xyuv) : RecipesPipeline.unzip(xyuv)
 
 @recipe function f(x::AVec, v::AVec{OHLC})
     seriestype := :path
@@ -1567,7 +1560,7 @@ end
 @recipe function f(::Type{Val{:spy}}, x, y, z)
     yflip := true
     aspect_ratio := 1
-    rs, cs, zs = Plots.findnz(z.surf)
+    rs, cs, zs = findnz(z.surf)
     xlims := ignorenan_extrema(cs)
     ylims := ignorenan_extrema(rs)
     widen --> true
@@ -1591,10 +1584,10 @@ end
 
 @specialize
 
-Plots.findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
+findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
 
 # fallback function for finding non-zero elements of non-sparse matrices
-function Plots.findnz(A::AbstractMatrix)
+function findnz(A::AbstractMatrix)
     keysnz = findall(!iszero, A)
     rs = [k[1] for k in keysnz]
     cs = [k[2] for k in keysnz]
@@ -1614,7 +1607,7 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Complex Numbers
 
-@recipe function f(A::Array{Complex{T}}) where {T<:Number}
+@recipe function f(A::AbstractArray{Complex{T}}) where {T<:Number}
     xguide --> "Re(x)"
     yguide --> "Im(x)"
     real.(A), imag.(A)
@@ -1623,7 +1616,7 @@ end
 # Splits a complex matrix to its real and complex parts
 # Reals defaults solid, imaginary defaults dashed
 # Label defaults are changed to match the real-imaginary reference / indexing
-@recipe function f(x::AbstractArray{T}, y::Array{Complex{T2}}) where {T<:Real,T2}
+@recipe function f(x::AbstractArray{Real}, y::AbstractMatrix{Complex})
     ylabel --> "Re(y)"
     zlabel --> "Im(y)"
     x, real.(y), imag.(y)

@@ -1,9 +1,10 @@
-import LaTeXStrings: LaTeXString
 import UUIDs: uuid4
-import Latexify
-import Contour
 
 import .PGFPlotsX: Options, Table
+import .Latexify
+import .Contour
+
+const LaTeXString = Latexify.LaTeXStrings.LaTeXString
 
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
