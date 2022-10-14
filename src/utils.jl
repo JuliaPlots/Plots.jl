@@ -3,7 +3,7 @@
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
 
-function replace_image_with_heatmap(z::Array{T}) where {T<:Colorant}
+function replace_image_with_heatmap(z::Array{Colorant})
     n, m = size(z)
     colors = palette(vec(z))
     newz = reshape(1:(n * m), n, m)
@@ -37,17 +37,13 @@ coords(segs::Segments{NTuple{3,Float64}}) =
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
-    for v in vs
-        push!(segments.pts, convert(T, v))
-    end
+    foreach(v -> push!(segments.pts, convert(T, v)), vs)
     segments
 end
 
 function Base.push!(segments::Segments{T}, vs::AVec) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
-    for v in vs
-        push!(segments.pts, convert(T, v))
-    end
+    foreach(v -> push!(segments.pts, convert(T, v)), vs)
     segments
 end
 
@@ -174,12 +170,9 @@ Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()
 # To allow use of NaN separated segments with categorical x axis
 
 float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
-float_extended_type(x::AbstractArray{T}) where {T<:Real} = Float64
+float_extended_type(x::AbstractArray{Real}) = Float64
 
 # ------------------------------------------------------------------------------------
-
-nop() = nothing
-notimpl() = error("This has not been implemented yet")
 
 _cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
 _cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
@@ -205,7 +198,7 @@ makevec(v::T) where {T} = T[v]
 
 "duplicate a single value, or pass the 2-tuple through"
 maketuple(x::Real) = (x, x)
-maketuple(x::Tuple{T,S}) where {T,S} = x
+maketuple(x::Tuple) = x
 
 RecipesPipeline.unzip(v) = unzip(v)
 
@@ -225,9 +218,7 @@ end
 
 function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
     length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
-    if isedges
-        return v
-    end
+    isedges && return v
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
@@ -310,13 +301,12 @@ isvertical(plotattributes::AKW) =
     get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
 isvertical(series::Series) = isvertical(series.plotattributes)
 
-ticksType(ticks::AVec{T}) where {T<:Real} = :ticks
-ticksType(ticks::AVec{T}) where {T<:AbstractString} = :labels
-ticksType(ticks::Tuple{T,S}) where {T<:Union{AVec,Tuple},S<:Union{AVec,Tuple}} =
-    :ticks_and_labels
+ticksType(ticks::AVec{Real}) = :ticks
+ticksType(ticks::AVec{AbstractString}) = :labels
+ticksType(ticks::Tuple{Union{AVec,Tuple},Union{AVec,Tuple}}) = :ticks_and_labels
 ticksType(ticks) = :invalid
 
-limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real} = :limits
+limsType(lims::Tuple{Real,Real}) = :limits
 limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
@@ -689,10 +679,8 @@ end
 # -------------------------------------------------------
 # indexing notation
 
-Base.setindex!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y} =
-    (setxy!(plt, xy, i); plt)
-Base.setindex!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z} =
-    (setxyz!(plt, xyz, i); plt)
+Base.setindex!(plt::Plot, xy::NTuple{2}, i::Integer) = (setxy!(plt, xy, i); plt)
+Base.setindex!(plt::Plot, xyz::Tuple{3}, i::Integer) = (setxyz!(plt, xyz, i); plt)
 
 # -------------------------------------------------------
 # operate on individual series

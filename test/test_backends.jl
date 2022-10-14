@@ -3,10 +3,7 @@ is_ci() = get(ENV, "CI", "false") == "true"
 const TEST_MODULE = Module(:PlotsTestModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "2e-3" : "1e-5"))
 
-Base.eval(TEST_MODULE, quote
-    using Random, StableRNGs, Plots
-    rng = StableRNG($PLOTS_SEED)
-end)
+Base.eval(TEST_MODULE, :(using Random, StableRNGs, Plots))
 
 reference_dir(args...) =
     if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) !== nothing
@@ -78,11 +75,11 @@ function image_comparison_tests(
     func =
         fn -> begin
             for ex in (
-                :(Plots._debugMode.on = $debug),
+                :(Plots._debugMode[] = $debug),
                 :(backend($(QuoteNode(pkg)))),
                 :(theme(:default)),
                 :(default(size = (500, 300), show = false, reuse = true)),
-                :(Random.seed!(rng, $PLOTS_SEED)),
+                :(rng = StableRNG(Plots.PLOTS_SEED)),
                 something(example.imports, :()),
                 replace_rand(example.exprs),
                 :(png($fn)),
@@ -179,18 +176,17 @@ end
 
 @testset "GR - reference images" begin
     with(:gr) do
-        ENV["PLOTS_TEST"] = "true"
-        ENV["GKSwstype"] = "nul"
         @test backend() == Plots.GRBackend()
-
-        @static if haskey(ENV, "APPVEYOR")
-            @info "Skipping GR image comparison tests on AppVeyor"
-        else
-            image_comparison_facts(
-                :gr,
-                tol = PLOTS_IMG_TOL,
-                skip = Plots._backend_skips[:gr],
-            )
+        withenv("PLOTS_TEST" => true, "GKSwstype" => "nul") do
+            @static if haskey(ENV, "APPVEYOR")
+                @info "Skipping GR image comparison tests on AppVeyor"
+            else
+                image_comparison_facts(
+                    :gr,
+                    tol = PLOTS_IMG_TOL,
+                    skip = Plots._backend_skips[:gr],
+                )
+            end
         end
     end
 end
@@ -207,10 +203,10 @@ end
 
 @testset "Examples" begin
     if Sys.islinux()
-        backends = (:unicodeplots, :pgfplotsx, :inspectdr, :plotlyjs, :gaston, :pyplot)
+        backends = (:gr, :unicodeplots, :pgfplotsx, :inspectdr, :plotlyjs, :gaston, :pyplot)
         only = setdiff(
             1:length(Plots._examples),
-            (Plots._backend_skips[be] for be in backends)...,
+            map(be -> Plots._backend_skips[be], backends)...,
         )
         for be in backends
             @info be
@@ -218,7 +214,9 @@ end
                 fn = tempname() * ".png"
                 png(pl, fn)
                 @test filesize(fn) > 1_000
+                display(pl)
             end
+            closeall()
         end
     end
 end

@@ -40,8 +40,6 @@ using Plots, Test, GeometryBasics
     @test !Plots.ismatrix(nothing)
     @test Plots.isscalar(1.0)
     @test !Plots.isscalar(nothing)
-    @test Plots.tovec([]) isa AbstractVector
-    @test Plots.tovec(nothing) isa AbstractVector
     @test Plots.anynan(1, 3, (1, NaN, 3))
     @test Plots.allnan(1, 2, (NaN, NaN, 1))
     @test Plots.makevec([]) isa AbstractVector
@@ -54,9 +52,6 @@ using Plots, Test, GeometryBasics
     @test !Plots.ok((1, 2, NaN))
     @test Plots.nansplit([1, 2, NaN, 3, 4]) == [[1.0, 2.0], [3.0, 4.0]]
     @test Plots.nanvcat([1, NaN]) |> length == 4
-
-    @test Plots.nop() === nothing
-    @test_throws ErrorException Plots.notimpl()
 
     @test Plots.inch2px(1) isa AbstractFloat
     @test Plots.px2inch(1) isa AbstractFloat
@@ -91,7 +86,7 @@ using Plots, Test, GeometryBasics
     pl = plot(1)
     push!(pl, 1.5)
     push!(pl, 1, 1.5)
-    append!(pl, [1., 2.])
+    append!(pl, [1.0, 2.0])
     append!(pl, 1, 2.5, 2.5)
     push!(pl, (1.5, 2.5))
     push!(pl, 1, (1.5, 2.5))
