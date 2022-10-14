@@ -31,10 +31,9 @@ to_nan(::Type{NTuple{3,Float64}}) = (NaN, NaN, NaN)
 
 coords(segs::Segments{Float64}) = segs.pts
 coords(segs::Segments{NTuple{2,Float64}}) =
-    Float64[p[1] for p in segs.pts], Float64[p[2] for p in segs.pts]
-coords(segs::Segments{NTuple{3,Float64}}) = Float64[p[1] for p in segs.pts],
-Float64[p[2] for p in segs.pts],
-Float64[p[3] for p in segs.pts]
+    (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
+coords(segs::Segments{NTuple{3,Float64}}) =
+    (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
@@ -209,35 +208,8 @@ maketuple(x::Real) = (x, x)
 maketuple(x::Tuple{T,S}) where {T,S} = x
 
 RecipesPipeline.unzip(v) = unzip(v)
-# given 2-element lims and a vector of data x, widen lims to account for the extrema of x
-function _expand_limits(lims, x)
-    try
-        e1, e2 = ignorenan_extrema(x)
-        lims[1] = NaNMath.min(lims[1], e1)
-        lims[2] = NaNMath.max(lims[2], e2)
-    catch
-    end
-    nothing
-end
 
-expand_data(v, n::Integer) = [_cycle(v, i) for i in 1:n]
-
-# if the type exists in a list, replace the first occurence.  otherwise add it to the end
-function addOrReplace(v::AbstractVector, t::DataType, args...; kw...)
-    for (i, vi) in enumerate(v)
-        if isa(vi, t)
-            v[i] = t(args...; kw...)
-            return
-        end
-    end
-    push!(v, t(args...; kw...))
-    return
-end
-
-function replaceType(vec, val)
-    filter!(x -> !isa(x, typeof(val)), vec)
-    push!(vec, val)
-end
+expand_data(v, n::Integer) = map(i -> _cycle(v, i), 1:n)
 
 function replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol})
     if haskey(aliases, k)
@@ -250,10 +222,6 @@ function replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol})
         replaceAlias!(plotattributes, k, aliases)
     end
 end
-
-createSegments(z) = collect(repeat(reshape(z, 1, :), 2, 1))[2:end]
-
-sortedkeys(plotattributes::Dict) = sort(collect(keys(plotattributes)))
 
 function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
     length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
@@ -381,19 +349,8 @@ end
 
 function nanvcat(vs::AVec)
     v_out = zeros(0)
-    for v in vs
-        nanappend!(v_out, v)
-    end
+    foreach(v -> nanappend!(v_out, v), vs)
     v_out
-end
-
-# given an array of discrete values, turn it into an array of indices of the unique values
-# returns the array of indices (znew) and a vector of unique values (vals)
-function indices_and_unique_values(z::AbstractArray)
-    vals = sort(unique(z))
-    vmap = Dict([(v, i) for (i, v) in enumerate(vals)])
-    newz = map(zi -> vmap[zi], z)
-    newz, vals
 end
 
 handle_surface(z) = z
@@ -710,67 +667,24 @@ function with(f::Function, args...; kw...)
 end
 
 # ---------------------------------------------------------------
-# ---------------------------------------------------------------
 
-mutable struct DebugMode
-    on::Bool
-end
-const _debugMode = DebugMode(false)
+const _debugMode = Ref(false)
 
-debugplots(on = true) = _debugMode.on = on
+debugplots(on = true) = _debugMode[] = on
 debugshow(io, x) = show(io, x)
 debugshow(io, x::AbstractArray) = print(io, summary(x))
 
-function dumpdict(io::IO, plotattributes::AKW, prefix = "", alwaysshow = false)
-    _debugMode.on || alwaysshow || return
+function dumpdict(io::IO, plotattributes::AKW, prefix = "")
+    _debugMode[] || return
     println(io)
     prefix == "" || println(io, prefix, ":")
     for k in sort(collect(keys(plotattributes)))
-        @printf("%14s: ", k)
+        @printf(io, "%14s: ", k)
         debugshow(io, plotattributes[k])
         println(io)
     end
     println(io)
 end
-DD(io::IO, plotattributes::AKW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
-DD(plotattributes::AKW, prefix = "") = DD(stdout, plotattributes, prefix)
-
-dumpcallstack() = error()  # well... you wanted the stacktrace, didn't you?!?
-
-# -------------------------------------------------------
-# NOTE: backends should implement the following methods to get/set the x/y/z data objects
-
-tovec(v::AbstractVector) = v
-tovec(v::Nothing) = zeros(0)
-
-function getxy(plt::Plot, i::Integer)
-    plotattributes = plt.series_list[i].plotattributes
-    tovec(plotattributes[:x]), tovec(plotattributes[:y])
-end
-
-function getxyz(plt::Plot, i::Integer)
-    plotattributes = plt.series_list[i].plotattributes
-    tovec(plotattributes[:x]), tovec(plotattributes[:y]), tovec(plotattributes[:z])
-end
-
-function setxy!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y}
-    series = plt.series_list[i]
-    series.plotattributes[:x], series.plotattributes[:y] = xy
-    sp = series.plotattributes[:subplot]
-    reset_extrema!(sp)
-    _series_updated(plt, series)
-end
-
-function setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z}
-    series = plt.series_list[i]
-    series.plotattributes[:x], series.plotattributes[:y], series.plotattributes[:z] = xyz
-    sp = series.plotattributes[:subplot]
-    reset_extrema!(sp)
-    _series_updated(plt, series)
-end
-
-setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z<:AbstractMatrix} =
-    (setxyz!(plt, (xyz[1], xyz[2], Surface(xyz[3])), i))
 
 # -------------------------------------------------------
 # indexing notation
@@ -815,12 +729,10 @@ end
 
 function copy_series!(series, letter)
     plt = series[:plot_object]
-    for s in plt.series_list
-        for l in (:x, :y, :z)
-            if s !== series || l !== letter
-                if s[l] === series[letter]
-                    series[letter] = copy(series[letter])
-                end
+    for s in plt.series_list, l in (:x, :y, :z)
+        if s !== series || l !== letter
+            if s[l] === series[letter]
+                series[letter] = copy(series[letter])
             end
         end
     end
@@ -869,7 +781,7 @@ end
 
 Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
 Base.push!(plt::Plot, i::Integer, args::Real...) = push!(plt.series_list[i], args...)
-Base.append!(plt::Plot, args::AbstractVector...) = append!(plt, 1, args...)
+Base.append!(plt::Plot, args::AbstractVector) = append!(plt, 1, args...)
 Base.append!(plt::Plot, i::Integer, args::Real...) = append!(plt.series_list[i], args...)
 
 # tuples

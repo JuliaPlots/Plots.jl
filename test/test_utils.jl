@@ -72,28 +72,36 @@ using Plots, Test, GeometryBasics
 
     @test_throws ErrorException Plots.inline()
     @test_throws ErrorException Plots._do_plot_show(plot(), :inline)
-    @test_throws ErrorException Plots.dumpcallstack()
 
     @test plot(-1:10, xscale = :log10) isa Plots.Plot
 
     Plots.makekw(foo = 1, bar = 2) isa Dict
 
     Plots.debugplots(true)
-    Plots.debugplots(false)
 
     io = PipeBuffer()
     Plots.debugshow(io, nothing)
     Plots.debugshow(io, [1])
 
+    pl = plot(1:2)
+    Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
+
+    Plots.debugplots(false)
+
     pl = plot(1)
     push!(pl, 1.5)
     push!(pl, 1, 1.5)
-    # append!(pl, [1., 2.])
+    append!(pl, [1., 2.])
     append!(pl, 1, 2.5, 2.5)
     push!(pl, (1.5, 2.5))
     push!(pl, 1, (1.5, 2.5))
     append!(pl, (1.5, 2.5))
     append!(pl, 1, (1.5, 2.5))
+
+    pl = scatter(1:2, 1:2)
+    push!(pl, 2:3)
+    pl = scatter(1:2, 1:2, 1:2)
+    push!(pl, 1:2, 2:3, 3:4)
 
     pl = plot([1, 2, 3], [4, 5, 6])
     @test Plots.xmin(pl) == 1

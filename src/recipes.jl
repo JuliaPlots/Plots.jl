@@ -37,10 +37,6 @@ function all_seriestypes()
 end
 
 # ----------------------------------------------------------------------------------
-
-num_series(x::AMat) = size(x, 2)
-num_series(x) = 1
-
 RecipesBase.apply_recipe(plotattributes::AKW, ::Type{T}, plt::AbstractPlot) where {T} =
     nothing
 
@@ -383,8 +379,6 @@ end
     fr = plotattributes[:fillrange]
     newfr = fr !== nothing ? zeros(0) : nothing
     newz = z !== nothing ? zeros(0) : nothing
-    # lz = plotattributes[:line_z]
-    # newlz = lz !== nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
@@ -399,11 +393,6 @@ end
         if fr !== nothing
             nanappend!(newfr, map(t -> bezier_value(_cycle(fr, rng), t), ts))
         end
-        # if lz !== nothing
-        #     lzrng = _cycle(lz, rng) # the line_z's for this segment
-        #     push!(newlz, 0.0)
-        #     append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
-        # end
     end
 
     x := newx
@@ -417,11 +406,6 @@ end
     if fr !== nothing
         fillrange := newfr
     end
-    # if lz !== nothing
-    #     # line_z := newlz
-    #     linecolor := (isa(plotattributes[:linecolor], ColorGradient) ? plotattributes[:linecolor] : cgrad())
-    # end
-    # Plots.DD(plotattributes)
     ()
 end
 @deps curves path
@@ -577,7 +561,7 @@ _scale_adjusted_values(
     ::Type{T},
     V::AbstractVector,
     scale::Symbol,
-) where {T<:AbstractFloat} = 
+) where {T<:AbstractFloat} =
     if scale in _logScales
         [_positive_else_nan(T, x) for x in V]
     else
@@ -1511,12 +1495,11 @@ end
 
 @nospecialize
 
-@recipe f(x::AVec, ohlc::AVec{NTuple{N,<:Number}}) where {N} =
-    x, map(t -> OHLC(t...), ohlc)
+@recipe f(x::AVec, ohlc::AVec{NTuple{N,<:Number}}) where {N} = x, map(t -> OHLC(t...), ohlc)
 
 @recipe f(xyuv::AVec{NTuple}) =
-    get(plotattributes, :seriestype, :path) === :ohlc ?
-    map(t -> OHLC(t...), xyuv) : RecipesPipeline.unzip(xyuv)
+    get(plotattributes, :seriestype, :path) === :ohlc ? map(t -> OHLC(t...), xyuv) :
+    RecipesPipeline.unzip(xyuv)
 
 @recipe function f(x::AVec, v::AVec{OHLC})
     seriestype := :path
