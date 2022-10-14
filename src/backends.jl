@@ -274,17 +274,17 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
     f2 = Symbol("supported_", s, "s")
     @eval begin
         $f(::AbstractBackend, $s) = false
-        $f(bend::AbstractBackend, $s::AbstractVector) = all(v -> $f(bend, v), $s)
+        $f(be::AbstractBackend, $s::AbstractVector) = all(v -> $f(be, v), $s)
         $f($s) = $f(backend(), $s)
         $f2() = $f2(backend())
     end
 
-    for bend in backends()
-        bend_type = typeof(_backend_instance(bend))
-        v = Symbol("_", bend, "_", s)
+    for be in backends()
+        be_type = typeof(_backend_instance(be))
+        v = Symbol("_", be, "_", s)
         @eval begin
-            $f(::$bend_type, $s::Symbol) = $s in $v
-            $f2(::$bend_type) = sort(collect($v))
+            $f(::$be_type, $s::Symbol) = $s in $v
+            $f2(::$be_type) = sort(collect($v))
         end
     end
 end
@@ -306,6 +306,8 @@ end
 
 # ------------------------------------------------------------------------------
 # gr
+
+_initialize_backend(pkg::GRBackend) = nothing
 
 const _gr_attr = merge_with_base_supported([
     :annotations,

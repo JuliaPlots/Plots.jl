@@ -1128,9 +1128,7 @@ const _examples = PlotExample[
     ),
     PlotExample(  # 61
         "Bézier curve",
-        quote
-            curves([1, 2, 3, 4], [1, 1, 2, 4], title = "Bézier curve")
-        end,
+        :(curves([1, 2, 3, 4], [1, 1, 2, 4], title = "Bézier curve")),
     ),
 ]
 
