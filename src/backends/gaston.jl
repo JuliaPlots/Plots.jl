@@ -493,7 +493,7 @@ function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
         end
     else
         gaston_ticks = nothing
-        @error "Gaston: invalid input for $(maj_min)$(letter)ticks: $ticks"
+        @error "Gaston: invalid input for $(maj_min)$(letter)ticks: $ticks ($ttype)"
     end
     if gaston_ticks !== nothing
         push!(axesconf, "set $(letter)tics $add (" * join(gaston_ticks, ", ") * ")")

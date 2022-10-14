@@ -301,12 +301,12 @@ isvertical(plotattributes::AKW) =
     get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
 isvertical(series::Series) = isvertical(series.plotattributes)
 
-ticksType(ticks::AVec{Real}) = :ticks
-ticksType(ticks::AVec{AbstractString}) = :labels
-ticksType(ticks::Tuple{Union{AVec,Tuple},Union{AVec,Tuple}}) = :ticks_and_labels
+ticksType(ticks::AVec{<:Real}) = :ticks
+ticksType(ticks::AVec{<:AbstractString}) = :labels
+ticksType(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
 ticksType(ticks) = :invalid
 
-limsType(lims::Tuple{Real,Real}) = :limits
+limsType(lims::Tuple{<:Real,<:Real}) = :limits
 limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
 limsType(lims) = :invalid
 

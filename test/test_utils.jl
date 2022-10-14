@@ -107,6 +107,16 @@ using Plots, Test, GeometryBasics
     @test Plots.get_attr_symbol(:x, :lims) === :xlims
 
     @test contains(Plots._document_argument("bar_position"), "bar_position")
+
+    @test Plots.limsType((1, 1)) === :limits
+    @test Plots.limsType(:undefined) === :invalid
+    @test Plots.limsType(:auto) === :auto
+
+    @test Plots.ticksType([1, 2]) === :ticks
+    @test Plots.ticksType(["1", "2"]) === :labels
+    @test Plots.ticksType(([1, 2], ["1", "2"])) === :ticks_and_labels
+    @test Plots.ticksType(((1, 2), ("1", "2"))) === :ticks_and_labels
+    @test Plots.ticksType(:undefined) === :invalid
 end
 
 @testset "NaN-separated Segments" begin
