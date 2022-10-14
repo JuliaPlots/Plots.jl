@@ -210,11 +210,10 @@ end
         )
         for be in backends
             @info be
-            for (i, pl) in Plots.test_examples(be, only = only, disp = false)
+            for (i, pl) in Plots.test_examples(be, only = only, disp = true)
                 fn = tempname() * ".png"
                 png(pl, fn)
                 @test filesize(fn) > 1_000
-                display(pl)
             end
             closeall()
         end

@@ -56,6 +56,8 @@ _before_layout_calcs(plt::Plot) = nothing
 title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefontsize] * pt
 guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefontsize] * pt
 
+closeall(::AbstractBackend) = nothing
+
 "Returns the (width,height) of a text label."
 function text_size(lablen::Int, sz::Number, rot::Number = 0)
     # we need to compute the size of the ticks generically
@@ -671,7 +673,7 @@ const _plotlyjs_scale      = _plotly_scale
 _initialize_backend(::PyPlotBackend) = @eval Main begin
     import PyPlot
     export PyPlot
-    _check_compat(PyPlot)
+    $(_check_compat)(PyPlot)
 
     # we don't want every command to update the figure
     PyPlot.ioff()
