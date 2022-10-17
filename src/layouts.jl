@@ -7,6 +7,7 @@ const _cbar_width = 5mm
 const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
 const defaultminpad = 20mm, 5mm, 2mm, 10mm
 
+origin(bbox::BoundingBox) = left(bbox) + width(bbox) / 2, top(bbox) + height(bbox) / 2
 left(bbox::BoundingBox) = bbox.x0[1]
 top(bbox::BoundingBox) = bbox.x0[2]
 right(bbox::BoundingBox) = left(bbox) + width(bbox)
@@ -29,16 +30,6 @@ function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
     r = max(right(bb1), right(bb2))
     b = max(bottom(bb1), bottom(bb2))
     BoundingBox(l, t, r - l, b - t)
-end
-
-# this creates a bounding box in the parent's scope, where the child bounding box
-# is relative to the parent
-function crop(parent::BoundingBox, child::BoundingBox)
-    l = left(parent) + left(child)
-    t = top(parent) + top(child)
-    w = width(child)
-    h = height(child)
-    BoundingBox(l, t, w, h)
 end
 
 # convert x,y coordinates from absolute coords to percentages...
@@ -66,30 +57,6 @@ function Base.show(io::IO, bbox::BoundingBox)
         io,
         "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}",
     )
-end
-
-# -----------------------------------------------------------
-
-# points combined by x/y, pct, and length
-mutable struct MixedMeasures
-    xy::Float64
-    pct::Float64
-    len::AbsoluteLength
-end
-
-function resolve_mixed(mix::MixedMeasures, sp::Subplot, letter::Symbol)
-    xy = mix.xy
-    pct = mix.pct
-    if mix.len != 0mm
-        f = (letter === :x ? width : height)
-        totlen = f(plotarea(sp))
-        pct += mix.len / totlen
-    end
-    if pct != 0
-        amin, amax = axis_limits(sp, letter)
-        xy += pct * (amax - amin)
-    end
-    xy
 end
 
 # -----------------------------------------------------------
