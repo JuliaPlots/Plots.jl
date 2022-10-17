@@ -3,7 +3,7 @@
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
 
-function replace_image_with_heatmap(z::Array{Colorant})
+function replace_image_with_heatmap(z::Array{<:Colorant})
     n, m = size(z)
     colors = palette(vec(z))
     newz = reshape(1:(n * m), n, m)
