@@ -90,21 +90,20 @@ function attr!(axis::Axis, args...; kw...)
 
     # then override for any keywords... only those keywords that already exists in plotattributes
     for (k, v) in kw
-        if haskey(plotattributes, k)
-            if k === :discrete_values
-                # add these discrete values to the axis
-                for vi in v
-                    discrete_value!(axis, vi)
-                end
-                #could perhaps use TimeType here, as Date and DateTime are both subtypes of TimeType
-                # or could perhaps check if dateformatter or datetimeformatter is in use
-            elseif k === :lims && isa(v, NTuple{2,Date})
-                plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
-            elseif k === :lims && isa(v, NTuple{2,DateTime})
-                plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
-            else
-                plotattributes[k] = v
+        haskey(plotattributes, k) || continue
+        if k === :discrete_values
+            # add these discrete values to the axis
+            for vi in v
+                discrete_value!(axis, vi)
             end
+            #could perhaps use TimeType here, as Date and DateTime are both subtypes of TimeType
+            # or could perhaps check if dateformatter or datetimeformatter is in use
+        elseif k === :lims && isa(v, NTuple{2,Date})
+            plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
+        elseif k === :lims && isa(v, NTuple{2,DateTime})
+            plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
+        else
+            plotattributes[k] = v
         end
     end
 
@@ -486,9 +485,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
     if fr !== nothing && !RecipesPipeline.is3d(plotattributes)
         axis = sp.attr[vert ? :yaxis : :xaxis]
         if typeof(fr) <: Tuple
-            for fri in fr
-                expand_extrema!(axis, fri)
-            end
+            foreach(x -> expand_extrema!(axis, x), fr)
         else
             expand_extrema!(axis, fr)
         end
@@ -590,10 +587,10 @@ const _widen_seriestypes = (
     :scatter3d,
 )
 
-const default_widen_factor = 1.06
+const default_widen_factor = Ref(1.06)
 
 # factor to widen axis limits by, or `nothing` if axis widening should be skipped
-function widen_factor(axis::Axis; factor = default_widen_factor)
+function widen_factor(axis::Axis; factor = default_widen_factor[])
     if (widen = axis[:widen]) isa Bool
         return widen ? factor : nothing
     elseif widen isa Number
@@ -777,6 +774,9 @@ discrete_value!(axis::Axis, v::Surface) = map(Surface, discrete_value!(axis, v.s
 
 # -------------------------------------------------------------------------
 
+const grid_factor_2d = Ref(1.2)
+const grid_factor_3d = Ref(grid_factor_2d[] / 100)
+
 # compute the line segments which should be drawn for this axis
 function axis_drawing_info(sp, letter)
     # find out which axis we are dealing with
@@ -862,7 +862,7 @@ function axis_drawing_info(sp, letter)
                 ticks[1],
                 ax[:grid],
                 grid_segments,
-                1.2 / ax_length,
+                grid_factor_2d[] / ax_length,
                 ax[:tick_direction] !== :none,
             )
 
@@ -872,7 +872,7 @@ function axis_drawing_info(sp, letter)
                     minor_ticks,
                     ax[:minorgrid],
                     minorgrid_segments,
-                    0.6 / ax_length,
+                    grid_factor_2d[] / 2ax_length,
                     true,
                 )
             end
@@ -999,7 +999,7 @@ function axis_drawing_info_3d(sp, letter)
                 ticks[1],
                 ax[:grid],
                 grid_segments,
-                0.012,
+                grid_factor_3d[],
                 ax[:tick_direction] !== :none,
             )
 
@@ -1009,7 +1009,7 @@ function axis_drawing_info_3d(sp, letter)
                     minor_ticks,
                     ax[:minorgrid],
                     minorgrid_segments,
-                    0.006,
+                    grid_factor_3d[] / 2,
                     true,
                 )
             end

@@ -46,9 +46,7 @@ replace_rand(ex) = ex
 
 function replace_rand(ex::Expr)
     expr = Expr(ex.head)
-    for arg in ex.args
-        push!(expr.args, replace_rand(arg))
-    end
+    foreach(arg -> push!(expr.args, replace_rand(arg)), ex.args)
     if Meta.isexpr(ex, :call) && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
         pushfirst!(expr.args, ex.args[1])
         expr.args[2] = :rng
@@ -105,8 +103,7 @@ function image_comparison_facts(
     sigma = [1, 1],     # number of pixels to "blur"
     tol = 1e-2,         # acceptable error (percent)
 )
-    for i in 1:length(Plots._examples)
-        i in skip && continue
+    for i in setdiff(1:length(Plots._examples), skip)
         if only === nothing || i in only
             @test success(
                 image_comparison_tests(pkg, i, debug = debug, sigma = sigma, tol = tol),
