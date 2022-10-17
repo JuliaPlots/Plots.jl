@@ -16,6 +16,8 @@ function lookup_aliases(attrtype, attribute)
     error("There is no attribute named $attribute in $attrtype")
 end
 
+# NOTE: the following cannot be tested in CI (interactive)
+# COV_EXCL_START
 """
     plotattr([attr])
 
@@ -55,6 +57,7 @@ function plotattr()
     - $(get(Plots._arg_desc, attr, ""))
     """)
 end
+# COV_EXCL_STOP
 
 function plotattr(attrtype::Symbol)
     in(attrtype, keys(_attribute_defaults)) || error("Viable options are $(attrtypes())")

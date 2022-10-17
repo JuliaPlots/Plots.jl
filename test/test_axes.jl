@@ -173,3 +173,13 @@ end
     pl = plot(1:2, tickor = :out)
     @test compare(pl, :tick_direction, :out, ===)
 end
+
+@testset "scale_lims!" begin
+    pl = plot(1:2)
+    xl, yl = xlims(pl), ylims(pl)
+    factor = 1.1
+    Plots.scale_lims!(:x, factor)
+    @test first(xlims(pl)) < first(xl)
+    @test last(xlims(pl)) > last(xl)
+    @test ylims(pl) == yl
+end

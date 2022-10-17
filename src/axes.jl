@@ -1027,4 +1027,3 @@ function axis_drawing_info_3d(sp, letter)
 end
 
 reverse_if(x, cond) = cond ? reverse(x) : x
-axis_tuple(x, y, letter) = reverse_if((x, y), letter === :y)

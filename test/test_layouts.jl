@@ -111,6 +111,12 @@ end
     @test parent(rl) === nothing
     @test Plots.parent_bbox(rl) == Plots.defaultbox
     @test Plots.bbox(rl) == Plots.defaultbox
+    @test Plots.origin(Plots.defaultbox) == (0Plots.mm, 0Plots.mm)
+    for h_anchor in (:left, :right, :hcenter)
+        for v_anchor in (:top, :bottom, :vcenter)
+            @test Plots.bbox(0, 0, 1, 1, h_anchor, v_anchor) isa Plots.BoundingBox
+        end
+    end
 
     el = Plots.EmptyLayout()
     @test Plots.update_position!(el) === nothing

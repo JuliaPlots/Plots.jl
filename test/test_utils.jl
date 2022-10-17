@@ -110,12 +110,18 @@
     @test Plots.limsType((1, 1)) === :limits
     @test Plots.limsType(:undefined) === :invalid
     @test Plots.limsType(:auto) === :auto
+    @test Plots.limsType(NaN) === :invalid
 
     @test Plots.ticksType([1, 2]) === :ticks
     @test Plots.ticksType(["1", "2"]) === :labels
     @test Plots.ticksType(([1, 2], ["1", "2"])) === :ticks_and_labels
     @test Plots.ticksType(((1, 2), ("1", "2"))) === :ticks_and_labels
     @test Plots.ticksType(:undefined) === :invalid
+
+    pl = plot(1:2, 1:2, 1:2, proj_type = :ortho)
+    @test Plots.isortho(pl.subplots |> first)
+    pl = plot(1:2, 1:2, 1:2, proj_type = :persp)
+    @test Plots.ispersp(pl.subplots |> first)
 end
 
 @testset "NaN-separated Segments" begin
