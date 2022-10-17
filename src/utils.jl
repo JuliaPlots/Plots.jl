@@ -511,27 +511,33 @@ const _segmenting_vector_attributes = (
 
 const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 
-function has_attribute_segments(series::Series)
-    # we want to check if a series needs to be split into segments just because
-    # of its attributes
-    # check relevant attributes if they have multiple inputs
-    return any(
+# we want to check if a series needs to be split into segments just because
+# of its attributes
+# check relevant attributes if they have multiple inputs
+has_attribute_segments(series::Series) =
+    any(
         series[attr] isa AbstractVector && length(series[attr]) > 1 for
         attr in _segmenting_vector_attributes
     ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
-end
+
+check_aspect_ratio(ar::Number) = nothing
+check_aspect_ratio(ar::Symbol) =
+    ar in (:none, :equal, :auto) || throw(ArgumentError("Invalid `aspect_ratio` = $ar"))
+check_aspect_ratio(ar::T) where {T} = throw(TypeError("Invalid `aspect_ratio`::$T = $ar "))
 
 function get_aspect_ratio(sp)
-    aspect_ratio = sp[:aspect_ratio]
-    if aspect_ratio === :auto
-        aspect_ratio = :none
+    ar = sp[:aspect_ratio]
+    check_aspect_ratio(ar)
+    if ar === :auto
+        ar = :none
         for series in series_list(sp)
             if series[:seriestype] === :image
-                aspect_ratio = :equal
+                ar = :equal
             end
         end
     end
-    return aspect_ratio
+    ar isa Bool && (ar = Int(ar))  # NOTE: Bool <: ... <: Number
+    ar
 end
 
 get_size(series::Series) = get_size(series.plotattributes[:subplot])

@@ -1,4 +1,3 @@
-using Plots, Test, GeometryBasics
 @testset "Utils" begin
     zipped = (
         [(1, 2)],

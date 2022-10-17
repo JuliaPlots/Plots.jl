@@ -98,9 +98,9 @@ function attr!(axis::Axis, args...; kw...)
                 end
                 #could perhaps use TimeType here, as Date and DateTime are both subtypes of TimeType
                 # or could perhaps check if dateformatter or datetimeformatter is in use
-            elseif k === :lims && isa(v, Tuple{Date,Date})
+            elseif k === :lims && isa(v, NTuple{2,Date})
                 plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
-            elseif k === :lims && isa(v, Tuple{DateTime,DateTime})
+            elseif k === :lims && isa(v, NTuple{2,DateTime})
                 plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
             else
                 plotattributes[k] = v
@@ -232,7 +232,7 @@ function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:for
                 axis[:letter] === :x &&
                 !isempty(dvals)
             )
-                collect(0:(pi / 4):(7pi / 4)), string.(0:45:315)
+                collect(0:(π / 4):(7π / 4)), string.(0:45:315)
             else
                 cvals = axis[:continuous_values]
                 alims = axis_limits(sp, axis[:letter])
@@ -623,6 +623,7 @@ function round_limits(amin, amax, scale)
     amin, amax
 end
 
+# NOTE: cannot use `NTuple` here ↓
 process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
 process_limits(lims::Symbol, axis) = lims
 process_limits(lims::AVec, axis) =
@@ -674,10 +675,10 @@ function axis_limits(
     end
     amin, amax = if ispolar(axis.sps[1])
         if axis[:letter] === :x
-            amin, amax = 0, 2pi
+            amin, amax = 0, 2π
         elseif lims === :auto
             # widen max radius so ticks dont overlap with theta axis
-            0, amax + 0.1 * abs(amax - amin)
+            0, amax + 0.1abs(amax - amin)
         else
             amin, amax
         end
@@ -693,20 +694,19 @@ function axis_limits(
         !has_user_lims &&
         consider_aspect &&
         letter in (:x, :y) &&
-        !(sp[:aspect_ratio] in (:none, :auto) || RecipesPipeline.is3d(:sp))
+        !((aspect_ratio = get_aspect_ratio(sp)) === :none || RecipesPipeline.is3d(:sp))
     )
-        aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
-        plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
+        aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
+        area = plotarea(sp)
+        plot_ratio = height(area) / width(area)
         dist = amax - amin
 
         if letter === :x
-            yamin, yamax = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false)
-            ydist = yamax - yamin
+            ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * ydist / dist
             factor = axis_ratio / plot_ratio
         else
-            xamin, xamax = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false)
-            xdist = xamax - xamin
+            xdist, = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * dist / xdist
             factor = plot_ratio / axis_ratio
         end
@@ -728,16 +728,15 @@ end
 # we return (continuous_value, discrete_index)
 function discrete_value!(plotattributes, letter::Symbol, dv)
     l = if plotattributes[:permute] !== :none
-        only(filter(!=(letter), plotattributes[:permute]))
+        filter(!=(letter), plotattributes[:permute]) |> only
     else
         letter
     end
     discrete_value!(plotattributes[:subplot][get_attr_symbol(l, :axis)], dv)
 end
 
-function discrete_value!(axis::Axis, dv)
-    cv_idx = get(axis[:discrete_map], dv, -1)
-    if cv_idx == -1
+discrete_value!(axis::Axis, dv) =
+    if (cv_idx = get(axis[:discrete_map], dv, -1)) == -1
         ex = axis[:extrema]
         cv = NaNMath.max(0.5, ex.emax + 1.0)
         expand_extrema!(axis, cv)
@@ -750,17 +749,15 @@ function discrete_value!(axis::Axis, dv)
         cv = axis[:continuous_values][cv_idx]
         cv, cv_idx
     end
-end
 
 # continuous value... just pass back with axis negative index
 discrete_value!(axis::Axis, cv::Number) = (cv, -1)
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AVec)
-    n = eachindex(v)
     cvec = zeros(axes(v))
     discrete_indices = similar(Array{Int}, axes(v))
-    for i in n
+    for i in eachindex(v)
         cvec[i], discrete_indices[i] = discrete_value!(axis, v[i])
     end
     cvec, discrete_indices
@@ -768,11 +765,10 @@ end
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AMat)
-    n, m = axes(v)
     cmat = zeros(axes(v))
     discrete_indices = similar(Array{Int}, axes(v))
-    for i in n, j in m
-        cmat[i, j], discrete_indices[i, j] = discrete_value!(axis, v[i, j])
+    for I in eachindex(v)
+        cmat[I], discrete_indices[I] = discrete_value!(axis, v[I])
     end
     cmat, discrete_indices
 end
@@ -797,11 +793,8 @@ function axis_drawing_info(sp, letter)
     minor_ticks = get_minor_ticks(sp, ax, ticks)
 
     # initialize the segments
-    segments = Segments(2)
-    tick_segments = Segments(2)
-    grid_segments = Segments(2)
-    minorgrid_segments = Segments(2)
-    border_segments = Segments(2)
+    segments, tick_segments, grid_segments, minorgrid_segments, border_segments =
+        map(_ -> Segments(2), 1:5)
 
     if sp[:framestyle] !== :none
         oa1, oa2 = if sp[:framestyle] in (:origin, :zerolines)
@@ -818,20 +811,18 @@ function axis_drawing_info(sp, letter)
                     !(ticks in (:none, nothing, false)) &&
                     length(ticks) > 1
                 )
-                    i = findfirst(==(0), ticks[1])
-                    if i !== nothing
+                    if (i = findfirst(==(0), ticks[1])) !== nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
                     end
                 end
             end
-            if sp[:framestyle] in (:semi, :box) # top spine
-                push!(
-                    border_segments,
-                    reverse_if((amin, oa2), isy),
-                    reverse_if((amax, oa2), isy),
-                )
-            end
+            # top spine
+            sp[:framestyle] in (:semi, :box) && push!(
+                border_segments,
+                reverse_if((amin, oa2), isy),
+                reverse_if((amax, oa2), isy),
+            )
         end
         if ax[:ticks] ∉ (:none, nothing, false)
             f = RecipesPipeline.scale_func(oax[:scale])
@@ -851,20 +842,16 @@ function axis_drawing_info(sp, letter)
                 end
 
                 for tick in ticks
-                    if ax[:showaxis] && cond
-                        push!(
-                            tick_segments,
-                            reverse_if((tick, tick_start), isy),
-                            reverse_if((tick, tick_stop), isy),
-                        )
-                    end
-                    if grid
-                        push!(
-                            segments,
-                            reverse_if((tick, oamin), isy),
-                            reverse_if((tick, oamax), isy),
-                        )
-                    end
+                    (ax[:showaxis] && cond) && push!(
+                        tick_segments,
+                        reverse_if((tick, tick_start), isy),
+                        reverse_if((tick, tick_stop), isy),
+                    )
+                    grid && push!(
+                        segments,
+                        reverse_if((tick, oamin), isy),
+                        reverse_if((tick, oamax), isy),
+                    )
                 end
             end
 
@@ -927,11 +914,8 @@ function axis_drawing_info_3d(sp, letter)
     minor_ticks = get_minor_ticks(sp, ax, ticks)
 
     # initialize the segments
-    segments = Segments(3)
-    tick_segments = Segments(3)
-    grid_segments = Segments(3)
-    minorgrid_segments = Segments(3)
-    border_segments = Segments(3)
+    segments, tick_segments, grid_segments, minorgrid_segments, border_segments =
+        map(_ -> Segments(3), 1:5)
 
     if sp[:framestyle] !== :none  # && letter === :x
         na0, na1 = if sp[:framestyle] in (:origin, :zerolines)
@@ -958,20 +942,17 @@ function axis_drawing_info_3d(sp, letter)
                     !(ticks in (:none, nothing, false)) &&
                     length(ticks) > 1
                 )
-                    i0 = findfirst(==(0), ticks[1])
-                    if i0 !== nothing
-                        deleteat!(ticks[1], i0)
-                        deleteat!(ticks[2], i0)
+                    if (i = findfirst(==(0), ticks[1])) !== nothing
+                        deleteat!(ticks[1], i)
+                        deleteat!(ticks[2], i)
                     end
                 end
             end
-            if sp[:framestyle] in (:semi, :box)
-                push!(
-                    border_segments,
-                    sort_3d_axes(amin, na1, fa1, letter),
-                    sort_3d_axes(amax, na1, fa1, letter),
-                )
-            end
+            sp[:framestyle] in (:semi, :box) && push!(
+                border_segments,
+                sort_3d_axes(amin, na1, fa1, letter),
+                sort_3d_axes(amax, na1, fa1, letter),
+            )
         end
 
         if ax[:ticks] ∉ (:none, nothing, false)
@@ -994,13 +975,11 @@ function axis_drawing_info_3d(sp, letter)
                 end
 
                 for tick in ticks
-                    if ax[:showaxis] && cond
-                        push!(
-                            tick_segments,
-                            sort_3d_axes(tick, tick_start, fa0, letter),
-                            sort_3d_axes(tick, tick_stop, fa0, letter),
-                        )
-                    end
+                    (ax[:showaxis] && cond) && push!(
+                        tick_segments,
+                        sort_3d_axes(tick, tick_start, fa0, letter),
+                        sort_3d_axes(tick, tick_stop, fa0, letter),
+                    )
                     if grid
                         fa0_, fa1_ = reverse_if((fa0, fa1), ax[:mirror])
                         ga0_, ga1_ = reverse_if((ga0, ga1), ax[:mirror])
@@ -1008,9 +987,6 @@ function axis_drawing_info_3d(sp, letter)
                             segments,
                             sort_3d_axes(tick, ga0_, fa0_, letter),
                             sort_3d_axes(tick, ga1_, fa0_, letter),
-                        )
-                        push!(
-                            segments,
                             sort_3d_axes(tick, ga1_, fa0_, letter),
                             sort_3d_axes(tick, ga1_, fa1_, letter),
                         )

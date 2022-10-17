@@ -93,6 +93,9 @@ _display(plt::Plot{GastonBackend}) = display(plt.o)
 function gaston_saveopts(plt::Plot{GastonBackend})
     saveopts = String["size $(join(plt.attr[:size], ","))"]
 
+    # Scale all plot elements to match Plots.jl DPI standard
+    scaling = plt.attr[:dpi] / Plots.DPI
+
     push!(
         saveopts,
         gaston_font(
@@ -102,15 +105,10 @@ function gaston_saveopts(plt::Plot{GastonBackend})
             color = false,
             scale = 1,
         ),
+        "background $(gaston_color(plt.attr[:background_color]))",
+        # "title '$(plt.attr[:window_title])'",
+        "fontscale $scaling lw $scaling dl $scaling",  # ps $scaling
     )
-
-    push!(saveopts, "background $(gaston_color(plt.attr[:background_color]))")
-
-    # push!(saveopts, "title '$(plt.attr[:window_title])'")
-
-    # Scale all plot elements to match Plots.jl DPI standard
-    scaling = plt.attr[:dpi] / Plots.DPI
-    push!(saveopts, "fontscale $scaling lw $scaling dl $scaling")  #  ps $scaling
 
     return join(saveopts, " ")
 end
@@ -120,11 +118,11 @@ function gaston_get_subplots(n, plt_subplots, layout)
     sps = Array{Any}(nothing, nr, nc)
     for r in 1:nr, c in 1:nc  # NOTE: col major
         l = layout[r, c]
-        if l isa GridLayout
+        sps[r, c] = if l isa GridLayout
             n, sub = gaston_get_subplots(n, plt_subplots, l)
-            sps[r, c] = size(sub) == (1, 1) ? only(sub) : sub
+            size(sub) == (1, 1) ? only(sub) : sub
         else
-            sps[r, c] = get(l.attr, :blank, false) ? nothing : plt_subplots[n += 1]
+            get(l.attr, :blank, false) ? nothing : plt_subplots[n += 1]
         end
     end
     return n, sps
@@ -162,11 +160,8 @@ function gaston_init_subplot(
             end
             any_label |= should_add_to_legend(series)
         end
-        sp.o = Gaston.Plot(
-            dims = dims,
-            curves = [],
-            axesconf = gaston_parse_axes_args(plt, sp, dims, any_label),
-        )
+        axesconf = gaston_parse_axes_args(plt, sp, dims, any_label)
+        sp.o = Gaston.Plot(dims = dims, curves = [], axesconf = axesconf)
         push!(plt.o.subplots, sp.o)
     end
     nothing
@@ -190,11 +185,11 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
             prev_c isa Array && (prev_c = prev_c[end, end])
             x = prev_c !== nothing ? prev_c[1] + prev_c[3] : parent_xy_wh[1]
             y = prev_r !== nothing ? prev_r[2] + prev_r[4] : parent_xy_wh[2]
-            if l isa GridLayout
+            dat[r, c] = if l isa GridLayout
                 sub = gaston_multiplot_pos_size(l, (x, y, w, h))
-                dat[r, c] = size(sub) == (1, 1) ? only(sub) : sub
+                size(sub) == (1, 1) ? only(sub) : sub
             else
-                dat[r, c] = x, y, w, h, l
+                x, y, w, h, l
             end
         end
     end
@@ -377,14 +372,14 @@ function gaston_parse_axes_args(
         )
         mirror = axis[:mirror] ? "mirror" : "nomirror"
 
-        if axis[:scale] === :identity
-            logscale, base = "nologscale", ""
+        logscale, base = if axis[:scale] === :identity
+            "nologscale", ""
         elseif axis[:scale] === :log10
-            logscale, base = "logscale", "10"
+            "logscale", "10"
         elseif axis[:scale] === :log2
-            logscale, base = "logscale", "2"
+            "logscale", "2"
         elseif axis[:scale] === :ln
-            logscale, base = "logscale", "e"
+            "logscale", "e"
         end
         push!(axesconf, "set $logscale $letter $base")
 
@@ -422,17 +417,14 @@ function gaston_parse_axes_args(
                 push!(axesconf, "set grid " * (polar ? "polar" : "m$(letter)tics"))
         end
 
-        ratio = get_aspect_ratio(sp)
-        if ratio !== :none
+        if (ratio = get_aspect_ratio(sp)) !== :none
             ratio === :equal && (ratio = -1)
             push!(axesconf, "set size ratio $ratio")
         end
     end
     gaston_set_legend!(axesconf, sp, any_label)
 
-    if hascolorbar(sp)
-        push!(axesconf, "set cbtics $(gaston_font(colorbartitlefont(sp)))")
-    end
+    hascolorbar(sp) && push!(axesconf, "set cbtics $(gaston_font(colorbartitlefont(sp)))")
 
     if sp[:title] !== nothing
         push!(axesconf, "set title '$(sp[:title])' $(gaston_font(titlefont(sp)))")
@@ -450,17 +442,12 @@ function gaston_parse_axes_args(
         end
         push!(
             axesconf,
-            "set rtics ( " *
-            join(gaston_ticks, ", ") *
-            " ) $(gaston_font(tickfont(sp.attr[:yaxis])))",
-        )
-        push!(axesconf, "set trange [$(min(0, tmin)):$(max(2π, tmax))]")
-        push!(axesconf, "set rrange [$rmin:$rmax]")
-        push!(
-            axesconf,
+            "set rtics ( $(join(gaston_ticks, ", ")) ) $(gaston_font(tickfont(sp.attr[:yaxis])))",
+            "set trange [$(min(0, tmin)):$(max(2π, tmax))]",
+            "set rrange [$rmin:$rmax]",
             "set ttics 0,30 format \"%g\".GPVAL_DEGREE_SIGN $(gaston_font(tickfont(sp.attr[:xaxis])))",
+            "set mttics 3",
         )
-        push!(axesconf, "set mttics 3")
     end
 
     return join(axesconf, "\n")
@@ -518,8 +505,7 @@ function gaston_set_legend!(axesconf, sp, any_label)
             # NOTE: cannot use legendtitlefont(sp) as it will override legendfont
             push!(axesconf, "set key title '$(sp[:legend_title])'")
         end
-        push!(axesconf, "set key box lw 1 opaque")
-        push!(axesconf, "set border back")
+        push!(axesconf, "set key box lw 1 opaque", "set border back")
     else
         push!(axesconf, "set key off")
     end

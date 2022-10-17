@@ -955,7 +955,7 @@ end
 # pie
 @recipe function f(::Type{Val{:pie}}, x, y, z)
     framestyle --> :none
-    aspect_ratio --> true
+    aspect_ratio --> 1
     s = sum(y)
     θ = 0
     colors = plotattributes[:seriescolor]
