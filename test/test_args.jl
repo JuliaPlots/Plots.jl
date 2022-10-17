@@ -1,4 +1,3 @@
-using Plots, Test
 import Plots: Font, @add_attributes, _subplot_defaults, add_aliases
 
 @testset "Subplot Attributes" begin
@@ -53,4 +52,12 @@ end
         :legend_title_font_color,
     )
     @test true
+end
+
+@testset "aspect_ratio" begin
+    fn = tempname()
+    for aspect_ratio in (1, 1.0, 1 // 10, :auto, :none, true)
+        @test_nowarn png(plot(1:2; aspect_ratio), fn)
+    end
+    @test_throws ArgumentError png(plot(1:2; aspect_ratio = :invalid_ar), fn)
 end

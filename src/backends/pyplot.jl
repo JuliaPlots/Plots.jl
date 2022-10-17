@@ -132,7 +132,7 @@ function py_marker(marker::Shape)
     x, y = coords(marker)
     n = length(x)
     mat = zeros(n + 1, 2)
-    for i in 1:n
+    for i in eachindex(x)
         mat[i, 1] = x[i]
         mat[i, 2] = y[i]
     end
@@ -216,18 +216,16 @@ end
 #     )
 # end
 
-function get_locator_and_formatter(vals::AVec)
+get_locator_and_formatter(vals::AVec) =
     pyticker."FixedLocator"(eachindex(vals)), pyticker."FixedFormatter"(vals)
-end
 
 function add_pyfixedformatter(cbar, vals::AVec)
     cbar[:locator], cbar[:formatter] = get_locator_and_formatter(vals)
     cbar[:update_ticks]()
 end
 
-function labelfunc(scale::Symbol, backend::PyPlotBackend)
+labelfunc(scale::Symbol, backend::PyPlotBackend) =
     PyPlot.LaTeXStrings.latexstring ∘ labelfunc_tex(scale)
-end
 
 function py_mask_nans(z)
     # pynp["ma"][:masked_invalid](z)))
@@ -243,23 +241,20 @@ function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
         nx, ny = length(x), length(y)
         if !isa(get(series.plotattributes, :z, nothing), Surface) && nx != ny
             if nx < ny
-                series[:x] = Float64[x[mod1(i, nx)] for i in 1:ny]
+                series[:x] = map(i -> Float64(x[mod1(i, nx)]), 1:ny)
             else
-                series[:y] = Float64[y[mod1(i, ny)] for i in 1:nx]
+                series[:y] = map(i -> Float64(y[mod1(i, ny)]), 1:nx)
             end
         end
     end
 end
 
-function py_linecolormap(series::Series)
+py_linecolormap(series::Series) =
     py_colormap(cgrad(series[:linecolor], alpha = get_linealpha(series)))
-end
-function py_markercolormap(series::Series)
+py_markercolormap(series::Series) =
     py_colormap(cgrad(series[:markercolor], alpha = get_markeralpha(series)))
-end
-function py_fillcolormap(series::Series)
+py_fillcolormap(series::Series) =
     py_colormap(cgrad(series[:fillcolor], alpha = get_fillalpha(series)))
-end
 
 # ---------------------------------------------------------------------------
 
@@ -303,22 +298,18 @@ py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
 function py_bbox(v::AVec)
     bbox_union = defaultbox
     for obj in v
-        bbox_union = bbox_union + py_bbox(obj)
+        bbox_union += py_bbox(obj)
     end
     bbox_union
 end
 
 # bounding box: union of axis tick labels
-function py_bbox_ticks(ax, letter)
-    labels = getproperty(ax, Symbol("get_" * letter * "ticklabels"))()
-    py_bbox(labels)
-end
+py_bbox_ticks(ax, letter) =
+    py_bbox(getproperty(ax, Symbol("get_" * letter * "ticklabels"))())
 
 # bounding box: axis guide
-function py_bbox_axislabel(ax, letter)
-    pyaxis_label = getproperty(ax, Symbol("get_" * letter * "axis"))().label
-    py_bbox(pyaxis_label)
-end
+py_bbox_axislabel(ax, letter) =
+    py_bbox(getproperty(ax, Symbol("get_" * letter * "axis"))().label)
 
 # bounding box: union of axis ticks and guide
 function py_bbox_axis(ax, letter)
@@ -433,12 +424,12 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     vmin, vmax = clims = get_clims(sp, series)
 
     # Dict to store extra kwargs
-    if st === :wireframe || st === :hexbin
+    extrakw = if st === :wireframe || st === :hexbin
         # vmin, vmax cause an error for wireframe plot
         # We are not supporting clims for hexbin as calculation of bins is not trivial
-        extrakw = KW()
+        KW()
     else
-        extrakw = KW(:vmin => vmin, :vmax => vmax)
+        KW(:vmin => vmin, :vmax => vmax)
     end
 
     # holds references to any python object representing the matplotlib series
@@ -462,36 +453,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # line plot
     if st in (:path, :path3d, :steppre, :stepmid, :steppost, :straightline)
         if maximum(series[:linewidth]) > 0
-            # TODO: check LineCollection alternative for speed
-            # if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] !== nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
-            #     # multicolored line segments
-            #     n = length(segments)
-            #     # segments = Array(Any,n)
-            #     segments = []
-            #     kw = KW(
-            #         :label => series[:label],
-            #         :zorder => plt.n,
-            #         :cmap => py_linecolormap(series),
-            #         :linewidths => py_thickness_scale(plt, get_linewidth.(series, 1:n)),
-            #         :linestyle => py_linestyle(st, get_linestyle.(series)),
-            #         :norm => pycolors["Normalize"](; extrakw...)
-            #     )
-            #     lz = _cycle(series[:line_z], 1:n)
-            #     handle = if RecipesPipeline.is3d(st)
-            #         line_segments = [[(x[j], y[j], z[j]) for j in rng] for rng in segments]
-            #         lc = pyart3d["Line3DCollection"](line_segments; kw...)
-            #         lc[:set_array](lz)
-            #         ax[:add_collection3d](lc, zs=z) #, zdir='y')
-            #         lc
-            #     else
-            #         line_segments = [[(x[j], y[j]) for j in rng] for rng in segments]
-            #         lc = pycollections["LineCollection"](line_segments; kw...)
-            #         lc[:set_array](lz)
-            #         ax[:add_collection](lc)
-            #         lc
-            #     end
-            #     push!(handles, handle)
-            # else
             for (k, segment) in enumerate(series_segments(series, st; check = true))
                 i, rng = segment.attr_index, segment.range
                 handle = ax."plot"(
@@ -510,7 +471,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 )[1]
                 push!(handles, handle)
             end
-            # end
 
             a = series[:arrow]
             if a !== nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
@@ -1411,13 +1371,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         # showaxis
         if !sp[:xaxis][:showaxis]
             kw = KW()
-            if ispolar(sp)
-                ax.spines."polar".set_visible(false)
-            end
+            ispolar(sp) && ax.spines."polar".set_visible(false)
             for dir in (:top, :bottom)
-                if !ispolar(sp)
-                    getproperty(ax.spines, string(dir)).set_visible(false)
-                end
+                ispolar(sp) || getproperty(ax.spines, string(dir)).set_visible(false)
                 kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
             ax."xaxis"."set_tick_params"(; which = "both", kw...)
@@ -1425,9 +1381,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         if !sp[:yaxis][:showaxis]
             kw = KW()
             for dir in (:left, :right)
-                if !ispolar(sp)
-                    getproperty(ax.spines, string(dir)).set_visible(false)
-                end
+                ispolar(sp) || getproperty(ax.spines, string(dir)).set_visible(false)
                 kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
             ax."yaxis"."set_tick_params"(; which = "both", kw...)

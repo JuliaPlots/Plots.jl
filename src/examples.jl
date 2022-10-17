@@ -1037,23 +1037,15 @@ const _examples = PlotExample[
     ),
     PlotExample( # 59
         "Annotations at discrete locations",
-        :(
-            begin
-                x, y = ["a", "b", "c"], [1, 5, 15]
-                p = scatter(
-                    ["a", "b"],
-                    ["q", "r"],
-                    ms = 8,
-                    legend = false,
-                    tickfontsize = 20,
-                )
-                annotate!(
-                    ["a", "b"],
-                    ["r", "q"],
-                    [text("ar", :top, :left, 50), text("bq", :bottom, :right, 20)],
-                )
-            end
-        ),
+        quote
+            x, y = ["a", "b", "c"], [1, 5, 15]
+            p = scatter(["a", "b"], ["q", "r"], ms = 8, legend = false, tickfontsize = 20)
+            annotate!(
+                ["a", "b"],
+                ["r", "q"],
+                [text("ar", :top, :left, 50), text("bq", :bottom, :right, 20)],
+            )
+        end,
     ),
     PlotExample( # 60
         "3D projection",
@@ -1134,6 +1126,10 @@ const _examples = PlotExample[
             )
         end,
     ),
+    PlotExample(  # 61
+        "Bézier curve",
+        :(curves([1, 2, 3, 4], [1, 1, 2, 4], title = "Bézier curve")),
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -1187,7 +1183,7 @@ _backend_skips[:plotly] = _backend_skips[:plotlyjs]
 
 # make and display one plot
 function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
-    Plots._debugMode.on = debug
+    Plots._debugMode[] = debug
     @info("Testing plot: $pkgname:$idx:$(_examples[idx].header)")
     backend(pkgname)
     backend()
@@ -1216,7 +1212,7 @@ function test_examples(
     skip = [],
     only = nothing,
 )
-    Plots._debugMode.on = debug
+    Plots._debugMode[] = debug
     plts = Dict()
     for i in eachindex(_examples)
         (only !== nothing && i ∉ only) && continue
@@ -1228,9 +1224,7 @@ function test_examples(
             # TODO: put error info into markdown?
             @warn("Example $pkgname:$i:$(_examples[i].header) failed with: $ex")
         end
-        if sleep !== nothing
-            Base.sleep(sleep)
-        end
+        sleep === nothing || Base.sleep(sleep)
     end
     plts
 end

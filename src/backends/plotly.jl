@@ -92,9 +92,7 @@ end
 function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
     aspect_ratio = get_aspect_ratio(sp)
     if aspect_ratio !== :none
-        if aspect_ratio === :equal
-            aspect_ratio = 1.0
-        end
+        aspect_ratio === :equal && (aspect_ratio = 1.0)
         xmin, xmax = axis_limits(sp, :x)
         ymin, ymax = axis_limits(sp, :y)
         want_ratio = ((xmax - xmin) / (ymax - ymin)) / aspect_ratio

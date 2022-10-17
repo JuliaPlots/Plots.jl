@@ -25,7 +25,7 @@ macro init_backend(s)
     str = lowercase(package_str)
     sym = Symbol(str)
     T = Symbol(string(s) * "Backend")
-    esc(quote
+    quote
         struct $T <: AbstractBackend end
         export $sym
         $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
@@ -35,7 +35,7 @@ macro init_backend(s)
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
         _backend_packages[Symbol($str)] = Symbol($package_str)
-    end)
+    end |> esc
 end
 
 # include("backends/web.jl")
@@ -55,6 +55,8 @@ _before_layout_calcs(plt::Plot) = nothing
 
 title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefontsize] * pt
 guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefontsize] * pt
+
+closeall(::AbstractBackend) = nothing
 
 "Returns the (width,height) of a text label."
 function text_size(lablen::Int, sz::Number, rot::Number = 0)
@@ -160,10 +162,7 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
-    if CURRENT_BACKEND.sym === :none
-        _pick_default_backend()
-    end
-
+    CURRENT_BACKEND.sym === :none && _pick_default_backend()
     CURRENT_BACKEND.pkg
 end
 
@@ -172,7 +171,7 @@ Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
-    if !(sym in _initialized_backends)
+    if sym ∉ _initialized_backends
         _initialize_backend(pkg)
         push!(_initialized_backends, sym)
     end
@@ -275,17 +274,17 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
     f2 = Symbol("supported_", s, "s")
     @eval begin
         $f(::AbstractBackend, $s) = false
-        $f(bend::AbstractBackend, $s::AbstractVector) = all(v -> $f(bend, v), $s)
+        $f(be::AbstractBackend, $s::AbstractVector) = all(v -> $f(be, v), $s)
         $f($s) = $f(backend(), $s)
         $f2() = $f2(backend())
     end
 
-    for bend in backends()
-        bend_type = typeof(_backend_instance(bend))
-        v = Symbol("_", bend, "_", s)
+    for be in backends()
+        be_type = typeof(_backend_instance(be))
+        v = Symbol("_", be, "_", s)
         @eval begin
-            $f(::$bend_type, $s::Symbol) = $s in $v
-            $f2(::$bend_type) = sort(collect($v))
+            $f(::$be_type, $s::Symbol) = $s in $v
+            $f2(::$be_type) = sort(collect($v))
         end
     end
 end
@@ -305,23 +304,10 @@ function _initialize_backend(pkg::AbstractBackend)
     end
 end
 
-_initialize_backend(pkg::GRBackend) = nothing
-
-function _initialize_backend(pkg::PlotlyBackend)
-    try
-        @eval Main begin
-            import PlotlyBase
-            import PlotlyKaleido
-        end
-        _check_compat(PlotlyBase)
-        _check_compat(PlotlyKaleido)
-    catch
-        @info "For saving to png with the Plotly backend PlotlyBase and PlotlyKaleido need to be installed."
-    end
-end
-
 # ------------------------------------------------------------------------------
 # gr
+
+_initialize_backend(pkg::GRBackend) = nothing
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
@@ -439,6 +425,19 @@ is_marker_supported(::GRBackend, shape::Shape) = true
 
 # ------------------------------------------------------------------------------
 # plotly
+
+function _initialize_backend(pkg::PlotlyBackend)
+    try
+        @eval Main begin
+            import PlotlyBase
+            import PlotlyKaleido
+        end
+        _check_compat(PlotlyBase)
+        _check_compat(PlotlyKaleido)
+    catch err
+        @warn "For saving to png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed." err
+    end
+end
 
 const _plotly_attr = merge_with_base_supported([
     :annotations,
@@ -664,11 +663,6 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # plotlyjs
 
-_initialize_backend(pkg::PlotlyJSBackend) = @eval Main begin
-    import PlotlyJS
-    export PlotlyJS
-end
-
 const _plotlyjs_attr       = _plotly_attr
 const _plotlyjs_seriestype = _plotly_seriestype
 const _plotlyjs_style      = _plotly_style
@@ -680,8 +674,8 @@ const _plotlyjs_scale      = _plotly_scale
 
 _initialize_backend(::PyPlotBackend) = @eval Main begin
     import PyPlot
-
     export PyPlot
+    $(_check_compat)(PyPlot)
 
     # we don't want every command to update the figure
     PyPlot.ioff()
@@ -808,11 +802,6 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # Gaston
-
-_initialize_backend(::GastonBackend) = @eval Main begin
-    import Gaston
-    export Gaston
-end
 
 const _gaston_attr = merge_with_base_supported([
     :annotations,

@@ -566,9 +566,7 @@ end #module _hdf5_implementation
 is_marker_supported(::HDF5Backend, shape::Shape) = true
 
 # Create the window/figure for this backend.
-function _create_backend_figure(plt::Plot{HDF5Backend})
-    #Do nothing
-end
+function _create_backend_figure(plt::Plot{HDF5Backend}) end
 
 # ---------------------------------------------------------------------------
 
@@ -579,9 +577,7 @@ end
 # ---------------------------------------------------------------------------
 
 # Set up the subplot within the backend object.
-function _initialize_subplot(plt::Plot{HDF5Backend}, sp::Subplot{HDF5Backend})
-    #Do nothing
-end
+function _initialize_subplot(plt::Plot{HDF5Backend}, sp::Subplot{HDF5Backend}) end
 
 # ---------------------------------------------------------------------------
 
@@ -589,40 +585,30 @@ end
 # Called once per series
 # NOTE: Seems to be called when user calls plot()... even if backend
 #       plot, sp.o has not yet been constructed...
-function _series_added(plt::Plot{HDF5Backend}, series::Series)
-    #Do nothing
-end
+function _series_added(plt::Plot{HDF5Backend}, series::Series) end
 
 # ---------------------------------------------------------------------------
 
 # When series data is added/changed, this callback can do dynamic updates to the backend object.
 # note: if the backend rebuilds the plot from scratch on display, then you might not do anything here.
-function _series_updated(plt::Plot{HDF5Backend}, series::Series)
-    #Do nothing
-end
+function _series_updated(plt::Plot{HDF5Backend}, series::Series) end
 
 # ---------------------------------------------------------------------------
 
 # called just before updating layout bounding boxes... in case you need to prep
 # for the calcs
-function _before_layout_calcs(plt::Plot{HDF5Backend})
-    #Do nothing
-end
+function _before_layout_calcs(plt::Plot{HDF5Backend}) end
 
 # ----------------------------------------------------------------
 
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
-function _update_min_padding!(sp::Subplot{HDF5Backend})
-    #Do nothing
-end
+function _update_min_padding!(sp::Subplot{HDF5Backend}) end
 
 # ----------------------------------------------------------------
 
 # Override this to update plot items (title, xlabel, etc), and add annotations (plotattributes[:annotations])
-function _update_plot_object(plt::Plot{HDF5Backend})
-    #Do nothing
-end
+function _update_plot_object(plt::Plot{HDF5Backend}) end
 
 # ----------------------------------------------------------------
 

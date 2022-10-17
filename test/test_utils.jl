@@ -1,4 +1,3 @@
-using Plots, Test, GeometryBasics
 @testset "Utils" begin
     zipped = (
         [(1, 2)],
@@ -40,8 +39,6 @@ using Plots, Test, GeometryBasics
     @test !Plots.ismatrix(nothing)
     @test Plots.isscalar(1.0)
     @test !Plots.isscalar(nothing)
-    @test Plots.tovec([]) isa AbstractVector
-    @test Plots.tovec(nothing) isa AbstractVector
     @test Plots.anynan(1, 3, (1, NaN, 3))
     @test Plots.allnan(1, 2, (NaN, NaN, 1))
     @test Plots.makevec([]) isa AbstractVector
@@ -54,9 +51,6 @@ using Plots, Test, GeometryBasics
     @test !Plots.ok((1, 2, NaN))
     @test Plots.nansplit([1, 2, NaN, 3, 4]) == [[1.0, 2.0], [3.0, 4.0]]
     @test Plots.nanvcat([1, NaN]) |> length == 4
-
-    @test Plots.nop() === nothing
-    @test_throws ErrorException Plots.notimpl()
 
     @test Plots.inch2px(1) isa AbstractFloat
     @test Plots.px2inch(1) isa AbstractFloat
@@ -72,28 +66,36 @@ using Plots, Test, GeometryBasics
 
     @test_throws ErrorException Plots.inline()
     @test_throws ErrorException Plots._do_plot_show(plot(), :inline)
-    @test_throws ErrorException Plots.dumpcallstack()
 
     @test plot(-1:10, xscale = :log10) isa Plots.Plot
 
     Plots.makekw(foo = 1, bar = 2) isa Dict
 
     Plots.debugplots(true)
-    Plots.debugplots(false)
 
     io = PipeBuffer()
     Plots.debugshow(io, nothing)
     Plots.debugshow(io, [1])
 
+    pl = plot(1:2)
+    Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
+
+    Plots.debugplots(false)
+
     pl = plot(1)
     push!(pl, 1.5)
     push!(pl, 1, 1.5)
-    # append!(pl, [1., 2.])
+    append!(pl, [1.0, 2.0])
     append!(pl, 1, 2.5, 2.5)
     push!(pl, (1.5, 2.5))
     push!(pl, 1, (1.5, 2.5))
     append!(pl, (1.5, 2.5))
     append!(pl, 1, (1.5, 2.5))
+
+    pl = scatter(1:2, 1:2)
+    push!(pl, 2:3)
+    pl = scatter(1:2, 1:2, 1:2)
+    push!(pl, 1:2, 2:3, 3:4)
 
     pl = plot([1, 2, 3], [4, 5, 6])
     @test Plots.xmin(pl) == 1
@@ -104,6 +106,16 @@ using Plots, Test, GeometryBasics
     @test Plots.get_attr_symbol(:x, :lims) === :xlims
 
     @test contains(Plots._document_argument("bar_position"), "bar_position")
+
+    @test Plots.limsType((1, 1)) === :limits
+    @test Plots.limsType(:undefined) === :invalid
+    @test Plots.limsType(:auto) === :auto
+
+    @test Plots.ticksType([1, 2]) === :ticks
+    @test Plots.ticksType(["1", "2"]) === :labels
+    @test Plots.ticksType(([1, 2], ["1", "2"])) === :ticks_and_labels
+    @test Plots.ticksType(((1, 2), ("1", "2"))) === :ticks_and_labels
+    @test Plots.ticksType(:undefined) === :invalid
 end
 
 @testset "NaN-separated Segments" begin
