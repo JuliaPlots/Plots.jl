@@ -5,9 +5,7 @@ const _keyAliases = Dict{Symbol,Symbol}()
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
-        if haskey(_keyAliases, alias) || alias === sym
-            return nothing
-        end
+        (haskey(_keyAliases, alias) || alias === sym) && return nothing
         _keyAliases[alias] = sym
     end
     return nothing
@@ -23,8 +21,7 @@ end
 
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k, v) in aliases
-        s = string(k)
-        if '_' in s
+        if '_' in string(k)
             aliases[make_non_underscore(k)] = v
         end
     end
@@ -32,8 +29,7 @@ end
 
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{Symbol})
     for arg in args
-        s = string(arg)
-        if '_' in s
+        if '_' in string(arg)
             aliases[make_non_underscore(arg)] = arg
         end
     end
@@ -2043,9 +2039,10 @@ function _update_subplot_args(
     anns = RecipesPipeline.pop_kw!(sp.attr, :annotations)
 
     # grab those args which apply to this subplot
-    for k in keys(_subplot_defaults)
-        slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
-    end
+    foreach(
+        k -> slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair),
+        keys(_subplot_defaults),
+    )
 
     _update_subplot_colors(sp)
 
@@ -2125,15 +2122,14 @@ label_to_string(label::Bool, series_plotindex) =
     label ? label_to_string(:auto, series_plotindex) : ""
 label_to_string(label::Nothing, series_plotindex) = ""
 label_to_string(label::Missing, series_plotindex) = ""
-function label_to_string(label::Symbol, series_plotindex)
+label_to_string(label::Symbol, series_plotindex) =
     if label === :auto
-        return string("y", series_plotindex)
+        string("y", series_plotindex)
     elseif label === :none
-        return ""
+        ""
     else
         throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
     end
-end
 label_to_string(label, series_plotindex) = string(label)  # Fallback to string promotion
 
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
@@ -2245,13 +2241,11 @@ Also creates pluralized and non-underscore aliases for these keywords.
 macro add_attributes(level, expr, match_table)
     expr = macroexpand(__module__, expr) # to expand @static
     expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
-    T = expr.args[2]
-    if T isa Expr && T.head === :<:
+    if (T = expr.args[2]) isa Expr && T.head === :<:
         T = T.args[1]
     end
 
     key_dict = KW()
-
     _splitdef!(expr.args[3], key_dict)
 
     insert_block = Expr(:block)
@@ -2269,20 +2263,11 @@ macro add_attributes(level, expr, match_table)
                 Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(exp_key)),
                 value,
             ),
-        )
-        push!(
-            insert_block.args,
             :(add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
-        )
-        push!(
-            insert_block.args,
             :(add_aliases(
                 $(QuoteNode(exp_key)),
                 $(QuoteNode(make_non_underscore(exp_key))),
             )),
-        )
-        push!(
-            insert_block.args,
             :(add_aliases(
                 $(QuoteNode(exp_key)),
                 $(QuoteNode(make_non_underscore(pl_key))),
@@ -2297,8 +2282,7 @@ end
 
 function _splitdef!(blk, key_dict)
     for i in eachindex(blk.args)
-        ei = blk.args[i]
-        if ei isa Symbol
+        if (ei = blk.args[i]) isa Symbol
             #  var
             continue
         elseif ei isa Expr

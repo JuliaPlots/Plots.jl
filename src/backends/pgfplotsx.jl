@@ -1,9 +1,8 @@
-import UUIDs: uuid4
-
-import .Latexify.LaTeXStrings: LaTeXString
 import .PGFPlotsX: Options, Table
-import .Latexify
-import .Contour
+import LaTeXStrings: LaTeXString
+import UUIDs: uuid4
+import Latexify
+import Contour
 
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false

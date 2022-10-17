@@ -1188,21 +1188,6 @@ const _inspectdr_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # pgfplotsx
 
-function _initialize_backend(pkg::PGFPlotsXBackend)
-    try
-        @eval Main begin
-            import Latexify
-            import Contour
-            import PGFPlotsX
-        end
-        _check_compat(Latexify)
-        _check_compat(Contour)
-        _check_compat(PGFPlotsX)
-    catch err
-        @warn "The `PGFPlotsX` backend requires `Latexify` and `Contour` to be installed." err
-    end
-end
-
 const _pgfplotsx_attr = merge_with_base_supported([
     :annotations,
     :legend_background_color,
