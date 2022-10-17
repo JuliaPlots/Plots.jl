@@ -67,6 +67,8 @@ end
     tmp = tempname()
     open(tmp, "w") do io
         redirect_stdout(io) do
+            @test_throws ErrorException plotattr(:WrongAttrType)
+            @test_throws ErrorException plotattr("WrongAttribute")
             plotattr("seriestype")
             plotattr(:Plot)
             # plotattr()  # interactive (JLFzf)
@@ -75,6 +77,8 @@ end
     str = join(readlines(tmp), "")
     @test occursin("seriestype", str)
     @test occursin("Plot attributes", str)
+    @test Plots.printnothing(nothing) == "nothing"
+    @test Plots.attrtypes() == "Series, Subplot, Plot, Axis"
 end
 
 @testset "legend" begin

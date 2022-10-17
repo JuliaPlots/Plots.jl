@@ -238,9 +238,8 @@ Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())
 
-# ---------------------------------------------------------
+# COV_EXCL_START
 # Atom PlotPane
-# ---------------------------------------------------------
 function showjuno(io::IO, m, plt)
     dpi = plt[:dpi]
 
@@ -264,3 +263,4 @@ _showjuno(io::IO, m::MIME"image/svg+xml", plt) =
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot) = false
 
 _showjuno(io::IO, m, plt) = _show(io, m, plt)
+# COV_EXCL_STOP
