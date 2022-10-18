@@ -93,13 +93,6 @@ _nobigs(v) = v
     _nobigs(x), _nobigs(y), _nobigs(z)
 end
 
-# not allowed
-_compute_xyz(x::Nothing, y::FuncOrFuncs{F}, z) where {F<:Function} =
-    error("If you want to plot the function `$y`, you need to define the x values!")
-_compute_xyz(x::Nothing, y::Nothing, z::FuncOrFuncs{F}) where {F<:Function} =
-    error("If you want to plot the function `$z`, you need to define x and y values!")
-_compute_xyz(x::Nothing, y::Nothing, z::Nothing) = error("x/y/z are all nothing!")
-
 # --------------------------------------------------------------------
 
 # we are going to build recipes to do the processing and splitting of the args

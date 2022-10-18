@@ -81,3 +81,12 @@ end
     @test p[1][2][:linestyle] == :dash
     @test p[1][3][:linestyle] == :dot
 end
+
+@testset "parametric" begin
+    @test plot(sin, sin, cos, 0, 2π) isa Plot
+    @test plot(sin, sin, cos, collect((-2π):(π / 4):(2π))) isa Plot
+end
+
+@testset "dict" begin
+    @test plot(Dict(1 => 2, 3 => -1)) isa Plot
+end
