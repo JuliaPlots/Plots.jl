@@ -173,6 +173,8 @@ float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
 float_extended_type(x::AbstractArray{Real}) = Float64
 
 # ------------------------------------------------------------------------------------
+_cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
+_cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
 _cycle(v::AVec, idx::Int) = v[mod(idx, axes(v, 1))]
 _cycle(v::AMat, idx::Int) = size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]

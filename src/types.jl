@@ -11,6 +11,10 @@ const TicksArgs =
 
 struct PlotsDisplay <: AbstractDisplay end
 
+struct InputWrapper{T}
+    obj::T
+end
+
 mutable struct Series
     plotattributes::DefaultsDict
 end
@@ -109,6 +113,10 @@ const PlotOrSubplot = Union{Plot,Subplot}
 
 # -----------------------------------------------------------
 
+wrap(obj::T) where {T} = InputWrapper{T}(obj)
+Base.isempty(wrapper::InputWrapper) = false
+
+# -----------------------------------------------------------
 attr(series::Series, k::Symbol) = series.plotattributes[k]
 attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 

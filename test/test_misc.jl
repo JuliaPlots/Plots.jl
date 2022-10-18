@@ -203,6 +203,7 @@ end
         Plots._pick_default_backend()
     end == Plots.UnicodePlotsBackend()
     @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
+    gr()  # restore to default
 end
 
 @testset "docstring" begin
@@ -210,15 +211,22 @@ end
 end
 
 @testset "text" begin
-    io = PipeBuffer()
-    x = y = range(-3, 3, length = 10)
-    extra_kwargs = Dict(
-        :series => Dict(:display_option => Plots.GR.OPTION_SHADED_MESH),
-        :subplot => Dict(:legend_hfactor => 2),
-    )
-    show(io, surface(x, y, (x, y) -> exp(-x^2 - y^2); extra_kwargs))
-    str = read(io, String)
-    @test occursin("extra kwargs", str)
-    @test occursin("Series{1}", str)
-    @test occursin("SubplotPlot{1}", str)
+    with(:gr) do
+        io = PipeBuffer()
+        x = y = range(-3, 3, length = 10)
+        extra_kwargs = Dict(
+            :series => Dict(:display_option => Plots.GR.OPTION_SHADED_MESH),
+            :subplot => Dict(:legend_hfactor => 2),
+        )
+        show(io, surface(x, y, (x, y) -> exp(-x^2 - y^2); extra_kwargs))
+        str = read(io, String)
+        @test occursin("extra kwargs", str)
+        @test occursin("Series{1}", str)
+        @test occursin("SubplotPlot{1}", str)
+    end
+end
+
+@testset "wrap" begin
+    # not sure what this is intended ...
+    @test scatter(1:2, color = wrap([:red, :blue])) isa Plot
 end
