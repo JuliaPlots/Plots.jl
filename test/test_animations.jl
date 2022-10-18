@@ -77,5 +77,6 @@ end
         show(io, MIME("image/gif"), gif)
     end
     @test filesize(fn) > 1_000
-    @test animate([1:2, 2:3]; variable_palette = false, show_msg = false) isa Plots.AnimatedGif
+    @test animate([1:2, 2:3]; variable_palette = false, show_msg = false) isa
+          Plots.AnimatedGif
 end

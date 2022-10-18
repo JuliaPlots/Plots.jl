@@ -1730,7 +1730,6 @@ end
 
 # 1-row matrices will give an element
 # multi-row matrices will give a column
-# InputWrapper just gives the contents
 # anything else is returned as-is
 function slice_arg(v::AMat, idx::Int)
     isempty(v) && return v
@@ -1738,7 +1737,6 @@ function slice_arg(v::AMat, idx::Int)
     m, n = axes(v)
     size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
 end
-slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
 slice_arg(v, idx) = v
 
