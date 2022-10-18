@@ -208,3 +208,17 @@ end
 @testset "docstring" begin
     @test occursin("label", Plots._generate_doclist(Plots._all_series_args))
 end
+
+@testset "text" begin
+    io = PipeBuffer()
+    x = y = range(-3, 3, length = 10)
+    extra_kwargs = Dict(
+        :series => Dict(:display_option => Plots.GR.OPTION_SHADED_MESH),
+        :subplot => Dict(:legend_hfactor => 2),
+    )
+    show(io, surface(x, y, (x, y) -> exp(-x^2 - y^2); extra_kwargs))
+    str = read(io, String)
+    @test occursin("extra kwargs", str)
+    @test occursin("Series{1}", str)
+    @test occursin("SubplotPlot{1}", str)
+end

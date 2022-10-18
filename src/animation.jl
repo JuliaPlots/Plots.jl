@@ -15,7 +15,7 @@ Add a plot (the current plot if not specified) to an existing animation
 """
 function frame(anim::Animation, plt::P = current()) where {P<:AbstractPlot}
     i = length(anim.frames) + 1
-    filename = @sprintf("%06d.png", i)
+    filename = @sprintf "%06d.png" i
     png(plt, joinpath(anim.dir, filename))
     push!(anim.frames, filename)
 end
