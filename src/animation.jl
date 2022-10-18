@@ -48,8 +48,25 @@ function animate(fitr::FrameIterator, fn = giffn(); kw...)
 end
 
 # most things will implement this
-animate(obj, fn = giffn(); every = 1, fps = 20, loop = 0, kw...) =
-    animate(FrameIterator(obj, every, kw), fn; fps = fps, loop = loop)
+animate(
+    obj,
+    fn = giffn();
+    every = 1,
+    fps = 20,
+    loop = 0,
+    variable_palette = false,
+    verbose = false,
+    show_msg = false,
+    kw...,
+) = animate(
+    FrameIterator(obj, every, kw),
+    fn;
+    fps,
+    loop,
+    variable_palette,
+    verbose,
+    show_msg,
+)
 
 # -----------------------------------------------
 
