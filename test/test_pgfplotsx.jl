@@ -15,19 +15,17 @@ end
 
 with(:pgfplotsx) do
     pl = plot(1:5)
-    axes = get_pgf_axes(pl)
-    axis = axes[1]
+    axis = first(get_pgf_axes(pl))
     @test pl.o.the_plot isa PGFPlotsX.TikzDocument
     @test pl.series_list[1].plotattributes[:quiver] === nothing
     @test count(x -> x isa PGFPlotsX.Plot, axis.contents) == 1
     @test !haskey(axis.contents[1].options.dict, "fill")
-    @test occursin("begin{document}", Plots.pgfx_preamble(pl))
+    @test occursin("documentclass", Plots.pgfx_preamble(pl))
 
     @testset "Legends" begin
         pl = plot(rand(5, 2), lab = ["1" ""], arrow = true)
         scatter!(pl, rand(5))
-        axes = get_pgf_axes(pl)
-        axis_contents = axes[1].contents
+        axis_contents = first(get_pgf_axes(pl)).contents
         leg_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis_contents)
         series = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
         @test length(leg_entries) == 2
@@ -56,9 +54,9 @@ with(:pgfplotsx) do
             w = 5,
         )
         pl = plot!(pl, zeros(n), zeros(n), 1:n, w = 10)
-        axes = get_pgf_axes(pl)
-        if @test_nowarn(haskey(axes[1].options.dict, "colorbar"))
-            @test axes[1]["colorbar"] === nothing
+        axis = first(get_pgf_axes(pl))
+        if @test_nowarn(haskey(axis.options.dict, "colorbar"))
+            @test axis["colorbar"] === nothing
         end
     end
 
@@ -80,8 +78,7 @@ with(:pgfplotsx) do
             ms = 10 * abs.(y .- 0.5) .+ 4,
             lab = ["grad", "", "ient"],
         )
-        axes = get_pgf_axes(pl)
-        axis = axes[1]
+        axis = first(get_pgf_axes(pl))
         @test count(x -> x isa PGFPlotsX.LegendEntry, axis.contents) == 6
         @test count(x -> x isa PGFPlotsX.Plot, axis.contents) == 108 # each marker is its own plot, fillranges create 2 plot-objects
         marker = axis.contents[15]
@@ -94,8 +91,7 @@ with(:pgfplotsx) do
     @testset "Plot in pieces" begin
         pl = plot(rand(100) / 3, reg = true, fill = (0, :green))
         scatter!(pl, rand(100), markersize = 6, c = :orange)
-        axes = get_pgf_axes(pl)
-        axis_contents = axes[1].contents
+        axis_contents = first(get_pgf_axes(pl)).contents
         leg_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis_contents)
         series = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
         @test length(leg_entries) == 2
@@ -114,7 +110,7 @@ with(:pgfplotsx) do
         n = length(markers)
         x = (range(0, stop = 10, length = n + 2))[2:(end - 1)]
         y = repeat(reshape(reverse(x), 1, :), n, 1)
-        scatter(
+        @test scatter(
             x,
             y,
             m = (8, :auto),
@@ -122,22 +118,22 @@ with(:pgfplotsx) do
             bg = :linen,
             xlim = (0, 10),
             ylim = (0, 10),
-        )
+        ) isa Plot
     end
 
     @testset "Layout" begin
-        plot(
+        @test plot(
             Plots.fakedata(100, 10),
             layout = 4,
             palette = [:grays :blues :hot :rainbow],
             bg_inside = [:orange :pink :darkblue :black],
-        )
+        ) isa Plot
     end
 
     @testset "Polar plots" begin
         Θ = range(0, stop = 1.5π, length = 100)
         r = abs.(0.1 * randn(100) + sin.(3Θ))
-        plot(Θ, r, proj = :polar, m = 2)
+        @test plot(Θ, r, proj = :polar, m = 2) isa Plot
     end
 
     @testset "Drawing shapes" begin
@@ -163,7 +159,7 @@ with(:pgfplotsx) do
         ]
         x = 0.1:0.2:0.9
         y = 0.7 * rand(5) .+ 0.15
-        plot(
+        @test plot(
             x,
             y,
             line = (3, :dash, :lightblue),
@@ -173,11 +169,11 @@ with(:pgfplotsx) do
             xlim = (0, 1),
             ylim = (0, 1),
             leg = false,
-        )
+        ) isa Plot
     end
 
     @testset "Histogram 2D" begin
-        histogram2d(randn(10000), randn(10000), nbins = 20)
+        @test histogram2d(randn(10_000), randn(10_000), nbins = 20) isa Plot
     end
 
     @testset "Heatmap-like" begin
@@ -185,28 +181,26 @@ with(:pgfplotsx) do
         ys = [string("y", i) for i in 1:4]
         z = float((1:4) * reshape(1:10, 1, :))
         pl = heatmap(xs, ys, z, aspect_ratio = 1)
-        axes = get_pgf_axes(pl)
-        if @test_nowarn(haskey(axes[1].options.dict, "colorbar"))
-            @test axes[1]["colorbar"] === nothing
-            @test axes[1]["colormap name"] == "plots1"
+        axis = first(get_pgf_axes(pl))
+        if @test_nowarn(haskey(axis.options.dict, "colorbar"))
+            @test axis["colorbar"] === nothing
+            @test axis["colormap name"] == "plots1"
         end
 
-        pl = wireframe(xs, ys, z, aspect_ratio = 1)
+        @test wireframe(xs, ys, z, aspect_ratio = 1) isa Plot
         # TODO: clims are wrong
     end
 
     @testset "Contours" begin
         x = 1:0.5:20
         y = 1:0.5:10
-        f(x, y) = begin
-            (3x + y^2) * abs(sin(x) + cos(y))
-        end
+        f(x, y) = (3x + y^2) * abs(sin(x) + cos(y))
         X = repeat(reshape(x, 1, :), length(y), 1)
         Y = repeat(y, 1, length(x))
         Z = map(f, X, Y)
         p2 = contour(x, y, Z)
         p1 = contour(x, y, f, fill = true)
-        plot(p1, p2)
+        @test plot(p1, p2) isa Plot
         # TODO: colorbar for filled contours
     end
 
@@ -217,7 +211,7 @@ with(:pgfplotsx) do
         y = t .* sin.(θ)
         p1 = plot(x, y, line_z = t, linewidth = 3, legend = false)
         p2 = scatter(x, y, marker_z = (x, y) -> x + y, color = :bwr, legend = false)
-        plot(p1, p2)
+        @test plot(p1, p2) isa Plot
     end
 
     @testset "Framestyles" begin
@@ -233,8 +227,7 @@ with(:pgfplotsx) do
             markerstrokewidth = 0,
             ticks = -2:2,
         )
-        axes = get_pgf_axes(pl)
-        for (i, axis) in enumerate(axes)
+        for (i, axis) in enumerate(get_pgf_axes(pl))
             opts = axis.options
             # just check by indexing (not defined -> throws)
             opts["x axis line style"]
@@ -243,6 +236,7 @@ with(:pgfplotsx) do
                 opts["axis x line*"]
                 opts["axis y line*"]
             end
+            @test true
         end
     end
 
@@ -253,6 +247,7 @@ with(:pgfplotsx) do
         u = ones(length(x))
         v = cos.(x)
         pl = plot(x, y, quiver = (u, v), arrow = true)
+        @test pl isa Plot
         # TODO: could adjust limits to fit arrows if too long, but how ?
         # TODO: get latex available on CI
         # mktempdir() do path
@@ -262,10 +257,9 @@ with(:pgfplotsx) do
 
     @testset "Annotations" begin
         y = rand(10)
-        pl =
-            plot(y, annotations = (3, y[3], Plots.text("this is \\#3", :left)), leg = false)
-        axes = get_pgf_axes(pl)
-        axis_content = axes[1].contents
+        ann = (3, y[3], Plots.text("this is \\#3", :left))
+        pl = plot(y, annotations = ann, leg = false)
+        axis_content = first(get_pgf_axes(pl)).contents
         nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
         @test length(nodes) == 1
         mktempdir() do path
@@ -280,8 +274,7 @@ with(:pgfplotsx) do
             (5, y[5], Plots.text("this is \\#5", 16, :red, :center)),
             (10, y[10], Plots.text("this is \\#10", :right, 20, "courier")),
         ])
-        axes = get_pgf_axes(pl)
-        axis_content = axes[1].contents
+        axis_content = first(get_pgf_axes(pl)).contents
         nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
         @test length(nodes) == 3
         mktempdir() do path
@@ -305,8 +298,7 @@ with(:pgfplotsx) do
                 Plots.text("data", :green),
             ],
         )
-        axes = get_pgf_axes(pl)
-        axis_content = axes[1].contents
+        axis_content = first(get_pgf_axes(pl)).contents
         nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
         @test length(nodes) == 9
         mktempdir() do path
@@ -330,8 +322,8 @@ with(:pgfplotsx) do
         cc = rand(10)
         conf = [aa - cc bb - cc]
         pl = plot(collect(1:10), fill(1, 10), ribbon = (conf[:, 1], conf[:, 2]))
-        axes = get_pgf_axes(pl)
-        plots = filter(x -> x isa PGFPlotsX.Plot, axes[1].contents)
+        axis_contents = first(get_pgf_axes(pl)).contents
+        plots = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
         @test length(plots) == 3
         @test haskey(plots[1].options.dict, "fill")
         @test haskey(plots[2].options.dict, "fill")
@@ -347,8 +339,8 @@ with(:pgfplotsx) do
             markersize = 8,
             color = [:red, :black],
         )
-        axes = get_pgf_axes(pl)
-        plots = filter(x -> x isa PGFPlotsX.Plot, axes[1].contents)
+        axis_contents = first(get_pgf_axes(pl)).contents
+        plots = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
         @test length(plots) == 9
     end
 
@@ -363,8 +355,8 @@ with(:pgfplotsx) do
             linetype = [:bar :scatter :steppre],
             linecolor = :match,
         )
-        axes = get_pgf_axes(pl)
-        legend_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axes[1].contents)
+        axis_contents = first(get_pgf_axes(pl)).contents
+        legend_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis_contents)
         @test length(legend_entries) == 2
     end
 
@@ -402,13 +394,13 @@ with(:pgfplotsx) do
             extra_kwargs = :subplot,
         )
         @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
-        axes = get_pgf_axes(pl)
-        @test filter(x -> x isa String, axes[1].contents)[1] ==
+        axis_contents = first(get_pgf_axes(pl)).contents
+        @test filter(x -> x isa String, axis_contents)[1] ==
               raw"\node at (0,0.5) {\huge hi};"
         plot!(pl)
         @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
-        axes = get_pgf_axes(pl)
-        @test filter(x -> x isa String, axes[1].contents)[1] ==
+        axis_contents = first(get_pgf_axes(pl)).contents
+        @test filter(x -> x isa String, axis_contents)[1] ==
               raw"\node at (0,0.5) {\huge hi};"
     end
 
@@ -417,8 +409,7 @@ with(:pgfplotsx) do
         @test pl[1][:title] == "Test me"
         @test pl[1][:titlefontsize] == 2
         @test pl[1][:titlefonthalign] === :left
-        axes = get_pgf_axes(pl)
-        ax_opt = axes[1].options
+        ax_opt = first(get_pgf_axes(pl)).options
         @test ax_opt["title"] == "Test me"
         @test(haskey(ax_opt.dict, "title style")) isa Test.Pass
         pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
