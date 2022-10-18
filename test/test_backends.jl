@@ -200,7 +200,7 @@ end
 
 @testset "Examples" begin
     if Sys.islinux()
-        for be in (:unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
+        for be in (:gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
             @info be
             for (i, pl) in
                 Plots.test_examples(be, skip = Plots._backend_skips[be], disp = is_ci())  # `ci` display for coverage
