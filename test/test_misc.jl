@@ -192,3 +192,12 @@ end
     @test 1Plots.mm / 0.1Plots.pct == 10Plots.mm
     @test 0.1Plots.pct / 1Plots.mm == 10Plots.mm
 end
+
+@testset "default backend" begin
+    @test_logs (:warn, r".*not a valid backend package") withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
+        Plots._pick_default_backend()
+    end
+    @test withenv("PLOTS_DEFAULT_BACKEND" => "gr") do
+        Plots._pick_default_backend()
+    end == Plots.GRBackend()
+end

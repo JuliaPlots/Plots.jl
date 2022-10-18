@@ -139,10 +139,8 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 _fallback_default_backend() = backend(GRBackend())
 
 function _pick_default_backend()
-    env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
-    if env_default != ""
-        sym = Symbol(lowercase(env_default))
-        if sym in _backends
+    if (env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")) != ""
+        if (sym = Symbol(lowercase(env_default))) in _backends
             backend(sym)
         else
             @warn(

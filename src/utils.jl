@@ -604,16 +604,12 @@ function with(f::Function, args...; kw...)
     end
 
     # save the backend
-    if CURRENT_BACKEND.sym === :none
-        _pick_default_backend()
-    end
+    CURRENT_BACKEND.sym === :none && _pick_default_backend()
     oldbackend = CURRENT_BACKEND.sym
 
     for arg in args
         # change backend?
-        if arg in backends()
-            backend(arg)
-        end
+        arg in backends() && backend(arg)
 
         # TODO: generalize this strategy to allow args as much as possible
         #       as in:  with(:gr, :scatter, :legend, :grid) do; ...; end
@@ -654,9 +650,7 @@ function with(f::Function, args...; kw...)
     default(; olddefs...)
 
     # revert the backend
-    if CURRENT_BACKEND.sym != oldbackend
-        backend(oldbackend)
-    end
+    CURRENT_BACKEND.sym != oldbackend && backend(oldbackend)
 
     # return the result of the function
     ret
