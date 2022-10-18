@@ -15,7 +15,7 @@ Add a plot (the current plot if not specified) to an existing animation
 """
 function frame(anim::Animation, plt::P = current()) where {P<:AbstractPlot}
     i = length(anim.frames) + 1
-    filename = @sprintf("%06d.png", i)
+    filename = @sprintf "%06d.png" i
     png(plt, joinpath(anim.dir, filename))
     push!(anim.frames, filename)
 end
@@ -48,8 +48,25 @@ function animate(fitr::FrameIterator, fn = giffn(); kw...)
 end
 
 # most things will implement this
-animate(obj, fn = giffn(); every = 1, fps = 20, loop = 0, kw...) =
-    animate(FrameIterator(obj, every, kw), fn; fps = fps, loop = loop)
+animate(
+    obj,
+    fn = giffn();
+    every = 1,
+    fps = 20,
+    loop = 0,
+    variable_palette = false,
+    verbose = false,
+    show_msg = false,
+    kw...,
+) = animate(
+    FrameIterator(obj, every, kw),
+    fn;
+    fps,
+    loop,
+    variable_palette,
+    verbose,
+    show_msg,
+)
 
 # -----------------------------------------------
 

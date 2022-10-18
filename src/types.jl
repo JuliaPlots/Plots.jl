@@ -117,7 +117,6 @@ wrap(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
 
 # -----------------------------------------------------------
-
 attr(series::Series, k::Symbol) = series.plotattributes[k]
 attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 
@@ -182,7 +181,6 @@ get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
 get_subplot(plt::Plot, k) = plt.spmap[k]
 get_subplot(series::Series) = series.plotattributes[:subplot]
 
-get_subplot_index(plt::Plot, idx::Integer) = Int(idx)
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
 
 series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)

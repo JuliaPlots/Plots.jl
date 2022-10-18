@@ -11,9 +11,7 @@ isplotnull() = CURRENT_PLOT.nullableplot === nothing
 Returns the Plot object for the current plot
 """
 function current()
-    if isplotnull()
-        error("No current plot/subplot")
-    end
+    isplotnull() && error("No current plot/subplot")
     CURRENT_PLOT.nullableplot
 end
 current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
@@ -26,13 +24,11 @@ function Base.show(io::IO, plt::Plot)
     print(io, string(plt))
     sp_ekwargs = getindex.(plt.subplots, :extra_kwargs)
     s_ekwargs = getindex.(plt.series_list, :extra_kwargs)
-    if (
+    (
         isempty(plt[:extra_plot_kwargs]) &&
         all(isempty, sp_ekwargs) &&
         all(isempty, s_ekwargs)
-    )
-        return
-    end
+    ) && return
     print(io, "\nCaptured extra kwargs:\n")
     do_show = true
     for (key, value) in plt[:extra_plot_kwargs]
@@ -61,7 +57,6 @@ end
 
 getplot(plt::Plot) = plt
 getattr(plt::Plot, idx::Int = 1) = plt.attr
-convertSeriesIndex(plt::Plot, n::Int) = n
 
 # ---------------------------------------------------------
 
@@ -87,13 +82,13 @@ Pass any attribute to `plotattr` as a String to look up its docstring, e.g., `pl
 
 ## Axis attributes
 Prepend these with the axis letter (x, y or z)
-- $(_generate_doclist(Plots._all_axis_args))
+- $(_generate_doclist(_all_axis_args))
 
 ## Subplot attributes
-- $(_generate_doclist(Plots._all_subplot_args))
+- $(_generate_doclist(_all_subplot_args))
 
 ## Plot attributes
-- $(_generate_doclist(Plots._all_plot_args))
+- $(_generate_doclist(_all_plot_args))
 """
 function RecipesBase.plot(args...; kw...)
     @nospecialize
@@ -246,19 +241,15 @@ function prepare_output(plt::Plot)
     # One pass down and back up the tree to compute the minimum padding
     # of the children on the perimeter.  This is an backend callback.
     _update_min_padding!(plt.layout)
-    for sp in plt.inset_subplots
-        _update_min_padding!(sp)
-    end
+    foreach(sp -> _update_min_padding!(sp), plt.inset_subplots)
 
     # spedific to :plot_title see _add_plot_title!
     force_minpad = get(plt, :force_minpad, ())
-    if !isempty(force_minpad)
-        for i in eachindex(plt.layout.grid)
-            plt.layout.grid[i].minpad = Tuple(
-                i === nothing ? j : i for
-                (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
-            )
-        end
+    isempty(force_minpad) || for i in eachindex(plt.layout.grid)
+        plt.layout.grid[i].minpad = Tuple(
+            i === nothing ? j : i for
+            (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
+        )
     end
 
     # now another pass down, to update the bounding boxes

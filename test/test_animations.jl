@@ -63,3 +63,20 @@ end
     end
     @test filesize(html) > 10_000
 end
+
+@testset "animate" begin
+    gif = animate([1:2, 2:3]; show_msg = false)
+    @test gif isa Plots.AnimatedGif
+    fn = tempname() * ".apng"
+    open(fn, "w") do io
+        show(io, MIME("image/png"), gif)
+    end
+    @test filesize(fn) > 1_000
+    fn = tempname() * ".gif"
+    open(fn, "w") do io
+        show(io, MIME("image/gif"), gif)
+    end
+    @test filesize(fn) > 1_000
+    @test animate([1:2, 2:3]; variable_palette = false, show_msg = false) isa
+          Plots.AnimatedGif
+end

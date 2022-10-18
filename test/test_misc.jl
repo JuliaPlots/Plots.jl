@@ -185,3 +185,48 @@ end
     @test series[:x] == x2
     @test series[:y] == y2
 end
+
+@testset "Measures" begin
+    @test 1Plots.mm * 0.1Plots.pct == 0.1Plots.mm
+    @test 0.1Plots.pct * 1Plots.mm == 0.1Plots.mm
+    @test 1Plots.mm / 0.1Plots.pct == 10Plots.mm
+    @test 0.1Plots.pct / 1Plots.mm == 10Plots.mm
+end
+
+@testset "backend" begin
+    @test_logs (:warn, r".*not a valid backend package") withenv(
+        "PLOTS_DEFAULT_BACKEND" => "invalid",
+    ) do
+        Plots._pick_default_backend()
+    end
+    @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
+        Plots._pick_default_backend()
+    end == Plots.UnicodePlotsBackend()
+    @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
+    gr()  # restore to default
+end
+
+@testset "docstring" begin
+    @test occursin("label", Plots._generate_doclist(Plots._all_series_args))
+end
+
+@testset "text" begin
+    with(:gr) do
+        io = PipeBuffer()
+        x = y = range(-3, 3, length = 10)
+        extra_kwargs = Dict(
+            :series => Dict(:display_option => Plots.GR.OPTION_SHADED_MESH),
+            :subplot => Dict(:legend_hfactor => 2),
+        )
+        show(io, surface(x, y, (x, y) -> exp(-x^2 - y^2); extra_kwargs))
+        str = read(io, String)
+        @test occursin("extra kwargs", str)
+        @test occursin("Series{1}", str)
+        @test occursin("SubplotPlot{1}", str)
+    end
+end
+
+@testset "wrap" begin
+    # not sure what this is intended ...
+    @test scatter(1:2, color = wrap([:red, :blue])) isa Plot
+end

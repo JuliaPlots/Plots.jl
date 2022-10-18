@@ -69,22 +69,21 @@ end
 
 # takes in color,alpha, and returns color and alpha appropriate for pgf style
 function pgf_color(c::Colorant)
-    cstr = @sprintf("{rgb,1:red,%.8f;green,%.8f;blue,%.8f}", red(c), green(c), blue(c))
+    cstr = @sprintf "{rgb,1:red,%.8f;green,%.8f;blue,%.8f}" red(c) green(c) blue(c)
     cstr, alpha(c)
 end
 
 function pgf_color(grad::ColorGradient)
     # Can't handle ColorGradient here, fallback to defaults.
-    cstr = @sprintf("{rgb,1:red,%.8f;green,%.8f;blue,%.8f}", 0.0, 0.60560316, 0.97868012)
+    cstr = @sprintf "{rgb,1:red,%.8f;green,%.8f;blue,%.8f}" 0.0 0.60560316 0.97868012
     cstr, 1
 end
 
 # Generates a colormap for pgfplots based on a ColorGradient
-function pgf_colormap(grad::ColorGradient)
-    join(map(grad.colors) do c
-        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
-    end, ", ")
-end
+pgf_colormap(grad::ColorGradient) = join(
+    map(c -> @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c)), grad.colors),
+    ", ",
+)
 
 pgf_thickness_scaling(plt::Plot) = plt[:thickness_scaling]
 pgf_thickness_scaling(sp::Subplot) = pgf_thickness_scaling(sp.plt)

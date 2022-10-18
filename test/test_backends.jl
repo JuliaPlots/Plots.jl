@@ -200,14 +200,10 @@ end
 
 @testset "Examples" begin
     if Sys.islinux()
-        backends = (:gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
-        only = setdiff(
-            1:length(Plots._examples),
-            map(be -> Plots._backend_skips[be], backends)...,
-        )
-        for be in backends
+        for be in (:gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
             @info be
-            for (i, pl) in Plots.test_examples(be, only = only, disp = is_ci())  # `ci` display for coverage
+            for (i, pl) in
+                Plots.test_examples(be, skip = Plots._backend_skips[be], disp = is_ci())  # `ci` display for coverage
                 fn = tempname() * ".png"
                 png(pl, fn)
                 @test filesize(fn) > 1_000
