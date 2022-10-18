@@ -193,11 +193,14 @@ end
     @test 0.1Plots.pct / 1Plots.mm == 10Plots.mm
 end
 
-@testset "default backend" begin
-    @test_logs (:warn, r".*not a valid backend package") withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
+@testset "backend" begin
+    @test_logs (:warn, r".*not a valid backend package") withenv(
+        "PLOTS_DEFAULT_BACKEND" => "invalid",
+    ) do
         Plots._pick_default_backend()
     end
-    @test withenv("PLOTS_DEFAULT_BACKEND" => "gr") do
+    @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
         Plots._pick_default_backend()
-    end == Plots.GRBackend()
+    end == Plots.UnicodePlotsBackend()
+    @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
 end

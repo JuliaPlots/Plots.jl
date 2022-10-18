@@ -189,16 +189,6 @@ backend(sym::Symbol) =
 const _deprecated_backends =
     [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize, :pgfplots]
 
-function warn_on_deprecated_backend(bsym::Symbol)
-    if bsym in _deprecated_backends
-        if bsym === :pgfplots
-            @warn("Backend $bsym has been deprecated. Use pgfplotsx instead.")
-        else
-            @warn("Backend $bsym has been deprecated.")
-        end
-    end
-end
-
 # ---------------------------------------------------------
 
 # these are args which every backend supports because they're not used in the backend code
