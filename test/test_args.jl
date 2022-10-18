@@ -61,3 +61,7 @@ end
     end
     @test_throws ArgumentError png(plot(1:2; aspect_ratio = :invalid_ar), fn)
 end
+
+@testset "aliases" begin
+    @test :legend in aliases(:legend_position)
+end

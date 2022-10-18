@@ -27,13 +27,6 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     end
 end
 
-function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{Symbol})
-    for arg in args
-        if '_' in string(arg)
-            aliases[make_non_underscore(arg)] = arg
-        end
-    end
-end
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
@@ -571,7 +564,7 @@ end
 
 aliases(val) = aliases(_keyAliases, val)
 aliases(aliasMap::Dict{Symbol,Symbol}, val) =
-    sortedkeys(filter((x) -> x.second == val, aliasMap))
+    filter((x) -> x.second == val, aliasMap) |> keys |> collect |> sort
 
 # -----------------------------------------------------------------------------
 # legend
@@ -1061,13 +1054,9 @@ end
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
     for defaults in _all_defaults
-        if haskey(defaults, k)
-            return defaults[k]
-        end
+        haskey(defaults, k) && return defaults[k]
     end
-    if haskey(_axis_defaults, k)
-        return _axis_defaults[k]
-    end
+    haskey(_axis_defaults, k) && return _axis_defaults[k]
     if (axis_k = parse_axis_kw(k)) !== nothing
         letter, key = axis_k
         return _axis_defaults_byletter[letter][key]
@@ -1097,9 +1086,7 @@ function default(k::Symbol, v)
 end
 
 function default(; reset = true, kw...)
-    if reset && isempty(kw)
-        reset_defaults()
-    end
+    (reset && isempty(kw)) && reset_defaults()
     kw = KW(kw)
     Plots.preprocess_attributes!(kw)
     for (k, v) in kw
@@ -1720,7 +1707,7 @@ convertLegendValue(val::Real) = val
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Nothing) = :none
 convertLegendValue(v::Union{Tuple,NamedTuple}) = convertLegendValue.(v)
-convertLegendValue(v::Tuple{S,T}) where {S<:Real,T<:Real} = v
+convertLegendValue(v::Tuple{<:Real,<:Real}) = v
 convertLegendValue(v::Tuple{<:Real,Symbol}) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
@@ -1730,17 +1717,12 @@ convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 or `levels` is less than 1"""
 function check_contour_levels(levels)
     if !(levels isa Union{Integer,AVec})
-        throw(
-            ArgumentError(
-                "the levels keyword argument must be an integer or AbstractVector",
-            ),
-        )
+        ArgumentError("the levels keyword argument must be an integer or AbstractVector") |>
+        throw
     elseif levels isa Integer && levels <= 0
-        throw(
-            ArgumentError(
-                "must pass a positive number of contours to the levels keyword argument",
-            ),
-        )
+        ArgumentError(
+            "must pass a positive number of contours to the levels keyword argument",
+        ) |> throw
     end
 end
 
@@ -1887,14 +1869,6 @@ function fg_color(plotattributes::AKW)
     if fg === :auto
         bg = plot_color(get(plotattributes, :background_color, :white))
         fg = isdark(bg) ? colorant"white" : colorant"black"
-    else
-        plot_color(fg)
-    end
-end
-
-function fg_color_sp(plotattributes::AKW)
-    if (fg = get(plotattributes, :foreground_color_subplot, :match)) === :match
-        fg_color(plotattributes)
     else
         plot_color(fg)
     end
