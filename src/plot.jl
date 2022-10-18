@@ -87,13 +87,13 @@ Pass any attribute to `plotattr` as a String to look up its docstring, e.g., `pl
 
 ## Axis attributes
 Prepend these with the axis letter (x, y or z)
-- $(_generate_doclist(Plots._all_axis_args))
+- $(_generate_doclist(_all_axis_args))
 
 ## Subplot attributes
-- $(_generate_doclist(Plots._all_subplot_args))
+- $(_generate_doclist(_all_subplot_args))
 
 ## Plot attributes
-- $(_generate_doclist(Plots._all_plot_args))
+- $(_generate_doclist(_all_plot_args))
 """
 function RecipesBase.plot(args...; kw...)
     @nospecialize

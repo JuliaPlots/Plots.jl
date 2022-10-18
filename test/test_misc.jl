@@ -204,3 +204,7 @@ end
     end == Plots.UnicodePlotsBackend()
     @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
 end
+
+@testset "docstring" begin
+    @test occursin("label", Plots._generate_doclist(Plots._all_series_args))
+end
