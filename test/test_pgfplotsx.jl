@@ -21,6 +21,7 @@ with(:pgfplotsx) do
     @test pl.series_list[1].plotattributes[:quiver] === nothing
     @test count(x -> x isa PGFPlotsX.Plot, axis.contents) == 1
     @test !haskey(axis.contents[1].options.dict, "fill")
+    @test occursin("begin{document}", Plots.pgfx_preamble(pl))
 
     @testset "Legends" begin
         pl = plot(rand(5, 2), lab = ["1" ""], arrow = true)
