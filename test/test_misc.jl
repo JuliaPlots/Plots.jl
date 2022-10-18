@@ -185,3 +185,10 @@ end
     @test series[:x] == x2
     @test series[:y] == y2
 end
+
+@testset "Measures" begin
+    @test 1Plots.mm * 0.1Plots.pct == 0.1Plots.mm
+    @test 0.1Plots.pct * 1Plots.mm == 0.1Plots.mm
+    @test 1Plots.mm / 0.1Plots.pct == 10Plots.mm
+    @test 0.1Plots.pct / 1Plots.mm == 10Plots.mm
+end
