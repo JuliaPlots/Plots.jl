@@ -52,9 +52,6 @@ apply_recipe(plotattributes::AbstractDict{Symbol,Any}) = ()
 is_explicit(d::AbstractDict{Symbol,Any}, k) = haskey(d, k)
 function is_default end
 
-const _debug_recipes = Ref(false)
-debug(v::Bool = true) = _debug_recipes[] = v
-
 # --------------------------------------------------------------------------
 
 # this holds the data and attributes of one series, and is returned from apply_recipe
@@ -296,7 +293,6 @@ macro recipe(funcexpr::Expr)
         func,
         quote
             @nospecialize
-            RecipesBase._debug_recipes[] && println("apply_recipe args: ", $args)
             $kw_body
             $cleanup_body
             series_list = RecipesBase.RecipeData[]

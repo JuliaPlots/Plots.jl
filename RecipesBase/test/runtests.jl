@@ -8,7 +8,6 @@ using Test
 const KW = Dict{Symbol,Any}
 
 RecipesBase.is_key_supported(k::Symbol) = true
-RecipesBase.debug(false)
 
 for t in map(i -> Symbol(:T, i), 1:5)
     @eval struct $t end
