@@ -48,7 +48,7 @@ function Base.push!(segments::Segments{T}, vs::AVec) where {T}
 end
 
 struct SeriesSegment
-    # indexes of this segement in series data vectors
+    # indexes of this segment in series data vectors
     range::UnitRange
     # index into vector-valued attributes corresponding to this segment
     attr_index::Int
@@ -123,7 +123,7 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
             @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
             if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
-                    If you intend elements of `$attr` to apply to individual NaN-separated segements in the data,
+                    If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
                     pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
                     may be suppressed by passing an empty label.
                     For example,
