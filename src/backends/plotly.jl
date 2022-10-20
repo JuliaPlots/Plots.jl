@@ -1033,7 +1033,7 @@ plotly_url() =
 function plotly_html_head(plt::Plot)
     plotly = plotly_url()
 
-    inc_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
+    include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
 
     mathjax_file = if include_mathjax != "cdn"
         "file://" * include_mathjax
