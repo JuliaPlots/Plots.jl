@@ -2061,7 +2061,7 @@ end
 get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
     map(x -> get_series_color(x, sp, n, seriestype), c)
 
-function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
+ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
     if plotattributes[csym] isa ColorPalette
         α = nothing
         plotattributes[asym] isa AbstractVector || (α = plotattributes[asym])
@@ -2071,23 +2071,21 @@ function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
             typeof(plotattributes[asym]) <: AbstractVector ? cgrad() :
             cgrad(alpha = plotattributes[asym])
     end
-end
 
-function _replace_linewidth(plotattributes::AKW)
-    # get a good default linewidth... 0 for surface and heatmaps
+_replace_linewidth(plotattributes::AKW) =
+# get a good default linewidth... 0 for surface and heatmaps
     if plotattributes[:linewidth] === :auto
         plotattributes[:linewidth] = (
             get(plotattributes, :seriestype, :path) in (:surface, :heatmap, :image) ? 0 : 1
         )
     end
-end
 
 function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
     for k in keys(_series_defaults)
         haskey(plotattributes, k) &&
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
     end
-    return plotattributes
+    plotattributes
 end
 
 label_to_string(label::Bool, series_plotindex) =
@@ -2228,25 +2226,26 @@ macro add_attributes(level, expr, match_table)
         if QuoteNode(exp_key) in match_table.args[2].args
             value = QuoteNode(:match)
         end
+        field = QuoteNode(Symbol("_", level, "_defaults"))
         push!(
             insert_block.args,
             Expr(
                 :(=),
-                Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(exp_key)),
+                Expr(:ref, Expr(:call, getfield, Plots, field), QuoteNode(exp_key)),
                 value,
             ),
-            :(add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
-            :(add_aliases(
+            :(Plots.add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
+            :(Plots.add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(make_non_underscore(exp_key))),
+                $(QuoteNode(Plots.make_non_underscore(exp_key))),
             )),
-            :(add_aliases(
+            :(Plots.add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(make_non_underscore(pl_key))),
+                $(QuoteNode(Plots.make_non_underscore(pl_key))),
             )),
         )
     end
-    return quote
+    quote
         $expr
         $insert_block
     end |> esc

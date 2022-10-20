@@ -71,6 +71,7 @@
 
     Plots.makekw(foo = 1, bar = 2) isa Dict
 
+    ######################
     Plots.debugplots(true)
 
     io = PipeBuffer()
@@ -81,16 +82,18 @@
     Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
 
     Plots.debugplots(false)
+    ######################
 
-    pl = plot(1)
-    push!(pl, 1.5)
-    push!(pl, 1, 1.5)
-    append!(pl, [1.0, 2.0])
-    append!(pl, 1, 2.5, 2.5)
-    push!(pl, (1.5, 2.5))
-    push!(pl, 1, (1.5, 2.5))
-    append!(pl, (1.5, 2.5))
-    append!(pl, 1, (1.5, 2.5))
+    let pl = plot(1)
+        push!(pl, 1.5)
+        push!(pl, 1, 1.5)
+        append!(pl, [1.0, 2.0])
+        append!(pl, 1, 2.5, 2.5)
+        push!(pl, (1.5, 2.5))
+        push!(pl, 1, (1.5, 2.5))
+        append!(pl, (1.5, 2.5))
+        append!(pl, 1, (1.5, 2.5))
+    end
 
     pl = scatter(1:2, 1:2)
     push!(pl, 2:3)
@@ -123,16 +126,17 @@
     pl = plot(1:2, 1:2, 1:2, proj_type = :persp)
     @test Plots.ispersp(first(pl.subplots))
 
-    pl = plot(1:2)
-    series = first(pl.series_list)
-    label = "fancy label"
-    attr!(series; label)
-    @test series[:label] == label
+    let pl = plot(1:2)
+        series = first(pl.series_list)
+        label = "fancy label"
+        attr!(series; label)
+        @test series[:label] == label
 
-    sp = first(pl.subplots)
-    title = "fancy title"
-    attr!(sp; title)
-    @test sp[:title] == title
+        sp = first(pl.subplots)
+        title = "fancy title"
+        attr!(sp; title)
+        @test sp[:title] == title
+    end
 end
 
 @testset "NaN-separated Segments" begin
