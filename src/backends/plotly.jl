@@ -30,29 +30,26 @@ function labelfunc(scale::Symbol, backend::PlotlyBackend)
     end
 end
 
-plotly_font(font::Font, color = font.color) =
-    KW(
-        :family => font.family,
-        :size   => round(Int, font.pointsize * 1.4),
-        :color  => rgba_string(color),
-    )
+plotly_font(font::Font, color = font.color) = KW(
+    :family => font.family,
+    :size   => round(Int, font.pointsize * 1.4),
+    :color  => rgba_string(color),
+)
 
 plotly_annotation_dict(x, y, val; xref = "paper", yref = "paper") =
     KW(:text => val, :xref => xref, :x => x, :yref => yref, :y => y, :showarrow => false)
 
-plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper") =
-    merge(
-        plotly_annotation_dict(x, y, ptxt.str; xref = xref, yref = yref),
-        KW(
-            :font => plotly_font(ptxt.font),
-            :xanchor => ptxt.font.halign === :hcenter ? :center : ptxt.font.halign,
-            :yanchor => ptxt.font.valign === :vcenter ? :middle : ptxt.font.valign,
-            :rotation => -ptxt.font.rotation,
-        ),
-    )
+plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper") = merge(
+    plotly_annotation_dict(x, y, ptxt.str; xref = xref, yref = yref),
+    KW(
+        :font => plotly_font(ptxt.font),
+        :xanchor => ptxt.font.halign === :hcenter ? :center : ptxt.font.halign,
+        :yanchor => ptxt.font.valign === :vcenter ? :middle : ptxt.font.valign,
+        :rotation => -ptxt.font.rotation,
+    ),
+)
 
-plotly_scale(scale::Symbol) =
-    scale === :log10 ? "log" : "-"
+plotly_scale(scale::Symbol) = scale === :log10 ? "log" : "-"
 
 function shrink_by(lo, sz, ratio)
     amt = 0.5 * (1.0 - ratio) * sz
@@ -416,10 +413,7 @@ plotly_colorscale(cg::ColorGradient, α = nothing) =
     [[v, rgba_string(plot_color(cg.colors[v], α))] for v in cg.values]
 plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing) =
     if length(c) == 1
-        [
-            [0.0, rgba_string(plot_color(c[1], α))],
-            [1.0, rgba_string(plot_color(c[1], α))],
-        ]
+        [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
     else
         vals = range(0.0, stop = 1.0, length = length(c))
         [[vals[i], rgba_string(plot_color(c[i], α))] for i in eachindex(c)]
@@ -930,8 +924,12 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             if typeof(series[:fillrange]) <: Real
                 plotattributes_out[:fillrange] = fill(series[:fillrange], length(rng))
             elseif typeof(series[:fillrange]) <: Tuple
-                f1 = (fr1 = series[:fillrange][1]) |> typeof <: Real ? fill(fr1, length(rng)) : fr1[rng]
-                f2 = (fr2 = series[:fillrange][2]) |> typeof <: Real ? fill(fr2, length(rng)) : fr2[rng]
+                f1 =
+                    (fr1 = series[:fillrange][1]) |> typeof <: Real ?
+                    fill(fr1, length(rng)) : fr1[rng]
+                f2 =
+                    (fr2 = series[:fillrange][2]) |> typeof <: Real ?
+                    fill(fr2, length(rng)) : fr2[rng]
                 plotattributes_out[:fillrange] = (f1, f2)
             end
             if isa(series[:fillrange], AbstractVector)

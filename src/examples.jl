@@ -655,13 +655,13 @@ const _examples = PlotExample[
     ),
     PlotExample( # 41
         "Array Types",
-        "Plots supports different `Array` types that follow the `AbstractArray` interface, like `StaticArrays` and `OffsetArrays.`",
+        "Plots supports different `Array` types that follow the `AbstractArray` interface, like `StaticArrays` and `OffsetArrays`.",
         true,
         :(using StaticArrays, OffsetArrays),
         quote
             sv = SVector{10}(rand(10))
             ov = OffsetVector(rand(10), -2)
-            plot([sv, ov], label = ["StaticArray" "OffsetArray"])
+            plot(Any[sv, ov], label = ["StaticArray" "OffsetArray"])
             plot!(3ov, ribbon = ov, label = "OffsetArray ribbon")
         end,
     ),
