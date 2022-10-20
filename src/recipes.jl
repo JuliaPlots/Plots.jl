@@ -85,18 +85,12 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     # a tuple as fillrange has to be handled differently
     if typeof(plotattributes[:fillrange]) <: Tuple
         lower, upper = plotattributes[:fillrange]
-        if typeof(lower) <: AVec
-            lower = _cycle(lower, indices)
-        end
-        if typeof(upper) <: AVec
-            upper = _cycle(upper, indices)
-        end
+        typeof(lower) <: AVec && (lower = _cycle(lower, indices))
+        typeof(upper) <: AVec && (upper = _cycle(upper, indices))
         plotattributes[:fillrange] = (lower, upper)
     end
 
-    if typeof(z) <: AVec
-        z := z[indices]
-    end
+    typeof(z) <: AVec && (z := z[indices])
     seriestype := :path
     ()
 end

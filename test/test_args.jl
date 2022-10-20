@@ -1,4 +1,4 @@
-import Plots: Font, @add_attributes, _subplot_defaults, add_aliases
+import Plots: Font, @add_attributes
 
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
@@ -64,4 +64,6 @@ end
 
 @testset "aliases" begin
     @test :legend in aliases(:legend_position)
+    add_non_underscore_aliases!(Plots._typeAliases)
+    add_axes_aliases(:ticks, :tick)
 end

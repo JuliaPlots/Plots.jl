@@ -201,19 +201,13 @@ maketuple(x::Tuple) = x
 
 RecipesPipeline.unzip(v) = unzip(v)
 
-expand_data(v, n::Integer) = map(i -> _cycle(v, i), 1:n)
-
-function replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol})
+replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
     if haskey(aliases, k)
         plotattributes[aliases[k]] = RecipesPipeline.pop_kw!(plotattributes, k)
     end
-end
 
-function replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol})
-    for k in collect(keys(plotattributes))
-        replaceAlias!(plotattributes, k, aliases)
-    end
-end
+replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
+    foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
 
 function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
     length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
@@ -255,8 +249,7 @@ function heatmap_edges(
               Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
               or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
     end
-    x, y = heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
-    return x, y
+    heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
 end
 
 function is_uniformly_spaced(v; tol = 1e-6)
@@ -370,9 +363,7 @@ end
 #turn tuple of fillranges to one path
 function concatenate_fillrange(x, y::Tuple)
     rib1, rib2 = collect(first(y)), collect(last(y)) # collect needed until https://github.com/JuliaLang/julia/pull/37629 is merged
-    yline = vcat(rib1, reverse(rib2))
-    xline = vcat(x, reverse(x))
-    return xline, yline
+    vcat(x, reverse(x)), vcat(rib1, reverse(rib2))  # x, y
 end
 
 get_sp_lims(sp::Subplot, letter::Symbol) = axis_limits(sp, letter)
@@ -414,9 +405,7 @@ function contour_levels(series::Series, clims)
     levels = series[:levels]
     if levels isa Integer
         levels = range(zmin, stop = zmax, length = levels + 2)
-        if !isfilledcontour(series)
-            levels = levels[2:(end - 1)]
-        end
+        isfilledcontour(series) || (levels = levels[2:(end - 1)])
     end
     levels
 end
@@ -614,15 +603,6 @@ function with(f::Function, args...; kw...)
         #       as in:  with(:gr, :scatter, :legend, :grid) do; ...; end
         # TODO: can we generalize this enough to also do something similar in the plot commands??
 
-        # k = :seriestype
-        # if arg in _allTypes
-        #     olddefs[k] = default(k)
-        #     newdefs[k] = arg
-        # elseif haskey(_typeAliases, arg)
-        #     olddefs[k] = default(k)
-        #     newdefs[k] = _typeAliases[arg]
-        # end
-
         k = :legend
         if arg in (k, :leg)
             olddefs[k] = default(k)
@@ -635,9 +615,6 @@ function with(f::Function, args...; kw...)
             newdefs[k] = true
         end
     end
-
-    # display(olddefs)
-    # display(newdefs)
 
     # now set all those defaults
     default(; newdefs...)

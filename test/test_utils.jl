@@ -119,9 +119,20 @@
     @test Plots.ticksType(:undefined) === :invalid
 
     pl = plot(1:2, 1:2, 1:2, proj_type = :ortho)
-    @test Plots.isortho(pl.subplots |> first)
+    @test Plots.isortho(first(pl.subplots))
     pl = plot(1:2, 1:2, 1:2, proj_type = :persp)
-    @test Plots.ispersp(pl.subplots |> first)
+    @test Plots.ispersp(first(pl.subplots))
+
+    pl = plot(1:2)
+    series = first(pl.series_list)
+    label = "fancy label"
+    attr!(series; label)
+    @test series[:label] == label
+
+    sp = first(pl.subplots)
+    title = "fancy title"
+    attr!(sp; title)
+    @test sp[:title] == title
 end
 
 @testset "NaN-separated Segments" begin
