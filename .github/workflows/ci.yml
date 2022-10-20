@@ -37,9 +37,9 @@ jobs:
           - os: ubuntu-latest
             prefix: xvfb-run
             version: '1.7'  # only test intermediate relase on `ubuntu`
-          # - os: ubuntu-latest
-          #   prefix: xvfb-run
-          #   version: 'nightly'
+          - os: ubuntu-latest
+            prefix: xvfb-run
+            version: 'nightly'
 
     steps:
       - uses: actions/checkout@v3
