@@ -420,8 +420,8 @@ for comp in (:line, :fill, :marker)
 
     @eval begin
         function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
-            c = series[$Symbol($compcolor)]
-            z = series[$Symbol($comp_z)]
+            c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
+            z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else

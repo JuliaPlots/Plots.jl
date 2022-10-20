@@ -145,7 +145,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     end
 
     # flip
-    axis[:flip] && reverse!(ax[:range])
+    axis[:flip] && (ax[:range] = reverse(ax[:range]))
 
     ax
 end
@@ -517,12 +517,10 @@ as_gradient(grad, α) = cgrad(alpha = α)
 
 # get a dictionary representing the series params (plotattributes is the Plots-dict, plotattributes_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
-    st = series[:seriestype]
-
     sp = series[:subplot]
     clims = get_clims(sp, series)
 
-    st === :shape && return plotly_series_shapes(plt, series, clims)
+    (st = series[:seriestype]) === :shape && return plotly_series_shapes(plt, series, clims)
 
     plotattributes_out = KW()
 
@@ -602,12 +600,12 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:contours][:start] = first(levels_range)
                 plotattributes_out[:contours][:end] = last(levels_range)
                 plotattributes_out[:contours][:size] = step(levels_range)
-                @warn(
-                    "setting arbitrary contour levels with Plotly backend is not supported; " *
-                    "use a range to set equally-spaced contours or an integer to set the " *
-                    "approximate number of contours with the keyword `levels`. " *
-                    "Setting levels to $(levels_range)"
-                )
+                @warn """
+                setting arbitrary contour levels with Plotly backend is not supported;
+                use a range to set equally-spaced contours or an integer to set the
+                approximate number of contours with the keyword `levels`.
+                Setting levels to $(levels_range)
+                """
             elseif levels isa Integer
                 plotattributes_out[:ncontours] = levels + 2
             end
@@ -685,7 +683,7 @@ function plotly_series(plt::Plot, series::Series)
         end
         plotattributes_out[:showscale] = hascolorbar(sp)
     else
-        @warn("Plotly: seriestype $st isn't supported.")
+        @warn "Plotly: seriestype $st isn't supported."
         return KW()
     end
 
@@ -696,7 +694,7 @@ function plotly_series(plt::Plot, series::Series)
             :symbol =>
                 get_plotly_marker(series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
-            :size => 2 * _cycle(series[:markersize], inds),
+            :size => 2_cycle(series[:markersize], inds),
             :color =>
                 rgba_string.(
                     plot_color.(
@@ -725,7 +723,7 @@ end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
     segments = series_segments(series; check = true)
-    plotattributes_outs = [KW() for _ in 1:length(segments)]
+    plotattributes_outs = map(i -> KW(), 1:length(segments))
 
     # TODO: create a plotattributes_out for each polygon
     # x, y = series[:x], series[:y]
@@ -854,7 +852,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             mcolor = rgba_string(
                 plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
             )
-            mcolor_next = if i < length(series[:markercolor])
+            mcolor_next = if (mz = series[:marker_z]) !== nothing && i < length(mz)
                 plot_color(
                     get_markercolor(series, clims, i + 1),
                     get_markeralpha(series, i + 1),
@@ -868,14 +866,10 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     get_markerstrokealpha(series, i),
                 ),
             )
-            lcolor_next = if i < length(series[:markerstrokecolor])
-                plot_color(
-                    get_markerstrokecolor(series, i + 1),
-                    get_markerstrokealpha(series, i + 1),
-                ) |> rgba_string
-            else
-                lcolor
-            end
+            lcolor_next = plot_color(
+                get_markerstrokecolor(series, i + 1),
+                get_markerstrokealpha(series, i + 1),
+            ) |> rgba_string
 
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
@@ -1028,17 +1022,29 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt), 4)
 html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
-function plotly_html_head(plt::Plot)
-    plotly =
-        use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) :
+plotly_url() =
+    if use_local_dependencies[]
+        "file:///" * plotly_local_file_path[]
+    else
         "https://cdn.plot.ly/$(_plotly_min_js_filename)"
+    end
 
-    include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
-    mathjax_file =
-        include_mathjax != "cdn" ? ("file://" * include_mathjax) :
+function plotly_html_head(plt::Plot)
+    plotly = plotly_url()
+
+    inc_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
+
+    mathjax_file = if include_mathjax != "cdn"
+        "file://" * include_mathjax
+    else
         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
-    mathjax_head =
-        include_mathjax == "" ? "" : "<script src=\"$mathjax_file\"></script>\n\t\t"
+    end
+
+    mathjax_head = if isempty(include_mathjax)
+        ""
+    else
+        "<script src=\"$mathjax_file\"></script>\n\t\t"
+    end
 
     if isijulia()
         mathjax_head
@@ -1053,14 +1059,10 @@ function plotly_html_body(plt, style = nothing)
         style = "width:$(w)px;height:$(h)px;"
     end
 
-    requirejs_prefix = ""
-    requirejs_suffix = ""
+    requirejs_prefix = requirejs_suffix = ""
     if isijulia()
         # require.js adds .js automatically
-        plotly_no_ext =
-            use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) :
-            "https://cdn.plot.ly/$(_plotly_min_js_filename)"
-        plotly_no_ext = plotly_no_ext[1:(end - 3)]
+        plotly_no_ext = plotly_url() |> splitext |> first
 
         requirejs_prefix = """
             requirejs.config({

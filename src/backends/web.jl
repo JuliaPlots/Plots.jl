@@ -3,11 +3,10 @@
 
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
 
-function standalone_html(
+standalone_html(
     plt::AbstractPlot;
     title::AbstractString = get(plt.attr, :window_title, "Plots.jl"),
-)
-    """
+) = """
     <!DOCTYPE html>
     <html>
         <head>
@@ -20,7 +19,6 @@ function standalone_html(
         </body>
     </html>
     """
-end
 
 embeddable_html(plt::AbstractPlot) = html_head(plt) * html_body(plt)
 

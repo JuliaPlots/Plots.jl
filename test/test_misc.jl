@@ -156,12 +156,13 @@ end
     mat = reshape(1:8, 2, 4)
     for i in axes(data4, 1)
         for attribute in (:fillrange, :ribbon)
-            @test plot(data4; NamedTuple{tuple(attribute)}(0)...)[1][i][attribute] == 0
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1, 2]))...)[1][i][attribute] ==
+            get_attr(pl) = pl[1][i][attribute]
+            @test plot(data4; NamedTuple{tuple(attribute)}(0)...) |> get_attr == 0
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1, 2]))...) |> get_attr ==
                   [1.0, 2.0]
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1 2]))...)[1][i][attribute] ==
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1 2]))...) |> get_attr ==
                   (iseven(i) ? 2 : 1)
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref(mat))...)[1][i][attribute] ==
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref(mat))...) |> get_attr ==
                   [2(i - 1) + 1, 2i]
         end
         @test plot(data4, ribbon = (mat, mat))[1][i][:ribbon] ==
