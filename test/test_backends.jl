@@ -214,7 +214,7 @@ end
         end
         for be in (
             # :gr, :unicodeplots, :pgfplotsx,
-            :plotlyjs,
+            # :plotlyjs,
             :pyplot,
             :inspectdr,
             :gaston,

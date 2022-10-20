@@ -1193,7 +1193,13 @@ function test_examples(
     m = Module(:PlotsExamplesModule)
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
-    Base.eval(m, :(using Plots; Plots.debugplots($debug); backend($(QuoteNode(pkgname)))))
+    Base.eval(m, quote
+        using Plots
+        Plots.debugplots($debug)
+        backend($(QuoteNode(pkgname)))
+        theme(:default)
+    end
+    )
     imports === nothing || Base.eval(m, _examples[i].imports)
     Base.eval(m, _examples[i].exprs)
 

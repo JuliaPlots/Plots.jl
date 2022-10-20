@@ -1645,7 +1645,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             )
             frame = leg."get_frame"()
             frame."set_linewidth"(py_thickness_scale(plt, 1))
-            leg."set_zorder"(1000)
+            leg."set_zorder"(1_000)
             if sp[:legend_title] !== nothing
                 leg."set_title"(sp[:legend_title])
                 PyPlot.plt."setp"(
