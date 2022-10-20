@@ -49,8 +49,17 @@ with(:unicodeplots) do
 end
 
 with(:plotlyjs) do
-    # @test_save :html
+    @test_save :html
     @test_save :json
-
-    # Sys.islinux() && @test_save :eps
 end
+
+with(:pyplot) do
+    @test_save :pdf
+    @test_save :png
+    @test_save :svg
+    if Sys.islinux()
+        @test_save :eps
+        @test_save :ps
+    end
+end
+

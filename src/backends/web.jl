@@ -57,11 +57,10 @@ function standalone_html_window(plt::AbstractPlot)
 end
 
 # uses wkhtmltopdf/wkhtmltoimage: http://wkhtmltopdf.org/downloads.html
-function html_to_png(html_fn, png_fn, w, h)
+html_to_png(html_fn, png_fn, w, h) =
     run(
         `wkhtmltoimage -f png -q --width $w --height $h --disable-smart-width $html_fn $png_fn`,
     )
-end
 
 function show_png_from_html(io::IO, plt::AbstractPlot)
     # write html to a temporary file
