@@ -66,7 +66,7 @@ jobs:
           using Conda; env, rc = Conda.ROOTENV, Conda.conda_rc(Conda.ROOTENV)
           Conda.runconda(`config --set auto_update_conda False --file $rc --force`, env)
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
-          Conda.add("matplotlib"; channel="conda-forge")
+          Conda.add("matplotlib")
           Conda.list()
 
       - name: Ubuntu LaTeX dependencies

@@ -61,7 +61,7 @@ with(:plotlyjs) do
     @test_save :json
     @test_save :pdf
     @test_save :png
-    @test_save :eps
+    # @test_save :eps
     @test_save :svg
 end
 

@@ -171,6 +171,12 @@ end
     end
 end
 
+const exclude = if VERSION.major == 1 && VERSION.minor == 9
+    [41]  # FIXME: github.com/JuliaLang/julia/issues/47261
+else
+    []
+end
+
 @testset "GR - reference images" begin
     with(:gr) do
         @test backend() == Plots.GRBackend()
@@ -181,7 +187,7 @@ end
                 image_comparison_facts(
                     :gr,
                     tol = PLOTS_IMG_TOL,
-                    skip = Plots._backend_skips[:gr],
+                    skip = vcat(Plots._backend_skips[:gr], exclude),
                 )
             end
         end
@@ -212,7 +218,7 @@ end
         end
         for be in (:gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
             @info "$be backend"
-            skip = Plots._backend_skips[be]
+            skip = vcat(Plots._backend_skips[be], exclude)
             Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
             closeall()
         end
