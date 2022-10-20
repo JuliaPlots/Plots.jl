@@ -508,10 +508,11 @@ has_attribute_segments(series::Series) =
         attr in _segmenting_vector_attributes
     ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
 
+check_aspect_ratio(ar::AbstractVector) = nothing  # for PyPlot
 check_aspect_ratio(ar::Number) = nothing
 check_aspect_ratio(ar::Symbol) =
     ar in (:none, :equal, :auto) || throw(ArgumentError("Invalid `aspect_ratio` = $ar"))
-check_aspect_ratio(ar::T) where {T} = throw(TypeError("Invalid `aspect_ratio`::$T = $ar "))
+check_aspect_ratio(ar::T) where {T} = throw(ArgumentError("Invalid `aspect_ratio`::$T = $ar "))
 
 function get_aspect_ratio(sp)
     ar = sp[:aspect_ratio]
