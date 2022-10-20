@@ -866,10 +866,11 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     get_markerstrokealpha(series, i),
                 ),
             )
-            lcolor_next = plot_color(
-                get_markerstrokecolor(series, i + 1),
-                get_markerstrokealpha(series, i + 1),
-            ) |> rgba_string
+            lcolor_next =
+                plot_color(
+                    get_markerstrokecolor(series, i + 1),
+                    get_markerstrokealpha(series, i + 1),
+                ) |> rgba_string
 
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
@@ -1087,9 +1088,8 @@ function plotly_html_body(plt, style = nothing)
     html
 end
 
-js_body(plt::Plot, uuid) = """
-                               Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
-                           """
+js_body(plt::Plot, uuid) =
+    "Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));"
 
 plotly_show_js(io::IO, plot::Plot) =
     JSON.print(io, Dict(:data => plotly_series(plot), :layout => plotly_layout(plot)))

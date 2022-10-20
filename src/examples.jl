@@ -1198,8 +1198,7 @@ function test_examples(
         Plots.debugplots($debug)
         backend($(QuoteNode(pkgname)))
         theme(:default)
-    end
-    )
+    end)
     imports === nothing || Base.eval(m, _examples[i].imports)
     Base.eval(m, _examples[i].exprs)
 

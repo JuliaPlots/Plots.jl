@@ -512,7 +512,8 @@ check_aspect_ratio(ar::AbstractVector) = nothing  # for PyPlot
 check_aspect_ratio(ar::Number) = nothing
 check_aspect_ratio(ar::Symbol) =
     ar in (:none, :equal, :auto) || throw(ArgumentError("Invalid `aspect_ratio` = $ar"))
-check_aspect_ratio(ar::T) where {T} = throw(ArgumentError("Invalid `aspect_ratio`::$T = $ar "))
+check_aspect_ratio(ar::T) where {T} =
+    throw(ArgumentError("Invalid `aspect_ratio`::$T = $ar "))
 
 function get_aspect_ratio(sp)
     ar = sp[:aspect_ratio]

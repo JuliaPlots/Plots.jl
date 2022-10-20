@@ -544,7 +544,7 @@ function scale_lims!(sp::Subplot, letter, factor)
     axis[:lims] = scale_lims(from, to, factor, scale)
 end
 function scale_lims!(plt::Plot, letter, factor)
-    foreach(sp -> scale_lims!(subplot, letter, factor), plt.subplots)
+    foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
     plt
 end
 scale_lims!(letter::Symbol, factor) = scale_lims!(current(), letter, factor)

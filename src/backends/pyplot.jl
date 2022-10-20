@@ -379,11 +379,7 @@ function py_init_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
         (;)
     end
     # add a new axis, and force it to create a new one by setting a distinct label
-    ax = fig."add_subplot"(;
-        label = string(gensym()),
-        projection = projection,
-        kw...,
-    )
+    ax = fig."add_subplot"(; label = string(gensym()), projection = projection, kw...)
     sp.o = ax
 end
 
