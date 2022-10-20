@@ -171,7 +171,6 @@ end
     end
 end
 
-#=
 @testset "GR - reference images" begin
     with(:gr) do
         @test backend() == Plots.GRBackend()
@@ -198,7 +197,6 @@ end
         @test_broken display(pl) isa Nothing
     end
 end
-=#
 
 @testset "Examples" begin
     if Sys.islinux()
