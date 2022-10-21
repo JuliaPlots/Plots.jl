@@ -156,12 +156,13 @@ end
     mat = reshape(1:8, 2, 4)
     for i in axes(data4, 1)
         for attribute in (:fillrange, :ribbon)
-            @test plot(data4; NamedTuple{tuple(attribute)}(0)...)[1][i][attribute] == 0
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1, 2]))...)[1][i][attribute] ==
+            get_attr(pl) = pl[1][i][attribute]
+            @test plot(data4; NamedTuple{tuple(attribute)}(0)...) |> get_attr == 0
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1, 2]))...) |> get_attr ==
                   [1.0, 2.0]
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1 2]))...)[1][i][attribute] ==
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1 2]))...) |> get_attr ==
                   (iseven(i) ? 2 : 1)
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref(mat))...)[1][i][attribute] ==
+            @test plot(data4; NamedTuple{tuple(attribute)}(Ref(mat))...) |> get_attr ==
                   [2(i - 1) + 1, 2i]
         end
         @test plot(data4, ribbon = (mat, mat))[1][i][:ribbon] ==
@@ -227,6 +228,24 @@ end
 end
 
 @testset "wrap" begin
-    # not sure what this is intended ...
+    # not sure what is intended here ...
     @test scatter(1:2, color = wrap([:red, :blue])) isa Plot
+end
+
+@testset "recipes" begin
+    with(:gr) do
+        @test Plots.seriestype_supported(:path) === :native
+
+        @test plot([1, 2, 5], seriestype = :linearfit) isa Plot
+        @test plot([1, 2, 5], seriestype = :scatterpath) isa Plot
+        @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa Plot
+
+        let pl = plot(1:2, widen = false)
+            Plots.abline!([0, 3], [5, 0])
+            @test xlims(pl) == (1, 2)
+            @test ylims(pl) == (1, 2)
+        end
+
+        @test Plots.findnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
+    end
 end

@@ -1,5 +1,3 @@
-import Plots: Font, @add_attributes, _subplot_defaults, add_aliases
-
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
         @test pl[1].primary_series_count == 2
@@ -13,10 +11,11 @@ end
           "y3"
     @test hline!(deepcopy(pl), [1.75], z_order = :back)[1].series_list[1][:label] == "y3"
     @test hline!(deepcopy(pl), [1.75], z_order = 2)[1].series_list[2][:label] == "y3"
-    @test isempty(pl[1][1][:extra_kwargs])
-    @test pl[1][2][:series_index] == 2
-    @test pl[1][1][:seriescolor] == cgrad(default(:palette))[1]
-    @test pl[1][2][:seriescolor] == cgrad(default(:palette))[2]
+    sp = pl[1]
+    @test isempty(sp[1][:extra_kwargs])
+    @test sp[2][:series_index] == 2
+    @test sp[1][:seriescolor] == cgrad(default(:palette))[1]
+    @test sp[2][:seriescolor] == cgrad(default(:palette))[2]
 end
 
 @testset "Axis Attributes" begin
@@ -28,16 +27,17 @@ end
 end
 
 @testset "Permute recipes" begin
-    pl = bar(["a", "b", "c"], [1, 2, 3])
-    ppl = bar(["a", "b", "c"], [1, 2, 3], permute = (:x, :y))
-    @test xticks(ppl) == yticks(pl)
-    @test yticks(ppl) == xticks(pl)
-    @test filter(isfinite, pl[1][1][:x]) == filter(isfinite, ppl[1][1][:y])
-    @test filter(isfinite, pl[1][1][:y]) == filter(isfinite, ppl[1][1][:x])
+    pl1 = bar(["a", "b", "c"], [1, 2, 3])
+    pl2 = bar(["a", "b", "c"], [1, 2, 3], permute = (:x, :y))
+    @test xticks(pl2) == yticks(pl1)
+    @test yticks(pl2) == xticks(pl1)
+    @test filter(isfinite, pl1[1][1][:x]) == filter(isfinite, pl2[1][1][:y])
+    @test filter(isfinite, pl1[1][1][:y]) == filter(isfinite, pl2[1][1][:x])
 end
 
 @testset "@add_attributes" begin
-    @add_attributes subplot struct Legend
+    Font = Plots.Font
+    Plots.@add_attributes subplot struct Legend
         background_color = :match
         foreground_color = :match
         position = :best
@@ -64,4 +64,6 @@ end
 
 @testset "aliases" begin
     @test :legend in aliases(:legend_position)
+    Plots.add_non_underscore_aliases!(Plots._typeAliases)
+    Plots.add_axes_aliases(:ticks, :tick)
 end

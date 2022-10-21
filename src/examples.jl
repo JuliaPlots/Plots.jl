@@ -4,7 +4,7 @@ Holds all data needed for a documentation example... header, description, and pl
 mutable struct PlotExample
     header::AbstractString
     desc::AbstractString
-    external::Bool  # requires external dependencies
+    external::Bool  # requires external optional dependencies not listed in [deps]
     imports::Union{Nothing,Expr}
     exprs::Expr
 end
@@ -655,13 +655,13 @@ const _examples = PlotExample[
     ),
     PlotExample( # 41
         "Array Types",
-        "Plots supports different `Array` types that follow the `AbstractArray` interface, like `StaticArrays` and `OffsetArrays.`",
+        "Plots supports different `Array` types that follow the `AbstractArray` interface, like `StaticArrays` and `OffsetArrays`.",
         true,
         :(using StaticArrays, OffsetArrays),
         quote
             sv = SVector{10}(rand(10))
             ov = OffsetVector(rand(10), -2)
-            plot([sv, ov], label = ["StaticArray" "OffsetArray"])
+            plot(Any[sv, ov], label = ["StaticArray" "OffsetArray"])
             plot!(3ov, ribbon = ov, label = "OffsetArray ribbon")
         end,
     ),
@@ -1180,27 +1180,36 @@ _backend_skips = Dict(
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
 
 # ---------------------------------------------------------------------------------
-
 # make and display one plot
-function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
-    Plots._debugMode[] = debug
-    @info("Testing plot: $pkgname:$idx:$(_examples[idx].header)")
-    backend(pkgname)
-    backend()
+function test_examples(
+    pkgname::Symbol,
+    i::Int;
+    debug = false,
+    disp = true,
+    callback = nothing,
+)
+    @info "Testing plot: $pkgname:$i:$(_examples[i].header)"
+
+    m = Module(:PlotsExamplesModule)
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
-    m = Module(:PlotsExampleModule)
-    Base.eval(m, :(using Plots))
-    imports === nothing || Base.eval(m, _examples[idx].imports)
-    Base.eval(m, _examples[idx].exprs)
+    Base.eval(m, quote
+        using Plots
+        Plots.debugplots($debug)
+        backend($(QuoteNode(pkgname)))
+        theme(:default)
+    end)
+    imports === nothing || Base.eval(m, _examples[i].imports)
+    Base.eval(m, _examples[i].exprs)
 
     disp && Base.eval(m, :(gui(current())))
-    current()
+    callback === nothing || callback(m, pkgname, i)
+    m.Plots.current()
 end
 
 # generate all plots and create a dict mapping idx --> plt
 """
-test_examples(pkgname[, idx]; debug=false, disp=true, sleep=nothing, skip=[], only=nothing)
+test_examples(pkgname[, idx]; debug=false, disp=true, sleep=nothing, skip=[], only=nothing, callback=nothing)
 
 Run the `idx` test example for a given backend, or all examples if `idx` is not specified.
 """
@@ -1211,18 +1220,21 @@ function test_examples(
     sleep = nothing,
     skip = [],
     only = nothing,
+    callback = nothing,
+    strict = false,
 )
-    Plots._debugMode[] = debug
     plts = Dict()
     for i in eachindex(_examples)
-        (only !== nothing && i ∉ only) && continue
-        i in skip && continue
+        i ∈ something(only, (i,)) || continue
+        i ∈ skip && continue
         try
-            plt = test_examples(pkgname, i, debug = debug, disp = disp)
-            plts[i] = plt
+            plts[i] = test_examples(pkgname, i; debug, disp, callback)
         catch ex
-            # TODO: put error info into markdown?
-            @warn("Example $pkgname:$i:$(_examples[i].header) failed with: $ex")
+            if strict
+                rethrow(ex)
+            else
+                @warn "Example $pkgname:$i:$(_examples[i].header) failed with: $ex"
+            end
         end
         sleep === nothing || Base.sleep(sleep)
     end

@@ -39,7 +39,6 @@ macro init_backend(s)
 end
 
 # include("backends/web.jl")
-# include("backends/supported.jl")
 
 # ---------------------------------------------------------
 

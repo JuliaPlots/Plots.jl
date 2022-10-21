@@ -26,7 +26,7 @@ pyrcparams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 
 # "support" matplotlib v3.4
 if PyPlot.version < v"3.4"
-    @warn("""You are using Matplotlib $(PyPlot.version), which is no longer
+    @warn """You are using Matplotlib $(PyPlot.version), which is no longer
     officialy supported by the Plots community. To ensure smooth Plots.jl
     integration update your Matplotlib library to a version >= 3.4.0
 
@@ -43,8 +43,7 @@ if PyPlot.version < v"3.4"
     Conda.update()
     Pkg.build("PyPlot")
     ```
-
-    """)
+    """
 end
 
 set_facecolor_sym = if PyPlot.version < v"2"
@@ -124,7 +123,7 @@ function py_linestyle(seriestype::Symbol, linestyle::Symbol)
     linestyle === :dash && return "--"
     linestyle === :dot && return ":"
     linestyle === :dashdot && return "-."
-    @warn("Unknown linestyle $linestyle")
+    @warn "Unknown linestyle $linestyle"
     return "-"
 end
 
@@ -159,13 +158,13 @@ function py_marker(marker::Symbol)
     marker === :vline && return "|"
     haskey(_shapes, marker) && return py_marker(_shapes[marker])
 
-    @warn("Unknown marker $marker")
+    @warn "Unknown marker $marker"
     return "o"
 end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
 function py_marker(markers::AVec)
-    @warn("Vectors of markers are currently unsupported in PyPlot: $markers")
+    @warn "Vectors of markers are currently unsupported in PyPlot: $markers"
     py_marker(markers[1])
 end
 
@@ -282,13 +281,15 @@ py_renderer(fig) = py_canvas(fig)."get_renderer"()
 py_drawfig(fig) = fig."draw"(py_renderer(fig))
 # py_drawax(ax) = ax[:draw](py_renderer(ax[:get_figure]()))
 
-# get a vector [left, right, bottom, top] in PyPlot coords (origin is bottom-left!)
+# get a vector [left, right, bottom, top] in PyPlot coords (origin is bottom-left (0, 0)!)
 py_extents(obj) = obj."get_window_extent"()."get_points"()
 
 # compute a bounding box (with origin top-left), however pyplot gives coords with origin bottom-left
 function py_bbox(obj)
-    fl, fr, fb, ft = py_extents(obj."get_figure"())
-    l, r, b, t = py_extents(obj)
+    fl, fr, fb, ft = bb = py_extents(obj."get_figure"())
+    l, r, b, t = ex = py_extents(obj)
+    # @show obj bb ex
+    # BoundingBox(x0, y0, width, height)
     BoundingBox(l * px, (ft - t) * px, (r - l) * px, (t - b) * px)
 end
 
@@ -305,7 +306,11 @@ end
 
 # bounding box: union of axis tick labels
 py_bbox_ticks(ax, letter) =
-    py_bbox(getproperty(ax, Symbol("get_" * letter * "ticklabels"))())
+    if ax.name == "3d"
+        py_bbox(nothing)  # FIXME: broken in `3d`
+    else
+        py_bbox(getproperty(ax, Symbol("get_" * letter * "ticklabels"))())
+    end
 
 # bounding box: axis guide
 py_bbox_axislabel(ax, letter) =
@@ -374,12 +379,7 @@ function py_init_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
         (;)
     end
     # add a new axis, and force it to create a new one by setting a distinct label
-    ax = fig."add_axes"(
-        [0, 0, 1, 1];
-        label = string(gensym()),
-        projection = projection,
-        kw...,
-    )
+    ax = fig."add_subplot"(; label = string(gensym()), projection = projection, kw...)
     sp.o = ax
 end
 
@@ -417,7 +417,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
     end
 
-    xyargs = (st in _3dTypes ? (x, y, z) : (x, y))
+    xyargs = st in _3dTypes ? (x, y, z) : (x, y)
 
     # handle zcolor and get c/cmap
     needs_colorbar = hascolorbar(sp)
@@ -475,7 +475,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             a = series[:arrow]
             if a !== nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
                 if typeof(a) != Arrow
-                    @warn("Unexpected type for arrow: $(typeof(a))")
+                    @warn "Unexpected type for arrow: $(typeof(a))"
                 else
                     arrowprops = KW(
                         :arrowstyle => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
@@ -891,8 +891,7 @@ function py_set_ticks(sp, ax, ticks, letter)
         return
     end
 
-    ttype = ticksType(ticks)
-    if ttype === :ticks
+    if (ttype = ticksType(ticks)) === :ticks
         axis."set_ticks"(ticks)
     elseif ttype === :ticks_and_labels
         axis."set_ticks"(ticks[1])
@@ -906,12 +905,10 @@ function py_compute_axis_minval(sp::Subplot, axis::Axis)
     # compute the smallest absolute value for the log scale's linear threshold
     minval = 1.0
     sps = axis.sps
-    for sp in sps
-        for series in series_list(sp)
-            v = series.plotattributes[axis[:letter]]
-            if !isempty(v)
-                minval = NaNMath.min(minval, ignorenan_minimum(abs.(v)))
-            end
+    for sp in sps, series in series_list(sp)
+        v = series.plotattributes[axis[:letter]]
+        if !isempty(v)
+            minval = NaNMath.min(minval, ignorenan_minimum(abs.(v)))
         end
     end
 
@@ -923,7 +920,7 @@ function py_compute_axis_minval(sp::Subplot, axis::Axis)
 end
 
 function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
-    scale in supported_scales() || return @warn("Unhandled scale value in pyplot: $scale")
+    scale in supported_scales() || return @warn "Unhandled scale value in pyplot: $scale"
     func = getproperty(ax, Symbol("set_", letter, "scale"))
     pyletter = PyPlot.version ≥ v"3.3" ? Symbol("") : letter  # https://matplotlib.org/3.3.0/api/api_changes.html
     kw = KW()
@@ -991,9 +988,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     PyPlot.plt."get_current_fig_manager"().resize(w, h)
 
     # initialize subplots
-    for sp in plt.subplots
-        py_init_subplot(plt, sp)
-    end
+    foreach(sp -> py_init_subplot(plt, sp), plt.subplots)
 
     # add the series
     for series in plt.series_list
@@ -1138,8 +1133,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ticks_letter = :y
             end
             py_set_scale(cb.ax, sp, sp[:colorbar_scale], ticks_letter)
-            sp[:colorbar_ticks] === :native ? nothing :
-            py_set_ticks(sp, cb.ax, ticks, ticks_letter)
+            sp[:colorbar_ticks] === :native || py_set_ticks(sp, cb.ax, ticks, ticks_letter)
 
             for lab in cbar_axis."get_ticklabels"()
                 lab."set_fontsize"(py_thickness_scale(plt, sp[:colorbar_tickfontsize]))
@@ -1308,9 +1302,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 py_get_matching_math_font(axis[:guidefontfamily]),
             )
 
-            if (RecipesPipeline.is3d(sp))
-                pyaxis."set_rotate_label"(false)
-            end
+            RecipesPipeline.is3d(sp) && pyaxis."set_rotate_label"(false)
 
             if (letter === :y && !RecipesPipeline.is3d(sp))
                 pyaxis."label"."set_rotation"(axis[:guidefontrotation] + 90)
@@ -1318,7 +1310,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."label"."set_rotation"(axis[:guidefontrotation])
             end
 
-            if axis[:grid] && !(ticks in (:none, nothing, false))
+            if axis[:grid] && ticks ∉ (:none, nothing, false)
                 pyaxis."grid"(
                     true,
                     color = py_color(axis[:foreground_color_grid]),
@@ -1469,8 +1461,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     if RecipesPipeline.is3d(sp)
         expand_padding!(padding, py_bbox_axis(ax, "z"), plotbb)
         if haskey(sp.attr, :cbar_ax)
-            bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
-            sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
+            sp.attr[:cbar_bbox] = py_bbox(sp.attr[:cbar_handle]."ax")
         end
     end
 
@@ -1645,7 +1636,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             )
             frame = leg."get_frame"()
             frame."set_linewidth"(py_thickness_scale(plt, 1))
-            leg."set_zorder"(1000)
+            leg."set_zorder"(1_000)
             if sp[:legend_title] !== nothing
                 leg."set_title"(sp[:legend_title])
                 PyPlot.plt."setp"(
@@ -1681,13 +1672,14 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
         ax."set_position"(pcts)
 
         if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)   # 2D plots are completely handled by axis dividers
-            cbw = sp.attr[:cbar_width]
+            bb = sp.attr[:cbar_bbox]
             # this is the bounding box of just the colors of the colorbar (not labels)
+            pad = 2mm
             cb_bbox = BoundingBox(
-                right(sp.bbox) - cbw - 2mm,
-                top(sp.bbox) + 2mm,
-                _cbar_width - 1mm,
-                height(sp.bbox) - 4mm,
+                right(sp.bbox) - 2width(bb) - 2pad,  # x0
+                top(sp.bbox) + pad,  # y0
+                width(bb),  # width
+                height(sp.bbox) - 2pad,  # height
             )
             pcts = get(
                 sp[:extra_kwargs],

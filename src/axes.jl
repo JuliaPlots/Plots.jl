@@ -81,9 +81,7 @@ end
 function attr!(axis::Axis, args...; kw...)
     # first process args
     plotattributes = axis.plotattributes
-    for arg in args
-        process_axis_arg!(plotattributes, arg)
-    end
+    foreach(arg -> process_axis_arg!(plotattributes, arg), args)
 
     # then preprocess keyword arguments
     Plots.preprocess_attributes!(KW(kw))
@@ -319,14 +317,13 @@ function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T}
     end
 end
 get_ticks(ticks::AVec, cvals, dvals, args...) = optimal_ticks_and_labels(ticks, args...)
-function get_ticks(ticks::Int, dvals, cvals, args...)
-    if !isempty(dvals)
+get_ticks(ticks::Int, dvals, cvals, args...) =
+    if isempty(dvals)
+        optimal_ticks_and_labels(ticks, args...)
+    else
         rng = round.(Int, range(1, stop = length(dvals), length = ticks))
         cvals[rng], string.(dvals[rng])
-    else
-        optimal_ticks_and_labels(ticks, args...)
     end
-end
 get_ticks(ticks::NTuple{2,Any}, args...) = ticks
 get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
 get_ticks(ticks::Bool, args...) =
@@ -361,10 +358,11 @@ function get_minor_ticks(sp, axis, ticks)
     end
 
     # default to 9 intervals between major ticks for log10 scale and 5 intervals otherwise
-    n_default = (scale === :log10) ? 9 : 5
-    n =
-        typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 ? axis[:minorticks] :
-        n_default
+    n = if typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1
+        axis[:minorticks]
+    else
+        scale === :log10 ? 9 : 5
+    end
 
     minorticks = typeof(ticks[1])[]
     for (i, hi) in enumerate(ticks[2:end])
@@ -377,15 +375,16 @@ function get_minor_ticks(sp, axis, ticks)
                     step = (hi_ - lo_) / n
                     append!(
                         minorticks,
-                        collect(
-                            (lo_ + (e > 1 ? 0 : step)):step:(hi_ - (e < sub ? 0 :
-                                                                    step / 2)),
-                        ),
+                        range(
+                            lo_ + (e > 1 ? 0 : step),
+                            hi_ - (e < sub ? 0 : step / 2);
+                            step,
+                        ) |> collect,
                     )
                 end
             else
                 step = (hi - lo) / n
-                append!(minorticks, collect((lo + step):step:(hi - step / 2)))
+                append!(minorticks, collect(range(lo + step, hi - step / 2; step)))
             end
         end
     end
@@ -423,9 +422,7 @@ function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:
 end
 function expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
     ex = axis[:extrema]::Extrema
-    for vi in v
-        expand_extrema!(ex, vi)
-    end
+    foreach(vi -> expand_extrema!(ex, vi), v)
     ex
 end
 
@@ -496,11 +493,9 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
         dsym = vert ? :x : :y
         data = plotattributes[dsym]
 
-        bw = plotattributes[:bar_width]
-        if bw === nothing
-            bw =
-                plotattributes[:bar_width] =
-                    _bar_width * ignorenan_minimum(filter(x -> x > 0, diff(sort(data))))
+        if (bw = plotattributes[:bar_width]) === nothing
+            pos = filter(>(0), diff(sort(data)))
+            plotattributes[:bar_width] = bw = _bar_width * ignorenan_minimum(pos)
         end
         axis = sp.attr[get_attr_symbol(dsym, :axis)]
         expand_extrema!(axis, ignorenan_maximum(data) + 0.5maximum(bw))
@@ -549,16 +544,12 @@ function scale_lims!(sp::Subplot, letter, factor)
     axis[:lims] = scale_lims(from, to, factor, scale)
 end
 function scale_lims!(plt::Plot, letter, factor)
-    for subplot in plt.subplots
-        scale_lims!(subplot, letter, factor)
-    end
+    foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
     plt
 end
 scale_lims!(letter::Symbol, factor) = scale_lims!(current(), letter, factor)
 function scale_lims!(plt::Union{Plot,Subplot}, factor)
-    for letter in (:x, :y, :z)
-        scale_lims!(plt, letter, factor)
-    end
+    foreach(letter -> scale_lims!(plt, letter, factor), (:x, :y, :z))
     plt
 end
 scale_lims!(factor::Number) = scale_lims!(current(), factor)
@@ -602,11 +593,9 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
     (lims isa Tuple || lims === :round) && return nothing
-    for sp in axis.sps
-        for series in series_list(sp)
-            if series.plotattributes[:seriestype] in _widen_seriestypes
-                return factor
-            end
+    for sp in axis.sps, series in series_list(sp)
+        if series.plotattributes[:seriestype] in _widen_seriestypes
+            return factor
         end
     end
     nothing
@@ -723,14 +712,14 @@ end
 # these methods track the discrete (categorical) values which correspond to axis continuous values (cv)
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
-function discrete_value!(plotattributes, letter::Symbol, dv)
-    l = if plotattributes[:permute] !== :none
-        filter(!=(letter), plotattributes[:permute]) |> only
-    else
-        letter
+discrete_value!(plotattributes, letter::Symbol, dv) =
+    let l = if plotattributes[:permute] !== :none
+            filter(!=(letter), plotattributes[:permute]) |> only
+        else
+            letter
+        end
+        discrete_value!(plotattributes[:subplot][get_attr_symbol(l, :axis)], dv)
     end
-    discrete_value!(plotattributes[:subplot][get_attr_symbol(l, :axis)], dv)
-end
 
 discrete_value!(axis::Axis, dv) =
     if (cv_idx = get(axis[:discrete_map], dv, -1)) == -1

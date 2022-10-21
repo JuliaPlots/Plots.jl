@@ -1,6 +1,6 @@
 macro test_save(fmt)
     quote
-        let pl = plot(1:10), fn = tempname(), fp = tmpname() # fp is an AbstractPath from FilePathsBase.jl
+        let pl = plot(1:2), fn = tempname(), fp = tmpname()  # fp is an AbstractPath from FilePathsBase.jl
             getfield(Plots, $fmt)(pl, fn)
             getfield(Plots, $fmt)(fn)
             getfield(Plots, $fmt)(fp)
@@ -21,7 +21,7 @@ macro test_save(fmt)
             @test_throws ErrorException savefig(string(fp, ".foo"))
         end
 
-        let pl = plot(1:10), io = PipeBuffer()
+        let pl = plot(1:2), io = PipeBuffer()
             getfield(Plots, $fmt)(pl, io)
             getfield(Plots, $fmt)(io)
             @test length(io.data) > 10
@@ -34,13 +34,9 @@ with(:gr) do
     @test Plots.addExtension("foo", "bar") == "foo.bar"
 
     @test_save :png
-    @test_save :svg
     @test_save :pdf
+    @test_save :svg
     @test_save :ps
-end
-
-with(:pgfplotsx) do
-    Sys.islinux() && @test_save :tex
 end
 
 with(:unicodeplots) do
@@ -49,8 +45,42 @@ with(:unicodeplots) do
 end
 
 with(:plotlyjs) do
-    # @test_save :html
+    @test_save :html
     @test_save :json
-
-    # Sys.islinux() && @test_save :eps
+    @test_save :pdf
+    @test_save :png
+    @test_save :svg
+    # @test_save :eps
 end
+
+if Sys.islinux()
+    with(:pgfplotsx) do
+        @test_save :tex
+        @test_save :png
+        @test_save :pdf
+    end
+
+    with(:pyplot) do
+        @test_save :pdf
+        @test_save :png
+        @test_save :svg
+        @test_save :eps
+        @test_save :ps
+    end
+end
+
+#=
+with(:gaston) do
+    @test_save :png
+    @test_save :pdf
+    @test_save :eps
+    @test_save :svg
+end
+
+with(:inspectdr) do
+    @test_save :png
+    @test_save :pdf
+    @test_save :eps
+    @test_save :svg
+end
+=#

@@ -1,9 +1,9 @@
 is_ci() = get(ENV, "CI", "false") == "true"
 
-const TEST_MODULE = Module(:PlotsTestModule)
+const TESTS_MODULE = Module(:PlotsTestsModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "2e-3" : "1e-5"))
 
-Base.eval(TEST_MODULE, :(using Random, StableRNGs, Plots))
+Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
 reference_dir(args...) =
     if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) !== nothing
@@ -82,7 +82,7 @@ function image_comparison_tests(
                 replace_rand(example.exprs),
                 :(png($fn)),
             )
-                Base.eval(TEST_MODULE, ex)
+                Base.eval(TESTS_MODULE, ex)
             end
         end
 
@@ -171,6 +171,12 @@ end
     end
 end
 
+const exclude = if VERSION.major == 1 && VERSION.minor == 9
+    [41]  # FIXME: github.com/JuliaLang/julia/issues/47261
+else
+    []
+end
+
 @testset "GR - reference images" begin
     with(:gr) do
         @test backend() == Plots.GRBackend()
@@ -181,7 +187,7 @@ end
                 image_comparison_facts(
                     :gr,
                     tol = PLOTS_IMG_TOL,
-                    skip = Plots._backend_skips[:gr],
+                    skip = vcat(Plots._backend_skips[:gr], exclude),
                 )
             end
         end
@@ -200,14 +206,19 @@ end
 
 @testset "Examples" begin
     if Sys.islinux()
+        callback(m, pkgname, i) = begin
+            pl = m.Plots.current()
+            save_func = (; pgfplotsx = m.Plots.pdf, unicodeplots = m.Plots.txt)  # fastest `savefig` for each backend
+            fn = Base.invokelatest(
+                get(save_func, pkgname, m.Plots.png),
+                pl,
+                tempname() * "_ex$i",
+            )
+            @test filesize(fn) > 1_000
+        end
         for be in (:gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
-            @info be
-            for (i, pl) in
-                Plots.test_examples(be, skip = Plots._backend_skips[be], disp = is_ci())  # `ci` display for coverage
-                fn = tempname() * ".png"
-                png(pl, fn)
-                @test filesize(fn) > 1_000
-            end
+            skip = vcat(Plots._backend_skips[be], exclude)
+            Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
             closeall()
         end
     end
