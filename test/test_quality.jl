@@ -1,10 +1,12 @@
 @testset "allocations" begin
     if Sys.islinux()
         with(:gr) do
-            stats = @timed plot(1:2)
-            ref_bytes = 53_196_261  # measured on v1.35.5 - 1.8.2
+            stats = @timed show(devnull, plot(1:2))
+            @show stats.bytes
+            ref_bytes = 62_095_277  # measured on v1.35.5 - 1.8.2
             if stats.bytes > ref_bytes
                 @warn "Allocations might have increased ($(stats.bytes) > $ref_bytes)"
+                # only warn, since this might be dependencies or `julia` dependent
             end
         end
     end
