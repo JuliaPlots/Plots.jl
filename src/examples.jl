@@ -1139,7 +1139,7 @@ _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [30],
     :pyplot => [22, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
-    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55, 56],
+    :plotlyjs => [21, 24, 25, 30, 49, 50, 51, 55, 56],
     :pgfplotsx => [
         6,  # images
         16,  # pgfplots thinks the upper panel is too small
@@ -1170,8 +1170,6 @@ _backend_skips = Dict(
         56,  # barplots
     ],
     :gaston => [
-        2,  # animations
-        31,  # animations
         49,  # TODO: support polar
         50,  # TODO: 1D data not supported for pm3d
         60,  # :perspective projection unsupported
