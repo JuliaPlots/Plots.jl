@@ -533,9 +533,9 @@ function gr_colorbar_colors(series::Series, clims)
         else
             clims  # GR.contour uses a color range according to data range
         end
-        1000 .+ 255 .* (levels .- zrange[1]) ./ (zrange[2] - zrange[1])
+        1_000 .+ 255 .* (levels .- zrange[1]) ./ (zrange[2] - zrange[1])
     else
-        1000:1255
+        1_000:1_255
     end
     round.(Int, colors)
 end
@@ -561,7 +561,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
         series = cbar.gradients
         gr_set_gradient(_cbar_unique(get_colorgradient.(series), "color"))
         gr_set_transparency(_cbar_unique(get_fillalpha.(series), "fill alpha"))
-        GR.cellarray(xmin, xmax, zmax, zmin, 1, 256, 1000:1255)
+        GR.cellarray(xmin, xmax, zmax, zmin, 1, 256, 1_000:1_255)
     end
 
     if !isempty(cbar.fills)
@@ -1024,7 +1024,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     gr_add_title(sp, viewport_plotarea, viewport_subplot)
 
     # this needs to be here to point the colormap to the right indices
-    GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
+    GR.setcolormap(1_000 + GR.COLORMAP_COOLWARM)
 
     # init the colorbar
     cbar = GRColorbar()
@@ -2034,7 +2034,7 @@ function gr_draw_contour(series, x, y, z, clims)
         GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
     else
         coff = let black = plot_color(:black)
-            plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1000
+            plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1_000
         end
         GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
     end
@@ -2136,7 +2136,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
             z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
             get_z_normalized.(z_log, log10.(clims)...), z_log
         end
-        rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
+        rgba = Int32[round(Int32, 1_000 + 255z) for z in z_normalized]
         bg_rgba = gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))
         foreach(i -> isnan(_z[i]) && (rgba[i] = bg_rgba), eachindex(rgba))
         if ispolar(series)
