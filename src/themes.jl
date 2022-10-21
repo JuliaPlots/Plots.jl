@@ -99,7 +99,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         subplot := 3
         seriestype := :histogram
         color_palette := cp
-        randn(1000) .+ (0:2:4)'
+        randn(1_000) .+ (0:2:4)'
     end
 
     f(r) = sin(r) / r

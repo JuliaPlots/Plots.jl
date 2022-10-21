@@ -149,7 +149,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 10
         "Histogram2D",
-        :(histogram2d(randn(10000), randn(10000), nbins = 20)),
+        :(histogram2d(randn(10_000), randn(10_000), nbins = 20)),
     ),
     PlotExample( # 11
         "Line types",
@@ -206,7 +206,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 15
         "Histogram",
-        :(histogram(randn(1000), bins = :scott, weights = repeat(1:5, outer = 200))),
+        :(histogram(randn(1_000), bins = :scott, weights = repeat(1:5, outer = 200))),
     ),
     PlotExample( # 16
         "Subplots",
@@ -759,7 +759,7 @@ const _examples = PlotExample[
         quote
             d = MvNormal([1.0 0.75; 0.75 2.0])
             plot([(1, 2), (3, 2), (2, 1), (2, 3)])
-            scatter!(Point2.(eachcol(rand(d, 1000))), alpha = 0.25)
+            scatter!(Point2.(eachcol(rand(d, 1_000))), alpha = 0.25)
         end,
     ),
     PlotExample( # 47

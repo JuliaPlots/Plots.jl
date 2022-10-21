@@ -1201,16 +1201,15 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
     if occursin("right", str)
         xpos = if occursin("outer", str)  # per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
             viewport_plotarea[2] +
-                leg.xoffset +
-                leg.leftw +
-                ymirror * gr_axis_width(sp, sp[:yaxis])
+            leg.xoffset +
+            leg.leftw +
+            ymirror * gr_axis_width(sp, sp[:yaxis])
         else
             viewport_plotarea[2] - leg.rightw - leg.textw - leg.xoffset
         end
     elseif occursin("left", str)
         xpos = if occursin("outer", str)
-            viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) -
-                leg.xoffset * 2 - leg.rightw - leg.textw
+            viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) - leg.xoffset * 2 - leg.rightw - leg.textw
         else
             viewport_plotarea[1] + leg.leftw + leg.xoffset
         end
@@ -1223,16 +1222,16 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
     if occursin("top", str)
         ypos = if s === :outertop
             viewport_plotarea[4] +
-                leg.yoffset +
-                leg.h +
-                xmirror * gr_axis_height(sp, sp[:xaxis])
+            leg.yoffset +
+            leg.h +
+            xmirror * gr_axis_height(sp, sp[:xaxis])
         else
             viewport_plotarea[4] - leg.yoffset - leg.dy
         end
     elseif occursin("bottom", str)
         ypos = if s === :outerbottom
             viewport_plotarea[3] - leg.yoffset - leg.dy -
-                !xmirror * gr_axis_height(sp, sp[:xaxis])
+            !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
             viewport_plotarea[3] + leg.yoffset + leg.h
         end

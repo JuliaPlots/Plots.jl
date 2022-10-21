@@ -455,7 +455,7 @@ with(:pgfplotsx) do
         @testset "Issues - actually compile `.tex`" begin
             # Plots.jl/issues/4308
             fn = tempname() * ".pdf"
-            pl = plot((1:1000) .^ 2, (1:1000) .^ 2, xscale = :log10)
+            pl = plot((1:10) .^ 2, (1:10) .^ 2, xscale = :log10)
             Plots.pdf(pl, fn)
             @test isfile(fn)
         end

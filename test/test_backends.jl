@@ -165,9 +165,13 @@ end
         @test pl isa Plot
         @test show(io, pl) isa Nothing
 
-        pl = plot((plot(i) for i in 1:4)..., layout = (2, 2))
+        pl = plot(map(plot, 1:4)..., layout = (2, 2))
         @test pl isa Plot
         @test show(io, pl) isa Nothing
+
+        redirect_stdout(devnull) do
+            show(plot(1:2))
+        end
     end
 end
 

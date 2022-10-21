@@ -141,12 +141,14 @@ end
 
     # JuliaPlots/Plots.jl/pull/3634#issue-940055478
     let p = plot(
-        plot(rand(10) .* 15, aspect_ratio=:equal),
-        plot(rand(10) .* 10, aspect_ratio=:equal),
-        legend=false, layout=grid(1, 2), frame=:box
-      )
-        annotate!(sp=1, (.03, .95), text("Cats&Dogs", :left))
-        annotate!(sp=2, (.03, .95), text("Cats&Dogs", :left))
+            plot(rand(10) .* 15, aspect_ratio = :equal),
+            plot(rand(10) .* 10, aspect_ratio = :equal),
+            legend = false,
+            layout = grid(1, 2),
+            frame = :box,
+        )
+        annotate!(sp = 1, (0.03, 0.95), text("Cats&Dogs", :left))
+        annotate!(sp = 2, (0.03, 0.95), text("Cats&Dogs", :left))
     end
 end
 

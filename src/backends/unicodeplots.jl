@@ -238,7 +238,7 @@ function addUnicodeSeries!(
         func = UnicodePlots.scatterplot!
         series_kw = (; marker = series[:markershape])
     else
-        error("Plots(UnicodePlots): series type $st not supported")
+        throw(ArgumentError("Plots(UnicodePlots): series type $st not supported"))
     end
 
     label = addlegend ? series[:label] : ""
@@ -282,18 +282,18 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
     canvas_type = nothing
     imgs = []
     sps = 0
-    for r in 1:nr
-        for c in 1:nc
-            if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
-                error("Plots(UnicodePlots): complex nested layout is currently unsupported")
-            else
-                img = UnicodePlots.png_image(plt.o[sps += 1]; pixelsize = 32)
-                canvas_type = eltype(img)
-                h, w = size(img)
-                s1[r, c] = h
-                s2[r, c] = w
-                push!(imgs, img)
-            end
+    for r in 1:nr, c in 1:nc
+        if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
+            "Plots(UnicodePlots): complex nested layout is currently unsupported" |>
+            ArgumentError |>
+            throw
+        else
+            img = UnicodePlots.png_image(plt.o[sps += 1]; pixelsize = 32)
+            canvas_type = eltype(img)
+            h, w = size(img)
+            s1[r, c] = h
+            s2[r, c] = w
+            push!(imgs, img)
         end
     end
     if canvas_type !== nothing
