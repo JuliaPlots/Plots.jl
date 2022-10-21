@@ -250,7 +250,7 @@ end
     end
 end
 
-@testset "mesh3d" do
+@testset "mesh3d" begin
     with(:gr) do
         x = [0, 1, 2, 0]
         y = [0, 0, 1, 2]
