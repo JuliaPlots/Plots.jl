@@ -1145,13 +1145,12 @@ const _examples = PlotExample[
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [2, 31]
 _backend_skips = Dict(
-    :gr => [30],
+    :gr => [],
     :pyplot => [22, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
     :plotlyjs => [21, 24, 25, 30, 49, 50, 51, 55, 56, 62],
     :pgfplotsx => [
         6,  # images
         16,  # pgfplots thinks the upper panel is too small
-        30,  # @df
         32,  # spy
         49,  # polar heatmap
         51,  # image with custom axes
