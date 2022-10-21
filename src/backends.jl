@@ -44,7 +44,6 @@ end
 
 # don't do anything as a default
 _create_backend_figure(plt::Plot) = nothing
-_prepare_plot_object(plt::Plot) = nothing
 _initialize_subplot(plt::Plot, sp::Subplot) = nothing
 
 _series_added(plt::Plot, series::Series) = nothing

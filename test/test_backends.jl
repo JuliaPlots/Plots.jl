@@ -180,6 +180,7 @@ end
 @testset "GR - reference images" begin
     with(:gr) do
         @test backend() == Plots.GRBackend()
+        @test backend_name() === :gr
         withenv("PLOTS_TEST" => true, "GKSwstype" => "nul") do
             @static if haskey(ENV, "APPVEYOR")
                 @info "Skipping GR image comparison tests on AppVeyor"
@@ -197,7 +198,6 @@ end
 @testset "PlotlyJS" begin
     with(:plotlyjs) do
         @test backend() == Plots.PlotlyJSBackend()
-
         pl = plot(rand(10))
         @test pl isa Plot
         @test_broken display(pl) isa Nothing

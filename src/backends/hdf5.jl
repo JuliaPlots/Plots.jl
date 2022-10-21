@@ -487,9 +487,6 @@ is_marker_supported(::HDF5Backend, shape::Shape) = true
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{HDF5Backend}) end
 
-# # this is called early in the pipeline, use it to make the plot current or something
-# function _prepare_plot_object(plt::Plot{HDF5Backend}) end
-
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{HDF5Backend}, sp::Subplot{HDF5Backend}) end
 
