@@ -1136,7 +1136,7 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [30],
-    :pyplot => [2, 22, 25, 30, 31, 49, 55, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
+    :pyplot => [2, 22, 25, 30, 31, 49, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55, 56],
     :pgfplotsx => [
         2,  # animation
