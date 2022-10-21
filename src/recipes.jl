@@ -70,7 +70,7 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
 
 @nospecialize
 
-@recipe function f(::Type{Val{:line}}, x, y, z)
+@recipe function f(::Type{Val{:line}}, x, y, z)  # COV_EXCL_LINE
     indices = sortperm(x)
     x := x[indices]
     y := y[indices]
@@ -96,7 +96,7 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
 end
 @deps line path
 
-@recipe function f(::Type{Val{:hline}}, x, y, z)
+@recipe function f(::Type{Val{:hline}}, x, y, z)  # COV_EXCL_LINE
     n = length(y)
     newx = repeat(Float64[1, 2, NaN], n)
     newy = vec(Float64[yi for i in 1:3, yi in y])
@@ -107,7 +107,7 @@ end
 end
 @deps hline straightline
 
-@recipe function f(::Type{Val{:vline}}, x, y, z)
+@recipe function f(::Type{Val{:vline}}, x, y, z)  # COV_EXCL_LINE
     n = length(y)
     newx = vec(Float64[yi for i in 1:3, yi in y])
     x := newx
@@ -117,7 +117,7 @@ end
 end
 @deps vline straightline
 
-@recipe function f(::Type{Val{:hspan}}, x, y, z)
+@recipe function f(::Type{Val{:hspan}}, x, y, z)  # COV_EXCL_LINE
     n = div(length(y), 2)
     newx = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
     newy = vcat(map(i -> [y[2i - 1], y[2i - 1], y[2i], y[2i], NaN], 1:n)...)
@@ -129,7 +129,7 @@ end
 end
 @deps hspan shape
 
-@recipe function f(::Type{Val{:vspan}}, x, y, z)
+@recipe function f(::Type{Val{:vspan}}, x, y, z)  # COV_EXCL_LINE
     n = div(length(y), 2)
     newx = vcat(map(i -> [y[2i - 1], y[2i - 1], y[2i], y[2i], NaN], 1:n)...)
     newy = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
@@ -145,7 +145,7 @@ end
 # path and scatter
 
 # create a path from steps
-@recipe function f(::Type{Val{:scatterpath}}, x, y, z)
+@recipe function f(::Type{Val{:scatterpath}}, x, y, z)  # COV_EXCL_LINE
     x := x
     y := y
     seriestype := :scatter
@@ -167,7 +167,7 @@ end
 # regression line and scatter
 
 # plots line corresponding to linear regression of y on a constant and x
-@recipe function f(::Type{Val{:linearfit}}, x, y, z)
+@recipe function f(::Type{Val{:linearfit}}, x, y, z)  # COV_EXCL_LINE
     x := x
     y := y
     seriestype := :scatter
@@ -213,7 +213,7 @@ make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
 @nospecialize
 
 # create a path from steps
-@recipe function f(::Type{Val{:steppre}}, x, y, z)
+@recipe function f(::Type{Val{:steppre}}, x, y, z)  # COV_EXCL_LINE
     plotattributes[:x] = make_steps(x, :post, false)
     plotattributes[:y] = make_steps(y, :pre, false)
     seriestype := :path
@@ -238,7 +238,7 @@ end
 @deps steppre path scatter
 
 # create a path from steps
-@recipe function f(::Type{Val{:stepmid}}, x, y, z)
+@recipe function f(::Type{Val{:stepmid}}, x, y, z)  # COV_EXCL_LINE
     plotattributes[:x] = make_steps(x, :mid, true)
     plotattributes[:y] = make_steps(y, :post, true)
     seriestype := :path
@@ -263,7 +263,7 @@ end
 @deps stepmid path scatter
 
 # create a path from steps
-@recipe function f(::Type{Val{:steppost}}, x, y, z)
+@recipe function f(::Type{Val{:steppost}}, x, y, z)  # COV_EXCL_LINE
     plotattributes[:x] = make_steps(x, :pre, false)
     plotattributes[:y] = make_steps(y, :post, false)
     seriestype := :path
@@ -291,7 +291,7 @@ end
 # sticks
 
 # create vertical line segments from fill
-@recipe function f(::Type{Val{:sticks}}, x, y, z)
+@recipe function f(::Type{Val{:sticks}}, x, y, z)  # COV_EXCL_LINE
     n = length(x)
     fr = plotattributes[:fillrange]
     if fr === nothing
@@ -367,7 +367,7 @@ end
 @nospecialize
 
 # create segmented bezier curves in place of line segments
-@recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
+@recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)  # COV_EXCL_LINE
     args = z !== nothing ? (x, y, z) : (x, y)
     newx, newy = zeros(0), zeros(0)
     fr = plotattributes[:fillrange]
@@ -407,7 +407,7 @@ end
 # ---------------------------------------------------------------------------
 
 # create a bar plot as a filled step function
-@recipe function f(::Type{Val{:bar}}, x, y, z)
+@recipe function f(::Type{Val{:bar}}, x, y, z)  # COV_EXCL_LINE
     procx, procy, xscale, yscale, baseline = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
     axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
@@ -510,7 +510,7 @@ end
 
 # ---------------------------------------------------------------------------
 # Plots Heatmap
-@recipe function f(::Type{Val{:plots_heatmap}}, x, y, z)
+@recipe function f(::Type{Val{:plots_heatmap}}, x, y, z)  # COV_EXCL_LINE
     xe, ye = heatmap_edges(x), heatmap_edges(y)
     m, n = size(z.surf)
     x_pts, y_pts = fill(NaN, 6 * m * n), fill(NaN, 6 * m * n)
@@ -599,7 +599,7 @@ end
 
 @nospecialize
 
-@recipe function f(::Type{Val{:barbins}}, x, y, z)
+@recipe function f(::Type{Val{:barbins}}, x, y, z)  # COV_EXCL_LINE
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
     if (plotattributes[:bar_width] === nothing)
         bar_width := diff(edge)
@@ -611,7 +611,7 @@ end
 end
 @deps barbins bar
 
-@recipe function f(::Type{Val{:scatterbins}}, x, y, z)
+@recipe function f(::Type{Val{:scatterbins}}, x, y, z)  # COV_EXCL_LINE
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
     @series begin
         x := _bin_centers(edge)
@@ -689,7 +689,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
     (x, y)
 end
 
-@recipe function f(::Type{Val{:stepbins}}, x, y, z)
+@recipe function f(::Type{Val{:stepbins}}, x, y, z)  # COV_EXCL_LINE
     @nospecialize
     axis = plotattributes[:subplot][Plots.isvertical(plotattributes) ? :xaxis : :yaxis]
 
@@ -821,13 +821,13 @@ end
 
 @nospecialize
 
-@recipe function f(::Type{Val{:histogram}}, x, y, z)
+@recipe function f(::Type{Val{:histogram}}, x, y, z)  # COV_EXCL_LINE
     seriestype := length(y) > 1e6 ? :stephist : :barhist
     ()
 end
 @deps histogram barhist
 
-@recipe function f(::Type{Val{:barhist}}, x, y, z)
+@recipe function f(::Type{Val{:barhist}}, x, y, z)  # COV_EXCL_LINE
     h = _make_hist(
         tuple(y),
         plotattributes[:bins],
@@ -841,7 +841,7 @@ end
 end
 @deps barhist barbins
 
-@recipe function f(::Type{Val{:stephist}}, x, y, z)
+@recipe function f(::Type{Val{:stephist}}, x, y, z)  # COV_EXCL_LINE
     h = _make_hist(
         tuple(y),
         plotattributes[:bins],
@@ -855,7 +855,7 @@ end
 end
 @deps stephist stepbins
 
-@recipe function f(::Type{Val{:scatterhist}}, x, y, z)
+@recipe function f(::Type{Val{:scatterhist}}, x, y, z)  # COV_EXCL_LINE
     h = _make_hist(
         tuple(y),
         plotattributes[:bins],
@@ -869,7 +869,7 @@ end
 end
 @deps scatterhist scatterbins
 
-@recipe function f(h::StatsBase.Histogram{T,1,E}) where {T,E}
+@recipe function f(h::StatsBase.Histogram{T,1,E}) where {T,E}  # COV_EXCL_LINE
     seriestype --> :barbins
 
     st_map = Dict(
@@ -892,7 +892,7 @@ end
     end
 end
 
-@recipe f(hv::AbstractVector{H}) where {H<:StatsBase.Histogram} =
+@recipe f(hv::AbstractVector{H}) where {H<:StatsBase.Histogram} =  # COV_EXCL_LINE
     for h in hv
         @series begin
             h
@@ -902,7 +902,7 @@ end
 # ---------------------------------------------------------------------------
 # Histogram 2D
 
-@recipe function f(::Type{Val{:bins2d}}, x, y, z)
+@recipe function f(::Type{Val{:bins2d}}, x, y, z)  # COV_EXCL_LINE
     edge_x, edge_y, weights = x, y, z.surf
 
     float_weights = float(weights)
@@ -925,7 +925,7 @@ end
 end
 Plots.@deps bins2d heatmap
 
-@recipe function f(::Type{Val{:histogram2d}}, x, y, z)
+@recipe function f(::Type{Val{:histogram2d}}, x, y, z)  # COV_EXCL_LINE
     h = _make_hist(
         (x, y),
         plotattributes[:bins],
@@ -940,14 +940,14 @@ Plots.@deps bins2d heatmap
 end
 @deps histogram2d bins2d
 
-@recipe function f(h::StatsBase.Histogram{T,2,E}) where {T,E}
+@recipe function f(h::StatsBase.Histogram{T,2,E}) where {T,E}  # COV_EXCL_LINE
     seriestype --> :bins2d
     (h.edges[1], h.edges[2], Surface(h.weights))
 end
 
 # ---------------------------------------------------------------------------
 # pie
-@recipe function f(::Type{Val{:pie}}, x, y, z)
+@recipe function f(::Type{Val{:pie}}, x, y, z)  # COV_EXCL_LINE
     framestyle --> :none
     aspect_ratio --> 1
     s = sum(y)
@@ -971,7 +971,7 @@ end
 # ---------------------------------------------------------------------------
 # mesh 3d replacement for non-plotly backends
 
-@recipe function f(::Type{Val{:mesh3d}}, x, y, z)
+@recipe function f(::Type{Val{:mesh3d}}, x, y, z)  # COV_EXCL_LINE
     # As long as no i,j,k are supplied this should work with PyPlot and GR
     seriestype := :surface
     if plotattributes[:connections] !== nothing
@@ -987,7 +987,7 @@ end
 # ---------------------------------------------------------------------------
 # scatter 3d
 
-@recipe function f(::Type{Val{:scatter3d}}, x, y, z)
+@recipe function f(::Type{Val{:scatter3d}}, x, y, z)  # COV_EXCL_LINE
     seriestype := :path3d
     if plotattributes[:markershape] === :none
         markershape := :circle
@@ -1003,7 +1003,7 @@ end
 # lens! - magnify a region of a plot
 lens!(args...; kwargs...) = plot!(args...; seriestype = :lens, kwargs...)
 export lens!
-@recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
+@recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)  # COV_EXCL_LINE
     sp_index, inset_bbox = plotattributes[:inset_subplots]
     if !(width(inset_bbox) isa Measures.Length{:w,<:Real})
         throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
@@ -1101,7 +1101,7 @@ end
 # ---------------------------------------------------------------------------
 # contourf - filled contours
 
-@recipe function f(::Type{Val{:contourf}}, x, y, z)
+@recipe function f(::Type{Val{:contourf}}, x, y, z)  # COV_EXCL_LINE
     @nospecialize
     fillrange := true
     seriestype := :contour
@@ -1169,7 +1169,7 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
 
 @nospecialize
 
-@recipe function f(::Type{Val{:xerror}}, x, y, z)
+@recipe function f(::Type{Val{:xerror}}, x, y, z)  # COV_EXCL_LINE
     error_style!(plotattributes)
     markershape --> :vline
     xerr = error_zipit(plotattributes[:xerror])
@@ -1186,7 +1186,7 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
 end
 @deps xerror path
 
-@recipe function f(::Type{Val{:yerror}}, x, y, z)
+@recipe function f(::Type{Val{:yerror}}, x, y, z)  # COV_EXCL_LINE
     error_style!(plotattributes)
     markershape --> :hline
     yerr = error_zipit(plotattributes[:yerror])
@@ -1203,7 +1203,7 @@ end
 end
 @deps yerror path
 
-@recipe function f(::Type{Val{:zerror}}, x, y, z)
+@recipe function f(::Type{Val{:zerror}}, x, y, z)  # COV_EXCL_LINE
     error_style!(plotattributes)
     markershape --> :hline
     if z !== nothing
@@ -1324,7 +1324,7 @@ function quiver_using_hack(plotattributes::AKW)
 end
 
 # function apply_series_recipe(plotattributes::AKW, ::Type{Val{:quiver}})
-@recipe function f(::Type{Val{:quiver}}, x, y, z)
+@recipe function f(::Type{Val{:quiver}}, x, y, z)  # COV_EXCL_LINE
     @nospecialize
     if :arrow in supported_attrs()
         quiver_using_arrows(plotattributes)
@@ -1348,7 +1348,7 @@ function clamp_greys!(mat::AMat{<:Gray})
     mat
 end
 
-@recipe function f(mat::AMat{<:Gray})
+@recipe function f(mat::AMat{<:Gray})  # COV_EXCL_LINE
     n, m = map(a -> range(0.5, stop = a.stop + 0.5), axes(mat))
 
     if is_seriestype_supported(:image)
@@ -1367,7 +1367,7 @@ end
 @nospecialize
 
 # images - colors
-@recipe function f(mat::AMat{T}) where {T<:Colorant}
+@recipe function f(mat::AMat{T}) where {T<:Colorant}  # COV_EXCL_LINE
     n, m = map(a -> range(0.5, stop = a.stop + 0.5), axes(mat))
 
     if is_seriestype_supported(:image)
@@ -1386,12 +1386,12 @@ end
 
 # plotting arbitrary shapes/polygons
 
-@recipe function f(shape::Shape)
+@recipe function f(shape::Shape)  # COV_EXCL_LINE
     seriestype --> :shape
     coords(shape)
 end
 
-@recipe function f(shapes::AVec{<:Shape})
+@recipe function f(shapes::AVec{<:Shape})  # COV_EXCL_LINE
     seriestype --> :shape
     # For backwards compatibility, column vectors of segmenting attributes are
     # interpreted as having one element per shape
@@ -1406,7 +1406,7 @@ end
     coords(shapes)
 end
 
-@recipe function f(shapes::AMat{<:Shape})
+@recipe function f(shapes::AMat{<:Shape})  # COV_EXCL_LINE
     seriestype --> :shape
     for j in axes(shapes, 2)
         @series coords(vec(shapes[:, j]))
@@ -1418,7 +1418,7 @@ end
 # --------------------------------------------------------------------
 
 # images - grays
-@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T<:Gray}
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T<:Gray}  # COV_EXCL_LINE
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
@@ -1433,7 +1433,7 @@ end
 end
 
 # images - colors
-@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T<:Colorant}
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T<:Colorant}  # COV_EXCL_LINE
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
@@ -1495,12 +1495,12 @@ end
     get(plotattributes, :seriestype, :path) === :ohlc ? map(t -> OHLC(t...), xyuv) :
     RecipesPipeline.unzip(xyuv)
 
-@recipe function f(x::AVec, v::AVec{OHLC})
+@recipe function f(x::AVec, v::AVec{OHLC})  # COV_EXCL_LINE
     seriestype := :path
     get_xy(v, x)
 end
 
-@recipe function f(v::AVec{OHLC})
+@recipe function f(v::AVec{OHLC})  # COV_EXCL_LINE
     seriestype := :path
     get_xy(v)
 end
@@ -1526,7 +1526,7 @@ end
 
 @userplot Spy
 
-@recipe function f(g::Spy)
+@recipe function f(g::Spy)  # COV_EXCL_LINE
     @assert length(g.args) == 1 && typeof(g.args[1]) <: AbstractMatrix
     seriestype := :spy
     mat = g.args[1]
@@ -1534,7 +1534,7 @@ end
     Plots.SliceIt, m, n, Surface(mat)
 end
 
-@recipe function f(::Type{Val{:spy}}, x, y, z)
+@recipe function f(::Type{Val{:spy}}, x, y, z)  # COV_EXCL_LINE
     yflip := true
     aspect_ratio := 1
     rs, cs, zs = findnz(z.surf)
@@ -1584,7 +1584,7 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Complex Numbers
 
-@recipe function f(A::AbstractArray{Complex{T}}) where {T<:Number}
+@recipe function f(A::AbstractArray{Complex{T}}) where {T<:Number}  # COV_EXCL_LINE
     xguide --> "Re(x)"
     yguide --> "Im(x)"
     real.(A), imag.(A)
@@ -1593,7 +1593,7 @@ end
 # Splits a complex matrix to its real and complex parts
 # Reals defaults solid, imaginary defaults dashed
 # Label defaults are changed to match the real-imaginary reference / indexing
-@recipe function f(x::AbstractArray{Real}, y::AbstractMatrix{Complex})
+@recipe function f(x::AbstractArray{Real}, y::AbstractMatrix{Complex})  # COV_EXCL_LINE
     ylabel --> "Re(y)"
     zlabel --> "Im(y)"
     x, real.(y), imag.(y)
@@ -1606,7 +1606,7 @@ end
 # - "returns" are the dependent variable
 # - "weights" are a matrix where the ith column is the composition for returns[i]
 # - since each polygon is its own series, you can assign labels easily
-@recipe function f(pc::PortfolioComposition)
+@recipe function f(pc::PortfolioComposition)  # COV_EXCL_LINE
     weights, returns = pc.args
     n = length(returns)
     weights = cumsum(weights, dims = 2)
@@ -1622,7 +1622,7 @@ end
 
 @userplot AreaPlot
 
-@recipe function f(a::AreaPlot; seriestype = :line)
+@recipe function f(a::AreaPlot; seriestype = :line)  # COV_EXCL_LINE
     data = cumsum(a.args[end], dims = 2)
     x = length(a.args) == 1 ? (axes(data, 1)) : a.args[1]
     for i in axes(data, 2)
