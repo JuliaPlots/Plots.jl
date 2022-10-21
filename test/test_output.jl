@@ -84,3 +84,18 @@ with(:inspectdr) do
     @test_save :svg
 end
 =#
+
+@testset "html" begin
+    with(:gr) do
+        io = PipeBuffer()
+        pl = plot(1:2)
+        pl.attr[:html_output_format] = :auto
+        Plots._show(io, MIME("text/html"), pl)
+        pl.attr[:html_output_format] = :png
+        Plots._show(io, MIME("text/html"), pl)
+        pl.attr[:html_output_format] = :svg
+        Plots._show(io, MIME("text/html"), pl)
+        pl.attr[:html_output_format] = :txt
+        Plots._show(io, MIME("text/html"), pl)
+    end
+end

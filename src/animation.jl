@@ -151,29 +151,26 @@ function buildanimation(
         )
     end
 
-    show_msg && @info("Saved animation to ", fn)
+    show_msg && @info "Saved animation to $fn"
     AnimatedGif(fn)
 end
 
 # write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
-    if ext == "gif"
-        html =
-            "<img src=\"data:image/gif;base64," *
-            base64encode(read(agif.filename)) *
-            "\" />"
+    html = if ext == "gif"
+        "<img src=\"data:image/gif;base64," *
+        base64encode(read(agif.filename)) *
+        "\" />"
     elseif ext == "apng"
-        html =
-            "<img src=\"data:image/png;base64," *
-            base64encode(read(agif.filename)) *
-            "\" />"
+        "<img src=\"data:image/png;base64," *
+        base64encode(read(agif.filename)) *
+        "\" />"
     elseif ext in ("mov", "mp4", "webm")
         mimetype = ext == "mov" ? "video/quicktime" : "video/$ext"
-        html =
-            "<video controls><source src=\"data:$mimetype;base64," *
-            base64encode(read(agif.filename)) *
-            "\" type = \"$mimetype\"></video>"
+        "<video controls><source src=\"data:$mimetype;base64," *
+        base64encode(read(agif.filename)) *
+        "\" type = \"$mimetype\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
     end
@@ -244,14 +241,14 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     end
 
     # full expression:
-    esc(quote
+    quote
         $freqassert                     # if filtering, check frequency is an Integer > 0
         $animsym = Plots.Animation()    # init animation object
         let $countersym = 1             # init iteration counter
             $forloop                      # for loop, saving a frame after each iteration
         end
         $retval                         # return the animation object, or the gif
-    end)
+    end |> esc
 end
 
 """

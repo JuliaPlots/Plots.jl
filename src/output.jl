@@ -192,7 +192,7 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
     end
     if output_type === :png
-        # @info("writing png to html output")
+        # @info "writing png to html output"
         print(
             io,
             "<img src=\"data:image/png;base64,",
@@ -200,7 +200,7 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
             "\" />",
         )
     elseif output_type === :svg
-        # @info("writing svg to html output")
+        # @info "writing svg to html output"
         show(io, MIME("image/svg+xml"), plt)
     elseif output_type === :txt
         show(io, MIME("text/plain"), plt)
@@ -240,15 +240,16 @@ for mime in (
     end
 end
 
+"Close all open gui windows of the current backend"
+closeall() = closeall(backend())
+
+# COV_EXCL_START
+
 Base.showable(::MIME"text/html", plt::Plot{UnicodePlotsBackend}) = false  # Pluto
 
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)
 
-"Close all open gui windows of the current backend"
-closeall() = closeall(backend())
-
-# COV_EXCL_START
 # Atom PlotPane
 function showjuno(io::IO, m, plt)
     dpi = plt[:dpi]

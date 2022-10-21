@@ -306,3 +306,9 @@ end
         show(devnull, pl)
     end
 end
+
+@testset "showable" begin
+    with(:gr) do
+        @test showable(MIME("image/png"), plot(1:2))
+    end
+end
