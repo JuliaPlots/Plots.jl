@@ -263,9 +263,7 @@ function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
-        @warn(
-            "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
-        )
+        @warn "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
         true
     end
 end
@@ -303,9 +301,7 @@ function showaxis(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
-        @warn(
-            "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
-        )
+        @warn "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
         true
     end
 end
@@ -1160,7 +1156,7 @@ function processLineArg(plotattributes::AKW, arg)
 
         # color
     elseif !handleColors!(plotattributes, arg, :linecolor)
-        @warn("Skipped line arg $arg.")
+        @warn "Skipped line arg $arg."
     end
 end
 
@@ -1204,7 +1200,7 @@ function processMarkerArg(plotattributes::AKW, arg)
 
         # markercolor
     elseif !handleColors!(plotattributes, arg, :markercolor)
-        @warn("Skipped marker arg $arg.")
+        @warn "Skipped marker arg $arg."
     end
 end
 
@@ -1274,7 +1270,7 @@ function processGridArg!(plotattributes::AKW, arg, letter)
         arg,
         get_attr_symbol(letter, :foreground_color_grid),
     )
-        @warn("Skipped grid arg $arg.")
+        @warn "Skipped grid arg $arg."
     end
 end
 
@@ -1317,7 +1313,7 @@ function processMinorGridArg!(plotattributes::AKW, arg, letter)
     )
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
     else
-        @warn("Skipped grid arg $arg.")
+        @warn "Skipped grid arg $arg."
     end
 end
 
@@ -1364,7 +1360,7 @@ end
     elseif typeof(arg) <: Real
         Symbol(fontname, :rotation) --> convert(Float64, arg)
     else
-        @warn("Skipped font arg: $arg ($(typeof(arg)))")
+        @warn "Skipped font arg: $arg ($(typeof(arg)))"
     end
 end
 
@@ -1573,9 +1569,7 @@ function preprocess_attributes!(plotattributes::AKW)
         Base.loaded_modules,
         Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
     )
-        @warn(
-            "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
-        )
+        @warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
     end
     return
 end
@@ -1612,14 +1606,12 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
             if k in keys(_deprecated_attributes)
-                @warn("""
+                @warn """
                 Keyword argument `$k` is deprecated.
                 Please use `$(_deprecated_attributes[k])` instead.
-                """)
+                """
             else
-                @warn(
-                    "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
-                )
+                @warn "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
             end
         end
     end
@@ -1635,19 +1627,13 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
         return
     end
     if !is_seriestype_supported(pkg, plotattributes[:seriestype])
-        @warn(
-            "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))"
-        )
+        @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))"
     end
     if !is_style_supported(pkg, plotattributes[:linestyle])
-        @warn(
-            "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))"
-        )
+        @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))"
     end
     if !is_marker_supported(pkg, plotattributes[:markershape])
-        @warn(
-            "markershape $(plotattributes[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))"
-        )
+        @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))"
     end
 end
 
@@ -1659,9 +1645,10 @@ function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
         if haskey(plotattributes, k)
             v = plotattributes[k]
             if !all(is_scale_supported.(Ref(pkg), v))
-                @warn(
-                    "scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))"
-                )
+                @warn """
+                scale $v is unsupported with $pkg.
+                Choose from: $(supported_scales(pkg))
+                """
             end
         end
     end
@@ -2029,7 +2016,7 @@ function _update_subplot_args(
         if !lims_warned &&
            haskey(plotattributes_in, lk) &&
            plotattributes_in[lk] isa AbstractRange
-            @warn("lims should be a Tuple, not $(typeof(plotattributes_in[lk])).")
+            @warn "lims should be a Tuple, not $(typeof(plotattributes_in[lk]))."
             lims_warned = true
         end
     end

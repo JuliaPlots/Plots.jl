@@ -213,7 +213,7 @@ end
 Base.showable(m::M, ::P) where {M<:MIME,P<:Plot} = showable(m, P)
 Base.showable(::M, ::Type{P}) where {M<:MIME,P<:Plot} = hasmethod(_show, Tuple{IO,M,P})
 
-_display(plt::Plot) = @warn("_display is not defined for this backend.")
+_display(plt::Plot) = @warn "_display is not defined for this backend."
 
 Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback

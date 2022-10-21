@@ -234,7 +234,7 @@ function _write_typed(grp::Group, name::String, v::T) where {T}
     try # Check to see if type is supported
         typestr = HDF5PLOT_MAP_TELEM2STR[MT]
     catch
-        @warn("HDF5Plots does not yet support structs of type `$MT`\n\n$grp")
+        @warn "HDF5Plots does not yet support structs of type `$MT`\n\n$grp"
         return
     end
 
@@ -421,9 +421,7 @@ function _read(::Type{DefaultsDict}, grp::Group)
     # User should set DefaultsDict.defaults to one of:
     #    _plot_defaults, _subplot_defaults, _axis_defaults, _series_defaults
     path = HDF5.name(ds)
-    @warn(
-        "Cannot yet read DefaultsDict using _read_typed():\n    $path\nCannot fully reconstruct plot."
-    )
+    @warn "Cannot yet read DefaultsDict using _read_typed():\n    $path\nCannot fully reconstruct plot."
 end
 
 # 1st arg appears to be ref to subplots. Seems to work without it.

@@ -61,7 +61,7 @@ function _process_seriesrecipe(plt, plotattributes)
                 end
                 _process_seriesrecipe(plt, data.plotattributes)
             else
-                @warn("Unhandled recipe: $(data)")
+                @warn "Unhandled recipe: $data"
                 break
             end
         end

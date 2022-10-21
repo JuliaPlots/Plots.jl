@@ -723,13 +723,13 @@ end
 end
 Plots.@deps stepbins path
 
-wand_edges(x...) = (
-    @warn(
-        "Load the StatsPlots package in order to use :wand bins. Defaulting to :auto",
-        once = true
-    );
+function wand_edges(x...)
+    @warn """"
+    Load the StatsPlots package in order to use :wand bins.
+    Defaulting to :auto
+    """ once = true
     :auto
-)
+end
 
 function _auto_binning_nbins(
     vs::NTuple{N,AbstractVector},

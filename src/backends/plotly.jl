@@ -7,9 +7,7 @@ function _plotly_framestyle(style::Symbol)
         return style
     else
         default_style = get((semi = :box, origin = :zerolines), style, :axes)
-        @warn(
-            "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
-        )
+        @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
         default_style
     end
 end
@@ -830,9 +828,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 )
             elseif !(series[:fillrange] in (false, nothing))
-                @warn(
-                    "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
-                )
+                @warn "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
             end
             plotattributes_out[:x], plotattributes_out[:y] = x[rng], y[rng]
 
