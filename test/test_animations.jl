@@ -86,5 +86,5 @@ end
 @testset "coverage" begin
     @test animate([1:2, 2:3]; variable_palette = true, show_msg = false) isa
           Plots.AnimatedGif
-    @test Plot.FrameIterator([1:2, 2:3]).every == 1
+    @test Plots.FrameIterator([1:2, 2:3]).every == 1
 end
