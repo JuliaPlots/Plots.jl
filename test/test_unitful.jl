@@ -374,5 +374,5 @@ end
     @test pointer(str, 1) isa Ptr
     @test isvalid(str, 1)
     @test ncodeunits(str) == 4
-    @test codeunit(str) isa UInt8
+    @test codeunit(str) == UInt8
 end

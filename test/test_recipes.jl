@@ -6,10 +6,18 @@ using OffsetArrays
         legend --> :topleft
         (1:3, 1:3)
     end
-    pl = plot(LegendPlot(); legend = :right)
-    @test pl[1][:legend_position] === :right
-    pl = plot(LegendPlot())
-    @test pl[1][:legend_position] === :topleft
+    let pl = pl = plot(LegendPlot(); legend = :right)
+        @test pl[1][:legend_position] === :right
+    end
+    let pl = pl = plot(LegendPlot())
+        @test pl[1][:legend_position] === :topleft
+    end
+    let pl = plot(LegendPlot(); legend = :inline)
+        @test pl[1][:legend_position] === :inline
+    end
+    let pl = plot(LegendPlot(); legend = :inline, ymirror = true)
+        @test pl[1][:legend_position] === :inline
+    end
 end
 
 @testset "lens!" begin
@@ -89,4 +97,10 @@ end
 
 @testset "dict" begin
     @test plot(Dict(1 => 2, 3 => -1)) isa Plot
+end
+
+@testset "gray image" begin
+    with(:gr) do
+        @test plot(rand(Gray, 2, 2)) isa Plot
+    end
 end

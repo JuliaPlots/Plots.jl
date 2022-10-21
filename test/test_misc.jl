@@ -299,3 +299,10 @@ end
     d = [1, 1, 1, 2, 2, 2, 2, 4, 3, 3, 3, 6]
     @test plot(b, d, group = (c, a), layout = (1, 3)) isa Plot
 end
+
+@testset "inline" begin
+    with(:gr) do
+        pl = plot(1:2, display_type = :inline)
+        show(devnull, pl)
+    end
+end
