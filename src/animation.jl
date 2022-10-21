@@ -116,9 +116,7 @@ function buildanimation(
     verbose = false,
     show_msg::Bool = true,
 )
-    if length(anim.frames) == 0
-        throw(ArgumentError("Cannot build empty animations"))
-    end
+    length(anim.frames) == 0 && throw(ArgumentError("Cannot build empty animations"))
 
     fn = abspath(expanduser(fn))
     animdir = anim.dir
@@ -198,9 +196,8 @@ Base.show(io::IO, ::MIME"image/png", agif::AnimatedGif) =
 # -----------------------------------------------
 
 function _animate(forloop::Expr, args...; type::Symbol = :none)
-    if forloop.head ∉ (:for, :while)
-        error("@animate macro expects a for- or while-block. got: $(forloop.head)")
-    end
+    forloop.head ∈ (:for, :while) ||
+        error("@animate macro expects a for- or while-block: $(forloop.head)")
 
     # add the call to frame to the end of each iteration
     animsym = gensym("anim")

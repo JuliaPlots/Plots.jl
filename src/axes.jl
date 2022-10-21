@@ -91,10 +91,8 @@ function attr!(axis::Axis, args...; kw...)
         haskey(plotattributes, k) || continue
         if k === :discrete_values
             # add these discrete values to the axis
-            for vi in v
-                discrete_value!(axis, vi)
-            end
-            #could perhaps use TimeType here, as Date and DateTime are both subtypes of TimeType
+            foreach(x -> discrete_value!(axis, x), v)
+            # could perhaps use TimeType here, as Date and DateTime are both subtypes of TimeType
             # or could perhaps check if dateformatter or datetimeformatter is in use
         elseif k === :lims && isa(v, NTuple{2,Date})
             plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
@@ -116,9 +114,6 @@ end
 # -------------------------------------------------------------------------
 
 Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis", true)
-# Base.getindex(axis::Axis, k::Symbol) = getindex(axis.plotattributes, k)
-Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.plotattributes, v, ks...)
-Base.haskey(axis::Axis, k::Symbol) = haskey(axis.plotattributes, k)
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 const _label_func =

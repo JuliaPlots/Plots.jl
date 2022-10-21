@@ -1136,14 +1136,12 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [30],
-    :pyplot => [2, 22, 25, 30, 31, 49, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
+    :pyplot => [22, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55, 56],
     :pgfplotsx => [
-        2,  # animation
         6,  # images
         16,  # pgfplots thinks the upper panel is too small
         30,  # @df
-        31,  # animation
         32,  # spy
         49,  # polar heatmap
         51,  # image with custom axes

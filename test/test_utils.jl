@@ -80,6 +80,7 @@
 
     pl = plot(1:2)
     Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
+    show(devnull, pl[1][:xaxis])
 
     Plots.debugplots(false)
     ######################

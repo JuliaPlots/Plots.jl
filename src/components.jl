@@ -514,27 +514,12 @@ function series_annotations(strs::AVec, args...)
             @warn "Unused SeriesAnnotations arg: $arg ($(typeof(arg)))"
         end
     end
-    # if scalefactor != 1
-    #     for s in get(shp)
-    #         scale!(s, scalefactor, scalefactor, (0, 0))
-    #     end
-    # end
-    SeriesAnnotations([_text_label(s, fnt) for s in strs], fnt, shp, scalefactor)
+    SeriesAnnotations(map(s -> _text_label(s, fnt), strs), fnt, shp, scalefactor)
 end
 
 function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     anns = series[:series_annotations]
-    # msw, msh = anns.scalefactor
-    # ms = series[:markersize]
-    # msw, msh = if isa(ms, AVec)
-    #     1, 1
-    # elseif is_2tuple(ms)
-    #     ms
-    # else
-    #     ms, ms
-    # end
 
-    # @show msw msh
     if anns !== nothing && anns.baseshape !== nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
@@ -550,7 +535,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # how much to scale the base shape?
             # note: it's a rough assumption that the shape fills the unit box [-1, -1, 1, 1],
             #       so we scale the length-2 shape by 1/2 the total length
-            scalar = (backend() == PyPlotBackend() ? 1.7 : 1.0)
+            scalar = backend() == PyPlotBackend() ? 1.7 : 1.0
             xscale = 0.5to_pixels(sw) * scalar
             yscale = 0.5to_pixels(sh) * scalar
 
@@ -585,7 +570,7 @@ function Base.iterate(ea::EachAnn, i = 1)
     else
         tmp, ea.anns.font
     end
-    ((_cycle(ea.x, i), _cycle(ea.y, i), str, fnt), i + 1)
+    (_cycle(ea.x, i), _cycle(ea.y, i), str, fnt), i + 1
 end
 
 # -----------------------------------------------------------------------
@@ -645,7 +630,6 @@ function process_annotation(
 end
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
-
     # !TODO Add more scales in the future (asinh, sqrt) ?
     if scale === :log || scale === :ln
         exp(log(xmin) + pos.value * log(xmax / xmin))
@@ -653,7 +637,7 @@ function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
         exp10(log10(xmin) + pos.value * log10(xmax / xmin))
     elseif scale === :log2
         exp2(log2(xmin) + pos.value * log2(xmax / xmin))
-    else # :identity (linear scale)
+    else  # :identity (linear scale)
         xmin + pos.value * (xmax - xmin)
     end
 end
@@ -721,26 +705,12 @@ locate_annotation(sp::Subplot, rel::NTuple{3,<:Number}, label::PlotText) = (
     ),
     label,
 )
-# -----------------------------------------------------------------------
-
-"type which represents z-values for colors and sizes (and anything else that might come up)"
-struct ZValues
-    values::Vector{Float64}
-    zrange::Tuple{Float64,Float64}
-end
-
-zvalues(
-    values::AVec{T},
-    zrange::Tuple{T,T} = (ignorenan_minimum(values), ignorenan_maximum(values)),
-) where {T<:Real} = ZValues(collect(float(values)), map(Float64, zrange))
 
 # -----------------------------------------------------------------------
 
 function expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]
-    for vi in surf.surf
-        expand_extrema!(ex, vi)
-    end
+    foreach(x -> expand_extrema!(ex, x), surf.surf)
     ex
 end
 
@@ -771,8 +741,7 @@ Define arrowheads to apply to lines - args are `style` (`:open` or `:closed`),
 `side` (`:head`, `:tail` or `:both`), `headlength` and `headwidth`
 """
 function arrow(args...)
-    style = :simple
-    side = :head
+    style, side = :simple, :head
     headlength = headwidth = 0.3
     setlength = false
     for arg in args
