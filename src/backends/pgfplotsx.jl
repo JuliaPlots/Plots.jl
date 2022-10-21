@@ -994,55 +994,6 @@ function pgfx_add_annotation!(
     push!(o, "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$x,$y) {$(val.str)};")
 end
 
-function pgfx_add_ribbons!(axis, series, segment_plot, series_func, series_index)
-    opt = series.plotattributes
-    if (ribbon_y = series[:ribbon]) isa AVec
-        ribbon_yp = ribbon_ym = repeat(ribbon_y, outer = length(opt[:y]) ÷ length(ribbon_y))
-    elseif ribbon_y isa Tuple
-        ribbon_ym, ribbon_yp = ribbon_y
-        ribbon_ym = repeat(ribbon_ym, outer = length(opt[:y]) ÷ length(ribbon_ym))
-        ribbon_yp = repeat(ribbon_yp, outer = length(opt[:y]) ÷ length(ribbon_yp))
-    else
-        ribbon_yp = ribbon_ym = ribbon_y
-    end
-    # upper ribbon
-    rib_uuid = uuid4()
-    ribbon_name_plus = "plots_rib_p$rib_uuid"
-    ribbon_opt_plus = merge(
-        segment_plot.options,
-        Options(
-            "name path" => ribbon_name_plus,
-            "color" => opt[:fillcolor],
-            "draw opacity" => opt[:fillalpha],
-            "forget plot" => nothing,
-        ),
-    )
-    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .+ ribbon_yp)
-    push!(axis, series_func(ribbon_opt_plus, coordinates_plus))
-    # lower ribbon
-    ribbon_name_minus = "plots_rib_m$rib_uuid"
-    ribbon_opt_minus = merge(
-        segment_plot.options,
-        Options(
-            "name path" => ribbon_name_minus,
-            "color" => opt[:fillcolor],
-            "draw opacity" => opt[:fillalpha],
-            "forget plot" => nothing,
-        ),
-    )
-    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .- ribbon_ym)
-    # fill
-    push!(
-        axis,
-        series_func(ribbon_opt_minus, coordinates_plus),
-        series_func(
-            merge(pgfx_fillstyle(opt, series_index), Options("forget plot" => nothing)),
-            "fill between [of=$(ribbon_name_plus) and $(ribbon_name_minus)]",
-        ),
-    )
-    return axis
-end
-
 function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
     fr_opt = Options("line width" => "0", "draw opacity" => "0")
     fr_opt = merge(fr_opt, pgfx_fillstyle(series, i))

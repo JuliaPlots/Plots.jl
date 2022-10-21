@@ -138,6 +138,16 @@ end
     # see github.com/JuliaPlots/Plots.jl/issues/4073
     anns = [(["x", "y"], [10, 20], :hexagon) (["a", "b"], [3, 4], :circle)]
     pl = plot(rand(2, 2), layout = 2, series_annotations = anns)
+
+    # JuliaPlots/Plots.jl/pull/3634#issue-940055478
+    let p = plot(
+        plot(rand(10) .* 15, aspect_ratio=:equal),
+        plot(rand(10) .* 10, aspect_ratio=:equal),
+        legend=false, layout=grid(1, 2), frame=:box
+      )
+        annotate!(sp=1, (.03, .95), text("Cats&Dogs", :left))
+        annotate!(sp=2, (.03, .95), text("Cats&Dogs", :left))
+    end
 end
 
 @testset "Fonts" begin
