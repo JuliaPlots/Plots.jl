@@ -194,19 +194,6 @@ end
     @test 0.1Plots.pct / 1Plots.mm == 10Plots.mm
 end
 
-@testset "backend" begin
-    @test_logs (:warn, r".*not a valid backend package") withenv(
-        "PLOTS_DEFAULT_BACKEND" => "invalid",
-    ) do
-        Plots._pick_default_backend()
-    end
-    @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
-        Plots._pick_default_backend()
-    end == Plots.UnicodePlotsBackend()
-    @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
-    gr()  # restore to default
-end
-
 @testset "docstring" begin
     @test occursin("label", Plots._generate_doclist(Plots._all_series_args))
 end

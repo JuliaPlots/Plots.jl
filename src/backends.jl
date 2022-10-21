@@ -292,7 +292,7 @@ end
 # ------------------------------------------------------------------------------
 # gr
 
-_initialize_backend(pkg::GRBackend) = nothing
+_initialize_backend(pkg::GRBackend) = nothing  # COV_EXCL_LINE
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
@@ -1056,11 +1056,11 @@ const _hdf5_marker = vcat(_allMarkers, :pixel)
 const _hdf5_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
-#Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
+# Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
 const HDF5PLOT_MAP_STR2TELEM = Dict{String,Type}()
 const HDF5PLOT_MAP_TELEM2STR = Dict{Type,String}()
 
-#Don't really like this global variable... Very hacky
+# Don't really like this global variable... Very hacky
 mutable struct HDF5Plot_PlotRef
     ref::Union{Plot,Nothing}
 end

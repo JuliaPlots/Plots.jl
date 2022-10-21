@@ -441,7 +441,7 @@ function _add_the_series(plt, sp, plotattributes)
     elseif kw === :series
         plotattributes[:extra_kwargs] = extra_kwargs
     else
-        ArgumentError("Unsupported type for extra keyword arguments")
+        throw(ArgumentError("Unsupported type for extra keyword arguments"))
     end
     warn_on_unsupported(plt.backend, plotattributes)
     series = Series(plotattributes)
