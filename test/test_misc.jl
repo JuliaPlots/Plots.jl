@@ -95,7 +95,7 @@ end
     @test Plots.legend_angle((20.0, 10.0)) == (20.0, 10.0)
 end
 
-@testset "Axis scales" begin
+@testset "axis scales" begin
     with(:unicodeplots) do
         pl = plot(1:5, xscale = :log2, yscale = :ln)
         @test pl[1][:xaxis][:scale] === :log2
@@ -260,7 +260,7 @@ end
         i = [0, 0, 0, 1]
         j = [1, 2, 3, 2]
         k = [2, 3, 1, 3]
-        # github.com/JuliaPlots/Plots.jl/pull/3868#issuecomment-939446686
+        # JuliaPlots/Plots.jl/pull/3868#issuecomment-939446686
         mesh3d(
             x,
             y,
@@ -270,7 +270,7 @@ end
             fillalpha = 0.5,
         )
 
-        # github.com/JuliaPlots/Plots.jl/pull/3835#issue-1002117649
+        # JuliaPlots/Plots.jl/pull/3835#issue-1002117649
         p0 = [0.0, 0.0, 0.0]
         p1 = [1.0, 0.0, 0.0]
         p2 = [0.0, 1.0, 0.0]
@@ -302,4 +302,13 @@ end
     with(:gr) do
         @test histogram(rand(10); fillstyle = :/) isa Plot
     end
+end
+
+@testset "group" begin
+    # from JuliaPlots/Plots.jl/issues/3630#issuecomment-876001540
+    a = repeat(1:3, inner = 4)
+    b = repeat(["low", "high"], inner = 2, outer = 3)
+    c = repeat(1:2, outer = 6)
+    d = [1, 1, 1, 2, 2, 2, 2, 4, 3, 3, 3, 6]
+    @test plot(b, d, group = (c, a), layout = (1, 3)) isa Plot
 end

@@ -367,3 +367,12 @@ end
     annotate!(pl, [0.25]u"s", [0.5]u"m", text("annotation"))
     @test show(devnull, pl) isa Nothing
 end
+
+@testset "AbstractProtectedString" begin
+    str = P"mass"
+    @test pointer(str) isa Ptr
+    @test pointer(str, 1) isa Ptr
+    @test isvalid(str, 1)
+    @test ncodeunits(str) == 4
+    @test codeunit(str) isa UInt8
+end
