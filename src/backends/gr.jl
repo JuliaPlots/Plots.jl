@@ -977,9 +977,7 @@ function get_z_normalized(z, clims...)
 end
 
 function gr_clims(args...)
-    if args[1][:clims] !== :auto
-        return get_clims(args[1])
-    end
+    args[1][:clims] === :auto || return get_clims(args[1])
     lo, hi = get_clims(args...)
     if lo == hi
         if lo == 0
@@ -1201,23 +1199,20 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
             (yaxis[:guide_position] === :auto && yaxis[:mirror] == true)
     end
     if occursin("right", str)
-        if occursin("outer", str)
-            # As per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            xpos =
-                viewport_plotarea[2] +
+        xpos = if occursin("outer", str)  # per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
+            viewport_plotarea[2] +
                 leg.xoffset +
                 leg.leftw +
                 ymirror * gr_axis_width(sp, sp[:yaxis])
         else
-            xpos = viewport_plotarea[2] - leg.rightw - leg.textw - leg.xoffset
+            viewport_plotarea[2] - leg.rightw - leg.textw - leg.xoffset
         end
     elseif occursin("left", str)
-        if occursin("outer", str)
-            xpos =
-                viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) -
+        xpos = if occursin("outer", str)
+            viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) -
                 leg.xoffset * 2 - leg.rightw - leg.textw
         else
-            xpos = viewport_plotarea[1] + leg.leftw + leg.xoffset
+            viewport_plotarea[1] + leg.leftw + leg.xoffset
         end
     else
         xpos =
@@ -1226,22 +1221,20 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
             leg.leftw - leg.rightw - leg.textw - leg.xoffset * 2
     end
     if occursin("top", str)
-        if s === :outertop
-            ypos =
-                viewport_plotarea[4] +
+        ypos = if s === :outertop
+            viewport_plotarea[4] +
                 leg.yoffset +
                 leg.h +
                 xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[4] - leg.yoffset - leg.dy
+            viewport_plotarea[4] - leg.yoffset - leg.dy
         end
     elseif occursin("bottom", str)
-        if s === :outerbottom
-            ypos =
-                viewport_plotarea[3] - leg.yoffset - leg.dy -
+        ypos = if s === :outerbottom
+            viewport_plotarea[3] - leg.yoffset - leg.dy -
                 !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[3] + leg.yoffset + leg.h
+            viewport_plotarea[3] + leg.yoffset + leg.h
         end
     else
         # Adding min y to shift legend pos to correct graph (#2377)
@@ -1251,6 +1244,7 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
     return xpos, ypos
 end
 
+#=
 function gr_legend_pos(v::Tuple{S,T}, viewport_plotarea) where {S<:Real,T<:Real}
     xpos = v[1] * (viewport_plotarea[2] - viewport_plotarea[1]) + viewport_plotarea[1]
     ypos = v[2] * (viewport_plotarea[4] - viewport_plotarea[3]) + viewport_plotarea[3]
@@ -1278,6 +1272,7 @@ function gr_legend_pos(theta::Real, leg, viewport_plotarea; axisclearance = noth
     end
     return legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
 end
+=#
 
 function gr_get_legend_geometry(viewport_plotarea, sp)
     legendn = 0
