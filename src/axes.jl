@@ -113,7 +113,7 @@ end
 
 # -------------------------------------------------------------------------
 
-Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis", true)
+Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 const _label_func =
