@@ -6,6 +6,7 @@
         @test Plots.vertices(square) == [(0, 0), (1, 0), (1, 1), (0, 1)]
         @test isa(square, Shape{Int64,Float64})
         @test coords(square) isa Tuple{Vector{S},Vector{T}} where {T,S}
+        @test Shape(:circle) isa Shape
     end
 
     @testset "Copy" begin
@@ -133,6 +134,10 @@ end
     @test Plots.locate_annotation(sp, 1, 2, 3, t) == (1, 2, 3, t)
     @test Plots.locate_annotation(sp, (0.1, 0.2), t) isa Tuple
     @test Plots.locate_annotation(sp, (0.1, 0.2, 0.3), t) isa Tuple
+
+    # see github.com/JuliaPlots/Plots.jl/issues/4073
+    anns = [(["x", "y"], [10, 20], :hexagon) (["a", "b"], [3, 4], :circle)]
+    pl = plot(rand(2, 2), layout = 2, series_annotations = anns)
 end
 
 @testset "Fonts" begin

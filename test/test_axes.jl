@@ -7,8 +7,8 @@
     @test Plots.ignorenan_extrema(axis) == (0.5, 1.5)
     @test axis[:discrete_map] == Dict{Any,Any}(:yo => 2, "HI" => 1)
 
-    Plots.discrete_value!(axis, ["x$i" for i in 1:5])
-    Plots.discrete_value!(axis, ["x$i" for i in 0:2])
+    Plots.discrete_value!(axis, map(i -> "x$i", 1:5))
+    Plots.discrete_value!(axis, map(i -> "x$i", 0:2))
     @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
 
     # JuliaPlots/Plots.jl/issues/4375
@@ -16,6 +16,10 @@
         pl = plot(1:2, xlabel = lab, ylabel = lab, title = lab)
         show(devnull, pl)
     end
+
+    @test Plots.labelfunc_tex(:log10)(1) == "10^{1}"
+    @test Plots.labelfunc_tex(:log2)(1) == "2^{1}"
+    @test Plots.labelfunc_tex(:ln)(1) == "e^{1}"
 end
 
 @testset "Showaxis" begin

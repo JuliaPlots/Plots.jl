@@ -9,6 +9,7 @@ mutable struct PlotExample
     exprs::Expr
 end
 
+# COV_EXCL_START
 PlotExample(header::AbstractString, expr::Expr) = PlotExample(header, "", expr)
 PlotExample(header::AbstractString, imports::Expr, expr::Expr) =
     PlotExample(header, "", false, imports, expr)
@@ -16,6 +17,7 @@ PlotExample(header::AbstractString, desc::AbstractString, expr::Expr) =
     PlotExample(header, desc, false, nothing, expr)
 PlotExample(header::AbstractString, desc::AbstractString, imports::Expr, expr::Expr) =
     PlotExample(header, desc, false, imports, expr)
+# COV_EXCL_STOP
 
 # the _examples we'll run for each backend
 const _examples = PlotExample[
@@ -1136,14 +1138,12 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [30],
-    :pyplot => [2, 22, 25, 30, 31, 49, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
+    :pyplot => [22, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55, 56],
     :pgfplotsx => [
-        2,  # animation
         6,  # images
         16,  # pgfplots thinks the upper panel is too small
         30,  # @df
-        31,  # animation
         32,  # spy
         49,  # polar heatmap
         51,  # image with custom axes
@@ -1230,11 +1230,13 @@ function test_examples(
         try
             plts[i] = test_examples(pkgname, i; debug, disp, callback)
         catch ex
+            # COV_EXCL_START
             if strict
                 rethrow(ex)
             else
                 @warn "Example $pkgname:$i:$(_examples[i].header) failed with: $ex"
             end
+            # COV_EXCL_STOP
         end
         sleep === nothing || Base.sleep(sleep)
     end

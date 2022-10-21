@@ -218,12 +218,14 @@ end
         extra_kwargs = Dict(
             :series => Dict(:display_option => Plots.GR.OPTION_SHADED_MESH),
             :subplot => Dict(:legend_hfactor => 2),
+            :plot => Dict(:foo => nothing),
         )
         show(io, surface(x, y, (x, y) -> exp(-x^2 - y^2); extra_kwargs))
         str = read(io, String)
         @test occursin("extra kwargs", str)
         @test occursin("Series{1}", str)
         @test occursin("SubplotPlot{1}", str)
+        @test occursin("Plot:", str)
     end
 end
 
@@ -247,5 +249,57 @@ end
         end
 
         @test Plots.findnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
+    end
+end
+
+@testset "mesh3d" begin
+    with(:gr) do
+        x = [0, 1, 2, 0]
+        y = [0, 0, 1, 2]
+        z = [0, 2, 0, 1]
+        i = [0, 0, 0, 1]
+        j = [1, 2, 3, 2]
+        k = [2, 3, 1, 3]
+        # github.com/JuliaPlots/Plots.jl/pull/3868#issuecomment-939446686
+        mesh3d(
+            x,
+            y,
+            z;
+            connections = (i, j, k),
+            fillcolor = [:blue, :red, :green, :yellow],
+            fillalpha = 0.5,
+        )
+
+        # github.com/JuliaPlots/Plots.jl/pull/3835#issue-1002117649
+        p0 = [0.0, 0.0, 0.0]
+        p1 = [1.0, 0.0, 0.0]
+        p2 = [0.0, 1.0, 0.0]
+        p3 = [1.0, 1.0, 0.0]
+        p4 = [0.5, 0.5, 1.0]
+        pts = [p0, p1, p2, p3, p4]
+        x, y, z = broadcast(i -> getindex.(pts, i), (1, 2, 3))
+        # [x[i],y[i],z[i]] is the i-th vertix of the mesh
+        mesh3d(
+            x,
+            y,
+            z;
+            connections = [
+                [1, 2, 4, 3], # Quadrangle 
+                [1, 2, 5], # Triangle
+                [2, 4, 5], # Triangle
+                [4, 3, 5], # Triangle
+                [3, 1, 5],  # Triangle
+            ],
+            linecolor = :black,
+            fillcolor = :blue,
+            fillalpha = 0.2,
+        )
+        @test true
+    end
+end
+
+@testset "fillstyle" begin
+    with(:gr) do
+        @test histogram(rand(10); fillstyle = :/) isa Plot
     end
 end

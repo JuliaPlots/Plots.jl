@@ -542,7 +542,7 @@ end
 
 function _cbar_unique(values, propname)
     out = last(values)
-    if any(x != out for x in values)
+    if any(map(x -> x != out, values))
         @warn "Multiple series with different $propname share a colorbar. " *
               "Colorbar may not reflect all series correctly."
     end
@@ -696,9 +696,7 @@ function gr_display(plt::Plot, dpi_factor = 1)
     gr_fill_viewport(viewport_canvas, plt[:background_color_outside])
 
     # subplots:
-    for sp in plt.subplots
-        gr_display(sp, w * px, h * px, viewport_canvas)
-    end
+    foreach(sp -> gr_display(sp, w * px, h * px, viewport_canvas), plt.subplots)
 
     GR.updatews()
 end
@@ -746,7 +744,7 @@ text_box_height(w, h, rot) = abs(sind(rot)) * w + abs(sind(rot + 90)) * h
 
 function gr_get_3d_axis_angle(cvs, nt, ft, letter)
     length(cvs) < 2 && return 0
-    tickpoints = [gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...) for cv in cvs]
+    tickpoints = map(cv -> gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...), cvs)
 
     dx = tickpoints[2][1] - tickpoints[1][1]
     dy = tickpoints[2][2] - tickpoints[1][2]
@@ -1045,11 +1043,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # add annotations
     for ann in sp[:annotations]
         x, y, val = locate_annotation(sp, ann...)
-        x, y = if gr_is3d(sp)
-            gr_w3tondc(x, y, z)
-        else
-            GR.wctondc(x, y)
-        end
+        x, y = gr_is3d(sp) ? gr_w3tondc(x, y, z) : GR.wctondc(x, y)
         gr_set_font(val.font, sp)
         gr_text(x, y, val.str)
     end
@@ -1363,7 +1357,7 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
 
     if s isa Tuple{<:Real,Symbol}
         if s[2] === :outer
-            (x, y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
+            x, y = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
             if x < viewport_plotarea[1]
                 viewport_plotarea[1] +=
                     leg.leftw +
@@ -1493,18 +1487,14 @@ function gr_draw_axes(sp, viewport_plotarea)
         x_bg, y_bg = RecipesPipeline.unzip(GR.wc3towc.(area_x, area_y, area_z))
         GR.fillarea(x_bg, y_bg)
 
-        for letter in (:x, :y, :z)
-            gr_draw_axis_3d(sp, letter, viewport_plotarea)
-        end
+        foreach(letter -> gr_draw_axis_3d(sp, letter, viewport_plotarea), (:x, :y, :z))
     elseif ispolar(sp)
         r = gr_set_viewport_polar(viewport_plotarea)
         #rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
         rmin, rmax = axis_limits(sp, :y)
         gr_polaraxes(rmin, rmax, sp)
     elseif sp[:framestyle] !== :none
-        for letter in (:x, :y)
-            gr_draw_axis(sp, letter, viewport_plotarea)
-        end
+        foreach(letter -> gr_draw_axis(sp, letter, viewport_plotarea), (:x, :y))
     end
 end
 
@@ -2078,28 +2068,24 @@ function gr_draw_surface(series, x, y, z, clims)
     elseif st === :mesh3d
         if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
             # Combination of any polygon types
-            cns = [[length(polyinds), polyinds...] for polyinds in series[:connections]]
+            cns = map(cns -> [length(cns), cns...], series[:connections])
         elseif series[:connections] isa AbstractVector{NTuple{N,Int}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             N = length(series[:connections][1])
-            cns = [[N, polyinds...] for polyinds in series[:connections]]
+            cns = map(cns -> [N, cns...], series[:connections])
         elseif series[:connections] isa NTuple{3,<:AbstractVector{Int}}
             # Only triangles - connections have to be 0-based (indexing)
             ci, cj, ck = series[:connections]
             if !(length(ci) == length(cj) == length(ck))
-                throw(
-                    ArgumentError(
-                        "Argument connections must consist of equally sized arrays.",
-                    ),
-                )
+                "Argument connections must consist of equally sized arrays." |>
+                ArgumentError |>
+                throw
             end
             cns = map(i -> ([3, ci[i] + 1, cj[i] + 1, ck[i] + 1]), eachindex(ci))
         else
-            throw(
-                ArgumentError(
-                    "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st",
-                ),
-            )
+            "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st" |>
+            ArgumentError |>
+            throw
         end
         facecolor = if series[:fillcolor] isa AbstractArray
             series[:fillcolor]
@@ -2135,9 +2121,10 @@ function gr_draw_heatmap(series, x, y, z, clims)
             z_normalized = get_z_normalized.(z_log, log10.(clims)...)
             plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
         end
-        for i in eachindex(colors)
-            isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i]))
-        end
+        foreach(
+            i -> isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i])),
+            eachindex(colors),
+        )
         GR.drawimage(first(x), last(x), last(y), first(y), w, h, gr_color.(colors))
     else
         if something(series[:fillalpha], 1) < 1
@@ -2151,9 +2138,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
         end
         rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
         bg_rgba = gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))
-        for i in eachindex(rgba)
-            isnan(_z[i]) && (rgba[i] = bg_rgba)
-        end
+        foreach(i -> isnan(_z[i]) && (rgba[i] = bg_rgba), eachindex(rgba))
         if ispolar(series)
             y[1] < 0 && @warn "'y[1] < 0' (rmin) is not yet supported."
             dist = min(gr_x_axislims(sp)[2], gr_y_axislims(sp)[2])
@@ -2181,17 +2166,17 @@ for (mime, fmt) in (
     "image/svg+xml" => "svg",
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
-        GR.emergencyclosegks()
         dpi_factor = $fmt == "png" ? plt[:dpi] / Plots.DPI : 1
         filepath = tempname() * "." * $fmt
+        GR.emergencyclosegks()
         withenv(
             "GKS_FILEPATH" => filepath,
             "GKS_ENCODING" => "utf8",
             "GKSwstype" => $fmt,
         ) do
             gr_display(plt, dpi_factor)
-            GR.emergencyclosegks()
         end
+        GR.emergencyclosegks()
         write(io, read(filepath, String))
         rm(filepath)
     end
@@ -2199,16 +2184,16 @@ end
 
 function _display(plt::Plot{GRBackend})
     if plt[:display_type] === :inline
-        GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
+        GR.emergencyclosegks()
         withenv(
             "GKS_FILEPATH" => filepath,
             "GKS_ENCODING" => "utf8",
             "GKSwstype" => "pdf",
         ) do
             gr_display(plt)
-            GR.emergencyclosegks()
         end
+        GR.emergencyclosegks()
         println(
             "\033]1337;File=inline=1;preserveAspectRatio=0:",
             base64encode(open(read, filepath)),
