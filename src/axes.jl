@@ -73,7 +73,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
         arg,
         get_attr_symbol(letter, :foreground_color_axis),
     )
-        @warn("Skipped $(letter)axis arg $arg")
+        @warn "Skipped $(letter)axis arg $arg"
     end
 end
 

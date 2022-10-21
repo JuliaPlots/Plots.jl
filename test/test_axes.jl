@@ -179,11 +179,28 @@ end
 end
 
 @testset "scale_lims!" begin
+    let pl = plot(1:2)
+        xl, yl = xlims(pl), ylims(pl)
+        Plots.scale_lims!(:x, 1.1)
+        @test first(xlims(pl)) < first(xl)
+        @test last(xlims(pl)) > last(xl)
+        @test ylims(pl) == yl
+    end
+
+    let pl = plot(1:2)
+        xl, yl = xlims(pl), ylims(pl)
+        Plots.scale_lims!(pl, 1.1)
+        @test first(xlims(pl)) < first(xl)
+        @test last(xlims(pl)) > last(xl)
+        @test first(ylims(pl)) < first(yl)
+        @test last(ylims(pl)) > last(yl)
+    end
+end
+
+@testset "reset_extrema!" begin
     pl = plot(1:2)
-    xl, yl = xlims(pl), ylims(pl)
-    factor = 1.1
-    Plots.scale_lims!(:x, factor)
-    @test first(xlims(pl)) < first(xl)
-    @test last(xlims(pl)) > last(xl)
-    @test ylims(pl) == yl
+    Plots.reset_extrema!(pl[1])
+    ax = pl[1][:xaxis]
+    @test Plots.expand_extrema!(ax, nothing) == ax[:extrema]
+    @test Plots.expand_extrema!(ax, true) == ax[:extrema]
 end
