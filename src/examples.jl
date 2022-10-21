@@ -29,7 +29,7 @@ const _examples = PlotExample[
     PlotExample( # 2
         "Functions, adding data, and animations",
         """
-        Plot multiple functions.  You can also put the function first, or use the form `plot(f,
+        Plot multiple functions. You can also put the function first, or use the form `plot(f,
         xmin, xmax)` where f is a Function or AbstractVector{Function}.\n\nGet series data:
         `x, y = plt[i]`.  Set series data: `plt[i] = (x,y)`. Add to the series with
         `push!`/`append!`.\n\nEasily build animations.  (`convert` or `ffmpeg` must be available
@@ -1132,6 +1132,14 @@ const _examples = PlotExample[
         "Bézier curve",
         :(curves([1, 2, 3, 4], [1, 1, 2, 4], title = "Bézier curve")),
     ),
+    PlotExample(  # 62
+        "Filled area - hatched patterns",
+        "Plot hatched regions.",
+        quote
+            y = rand(10)
+            plot(y .+ 1, fillrange = y, fillstyle = :/)
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -1139,7 +1147,7 @@ _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [30],
     :pyplot => [22, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
-    :plotlyjs => [21, 24, 25, 30, 49, 50, 51, 55, 56],
+    :plotlyjs => [21, 24, 25, 30, 49, 50, 51, 55, 56, 62],
     :pgfplotsx => [
         6,  # images
         16,  # pgfplots thinks the upper panel is too small
@@ -1150,7 +1158,7 @@ _backend_skips = Dict(
         56,  # custom bar plot
     ],
     :inspectdr =>
-        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60],
+        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60, 62],
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
@@ -1168,6 +1176,7 @@ _backend_skips = Dict(
         51,  # drawing on top of image unsupported
         55,  # mirror unsupported, resolution too low
         56,  # barplots
+        62,  # fillstyle
     ],
     :gaston => [
         2,   # animations
@@ -1175,6 +1184,7 @@ _backend_skips = Dict(
         49,  # TODO: support polar
         50,  # TODO: 1D data not supported for pm3d
         60,  # :perspective projection unsupported
+        62,  # fillstyle
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
