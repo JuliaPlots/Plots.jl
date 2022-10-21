@@ -2087,19 +2087,15 @@ function gr_draw_surface(series, x, y, z, clims)
             # Only triangles - connections have to be 0-based (indexing)
             ci, cj, ck = series[:connections]
             if !(length(ci) == length(cj) == length(ck))
-                throw(
-                    ArgumentError(
-                        "Argument connections must consist of equally sized arrays.",
-                    ),
-                )
+                "Argument connections must consist of equally sized arrays." |>
+                ArgumentError |>
+                throw
             end
             cns = map(i -> ([3, ci[i] + 1, cj[i] + 1, ck[i] + 1]), eachindex(ci))
         else
-            throw(
-                ArgumentError(
-                    "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st",
-                ),
-            )
+            "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st" |>
+            ArgumentError |>
+            throw
         end
         facecolor = if series[:fillcolor] isa AbstractArray
             series[:fillcolor]
