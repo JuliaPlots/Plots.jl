@@ -542,7 +542,7 @@ end
 
 function _cbar_unique(values, propname)
     out = last(values)
-    if any(map(x -> x != out, values))
+    if any(x != out for x in values)
         @warn "Multiple series with different $propname share a colorbar. " *
               "Colorbar may not reflect all series correctly."
     end
