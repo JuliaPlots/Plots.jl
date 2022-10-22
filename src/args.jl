@@ -5,10 +5,10 @@ const _keyAliases = Dict{Symbol,Symbol}()
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
-        (haskey(_keyAliases, alias) || alias === sym) && return nothing
+        (haskey(_keyAliases, alias) || alias === sym) && return
         _keyAliases[alias] = sym
     end
-    return nothing
+    nothing
 end
 
 function add_axes_aliases(sym::Symbol, aliases::Symbol...; generic::Bool = true)
@@ -1028,11 +1028,9 @@ add_aliases(:warn_on_unsupported, :warn)
 function parse_axis_kw(s::Symbol)
     s = string(s)
     for letter in ('x', 'y', 'z')
-        if startswith(s, letter)
-            return (Symbol(letter), Symbol(chop(s, head = 1, tail = 0)))
-        end
+        startswith(s, letter) && return (Symbol(letter), Symbol(chop(s, head = 1, tail = 0)))
     end
-    return nothing
+    nothing
 end
 
 # update the defaults globally
@@ -1058,7 +1056,7 @@ function default(k::Symbol)
         return _axis_defaults_byletter[letter][key]
     end
     k === :letter && return k # for type recipe processing
-    return missing
+    missing
 end
 
 function default(k::Symbol, v)
@@ -1234,7 +1232,7 @@ function processFillArg(plotattributes::AKW, arg)
         plotattributes[:fillrange] = arg
     end
     # plotattributes[:fillrange] = fr
-    return
+    nothing
 end
 
 function processGridArg!(plotattributes::AKW, arg, letter)
@@ -1571,7 +1569,7 @@ function preprocess_attributes!(plotattributes::AKW)
     )
         @warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
     end
-    return
+    nothing
 end
 RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Plots.preprocess_attributes!(plotattributes)
@@ -1615,7 +1613,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
             end
         end
     end
-    return extra_kwargs
+    extra_kwargs
 end
 
 # _markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supported_markers(pkg)
@@ -1623,9 +1621,7 @@ end
 # _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
-    if !get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
-        return
-    end
+    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
     if !is_seriestype_supported(pkg, plotattributes[:seriestype])
         @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))"
     end
@@ -1638,9 +1634,7 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
-    if !get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
-        return
-    end
+    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
     for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(plotattributes, k)
             v = plotattributes[k]
@@ -1745,17 +1739,15 @@ function slice_arg!(
     else
         v
     end
-    if remove_pair
-        RecipesPipeline.reset_kw!(plotattributes_in, k)
-    end
-    return
+    remove_pair && RecipesPipeline.reset_kw!(plotattributes_in, k)
+    nothing
 end
 
 # -----------------------------------------------------------------------------
 
 function color_or_nothing!(plotattributes, k::Symbol)
     plotattributes[k] = (v = plotattributes[k]) === :match ? v : plot_color(v)
-    return
+    nothing
 end
 
 # -----------------------------------------------------------------------------
@@ -1897,7 +1889,7 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     if sp.attr[:colorbar] === :legend
         sp.attr[:colorbar] = sp.attr[:legend_position]
     end
-    return
+    nothing
 end
 
 function _update_subplot_colors(sp::Subplot)
@@ -1911,7 +1903,7 @@ function _update_subplot_colors(sp::Subplot)
     color_or_nothing!(sp.attr, :foreground_color_subplot)
     color_or_nothing!(sp.attr, :legend_foreground_color)
     color_or_nothing!(sp.attr, :foreground_color_title)
-    return
+    nothing
 end
 
 function _update_axis(
@@ -1933,7 +1925,7 @@ function _update_axis(
 
     _update_axis_colors(axis)
     _update_axis_links(plt, axis, letter)
-    return
+    nothing
 end
 
 function _update_axis(
@@ -1961,7 +1953,7 @@ function _update_axis(
 
     # update the axis
     attr!(axis; kw...)
-    return
+    nothing
 end
 
 function _update_axis_colors(axis::Axis)
@@ -1972,7 +1964,7 @@ function _update_axis_colors(axis::Axis)
     color_or_nothing!(axis.plotattributes, :foreground_color_text)
     color_or_nothing!(axis.plotattributes, :foreground_color_grid)
     color_or_nothing!(axis.plotattributes, :foreground_color_minor_grid)
-    return
+    nothing
 end
 
 function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
@@ -1986,7 +1978,7 @@ function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
         end
         axis.plotattributes[:link] = []
     end
-    return
+    nothing
 end
 
 # update a subplots args and axes
