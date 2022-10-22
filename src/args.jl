@@ -2000,10 +2000,9 @@ function _update_subplot_args(
     anns = RecipesPipeline.pop_kw!(sp.attr, :annotations)
 
     # grab those args which apply to this subplot
-    foreach(
-        k -> slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair),
-        keys(_subplot_defaults),
-    )
+    for k in keys(_subplot_defaults)
+        slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
+    end
 
     _update_subplot_colors(sp)
 

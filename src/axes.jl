@@ -90,13 +90,8 @@ function attr!(axis::Axis, args...; kw...)
     for (k, v) in kw
         haskey(plotattributes, k) || continue
         if k === :discrete_values
-            # add these discrete values to the axis
-            foreach(x -> discrete_value!(axis, x), v)
-            # could perhaps use TimeType here, as Date and DateTime are both subtypes of TimeType
-            # or could perhaps check if dateformatter or datetimeformatter is in use
-        elseif k === :lims && isa(v, NTuple{2,Date})
-            plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
-        elseif k === :lims && isa(v, NTuple{2,DateTime})
+            foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
+        elseif k === :lims && isa(v, NTuple{2,TimeType})
             plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
         else
             plotattributes[k] = v
@@ -158,8 +153,8 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     end
 
     # get a list of well-laid-out ticks
-    if ticks === nothing
-        scaled_ticks = optimize_ticks(
+    scaled_ticks = if ticks === nothing
+        optimize_ticks(
             sf(amin),
             sf(amax);
             k_min = scale ∈ _logScales ? 2 : 4, # minimum number of ticks
@@ -167,7 +162,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             scale = scale,
         )[1]
     elseif typeof(ticks) <: Int
-        scaled_ticks, viewmin, viewmax = optimize_ticks(
+        optimize_ticks(
             sf(amin),
             sf(amax);
             k_min = ticks, # minimum number of ticks
@@ -177,10 +172,9 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
             scale = scale,
-        )
-        # axis[:lims] = map(RecipesPipeline.inverse_scale_func(scale), (viewmin, viewmax))
+        )[1]
     else
-        scaled_ticks = map(sf, (filter(t -> amin <= t <= amax, ticks)))
+        map(sf, (filter(t -> amin ≤ t ≤ amax, ticks)))
     end
     unscaled_ticks = map(RecipesPipeline.inverse_scale_func(scale), scaled_ticks)
 
@@ -228,11 +222,10 @@ function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:for
             else
                 cvals = axis[:continuous_values]
                 alims = axis_limits(sp, axis[:letter])
-                scale = axis[:scale]
-                get_ticks(ticks, cvals, dvals, alims, scale, formatter)
+                get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
             end
     end
-    return axis.plotattributes[:optimized_ticks]
+    axis.plotattributes[:optimized_ticks]
 end
 
 # Ticks getter functions
@@ -330,18 +323,17 @@ _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
     Dates.value.(ticks)
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
-function get_minor_ticks(sp, axis, ticks)
+function get_minor_ticks(sp, axis, ticks_and_labels)
     axis[:minorticks] ∈ (:none, nothing, false) && !axis[:minorgrid] && return nothing
-    ticks = ticks[1]
+    ticks = first(ticks_and_labels)
     length(ticks) < 2 && return nothing
 
     amin, amax = axis_limits(sp, axis[:letter])
     scale = axis[:scale]
-    log_scaled = scale ∈ _logScales
     base = get(_logScaleBases, scale, nothing)
 
     # add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
-    if log_scaled
+    if (log_scaled = scale ∈ _logScales)
         sub = round(Int, log(base, ticks[2] / ticks[1]))
         ticks = [ticks[1] / base; ticks; ticks[end] * base]
     else
@@ -359,31 +351,25 @@ function get_minor_ticks(sp, axis, ticks)
         scale === :log10 ? 9 : 5
     end
 
-    minorticks = typeof(ticks[1])[]
-    for (i, hi) in enumerate(ticks[2:end])
-        lo = ticks[i]
-        if isfinite(lo) && isfinite(hi) && hi > lo
-            if log_scaled
-                for e in 1:sub
-                    lo_ = lo * base^(e - 1)
-                    hi_ = lo_ * base
-                    step = (hi_ - lo_) / n
-                    append!(
-                        minorticks,
-                        range(
-                            lo_ + (e > 1 ? 0 : step),
-                            hi_ - (e < sub ? 0 : step / 2);
-                            step,
-                        ) |> collect,
-                    )
-                end
-            else
-                step = (hi - lo) / n
-                append!(minorticks, collect(range(lo + step, hi - step / 2; step)))
+    minorticks = sizehint!(eltype(ticks)[], n * sub * length(ticks))
+    for i in 2:length(ticks)
+        lo = ticks[i - 1]
+        hi = ticks[i]
+        (isfinite(lo) && isfinite(hi) && hi > lo) || continue
+        if log_scaled
+            for e in 1:sub
+                lo_ = lo * base^(e - 1)
+                hi_ = lo_ * base
+                step = (hi_ - lo_) / n
+                rng = lo_ + (e > 1 ? 0 : step):step:hi_ - (e < sub ? 0 : step / 2)
+                append!(minorticks, collect(rng))
             end
+        else
+            step = (hi - lo) / n
+            append!(minorticks, collect((lo + step):step:(hi - step / 2)))
         end
     end
-    minorticks[amin .<= minorticks .<= amax]
+    minorticks[amin .≤ minorticks .≤ amax]
 end
 
 # -------------------------------------------------------------------------
@@ -589,9 +575,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     lims = process_limits(axis[:lims], axis)
     (lims isa Tuple || lims === :round) && return nothing
     for sp in axis.sps, series in series_list(sp)
-        if series.plotattributes[:seriestype] in _widen_seriestypes
-            return factor
-        end
+        series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end
     nothing
 end
@@ -629,8 +613,8 @@ function axis_limits(
     amin, amax = ex.emin, ex.emax
     lims = process_limits(axis[:lims], axis)
     lims === nothing && warn_invalid_limits(axis[:lims], letter)
-    has_user_lims = lims isa Tuple
-    if has_user_lims
+    
+    if (has_user_lims = lims isa Tuple)
         lmin, lmax = lims
         if lmin isa Number && isfinite(lmin)
             amin = lmin
@@ -644,52 +628,48 @@ function axis_limits(
         end
     end
     if lims === :symmetric
-        aval = max(abs(amin), abs(amax))
-        amin = -aval
-        amax = aval
+        amax = max(abs(amin), abs(amax))
+        amin = -amax
     end
-    if amax <= amin && isfinite(amin)
+    if amax ≤ amin && isfinite(amin)
         amax = amin + 1.0
     end
     if !isfinite(amin) && !isfinite(amax)
-        amin, amax = 0.0, 1.0
+        amin, amax = zero(amin), one(amax)
     end
-    amin, amax = if ispolar(axis.sps[1])
+    if ispolar(axis.sps[1])
         if axis[:letter] === :x
             amin, amax = 0, 2π
         elseif lims === :auto
             # widen max radius so ticks dont overlap with theta axis
-            0, amax + 0.1abs(amax - amin)
-        else
-            amin, amax
+            amin, amax = 0, amax + 0.1abs(amax - amin)
         end
     elseif lims_factor !== nothing
-        scale_lims(amin, amax, lims_factor, axis[:scale])
+        amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
     elseif lims === :round
-        round_limits(amin, amax, axis[:scale])
-    else
-        amin, amax
+        amin, amax = round_limits(amin, amax, axis[:scale])
     end
 
+    aspect_ratio = get_aspect_ratio(sp)
     if (
         !has_user_lims &&
         consider_aspect &&
         letter in (:x, :y) &&
-        !((aspect_ratio = get_aspect_ratio(sp)) === :none || RecipesPipeline.is3d(:sp))
+        !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
     )
         aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
         area = plotarea(sp)
         plot_ratio = height(area) / width(area)
         dist = amax - amin
 
-        if letter === :x
+        factor = if letter === :x
             ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * ydist / dist
-            factor = axis_ratio / plot_ratio
+            axis_ratio / plot_ratio
         else
             xdist, = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * dist / xdist
-            factor = plot_ratio / axis_ratio
+            plot_ratio / axis_ratio
         end
 
         if factor > 1
@@ -699,7 +679,7 @@ function axis_limits(
         end
     end
 
-    return amin, amax
+    amin, amax
 end
 
 # -------------------------------------------------------------------------
@@ -719,7 +699,7 @@ discrete_value!(plotattributes, letter::Symbol, dv) =
 discrete_value!(axis::Axis, dv) =
     if (cv_idx = get(axis[:discrete_map], dv, -1)) == -1
         ex = axis[:extrema]
-        cv = NaNMath.max(0.5, ex.emax + 1.0)
+        cv = NaNMath.max(0.5, ex.emax + 1)
         expand_extrema!(axis, cv)
         push!(axis[:discrete_values], dv)
         push!(axis[:continuous_values], cv)
@@ -764,15 +744,12 @@ const grid_factor_3d = Ref(grid_factor_2d[] / 100)
 # compute the line segments which should be drawn for this axis
 function axis_drawing_info(sp, letter)
     # find out which axis we are dealing with
-    asym = get_attr_symbol(letter, :axis)
     isy = letter === :y
-    oletter = isy ? :x : :y
-    oasym = get_attr_symbol(oletter, :axis)
+    letters = letter, isy ? :x : :y
 
     # get axis objects, ticks and minor ticks
-    ax, oax = sp[asym], sp[oasym]
-    amin, amax = axis_limits(sp, letter)
-    oamin, oamax = axis_limits(sp, oletter)
+    ax, oax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
+    (amin, amax), (oamin, oamax) = map(l -> axis_limits(sp, l), letters)
     ticks = get_ticks(sp, ax, update = false)
     minor_ticks = get_minor_ticks(sp, ax, ticks)
 
@@ -792,7 +769,7 @@ function axis_drawing_info(sp, letter)
                 # don't show the 0 tick label for the origin framestyle
                 if (
                     sp[:framestyle] === :origin &&
-                    !(ticks in (:none, nothing, false)) &&
+                    ticks ∉ (:none, nothing, false) &&
                     length(ticks) > 1
                 )
                     if (i = findfirst(==(0), ticks[1])) !== nothing
@@ -885,14 +862,10 @@ sort_3d_axes(a, b, c, letter) =
 function axis_drawing_info_3d(sp, letter)
     near_letter = letter in (:x, :z) ? :y : :x
     far_letter = letter in (:x, :y) ? :z : :x
+    letters = letter, near_letter, far_letter
 
-    ax = sp[get_attr_symbol(letter, :axis)]
-    nax = sp[get_attr_symbol(near_letter, :axis)]
-    fax = sp[get_attr_symbol(far_letter, :axis)]
-
-    amin, amax = axis_limits(sp, letter)
-    namin, namax = axis_limits(sp, near_letter)
-    famin, famax = axis_limits(sp, far_letter)
+    ax, nax, fax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
+    (amin, amax), (namin, namax), (famin, famax) = map(l -> axis_limits(sp, l), letters)
 
     ticks = get_ticks(sp, ax, update = false)
     minor_ticks = get_minor_ticks(sp, ax, ticks)
@@ -923,7 +896,7 @@ function axis_drawing_info_3d(sp, letter)
                 # don't show the 0 tick label for the origin framestyle
                 if (
                     sp[:framestyle] === :origin &&
-                    !(ticks in (:none, nothing, false)) &&
+                    ticks ∉ (:none, nothing, false) &&
                     length(ticks) > 1
                 )
                     if (i = findfirst(==(0), ticks[1])) !== nothing
