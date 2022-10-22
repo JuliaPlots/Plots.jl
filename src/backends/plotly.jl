@@ -30,7 +30,7 @@ end
 
 plotly_font(font::Font, color = font.color) = KW(
     :family => font.family,
-    :size   => round(Int, font.pointsize * 1.4),
+    :size   => round(Int, 1.4font.pointsize),
     :color  => rgba_string(color),
 )
 
@@ -50,7 +50,7 @@ plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper") = m
 plotly_scale(scale::Symbol) = scale === :log10 ? "log" : "-"
 
 function shrink_by(lo, sz, ratio)
-    amt = 0.5 * (1.0 - ratio) * sz
+    amt = 0.5(1 - ratio) * sz
     lo + amt, sz - 2amt
 end
 
@@ -185,7 +185,7 @@ function plotly_layout(plt::Plot)
                 xmm, ymm = left(bb), top(bbox(sp))
                 halign, valign = :left, :top
             elseif tpos === :center
-                xmm, ymm = 0.5 * (left(bb) + right(bb)), top(bbox(sp))
+                xmm, ymm = 0.5(left(bb) + right(bb)), top(bbox(sp))
                 halign, valign = :hcenter, :top
             elseif tpos === :right
                 xmm, ymm = right(bb), top(bbox(sp))
@@ -228,9 +228,9 @@ function plotly_layout(plt::Plot)
                     #2.6 multiplier set camera eye such that whole plot can be seen
                     :camera => KW(
                         :eye => KW(
-                            :x => cosd(azim) * sind(theta) * 2.6,
-                            :y => sind(azim) * sind(theta) * 2.6,
-                            :z => cosd(theta) * 2.6,
+                            :x => 2.6cosd(azim) * sind(theta),
+                            :y => 2.6sind(azim) * sind(theta),
+                            :z => 2.6cosd(theta),
                         ),
                         :projection => (
                             auto = "orthographic",  # we choose to unify backends by using a default "orthographic" proj when `:auto`
@@ -874,7 +874,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     string(_cycle(series[:markershape], i)),
                 ),
                 # :opacity => needs_scatter_fix ? [1, 0] : 1,
-                :size => 2 * _cycle(series[:markersize], i),
+                :size => 2_cycle(series[:markersize], i),
                 :color => needs_scatter_fix ? [mcolor, mcolor_next] : mcolor,
                 :line => KW(
                     :color => needs_scatter_fix ? [lcolor, lcolor_next] : lcolor,

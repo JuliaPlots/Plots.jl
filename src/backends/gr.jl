@@ -1109,8 +1109,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     # We are trying to get markers to not be larger than half the line length. 
                     # 1 / leg.dy translates width_factor to line length units (important in the context of size kwarg)
                     # 4 is an empirical constant to translate between line length unit and marker size unit
-                    maxmarkersize =
-                        0.5(3.5leg.width_factor - 0.5leg.width_factor) / 4leg.dy
+                    maxmarkersize = 0.5(3.5leg.width_factor - 0.5leg.width_factor) / 4leg.dy
                     if series[:fillrange] === nothing || series[:ribbon] !== nothing
                         GR.polyline(
                             [xpos - 3.5leg.width_factor, xpos - leg.width_factor / 2],

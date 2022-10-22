@@ -361,7 +361,7 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
                 lo_ = lo * base^(e - 1)
                 hi_ = lo_ * base
                 step = (hi_ - lo_) / n
-                rng = lo_ + (e > 1 ? 0 : step):step:hi_ - (e < sub ? 0 : step / 2)
+                rng = (lo_ + (e > 1 ? 0 : step)):step:(hi_ - (e < sub ? 0 : step / 2))
                 append!(minorticks, collect(rng))
             end
         else
@@ -613,7 +613,7 @@ function axis_limits(
     amin, amax = ex.emin, ex.emax
     lims = process_limits(axis[:lims], axis)
     lims === nothing && warn_invalid_limits(axis[:lims], letter)
-    
+
     if (has_user_lims = lims isa Tuple)
         lmin, lmax = lims
         if lmin isa Number && isfinite(lmin)
