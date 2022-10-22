@@ -1901,8 +1901,9 @@ function gr_draw_markers(
     msize = series[:markersize],
     strokewidth = series[:markerstrokewidth],
 )
-    (isempty(x) || (shapes = series[:markershape]) === :none) && return
+    isempty(x) && return
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
+    (shapes = series[:markershape]) === :none && return
     for segment in series_segments(series, :scatter)
         i = segment.attr_index
         rng = intersect(eachindex(x), segment.range)

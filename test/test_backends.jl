@@ -175,7 +175,7 @@ end
     end
 end
 
-const exclude = if VERSION.major == 1 && VERSION.minor == 9
+const blacklist = if VERSION.major == 1 && VERSION.minor == 9
     [41]  # FIXME: github.com/JuliaLang/julia/issues/47261
 else
     []
@@ -192,7 +192,7 @@ end
                 image_comparison_facts(
                     :gr,
                     tol = PLOTS_IMG_TOL,
-                    skip = vcat(Plots._backend_skips[:gr], exclude),
+                    skip = vcat(Plots._backend_skips[:gr], blacklist),
                 )
             end
         end
@@ -221,7 +221,7 @@ end
             @test filesize(fn) > 1_000
         end
         for be in (:gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
-            skip = vcat(Plots._backend_skips[be], exclude)
+            skip = vcat(Plots._backend_skips[be], blacklist)
             Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
             closeall()
         end
@@ -229,18 +229,20 @@ end
 end
 
 @testset "coverage" begin
-    @test Plots.CurrentBackend(:gr).sym === :gr
-    @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
+    with(:gr) do
+        @test Plots.CurrentBackend(:gr).sym === :gr
+        @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
 
-    @test_logs (:warn, r".*not a valid backend package") withenv(
-        "PLOTS_DEFAULT_BACKEND" => "invalid",
-    ) do
-        Plots._pick_default_backend()
+        @test_logs (:warn, r".*not a valid backend package") withenv(
+            "PLOTS_DEFAULT_BACKEND" => "invalid",
+        ) do
+            Plots._pick_default_backend()
+        end
+        @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
+            Plots._pick_default_backend()
+        end == Plots.UnicodePlotsBackend()
+        @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
+
+        @test Plots._pick_default_backend() == Plots.GRBackend()
     end
-    @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
-        Plots._pick_default_backend()
-    end == Plots.UnicodePlotsBackend()
-    @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
-
-    @test Plots._pick_default_backend() == Plots.GRBackend()  # this also restore the backend to default gr
 end

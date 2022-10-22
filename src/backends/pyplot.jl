@@ -1138,8 +1138,12 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ax.tick_params(top = true)   # Add ticks too
                 ax.tick_params(right = true) # Add ticks too
             elseif sp[:framestyle] in (:axes, :origin)
-                getproperty(ax.spines, sp[:xaxis][:mirror] ? "bottom" : "top")."set_visible"(false)
-                getproperty(ax.spines, sp[:yaxis][:mirror] ? "left" : "right")."set_visible"(false)
+                getproperty(ax.spines, sp[:xaxis][:mirror] ? "bottom" : "top")."set_visible"(
+                    false,
+                )
+                getproperty(ax.spines, sp[:yaxis][:mirror] ? "left" : "right")."set_visible"(
+                    false,
+                )
                 if sp[:framestyle] === :origin
                     ax.spines."bottom"."set_position"("zero")
                     ax.spines."left"."set_position"("zero")
