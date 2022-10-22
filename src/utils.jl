@@ -335,15 +335,18 @@ function nanvcat(vs::AVec)
     v_out
 end
 
+sort_3d_axes(a, b, c, letter) =
+    if letter === :x
+        a, b, c
+    elseif letter === :y
+        b, a, c
+    else
+        c, b, a
+    end
+
 right_handed(sp, letter) =
     if RecipesPipeline.is3d(sp)
-        if letter === :x
-            :x, :y, :z  # letter, far_letter, near_letter
-        elseif letter === :y
-            :y, :z, :x
-        else
-            :z, :x, :y
-        end
+        sort_3d_axes(:x, :y, :z, letter)
     else
         letter === :x ? (:x, :y) : (:y, :x)
     end

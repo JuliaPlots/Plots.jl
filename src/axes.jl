@@ -849,19 +849,10 @@ function axis_drawing_info(sp, letter)
     )
 end
 
-sort_3d_axes(a, b, c, letter) =
-    if letter === :x
-        a, b, c
-    elseif letter === :y
-        b, a, c
-    else
-        c, b, a
-    end
-
 function axis_drawing_info_3d(sp, letter)
     letters = right_handed(sp, letter)
-    ax, fax, nax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
-    (amin, amax), (famin, famax), (namin, namax) = map(l -> axis_limits(sp, l), letters)
+    ax, nax, fax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
+    (amin, amax), (namin, namax), (famin, famax) = map(l -> axis_limits(sp, l), letters)
 
     ticks = get_ticks(sp, ax, update = false)
     minor_ticks = get_minor_ticks(sp, ax, ticks)
