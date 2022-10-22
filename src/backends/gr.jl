@@ -53,6 +53,7 @@ const gr_valigns = (
     center = GR.TEXT_VALIGN_HALF,
     bottom = GR.TEXT_VALIGN_BOTTOM,
 )
+const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
 
 const gr_font_family = Dict(
     # compat
@@ -173,26 +174,12 @@ function gr_set_fillstyle(s::Symbol)
     nothing
 end
 
-function gr_set_projectiontype(sp)
-    GR.setprojectiontype(
-        # https://gr-framework.org/python-gr.html?highlight=setprojectiontype#gr.setprojectiontype
-        # PROJECTION_DEFAULT      0 default
-        # PROJECTION_ORTHOGRAPHIC 1 orthographic
-        # PROJECTION_PERSPECTIVE  2 perspective
-        # we choose to unify backends by using a default `orthographic` proj when `:auto`
-        (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)[sp[:projection_type]],
-    )
-    #=
-    GR.gr3.setprojectiontype(
-        # https://github.com/sciapp/gr/blob/master/lib/gr3/gr3.h
-        #define GR3_PROJECTION_PERSPECTIVE  0
-        #define GR3_PROJECTION_PARALLEL     1
-        #define GR3_PROJECTION_ORTHOGRAPHIC 2
-        (auto = 0, ortho = 2, orthographic = 2, persp = 0, perspective = 0)[sp[:projection_type]],
-    )
-    =#
-    nothing
-end
+# https://gr-framework.org/python-gr.html?highlight=setprojectiontype#gr.setprojectiontype
+# PROJECTION_DEFAULT      0 default
+# PROJECTION_ORTHOGRAPHIC 1 orthographic
+# PROJECTION_PERSPECTIVE  2 perspective
+# we choose to unify backends by using a default `orthographic` proj when `:auto`
+gr_set_projectiontype(sp) = GR.setprojectiontype(gr_projections[sp[:projection_type]])
 
 # --------------------------------------------------------------------------------------
 
@@ -348,11 +335,9 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     end
 
     # draw radial ticks
-    if yaxis[:showaxis]
-        for i in eachindex(rtick_values)
-            r = (rtick_values[i] - rmin) / (rmax - rmin)
-            (r ≤ 1 && r ≥ 0) && gr_text(GR.wctondc(0.05, r)..., _cycle(rtick_labels, i))
-        end
+    yaxis[:showaxis] && for i in eachindex(rtick_values)
+        r = (rtick_values[i] - rmin) / (rmax - rmin)
+        (r ≤ 1 && r ≥ 0) && gr_text(GR.wctondc(0.05, r)..., _cycle(rtick_labels, i))
     end
     GR.restorestate()
 end
@@ -432,10 +417,7 @@ function gr_set_line(lw, style, c, s)  # s can be Subplot or Series
     gr_set_linecolor(c)
 end
 
-function gr_set_fill(c)
-    gr_set_fillcolor(c)
-    GR.setfillintstyle(GR.INTSTYLE_SOLID)
-end
+gr_set_fill(c) = (gr_set_fillcolor(c); GR.setfillintstyle(GR.INTSTYLE_SOLID); nothing)
 
 # this stores the conversion from a font pointsize to "percentage of window height"
 # (which is what GR uses). `s` can be a Series, Subplot or Plot
@@ -1144,22 +1126,22 @@ function gr_get_legend_geometry(vp, sp)
         GR.setscale(0)
         if sp[:legend_title] !== nothing
             gr_set_font(legendtitlefont(sp), sp)
-            legendn += 1
             tbx, tby = gr_inqtext(0, 0, string(sp[:legend_title]))
             l, r = extrema(tbx)
             b, t = extrema(tby)
-            legendw = r - l
             dy = t - b
+            legendw = r - l
+            legendn += 1
         end
         gr_set_font(legendfont(sp), sp)
         for series in series_list(sp)
             should_add_to_legend(series) || continue
-            legendn += 1
             tbx, tby = gr_inqtext(0, 0, string(series[:label]))
             l, r = extrema(tbx)
             b, t = extrema(tby)
-            legendw = max(legendw, r - l) # Holds text width right now
             dy = max(dy, t - b)
+            legendw = max(legendw, r - l) # Holds text width right now
+            legendn += 1
         end
 
         GR.setscale(GR.OPTION_X_LOG)
@@ -1601,15 +1583,14 @@ gr_add_title(sp, vp_plt, vp_sp) =
     if sp[:title] != ""
         GR.savestate()
         gr_set_font(titlefont(sp), sp)
-        loc = sp[:titlelocation]
-        if loc === :left
-            xpos, ypos = xmin(vp_plt), ymax(vp_plt)
+        if (loc = sp[:titlelocation]) === :left
+            xpos, ypos = xmin(vp_plt), ymax(vp_sp)
             halign, valign = GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_TOP
         elseif loc === :center
-            xpos, ypos = xcenter(vp_plt), ymax(vp_plt)
+            xpos, ypos = xcenter(vp_plt), ymax(vp_sp)
             halign, valign = GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP
         elseif loc === :right
-            xpos, ypos = xmax(vp_plt), ymax(vp_plt)
+            xpos, ypos = xmax(vp_plt), ymax(vp_sp)
             halign, valign = GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_TOP
         else
             xpos = xposition(vp_plt, loc[1])
@@ -1625,8 +1606,6 @@ gr_add_title(sp, vp_plt, vp_sp) =
 ## Series
 
 function gr_add_series(sp, series)
-    st = series[:seriestype]
-
     # update the current stored gradient
     gr_set_gradient(series)
 
@@ -1638,14 +1617,12 @@ function gr_add_series(sp, series)
 
     # recompute data
     if ispolar(sp) && z === nothing
-        rmin, rmax = gr_y_axislims(sp)
+        extrema_r = gr_y_axislims(sp)
         if frng !== nothing
-            _, frng = convert_to_polar(x, frng, (rmin, rmax))
+            _, frng = convert_to_polar(x, frng, extrema_r)
         end
-        x, y = convert_to_polar(x, y, (rmin, rmax))
+        x, y = convert_to_polar(x, y, extrema_r)
     end
-
-    clims = gr_clims(sp, series)
 
     # add custom frame shapes to markershape?
     series_annotations_shapes!(series)
@@ -1654,7 +1631,8 @@ function gr_add_series(sp, series)
     gr_is3d(sp) && gr_set_projectiontype(sp)
 
     # draw the series
-    if st in (:path, :scatter, :straightline)
+    clims = gr_clims(sp, series)
+    if (st = series[:seriestype]) in (:path, :scatter, :straightline)
         if st === :straightline
             x, y = straightline_data(series)
         end
@@ -1701,9 +1679,9 @@ function gr_add_series(sp, series)
         else
             _, i = sp[:xaxis][:flip] ? findmin(x) : findmax(x)
             GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-            offset = 0.01
+            offset = +0.01
         end
-        (x_l, y_l) = GR.wctondc(x[i], y[i])
+        x_l, y_l = GR.wctondc(x[i], y[i])
         gr_text(x_l + offset, y_l, series[:label])
     end
     GR.restorestate()
@@ -1819,9 +1797,8 @@ function gr_draw_contour(series, x, y, z, clims)
     if series[:fillrange] !== nothing
         GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
     else
-        coff = let black = plot_color(:black)
-            plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1_000
-        end
+        black = plot_color(:black)
+        coff = plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1_000
         GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
     end
 end
@@ -1937,10 +1914,9 @@ function gr_draw_heatmap(series, x, y, z, clims)
 end
 
 function gr_draw_image(series, x, y, z, clims)
-    w, h = size(z)
     x_min, x_max = ignorenan_extrema(x)
     y_min, y_max = ignorenan_extrema(y)
-    GR.drawimage(x_min, x_max, y_max, y_min, w, h, gr_color.(z))
+    GR.drawimage(x_min, x_max, y_max, y_min, size(z)..., gr_color.(z))
 end
 
 # ----------------------------------------------------------------

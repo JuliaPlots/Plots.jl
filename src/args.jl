@@ -1623,15 +1623,12 @@ end
 
 function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
     get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
-    if !is_seriestype_supported(pkg, plotattributes[:seriestype])
-        @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))"
-    end
-    if !is_style_supported(pkg, plotattributes[:linestyle])
-        @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))"
-    end
-    if !is_marker_supported(pkg, plotattributes[:markershape])
-        @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))"
-    end
+    is_seriestype_supported(pkg, plotattributes[:seriestype]) ||
+        @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
+    is_style_supported(pkg, plotattributes[:linestyle]) ||
+        @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
+    is_marker_supported(pkg, plotattributes[:markershape]) ||
+        @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
@@ -1699,12 +1696,13 @@ convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 or `levels` is less than 1"""
 function check_contour_levels(levels)
     if !(levels isa Union{Integer,AVec})
-        ArgumentError("the levels keyword argument must be an integer or AbstractVector") |>
+        "the levels keyword argument must be an integer or AbstractVector" |>
+        ArgumentError |>
         throw
     elseif levels isa Integer && levels <= 0
-        ArgumentError(
-            "must pass a positive number of contours to the levels keyword argument",
-        ) |> throw
+        "must pass a positive number of contours to the levels keyword argument" |>
+        ArgumentError |>
+        throw
     end
 end
 
