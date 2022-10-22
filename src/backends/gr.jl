@@ -447,10 +447,10 @@ function gr_viewport_from_bbox(
     viewport_canvas,
 )
     viewport = [
-        viewport_canvas[2] * (left(bb) / w)
-        viewport_canvas[2] * (right(bb) / w)
-        viewport_canvas[4] * (1 - bottom(bb) / h)
-        viewport_canvas[4] * (1 - top(bb) / h)
+        viewport_canvas[2] * (left(bb) / w),
+        viewport_canvas[2] * (right(bb) / w),
+        viewport_canvas[4] * (1 - bottom(bb) / h),
+        viewport_canvas[4] * (1 - top(bb) / h),
     ]
     hascolorbar(sp) && (viewport[2] -= 0.1(1 + 0.5gr_is3d(sp)))
     viewport
@@ -458,8 +458,8 @@ end
 
 # change so we're focused on the viewport area
 gr_set_viewport_cmap(sp::Subplot, viewport_plotarea) = GR.setviewport(
-    viewport_plotarea[2] + gr_is3d(sp) ? 0.07 : 0.02,
-    viewport_plotarea[2] + gr_is3d(sp) ? 0.10 : 0.05,
+    viewport_plotarea[2] + (gr_is3d(sp) ? 0.07 : 0.02),
+    viewport_plotarea[2] + (gr_is3d(sp) ? 0.10 : 0.05),
     viewport_plotarea[3],
     viewport_plotarea[4],
 )
@@ -624,7 +624,7 @@ alignment(symb) =
 
 function gr_set_gradient(c)
     grad = _as_gradient(c)
-    for (i, z) in enumerate(range(0, stop = 1, length = 256))
+    for (i, z) in enumerate(range(0, 1; length = 256))
         c = grad[z]
         GR.setcolorrep(999 + i, red(c), green(c), blue(c))
     end
@@ -695,7 +695,7 @@ function gr_text_size(str)
     w = r - l
     h = t - b
     GR.restorestate()
-    return w, h
+    w, h
 end
 
 # size of the text with rotation applied
@@ -709,7 +709,7 @@ function gr_text_size(str, rot)
     w = text_box_width(r - l, t - b, rot)
     h = text_box_height(r - l, t - b, rot)
     GR.restorestate()
-    return w, h
+    w, h
 end
 
 text_box_width(w, h, rot) = abs(cosd(rot)) * w + abs(cosd(rot + 90)) * h
@@ -721,7 +721,7 @@ function gr_get_3d_axis_angle(cvs, nt, ft, letter)
 
     dx = tickpoints[2][1] - tickpoints[1][1]
     dy = tickpoints[2][2] - tickpoints[1][2]
-    return atand(dy, dx)
+    atand(dy, dx)
 end
 
 function gr_get_ticks_size(ticks, rot)
@@ -731,7 +731,7 @@ function gr_get_ticks_size(ticks, rot)
         w = NaNMath.max(w, wi)
         h = NaNMath.max(h, hi)
     end
-    return w, h
+    w, h
 end
 
 function labelfunc(scale::Symbol, backend::GRBackend)
@@ -753,7 +753,7 @@ function gr_axis_height(sp, axis)
         h += last(gr_text_size(axis[:guide]))
     end
     GR.restorestate()
-    return h
+    h
 end
 
 function gr_axis_width(sp, axis)
@@ -769,7 +769,7 @@ function gr_axis_width(sp, axis)
         w += last(gr_text_size(axis[:guide]))
     end
     GR.restorestate()
-    return w
+    w
 end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
@@ -817,7 +817,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
         if h > 0mm
             (xaxis[:mirror] || yaxis[:mirror]) && (toppad += h)
-            (xaxis[:mirror] && yaxis[:mirror]) && (bottompad += h)
+            (!xaxis[:mirror] || !yaxis[:mirror]) && (bottompad += h)
         end
 
         if !isempty(first(zticks))
@@ -946,7 +946,7 @@ function gr_clims(args...)
             lo = zero(lo)
         end
     end
-    return lo, hi
+    lo, hi
 end
 
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
@@ -1002,14 +1002,16 @@ end
 
 ## Legend
 
-function gr_add_legend(sp, leg, viewport_plotarea)
-    sp[:legend_position] in (:none, :inline) && return
+const gr_legend_marker_to_line_factor = Ref(4.0)
+
+function gr_add_legend(sp, leg, viewport_area)
+    sp[:legend_position] ∈ (:none, :inline) && return
     GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
     gr_set_font(legendfont(sp), sp)
     if leg.w > 0
-        xpos, ypos = gr_legend_pos(sp, leg, viewport_plotarea)
+        xpos, ypos = gr_legend_pos(sp, leg, viewport_area)
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
         gr_set_fillcolor(sp[:legend_background_color])
         GR.fillrect(
@@ -1025,31 +1027,32 @@ function gr_add_legend(sp, leg, viewport_plotarea)
             ypos + leg.dy,
             ypos - leg.h,
         ) # Drawing actual legend width here
-        i = 0
         if sp[:legend_title] !== nothing
             GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
             gr_set_font(legendtitlefont(sp), sp)
             gr_text(xpos - 0.03 + 0.5leg.w, ypos, string(sp[:legend_title]))
-            ypos -= leg.dy
             gr_set_font(legendfont(sp), sp)
+            ypos -= leg.dy
         end
         for series in series_list(sp)
-            clims = gr_clims(sp, series)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
+            clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
-            gr_set_line(sp[:legend_font_pointsize] / 8, get_linestyle(series), lc, sp)
+            lfps = sp[:legend_font_pointsize]
+            gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
+
+            lft, rgt, bot, top =
+                0.5leg.width_factor, 3.5leg.width_factor, 0.4leg.dy, 0.4leg.dy
 
             if (
                 (st === :shape || series[:fillrange] !== nothing) &&
                 series[:ribbon] === nothing
             )
-                fc = get_fillcolor(series, clims)
-                gr_set_fill(fc)
-                fs = get_fillstyle(series, i)
-                gr_set_fillstyle(fs)
-                l, r = xpos - 3.5leg.width_factor, xpos - 0.5leg.width_factor
-                b, t = ypos - 0.4leg.dy, ypos + 0.4leg.dy
+                (fc = get_fillcolor(series, clims)) |> gr_set_fill
+                gr_set_fillstyle(get_fillstyle(series, 0))
+                l, r = xpos - lft, xpos - rgt
+                b, t = ypos - bot, ypos + top
                 x = [l, r, r, l, l]
                 y = [b, b, t, t, b]
                 gr_set_transparency(fc, get_fillalpha(series))
@@ -1066,52 +1069,34 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                 # This is to prevent that linestyle is obscured by large markers. 
                 # We are trying to get markers to not be larger than half the line length. 
                 # 1 / leg.dy translates width_factor to line length units (important in the context of size kwarg)
-                # 4 is an empirical constant to translate between line length unit and marker size unit
-                maxmarkersize = 0.5(3.5leg.width_factor - 0.5leg.width_factor) / 4leg.dy
+                # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
+                maxmarkersize = gr_legend_marker_to_line_factor[] * 0.5(rgt - lft) / leg.dy
                 if series[:fillrange] === nothing || series[:ribbon] !== nothing
-                    GR.polyline(
-                        [xpos - 3.5leg.width_factor, xpos - 0.5leg.width_factor],
-                        [ypos, ypos],
-                    )
+                    GR.polyline([xpos - rgt, xpos - lft], [ypos, ypos])
                 else
-                    GR.polyline(
-                        [xpos - 3.5leg.width_factor, xpos - 0.5leg.width_factor],
-                        [ypos + 0.4leg.dy, ypos + 0.4leg.dy],
-                    )
+                    GR.polyline([xpos - rgt, xpos - lft], [ypos + bot, ypos + top])
                 end
             end
 
-            if series[:markershape] !== :none
-                ms = first(series[:markersize])
+            if (msh = series[:markershape]) !== :none
+                msz = first(series[:markersize])
                 msw = first(series[:markerstrokewidth])
-                shape = Plots._cycle(series[:markershape], 1)
-                s, sw =
-                    min.(
-                        maxmarkersize,
-                        if ms > 0
-                            0.8sp[:legend_font_pointsize],
-                            0.8sp[:legend_font_pointsize] * msw / ms
-                        else
-                            0, 0.8sp[:legend_font_pointsize] * msw / 8
-                        end,
-                    )
                 gr_draw_marker(
                     series,
-                    xpos - 2leg.width_factor,
+                    xpos - 2 * leg.width_factor,
                     ypos,
                     nothing,
                     clims,
                     1,
-                    s,
-                    sw,
-                    shape,
+                    min(maxmarkersize, msz > 0 ? 0.8lfps : 0),
+                    min(maxmarkersize, 0.8lfps * msw / (msz > 0 ? msz : 8)),
+                    Plots._cycle(msh, 1),
                 )
             end
 
-            lab = series[:label]
             GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
             gr_set_textcolor(plot_color(sp[:legend_font_color]))
-            gr_text(xpos, ypos, string(lab))
+            gr_text(xpos, ypos, string(series[:label]))
             ypos -= leg.dy
         end
     end
@@ -1120,9 +1105,9 @@ function gr_add_legend(sp, leg, viewport_plotarea)
 end
 
 function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
-    s = sp[:legend_position]
-    s isa Real && return gr_legend_pos(s, leg, viewport_plotarea)
-    if s isa Tuple{<:Real,Symbol}
+    if (s = sp[:legend_position]) isa Real
+        return gr_legend_pos(s, leg, viewport_plotarea)
+    elseif s isa Tuple{<:Real,Symbol}
         s[2] === :outer || return gr_legend_pos(s[1], leg, viewport_plotarea)
 
         xaxis, yaxis = sp[:xaxis], sp[:yaxis]
@@ -1139,8 +1124,9 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
             xmirror * gr_axis_height(sp, sp[:xaxis]),
         ]
         return gr_legend_pos(s[1], leg, viewport_plotarea; axisclearance)
+    elseif !(s isa Symbol)
+        return gr_legend_pos(s, viewport_plotarea)
     end
-    s isa Symbol || return gr_legend_pos(s, viewport_plotarea)
     (str = string(s)) == "best" && (str = "topright")
     if occursin("outer", str)
         xaxis, yaxis = sp[:xaxis], sp[:yaxis]
@@ -1162,7 +1148,7 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
         end
     elseif occursin("left", str)
         xpos = if occursin("outer", str)
-            viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) - 2leg.xoffset - leg.rightw - leg.textw
+            viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) - 2 * leg.xoffset - leg.rightw - leg.textw
         else
             viewport_plotarea[1] + leg.leftw + leg.xoffset
         end
@@ -1170,7 +1156,7 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
         xpos =
             (viewport_plotarea[2] - viewport_plotarea[1]) / 2 +
             viewport_plotarea[1] +
-            leg.leftw - leg.rightw - leg.textw - 2leg.xoffset
+            leg.leftw - leg.rightw - leg.textw - 2 * leg.xoffset
     end
     if occursin("top", str)
         ypos = if s === :outertop
@@ -1193,38 +1179,8 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
         ypos =
             (viewport_plotarea[4] - viewport_plotarea[3] + leg.h) / 2 + viewport_plotarea[3]
     end
-    return xpos, ypos
+    xpos, ypos
 end
-
-#=
-function gr_legend_pos(v::Tuple{S,T}, viewport_plotarea) where {S<:Real,T<:Real}
-    xpos = v[1] * (viewport_plotarea[2] - viewport_plotarea[1]) + viewport_plotarea[1]
-    ypos = v[2] * (viewport_plotarea[4] - viewport_plotarea[3]) + viewport_plotarea[3]
-    (xpos, ypos)
-end
-
-function gr_legend_pos(theta::Real, leg, viewport_plotarea; axisclearance = nothing)
-    xcenter = +(viewport_plotarea[1:2]...) / 2
-    ycenter = +(viewport_plotarea[3:4]...) / 2
-
-    if isnothing(axisclearance)
-        # Inner
-        # rectangle where the anchor can legally be
-        xmin = viewport_plotarea[1] + leg.xoffset + leg.leftw
-        xmax = viewport_plotarea[2] - leg.xoffset - leg.rightw - leg.textw
-        ymin = viewport_plotarea[3] + leg.yoffset + leg.h
-        ymax = viewport_plotarea[4] - leg.yoffset - leg.dy
-    else
-        # Outer
-        xmin =
-            viewport_plotarea[1] - leg.xoffset - leg.rightw - leg.textw - axisclearance[1]
-        xmax = viewport_plotarea[2] + leg.xoffset + leg.leftw + axisclearance[2]
-        ymin = viewport_plotarea[3] - leg.yoffset - leg.dy - axisclearance[3]
-        ymax = viewport_plotarea[4] + leg.yoffset + leg.h + axisclearance[4]
-    end
-    return legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
-end
-=#
 
 function gr_get_legend_geometry(viewport_plotarea, sp)
     legendn = 0
@@ -1271,7 +1227,7 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
     dy *= get(sp[:extra_kwargs], :legend_hfactor, 1)
     legendh = dy * legendn
 
-    return (
+    (
         w = legendw,
         h = legendh,
         dy = dy,
@@ -1432,7 +1388,7 @@ function gr_draw_axes(sp, viewport_plotarea)
         foreach(letter -> gr_draw_axis_3d(sp, letter, viewport_plotarea), (:x, :y, :z))
     elseif ispolar(sp)
         r = gr_set_viewport_polar(viewport_plotarea)
-        #rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
+        # rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
         rmin, rmax = axis_limits(sp, :y)
         gr_polaraxes(rmin, rmax, sp)
     elseif sp[:framestyle] !== :none
@@ -1666,7 +1622,7 @@ gr_label_axis(sp, letter, viewport_plotarea) =
         guide_position = axis[:guide_position]
         angle = float(axis[:guidefontrotation])  # github.com/JuliaPlots/Plots.jl/issues/3089
         if letter === :y
-            angle += 180.0  # default angle = 0. should yield GR.setcharup(-1, 0) i.e. 180°
+            angle += 180  # default angle = 0. should yield GR.setcharup(-1, 0) i.e. 180°
             GR.setcharup(cosd(angle), sind(angle))
             ypos = gr_view_yposition(viewport_plotarea, position(axis[:guidefontvalign]))
             yalign = alignment(axis[:guidefontvalign])
@@ -1678,7 +1634,7 @@ gr_label_axis(sp, letter, viewport_plotarea) =
                 xpos = viewport_plotarea[1] - 0.03 - !mirror * gr_axis_width(sp, axis)
             end
         else
-            angle += 90.0  # default angle = 0. should yield GR.setcharup(0, 1) i.e. 90°
+            angle += 90  # default angle = 0. should yield GR.setcharup(0, 1) i.e. 90°
             GR.setcharup(cosd(angle), sind(angle))
             xpos = gr_view_xposition(viewport_plotarea, position(axis[:guidefonthalign]))
             xalign = alignment(axis[:guidefonthalign])
@@ -1866,23 +1822,20 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
         is3d = st === :path3d && z !== nothing
         is2d = st === :path || st === :straightline
         if is2d && fillrange !== nothing
-            fc = get_fillcolor(series, clims, i)
-            gr_set_fillcolor(fc)
+            (fc = get_fillcolor(series, clims, i)) |> gr_set_fillcolor
             gr_set_fillstyle(get_fillstyle(series, i))
             fx = _cycle(x, vcat(rng, reverse(rng)))
             fy = vcat(_cycle(fr_from, rng), _cycle(fr_to, reverse(rng)))
             gr_set_transparency(fc, get_fillalpha(series, i))
             GR.fillarea(fx, fy)
         end
-        lc = get_linecolor(series, clims, i)
+        (lc = get_linecolor(series, clims, i)) |> gr_set_fillcolor
         gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
-        gr_set_fillcolor(lc)
         gr_set_transparency(lc, get_linealpha(series, i))
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
         elseif is2d
-            arrow = series[:arrow]
-            arrowside, arrowstyle = if isa(arrow, Arrow)
+            arrowside, arrowstyle = if (arrow = series[:arrow]) isa Arrow
                 arrow.side, arrow.style
             else
                 :none, :simple
