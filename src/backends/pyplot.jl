@@ -1,4 +1,3 @@
-
 # https://github.com/JuliaPy/PyPlot.jl
 
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
@@ -9,6 +8,7 @@ is_marker_supported(::PyPlotBackend, shape::Shape) = true
 # solution: hack from @stevengj: https://github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
 otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
 append!(Base.Multimedia.displays, otherdisplays)
+
 pycolors = PyPlot.pyimport("matplotlib.colors")
 pypath = PyPlot.pyimport("matplotlib.path")
 mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
@@ -330,9 +330,6 @@ function py_bbox_title(ax)
     end
     bb
 end
-
-visible(x) = x."set_visible"(true)
-invisible(x) = x."set_visible"(false)
 
 # bounding box: legend
 py_bbox_legend(ax) = py_bbox(ax."get_legend"())
@@ -1141,21 +1138,15 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ax.tick_params(top = true)   # Add ticks too
                 ax.tick_params(right = true) # Add ticks too
             elseif sp[:framestyle] in (:axes, :origin)
-                getproperty(ax.spines, sp[:xaxis][:mirror] ? "bottom" : "top") |> invisible
-                getproperty(ax.spines, sp[:yaxis][:mirror] ? "left" : "right") |> invisible
+                getproperty(ax.spines, sp[:xaxis][:mirror] ? "bottom" : "top")."set_visible"(false)
+                getproperty(ax.spines, sp[:yaxis][:mirror] ? "left" : "right")."set_visible"(false)
                 if sp[:framestyle] === :origin
                     ax.spines."bottom"."set_position"("zero")
                     ax.spines."left"."set_position"("zero")
                 end
             elseif sp[:framestyle] in (:grid, :none, :zerolines)
-                if PyPlot.version >= v"3.4.1" # that is one where it worked, the API change may have some other value
-                    for spine in ax.spines
-                        getproperty(ax.spines, string(spine)) |> invisible
-                    end
-                else
-                    for (_, spine) in ax.spines
-                        spine |> invisible
-                    end
+                for spine in ax.spines
+                    getproperty(ax.spines, string(spine))."set_visible"(false)
                 end
                 if sp[:framestyle] === :zerolines
                     ax."axhline"(
@@ -1173,12 +1164,12 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
             if sp[:xaxis][:mirror]
                 ax.xaxis."set_label_position"("top")  # the guides
-                sp[:framestyle] === :box ? nothing : ax.xaxis."tick_top"()
+                sp[:framestyle] === :box || ax.xaxis."tick_top"()
             end
 
             if sp[:yaxis][:mirror]
                 ax.yaxis."set_label_position"("right")  # the guides
-                sp[:framestyle] === :box ? nothing : ax.yaxis."tick_right"()
+                sp[:framestyle] === :box || ax.yaxis."tick_right"()
             end
         end
 
@@ -1197,6 +1188,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             py_set_lims(ax, sp, axis)
             (ispolar(sp) && letter === :y) && ax."set_rlabel_position"(90)
             ticks = sp[:framestyle] === :none ? nothing : get_ticks(sp, axis)
+
             # don't show the 0 tick label for the origin framestyle
             if sp[:framestyle] === :origin && length(ticks) > 1
                 ticks[2][ticks[1] .== 0] .= ""
@@ -1491,6 +1483,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 linestyle = py_linestyle(series[:seriestype], ls),
                 capstyle = "butt",
             )
+            push!(handles, line_handle)
 
             # hatched fill
             # hatch color/alpha are controlled by edge (not face) color/alpha
@@ -1506,10 +1499,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
 
                 # plot two handles on top of each other by passing in a tuple
                 # https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html
-                push!(handles, (line_handle, fill_handle))
-            else
-                # plot line handle (which includes solid fill) only
-                push!(handles, line_handle)
+                push!(handles, fill_handle)
             end
         elseif series[:seriestype] in
                (:path, :straightline, :scatter, :steppre, :stepmid, :steppost)

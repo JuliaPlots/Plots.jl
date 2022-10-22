@@ -3,12 +3,18 @@
 import GR
 export GR
 
-# --------------------------------------------------------------------------------------
-gr_is3d(st) = RecipesPipeline.is3d(st)
-
-gr_linetype(k) = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)[k]
-
-gr_markertype(k) = (
+const gr_linetypes = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)
+const gr_fill_styles = ((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6)
+const gr_arrowstyles = (
+    simple = 1,
+    hollow = 3,
+    filled = 4,
+    triangle = 5,
+    filledtriangle = 6,
+    closed = 6,
+    open = 5,
+)
+const gr_markertypes = (
     auto = 1,
     pixel = 1,
     none = -1,
@@ -34,20 +40,19 @@ gr_markertype(k) = (
     star8 = -29,
     vline = -30,
     hline = -31,
-)[k]
-
-gr_halign(k) = (
+)
+const gr_haligns = (
     left = GR.TEXT_HALIGN_LEFT,
     hcenter = GR.TEXT_HALIGN_CENTER,
     center = GR.TEXT_HALIGN_CENTER,
     right = GR.TEXT_HALIGN_RIGHT,
-)[k]
-gr_valign(k) = (
+)
+const gr_valigns = (
     top = GR.TEXT_VALIGN_TOP,
     vcenter = GR.TEXT_VALIGN_HALF,
     center = GR.TEXT_VALIGN_HALF,
     bottom = GR.TEXT_VALIGN_BOTTOM,
-)[k]
+)
 
 const gr_font_family = Dict(
     # compat
@@ -97,21 +102,22 @@ const gr_font_family = Dict(
 )
 
 # --------------------------------------------------------------------------------------
+gr_is3d(st) = RecipesPipeline.is3d(st)
 
+gr_color(c, ::Type) = gr_color(RGBA(c), RGB)
 gr_color(c) = gr_color(c, color_type(c))
-
 gr_color(c, ::Type{<:AbstractRGB}) = UInt32(
     round(UInt, clamp(255alpha(c), 0, 255)) << 24 +
     round(UInt, clamp(255blue(c), 0, 255)) << 16 +
     round(UInt, clamp(255green(c), 0, 255)) << 8 +
     round(UInt, clamp(255red(c), 0, 255)),
 )
-function gr_color(c, ::Type{<:AbstractGray})
-    g = round(UInt, clamp(255gray(c), 0, 255))
-    α = round(UInt, clamp(255alpha(c), 0, 255))
-    rgba = UInt32(α << 24 + g << 16 + g << 8 + g)
-end
-gr_color(c, ::Type) = gr_color(RGBA(c), RGB)
+gr_color(c, ::Type{<:AbstractGray}) =
+    let g = round(UInt, clamp(255gray(c), 0, 255)),
+        α = round(UInt, clamp(255alpha(c), 0, 255))
+
+        UInt32(α << 24 + g << 16 + g << 8 + g)
+    end
 
 set_RGBA_alpha(alpha, c::RGBA) = RGBA(red(c), green(c), blue(c), alpha)
 set_RGBA_alpha(alpha::Nothing, c::RGBA) = c
@@ -132,26 +138,12 @@ gr_set_transparency(c, α) = gr_set_transparency(α)
 gr_set_transparency(c::Colorant, ::Nothing) = gr_set_transparency(c)
 gr_set_transparency(c::Colorant) = GR.settransparency(alpha(c))
 
-gr_set_arrowstyle(s::Symbol) = GR.setarrowstyle(
-    get(
-        (
-            simple = 1,
-            hollow = 3,
-            filled = 4,
-            triangle = 5,
-            filledtriangle = 6,
-            closed = 6,
-            open = 5,
-        ),
-        s,
-        1,
-    ),
-)
+gr_set_arrowstyle(style::Symbol) = GR.setarrowstyle(get(gr_arrowstyles, style, 1))
 
 gr_set_fillstyle(::Nothing) = GR.setfillintstyle(GR.INTSTYLE_SOLID)
 function gr_set_fillstyle(s::Symbol)
     GR.setfillintstyle(GR.INTSTYLE_HATCH)
-    GR.setfillstyle(get(((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6), s, 9))
+    GR.setfillstyle(get(gr_fill_styles, s, 9))
     nothing
 end
 
@@ -257,26 +249,22 @@ function gr_polyline3d(x, y, z, func = GR.polyline3d)
 end
 
 gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
-
-function gr_inqtext(x, y, s::AbstractString)
+gr_inqtext(x, y, s::AbstractString) =
     if (occursin('\\', s) || occursin("10^{", s)) &&
        match(r".*\$[^\$]+?\$.*", String(s)) === nothing
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
     end
-end
 
 gr_text(x, y, s) = gr_text(x, y, string(s))
-
-function gr_text(x, y, s::AbstractString)
+gr_text(x, y, s::AbstractString) =
     if (occursin('\\', s) || occursin("10^{", s)) &&
        match(r".*\$[^\$]+?\$.*", String(s)) === nothing
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
     end
-end
 
 function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     GR.savestate()
@@ -398,7 +386,7 @@ function gr_draw_marker(series, xi, yi, zi, clims, i, msize, strokewidth, shape:
     gr_set_bordercolor(get_markerstrokecolor(series, i))
     gr_set_markercolor(get_markercolor(series, clims, i))
     gr_set_transparency(get_markeralpha(series, i))
-    GR.setmarkertype(gr_markertype(shape))
+    GR.setmarkertype(gr_markertypes[shape])
     GR.setmarkersize(0.3msize / gr_nominal_size(series))
     if zi === nothing
         GR.polymarker([xi], [yi])
@@ -409,14 +397,14 @@ end
 
 # ---------------------------------------------------------
 
-function gr_set_line(lw, style, c, s) # s can be Subplot or Series
-    GR.setlinetype(gr_linetype(style))
+function gr_set_line(lw, style, c, s)  # s can be Subplot or Series
+    GR.setlinetype(gr_linetypes[style])
     GR.setlinewidth(get_thickness_scaling(s) * max(0, lw / gr_nominal_size(s)))
     gr_set_linecolor(c)
 end
 
-function gr_set_fill(c) #, a)
-    gr_set_fillcolor(c) #, a)
+function gr_set_fill(c)
+    gr_set_fillcolor(c)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
 end
 
@@ -441,13 +429,12 @@ function gr_set_font(
         gr_font_family[family] ≥ 200 ? 3 : GR.TEXT_PRECISION_STRING,
     )
     gr_set_textcolor(plot_color(color))
-    GR.settextalign(gr_halign(halign), gr_valign(valign))
+    GR.settextalign(gr_haligns[halign], gr_valigns[valign])
 end
 
 function gr_w3tondc(x, y, z)
-    xw, yw, zw = GR.wc3towc(x, y, z)
-    x, y = GR.wctondc(xw, yw)
-    return x, y
+    xw, yw, _ = GR.wc3towc(x, y, z)
+    GR.wctondc(xw, yw)  # x, y
 end
 
 # --------------------------------------------------------------------------------------
@@ -496,8 +483,7 @@ struct GRColorbar
 end
 
 function gr_update_colorbar!(cbar::GRColorbar, series::Series)
-    style = colorbar_style(series)
-    style === nothing && return
+    (style = colorbar_style(series)) === nothing && return
     list =
         style == cbar_gradient ? cbar.gradients :
         style == cbar_fill ? cbar.fills :
@@ -1770,8 +1756,8 @@ gr_add_title(sp, viewport_plotarea, viewport_subplot) =
         else
             xpos = gr_view_xposition(viewport_plotarea, loc[1])
             ypos = gr_view_yposition(viewport_plotarea, loc[2])
-            halign = gr_halign(sp[:titlefonthalign])
-            valign = gr_valign(sp[:titlefontvalign])
+            halign = gr_haligns[sp[:titlefonthalign]]
+            valign = gr_valigns[sp[:titlefontvalign]]
         end
         GR.settextalign(halign, valign)
         gr_text(xpos, ypos, sp[:title])
@@ -1842,8 +1828,7 @@ function gr_add_series(sp, series)
     end
 
     # this is all we need to add the series_annotations text
-    anns = series[:series_annotations]
-    for (xi, yi, str, fnt) in EachAnn(anns, x, y)
+    for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
         gr_set_font(fnt, sp)
         gr_text(GR.wctondc(xi, yi)..., str)
     end
@@ -1868,13 +1853,13 @@ end
 
 function gr_draw_segments(series, x, y, z, fillrange, clims)
     (x === nothing || length(x) ≤ 1) && return
-    st = series[:seriestype]
     if fillrange !== nothing  # prepare fill-in
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
         fr_from, fr_to = is_2tuple(fillrange) ? fillrange : (y, fillrange)
     end
 
     # draw the line(s)
+    st = series[:seriestype]
     for segment in series_segments(series, st; check = true)
         i, rng = segment.attr_index, segment.range
         isempty(rng) && continue
@@ -1896,8 +1881,12 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
         elseif is2d
-            arrowside = Arrow isa series[:arrow] ? series[:arrow].side : :none
-            arrowstyle = Arrow isa series[:arrow] ? series[:arrow].style : :simple
+            arrow = series[:arrow]
+            arrowside, arrowstyle = if isa(arrow, Arrow)
+                arrow.side, arrow.style
+            else
+                :none, :simple
+            end
             gr_polyline(x[rng], y[rng]; arrowside = arrowside, arrowstyle = arrowstyle)
         end
     end
@@ -1912,30 +1901,27 @@ function gr_draw_markers(
     msize = series[:markersize],
     strokewidth = series[:markerstrokewidth],
 )
-    isempty(x) && return
+    (isempty(x) || (shapes = series[:markershape]) === :none) && return
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
-
-    if (shapes = series[:markershape]) !== :none
-        for segment in series_segments(series, :scatter)
-            i = segment.attr_index
-            rng = intersect(eachindex(x), segment.range)
-            isempty(rng) && continue
-            ms = get_thickness_scaling(series) * _cycle(msize, i)
-            msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
-            shape = _cycle(shapes, i)
-            for j in rng
-                gr_draw_marker(
-                    series,
-                    _cycle(x, j),
-                    _cycle(y, j),
-                    _cycle(z, j),
-                    clims,
-                    i,
-                    ms,
-                    msw,
-                    shape,
-                )
-            end
+    for segment in series_segments(series, :scatter)
+        i = segment.attr_index
+        rng = intersect(eachindex(x), segment.range)
+        isempty(rng) && continue
+        ms = get_thickness_scaling(series) * _cycle(msize, i)
+        msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
+        shape = _cycle(shapes, i)
+        for j in rng
+            gr_draw_marker(
+                series,
+                _cycle(x, j),
+                _cycle(y, j),
+                _cycle(z, j),
+                clims,
+                i,
+                ms,
+                msw,
+                shape,
+            )
         end
     end
 end
@@ -1986,8 +1972,7 @@ end
 
 function gr_draw_surface(series, x, y, z, clims)
     e_kwargs = series[:extra_kwargs]
-    st = series[:seriestype]
-    if st === :surface
+    if (st = series[:seriestype]) === :surface
         if ndims(x) == ndims(y) == ndims(z) == 2
             GR.gr3.surface(x', y', z, GR.OPTION_3D_MESH)
         else
