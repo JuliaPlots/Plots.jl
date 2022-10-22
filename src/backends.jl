@@ -693,6 +693,7 @@ const _pyplot_attr = merge_with_base_supported([
     :fillrange,
     :fillcolor,
     :fillalpha,
+    :fillstyle,
     :bins,
     :bar_width,
     :bar_edges,

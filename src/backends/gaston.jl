@@ -298,6 +298,7 @@ function gaston_seriesconf!(
     elseif st ∈ (:path, :straightline, :path3d)
         fr = series[:fillrange]
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
+        fs = get_fillstyle(series, i)  # FIXME: add fillstyle support ?
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         if fr !== nothing # filled curves, but not filled curves with markers
             push!(
