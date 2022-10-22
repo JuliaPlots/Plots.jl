@@ -106,14 +106,14 @@ const gr_font_family = Dict(
 gr_color(c) = gr_color(c, color_type(c))
 
 gr_color(c, ::Type{<:AbstractRGB}) = UInt32(
-    round(UInt, clamp(alpha(c) * 255, 0, 255)) << 24 +
-    round(UInt, clamp(blue(c) * 255, 0, 255)) << 16 +
-    round(UInt, clamp(green(c) * 255, 0, 255)) << 8 +
-    round(UInt, clamp(red(c) * 255, 0, 255)),
+    round(UInt, clamp(255alpha(c), 0, 255)) << 24 +
+    round(UInt, clamp(255blue(c), 0, 255)) << 16 +
+    round(UInt, clamp(255green(c), 0, 255)) << 8 +
+    round(UInt, clamp(255red(c), 0, 255)),
 )
 function gr_color(c, ::Type{<:AbstractGray})
-    g = round(UInt, clamp(gray(c) * 255, 0, 255))
-    α = round(UInt, clamp(alpha(c) * 255, 0, 255))
+    g = round(UInt, clamp(255gray(c), 0, 255))
+    α = round(UInt, clamp(255alpha(c), 0, 255))
     rgba = UInt32(α << 24 + g << 16 + g << 8 + g)
 end
 gr_color(c, ::Type) = gr_color(RGBA(c), RGB)
@@ -335,7 +335,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     if xaxis[:showaxis]
         GR.drawarc(-1, 1, -1, 1, 0, 359)
         for i in eachindex(α)
-            x, y = GR.wctondc(1.1 * sinf[i], 1.1 * cosf[i])
+            x, y = GR.wctondc(1.1sinf[i], 1.1cosf[i])
             GR.textext(x, y, string((360 - α[i]) % 360, "^o"))
         end
     end
@@ -432,7 +432,7 @@ end
 
 # this stores the conversion from a font pointsize to "percentage of window height"
 # (which is what GR uses). `s` can be a Series, Subplot or Plot
-gr_point_mult(s) = 1.5 * get_thickness_scaling(s) * px / pt / maximum(get_size(s))
+gr_point_mult(s) = 1.5get_thickness_scaling(s) * px / pt / maximum(get_size(s))
 
 # set the font attributes.
 function gr_set_font(
@@ -476,7 +476,7 @@ function gr_viewport_from_bbox(
     viewport[2] = viewport_canvas[2] * (right(bb) / w)
     viewport[3] = viewport_canvas[4] * (1 - bottom(bb) / h)
     viewport[4] = viewport_canvas[4] * (1 - top(bb) / h)
-    hascolorbar(sp) && (viewport[2] -= 0.1 * (1 + gr_is3d(sp) / 2))
+    hascolorbar(sp) && (viewport[2] -= 0.1(1 + gr_is3d(sp) / 2))
     viewport
 end
 
@@ -492,10 +492,10 @@ end
 
 function gr_set_viewport_polar(viewport_plotarea)
     xmin, xmax, ymin, ymax = viewport_plotarea
-    ymax -= 0.05 * (xmax - xmin)
-    xcenter = 0.5 * (xmin + xmax)
-    ycenter = 0.5 * (ymin + ymax)
-    r = 0.5 * NaNMath.min(xmax - xmin, ymax - ymin)
+    ymax -= 0.05(xmax - xmin)
+    xcenter = 0.5(xmin + xmax)
+    ycenter = 0.5(ymin + ymax)
+    r = 0.5NaNMath.min(xmax - xmin, ymax - ymin)
     GR.setviewport(xcenter - r, xcenter + r, ycenter - r, ycenter + r)
     GR.setwindow(-1, 1, -1, 1)
     r
@@ -603,7 +603,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
         end
     end
 
-    ztick = 0.5 * GR.tick(zmin, zmax)
+    ztick = 0.5GR.tick(zmin, zmax)
     gr_set_line(1, :solid, plot_color(:black), sp)
     sp[:colorbar_scale] === :log10 && GR.setscale(GR.OPTION_Y_LOG)
     GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
@@ -621,8 +621,8 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
     GR.restorestate()
 end
 
-gr_view_xcenter(viewport_plotarea) = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
-gr_view_ycenter(viewport_plotarea) = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
+gr_view_xcenter(viewport_plotarea) = 0.5(viewport_plotarea[1] + viewport_plotarea[2])
+gr_view_ycenter(viewport_plotarea) = 0.5(viewport_plotarea[3] + viewport_plotarea[4])
 
 gr_view_xposition(viewport_plotarea, position) =
     viewport_plotarea[1] + position * (viewport_plotarea[2] - viewport_plotarea[1])
@@ -1071,7 +1071,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
             if sp[:legend_title] !== nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
                 gr_set_font(legendtitlefont(sp), sp)
-                gr_text(xpos - 0.03 + 0.5 * leg.w, ypos, string(sp[:legend_title]))
+                gr_text(xpos - 0.03 + 0.5leg.w, ypos, string(sp[:legend_title]))
                 ypos -= leg.dy
                 gr_set_font(legendfont(sp), sp)
             end
@@ -1090,8 +1090,8 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     gr_set_fill(fc)
                     fs = get_fillstyle(series, i)
                     gr_set_fillstyle(fs)
-                    l, r = xpos - leg.width_factor * 3.5, xpos - leg.width_factor / 2
-                    b, t = ypos - 0.4 * leg.dy, ypos + 0.4 * leg.dy
+                    l, r = xpos - 3.5leg.width_factor, xpos - leg.width_factor / 2
+                    b, t = ypos - 0.4leg.dy, ypos + 0.4leg.dy
                     x = [l, r, r, l, l]
                     y = [b, b, t, t, b]
                     gr_set_transparency(fc, get_fillalpha(series))
@@ -1110,16 +1110,16 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     # 1 / leg.dy translates width_factor to line length units (important in the context of size kwarg)
                     # 4 is an empirical constant to translate between line length unit and marker size unit
                     maxmarkersize =
-                        (leg.width_factor * 3.5 - leg.width_factor / 2) * 0.5 / leg.dy * 4
+                        0.5(3.5leg.width_factor - 0.5leg.width_factor) / 4leg.dy
                     if series[:fillrange] === nothing || series[:ribbon] !== nothing
                         GR.polyline(
-                            [xpos - leg.width_factor * 3.5, xpos - leg.width_factor / 2],
+                            [xpos - 3.5leg.width_factor, xpos - leg.width_factor / 2],
                             [ypos, ypos],
                         )
                     else
                         GR.polyline(
-                            [xpos - leg.width_factor * 3.5, xpos - leg.width_factor / 2],
-                            [ypos + 0.4 * leg.dy, ypos + 0.4 * leg.dy],
+                            [xpos - 3.5leg.width_factor, xpos - leg.width_factor / 2],
+                            [ypos + 0.4leg.dy, ypos + 0.4leg.dy],
                         )
                     end
                 end
@@ -1132,15 +1132,15 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                         min.(
                             maxmarkersize,
                             if ms > 0
-                                0.8 * sp[:legend_font_pointsize],
-                                0.8 * sp[:legend_font_pointsize] * msw / ms
+                                0.8sp[:legend_font_pointsize],
+                                0.8sp[:legend_font_pointsize] * msw / ms
                             else
-                                0, 0.8 * sp[:legend_font_pointsize] * msw / 8
+                                0, 0.8sp[:legend_font_pointsize] * msw / 8
                             end,
                         )
                     gr_draw_marker(
                         series,
-                        xpos - leg.width_factor * 2,
+                        xpos - 2leg.width_factor,
                         ypos,
                         nothing,
                         clims,
@@ -1209,7 +1209,7 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
         end
     elseif occursin("left", str)
         xpos = if occursin("outer", str)
-            viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) - leg.xoffset * 2 - leg.rightw - leg.textw
+            viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) - 2leg.xoffset - leg.rightw - leg.textw
         else
             viewport_plotarea[1] + leg.leftw + leg.xoffset
         end
@@ -1217,7 +1217,7 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
         xpos =
             (viewport_plotarea[2] - viewport_plotarea[1]) / 2 +
             viewport_plotarea[1] +
-            leg.leftw - leg.rightw - leg.textw - leg.xoffset * 2
+            leg.leftw - leg.rightw - leg.textw - 2leg.xoffset
     end
     if occursin("top", str)
         ypos = if s === :outertop
@@ -1309,7 +1309,7 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
     legend_width_factor = (viewport_plotarea[2] - viewport_plotarea[1]) / 45 # Determines the width of legend box
     legend_textw = legendw
     legend_rightw = legend_width_factor
-    legend_leftw = legend_width_factor * 4
+    legend_leftw = 4legend_width_factor
     total_legendw = legend_textw + legend_leftw + legend_rightw
 
     x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
@@ -1401,19 +1401,19 @@ function gr_update_viewport_ratio!(viewport_plotarea, sp)
             (viewport_plotarea[4] - viewport_plotarea[3])
         window_ratio = (xmax - xmin) / (ymax - ymin) / ratio
         if window_ratio < viewport_ratio
-            viewport_center = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
+            viewport_center = 0.5(viewport_plotarea[1] + viewport_plotarea[2])
             viewport_size =
                 (viewport_plotarea[2] - viewport_plotarea[1]) * window_ratio /
                 viewport_ratio
-            viewport_plotarea[1] = viewport_center - 0.5 * viewport_size
-            viewport_plotarea[2] = viewport_center + 0.5 * viewport_size
+            viewport_plotarea[1] = viewport_center - 0.5viewport_size
+            viewport_plotarea[2] = viewport_center + 0.5viewport_size
         elseif window_ratio > viewport_ratio
-            viewport_center = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
+            viewport_center = 0.5(viewport_plotarea[3] + viewport_plotarea[4])
             viewport_size =
                 (viewport_plotarea[4] - viewport_plotarea[3]) * viewport_ratio /
                 window_ratio
-            viewport_plotarea[3] = viewport_center - 0.5 * viewport_size
-            viewport_plotarea[4] = viewport_center + 0.5 * viewport_size
+            viewport_plotarea[3] = viewport_center - 0.5viewport_size
+            viewport_plotarea[4] = viewport_center + 0.5viewport_size
         end
     end
 end
@@ -1593,8 +1593,8 @@ function gr_label_ticks(sp, letter, ticks)
     oamin, oamax = axis_limits(sp, oletter)
     gr_set_tickfont(sp, letter)
     out_factor = ifelse(axis[:tick_direction] === :out, 1.5, 1)
-    x_base_offset = isy ? -1.5e-2 * out_factor : 0
-    y_base_offset = isy ? 0 : -8e-3 * out_factor
+    x_base_offset = isy ? -1.5e-2out_factor : 0
+    y_base_offset = isy ? 0 : -8e-3out_factor
 
     rot = axis[:rotation] % 360
     ov = sp[:framestyle] === :origin ? 0 : xor(oaxis[:flip], axis[:mirror]) ? oamax : oamin
@@ -1665,7 +1665,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     axisϕ = mod(axisθ - 90, 360)
 
     out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
-    axisoffset = out_factor * 1.2e-2
+    axisoffset = 1.2e-2out_factor
     x_base_offset = axisoffset * cosd(axisϕ)
     y_base_offset = axisoffset * sind(axisϕ)
 
@@ -2110,10 +2110,9 @@ function gr_draw_heatmap(series, x, y, z, clims)
             z_normalized = get_z_normalized.(z_log, log10.(clims)...)
             plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
         end
-        foreach(
-            i -> isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i])),
-            eachindex(colors),
-        )
+        for i in eachindex(colors)
+            isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i]))
+        end
         GR.drawimage(first(x), last(x), last(y), first(y), w, h, gr_color.(colors))
     else
         if something(series[:fillalpha], 1) < 1
@@ -2125,9 +2124,11 @@ function gr_draw_heatmap(series, x, y, z, clims)
             z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
             get_z_normalized.(z_log, log10.(clims)...), z_log
         end
-        rgba = Int32[round(Int32, 1_000 + 255z) for z in z_normalized]
+        rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)
         bg_rgba = gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))
-        foreach(i -> isnan(_z[i]) && (rgba[i] = bg_rgba), eachindex(rgba))
+        for i in eachindex(rgba)
+            isnan(_z[i]) && (rgba[i] = bg_rgba)
+        end
         if ispolar(series)
             y[1] < 0 && @warn "'y[1] < 0' (rmin) is not yet supported."
             dist = min(gr_x_axislims(sp)[2], gr_y_axislims(sp)[2])
