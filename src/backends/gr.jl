@@ -139,6 +139,7 @@ gr_color(c, ::Type{<:AbstractRGB}) = UInt32(
 gr_color(c, ::Type{<:AbstractGray}) =
     let g = round(UInt, clamp(255gray(c), 0, 255)),
         α = round(UInt, clamp(255alpha(c), 0, 255))
+
         UInt32(α << 24 + g << 16 + g << 8 + g)
     end
 
@@ -654,8 +655,7 @@ function gr_display(plt::Plot, dpi_factor = 1)
     GR.clearws()
 
     # collect some monitor/display sizes in meters and pixels
-    dsp_width_meters, dsp_height_meters, dsp_width_px, dsp_height_px =
-        GR.inqdspsize()
+    dsp_width_meters, dsp_height_meters, dsp_width_px, dsp_height_px = GR.inqdspsize()
     dsp_width_ratio = dsp_width_meters / dsp_width_px
     dsp_height_ratio = dsp_height_meters / dsp_height_px
 
@@ -1091,31 +1091,35 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     end
     (str = string(s)) == "best" && (str = "topright")
     if occursin("left", str)
-        xpos = if occursin("outer", str)
-            - !ymirror * gr_axis_width(sp, yaxis) - 2leg.xoffset - leg.rightw - leg.textw
-        else
-            leg.leftw + leg.xoffset
-        end + xmin(vp)
+        xpos =
+            if occursin("outer", str)
+                -!ymirror * gr_axis_width(sp, yaxis) - 2leg.xoffset - leg.rightw -
+                leg.textw
+            else
+                leg.leftw + leg.xoffset
+            end + xmin(vp)
     elseif occursin("right", str)
-        xpos = if occursin("outer", str)  # per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            leg.xoffset + leg.leftw + ymirror * gr_axis_width(sp, yaxis)
-        else
-            - leg.rightw - leg.textw - leg.xoffset
-        end + xmax(vp)
+        xpos =
+            if occursin("outer", str)  # per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
+                leg.xoffset + leg.leftw + ymirror * gr_axis_width(sp, yaxis)
+            else
+                -leg.rightw - leg.textw - leg.xoffset
+            end + xmax(vp)
     else
         xpos = xposition(vp, 0) + leg.leftw - leg.rightw - leg.textw - 2leg.xoffset
     end
     if occursin("bottom", str)
-        ypos = if s === :outerbottom
-            - leg.yoffset - leg.dy - !xmirror * gr_axis_height(sp, xaxis)
-        else
-            leg.yoffset + leg.h
-        end + ymin(vp)
+        ypos =
+            if s === :outerbottom
+                -leg.yoffset - leg.dy - !xmirror * gr_axis_height(sp, xaxis)
+            else
+                leg.yoffset + leg.h
+            end + ymin(vp)
     elseif occursin("top", str)
         ypos = if s === :outertop
             leg.yoffset + leg.h + xmirror * gr_axis_height(sp, xaxis)
         else
-            - leg.yoffset - leg.dy
+            -leg.yoffset - leg.dy
         end + ymax(vp)
     else
         # Adding min y to shift legend pos to correct graph (#2377)
@@ -1223,8 +1227,7 @@ function gr_update_viewport_legend!(vp, sp, leg)
         elseif occursin("top", leg_str)
             vp.ymax[] -= leg.h + leg.dy + leg.yoffset
         elseif occursin("bottom", leg_str)
-            vp.ymin[] +=
-                leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, xaxis)
+            vp.ymin[] += leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, xaxis)
         end
     end
     if s === :inline

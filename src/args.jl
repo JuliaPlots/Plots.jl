@@ -1028,7 +1028,8 @@ add_aliases(:warn_on_unsupported, :warn)
 function parse_axis_kw(s::Symbol)
     s = string(s)
     for letter in ('x', 'y', 'z')
-        startswith(s, letter) && return (Symbol(letter), Symbol(chop(s, head = 1, tail = 0)))
+        startswith(s, letter) &&
+            return (Symbol(letter), Symbol(chop(s, head = 1, tail = 0)))
     end
     nothing
 end

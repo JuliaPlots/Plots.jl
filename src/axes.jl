@@ -741,7 +741,19 @@ discrete_value!(axis::Axis, v::Surface) = map(Surface, discrete_value!(axis, v.s
 const grid_factor_2d = Ref(1.2)
 const grid_factor_3d = Ref(grid_factor_2d[] / 100)
 
-function add_major_or_minor_segments_2d(sp, ax, oax, oas, oamM, ticks, grid, tick_segments, segments, factor, cond)
+function add_major_or_minor_segments_2d(
+    sp,
+    ax,
+    oax,
+    oas,
+    oamM,
+    ticks,
+    grid,
+    tick_segments,
+    segments,
+    factor,
+    cond,
+)
     ticks === nothing && return
     if cond
         f = RecipesPipeline.scale_func(oax[:scale])
@@ -820,7 +832,11 @@ function axis_drawing_info(sp, letter)
 
             # add major grid segments
             add_major_or_minor_segments_2d(
-                sp, ax, oax, oas, oamM,
+                sp,
+                ax,
+                oax,
+                oas,
+                oamM,
                 ticks[1],
                 ax[:grid],
                 tick_segments,
@@ -832,7 +848,11 @@ function axis_drawing_info(sp, letter)
             # add minor grid segments
             if ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]
                 add_major_or_minor_segments_2d(
-                    sp, ax, oax, oas, oamM,
+                    sp,
+                    ax,
+                    oax,
+                    oas,
+                    oamM,
                     minor_ticks,
                     ax[:minorgrid],
                     tick_segments,
@@ -854,7 +874,20 @@ function axis_drawing_info(sp, letter)
     )
 end
 
-function add_major_or_minor_segments_3d(sp, ax, nax, nas, fas, namM, ticks, grid, tick_segments, segments, factor, cond)
+function add_major_or_minor_segments_3d(
+    sp,
+    ax,
+    nax,
+    nas,
+    fas,
+    namM,
+    ticks,
+    grid,
+    tick_segments,
+    segments,
+    factor,
+    cond,
+)
     ticks === nothing && return
     f = RecipesPipeline.scale_func(nax[:scale])
     invf = RecipesPipeline.inverse_scale_func(nax[:scale])
@@ -905,11 +938,12 @@ function axis_drawing_info_3d(sp, letter)
         map(_ -> Segments(3), 1:5)
 
     if sp[:framestyle] !== :none  # && letter === :x
-        na0, na1 = nas = if sp[:framestyle] in (:origin, :zerolines)
-            0, 0
-        else
-            reverse_if(reverse_if(namM, letter === :y), xor(ax[:mirror], nax[:flip]))
-        end
+        na0, na1 =
+            nas = if sp[:framestyle] in (:origin, :zerolines)
+                0, 0
+            else
+                reverse_if(reverse_if(namM, letter === :y), xor(ax[:mirror], nax[:flip]))
+            end
         fa0, fa1 = fas = if sp[:framestyle] in (:origin, :zerolines)
             0, 0
         else
@@ -944,7 +978,12 @@ function axis_drawing_info_3d(sp, letter)
         if ax[:ticks] ∉ (:none, nothing, false)
             # add major grid segments
             add_major_or_minor_segments_3d(
-                sp, ax, nax, nas, fas, namM, 
+                sp,
+                ax,
+                nax,
+                nas,
+                fas,
+                namM,
                 ticks[1],
                 ax[:grid],
                 tick_segments,
@@ -956,7 +995,12 @@ function axis_drawing_info_3d(sp, letter)
             # add minor grid segments
             if ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]
                 add_major_or_minor_segments_3d(
-                    sp, ax, nax, nas, fas, namM,
+                    sp,
+                    ax,
+                    nax,
+                    nas,
+                    fas,
+                    namM,
                     minor_ticks,
                     ax[:minorgrid],
                     tick_segments,
