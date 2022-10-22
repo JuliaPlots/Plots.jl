@@ -116,6 +116,8 @@ xmax(v::GRViewport) = v.xmax[]
 ymin(v::GRViewport) = v.ymin[]
 ymax(v::GRViewport) = v.ymax[]
 
+xyminmax(v::GRViewport) = xmin(v), xmax(v), ymin(v), ymax(v)
+
 width(v::GRViewport) = xmax(v) - xmin(v)
 height(v::GRViewport) = ymax(v) - ymin(v)
 
@@ -367,7 +369,7 @@ function gr_fill_viewport(vp::GRViewport, c)
     GR.setscale(0)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     gr_set_fillcolor(c)
-    GR.fillrect(xmin(vp), xmax(vp), ymin(vp), ymax(vp))
+    GR.fillrect(xyminmax(vp)...)
     GR.selntran(1)
     GR.restorestate()
 end
@@ -486,15 +488,19 @@ end
 
 # change so we're focused on the viewport area
 gr_set_viewport_cmap(sp::Subplot, vp) = GR.setviewport(
-    xmin(vp) + (gr_is3d(sp) ? 0.07 : 0.02),
-    xmin(vp) + (gr_is3d(sp) ? 0.10 : 0.05),
+    xmax(vp) + (gr_is3d(sp) ? 0.07 : 0.02),
+    xmax(vp) + (gr_is3d(sp) ? 0.10 : 0.05),
     ymin(vp),
     ymax(vp),
 )
 
 function gr_set_viewport_polar(vp)
-    r = 0.5NaNMath.min(width(vp), ymax(vp) - ymin(vp) - 0.05width(vp))
-    GR.setviewport(xcenter(vp) - r, xcenter(vp) + r, ycenter(vp) - r, ycenter(vp) + r)
+    x_min, x_max, y_min, y_max = xyminmax(vp)
+    y_max -= 0.05(x_max - x_min)
+    x_ctr = 0.5(x_min + x_max)
+    y_ctr = 0.5(y_min + y_max)
+    r = 0.5 * NaNMath.min(x_max - x_min, y_max - y_min)
+    GR.setviewport(x_ctr - r, x_ctr + r, y_ctr - r, y_ctr + r)
     GR.setwindow(-1, 1, -1, 1)
     r
 end
@@ -929,7 +935,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas)
     gr_fill_plotarea(sp, vp_plt)
 
     # set our plot area view
-    GR.setviewport(xmin(vp_plt), xmax(vp_plt), ymin(vp_plt), ymax(vp_plt))
+    GR.setviewport(xyminmax(vp_plt)...)
 
     # set the scale flags and window
     gr_set_window(sp, vp_plt)
