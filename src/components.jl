@@ -4,10 +4,11 @@ const P3 = NTuple{3,Float64}
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
 
-nanpush!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); push!(a, b))
-nanappend!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); append!(a, b))
-nanpush!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); push!(a, b))
-nanappend!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); append!(a, b))
+nanpush!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); push!(a, b); nothing)
+nanappend!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); append!(a, b); nothing)
+nanpush!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); push!(a, b); nothing)
+nanappend!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); append!(a, b); nothing)
+
 compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angle)
 
 # -------------------------------------------------------------
@@ -112,11 +113,12 @@ const _shapes = KW(
     :xcross    => makecross(),
     :vline     => Shape([(0, 1), (0, -1)]),
     :hline     => Shape([(1, 0), (-1, 0)]),
+    :star4     => makestar(4),
+    :star5     => makestar(5),
+    :star6     => makestar(6),
+    :star7     => makestar(7),
+    :star8     => makestar(8),
 )
-
-for n in 4:8
-    _shapes[Symbol("star$n")] = makestar(n)
-end
 
 Shape(k::Symbol) = deepcopy(_shapes[k])
 

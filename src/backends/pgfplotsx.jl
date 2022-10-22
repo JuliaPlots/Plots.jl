@@ -504,12 +504,10 @@ function pgfx_add_series!(::Val{:mesh3d}, axis, series_opt, series, series_func,
     elseif typeof(cns) <: AVec{NTuple{3,Int}}  # 1-based indexing
         map(c -> "$(c[1] - 1) $(c[2] - 1) $(c[3] - 1)\\\\", cns)
     else
-        throw(
-            ArgumentError(
-                "Argument connections has to be either a tuple of three arrays (0-based indexing)
-                    or an AbstractVector{NTuple{3,Int}} (1-based indexing).",
-            ),
-        )
+        """
+        Argument connections has to be either a tuple of three arrays (0-based indexing)
+        or an AbstractVector{NTuple{3,Int}} (1-based indexing).
+        """ |> ArgumentError |> throw
     end
     push!(
         series_opt,

@@ -46,12 +46,6 @@ if PyPlot.version < v"3.4"
     """
 end
 
-set_facecolor_sym = if PyPlot.version < v"2"
-    :set_axis_bgcolor
-else
-    :set_facecolor
-end
-
 # PyCall API changes in v1.90.0
 isdefined(PyPlot.PyCall, :_setproperty!) ||
     @warn "Plots no longer supports PyCall < 1.90.0 and PyPlot < 2.8.0. Either update PyCall and PyPlot or pin Plots to a version <= 0.23.2."
@@ -502,11 +496,17 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
        st in (:path, :scatter, :path3d, :scatter3d, :steppre, :stepmid, :steppost, :bar)
         for segment in series_segments(series, :scatter)
             i, rng = segment.attr_index, segment.range
-            xyzs = x[rng], y[rng], RecipesPipeline.is3d(sp) ? z[rng] : nothing
-            st === :bar && !isvertical(series) && (xyzs = (xyzs[2], xyzs[1], xyzs[3]))  # swap x/y
+            args = if st === :bar && !isvertical(series)
+                y[rng], x[rng]
+            else
+                x[rng], y[rng]
+            end
+            if RecipesPipeline.is3d(sp)
+                args = (args..., z[rng])
+            end
 
             handle = ax."scatter"(
-                xyzs...;
+                args...;
                 label = series[:label],
                 zorder = series[:series_plotindex] + 0.5,
                 marker = py_marker(_cycle(series[:markershape], i)),
@@ -527,9 +527,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st === :hexbin
-        extrakw[:mincnt] = get(series[:extra_kwargs], :mincnt, nothing)
-        extrakw[:edgecolors] =
-            get(series[:extra_kwargs], :edgecolors, py_color(get_linecolor(series)))
+        sekw = series[:extra_kwargs]
+        extrakw[:mincnt] = get(sekw, :mincnt, nothing)
+        extrakw[:edgecolors] = get(sekw, :edgecolors, py_color(get_linecolor(series)))
         handle = ax."hexbin"(
             x,
             y;
@@ -954,7 +954,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     fig = plt.o
     fig."clear"()
     fig."set_size_inches"(w / DPI, h / DPI, forward = true)
-    getproperty(fig, set_facecolor_sym)(py_color(plt[:background_color_outside]))
+    fig."set_facecolor"(py_color(plt[:background_color_outside]))
     fig."set_dpi"(plt[:dpi])
 
     # resize the window
@@ -964,7 +964,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     foreach(sp -> py_init_subplot(plt, sp), plt.subplots)
 
     # add the series
-    foreach(series -> py_add_series(plt, sp), plt.series_list)
+    foreach(series -> py_add_series(plt, series), plt.series_list)
 
     # update subplots
     for sp in plt.subplots
@@ -1210,7 +1210,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             pyaxis.set_major_locator(pyticker.FixedLocator(positions))
 
             kw = if RecipesPipeline.is3d(sp)
-                (; fontProperties...)
+                NamedTuple(Symbol(k) => v for (k, v) in fontProperties)
             else
                 (; fontdict = PyPlot.PyCall.PyDict(fontProperties))
             end
@@ -1345,7 +1345,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         py_add_legend(plt, sp, ax)
 
         # this sets the bg color inside the grid
-        getproperty(ax, set_facecolor_sym)(py_color(sp[:background_color_inside]))
+        ax."set_facecolor"(py_color(sp[:background_color_inside]))
 
         # link axes
         x_ax_link, y_ax_link = sp[:xaxis].sps[1].o, sp[:yaxis].sps[1].o
@@ -1357,16 +1357,10 @@ end
 
 expand_padding!(padding, bb, plotbb) =
     if ispositive(width(bb)) && ispositive(height(bb))
-        padding[:] =
-            max.(
-                padding,
-                [
-                    left(plotbb) - left(bb),
-                    top(plotbb) - top(bb),
-                    right(bb) - right(plotbb),
-                    bottom(bb) - bottom(plotbb),
-                ],
-            )
+        padding[1] = max(padding[1], left(plotbb) - left(bb))
+        padding[2] = max(padding[2], top(plotbb) - top(bb))
+        padding[3] = max(padding[3], right(bb) - right(plotbb))
+        padding[4] = max(padding[4], bottom(bb) - bottom(plotbb))
     end
 
 # Set the (left, top, right, bottom) minimum padding around the plot area

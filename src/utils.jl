@@ -311,8 +311,8 @@ recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)
 # if values are not AbstractDicts, take the last definition (as does merge)
 recursive_merge(x...) = x[end]
 
-nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
-nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
+nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b); nothing)
+nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b); nothing)
 
 function nansplit(v::AVec)
     vs = Vector{eltype(v)}[]

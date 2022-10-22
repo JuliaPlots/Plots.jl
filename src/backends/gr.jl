@@ -457,15 +457,15 @@ function gr_viewport_from_bbox(
 end
 
 # change so we're focused on the viewport area
-gr_set_viewport_cmap(sp::Subplot, viewport_plotarea) = GR.setviewport(
-    viewport_plotarea[2] + (gr_is3d(sp) ? 0.07 : 0.02),
-    viewport_plotarea[2] + (gr_is3d(sp) ? 0.10 : 0.05),
-    viewport_plotarea[3],
-    viewport_plotarea[4],
+gr_set_viewport_cmap(sp::Subplot, viewport_plt) = GR.setviewport(
+    viewport_plt[2] + (gr_is3d(sp) ? 0.07 : 0.02),
+    viewport_plt[2] + (gr_is3d(sp) ? 0.10 : 0.05),
+    viewport_plt[3],
+    viewport_plt[4],
 )
 
-function gr_set_viewport_polar(viewport_plotarea)
-    xmin, xmax, ymin, ymax = viewport_plotarea
+function gr_set_viewport_polar(viewport_plt)
+    xmin, xmax, ymin, ymax = viewport_plt
     ymax -= 0.05(xmax - xmin)
     xcenter = 0.5(xmin + xmax)
     ycenter = 0.5(ymin + ymax)
@@ -523,11 +523,11 @@ function _cbar_unique(values, propname)
 end
 
 # add the colorbar
-function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotarea)
+function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plt)
     GR.savestate()
     xmin, xmax = gr_xy_axislims(sp)[1:2]
     zmin, zmax = clims[1:2]
-    gr_set_viewport_cmap(sp, viewport_plotarea)
+    gr_set_viewport_cmap(sp, viewport_plt)
     GR.setscale(0)
     GR.setwindow(xmin, xmax, zmin, zmax)
     if !isempty(cbar.gradients)
@@ -589,18 +589,18 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotare
     gr_set_font(title.font, sp)
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
-    gr_text(viewport_plotarea[2] + 0.1, gr_view_ycenter(viewport_plotarea), title.str)
+    gr_text(viewport_plt[2] + 0.1, gr_view_ycenter(viewport_plt), title.str)
 
     GR.restorestate()
 end
 
-gr_view_xcenter(viewport_plotarea) = 0.5(viewport_plotarea[1] + viewport_plotarea[2])
-gr_view_ycenter(viewport_plotarea) = 0.5(viewport_plotarea[3] + viewport_plotarea[4])
+gr_view_xcenter(viewport_plt) = 0.5(viewport_plt[1] + viewport_plt[2])
+gr_view_ycenter(viewport_plt) = 0.5(viewport_plt[3] + viewport_plt[4])
 
-gr_view_xposition(viewport_plotarea, position) =
-    viewport_plotarea[1] + position * (viewport_plotarea[2] - viewport_plotarea[1])
-gr_view_yposition(viewport_plotarea, position) =
-    viewport_plotarea[3] + position * (viewport_plotarea[4] - viewport_plotarea[3])
+gr_view_xposition(viewport_plt, position) =
+    viewport_plt[1] + position * (viewport_plt[2] - viewport_plt[1])
+gr_view_yposition(viewport_plt, position) =
+    viewport_plt[3] + position * (viewport_plt[4] - viewport_plt[3])
 
 position(symb) =
     if symb === :top || symb === :right
@@ -952,27 +952,27 @@ end
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     _update_min_padding!(sp)
 
-    # the viewports for this subplot
-    viewport_subplot = gr_viewport_from_bbox(sp, bbox(sp), w, h, viewport_canvas)
-    viewport_plotarea = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
+    # the viewports for this subplot and the whole plot
+    viewport_sp = gr_viewport_from_bbox(sp, bbox(sp), w, h, viewport_canvas)
+    viewport_plt = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
 
-    # update viewport_plotarea
-    leg = gr_get_legend_geometry(viewport_plotarea, sp)
-    gr_update_viewport_legend!(viewport_plotarea, sp, leg)
-    gr_update_viewport_ratio!(viewport_plotarea, sp)
+    # update viewport_plt
+    leg = gr_get_legend_geometry(viewport_plt, sp)
+    gr_update_viewport_legend!(viewport_plt, sp, leg)
+    gr_update_viewport_ratio!(viewport_plt, sp)
 
     # fill in the plot area background
-    gr_fill_plotarea(sp, viewport_plotarea)
+    gr_fill_plotarea(sp, viewport_plt)
 
     # set our plot area view
-    GR.setviewport(viewport_plotarea...)
+    GR.setviewport(viewport_plt...)
 
     # set the scale flags and window
-    gr_set_window(sp, viewport_plotarea)
+    gr_set_window(sp, viewport_plt)
 
     # draw the axes
-    gr_draw_axes(sp, viewport_plotarea)
-    gr_add_title(sp, viewport_plotarea, viewport_subplot)
+    gr_draw_axes(sp, viewport_plt)
+    gr_add_title(sp, viewport_plt, viewport_sp)
 
     # this needs to be here to point the colormap to the right indices
     GR.setcolormap(1_000 + GR.COLORMAP_COOLWARM)
@@ -986,10 +986,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
 
     # draw the colorbar
-    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, gr_clims(sp), viewport_plotarea)
+    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, gr_clims(sp), viewport_plt)
 
     # add the legend
-    gr_add_legend(sp, leg, viewport_plotarea)
+    gr_add_legend(sp, leg, viewport_plt)
 
     # add annotations
     for ann in sp[:annotations]
@@ -1104,11 +1104,11 @@ function gr_add_legend(sp, leg, viewport_area)
     GR.restorestate()
 end
 
-function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
+function gr_legend_pos(sp::Subplot, leg, viewport_plt)
     if (s = sp[:legend_position]) isa Real
-        return gr_legend_pos(s, leg, viewport_plotarea)
+        return gr_legend_pos(s, leg, viewport_plt)
     elseif s isa Tuple{<:Real,Symbol}
-        s[2] === :outer || return gr_legend_pos(s[1], leg, viewport_plotarea)
+        s[2] === :outer || return gr_legend_pos(s[1], leg, viewport_plt)
 
         xaxis, yaxis = sp[:xaxis], sp[:yaxis]
         xmirror =
@@ -1123,9 +1123,9 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
             !xmirror * gr_axis_height(sp, sp[:xaxis]),
             xmirror * gr_axis_height(sp, sp[:xaxis]),
         ]
-        return gr_legend_pos(s[1], leg, viewport_plotarea; axisclearance)
+        return gr_legend_pos(s[1], leg, viewport_plt; axisclearance)
     elseif !(s isa Symbol)
-        return gr_legend_pos(s, viewport_plotarea)
+        return gr_legend_pos(s, viewport_plt)
     end
     (str = string(s)) == "best" && (str = "topright")
     if occursin("outer", str)
@@ -1139,50 +1139,41 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
     end
     if occursin("right", str)
         xpos = if occursin("outer", str)  # per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            viewport_plotarea[2] +
-            leg.xoffset +
-            leg.leftw +
-            ymirror * gr_axis_width(sp, sp[:yaxis])
+            viewport_plt[2] + leg.xoffset + leg.leftw + ymirror * gr_axis_width(sp, sp[:yaxis])
         else
-            viewport_plotarea[2] - leg.rightw - leg.textw - leg.xoffset
+            viewport_plt[2] - leg.rightw - leg.textw - leg.xoffset
         end
     elseif occursin("left", str)
         xpos = if occursin("outer", str)
-            viewport_plotarea[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) - 2 * leg.xoffset - leg.rightw - leg.textw
+            viewport_plt[1] - !ymirror * gr_axis_width(sp, sp[:yaxis]) - 2 * leg.xoffset - leg.rightw - leg.textw
         else
-            viewport_plotarea[1] + leg.leftw + leg.xoffset
+            viewport_plt[1] + leg.leftw + leg.xoffset
         end
     else
         xpos =
-            (viewport_plotarea[2] - viewport_plotarea[1]) / 2 +
-            viewport_plotarea[1] +
-            leg.leftw - leg.rightw - leg.textw - 2 * leg.xoffset
+            (viewport_plt[2] - viewport_plt[1]) / 2 + viewport_plt[1] + leg.leftw -
+            leg.rightw - leg.textw - 2 * leg.xoffset
     end
     if occursin("top", str)
         ypos = if s === :outertop
-            viewport_plotarea[4] +
-            leg.yoffset +
-            leg.h +
-            xmirror * gr_axis_height(sp, sp[:xaxis])
+            viewport_plt[4] + leg.yoffset + leg.h + xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            viewport_plotarea[4] - leg.yoffset - leg.dy
+            viewport_plt[4] - leg.yoffset - leg.dy
         end
     elseif occursin("bottom", str)
         ypos = if s === :outerbottom
-            viewport_plotarea[3] - leg.yoffset - leg.dy -
-            !xmirror * gr_axis_height(sp, sp[:xaxis])
+            viewport_plt[3] - leg.yoffset - leg.dy - !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            viewport_plotarea[3] + leg.yoffset + leg.h
+            viewport_plt[3] + leg.yoffset + leg.h
         end
     else
         # Adding min y to shift legend pos to correct graph (#2377)
-        ypos =
-            (viewport_plotarea[4] - viewport_plotarea[3] + leg.h) / 2 + viewport_plotarea[3]
+        ypos = (viewport_plt[4] - viewport_plt[3] + leg.h) / 2 + viewport_plt[3]
     end
     xpos, ypos
 end
 
-function gr_get_legend_geometry(viewport_plotarea, sp)
+function gr_get_legend_geometry(viewport_plt, sp)
     legendn = 0
     legendw = dy = 0.0
     if sp[:legend_position] !== :none
@@ -1215,14 +1206,14 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
         GR.restorestate()
     end
 
-    legend_width_factor = (viewport_plotarea[2] - viewport_plotarea[1]) / 45 # Determines the width of legend box
+    legend_width_factor = (viewport_plt[2] - viewport_plt[1]) / 45 # Determines the width of legend box
     legend_textw = legendw
     legend_rightw = legend_width_factor
     legend_leftw = 4legend_width_factor
     total_legendw = legend_textw + legend_leftw + legend_rightw
 
-    x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
-    y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 30
+    x_legend_offset = (viewport_plt[2] - viewport_plt[1]) / 30
+    y_legend_offset = (viewport_plt[4] - viewport_plt[3]) / 30
 
     dy *= get(sp[:extra_kwargs], :legend_hfactor, 1)
     legendh = dy * legendn
@@ -1242,7 +1233,7 @@ end
 
 ## Viewport, window and scale
 
-function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
+function gr_update_viewport_legend!(viewport_plt, sp, leg)
     s = sp[:legend_position]
 
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
@@ -1255,81 +1246,78 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
 
     if s isa Tuple{<:Real,Symbol}
         if s[2] === :outer
-            x, y = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
-            if x < viewport_plotarea[1]
-                viewport_plotarea[1] +=
+            x, y = gr_legend_pos(sp, leg, viewport_plt) # Dry run, to figure out
+            if x < viewport_plt[1]
+                viewport_plt[1] +=
                     leg.leftw +
                     leg.textw +
                     leg.rightw +
                     leg.xoffset +
                     !ymirror * gr_axis_width(sp, sp[:yaxis])
-            elseif x > viewport_plotarea[2]
-                viewport_plotarea[2] -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
+            elseif x > viewport_plt[2]
+                viewport_plt[2] -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
             end
-            if y < viewport_plotarea[3]
-                viewport_plotarea[3] +=
+            if y < viewport_plt[3]
+                viewport_plt[3] +=
                     leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, sp[:xaxis])
-            elseif y > viewport_plotarea[4]
-                viewport_plotarea[4] -= leg.h + leg.dy + leg.yoffset
+            elseif y > viewport_plt[4]
+                viewport_plt[4] -= leg.h + leg.dy + leg.yoffset
             end
         end
     end
     leg_str = string(s)
     if occursin("outer", leg_str)
         if occursin("right", leg_str)
-            viewport_plotarea[2] -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
+            viewport_plt[2] -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
         elseif occursin("left", leg_str)
-            viewport_plotarea[1] +=
+            viewport_plt[1] +=
                 leg.leftw +
                 leg.textw +
                 leg.rightw +
                 leg.xoffset +
                 !ymirror * gr_axis_width(sp, sp[:yaxis])
         elseif occursin("top", leg_str)
-            viewport_plotarea[4] -= leg.h + leg.dy + leg.yoffset
+            viewport_plt[4] -= leg.h + leg.dy + leg.yoffset
         elseif occursin("bottom", leg_str)
-            viewport_plotarea[3] +=
+            viewport_plt[3] +=
                 leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, sp[:xaxis])
         end
     end
     if s === :inline
         if sp[:yaxis][:mirror]
-            viewport_plotarea[1] += leg.w
+            viewport_plt[1] += leg.w
         else
-            viewport_plotarea[2] -= leg.w
+            viewport_plt[2] -= leg.w
         end
     end
 end
 
-function gr_update_viewport_ratio!(viewport_plotarea, sp)
+function gr_update_viewport_ratio!(viewport_plt, sp)
     if (ratio = get_aspect_ratio(sp)) !== :none
         ratio === :equal && (ratio = 1)
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         viewport_ratio =
-            (viewport_plotarea[2] - viewport_plotarea[1]) /
-            (viewport_plotarea[4] - viewport_plotarea[3])
+            (viewport_plt[2] - viewport_plt[1]) / (viewport_plt[4] - viewport_plt[3])
         window_ratio = (xmax - xmin) / (ymax - ymin) / ratio
         if window_ratio < viewport_ratio
-            viewport_center = 0.5(viewport_plotarea[1] + viewport_plotarea[2])
+            viewport_center = 0.5(viewport_plt[1] + viewport_plt[2])
             viewport_size =
-                (viewport_plotarea[2] - viewport_plotarea[1]) * window_ratio /
-                viewport_ratio
-            viewport_plotarea[1] = viewport_center - 0.5viewport_size
-            viewport_plotarea[2] = viewport_center + 0.5viewport_size
+                (viewport_plt[2] - viewport_plt[1]) * window_ratio / viewport_ratio
+            viewport_plt[1] = viewport_center - 0.5viewport_size
+            viewport_plt[2] = viewport_center + 0.5viewport_size
         elseif window_ratio > viewport_ratio
-            viewport_center = 0.5(viewport_plotarea[3] + viewport_plotarea[4])
+            viewport_center = 0.5(viewport_plt[3] + viewport_plt[4])
             viewport_size =
-                (viewport_plotarea[4] - viewport_plotarea[3]) * viewport_ratio /
-                window_ratio
-            viewport_plotarea[3] = viewport_center - 0.5viewport_size
-            viewport_plotarea[4] = viewport_center + 0.5viewport_size
+                (viewport_plt[4] - viewport_plt[3]) * viewport_ratio / window_ratio
+            viewport_plt[3] = viewport_center - 0.5viewport_size
+            viewport_plt[4] = viewport_center + 0.5viewport_size
         end
     end
 end
 
-function gr_set_window(sp, viewport_plotarea)
+function gr_set_window(sp, viewport_plt)
     if ispolar(sp)
-        gr_set_viewport_polar(viewport_plotarea)
+        gr_set_viewport_polar(viewport_plt)
     else
         xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         needs_3d = needs_any_3d_axes(sp)
@@ -1355,13 +1343,12 @@ function gr_set_window(sp, viewport_plotarea)
     end
 end
 
-gr_fill_plotarea(sp, viewport_plotarea) =
-    gr_is3d(sp) ||
-    gr_fill_viewport(viewport_plotarea, plot_color(sp[:background_color_inside]))
+gr_fill_plotarea(sp, viewport_plt) =
+    gr_is3d(sp) || gr_fill_viewport(viewport_plt, plot_color(sp[:background_color_inside]))
 
 ## Axes
 
-function gr_draw_axes(sp, viewport_plotarea)
+function gr_draw_axes(sp, viewport_plt)
     GR.setlinewidth(sp.plt[:thickness_scaling])
 
     if gr_is3d(sp)
@@ -1385,18 +1372,18 @@ function gr_draw_axes(sp, viewport_plotarea)
         x_bg, y_bg = RecipesPipeline.unzip(GR.wc3towc.(area_x, area_y, area_z))
         GR.fillarea(x_bg, y_bg)
 
-        foreach(letter -> gr_draw_axis_3d(sp, letter, viewport_plotarea), (:x, :y, :z))
+        foreach(letter -> gr_draw_axis_3d(sp, letter, viewport_plt), (:x, :y, :z))
     elseif ispolar(sp)
-        r = gr_set_viewport_polar(viewport_plotarea)
+        r = gr_set_viewport_polar(viewport_plt)
         # rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
         rmin, rmax = axis_limits(sp, :y)
         gr_polaraxes(rmin, rmax, sp)
     elseif sp[:framestyle] !== :none
-        foreach(letter -> gr_draw_axis(sp, letter, viewport_plotarea), (:x, :y))
+        foreach(letter -> gr_draw_axis(sp, letter, viewport_plt), (:x, :y))
     end
 end
 
-function gr_draw_axis(sp, letter, viewport_plotarea)
+function gr_draw_axis(sp, letter, viewport_plt)
     ax = axis_drawing_info(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
 
@@ -1409,10 +1396,10 @@ function gr_draw_axis(sp, letter, viewport_plotarea)
 
     # labels
     gr_label_ticks(sp, letter, ax.ticks)
-    gr_label_axis(sp, letter, viewport_plotarea)
+    gr_label_axis(sp, letter, viewport_plt)
 end
 
-function gr_draw_axis_3d(sp, letter, viewport_plotarea)
+function gr_draw_axis_3d(sp, letter, viewport_plt)
     ax = axis_drawing_info_3d(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
 
@@ -1427,7 +1414,7 @@ function gr_draw_axis_3d(sp, letter, viewport_plotarea)
     GR.setscale(0)
     gr_label_ticks_3d(sp, letter, ax.ticks)
     gr_label_axis_3d(sp, letter)
-    gr_set_window(sp, viewport_plotarea)
+    gr_set_window(sp, viewport_plt)
 end
 
 gr_draw_grid(sp, axis, segments, func = gr_polyline) =
@@ -1497,8 +1484,8 @@ function gr_label_ticks(sp, letter, ticks)
     oamin, oamax = axis_limits(sp, oletter)
     gr_set_tickfont(sp, letter)
     out_factor = ifelse(axis[:tick_direction] === :out, 1.5, 1)
-    x_base_offset = isy ? -0.015out_factor : 0
-    y_base_offset = isy ? 0 : -0.008out_factor
+    x_offset = isy ? -0.015out_factor : 0
+    y_offset = isy ? 0 : -0.008out_factor
 
     rot = axis[:rotation] % 360
     ov = sp[:framestyle] === :origin ? 0 : xor(oaxis[:flip], axis[:mirror]) ? oamax : oamin
@@ -1511,22 +1498,21 @@ function gr_label_ticks(sp, letter, ticks)
     end
     for (cv, dv) in zip(ticks...)
         x, y = GR.wctondc(reverse_if((cv, ov), isy)...)
-        sz_rot = gr_text_size(dv, rot)
-        sz = gr_text_size(dv)
-        x_offset = x_base_offset
-        y_offset = y_base_offset
+        sz_rot, sz = gr_text_size(dv, rot), gr_text_size(dv)
+        x_off = x_offset
+        y_off = y_offset
         if isy
-            x_offset += -first(sz_rot) / 2
+            x_off += -first(sz_rot) / 2
             if rot % 90 != 0
-                y_offset += sgn2 * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
+                y_off += 0.5(sgn2 * last(sz_rot) + sgn3 * last(sz) * cosd(rot))
             end
         else
             if rot % 90 != 0
-                x_offset += sgn2 * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
+                x_off += 0.5(sgn2 * first(sz_rot) + sgn3 * last(sz) * sind(rot))
             end
-            y_offset += -last(sz_rot) / 2
+            y_off += -last(sz_rot) / 2
         end
-        gr_text(x + sgn * x_offset, y + sgn * y_offset, dv)
+        gr_text(x + sgn * x_off, y + sgn * y_off, dv)
     end
 end
 
@@ -1569,9 +1555,9 @@ function gr_label_ticks_3d(sp, letter, ticks)
     axisϕ = mod(axisθ - 90, 360)
 
     out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
-    axisoffset = 0.012out_factor
-    x_base_offset = axisoffset * cosd(axisϕ)
-    y_base_offset = axisoffset * sind(axisϕ)
+    axis_offset = 0.012out_factor
+    x_offset = axis_offset * cosd(axisϕ)
+    y_offset = axis_offset * sind(axisϕ)
 
     sgn2a = sgn2b = sgn3 = 0
     if axisθ != 0 || rot % 90 != 0
@@ -1606,15 +1592,13 @@ function gr_label_ticks_3d(sp, letter, ticks)
         xi, yi = gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...)
         sz_rot = gr_text_size(dv, rot)
         sz = gr_text_size(dv)
-        x_offset =
-            x_base_offset + sgn2a * first(sz_rot) / 2 + sgn3 * last(sz) * sind(rot) / 2
-        y_offset =
-            y_base_offset + sgn2b * last(sz_rot) / 2 + sgn3 * last(sz) * cosd(rot) / 2
-        gr_text(xi + sgn * x_offset, yi + sgn * y_offset, dv)
+        x_off = x_offset + 0.5(sgn2a * first(sz_rot) + sgn3 * last(sz) * sind(rot))
+        y_off = y_offset + 0.5(sgn2b * last(sz_rot) + sgn3 * last(sz) * cosd(rot))
+        gr_text(xi + sgn * x_off, yi + sgn * y_off, dv)
     end
 end
 
-gr_label_axis(sp, letter, viewport_plotarea) =
+gr_label_axis(sp, letter, viewport_plt) =
     if (axis = sp[get_attr_symbol(letter, :axis)])[:guide] != ""
         mirror = axis[:mirror]
         GR.savestate()
@@ -1624,31 +1608,26 @@ gr_label_axis(sp, letter, viewport_plotarea) =
         if letter === :y
             angle += 180  # default angle = 0. should yield GR.setcharup(-1, 0) i.e. 180°
             GR.setcharup(cosd(angle), sind(angle))
-            ypos = gr_view_yposition(viewport_plotarea, position(axis[:guidefontvalign]))
+            ypos = gr_view_yposition(viewport_plt, position(axis[:guidefontvalign]))
             yalign = alignment(axis[:guidefontvalign])
             if guide_position === :right || (guide_position === :auto && mirror)
                 GR.settextalign(yalign, GR.TEXT_VALIGN_BOTTOM)
-                xpos = viewport_plotarea[2] + 0.03 + mirror * gr_axis_width(sp, axis)
+                xpos = viewport_plt[2] + 0.03 + mirror * gr_axis_width(sp, axis)
             else
                 GR.settextalign(yalign, GR.TEXT_VALIGN_TOP)
-                xpos = viewport_plotarea[1] - 0.03 - !mirror * gr_axis_width(sp, axis)
+                xpos = viewport_plt[1] - 0.03 - !mirror * gr_axis_width(sp, axis)
             end
         else
             angle += 90  # default angle = 0. should yield GR.setcharup(0, 1) i.e. 90°
             GR.setcharup(cosd(angle), sind(angle))
-            xpos = gr_view_xposition(viewport_plotarea, position(axis[:guidefonthalign]))
+            xpos = gr_view_xposition(viewport_plt, position(axis[:guidefonthalign]))
             xalign = alignment(axis[:guidefonthalign])
             if guide_position === :top || (guide_position === :auto && mirror)
                 GR.settextalign(xalign, GR.TEXT_VALIGN_TOP)
-                ypos =
-                    viewport_plotarea[4] +
-                    0.015 +
-                    (mirror ? gr_axis_height(sp, axis) : 0.015)
+                ypos = viewport_plt[4] + 0.015 + (mirror ? gr_axis_height(sp, axis) : 0.015)
             else
                 GR.settextalign(xalign, GR.TEXT_VALIGN_BOTTOM)
-                ypos =
-                    viewport_plotarea[3] - 0.015 -
-                    (mirror ? 0.015 : gr_axis_height(sp, axis))
+                ypos = viewport_plt[3] - 0.015 - (mirror ? 0.015 : gr_axis_height(sp, axis))
             end
         end
         gr_text(xpos, ypos, axis[:guide])
@@ -1695,23 +1674,23 @@ gr_label_axis_3d(sp, letter) =
         GR.restorestate()
     end
 
-gr_add_title(sp, viewport_plotarea, viewport_subplot) =
+gr_add_title(sp, viewport_plt, viewport_sp) =
     if sp[:title] != ""
         GR.savestate()
         gr_set_font(titlefont(sp), sp)
         loc = sp[:titlelocation]
         if loc === :left
-            xpos, ypos = viewport_plotarea[1], viewport_subplot[4]
+            xpos, ypos = viewport_plt[1], viewport_sp[4]
             halign, valign = GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_TOP
         elseif loc === :center
-            xpos, ypos = +(viewport_plotarea[1:2]...) / 2, viewport_subplot[4]
+            xpos, ypos = +(viewport_plt[1:2]...) / 2, viewport_sp[4]
             halign, valign = GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP
         elseif loc === :right
-            xpos, ypos = viewport_plotarea[2], viewport_subplot[4]
+            xpos, ypos = viewport_plt[2], viewport_sp[4]
             halign, valign = GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_TOP
         else
-            xpos = gr_view_xposition(viewport_plotarea, loc[1])
-            ypos = gr_view_yposition(viewport_plotarea, loc[2])
+            xpos = gr_view_xposition(viewport_plt, loc[1])
+            ypos = gr_view_yposition(viewport_plt, loc[2])
             halign = gr_haligns[sp[:titlefonthalign]]
             valign = gr_valigns[sp[:titlefontvalign]]
         end

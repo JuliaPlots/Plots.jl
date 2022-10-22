@@ -288,7 +288,7 @@ end
 get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
 get_ticks(p::Plot, s::Symbol) = [get_ticks(sp, s) for sp in p.subplots]
 
-function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T}
+get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
     if ticks === :none
         return T[], String[]
     elseif !isempty(dvals)
@@ -303,7 +303,7 @@ function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T}
     else
         return optimal_ticks_and_labels(nothing, args...)
     end
-end
+
 get_ticks(ticks::AVec, cvals, dvals, args...) = optimal_ticks_and_labels(ticks, args...)
 get_ticks(ticks::Int, dvals, cvals, args...) =
     if isempty(dvals)
@@ -840,7 +840,7 @@ function axis_drawing_info(sp, letter)
         end
     end
 
-    return (
+    (
         ticks = ticks,
         segments = segments,
         tick_segments = tick_segments,
@@ -973,7 +973,7 @@ function axis_drawing_info_3d(sp, letter)
         end
     end
 
-    return (
+    (
         ticks = ticks,
         segments = segments,
         tick_segments = tick_segments,

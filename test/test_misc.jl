@@ -229,10 +229,10 @@ end
         @test plot([1, 2, 5], seriestype = :scatterpath) isa Plot
         @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa Plot
 
-        let pl = plot(1:2, widen = false)
-            Plots.abline!([0, 3], [5, 0])
-            @test xlims(pl) == (1, 2)
-            @test ylims(pl) == (1, 2)
+        let pl = plot(1:2, -1:1, widen = false)
+            Plots.abline!([0, 3], [5, -5])
+            @test xlims(pl) == (+1, +2)
+            @test ylims(pl) == (-1, +1)
         end
 
         @test Plots.findnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
