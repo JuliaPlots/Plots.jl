@@ -507,7 +507,9 @@ function pgfx_add_series!(::Val{:mesh3d}, axis, series_opt, series, series_func,
         """
         Argument connections has to be either a tuple of three arrays (0-based indexing)
         or an AbstractVector{NTuple{3,Int}} (1-based indexing).
-        """ |> ArgumentError |> throw
+        """ |>
+        ArgumentError |>
+        throw
     end
     push!(
         series_opt,

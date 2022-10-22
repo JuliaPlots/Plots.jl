@@ -743,13 +743,11 @@ const grid_factor_3d = Ref(grid_factor_2d[] / 100)
 
 # compute the line segments which should be drawn for this axis
 function axis_drawing_info(sp, letter)
-    # find out which axis we are dealing with
-    isy = letter === :y
-    letters = letter, isy ? :x : :y
-
     # get axis objects, ticks and minor ticks
+    letters = right_handed(sp, letter)
     ax, oax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
     (amin, amax), (oamin, oamax) = map(l -> axis_limits(sp, l), letters)
+
     ticks = get_ticks(sp, ax, update = false)
     minor_ticks = get_minor_ticks(sp, ax, ticks)
 
@@ -758,6 +756,7 @@ function axis_drawing_info(sp, letter)
         map(_ -> Segments(2), 1:5)
 
     if sp[:framestyle] !== :none
+        isy = letter === :y
         oa1, oa2 = if sp[:framestyle] in (:origin, :zerolines)
             0.0, 0.0
         else
@@ -860,12 +859,9 @@ sort_3d_axes(a, b, c, letter) =
     end
 
 function axis_drawing_info_3d(sp, letter)
-    near_letter = letter in (:x, :z) ? :y : :x
-    far_letter = letter in (:x, :y) ? :z : :x
-    letters = letter, near_letter, far_letter
-
-    ax, nax, fax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
-    (amin, amax), (namin, namax), (famin, famax) = map(l -> axis_limits(sp, l), letters)
+    letters = right_handed(sp, letter)
+    ax, fax, nax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
+    (amin, amax), (famin, famax), (namin, namax) = map(l -> axis_limits(sp, l), letters)
 
     ticks = get_ticks(sp, ax, update = false)
     minor_ticks = get_minor_ticks(sp, ax, ticks)

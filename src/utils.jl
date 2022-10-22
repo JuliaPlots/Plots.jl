@@ -335,6 +335,19 @@ function nanvcat(vs::AVec)
     v_out
 end
 
+right_handed(sp, letter) =
+    if RecipesPipeline.is3d(sp)
+        if letter === :x
+            :x, :y, :z  # letter, far_letter, near_letter
+        elseif letter === :y
+            :y, :z, :x
+        else
+            :z, :x, :y
+        end
+    else
+        letter === :x ? (:x, :y) : (:y, :x)
+    end
+
 handle_surface(z) = z
 handle_surface(z::Surface) = permutedims(z.surf)
 
