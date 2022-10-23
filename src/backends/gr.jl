@@ -452,13 +452,13 @@ function gr_viewport_from_bbox(
     bb::BoundingBox,
     w,
     h,
-    viewport_canvas,
+    vp_canvas,
 )
     viewport = GRViewport(
-        viewport_canvas.xmax[] * (left(bb) / w),
-        viewport_canvas.xmax[] * (right(bb) / w),
-        viewport_canvas.ymax[] * (1 - bottom(bb) / h),
-        viewport_canvas.ymax[] * (1 - top(bb) / h),
+        vp_canvas.xmax[] * (left(bb) / w),
+        vp_canvas.xmax[] * (right(bb) / w),
+        vp_canvas.ymax[] * (1 - bottom(bb) / h),
+        vp_canvas.ymax[] * (1 - top(bb) / h),
     )
     hascolorbar(sp) && (viewport.xmax[] -= 0.1(1 + 0.5gr_is3d(sp)))
     viewport
@@ -536,7 +536,7 @@ const gr_colorbar_tick_size = Ref(0.005)
 function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, vp)
     GR.savestate()
     x_min, x_max = gr_x_axislims(sp)
-    z_min, z_max = clims[1:2]
+    z_min, z_max = clims
     gr_set_viewport_cmap(sp, vp)
     GR.setscale(0)
     GR.setwindow(x_min, x_max, z_min, z_max)
@@ -646,30 +646,30 @@ function gr_display(plt::Plot, dpi_factor = 1)
     dsp_height_ratio = dsp_height_meters / dsp_height_px
 
     # compute the viewport_canvas, normalized to the larger dimension
-    viewport_canvas = GRViewport(0.0, 1.0, 0.0, 1.0)
+    vp_canvas = GRViewport(0.0, 1.0, 0.0, 1.0)
     w, h = get_size(plt)
     if w > h
         ratio = float(h) / w
         msize = dsp_width_ratio * w * dpi_factor
         GR.setwsviewport(0, msize, 0, msize * ratio)
         GR.setwswindow(0, 1, 0, ratio)
-        viewport_canvas.ymin[] *= ratio
-        viewport_canvas.ymax[] *= ratio
+        vp_canvas.ymin[] *= ratio
+        vp_canvas.ymax[] *= ratio
     else
         ratio = float(w) / h
         msize = dsp_height_ratio * h * dpi_factor
         GR.setwsviewport(0, msize * ratio, 0, msize)
         GR.setwswindow(0, ratio, 0, 1)
-        viewport_canvas.xmin[] *= ratio
-        viewport_canvas.xmax[] *= ratio
+        vp_canvas.xmin[] *= ratio
+        vp_canvas.xmax[] *= ratio
     end
 
     # fill in the viewport_canvas background
-    gr_fill_viewport(viewport_canvas, plt[:background_color_outside])
+    gr_fill_viewport(vp_canvas, plt[:background_color_outside])
 
     # subplots:
     for sp in plt.subplots
-        gr_display(sp, w * px, h * px, viewport_canvas)
+        gr_display(sp, w * px, h * px, vp_canvas)
     end
 
     GR.updatews()

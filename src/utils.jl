@@ -79,36 +79,34 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     if check
         scales = :xscale, :yscale, :zscale
         for (n, s) in enumerate(args)
-            scale = get(series, scales[n], :identity)
-            if scale ∈ _logScales
-                for (i, v) in enumerate(s)
-                    if v <= 0
-                        @warn "Invalid negative or zero value $v found at series index $i for $(scale) based $(scales[n])"
-                        @debug "" exception = (DomainError(v), stacktrace())
-                        break
-                    end
+            if (scale = get(series, scales[n], :identity)) ∈ _logScales || continue
+            for (i, v) in enumerate(s)
+                if v <= 0
+                    @warn "Invalid negative or zero value $v found at series index $i for $(scale) based $(scales[n])"
+                    @debug "" exception = (DomainError(v), stacktrace())
+                    break
                 end
             end
         end
     end
 
     segments = if has_attribute_segments(series)
-        Iterators.flatten(map(nan_segments) do r
-                if seriestype === :shape
-                    warn_on_inconsistent_shape_attr(series, x, y, z, r)
-                    (SeriesSegment(r, first(r)),)
-                elseif seriestype in (:scatter, :scatter3d)
-                    (SeriesSegment(i:i, i) for i in r)
-                else
-                    (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
-                end
-            end)
+        map(nan_segments) do r
+            if seriestype === :shape
+                warn_on_inconsistent_shape_attr(series, x, y, z, r)
+                (SeriesSegment(r, first(r)),)
+            elseif seriestype in (:scatter, :scatter3d)
+                (SeriesSegment(i:i, i) for i in r)
+            else
+                (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
+            end
+        end |> Iterators.flatten
     else
         (SeriesSegment(r, 1) for r in nan_segments)
     end
 
     warn_on_attr_dim_mismatch(series, x, y, z, segments)
-    return segments
+    segments
 end
 
 function warn_on_attr_dim_mismatch(series, x, y, z, segments)
@@ -686,27 +684,25 @@ function extend_series!(series::Series, yi)
     y = extend_series_data!(series, yi, :y)
     x = extend_to_length!(series[:x], length(y))
     expand_extrema!(series[:subplot][:xaxis], x)
-    return x, y
+    x, y
 end
 
-function extend_series!(series::Series, xi, yi)
-    x = extend_series_data!(series, xi, :x)
-    y = extend_series_data!(series, yi, :y)
-    return x, y
-end
+extend_series!(series::Series, xi, yi) = (
+    extend_series_data!(series, xi, :x)
+    extend_series_data!(series, yi, :y)
+)
 
-function extend_series!(series::Series, xi, yi, zi)
-    x = extend_series_data!(series, xi, :x)
-    y = extend_series_data!(series, yi, :y)
-    z = extend_series_data!(series, zi, :z)
-    return x, y, z
-end
+extend_series!(series::Series, xi, yi, zi) = (
+    extend_series_data!(series, xi, :x)
+    extend_series_data!(series, yi, :y)
+    extend_series_data!(series, zi, :z)
+)
 
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
     d = extend_by_data!(series[letter], v)
     expand_extrema!(series[:subplot][get_attr_symbol(letter, :axis)], d)
-    return d
+    d
 end
 
 function copy_series!(series, letter)
@@ -967,7 +963,7 @@ function straightline_data(series, expansion_factor = 1)
         end
     end
 
-    return xinvf.(xdata), yinvf.(ydata)
+    xinvf.(xdata), yinvf.(ydata)
 end
 
 function straightline_data(xl, yl, x, y, expansion_factor = 1)
@@ -996,7 +992,7 @@ function straightline_data(xl, yl, x, y, expansion_factor = 1)
     # plotly(js) and interactive behaviour
     x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* expansion_factor .* [-1, 1]
     y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* expansion_factor .* [-1, 1]
-    return x_vals, y_vals
+    x_vals, y_vals
 end
 
 function shape_data(series, expansion_factor = 1)
@@ -1026,7 +1022,7 @@ function shape_data(series, expansion_factor = 1)
             y[i] = yinvf(yf(yl[2]) + expansion_factor * (yf(yl[2]) - yf(yl[1])))
         end
     end
-    return x, y
+    x, y
 end
 
 construct_categorical_data(x::AbstractArray, axis::Axis) =
@@ -1092,7 +1088,7 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     @inbounds for I in eachindex(ci)  # connections are 0-based
         add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
     end
-    return X, Y, Z
+    X, Y, Z
 end
 
 function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
@@ -1102,7 +1098,7 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     @inbounds for I in eachindex(cns)  # connections are 1-based
         add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
     end
-    return X, Y, Z
+    X, Y, Z
 end
 
 # cache joined symbols so they can be looked up instead of constructed each time
@@ -1116,5 +1112,5 @@ texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
 
 macro attributes(expr::Expr)
     RecipesBase.process_recipe_body!(expr)
-    return expr
+    expr
 end

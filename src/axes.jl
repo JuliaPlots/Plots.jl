@@ -889,9 +889,9 @@ function add_major_or_minor_segments_3d(
     cond,
 )
     ticks === nothing && return
-    f = RecipesPipeline.scale_func(nax[:scale])
-    invf = RecipesPipeline.inverse_scale_func(nax[:scale])
     if cond
+        f = RecipesPipeline.scale_func(nax[:scale])
+        invf = RecipesPipeline.inverse_scale_func(nax[:scale])
         tick_start, tick_stop = if sp[:framestyle] === :origin
             namin, namax = namM
             t = invf(f(0) + factor * (f(namax) - f(namin)))
