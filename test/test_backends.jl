@@ -119,8 +119,8 @@ with(:gr) do
     image_comparison_facts(:gr, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:gr])
 end
 
-with(:plotly) do
-    image_comparison_facts(:plotly, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:plotlyjs])
+with(:plotlyjs) do
+    image_comparison_facts(:plotlyjs, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:plotlyjs])
 end
 
 with(:pyplot) do

@@ -218,7 +218,9 @@ end
 
 @testset "wrap" begin
     # not sure what is intended here ...
-    @test scatter(1:2, color = wrap([:red, :blue])) isa Plot
+    wrapped = wrap([:red, :blue])
+    @test !isempty(wrapped)
+    @test scatter(1:2, color = wrapped) isa Plot
 end
 
 @testset "recipes" begin

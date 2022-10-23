@@ -4,7 +4,6 @@ const _backendType = Dict{Symbol,DataType}(:none => NoBackend)
 const _backendSymbol = Dict{DataType,Symbol}(NoBackend => :none)
 const _backends = Symbol[]
 const _initialized_backends = Set{Symbol}()
-const _default_backends = (:none, :gr, :plotly)
 
 const _backend_packages = Dict{Symbol,Symbol}()
 
@@ -14,9 +13,8 @@ backends() = _backends
 "Returns the name of the current backend"
 backend_name() = CURRENT_BACKEND.sym
 
-function _backend_instance(sym::Symbol)::AbstractBackend
+_backend_instance(sym::Symbol)::AbstractBackend =
     haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
-end
 
 backend_package_name(sym::Symbol) = _backend_packages[sym]
 
@@ -75,8 +73,7 @@ text_size(lab::PlotText, sz::Number, rot::Number = 0) = text_size(length(lab.str
 
 # account for the size/length/rotation of tick labels
 function tick_padding(sp::Subplot, axis::Axis)
-    ticks = get_ticks(sp, axis)
-    if ticks === nothing
+    if (ticks = get_ticks(sp, axis)) === nothing
         0mm
     else
         vals, labs = ticks
