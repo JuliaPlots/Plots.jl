@@ -79,7 +79,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     if check
         scales = :xscale, :yscale, :zscale
         for (n, s) in enumerate(args)
-            if (scale = get(series, scales[n], :identity)) ∈ _logScales || continue
+            (scale = get(series, scales[n], :identity)) ∈ _logScales || continue
             for (i, v) in enumerate(s)
                 if v <= 0
                     @warn "Invalid negative or zero value $v found at series index $i for $(scale) based $(scales[n])"
@@ -688,14 +688,14 @@ function extend_series!(series::Series, yi)
 end
 
 extend_series!(series::Series, xi, yi) = (
-    extend_series_data!(series, xi, :x)
-    extend_series_data!(series, yi, :y)
+    extend_series_data!(series, xi, :x),
+    extend_series_data!(series, yi, :y),
 )
 
 extend_series!(series::Series, xi, yi, zi) = (
-    extend_series_data!(series, xi, :x)
-    extend_series_data!(series, yi, :y)
-    extend_series_data!(series, zi, :z)
+    extend_series_data!(series, xi, :x),
+    extend_series_data!(series, yi, :y),
+    extend_series_data!(series, zi, :z),
 )
 
 function extend_series_data!(series::Series, v, letter)

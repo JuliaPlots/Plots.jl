@@ -631,6 +631,7 @@ end
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     # !TODO Add more scales in the future (asinh, sqrt) ?
+    @show xmin, xmax, pos, scale
     if scale === :log || scale === :ln
         exp(log(xmin) + pos.value * log(xmax / xmin))
     elseif scale === :log10
@@ -642,19 +643,28 @@ function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     end
 end
 
+const position_multiplier = Dict(
+    :N            => (0.5pct, 0.9pct),
+    :NW           => (0.1pct, 0.9pct),
+    :W            => (0.1pct, 0.5pct),
+    :SW           => (0.1pct, 0.1pct),
+    :S            => (0.5pct, 0.1pct),
+    :SE           => (0.9pct, 0.1pct),
+    :E            => (0.9pct, 0.5pct),
+    :NE           => (0.9pct, 0.9pct),
+    :topleft      => (0.1pct, 0.9pct),
+    :topcenter    => (0.5pct, 0.9pct),
+    :topright     => (0.9pct, 0.9pct),
+    :bottomleft   => (0.1pct, 0.1pct),
+    :bottomcenter => (0.5pct, 0.1pct),
+    :bottomright  => (0.9pct, 0.1pct),
+)
+
 # Give each annotation coordinates based on specified position
 function locate_annotation(
     sp::Subplot,
     pos::Symbol,
-    label::PlotText;
-    position_multiplier = Dict{Symbol,Tuple{Float64,Float64}}(
-        :topleft      => (0.1pct, 0.9pct),
-        :topcenter    => (0.5pct, 0.9pct),
-        :topright     => (0.9pct, 0.9pct),
-        :bottomleft   => (0.1pct, 0.1pct),
-        :bottomcenter => (0.5pct, 0.1pct),
-        :bottomright  => (0.9pct, 0.1pct),
-    ),
+    label::PlotText
 )
     x, y = position_multiplier[pos]
     (

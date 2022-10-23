@@ -150,6 +150,20 @@ end
         annotate!(sp = 1, (0.03, 0.95), text("Cats&Dogs", :left))
         annotate!(sp = 2, (0.03, 0.95), text("Cats&Dogs", :left))
     end
+
+    for scale ∈ Plots._logScales
+        pl = plot(xlim=(1, 10), xscale = scale)
+        annotate!(pl, (0.5, 0.5), "hello")
+    end
+
+    pl = plot(1:2)
+    for loc in (:topleft, :topcenter, :topright, :bottomleft, :bottomcenter, :bottomright)
+        annotate!(pl, loc, string(loc))
+    end
+    pl = plot(1:2)
+    for loc in (:N, :NE, :E, :SE, :S, :SW, :W, :NW, :N)
+        annotate!(pl, loc, string(loc))
+    end
 end
 
 @testset "Fonts" begin
