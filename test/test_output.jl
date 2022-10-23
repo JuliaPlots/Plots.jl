@@ -53,6 +53,13 @@ with(:plotlyjs) do
     # @test_save :eps
 end
 
+with(:plotly) do
+    @test_save :pdf
+    @test_save :png
+    @test_save :svg
+    # @test_save :eps
+end
+
 if Sys.islinux()
     with(:pgfplotsx) do
         @test_save :tex
