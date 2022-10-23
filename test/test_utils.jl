@@ -132,11 +132,17 @@
         label = "fancy label"
         attr!(series; label)
         @test series[:label] == label
+        @test Plots.attr(series, :label) == label
+
+        label = "another label"
+        attr!(series, label, :label)
+        @test Plots.attr(series, :label) == label
 
         sp = first(pl.subplots)
         title = "fancy title"
         attr!(sp; title)
         @test sp[:title] == title
+
     end
 end
 
