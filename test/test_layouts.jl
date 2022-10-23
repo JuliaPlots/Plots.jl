@@ -56,7 +56,7 @@ end
 end
 
 @testset "Invalid viewport" begin
-    # JuliaPlots/Plots.jl/issues/2804
+    # github.com/JuliaPlots/Plots.jl/issues/2804
     pl = plot(1, layout = (10, 2))
     show(devnull, pl)
 end

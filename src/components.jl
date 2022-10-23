@@ -631,7 +631,6 @@ end
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     # !TODO Add more scales in the future (asinh, sqrt) ?
-    @show xmin, xmax, pos, scale
     if scale === :log || scale === :ln
         exp(log(xmin) + pos.value * log(xmax / xmin))
     elseif scale === :log10
@@ -661,11 +660,7 @@ const position_multiplier = Dict(
 )
 
 # Give each annotation coordinates based on specified position
-function locate_annotation(
-    sp::Subplot,
-    pos::Symbol,
-    label::PlotText
-)
+function locate_annotation(sp::Subplot, pos::Symbol, label::PlotText)
     x, y = position_multiplier[pos]
     (
         _relative_position(

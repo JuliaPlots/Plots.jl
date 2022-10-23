@@ -447,13 +447,7 @@ end
 # --------------------------------------------------------------------------------------
 # viewport plot area
 
-function gr_viewport_from_bbox(
-    sp::Subplot{GRBackend},
-    bb::BoundingBox,
-    w,
-    h,
-    vp_canvas,
-)
+function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vp_canvas)
     viewport = GRViewport(
         vp_canvas.xmax[] * (left(bb) / w),
         vp_canvas.xmax[] * (right(bb) / w),

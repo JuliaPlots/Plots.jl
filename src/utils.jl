@@ -687,10 +687,8 @@ function extend_series!(series::Series, yi)
     x, y
 end
 
-extend_series!(series::Series, xi, yi) = (
-    extend_series_data!(series, xi, :x),
-    extend_series_data!(series, yi, :y),
-)
+extend_series!(series::Series, xi, yi) =
+    (extend_series_data!(series, xi, :x), extend_series_data!(series, yi, :y))
 
 extend_series!(series::Series, xi, yi, zi) = (
     extend_series_data!(series, xi, :x),
