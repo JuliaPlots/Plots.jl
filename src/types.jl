@@ -90,13 +90,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     function Plot(osp::Subplot)
         plt = Plot()
         plt.layout = GridLayout(1, 1)
-        @static if true
-            sp = deepcopy(osp)  # NOTE: fails `PlotlyJS`
-        else
-            sp = Subplot(plt.backend; parent = plt.layout)
-            sp.series_list = copy(osp.series_list)
-            sp.attr = copy(osp.attr)
-        end
+        sp = deepcopy(osp)  # FIXME: fails `PlotlyJS` ?
         plt.layout.grid[1, 1] = sp
         # reset some attributes
         sp.minpad = defaultminpad

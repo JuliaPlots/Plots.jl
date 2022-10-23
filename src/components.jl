@@ -468,7 +468,7 @@ series_annotations(::Nothing) = nothing
 
 function series_annotations(anns::AMat{SeriesAnnotations})
     @assert size(anns, 1) == 1 "matrix of SeriesAnnotations must be a row vector"
-    return anns
+    anns
 end
 
 function series_annotations(anns::AMat, outer_args...)
@@ -478,9 +478,9 @@ function series_annotations(anns::AMat, outer_args...)
     # whole_series types can only be in a row vector
     if size(anns, 1) > 1
         for ann in Iterators.filter(ann -> ann isa whole_series, anns)
-            (throw ∘ ArgumentError)(
-                "Given series annotation must be the only element in its column:\n$ann",
-            )
+            "Given series annotation must be the only element in its column:\n$ann" |>
+            ArgumentError |>
+            throw
         end
     end
 
@@ -492,7 +492,7 @@ function series_annotations(anns::AMat, outer_args...)
         series_annotations(strs, outer_args..., inner_args...)
     end
 
-    return permutedims(ann_vec)
+    permutedims(ann_vec)
 end
 
 function series_annotations(strs::AVec, args...)
@@ -552,7 +552,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         series[:markershape] = shapes
         series[:markersize] = msize
     end
-    return
+    nothing
 end
 
 mutable struct EachAnn
@@ -562,9 +562,7 @@ mutable struct EachAnn
 end
 
 function Base.iterate(ea::EachAnn, i = 1)
-    if ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)
-        return
-    end
+    (ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)) && return
 
     tmp = _cycle(ea.anns.strs, i)
     str, fnt = if isa(tmp, PlotText)
@@ -644,20 +642,25 @@ function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     end
 end
 
-# Give each annotation coordinates based on specified position
-function locate_annotation(
-    sp::Subplot,
-    pos::Symbol,
-    label::PlotText;
-    position_multiplier = Dict{Symbol,Tuple{Float64,Float64}}(
-        :topleft      => (0.1pct, 0.9pct),
-        :topcenter    => (0.5pct, 0.9pct),
-        :topright     => (0.9pct, 0.9pct),
-        :bottomleft   => (0.1pct, 0.1pct),
-        :bottomcenter => (0.5pct, 0.1pct),
-        :bottomright  => (0.9pct, 0.1pct),
-    ),
+const position_multiplier = Dict(
+    :N            => (0.5pct, 0.9pct),
+    :NE           => (0.9pct, 0.9pct),
+    :E            => (0.9pct, 0.5pct),
+    :SE           => (0.9pct, 0.1pct),
+    :S            => (0.5pct, 0.1pct),
+    :SW           => (0.1pct, 0.1pct),
+    :W            => (0.1pct, 0.5pct),
+    :NW           => (0.1pct, 0.9pct),
+    :topleft      => (0.1pct, 0.9pct),
+    :topcenter    => (0.5pct, 0.9pct),
+    :topright     => (0.9pct, 0.9pct),
+    :bottomleft   => (0.1pct, 0.1pct),
+    :bottomcenter => (0.5pct, 0.1pct),
+    :bottomright  => (0.9pct, 0.1pct),
 )
+
+# Give each annotation coordinates based on specified position
+function locate_annotation(sp::Subplot, pos::Symbol, label::PlotText)
     x, y = position_multiplier[pos]
     (
         _relative_position(

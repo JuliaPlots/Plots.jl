@@ -139,7 +139,7 @@ end
     anns = [(["x", "y"], [10, 20], :hexagon) (["a", "b"], [3, 4], :circle)]
     pl = plot(rand(2, 2), layout = 2, series_annotations = anns)
 
-    # JuliaPlots/Plots.jl/pull/3634#issue-940055478
+    # github.com/JuliaPlots/Plots.jl/pull/3634#issue-940055478
     let p = plot(
             plot(rand(10) .* 15, aspect_ratio = :equal),
             plot(rand(10) .* 10, aspect_ratio = :equal),
@@ -149,6 +149,23 @@ end
         )
         annotate!(sp = 1, (0.03, 0.95), text("Cats&Dogs", :left))
         annotate!(sp = 2, (0.03, 0.95), text("Cats&Dogs", :left))
+    end
+
+    for scale in Plots._logScales
+        pl = plot(xlim = (1, 10), xscale = scale)
+        annotate!(pl, (0.5, 0.5), "hello")
+    end
+
+    let pl = plot(1:2)
+        for loc in
+            (:topleft, :topcenter, :topright, :bottomleft, :bottomcenter, :bottomright)
+            annotate!(pl, loc, string(loc))
+        end
+    end
+    let pl = plot(1:2)
+        for loc in (:N, :NE, :E, :SE, :S, :SW, :W, :NW, :N)
+            annotate!(pl, loc, string(loc))
+        end
     end
 end
 

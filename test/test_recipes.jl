@@ -104,3 +104,27 @@ end
         @test plot(rand(Gray, 2, 2)) isa Plot
     end
 end
+
+@testset "plots_heatmap" begin
+    with(:gr) do
+        @test plots_heatmap(rand(RGBA, 2, 2)) isa Plot
+    end
+end
+
+@testset "scatter3d" begin
+    with(:gr) do
+        @test scatter3d(1:2, 1:2, 1:2) isa Plot
+    end
+end
+
+@testset "sticks" begin
+    with(:gr) do
+        @test sticks(1:2, marker = :circle) isa Plot
+    end
+end
+
+@testset "stephist" begin
+    with(:gr) do
+        @test stephist([1, 2], marker = :circle) isa Plot
+    end
+end

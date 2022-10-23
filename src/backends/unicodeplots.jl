@@ -342,9 +342,9 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
             lmax = 0
             for c in 1:nc
                 if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
-                    error(
-                        "Plots(UnicodePlots): complex nested layout is currently unsupported",
-                    )
+                    "Plots(UnicodePlots): complex nested layout is currently unsupported" |>
+                    ArgumentError |>
+                    throw
                 else
                     if get(l.attr, :blank, false)
                         lines_colored[r, c] = lines_uncolored[r, c] = nothing

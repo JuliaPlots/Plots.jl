@@ -170,7 +170,7 @@ end
     end
 end
 
-@testset "Extract subplot" begin  # JuliaPlots/Plots.jl/issues/4045
+@testset "Extract subplot" begin  # github.com/JuliaPlots/Plots.jl/issues/4045
     x1, y1 = -1:5, 4:10
     x2, y2 = rand(10), rand(10)
     p1, p2 = plot(x1, y1), plot(x2, y2)
@@ -218,7 +218,9 @@ end
 
 @testset "wrap" begin
     # not sure what is intended here ...
-    @test scatter(1:2, color = wrap([:red, :blue])) isa Plot
+    wrapped = wrap([:red, :blue])
+    @test !isempty(wrapped)
+    @test scatter(1:2, color = wrapped) isa Plot
 end
 
 @testset "recipes" begin
@@ -247,7 +249,7 @@ end
         i = [0, 0, 0, 1]
         j = [1, 2, 3, 2]
         k = [2, 3, 1, 3]
-        # JuliaPlots/Plots.jl/pull/3868#issuecomment-939446686
+        # github.com/JuliaPlots/Plots.jl/pull/3868#issuecomment-939446686
         mesh3d(
             x,
             y,
@@ -257,7 +259,7 @@ end
             fillalpha = 0.5,
         )
 
-        # JuliaPlots/Plots.jl/pull/3835#issue-1002117649
+        # github.com/JuliaPlots/Plots.jl/pull/3835#issue-1002117649
         p0 = [0.0, 0.0, 0.0]
         p1 = [1.0, 0.0, 0.0]
         p2 = [0.0, 1.0, 0.0]
@@ -292,7 +294,7 @@ end
 end
 
 @testset "group" begin
-    # from JuliaPlots/Plots.jl/issues/3630#issuecomment-876001540
+    # from github.com/JuliaPlots/Plots.jl/issues/3630#issuecomment-876001540
     a = repeat(1:3, inner = 4)
     b = repeat(["low", "high"], inner = 2, outer = 3)
     c = repeat(1:2, outer = 6)

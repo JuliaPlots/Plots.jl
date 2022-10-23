@@ -119,8 +119,8 @@ with(:gr) do
     image_comparison_facts(:gr, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:gr])
 end
 
-with(:plotly) do
-    image_comparison_facts(:plotly, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:plotlyjs])
+with(:plotlyjs) do
+    image_comparison_facts(:plotlyjs, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:plotlyjs])
 end
 
 with(:pyplot) do
@@ -140,33 +140,30 @@ end
 
         # lets just make sure it runs without error
         pl = plot(rand(10))
-        @test pl isa Plot
         @test show(io, pl) isa Nothing
 
         pl = bar(randn(10))
-        @test pl isa Plot
         @test show(io, pl) isa Nothing
 
         pl = plot([1, 2], [3, 4])
         annotate!(pl, [(1.5, 3.2, Plots.text("Test", :red, :center))])
         hline!(pl, [3.1])
-        @test pl isa Plot
         @test show(io, pl) isa Nothing
 
         pl = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
         hline!(pl, [3.1])
         annotate!(pl, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
-        @test pl isa Plot
         @test show(io, pl) isa Nothing
 
         pl = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
         annotate!(pl, [(Dates.Date(2019, 1, 15), 3.2, :auto)])
         hline!(pl, [3.1])
-        @test pl isa Plot
         @test show(io, pl) isa Nothing
 
         pl = plot(map(plot, 1:4)..., layout = (2, 2))
-        @test pl isa Plot
+        @test show(io, pl) isa Nothing
+
+        pl = plot(map(plot, 1:2)..., layout = @layout([° _; _ °]))
         @test show(io, pl) isa Nothing
 
         redirect_stdout(devnull) do

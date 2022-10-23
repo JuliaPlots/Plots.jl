@@ -11,7 +11,7 @@
     Plots.discrete_value!(axis, map(i -> "x$i", 0:2))
     @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
 
-    # JuliaPlots/Plots.jl/issues/4375
+    # github.com/JuliaPlots/Plots.jl/issues/4375
     for lab in ("foo", :foo)
         pl = plot(1:2, xlabel = lab, ylabel = lab, title = lab)
         show(devnull, pl)
@@ -85,7 +85,7 @@ end
         @test plims == default_widen(1, 5)
     end
 
-    @testset "JuliaPlots/Plots.jl/issues/4379" begin
+    @testset "#4379" begin
         for ylims in ((-5, :auto), [-5, :auto])
             pl = plot([-2, 3], ylims = ylims, widen = false)
             @test Plots.ylims(pl) == (-5.0, 3.0)
