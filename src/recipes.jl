@@ -1,7 +1,6 @@
-
 const _series_recipe_deps = Dict()
 
-series_recipe_dependencies(st::Symbol, deps::Symbol...) = _series_recipe_deps[st] = deps
+series_recipe_dependencies(st::Symbol, deps::Symbol...) = _series_recipe_deps[st] = deps  # COV_EXCL_LINE
 
 seriestype_supported(st::Symbol) = seriestype_supported(backend(), st)
 
@@ -711,7 +710,7 @@ end
     seriestype := :path
     ()
 end
-Plots.@deps stepbins path
+@deps stepbins path
 
 function wand_edges(x...)
     @warn """"

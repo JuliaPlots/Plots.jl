@@ -142,7 +142,6 @@
         title = "fancy title"
         attr!(sp; title)
         @test sp[:title] == title
-
     end
 end
 

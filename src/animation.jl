@@ -169,9 +169,10 @@ end
 
 # Only gifs can be shown via image/gif
 Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
-Base.showable(::MIME"image/png", agif::AnimatedGif) = let ext = file_extension(agif.filename)
-    ext == "apng" || ext == "png"
-end
+Base.showable(::MIME"image/png", agif::AnimatedGif) =
+    let ext = file_extension(agif.filename)
+        ext == "apng" || ext == "png"
+    end
 
 Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)

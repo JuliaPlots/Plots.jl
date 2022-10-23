@@ -43,7 +43,6 @@ end
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end every 5
     @test showable(MIME("image/png"), anim)
-
 end
 
 @testset "html" begin
@@ -74,7 +73,6 @@ end
     anim = animate([1:2, 2:3]; show_msg = false, fps = 1 // 10)
     @test anim isa Plots.AnimatedGif
     @test showable(MIME("image/gif"), anim)
-
 
     fn = tempname() * ".apng"
     open(fn, "w") do io
