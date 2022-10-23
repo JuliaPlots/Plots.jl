@@ -479,8 +479,6 @@ end
 layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) =
     layout_args(layout)
 
-layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
-
 # ----------------------------------------------------------------------
 
 function build_layout(args...)
@@ -535,7 +533,7 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
         elseif isa(l, Subplot) && empty
             error("Subplot exists. Cannot re-use existing layout.  Please make a new one.")
         end
-        i >= n && break  # only add n subplots
+        i ≥ n && break  # only add n subplots
     end
 
     layout, subplots, spmap
@@ -580,9 +578,7 @@ end
 function link_axes!(a::AbstractArray{AbstractLayout}, axissym::Symbol)
     subplots = link_subplots(a, axissym)
     axes = [sp.attr[axissym] for sp in subplots]
-    if length(axes) > 0
-        link_axes!(axes...)
-    end
+    length(axes) > 0 && link_axes!(axes...)
 end
 
 # don't do anything for most layout types
@@ -602,8 +598,7 @@ function link_axes!(layout::GridLayout, link::Symbol)
         end
     end
     if link === :square
-        sps = filter(l -> isa(l, Subplot), layout.grid)
-        if !isempty(sps)
+        if (sps = filter(l -> isa(l, Subplot), layout.grid)) |> !isempty
             base_axis = sps[1][:xaxis]
             for sp in sps
                 link_axes!(base_axis, sp[:xaxis])
@@ -615,9 +610,7 @@ function link_axes!(layout::GridLayout, link::Symbol)
         link_axes!(layout.grid, :xaxis)
         link_axes!(layout.grid, :yaxis)
     end
-    for l in layout.grid
-        link_axes!(l, link)
-    end
+    foreach(l -> link_axes!(l, link), layout.grid)
 end
 
 # -------------------------------------------------------------------------

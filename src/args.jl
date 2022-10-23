@@ -537,7 +537,6 @@ is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
 is_axis_attr_noletter(k) = k in _all_axis_args
 
 RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
-is_default_attribute(k) = k in _internal_args || k in _all_args || is_axis_attr_noletter(k)
 
 # -----------------------------------------------------------------------------
 autopick_ignore_none_auto(arr::AVec, idx::Integer) =
@@ -1969,14 +1968,11 @@ end
 function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
     # handle linking here.  if we're passed a list of
     # other subplots to link to, link them together
-    link = axis[:link]
-    if !isempty(link)
-        for other_sp in link
-            other_sp = get_subplot(plt, other_sp)
-            link_axes!(axis, get_axis(other_sp, letter))
-        end
-        axis.plotattributes[:link] = []
+    (link = axis[:link]) |> isempty && return
+    for other_sp in link
+        link_axes!(axis, get_axis(get_subplot(plt, other_sp), letter))
     end
+    axis.plotattributes[:link] = []
     nothing
 end
 

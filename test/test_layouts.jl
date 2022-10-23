@@ -56,7 +56,7 @@ end
 end
 
 @testset "Invalid viewport" begin
-    # github.com/JuliaPlots/Plots.jl/issues/2804
+    # JuliaPlots/Plots.jl/issues/2804
     pl = plot(1, layout = (10, 2))
     show(devnull, pl)
 end
@@ -129,5 +129,11 @@ end
     @test Plots.right(el) == 0Plots.mm
     @test Plots.bottom(el) == 0Plots.mm
 
-    @test_throws ErrorException Plots.layout_args(nothing)
+    plot(map(plot, 1:4)..., layout = (2, :))
+    plot(map(plot, 1:4)..., layout = (:, 2))
+end
+
+@testset "Link" begin
+    plot(map(plot, 1:4)..., link = :all)
+    plot(map(plot, 1:4)..., link = :square)
 end
