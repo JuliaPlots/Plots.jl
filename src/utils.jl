@@ -311,8 +311,8 @@ recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)
 # if values are not AbstractDicts, take the last definition (as does merge)
 recursive_merge(x...) = x[end]
 
-nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
-nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
+nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b); nothing)
+nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b); nothing)
 
 function nansplit(v::AVec)
     vs = Vector{eltype(v)}[]
@@ -334,6 +334,22 @@ function nanvcat(vs::AVec)
     foreach(v -> nanappend!(v_out, v), vs)
     v_out
 end
+
+sort_3d_axes(x, y, z, letter) =
+    if letter === :x
+        x, y, z
+    elseif letter === :y
+        y, x, z
+    else
+        z, y, x
+    end
+
+axes_letters(sp, letter) =
+    if RecipesPipeline.is3d(sp)
+        sort_3d_axes(:x, :y, :z, letter)
+    else
+        letter === :x ? (:x, :y) : (:y, :x)
+    end
 
 handle_surface(z) = z
 handle_surface(z::Surface) = permutedims(z.surf)
@@ -722,7 +738,7 @@ function attr!(series::Series; kw...)
         if haskey(_series_defaults, k)
             series[k] = v
         else
-            @warn("unused key $k in series attr")
+            @warn "unused key $k in series attr"
         end
     end
     _series_updated(series[:subplot].plt, series)
@@ -736,7 +752,7 @@ function attr!(sp::Subplot; kw...)
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else
-            @warn("unused key $k in subplot attr")
+            @warn "unused key $k in subplot attr"
         end
     end
     sp

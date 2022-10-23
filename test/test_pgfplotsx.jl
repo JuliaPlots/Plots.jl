@@ -21,6 +21,7 @@ with(:pgfplotsx) do
     @test count(x -> x isa PGFPlotsX.Plot, axis.contents) == 1
     @test !haskey(axis.contents[1].options.dict, "fill")
     @test occursin("documentclass", Plots.pgfx_preamble(pl))
+    @test occursin("documentclass", Plots.pgfx_preamble())
 
     @testset "Legends" begin
         pl = plot(rand(5, 2), lab = ["1" ""], arrow = true)
@@ -345,9 +346,7 @@ with(:pgfplotsx) do
     end
 
     @testset "Groups and Subplots" begin
-        group = rand(map((i -> begin
-            "group $(i)"
-        end), 1:4), 100)
+        group = rand(map(i -> "group $i", 1:4), 100)
         pl = plot(
             rand(100),
             layout = @layout([a b; c]),
@@ -456,7 +455,7 @@ with(:pgfplotsx) do
         @testset "Issues - actually compile `.tex`" begin
             # Plots.jl/issues/4308
             fn = tempname() * ".pdf"
-            pl = plot((1:1000) .^ 2, (1:1000) .^ 2, xscale = :log10)
+            pl = plot((1:10) .^ 2, (1:10) .^ 2, xscale = :log10)
             Plots.pdf(pl, fn)
             @test isfile(fn)
         end

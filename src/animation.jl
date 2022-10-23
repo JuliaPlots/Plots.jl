@@ -20,11 +20,11 @@ function frame(anim::Animation, plt::P = current()) where {P<:AbstractPlot}
     push!(anim.frames, filename)
 end
 
-giffn() = (isijulia() ? "tmp.gif" : tempname() * ".gif")
-movfn() = (isijulia() ? "tmp.mov" : tempname() * ".mov")
-mp4fn() = (isijulia() ? "tmp.mp4" : tempname() * ".mp4")
-webmfn() = (isijulia() ? "tmp.webm" : tempname() * ".webm")
-apngfn() = (isijulia() ? "tmp.png" : tempname() * ".png")
+giffn() = isijulia() ? "tmp.gif" : tempname() * ".gif"
+movfn() = isijulia() ? "tmp.mov" : tempname() * ".mov"
+mp4fn() = isijulia() ? "tmp.mp4" : tempname() * ".mp4"
+webmfn() = isijulia() ? "tmp.webm" : tempname() * ".webm"
+apngfn() = isijulia() ? "tmp.png" : tempname() * ".png"
 
 mutable struct FrameIterator
     itr
@@ -127,53 +127,38 @@ function buildanimation(
         if variable_palette
             # generate a colorpalette for each frame for highest quality, but larger filesize
             palette = "palettegen=stats_mode=single[pal],[0:v][pal]paletteuse=new=1"
-            ffmpeg_exe(
-                `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -lavfi "$palette" -loop $loop -y $fn`,
-            )
+            `-v $verbose_level -framerate $framerate -i $animdir/%06d.png -lavfi "$palette" -loop $loop -y $fn` |>
+            ffmpeg_exe
         else
             # generate a colorpalette first so ffmpeg does not have to guess it
-            ffmpeg_exe(
-                `-v $verbose_level -i $(animdir)/%06d.png -vf "palettegen=stats_mode=full" -y "$(animdir)/palette.bmp"`,
-            )
+            `-v $verbose_level -i $animdir/%06d.png -vf "palettegen=stats_mode=full" -y "$animdir/palette.bmp"` |>
+            ffmpeg_exe
             # then apply the palette to get better results
-            ffmpeg_exe(
-                `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn`,
-            )
+            `-v $verbose_level -framerate $framerate -i $animdir/%06d.png -i "$animdir/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn` |>
+            ffmpeg_exe
         end
     elseif file_extension(fn) in ("png", "apng")
         # FFMPEG specific command for APNG (Animated PNG) animations
-        ffmpeg_exe(
-            `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -plays $loop -f apng  -y $fn`,
-        )
+        `-v $verbose_level -framerate $framerate -i $animdir/%06d.png -plays $loop -f apng  -y $fn` |>
+        ffmpeg_exe
     else
-        ffmpeg_exe(
-            `-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -vf format=yuv420p -loop $loop -y $fn`,
-        )
+        `-v $verbose_level -framerate $framerate -i $animdir/%06d.png -vf format=yuv420p -loop $loop -y $fn` |>
+        ffmpeg_exe
     end
 
-    show_msg && @info("Saved animation to ", fn)
+    show_msg && @info "Saved animation to $fn"
     AnimatedGif(fn)
 end
 
 # write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
-    ext = file_extension(agif.filename)
-    if ext == "gif"
-        html =
-            "<img src=\"data:image/gif;base64," *
-            base64encode(read(agif.filename)) *
-            "\" />"
+    html = if (ext = file_extension(agif.filename)) == "gif"
+        "<img src=\"data:image/gif;base64,$(base64encode(read(agif.filename)))\" />"
     elseif ext == "apng"
-        html =
-            "<img src=\"data:image/png;base64," *
-            base64encode(read(agif.filename)) *
-            "\" />"
+        "<img src=\"data:image/png;base64,$(base64encode(read(agif.filename)))\" />"
     elseif ext in ("mov", "mp4", "webm")
         mimetype = ext == "mov" ? "video/quicktime" : "video/$ext"
-        html =
-            "<video controls><source src=\"data:$mimetype;base64," *
-            base64encode(read(agif.filename)) *
-            "\" type = \"$mimetype\"></video>"
+        "<video controls><source src=\"data:$mimetype;base64,$(base64encode(read(agif.filename)))\" type = \"$mimetype\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
     end
@@ -244,14 +229,14 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     end
 
     # full expression:
-    esc(quote
+    quote
         $freqassert                     # if filtering, check frequency is an Integer > 0
         $animsym = Plots.Animation()    # init animation object
         let $countersym = 1             # init iteration counter
-            $forloop                      # for loop, saving a frame after each iteration
+            $forloop                    # for loop, saving a frame after each iteration
         end
         $retval                         # return the animation object, or the gif
-    end)
+    end |> esc
 end
 
 """

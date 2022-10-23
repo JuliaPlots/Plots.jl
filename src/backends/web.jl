@@ -32,7 +32,7 @@ function open_browser_window(filename::AbstractString)
     @static if Sys.iswindows()
         return run(`$(ENV["COMSPEC"]) /c start "" "$(filename)"`)
     end
-    @warn("Unknown OS... cannot open browser window.")
+    @warn "Unknown OS... cannot open browser window."
 end
 
 function write_temp_html(plt::AbstractPlot)

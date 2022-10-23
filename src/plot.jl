@@ -128,7 +128,7 @@ function plot!(
 
     # compute the layout
     layout = layout_args(plotattributes, n)[1]
-    num_sp = sum([length(p.subplots) for p in plts])
+    num_sp = sum(length(p.subplots) for p in plts)
 
     # create a new plot object, with subplot list/map made of existing subplots.
     # note: we create a new backend figure for this new plot object
@@ -152,9 +152,7 @@ function plot!(
 
     series_attr = KW()
     for (k, v) in plotattributes
-        if is_series_attr(k)
-            series_attr[k] = pop!(plotattributes, k)
-        end
+        is_series_attr(k) && (series_attr[k] = pop!(plotattributes, k))
     end
 
     # create the layout

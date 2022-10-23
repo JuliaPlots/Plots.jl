@@ -296,8 +296,7 @@ end
     fr = plotattributes[:fillrange]
     if fr === nothing
         sp = plotattributes[:subplot]
-        yaxis = sp[:yaxis]
-        fr = if yaxis[:scale] === :identity
+        fr = if sp[:yaxis][:scale] === :identity
             0.0
         else
             NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
@@ -415,7 +414,7 @@ end
     procx = if nx == ny
         cv
     elseif nx == ny + 1
-        0.5 * diff(cv) + cv[1:(end - 1)]
+        0.5diff(cv) + cv[1:(end - 1)]
     else
         error(
             "bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))",
@@ -425,7 +424,7 @@ end
     # compute half-width of bars
     bw = plotattributes[:bar_width]
     hw = if bw === nothing
-        0.5 * _bar_width * if nx > 1
+        0.5_bar_width * if nx > 1
             ignorenan_minimum(filter(x -> x > 0, diff(sort(procx))))
         else
             1
@@ -435,11 +434,10 @@ end
     end
 
     # make fillto a vector... default fills to 0
-    fillto = plotattributes[:fillrange]
-    if fillto === nothing
+    if (fillto = plotattributes[:fillrange]) === nothing
         fillto = 0
     end
-    if (yscale in _logScales) && !all(_is_positive, fillto)
+    if yscale in _logScales && !all(_is_positive, fillto)
         fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
     end
 
@@ -483,8 +481,7 @@ end
         y := yseg.pts
         # expand attributes to match indices in new series data
         for k in _segmenting_vector_attributes ∪ _segmenting_array_attributes
-            v = get(plotattributes, k, nothing)
-            if v isa AVec
+            if (v = get(plotattributes, k, nothing)) isa AVec
                 if eachindex(v) != eachindex(y)
                     @warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
                 end
@@ -515,14 +512,12 @@ end
     m, n = size(z.surf)
     x_pts, y_pts = fill(NaN, 6 * m * n), fill(NaN, 6 * m * n)
     fz = zeros(m * n)
-    for i in 1:m # y
-        for j in 1:n # x
-            k = (j - 1) * m + i
-            inds = (6 * (k - 1) + 1):(6 * k - 1)
-            x_pts[inds] .= [xe[j], xe[j + 1], xe[j + 1], xe[j], xe[j]]
-            y_pts[inds] .= [ye[i], ye[i], ye[i + 1], ye[i + 1], ye[i]]
-            fz[k] = z.surf[i, j]
-        end
+    for i in 1:m, j in 1:n  # i ≡ y, j ≡ x
+        k = (j - 1) * m + i
+        inds = (6 * (k - 1) + 1):(6 * k - 1)
+        x_pts[inds] .= [xe[j], xe[j + 1], xe[j + 1], xe[j], xe[j]]
+        y_pts[inds] .= [ye[i], ye[i], ye[i + 1], ye[i + 1], ye[i]]
+        fz[k] = z.surf[i, j]
     end
     ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     fill_z := fz
@@ -564,7 +559,7 @@ _scale_adjusted_values(
 
 _binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real} =
     if scale in _logScales
-        isnan(min_value) ? T(1E-3) : min_value / T(_logScaleBases[scale]^log10(2))
+        isnan(min_value) ? T(1e-3) : min_value / T(_logScaleBases[scale]^log10(2))
     else
         zero(T)
     end
@@ -601,7 +596,7 @@ end
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)  # COV_EXCL_LINE
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
-    if (plotattributes[:bar_width] === nothing)
+    if plotattributes[:bar_width] === nothing
         bar_width := diff(edge)
     end
     x := _bin_centers(edge)
@@ -644,7 +639,6 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
     it_tuple_e = iterate(edge)
     a, it_state_e = it_tuple_e
     it_tuple_e = iterate(edge, it_state_e)
-
     it_tuple_w = iterate(weights)
 
     last_w = eltype(weights)(NaN)
@@ -653,26 +647,22 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
         b, it_state_e = it_tuple_e
         w, it_state_w = it_tuple_w
 
-        if (log_scale_x && a ≈ 0)
+        if log_scale_x && a ≈ 0
             a = oftype(a, b / _logScaleBases[xscale]^3)
         end
 
         if isnan(w)
             if !isnan(last_w)
-                push!(x, a)
-                push!(y, baseline)
-                push!(x, NaN)
-                push!(y, NaN)
+                push!(x, a, NaN)
+                push!(y, baseline, NaN)
             end
         else
             if isnan(last_w)
                 push!(x, a)
                 push!(y, baseline)
             end
-            push!(x, a)
-            push!(y, w)
-            push!(x, b)
-            push!(y, w)
+            push!(x, a, b)
+            push!(y, w, w)
         end
 
         a = oftype(a, b)
@@ -723,13 +713,13 @@ end
 end
 Plots.@deps stepbins path
 
-wand_edges(x...) = (
-    @warn(
-        "Load the StatsPlots package in order to use :wand bins. Defaulting to :auto",
-        once = true
-    );
+function wand_edges(x...)
+    @warn """"
+    Load the StatsPlots package in order to use :wand bins.
+    Defaulting to :auto
+    """ once = true
     :auto
-)
+end
 
 function _auto_binning_nbins(
     vs::NTuple{N,AbstractVector},
@@ -750,10 +740,7 @@ function _auto_binning_nbins(
         min(n_samples^(1 / (2 + N)), nd / (1 - cor(first(vs), last(vs))^2)^(3 // 8)) : nd # the >2-dimensional case does not have a nice solution to correlations
 
     v = vs[dim]
-
-    if mode === :auto
-        mode = :fd
-    end
+    mode === :auto && (mode = :fd)
 
     if mode === :sqrt  # Square-root choice
         _cl(sqrt(n_samples))
@@ -911,9 +898,7 @@ end
             float_weights = deepcopy(float_weights)
         end
         for (i, c) in enumerate(float_weights)
-            if c == 0
-                float_weights[i] = NaN
-            end
+            c == 0 && (float_weights[i] = NaN)
         end
     end
 
@@ -975,11 +960,9 @@ end
     # As long as no i,j,k are supplied this should work with PyPlot and GR
     seriestype := :surface
     if plotattributes[:connections] !== nothing
-        throw(
-            ArgumentError(
-                "Giving triangles using the connections argument is only supported on Plotly backend.",
-            ),
-        )
+        "Giving triangles using the connections argument is only supported on Plotly backend." |>
+        ArgumentError |>
+        throw
     end
     ()
 end
@@ -1077,8 +1060,7 @@ end
 
 function intersection_point(xA, yA, xB, yB, h, w)
     s = (yA - yB) / (xA - xB)
-    hh = h / 2
-    hw = w / 2
+    hh, hw = h / 2, w / 2
     # left or right?
     if -hh <= s * hw <= hh
         if xA > xB
@@ -1113,14 +1095,10 @@ end
 
 @attributes function error_style!(plotattributes::AKW)
     # errorbar color should soley determined by markerstrokecolor
-    if haskey(plotattributes, :marker_z)
-        reset_kw!(plotattributes, :marker_z)
-    end
-    if haskey(plotattributes, :line_z)
-        reset_kw!(plotattributes, :line_z)
-    end
-    msc = plotattributes[:markerstrokecolor]
-    msc = if msc === :match
+    haskey(plotattributes, :marker_z) && reset_kw!(plotattributes, :marker_z)
+    haskey(plotattributes, :line_z) && reset_kw!(plotattributes, :line_z)
+
+    msc = if (msc = plotattributes[:markerstrokecolor]) === :match
         plotattributes[:subplot][:foreground_color_subplot]
     elseif msc === :auto
         get_series_color(
@@ -1229,9 +1207,7 @@ end
 function quiver_using_arrows(plotattributes::AKW)
     plotattributes[:label] = ""
     plotattributes[:seriestype] = :path
-    if !isa(plotattributes[:arrow], Arrow)
-        plotattributes[:arrow] = arrow()
-    end
+    isa(plotattributes[:arrow], Arrow) || (plotattributes[:arrow] = arrow())
     is_3d = haskey(plotattributes, :z) && !isnothing(plotattributes[:z])
     velocity = error_zipit(plotattributes[:quiver])
     xorig, yorig = plotattributes[:x], plotattributes[:y]
@@ -1398,8 +1374,10 @@ end
     for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
         v = get(plotattributes, attr, nothing)
         if v isa AVec || v isa AMat && size(v, 2) == 1
-            @warn "Column vector attribute `$attr` reinterpreted as row vector (one value per shape).\n" *
-                  "Pass a row vector instead (e.g. using `permutedims`) to suppress this warning."
+            @warn """
+            Column vector attribute `$attr` reinterpreted as row vector (one value per shape).
+            Pass a row vector instead (e.g. using `permutedims`) to suppress this warning.
+            """
             plotattributes[attr] = permutedims(v)
         end
     end
@@ -1566,8 +1544,8 @@ findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
 # fallback function for finding non-zero elements of non-sparse matrices
 function findnz(A::AbstractMatrix)
     keysnz = findall(!iszero, A)
-    rs = [k[1] for k in keysnz]
-    cs = [k[2] for k in keysnz]
+    rs = map(k -> k[1], keysnz)
+    cs = map(k -> k[2], keysnz)
     zs = A[keysnz]
     rs, cs, zs
 end

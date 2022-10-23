@@ -234,7 +234,7 @@ function _write_typed(grp::Group, name::String, v::T) where {T}
     try # Check to see if type is supported
         typestr = HDF5PLOT_MAP_TELEM2STR[MT]
     catch
-        @warn("HDF5Plots does not yet support structs of type `$MT`\n\n$grp")
+        @warn "HDF5Plots does not yet support structs of type `$MT`\n\n$grp"
         return
     end
 
@@ -421,9 +421,7 @@ function _read(::Type{DefaultsDict}, grp::Group)
     # User should set DefaultsDict.defaults to one of:
     #    _plot_defaults, _subplot_defaults, _axis_defaults, _series_defaults
     path = HDF5.name(ds)
-    @warn(
-        "Cannot yet read DefaultsDict using _read_typed():\n    $path\nCannot fully reconstruct plot."
-    )
+    @warn "Cannot yet read DefaultsDict using _read_typed():\n    $path\nCannot fully reconstruct plot."
 end
 
 # 1st arg appears to be ref to subplots. Seems to work without it.
@@ -488,9 +486,6 @@ is_marker_supported(::HDF5Backend, shape::Shape) = true
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{HDF5Backend}) end
-
-# # this is called early in the pipeline, use it to make the plot current or something
-# function _prepare_plot_object(plt::Plot{HDF5Backend}) end
 
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{HDF5Backend}, sp::Subplot{HDF5Backend}) end

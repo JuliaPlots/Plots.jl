@@ -191,11 +191,6 @@ end
 
 # ---------------------------------------------------------------------------
 
-# # this is called early in the pipeline, use it to make the plot current or something
-# _prepare_plot_object(plt::Plot{InspectDRBackend}) = nothing
-
-# ---------------------------------------------------------------------------
-
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{InspectDRBackend}, sp::Subplot{InspectDRBackend})
     plot = sp.o

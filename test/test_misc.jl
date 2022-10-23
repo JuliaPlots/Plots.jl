@@ -95,7 +95,7 @@ end
     @test Plots.legend_angle((20.0, 10.0)) == (20.0, 10.0)
 end
 
-@testset "Axis scales" begin
+@testset "axis scales" begin
     with(:unicodeplots) do
         pl = plot(1:5, xscale = :log2, yscale = :ln)
         @test pl[1][:xaxis][:scale] === :log2
@@ -194,19 +194,6 @@ end
     @test 0.1Plots.pct / 1Plots.mm == 10Plots.mm
 end
 
-@testset "backend" begin
-    @test_logs (:warn, r".*not a valid backend package") withenv(
-        "PLOTS_DEFAULT_BACKEND" => "invalid",
-    ) do
-        Plots._pick_default_backend()
-    end
-    @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
-        Plots._pick_default_backend()
-    end == Plots.UnicodePlotsBackend()
-    @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
-    gr()  # restore to default
-end
-
 @testset "docstring" begin
     @test occursin("label", Plots._generate_doclist(Plots._all_series_args))
 end
@@ -242,10 +229,10 @@ end
         @test plot([1, 2, 5], seriestype = :scatterpath) isa Plot
         @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa Plot
 
-        let pl = plot(1:2, widen = false)
-            Plots.abline!([0, 3], [5, 0])
-            @test xlims(pl) == (1, 2)
-            @test ylims(pl) == (1, 2)
+        let pl = plot(1:2, -1:1, widen = false)
+            Plots.abline!([0, 3], [5, -5])
+            @test xlims(pl) == (+1, +2)
+            @test ylims(pl) == (-1, +1)
         end
 
         @test Plots.findnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
@@ -260,7 +247,7 @@ end
         i = [0, 0, 0, 1]
         j = [1, 2, 3, 2]
         k = [2, 3, 1, 3]
-        # github.com/JuliaPlots/Plots.jl/pull/3868#issuecomment-939446686
+        # JuliaPlots/Plots.jl/pull/3868#issuecomment-939446686
         mesh3d(
             x,
             y,
@@ -270,7 +257,7 @@ end
             fillalpha = 0.5,
         )
 
-        # github.com/JuliaPlots/Plots.jl/pull/3835#issue-1002117649
+        # JuliaPlots/Plots.jl/pull/3835#issue-1002117649
         p0 = [0.0, 0.0, 0.0]
         p1 = [1.0, 0.0, 0.0]
         p2 = [0.0, 1.0, 0.0]
@@ -301,5 +288,27 @@ end
 @testset "fillstyle" begin
     with(:gr) do
         @test histogram(rand(10); fillstyle = :/) isa Plot
+    end
+end
+
+@testset "group" begin
+    # from JuliaPlots/Plots.jl/issues/3630#issuecomment-876001540
+    a = repeat(1:3, inner = 4)
+    b = repeat(["low", "high"], inner = 2, outer = 3)
+    c = repeat(1:2, outer = 6)
+    d = [1, 1, 1, 2, 2, 2, 2, 4, 3, 3, 3, 6]
+    @test plot(b, d, group = (c, a), layout = (1, 3)) isa Plot
+end
+
+@testset "inline" begin
+    with(:gr) do
+        pl = plot(1:2, display_type = :inline)
+        show(devnull, pl)
+    end
+end
+
+@testset "showable" begin
+    with(:gr) do
+        @test showable(MIME("image/png"), plot(1:2))
     end
 end

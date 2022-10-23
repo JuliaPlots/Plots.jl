@@ -2,17 +2,14 @@
 
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
-function _plotly_framestyle(style::Symbol)
+_plotly_framestyle(style::Symbol) =
     if style in (:box, :axes, :zerolines, :grid, :none)
-        return style
+        style
     else
         default_style = get((semi = :box, origin = :zerolines), style, :axes)
-        @warn(
-            "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
-        )
+        @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
         default_style
     end
-end
 
 # --------------------------------------------------------------------------------------
 
@@ -32,7 +29,7 @@ end
 
 plotly_font(font::Font, color = font.color) = KW(
     :family => font.family,
-    :size   => round(Int, font.pointsize * 1.4),
+    :size   => round(Int, 1.4font.pointsize),
     :color  => rgba_string(color),
 )
 
@@ -52,13 +49,12 @@ plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper") = m
 plotly_scale(scale::Symbol) = scale === :log10 ? "log" : "-"
 
 function shrink_by(lo, sz, ratio)
-    amt = 0.5 * (1.0 - ratio) * sz
+    amt = 0.5(1 - ratio) * sz
     lo + amt, sz - 2amt
 end
 
 function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
-    aspect_ratio = get_aspect_ratio(sp)
-    if aspect_ratio !== :none
+    if (aspect_ratio = get_aspect_ratio(sp)) !== :none
         aspect_ratio === :equal && (aspect_ratio = 1.0)
         xmin, xmax = axis_limits(sp, :x)
         ymin, ymax = axis_limits(sp, :y)
@@ -85,7 +81,7 @@ function plotly_domain(sp::Subplot)
     pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
     x_domain = [pcts[1], pcts[1] + pcts[3]]
     y_domain = [pcts[2], pcts[2] + pcts[4]]
-    return x_domain, y_domain
+    x_domain, y_domain
 end
 
 function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
@@ -159,7 +155,6 @@ function plotly_polaraxis(sp::Subplot, axis::Axis)
         ax[:range] = axis_limits(sp, :y)
         ax[:orientation] = -90
     end
-
     ax
 end
 
@@ -187,7 +182,7 @@ function plotly_layout(plt::Plot)
                 xmm, ymm = left(bb), top(bbox(sp))
                 halign, valign = :left, :top
             elseif tpos === :center
-                xmm, ymm = 0.5 * (left(bb) + right(bb)), top(bbox(sp))
+                xmm, ymm = 0.5(left(bb) + right(bb)), top(bbox(sp))
                 halign, valign = :hcenter, :top
             elseif tpos === :right
                 xmm, ymm = right(bb), top(bbox(sp))
@@ -230,9 +225,9 @@ function plotly_layout(plt::Plot)
                     #2.6 multiplier set camera eye such that whole plot can be seen
                     :camera => KW(
                         :eye => KW(
-                            :x => cosd(azim) * sind(theta) * 2.6,
-                            :y => sind(azim) * sind(theta) * 2.6,
-                            :z => cosd(theta) * 2.6,
+                            :x => 2.6cosd(azim) * sind(theta),
+                            :y => 2.6sind(azim) * sind(theta),
+                            :z => 2.6cosd(theta),
                         ),
                         :projection => (
                             auto = "orthographic",  # we choose to unify backends by using a default "orthographic" proj when `:auto`
@@ -295,9 +290,7 @@ function plotly_layout(plt::Plot)
         #     end
         # end
 
-        if ispolar(sp)
-            plotattributes_out[:direction] = "counterclockwise"
-        end
+        ispolar(sp) && (plotattributes_out[:direction] = "counterclockwise")
 
         plotattributes_out
     end
@@ -313,39 +306,33 @@ end
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     plotattributes_out[:showlegend] = sp[:legend_position] !== :none
     legend_position = plotly_legend_pos(sp[:legend_position])
-    if sp[:legend_position] !== :none
-        plotattributes_out[:legend] = KW(
-            :bgcolor => rgba_string(sp[:legend_background_color]),
-            :bordercolor => rgba_string(sp[:legend_foreground_color]),
-            :borderwidth => 1,
-            :traceorder => "normal",
-            :xanchor => legend_position.xanchor,
-            :yanchor => legend_position.yanchor,
-            :font => plotly_font(legendfont(sp)),
-            :tracegroupgap => 0,
-            :x => legend_position.coords[1],
-            :y => legend_position.coords[2],
-            :title => KW(
-                :text => sp[:legend_title] === nothing ? "" : string(sp[:legend_title]),
-                :font => plotly_font(legendtitlefont(sp)),
-            ),
-        )
-    end
+    sp[:legend_position] === :none && return
+    plotattributes_out[:legend] = KW(
+        :bgcolor => rgba_string(sp[:legend_background_color]),
+        :bordercolor => rgba_string(sp[:legend_foreground_color]),
+        :borderwidth => 1,
+        :traceorder => "normal",
+        :xanchor => legend_position.xanchor,
+        :yanchor => legend_position.yanchor,
+        :font => plotly_font(legendfont(sp)),
+        :tracegroupgap => 0,
+        :x => legend_position.coords[1],
+        :y => legend_position.coords[2],
+        :title => KW(
+            :text => sp[:legend_title] === nothing ? "" : string(sp[:legend_title]),
+            :font => plotly_font(legendtitlefont(sp)),
+        ),
+    )
 end
 
-function plotly_legend_pos(pos::Symbol)
-    xleft = 0.07
-    xright = 1.0
-    ybot = 0.07
-    ytop = 1.0
-    xcenter = 0.55
-    ycenter = 0.52
-    center = 0.5
-    youtertop = 1.1
-    youterbot = -0.15
-    xouterright = 1.05
-    xouterleft = -0.15
-    plotly_legend_position_mapping = (
+#! format: off
+plotly_legend_position_mapping = let center = 0.5,
+    xcenter = 0.55, ycenter = 0.52,
+    xleft = 0.07, xright = 1.0,
+    ybot = 0.07, ytop = 1.0,
+    youtertop = 1.1, youterbot = -0.15,
+    xouterright = 1.05, xouterleft = -0.15
+    (
         right = (coords = [xright, ycenter], xanchor = "right", yanchor = "middle"),
         left = (coords = [xleft, ycenter], xanchor = "left", yanchor = "middle"),
         top = (coords = [xcenter, ytop], xanchor = "center", yanchor = "top"),
@@ -376,10 +363,11 @@ function plotly_legend_pos(pos::Symbol)
         ),
         default = (coords = [xright, ytop], xanchor = "auto", yanchor = "auto"),
     )
-
-    legend_position =
-        get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
 end
+#! format: on
+
+plotly_legend_pos(pos::Symbol) =
+    get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
 
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real,T<:Real} =
     (coords = v, xanchor = "left", yanchor = "top")
@@ -392,11 +380,11 @@ function plotly_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
     yanchors = ["bottom", "middle", "top"]
 
     if v[2] === :inner
-        rect = (0.07, 0.5, 1.0, 0.07, 0.52, 1.0)
+        rect = 0.07, 0.5, 1.0, 0.07, 0.52, 1.0
         xanchor = xanchors[legend_anchor_index(c)]
         yanchor = yanchors[legend_anchor_index(s)]
     else
-        rect = (-0.15, 0.5, 1.05, -0.15, 0.52, 1.1)
+        rect = -0.15, 0.5, 1.05, -0.15, 0.52, 1.1
         xanchor = xanchors[4 - legend_anchor_index(c)]
         yanchor = yanchors[4 - legend_anchor_index(s)]
     end
@@ -410,23 +398,23 @@ end
 plotly_layout_json(plt::Plot) = JSON.json(plotly_layout(plt), 4)
 
 plotly_colorscale(cg::ColorGradient, α = nothing) =
-    [[v, rgba_string(plot_color(cg.colors[v], α))] for v in cg.values]
+    map(v -> [v, rgba_string(plot_color(cg.colors[v], α))], cg.values)
 plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing) =
     if length(c) == 1
         [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
     else
         vals = range(0.0, stop = 1.0, length = length(c))
-        [[vals[i], rgba_string(plot_color(c[i], α))] for i in eachindex(c)]
+        map(i --> [vals[i], rgba_string(plot_color(c[i], α))], eachindex(c))
     end
 
 function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
     n = length(cg)
     cinds = repeat(1:n, inner = 2)
     vinds = vcat((i:(i + 1) for i in 1:n)...)
-    [
-        [cg.values[vinds[i]], rgba_string(plot_color(color_list(cg)[cinds[i]], α))] for
-        i in eachindex(cinds)
-    ]
+    map(
+        i -> [cg.values[vinds[i]], rgba_string(plot_color(color_list(cg)[cinds[i]], α))],
+        eachindex(cinds),
+    )
 end
 plotly_colorscale(c, α = nothing) = plotly_colorscale(_as_gradient(c), α)
 
@@ -487,7 +475,8 @@ plotly_data(v::AbstractArray) = v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 
-function plotly_native_data(axis::Axis, data::AbstractArray)
+plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
+plotly_native_data(axis::Axis, data::AbstractArray) =
     if !isempty(axis[:discrete_values])
         construct_categorical_data(data, axis)
     elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
@@ -495,10 +484,8 @@ function plotly_native_data(axis::Axis, data::AbstractArray)
     else
         data
     end
-end
-plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
 
-function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
+plotly_convert_to_datetime(x::AbstractArray, formatter::Function) =
     if formatter == datetimeformatter
         map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
     elseif formatter == dateformatter
@@ -510,7 +497,7 @@ function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
             "Invalid DateTime formatter. Expected Plots.datetime/date/time formatter but got $formatter",
         )
     end
-end
+
 #ensures that a gradient is called if a single color is supplied where a gradient is needed (e.g. if a series recipe defines marker_z)
 as_gradient(grad::ColorGradient, α) = grad
 as_gradient(grad, α) = cgrad(alpha = α)
@@ -718,7 +705,7 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(plotattributes_out, series)
     plotly_adjust_hover_label!(plotattributes_out, series[:hover])
 
-    return [merge(plotattributes_out, series[:extra_kwargs])]
+    [merge(plotattributes_out, series[:extra_kwargs])]
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
@@ -830,9 +817,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 )
             elseif !(series[:fillrange] in (false, nothing))
-                @warn(
-                    "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
-                )
+                @warn "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
             end
             plotattributes_out[:x], plotattributes_out[:y] = x[rng], y[rng]
 
@@ -878,7 +863,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     string(_cycle(series[:markershape], i)),
                 ),
                 # :opacity => needs_scatter_fix ? [1, 0] : 1,
-                :size => 2 * _cycle(series[:markersize], i),
+                :size => 2_cycle(series[:markersize], i),
                 :color => needs_scatter_fix ? [mcolor, mcolor_next] : mcolor,
                 :line => KW(
                     :color => needs_scatter_fix ? [lcolor, lcolor_next] : lcolor,
@@ -987,26 +972,24 @@ function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symb
     return plotattributes_out
 end
 
-function plotly_polar!(plotattributes_out::KW, series::Series)
-    # convert polar plots x/y to theta/radius
-    if ispolar(series[:subplot])
+plotly_polar!(plotattributes_out::KW, series::Series) =
+    if ispolar(series[:subplot])  # convert polar plots x/y to theta/radius
         theta, r = pop!(plotattributes_out, :x), pop!(plotattributes_out, :y)
         plotattributes_out[:theta] = rad2deg.(theta)
         plotattributes_out[:r] = r
         plotattributes_out[:type] = :scatterpolar
     end
-end
 
 function plotly_adjust_hover_label!(plotattributes_out::KW, hover)
     if hover === nothing
-        return nothing
+        return
     elseif all(in([:none, false]), hover)
         plotattributes_out[:hoverinfo] = "none"
     elseif any(!isnothing, hover)
         plotattributes_out[:hoverinfo] = "text"
         plotattributes_out[:text] = hover
     end
-    return nothing
+    nothing
 end
 
 # get a list of dictionaries, each representing the series params

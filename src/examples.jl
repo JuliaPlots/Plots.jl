@@ -29,7 +29,7 @@ const _examples = PlotExample[
     PlotExample( # 2
         "Functions, adding data, and animations",
         """
-        Plot multiple functions.  You can also put the function first, or use the form `plot(f,
+        Plot multiple functions. You can also put the function first, or use the form `plot(f,
         xmin, xmax)` where f is a Function or AbstractVector{Function}.\n\nGet series data:
         `x, y = plt[i]`.  Set series data: `plt[i] = (x,y)`. Add to the series with
         `push!`/`append!`.\n\nEasily build animations.  (`convert` or `ffmpeg` must be available
@@ -149,7 +149,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 10
         "Histogram2D",
-        :(histogram2d(randn(10000), randn(10000), nbins = 20)),
+        :(histogram2d(randn(10_000), randn(10_000), nbins = 20)),
     ),
     PlotExample( # 11
         "Line types",
@@ -206,7 +206,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 15
         "Histogram",
-        :(histogram(randn(1000), bins = :scott, weights = repeat(1:5, outer = 200))),
+        :(histogram(randn(1_000), bins = :scott, weights = repeat(1:5, outer = 200))),
     ),
     PlotExample( # 16
         "Subplots",
@@ -759,7 +759,7 @@ const _examples = PlotExample[
         quote
             d = MvNormal([1.0 0.75; 0.75 2.0])
             plot([(1, 2), (3, 2), (2, 1), (2, 3)])
-            scatter!(Point2.(eachcol(rand(d, 1000))), alpha = 0.25)
+            scatter!(Point2.(eachcol(rand(d, 1_000))), alpha = 0.25)
         end,
     ),
     PlotExample( # 47
@@ -1132,25 +1132,32 @@ const _examples = PlotExample[
         "Bézier curve",
         :(curves([1, 2, 3, 4], [1, 1, 2, 4], title = "Bézier curve")),
     ),
+    PlotExample(  # 62
+        "Filled area - hatched patterns",
+        "Plot hatched regions.",
+        quote
+            y = rand(10)
+            plot(y .+ 1, fillrange = y, fillstyle = :/)
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [2, 31]
 _backend_skips = Dict(
-    :gr => [30],
+    :gr => [],
     :pyplot => [22, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
-    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 50, 51, 55, 56],
+    :plotlyjs => [21, 24, 25, 30, 49, 50, 51, 55, 56, 62],
     :pgfplotsx => [
         6,  # images
         16,  # pgfplots thinks the upper panel is too small
-        30,  # @df
         32,  # spy
         49,  # polar heatmap
         51,  # image with custom axes
         56,  # custom bar plot
     ],
     :inspectdr =>
-        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60],
+        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60, 62],
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
@@ -1168,13 +1175,15 @@ _backend_skips = Dict(
         51,  # drawing on top of image unsupported
         55,  # mirror unsupported, resolution too low
         56,  # barplots
+        62,  # fillstyle
     ],
     :gaston => [
-        2,  # animations
+        2,   # animations
         31,  # animations
         49,  # TODO: support polar
         50,  # TODO: 1D data not supported for pm3d
         60,  # :perspective projection unsupported
+        62,  # fillstyle
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]

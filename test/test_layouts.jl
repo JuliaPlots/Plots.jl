@@ -1,8 +1,8 @@
 @testset "Plotting plots" begin
-    pl = @test_nowarn plot(plot(1:2), plot(1:2, size = (1200, 400)))
-    @test pl[:size] == (1200, 400)
-    pl = @test_nowarn plot(plot(1:2), plot(1:2), size = (1200, 400))
-    @test pl[:size] == (1200, 400)
+    pl = @test_nowarn plot(plot(1:2), plot(1:2, size = (1_200, 400)))
+    @test pl[:size] == (1_200, 400)
+    pl = @test_nowarn plot(plot(1:2), plot(1:2), size = (1_200, 400))
+    @test pl[:size] == (1_200, 400)
 end
 
 @testset "Subplot sclicing" begin
@@ -42,17 +42,17 @@ end
     pl = plot(plot(1:2); layout = grid(2, 2))
     @test length(pl) == 1
 
-    pl = plot((plot(1:2) for _ in 1:2)...; layout = grid(2, 2))
+    pl = plot(map(_ -> plot(1:2), 1:2)...; layout = grid(2, 2))
     @test length(pl) == 2
 
-    pl = plot((plot(1:2) for _ in 1:3)...; layout = grid(2, 2))
+    pl = plot(map(_ -> plot(1:2), 1:3)...; layout = grid(2, 2))
     @test length(pl) == 3
     @test length(plot!(pl, plot(1:2))) == 4
 
-    pl = plot((plot(1:2) for _ in 1:4)...; layout = grid(2, 2))
+    pl = plot(map(_ -> plot(1:2), 1:4)...; layout = grid(2, 2))
     @test length(pl) == 4
 
-    @test_throws ErrorException plot((plot(1:2) for _ in 1:5)...; layout = grid(2, 2))
+    @test_throws ErrorException plot(map(_ -> plot(1:2), 1:5)...; layout = grid(2, 2))
 end
 
 @testset "Invalid viewport" begin
@@ -62,7 +62,7 @@ end
 end
 
 @testset "Coverage" begin
-    pl = plot((plot(i) for i in 1:4)..., layout = (2, 2))
+    pl = plot(map(plot, 1:4)..., layout = (2, 2))
 
     sp = pl[end]
     @test sp isa Plots.Subplot

@@ -44,7 +44,6 @@ end
 
 # don't do anything as a default
 _create_backend_figure(plt::Plot) = nothing
-_prepare_plot_object(plt::Plot) = nothing
 _initialize_subplot(plt::Plot, sp::Subplot) = nothing
 
 _series_added(plt::Plot, series::Series) = nothing
@@ -142,10 +141,9 @@ function _pick_default_backend()
         if (sym = Symbol(lowercase(env_default))) in _backends
             backend(sym)
         else
-            @warn(
-                "You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t" *
-                join(sort(_backends), "\n\t")
-            )
+            @warn """You have set PLOTS_DEFAULT_BACKEND=$env_default, but it is not a valid backend package.
+            Choose from: \n\t$(join(sort(_backends), "\n\t"))
+            """
             _fallback_default_backend()
         end
     else
@@ -181,7 +179,7 @@ backend(sym::Symbol) =
     if sym in _backends
         backend(_backend_instance(sym))
     else
-        @warn("`:$sym` is not a supported backend.")
+        @warn "`:$sym` is not a supported backend."
         backend()
     end
 
@@ -294,7 +292,7 @@ end
 # ------------------------------------------------------------------------------
 # gr
 
-_initialize_backend(pkg::GRBackend) = nothing
+_initialize_backend(pkg::GRBackend) = nothing  # COV_EXCL_LINE
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
@@ -695,6 +693,7 @@ const _pyplot_attr = merge_with_base_supported([
     :fillrange,
     :fillcolor,
     :fillalpha,
+    :fillstyle,
     :bins,
     :bar_width,
     :bar_edges,
@@ -1058,11 +1057,11 @@ const _hdf5_marker = vcat(_allMarkers, :pixel)
 const _hdf5_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
-#Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
+# Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
 const HDF5PLOT_MAP_STR2TELEM = Dict{String,Type}()
 const HDF5PLOT_MAP_TELEM2STR = Dict{Type,String}()
 
-#Don't really like this global variable... Very hacky
+# Don't really like this global variable... Very hacky
 mutable struct HDF5Plot_PlotRef
     ref::Union{Plot,Nothing}
 end
