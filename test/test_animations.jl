@@ -39,9 +39,11 @@ end
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end when i % 5 == 0
 
-    Plots.@apng for i in 1:n
+    anim = Plots.@apng for i in 1:n
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end every 5
+    @test showable(MIME("image/png"), anim)
+
 end
 
 @testset "html" begin
@@ -69,16 +71,20 @@ end
 end
 
 @testset "animate" begin
-    gif = animate([1:2, 2:3]; show_msg = false)
-    @test gif isa Plots.AnimatedGif
+    anim = animate([1:2, 2:3]; show_msg = false, fps = 1 // 10)
+    @test anim isa Plots.AnimatedGif
+    @test showable(MIME("image/gif"), anim)
+
+
     fn = tempname() * ".apng"
     open(fn, "w") do io
-        show(io, MIME("image/png"), gif)
+        show(io, MIME("image/png"), anim)
     end
     @test filesize(fn) > 1_000
+
     fn = tempname() * ".gif"
     open(fn, "w") do io
-        show(io, MIME("image/gif"), gif)
+        show(io, MIME("image/gif"), anim)
     end
     @test filesize(fn) > 1_000
 end
