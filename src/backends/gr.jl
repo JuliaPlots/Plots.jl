@@ -109,16 +109,14 @@ mutable struct GRViewport{T}
     ymax::T
 end
 
-xyminmax(v::GRViewport) = v.xmin, v.xmax, v.ymin, v.ymax
+width(vp::GRViewport) = vp.xmax - vp.xmin
+height(vp::GRViewport) = vp.ymax - vp.ymin
 
-width(v::GRViewport) = v.xmax - v.xmin
-height(v::GRViewport) = v.ymax - v.ymin
+xcenter(vp::GRViewport) = 0.5(vp.xmin + vp.xmax)
+ycenter(vp::GRViewport) = 0.5(vp.ymin + vp.ymax)
 
-xcenter(v::GRViewport) = 0.5(v.xmin + v.xmax)
-ycenter(v::GRViewport) = 0.5(v.ymin + v.ymax)
-
-xposition(v::GRViewport, pos) = v.xmin + pos * width(v)
-yposition(v::GRViewport, pos) = v.ymin + pos * height(v)
+xposition(vp::GRViewport, pos) = vp.xmin + pos * width(vp)
+yposition(vp::GRViewport, pos) = vp.ymin + pos * height(vp)
 
 # --------------------------------------------------------------------------------------
 gr_is3d(st) = RecipesPipeline.is3d(st)
@@ -341,7 +339,7 @@ function gr_fill_viewport(vp::GRViewport, c)
     GR.setscale(0)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     gr_set_fillcolor(c)
-    GR.fillrect(xyminmax(vp)...)
+    GR.fillrect(vp.xmin, vp.xmax, vp.ymin, vp.ymax)
     GR.selntran(1)
     GR.restorestate()
     nothing
@@ -462,18 +460,16 @@ const gr_cbar_offsets = Ref((0.02, 0.07))
 
 function gr_set_viewport_cmap(sp::Subplot, vp::GRViewport)
     offset = gr_cbar_offsets[][gr_is3d(sp) ? 2 : 1]
-    args =
-        GRViewport(vp.xmax + offset, vp.xmax + offset + gr_cbar_width[], vp.ymin, vp.ymax)
-    GR.setviewport(xyminmax(args)...)
-    args
+    args = vp.xmax + offset, vp.xmax + offset + gr_cbar_width[], vp.ymin, vp.ymax
+    GR.setviewport(args...)
+    GRViewport(args...)
 end
 
 function gr_set_viewport_polar(vp)
-    x_min, x_max, y_min, y_max = xyminmax(vp)
-    y_max -= 0.05(x_max - x_min)
-    x_ctr = 0.5(x_min + x_max)
-    y_ctr = 0.5(y_min + y_max)
-    r = 0.5NaNMath.min(x_max - x_min, y_max - y_min)
+    x_ctr = xcenter(vp)
+    dist = vp.ymax - 0.05width(vp)
+    y_ctr = 0.5(vp.ymin + dist)
+    r = 0.5NaNMath.min(width(vp), dist - vp.ymin)
     GR.setviewport(x_ctr - r, x_ctr + r, y_ctr - r, y_ctr + r)
     GR.setwindow(-1, 1, -1, 1)
     r
@@ -936,7 +932,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     gr_fill_plotarea(sp, vp_plt)
 
     # set our plot area view
-    GR.setviewport(xyminmax(vp_plt)...)
+    GR.setviewport(vp_plt.xmin, vp_plt.xmax, vp_plt.ymin, vp_plt.ymax)
 
     # set the scale flags and window
     gr_set_window(sp, vp_plt)
