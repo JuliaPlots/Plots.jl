@@ -1113,7 +1113,7 @@ macro attributes(expr::Expr)
     expr
 end
 
-const rotations = Dict(
+const _rotations = Dict(
     1 => (  # noop
         center = :center,
         hcenter = :hcenter,
@@ -1156,19 +1156,22 @@ const rotations = Dict(
 given an arbitrary angle, determine the circle quadrant
 NE: I - NW: II - SW : III - SE: IV
 """
-quadrant(angle::Number) = if sind(angle) > 0
-    cosd(angle) > 0 ? 1 : 2
-else
-    cosd(angle) > 0 ? 4 : 3
-end::Int
+function quadrant(angle::Number)
+    sn, cs = sincosd(angle)
+    if sn > 0
+        cs > 0 ? 1 : 2
+    else
+        cs > 0 ? 4 : 3
+    end::Int
+end
 
-function rotate(halign::Symbol, valign::Symbol, angle::Number)
-    θ = angle + 45
+function rotate_alignements(halign::Symbol, valign::Symbol, angle::Number)
+    θ = angle + 45  # allow a +45/-45° sector
     Q = quadrant(θ)
-    r = rotations[Q]
+    r = _rotations[Q]
     if Q == 1 || Q == 3
         r[halign], r[valign]
     else
         r[valign], r[halign]  # swap !
-    end
+    end::NTuple{2,Symbol}
 end

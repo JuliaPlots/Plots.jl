@@ -143,6 +143,16 @@
         attr!(sp; title)
         @test sp[:title] == title
     end
+
+    @test Plots.rotate_alignements(:center, :center, 120) == (:center, :center)
+    @test Plots.rotate_alignements(:right, :top, 30) == (:right, :top)
+    @test Plots.rotate_alignements(:right, :top, 60) == (:left, :top)
+    @test Plots.rotate_alignements(:right, :top, 120) == (:left, :top)
+    @test Plots.rotate_alignements(:right, :top, 150) == (:left, :bottom)
+    @test Plots.rotate_alignements(:right, :top, 210) == (:left, :bottom)
+    @test Plots.rotate_alignements(:right, :top, 240) == (:right, :bottom)
+    @test Plots.rotate_alignements(:right, :top, 300) == (:right, :bottom)
+    @test Plots.rotate_alignements(:right, :top, 330) == (:right, :top)
 end
 
 @testset "NaN-separated Segments" begin

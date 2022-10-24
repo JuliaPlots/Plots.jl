@@ -882,7 +882,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
     end
     if (title = gr_colorbar_title(sp)).str != ""
-        padding.right[] += @static if false
+        padding.right[] += @static if true
             sz = gr_text_size(title)
             l = is_horizontal(title) ? first(sz) : last(sz)
             l * width * px
