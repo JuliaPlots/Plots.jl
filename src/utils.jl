@@ -1122,7 +1122,8 @@ const rotations = Dict(
         top = :top,
         left = :left,
         bottom = :bottom,
-    ), 2 => (  # rotate by +90°
+    ),
+    2 => (  # rotate by +90°
         center = :center,
         hcenter = :vcenter,
         vcenter = :hcenter,
@@ -1130,7 +1131,8 @@ const rotations = Dict(
         top = :left,
         left = :bottom,
         bottom = :right,
-    ), 3 => (  # rotate by +180°
+    ),
+    3 => (  # rotate by +180°
         center = :center,
         hcenter = :hcenter,
         vcenter = :vcenter,
@@ -1138,7 +1140,8 @@ const rotations = Dict(
         top = :bottom,
         left = :right,
         bottom = :top,
-    ), 4 => (  # rotate by +270°
+    ),
+    4 => (  # rotate by +270°
         center = :center,
         hcenter = :vcenter,
         vcenter = :hcenter,
@@ -1146,19 +1149,18 @@ const rotations = Dict(
         top = :right,
         left = :top,
         bottom = :left,
-    )
+    ),
 )
 
 """
 given an arbitrary angle, determine the circle quadrant
 NE: I - NW: II - SW : III - SE: IV
 """
-quadrant(angle::Number) =
-    if sind(angle) > 0
-        cosd(angle) > 0 ? 1 : 2
-    else
-        cosd(angle) > 0 ? 4 : 3
-    end::Int
+quadrant(angle::Number) = if sind(angle) > 0
+    cosd(angle) > 0 ? 1 : 2
+else
+    cosd(angle) > 0 ? 4 : 3
+end::Int
 
 function rotate(halign::Symbol, valign::Symbol, angle::Number)
     θ = angle + 45
