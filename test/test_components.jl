@@ -105,14 +105,23 @@ end
 
 @testset "Text" begin
     t = Plots.PlotText("foo")
-    f = Plots.font()
-
-    @test Plots.PlotText(nothing).str == "nothing"
     @test length(t) == 3
+
+    f = Plots.font()
+    @test Plots.PlotText(nothing).str == "nothing"
     @test text(t).str == "foo"
     @test text(t, f).str == "foo"
     @test text("bar", f).str == "bar"
     @test text(true).str == "true"
+
+    for rotation in -180:5:180
+        t = text("foo"; rotation)
+        if abs(rotation) ≤ 45 || abs(rotation) ≥ 135
+            @test Plots.is_horizontal(t)
+        else
+            @test !Plots.is_horizontal(t)
+        end
+    end
 end
 
 @testset "Annotations" begin
