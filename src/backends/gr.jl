@@ -459,12 +459,23 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vp
 end
 
 # change so we're focused on the viewport area
-gr_set_viewport_cmap(sp::Subplot, vp) = GR.setviewport(
-    xmax(vp) + (gr_is3d(sp) ? 0.07 : 0.02),
-    xmax(vp) + (gr_is3d(sp) ? 0.10 : 0.05),
-    ymin(vp),
-    ymax(vp),
-)
+
+# in case someone wants to modify these hardcoded factors
+const gr_cbar_width = Ref(0.03)
+const gr_cbar_off_2d = Ref(0.02)
+const gr_cbar_off_3d = Ref(0.07)
+
+function gr_set_viewport_cmap(sp::Subplot, vp::GRViewport)
+    offset = gr_is3d(sp) ? gr_cbar_off_3d[] : gr_cbar_off_2d[]
+    args = GRViewport(
+        xmax(vp) + offset,
+        xmax(vp) + offset + gr_cbar_width[],
+        ymin(vp),
+        ymax(vp),
+    )
+    GR.setviewport(xyminmax(args)...)
+    args
+end
 
 function gr_set_viewport_polar(vp)
     x_min, x_max, y_min, y_max = xyminmax(vp)
@@ -526,12 +537,28 @@ end
 
 const gr_colorbar_tick_size = Ref(0.005)
 
+function gr_colorbar_title(sp::Subplot) =
+    title = if (ttl = sp[:colorbar_title]) isa PlotText
+        ttl
+    else
+        text(ttl, colorbartitlefont(sp))
+    end
+    title.font.rotation += 90  # default rotated by 90° (vertical)
+    title
+end
+
+function gr_colorbar_info(sp::Subplot)
+    clims = gr_clims(sp)
+    maximum(first.(gr_text_size.(clims))), clims  # tick_max_width, clims
+end
+
 # add the colorbar
-function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, vp)
+function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     GR.savestate()
     x_min, x_max = gr_x_axislims(sp)
+    tick_max_width, clims = gr_colorbar_info(sp)
     z_min, z_max = clims
-    gr_set_viewport_cmap(sp, vp)
+    vp_cmap = gr_set_viewport_cmap(sp, vp)
     GR.setscale(0)
     GR.setwindow(x_min, x_max, z_min, z_max)
     if !isempty(cbar.gradients)
@@ -548,12 +575,12 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, vp)
         gr_set_transparency(_cbar_unique(get_fillalpha.(series), "fill alpha"))
         levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         # GR implicitly uses the maximal z value as the highest level
-        if last(levels) < clims[2]
+        if last(levels) < z_max
             @warn "GR: highest contour level less than maximal z value is not supported."
             # replace levels, rather than assign to last(levels), to ensure type
             # promotion in case levels is an integer array
             pop!(levels)
-            push!(levels, clims[2])
+            push!(levels, z_max)
         end
         colors = gr_colorbar_colors(last(series), clims)
         for (from, to, color) in zip(levels[1:(end - 1)], levels[2:end], colors)
@@ -586,14 +613,9 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, vp)
     # gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
     GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
 
-    title = if sp[:colorbar_title] isa PlotText
-        sp[:colorbar_title]
-    else
-        text(sp[:colorbar_title], colorbartitlefont(sp))
-    end
+    title = gr_colorbar_title(sp)
     gr_set_font(title.font, sp; halign = :center, valign = :top)
-    GR.setcharup(-1, 0)
-    gr_text(xmax(vp) + 0.1, ycenter(vp), title.str)
+    gr_text(xmax(vp_cmap) + tick_max_width + 2gr_colorbar_tick_size[], ycenter(vp), title.str)
 
     GR.restorestate()
 end
@@ -866,7 +888,12 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             end
         end
     end
-    sp[:colorbar_title] == "" || (padding.right[] += 4mm)
+    if (title = gr_colorbar_title(sp)).str != ""
+        # FIXME: adjust padding based on title size ?
+        # tick_max_width, = gr_colorbar_info(sp)
+        # padding.right[] += 1mm + tick_max_width + ...
+        padding.right[] += 4mm
+    end
     sp.minpad = (
         dpi * padding.left[],
         dpi * padding.top[],
@@ -893,7 +920,7 @@ function gr_clims(sp, args...)
     lo, hi
 end
 
-function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas)
+function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     _update_min_padding!(sp)
 
     # the viewports for this subplot and the whole plot
@@ -930,7 +957,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas)
     end
 
     # draw the colorbar
-    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, gr_clims(sp), vp_plt)
+    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, vp_plt)
 
     # add the legend
     gr_add_legend(sp, leg, vp_plt)
