@@ -373,6 +373,8 @@ text(str, args...; kw...) = PlotText(string(str), font(args...; kw...))
 
 Base.length(t::PlotText) = length(t.str)
 
+is_horizontal(t::PlotText) = abs(sind(t.font.rotation - 45)) < sind(45)
+
 # -----------------------------------------------------------------------
 
 struct Stroke

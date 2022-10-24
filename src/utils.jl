@@ -1112,3 +1112,66 @@ macro attributes(expr::Expr)
     RecipesBase.process_recipe_body!(expr)
     expr
 end
+
+const _rotations = Dict(
+    1 => (  # noop
+        center = :center,
+        hcenter = :hcenter,
+        vcenter = :vcenter,
+        right = :right,
+        top = :top,
+        left = :left,
+        bottom = :bottom,
+    ),
+    2 => (  # rotate by +90°
+        center = :center,
+        hcenter = :vcenter,
+        vcenter = :hcenter,
+        right = :top,
+        top = :left,
+        left = :bottom,
+        bottom = :right,
+    ),
+    3 => (  # rotate by +180°
+        center = :center,
+        hcenter = :hcenter,
+        vcenter = :vcenter,
+        right = :left,
+        top = :bottom,
+        left = :right,
+        bottom = :top,
+    ),
+    4 => (  # rotate by +270°
+        center = :center,
+        hcenter = :vcenter,
+        vcenter = :hcenter,
+        right = :bottom,
+        top = :right,
+        left = :top,
+        bottom = :left,
+    ),
+)
+
+"""
+given an arbitrary angle, determine the circle quadrant
+NE: I - NW: II - SW : III - SE: IV
+"""
+function quadrant(angle::Number)
+    sn, cs = sincosd(angle)
+    if sn > 0
+        cs > 0 ? 1 : 2
+    else
+        cs > 0 ? 4 : 3
+    end::Int
+end
+
+function rotate_alignements(halign::Symbol, valign::Symbol, angle::Number)
+    θ = angle + 45  # allow a +45/-45° sector
+    Q = quadrant(θ)
+    r = _rotations[Q]
+    if Q == 1 || Q == 3
+        r[halign], r[valign]
+    else
+        r[valign], r[halign]  # swap !
+    end::NTuple{2,Symbol}
+end
