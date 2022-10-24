@@ -458,11 +458,10 @@ end
 
 # in case someone wants to modify these hardcoded factors
 const gr_cbar_width = Ref(0.03)
-const gr_cbar_off_2d = Ref(0.02)
-const gr_cbar_off_3d = Ref(0.07)
+const gr_cbar_offsets = Ref((0.02, 0.07))
 
 function gr_set_viewport_cmap(sp::Subplot, vp::GRViewport)
-    offset = gr_is3d(sp) ? gr_cbar_off_3d[] : gr_cbar_off_2d[]
+    offset = gr_cbar_offsets[][gr_is3d(sp) ? 2 : 1]
     args =
         GRViewport(vp.xmax + offset, vp.xmax + offset + gr_cbar_width[], vp.ymin, vp.ymax)
     GR.setviewport(xyminmax(args)...)
@@ -474,7 +473,7 @@ function gr_set_viewport_polar(vp)
     y_max -= 0.05(x_max - x_min)
     x_ctr = 0.5(x_min + x_max)
     y_ctr = 0.5(y_min + y_max)
-    r = 0.5 * NaNMath.min(x_max - x_min, y_max - y_min)
+    r = 0.5NaNMath.min(x_max - x_min, y_max - y_min)
     GR.setviewport(x_ctr - r, x_ctr + r, y_ctr - r, y_ctr + r)
     GR.setwindow(-1, 1, -1, 1)
     r
@@ -541,7 +540,7 @@ end
 
 function gr_colorbar_info(sp::Subplot)
     clims = gr_clims(sp)
-    maximum(first.(gr_text_size.(clims))), clims  # tick_max_width, clims
+    maximum(first.(gr_text_size.(clims))), clims
 end
 
 # add the colorbar
@@ -887,10 +886,13 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
     end
     if (title = gr_colorbar_title(sp)).str != ""
-        # FIXME: adjust padding based on title size ?
-        # tick_max_width, = gr_colorbar_info(sp)
-        # padding.right[] += 1mm + tick_max_width + ...
-        padding.right[] += 4mm
+        padding.right[] += @static if false
+            sz = gr_text_size(title)
+            l = is_horizontal(title) ? first(sz) : last(sz)
+            l * width * px
+        else
+            4mm
+        end
     end
     sp.minpad = (
         dpi * padding.left[],
@@ -1592,7 +1594,7 @@ gr_add_title(sp, vp_plt, vp_sp) =
         xpos, ypos, halign, valign = if (loc = sp[:titlelocation]) === :left
             vp_plt.xmin, vp_sp.ymax, :left, :top
         elseif loc === :center
-            vp_plt.xcenter, vp_sp.ymax, :center, :top
+            xcenter(vp_plt), vp_sp.ymax, :center, :top
         elseif loc === :right
             vp_plt.xmax, vp_sp.ymax, :right, :top
         else
