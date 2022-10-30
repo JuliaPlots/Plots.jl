@@ -82,7 +82,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
             (scale = get(series, scales[n], :identity)) ∈ _logScales || continue
             for (i, v) in enumerate(s)
                 if v <= 0
-                    @warn "Invalid negative or zero value $v found at series index $i for $(scale) based $(scales[n])"
+                    @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
                     @debug "" exception = (DomainError(v), stacktrace())
                     break
                 end
@@ -153,8 +153,7 @@ anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
 function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
-    i = findfirst(!anynan(itr.args), nextidx:(itr.n2))
-    i === nothing && return
+    (i = findfirst(!anynan(itr.args), nextidx:(itr.n2))) === nothing && return
     nextval = nextidx + i - 1
 
     j = findfirst(anynan(itr.args), nextval:(itr.n2))
@@ -162,7 +161,7 @@ function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
 
     nextval:(nextnan - 1), nextnan
 end
-Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()
+Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()  # COV_EXCL_LINE
 
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
@@ -197,7 +196,7 @@ makevec(v::T) where {T} = T[v]
 maketuple(x::Real) = (x, x)
 maketuple(x::Tuple) = x
 
-RecipesPipeline.unzip(v) = unzip(v)
+RecipesPipeline.unzip(v) = unzip(v)  # COV_EXCL_LINE
 
 replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
     if haskey(aliases, k)
@@ -215,7 +214,7 @@ function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
     vmin, vmax = ignorenan_extrema(v)
     extra_min = ispolar ? min(v[1], (v[2] - v[1]) / 2) : (v[2] - v[1]) / 2
     extra_max = (v[end] - v[end - 1]) / 2
-    vcat(vmin - extra_min, 0.5 * (v[1:(end - 1)] + v[2:end]), vmax + extra_max)
+    vcat(vmin - extra_min, 0.5(v[1:(end - 1)] + v[2:end]), vmax + extra_max)
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
@@ -268,7 +267,7 @@ fakedata(sz::Int...) = fakedata(Random.seed!(PLOTS_SEED), sz...)
 function fakedata(rng::AbstractRNG, sz...)
     y = zeros(sz...)
     for r in 2:size(y, 1)
-        y[r, :] = 0.95 * vec(y[r - 1, :]) + randn(rng, size(y, 2))
+        y[r, :] = 0.95vec(y[r - 1, :]) + randn(rng, size(y, 2))
     end
     y
 end
@@ -706,10 +705,8 @@ end
 function copy_series!(series, letter)
     plt = series[:plot_object]
     for s in plt.series_list, l in (:x, :y, :z)
-        if s !== series || l !== letter
-            if s[l] === series[letter]
-                series[letter] = copy(series[letter])
-            end
+        if (s !== series || l !== letter) && s[l] === series[letter]
+            series[letter] = copy(series[letter])
         end
     end
 end

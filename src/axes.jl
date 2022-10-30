@@ -186,6 +186,8 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
                 x -> string("\$", replace(convert_sci_unicode(x), '×' => "\\times"), "\$"),
                 Showoff.showoff(unscaled_ticks, :auto),
             )
+        elseif formatter === :none
+            String[]
         else
             # there was an override for the formatter... use that on the unscaled ticks
             map(formatter, unscaled_ticks)
@@ -196,12 +198,9 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # end
         end
     else
-        # no finite ticks to show...
-        String[]
+        String[]  # no finite ticks to show...
     end
 
-    # @show unscaled_ticks labels
-    # labels = Showoff.showoff(unscaled_ticks, scale === :log10 ? :scientific : :auto)
     unscaled_ticks, labels
 end
 
