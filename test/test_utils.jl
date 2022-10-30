@@ -176,3 +176,9 @@ end
     X, Y, Z = Plots.mesh3d_triangles(x, y, z, cns)
     @test length(X) == length(Y) == length(Z) == 4length(i)
 end
+
+@testset "SentinelArrays - _cycle" begin
+    # discourse.julialang.org/t/plots-borking-on-sentinelarrays-produced-by-csv-read/89505
+    # `CSV` produces `SentinelArrays` data
+    @test scatter(ChainedVector([[1, 2], [3, 4]]), 1:4) isa Plot
+end
