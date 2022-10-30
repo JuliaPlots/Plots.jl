@@ -314,3 +314,7 @@ end
         @test showable(MIME("image/png"), plot(1:2))
     end
 end
+
+@testset "skipissing" begin
+    @test plot(skipmissing(1:5)) isa Plot
+end

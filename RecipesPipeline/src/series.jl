@@ -22,6 +22,7 @@ function _prepare_series_data(a::AbstractArray{T}) where {T<:MaybeNumber}
     end
     return float_a
 end
+_prepare_series_data(a::Base.SkipMissing) = collect(a)
 _prepare_series_data(a::AbstractArray{<:Missing}) = fill(NaN, axes(a))
 _prepare_series_data(a::AbstractArray{<:MaybeString}) =
     replace(x -> ismissing(x) ? "" : x, a)
