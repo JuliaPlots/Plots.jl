@@ -1734,9 +1734,9 @@ function gr_draw_markers(
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     (shapes = series[:markershape]) === :none && return
     for segment in series_segments(series, :scatter)
-        i = segment.attr_index
-        rng = intersect(eachindex(x), segment.range)
+        rng = intersect(eachindex(IndexLinear(), x), segment.range)
         isempty(rng) && continue
+        i = segment.attr_index
         ms = get_thickness_scaling(series) * _cycle(msize, i)
         msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
         shape = _cycle(shapes, i)

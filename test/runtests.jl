@@ -1,5 +1,6 @@
 import Unitful: m, s, cm, DimensionError
 import Plots: PLOTS_SEED, Plot, with
+import SentinelArrays: ChainedVector
 import GeometryBasics
 import ImageMagick
 import LibGit2
