@@ -204,3 +204,9 @@ end
     @test Plots.expand_extrema!(ax, nothing) == ax[:extrema]
     @test Plots.expand_extrema!(ax, true) == ax[:extrema]
 end
+
+@testset "no labels" begin
+    # github.com/JuliaPlots/Plots.jl/issues/4475
+    pl = plot(100:100:300, hcat([1, 2, 4], [-1, -2, -4]); yformatter = :none)
+    @test pl[1][:yaxis][:formatter] === :none
+end
