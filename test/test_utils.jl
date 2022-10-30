@@ -159,6 +159,13 @@ end
     @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
 end
 
+@testset "Invalid scale values" begin
+    @test_logs match_mode = :any (:warn, r"Invalid negative or zero value.*") png(
+        plot([0, 1], yscale = :log10),
+        tempname(),
+    )
+end
+
 @testset "Triangulation" begin
     x = [0, 1, 2, 0]
     y = [0, 0, 1, 2]
