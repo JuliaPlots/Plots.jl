@@ -100,6 +100,8 @@ end
     sd = _prepare_series_data(a)
     @test eltype(sd) == Float64
     @test all(isnan, sd)
+    sd = _prepare_series_data(skipmissing(1:5))
+    @test length(sd) == 5
     # TODO String, Volume etc
 end
 
