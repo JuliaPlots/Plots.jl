@@ -130,8 +130,11 @@ parent_bbox(layout::AbstractLayout) = bbox(parent(layout))
 # padding(layout::AbstractLayout) = (padding_w(layout), padding_h(layout))
 
 update_position!(layout::AbstractLayout) = nothing
-update_child_bboxes!(layout::AbstractLayout, minimum_perimeter = [0mm, 0mm, 0mm, 0mm]; kw...) =
-    nothing
+update_child_bboxes!(
+    layout::AbstractLayout,
+    minimum_perimeter = [0mm, 0mm, 0mm, 0mm];
+    kw...,
+) = nothing
 
 left(layout::AbstractLayout) = left(bbox(layout))
 top(layout::AbstractLayout) = top(bbox(layout))
@@ -369,7 +372,7 @@ function update_child_bboxes!(
         # this is the minimum perimeter as decided by this child's parent, so that
         # all children on this border have the same value
         min_child_perim = [
-            max(c == 1 ? leftpad(layout) : pad_left[c],  leftpad(inset_perim)),
+            max(c == 1 ? leftpad(layout) : pad_left[c], leftpad(inset_perim)),
             max(r == 1 ? toppad(layout) : pad_top[r], toppad(inset_perim)),
             max(c == nc ? rightpad(layout) : pad_right[c], rightpad(inset_perim)),
             max(r == nr ? bottompad(layout) : pad_bottom[r], bottompad(inset_perim)),
