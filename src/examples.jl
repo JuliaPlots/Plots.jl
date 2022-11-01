@@ -1140,6 +1140,38 @@ const _examples = PlotExample[
             plot(y .+ 1, fillrange = y, fillstyle = :/)
         end,
     ),
+    PlotExample(  # 63
+        "twinx - twiny",
+        quote
+            x = π:0.1:(2π)
+
+            kw = (; lab = "", title_loc = :left)
+
+            plot(
+                x,
+                sin.(x),
+                xaxis = "common X label",
+                yaxis = "Y label 1",
+                color = :red,
+                title = "twinx";
+                kw...,
+            )
+            p1 = plot!(twinx(), x, 2cos.(x), yaxis = "Y label 2"; kw...)
+
+            plot(
+                x,
+                cos.(x),
+                xaxis = "X label 1",
+                yaxis = "common Y label",
+                color = :red,
+                title = "twiny";
+                kw...,
+            )
+            p2 = plot!(twiny(), 2x, cos.(2x), xaxis = "X label 2"; kw...)
+
+            plot(p1, p2)
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages

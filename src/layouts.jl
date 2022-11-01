@@ -378,6 +378,12 @@ function update_child_bboxes!(
             c == nc ? rightpad(layout) : pad_right[c],
             r == nr ? bottompad(layout) : pad_bottom[r],
         ]
+        min_child_perimeter = [
+            max(leftpad(min_child_perimeter), leftpad(inset_perim)),
+            max(toppad(min_child_perimeter), toppad(inset_perim)),
+            max(rightpad(min_child_perimeter), rightpad(inset_perim)),
+            max(bottompad(min_child_perimeter), bottompad(inset_perim)),
+        ]
 
         # recursively update the child's children
         update_child_bboxes!(child, min_child_perimeter)
