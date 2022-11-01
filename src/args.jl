@@ -1862,13 +1862,6 @@ function _update_plot_args(plt::Plot, plotattributes_in::AKW)
     plotattributes = plt.attr
     plt[:background_color] = plot_color(plotattributes[:background_color])
     plt[:foreground_color] = fg_color(plotattributes)
-    # bg = plot_color(plt.attr[:background_color])
-    # fg = plt.attr[:foreground_color]
-    # if fg === :auto
-    #     fg = isdark(bg) ? colorant"white" : colorant"black"
-    # end
-    # plt.attr[:background_color] = bg
-    # plt.attr[:foreground_color] = plot_color(fg)
     color_or_nothing!(plt.attr, :background_color_outside)
 end
 

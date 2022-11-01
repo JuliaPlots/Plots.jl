@@ -130,7 +130,7 @@ parent_bbox(layout::AbstractLayout) = bbox(parent(layout))
 # padding(layout::AbstractLayout) = (padding_w(layout), padding_h(layout))
 
 update_position!(layout::AbstractLayout) = nothing
-update_child_bboxes!(layout::AbstractLayout, minimum_perimeter = [0mm, 0mm, 0mm, 0mm]) =
+update_child_bboxes!(layout::AbstractLayout, minimum_perimeter = [0mm, 0mm, 0mm, 0mm]; kw...) =
     nothing
 
 left(layout::AbstractLayout) = left(bbox(layout))
@@ -344,10 +344,6 @@ function update_child_bboxes!(
     layout.widths = recompute_lengths(layout.widths)
     layout.heights = recompute_lengths(layout.heights)
 
-    # normalize widths/heights so they sum to 1
-    # denom_w = sum(layout.widths)
-    # denom_h = sum(layout.heights)
-
     # we have all the data we need... lets compute the plot areas and set the bounding boxes
     for r in 1:nr, c in 1:nc
         child = layout[r, c]
@@ -372,21 +368,15 @@ function update_child_bboxes!(
 
         # this is the minimum perimeter as decided by this child's parent, so that
         # all children on this border have the same value
-        min_child_perimeter = [
-            c == 1 ? leftpad(layout) : pad_left[c],
-            r == 1 ? toppad(layout) : pad_top[r],
-            c == nc ? rightpad(layout) : pad_right[c],
-            r == nr ? bottompad(layout) : pad_bottom[r],
-        ]
-        min_child_perimeter = [
-            max(leftpad(min_child_perimeter), leftpad(inset_perim)),
-            max(toppad(min_child_perimeter), toppad(inset_perim)),
-            max(rightpad(min_child_perimeter), rightpad(inset_perim)),
-            max(bottompad(min_child_perimeter), bottompad(inset_perim)),
+        min_child_perim = [
+            max(c == 1 ? leftpad(layout) : pad_left[c],  leftpad(inset_perim)),
+            max(r == 1 ? toppad(layout) : pad_top[r], toppad(inset_perim)),
+            max(c == nc ? rightpad(layout) : pad_right[c], rightpad(inset_perim)),
+            max(r == nr ? bottompad(layout) : pad_bottom[r], bottompad(inset_perim)),
         ]
 
         # recursively update the child's children
-        update_child_bboxes!(child, min_child_perimeter)
+        update_child_bboxes!(child, min_child_perim; insets)
     end
 end
 

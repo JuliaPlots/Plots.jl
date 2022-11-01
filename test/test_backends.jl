@@ -68,19 +68,19 @@ function image_comparison_tests(
     reffn = reference_file(pkg, idx, Plots._current_plots_version)
     newfn = joinpath(reference_path(pkg, Plots._current_plots_version), "ref$idx.png")
 
-    ex = quote
+    imports = something(example.imports, :())
+    exprs = quote
         Plots.debugplots($debug)
         backend($(QuoteNode(pkg)))
         theme(:default)
         rng = StableRNG(Plots.PLOTS_SEED)
-        $(something(example.imports, :()))
         $(replace_rand(example.exprs))
-        png($fn)
     end
-    @debug ex
+    @debug imports exprs
 
+    func = fn -> Base.eval.(Ref(TESTS_MODULE), (imports, exprs, :(png($fn))))
     test_images(
-        VisualTest(fn -> Base.eval(TESTS_MODULE, ex), reffn),
+        VisualTest(func, reffn),
         newfn = newfn,
         popup = popup,
         sigma = sigma,

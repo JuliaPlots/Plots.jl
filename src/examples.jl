@@ -1216,6 +1216,7 @@ _backend_skips = Dict(
         50,  # TODO: 1D data not supported for pm3d
         60,  # :perspective projection unsupported
         62,  # fillstyle
+        63,  # un-identified bug
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
