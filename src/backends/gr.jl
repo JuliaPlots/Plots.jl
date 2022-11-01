@@ -1116,7 +1116,7 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         end + vp.ymax
     else
         # Adding min y to shift legend pos to correct graph (#2377)
-        0.5(height(vp) + leg.h) + vp.xmin
+        0.5(height(vp) + leg.h) + vp.ymin
     end
     xpos, ypos
 end

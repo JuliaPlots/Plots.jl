@@ -72,7 +72,7 @@ function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
         yi = y[groupby.group_indices[i]]
         y_mat[getindex.(Ref(x_ind), xi), i] = yi
     end
-    return y_mat
+    y_mat
 end
 
 groupedvec2mat(x_ind, x, y::Tuple, groupby) =
@@ -81,7 +81,7 @@ groupedvec2mat(x_ind, x, y::Tuple, groupby) =
 group_as_matrix(t) = false  # used in `StatsPlots`
 
 # split the group into 1 series per group, and set the label and idxfilter for each
-@recipe function f(groupby::GroupBy, args...)
+@recipe function f(groupby::GroupBy, args...)  # COV_EXCL_LINE
     plt = plotattributes[:plot_object]
     group_length = maximum(union(groupby.group_indices...))
     if !group_as_matrix(args[1])

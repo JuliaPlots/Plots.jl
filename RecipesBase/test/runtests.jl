@@ -37,8 +37,10 @@ RecipesBase.@recipe function plot(t::Dummy, args...) end
 end
 
 @testset "layout" begin
+    grid(x, y) = (x, y)  # fake `grid` function for `Plots`
     @test RecipesBase.@layout([a b; c]) isa Matrix
     @test RecipesBase.@layout([a{0.3w}; b{0.2h}]) isa Matrix
+    @test RecipesBase.@layout([a{0.3w} [grid(3, 3); b{0.2h}]]) isa Matrix
     @test RecipesBase.@layout([_ ° _; ° ° °; ° ° °]) isa Matrix
 end
 
