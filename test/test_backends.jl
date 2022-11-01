@@ -63,28 +63,23 @@ function image_comparison_tests(
     tol = 1e-2,
 )
     example = Plots._examples[idx]
-    @info("Testing plot: $pkg:$idx:$(example.header)")
+    @info "Testing plot: $pkg:$idx:$(example.header)"
 
     reffn = reference_file(pkg, idx, Plots._current_plots_version)
     newfn = joinpath(reference_path(pkg, Plots._current_plots_version), "ref$idx.png")
     @debug example.exprs
 
     # test function
-    func =
-        fn -> begin
-            for ex in (
-                :(Plots._debugMode[] = $debug),
-                :(backend($(QuoteNode(pkg)))),
-                :(theme(:default)),
-                :(default(size = (500, 300), show = false, reuse = true)),
-                :(rng = StableRNG(Plots.PLOTS_SEED)),
-                something(example.imports, :()),
-                replace_rand(example.exprs),
-                :(png($fn)),
-            )
-                Base.eval(TESTS_MODULE, ex)
-            end
-        end
+    func = fn -> Base.eval(TESTS_MODULE, quote
+        Plots._debugMode[] = $debug
+        backend($(QuoteNode(pkg)))
+        theme(:default)
+        default(show = false, reuse = true)
+        rng = StableRNG(Plots.PLOTS_SEED)
+        $(something(example.imports, :()))
+        $(replace_rand(example.exprs))
+        png($fn)
+    end)
 
     test_images(
         VisualTest(func, reffn),

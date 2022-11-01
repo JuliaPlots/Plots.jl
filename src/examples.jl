@@ -1169,7 +1169,8 @@ const _examples = PlotExample[
             )
             p2 = plot!(twiny(), 2x, cos.(2x), xaxis = "X label 2"; kw...)
 
-            plot(p1, p2)
+            pl = plot(p1, p2)
+            pl
         end,
     ),
 ]
