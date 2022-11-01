@@ -97,7 +97,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         :zeroline => framestyle === :zerolines,
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
         :showline => framestyle in (:box, :axes) && axis[:showaxis],
-        :linecolor => rgba_string(plot_color(axis[:foreground_color_axis])),
+        :line_color => rgba_string(plot_color(axis[:foreground_color_axis])),
         :ticks =>
             axis[:tick_direction] === :out ? "outside" :
             axis[:tick_direction] === :in ? "inside" : "",
@@ -121,7 +121,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         ax[:tickcolor] =
             framestyle in (:zerolines, :grid) || !axis[:showaxis] ?
             rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
-        ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
+        ax[:line_color] = rgba_string(axis[:foreground_color_axis])
 
         # ticks
         if axis[:ticks] !== :native
@@ -540,7 +540,7 @@ function plotly_series(plt::Plot, series::Series)
     plotattributes_out[:name] = series[:label]
 
     isscatter = st in (:scatter, :scatter3d, :scattergl)
-    hasmarker = isscatter || series[:markershape] !== :none
+    hasmarker = isscatter || series[:marker_shape] !== :none
     hasline = st in (:path, :path3d, :straightline)
     hasfillrange =
         st in (:path, :scatter, :scattergl, :straightline) &&
@@ -598,7 +598,7 @@ function plotly_series(plt::Plot, series::Series)
             end
         end
         plotattributes_out[:colorscale] =
-            plotly_colorscale(series[:linecolor], series[:linealpha])
+            plotly_colorscale(series[:line_color], series[:line_alpha])
         plotattributes_out[:showscale] = hascolorbar(sp) && hascolorbar(series)
 
     elseif st in (:surface, :wireframe)
@@ -609,8 +609,8 @@ function plotly_series(plt::Plot, series::Series)
             wirelines = KW(
                 :show => true,
                 :color =>
-                    rgba_string(plot_color(series[:linecolor], series[:linealpha])),
-                :highlightwidth => series[:linewidth],
+                    rgba_string(plot_color(series[:line_color], series[:line_alpha])),
+                :highlightwidth => series[:line_width],
             )
             plotattributes_out[:contours] =
                 KW(:x => wirelines, :y => wirelines, :z => wirelines)
@@ -679,14 +679,14 @@ function plotly_series(plt::Plot, series::Series)
         inds = eachindex(x)
         plotattributes_out[:marker] = KW(
             :symbol =>
-                get_plotly_marker(series[:markershape], string(series[:markershape])),
-            # :opacity => series[:markeralpha],
+                get_plotly_marker(series[:marker_shape], string(series[:marker_shape])),
+            # :opacity => series[:marker_alpha],
             :size => 2_cycle(series[:markersize], inds),
             :color =>
                 rgba_string.(
                     plot_color.(
-                        get_markercolor.(series, inds),
-                        get_markeralpha.(series, inds),
+                        get_marker_color.(series, inds),
+                        get_marker_alpha.(series, inds),
                     ),
                 ),
             :line => KW(
@@ -750,7 +750,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         if series[:markerstrokewidth] > 0
             plotattributes_out[:line] = KW(
                 :color => rgba_string(
-                    plot_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
+                    plot_color(get_line_color(series, clims, i), get_line_alpha(series, i)),
                 ),
                 :width => get_linewidth(series, i),
                 :dash => string(get_linestyle(series, i)),
@@ -778,7 +778,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
     st = series[:seriestype]
     sp = series[:subplot]
     isscatter = st in (:scatter, :scatter3d, :scattergl)
-    hasmarker = isscatter || series[:markershape] !== :none
+    hasmarker = isscatter || series[:marker_shape] !== :none
     hasline = st in (:path, :path3d, :straightline)
     hasfillrange =
         st in (:path, :scatter, :scattergl, :straightline) &&
@@ -835,12 +835,12 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         # add "marker"
         if hasmarker
             mcolor = rgba_string(
-                plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
+                plot_color(get_marker_color(series, clims, i), get_marker_alpha(series, i)),
             )
             mcolor_next = if (mz = series[:marker_z]) !== nothing && i < length(mz)
                 plot_color(
-                    get_markercolor(series, clims, i + 1),
-                    get_markeralpha(series, i + 1),
+                    get_marker_color(series, clims, i + 1),
+                    get_marker_alpha(series, i + 1),
                 ) |> rgba_string
             else
                 mcolor
@@ -859,8 +859,8 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
 
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
-                    _cycle(series[:markershape], i),
-                    string(_cycle(series[:markershape], i)),
+                    _cycle(series[:marker_shape], i),
+                    string(_cycle(series[:marker_shape], i)),
                 ),
                 # :opacity => needs_scatter_fix ? [1, 0] : 1,
                 :size => 2_cycle(series[:markersize], i),
@@ -876,7 +876,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         if hasline
             plotattributes_out[:line] = KW(
                 :color => rgba_string(
-                    plot_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
+                    plot_color(get_line_color(series, clims, i), get_line_alpha(series, i)),
                 ),
                 :width => get_linewidth(series, i),
                 :shape => if st === :steppre

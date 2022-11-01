@@ -253,8 +253,8 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
         for (i, rng) in enumerate(iter_segments(x, y))
             nmax = i
             if length(rng) > 1
-                linewidth = series[:linewidth]
-                c = plot_color(get_linecolor(series), get_linealpha(series))
+                linewidth = series[:line_width]
+                c = plot_color(get_line_color(series), get_line_alpha(series))
                 linecolor = _inspectdr_mapcolor(_cycle(c, i))
                 c = plot_color(get_fillcolor(series), get_fillalpha(series))
                 fillcolor = _inspectdr_mapcolor(_cycle(c, i))
@@ -271,8 +271,8 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
 
         i = (nmax >= 2 ? div(nmax, 2) : nmax) #Must pick one set of colors for legend
         if i > 1 #Add dummy waveform for legend entry:
-            linewidth = series[:linewidth]
-            c = plot_color(get_linecolor(series), get_linealpha(series))
+            linewidth = series[:line_width]
+            c = plot_color(get_line_color(series), get_line_alpha(series))
             linecolor = _inspectdr_mapcolor(_cycle(c, i))
             c = plot_color(get_fillcolor(series), get_fillalpha(series))
             fillcolor = _inspectdr_mapcolor(_cycle(c, i))
@@ -290,14 +290,14 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
         end
     elseif st in (:path, :scatter, :straightline) #, :steppre, :stepmid, :steppost)
         # NOTE: In Plots.jl, :scatter plots have 0-linewidths (I think).
-        linewidth = series[:linewidth]
+        linewidth = series[:line_width]
         # More efficient & allows some support for markerstrokewidth:
-        _style = (0 == linewidth ? :none : series[:linestyle])
+        _style = (0 == linewidth ? :none : series[:line_style])
         wfrm = InspectDR.add(plot, x, y, id = series[:label])
         wfrm.line = InspectDR.line(
             style = _style,
-            width = series[:linewidth],
-            color = plot_color(get_linecolor(series), get_linealpha(series)),
+            width = series[:line_width],
+            color = plot_color(get_line_color(series), get_line_alpha(series)),
         )
         # InspectDR does not control markerstrokewidth independently.
         if _style === :none
@@ -305,13 +305,13 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
             wfrm.line.width = series[:markerstrokewidth]
         end
         wfrm.glyph = InspectDR.glyph(
-            shape = _inspectdr_mapglyph(series[:markershape]),
+            shape = _inspectdr_mapglyph(series[:marker_shape]),
             size = _inspectdr_mapglyphsize(series[:markersize]),
             color = _inspectdr_mapcolor(
                 plot_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
             ),
             fillcolor = _inspectdr_mapcolor(
-                plot_color(get_markercolor(series, clims), get_markeralpha(series)),
+                plot_color(get_marker_color(series, clims), get_marker_alpha(series)),
             ),
         )
     end

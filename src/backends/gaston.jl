@@ -302,7 +302,7 @@ function gaston_seriesconf!(
                 curveconf,
                 "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt",
             )
-        elseif series[:markershape] === :none  # simplepath
+        elseif series[:marker_shape] === :none  # simplepath
             push!(curveconf, "w lines lc $lc dt $dt lw $lw")
         else
             pt, ps, mc = gaston_mk_ms_mc(series, clims, i)
@@ -520,15 +520,15 @@ gaston_valign(k) = (top = :top, vcenter = :center, bottom = :bottom)[k]
 gaston_alpha(alpha) = alpha === nothing ? 0 : alpha
 
 gaston_lc_ls_lw(series::Series, clims, i::Int) = (
-    gaston_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
+    gaston_color(get_line_color(series, clims, i), get_line_alpha(series, i)),
     gaston_linestyle(get_linestyle(series, i)),
     get_linewidth(series, i),
 )
 
 gaston_mk_ms_mc(series::Series, clims, i::Int) = (
-    gaston_marker(_cycle(series[:markershape], i), get_markeralpha(series, i)),
+    gaston_marker(_cycle(series[:marker_shape], i), get_marker_alpha(series, i)),
     _cycle(series[:markersize], i) * 1.3 / 5,
-    gaston_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
+    gaston_color(get_marker_color(series, clims, i), get_marker_alpha(series, i)),
 )
 
 function gaston_font(f; rot = true, align = true, color = true, scale = 1)

@@ -367,9 +367,9 @@ function gr_draw_marker(series, xi, yi, zi, clims, i, msize, strokewidth, shape:
     xs, ys = getindex.(xs_ys, 1), getindex.(xs_ys, 2)
 
     # draw the interior
-    mc = get_markercolor(series, clims, i)
+    mc = get_marker_color(series, clims, i)
     gr_set_fill(mc)
-    gr_set_transparency(mc, get_markeralpha(series, i))
+    gr_set_transparency(mc, get_marker_alpha(series, i))
     GR.fillarea(xs, ys)
 
     # draw the shapes
@@ -384,8 +384,8 @@ end
 function gr_draw_marker(series, xi, yi, zi, clims, i, msize, strokewidth, shape::Symbol)
     GR.setborderwidth(strokewidth)
     gr_set_bordercolor(get_markerstrokecolor(series, i))
-    gr_set_markercolor(get_markercolor(series, clims, i))
-    gr_set_transparency(get_markeralpha(series, i))
+    gr_set_markercolor(get_marker_color(series, clims, i))
+    gr_set_transparency(get_marker_alpha(series, i))
     GR.setmarkertype(gr_markertypes[shape])
     GR.setmarkersize(0.3msize / gr_nominal_size(series))
     if zi === nothing
@@ -583,10 +583,10 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         gr_set_line(
             _cbar_unique(get_linewidth.(series), "line width"),
             _cbar_unique(get_linestyle.(series), "line style"),
-            _cbar_unique(get_linecolor.(series, Ref(clims)), "line color"),
+            _cbar_unique(get_line_color.(series, Ref(clims)), "line color"),
             sp,
         )
-        gr_set_transparency(_cbar_unique(get_linealpha.(series), "line alpha"))
+        gr_set_transparency(_cbar_unique(get_line_alpha.(series), "line alpha"))
         levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         colors = gr_colorbar_colors(last(series), clims)
         for (line, color) in zip(levels, colors)
@@ -1005,7 +1005,7 @@ function gr_add_legend(sp, leg, viewport_area)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
             clims = gr_clims(sp, series)
-            lc = get_linecolor(series, clims)
+            lc = get_line_color(series, clims)
             gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
             _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
 
@@ -1026,8 +1026,8 @@ function gr_add_legend(sp, leg, viewport_area)
                 x, y = [l, r, r, l, l], [b, b, t, t, b]
                 gr_set_transparency(fc, get_fillalpha(series))
                 gr_polyline(x, y, GR.fillarea)
-                lc = get_linecolor(series, clims)
-                gr_set_transparency(lc, get_linealpha(series))
+                lc = get_line_color(series, clims)
+                gr_set_transparency(lc, get_line_alpha(series))
                 gr_set_line(get_linewidth(series), get_linestyle(series), lc, sp)
                 st === :shape && gr_polyline(x, y)
             end
@@ -1040,7 +1040,7 @@ function gr_add_legend(sp, leg, viewport_area)
                 GR.polyline(xpos .+ [lft, rgt], ypos .+ (filled ? [top, top] : [0, 0]))
             end
 
-            if (msh = series[:markershape]) !== :none
+            if (msh = series[:marker_shape]) !== :none
                 msz = first(series[:markersize])
                 msw = first(series[:markerstrokewidth])
                 gr_draw_marker(
@@ -1673,14 +1673,14 @@ function gr_add_series(sp, series)
             x, y = straightline_data(series)
         end
         gr_draw_segments(series, x, y, nothing, frng, clims)
-        if series[:markershape] !== :none
+        if series[:marker_shape] !== :none
             gr_draw_markers(series, x, y, nothing, clims)
         end
     elseif st === :shape
         gr_draw_shapes(series, clims)
     elseif st in (:path3d, :scatter3d)
         gr_draw_segments(series, x, y, z, nothing, clims)
-        if st === :scatter3d || series[:markershape] !== :none
+        if st === :scatter3d || series[:marker_shape] !== :none
             gr_draw_markers(series, x, y, z, clims)
         end
     elseif st === :contour
@@ -1744,9 +1744,9 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
             gr_set_transparency(fc, get_fillalpha(series, i))
             GR.fillarea(fx, fy)
         end
-        (lc = get_linecolor(series, clims, i)) |> gr_set_fillcolor
+        (lc = get_line_color(series, clims, i)) |> gr_set_fillcolor
         gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
-        gr_set_transparency(lc, get_linealpha(series, i))
+        gr_set_transparency(lc, get_line_alpha(series, i))
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
         elseif is2d
@@ -1771,7 +1771,7 @@ function gr_draw_markers(
 )
     isempty(x) && return
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
-    (shapes = series[:markershape]) === :none && return
+    (shapes = series[:marker_shape]) === :none && return
     for segment in series_segments(series, :scatter)
         rng = intersect(eachindex(IndexLinear(), x), segment.range)
         isempty(rng) && continue
@@ -1815,9 +1815,9 @@ function gr_draw_shapes(series, clims)
             GR.fillarea(xseg, yseg)
 
             # draw the shapes
-            lc = get_linecolor(series, clims, i)
+            lc = get_line_color(series, clims, i)
             gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
-            gr_set_transparency(lc, get_linealpha(series, i))
+            gr_set_transparency(lc, get_line_alpha(series, i))
             GR.polyline(xseg, yseg)
         end
     end
@@ -1826,14 +1826,14 @@ end
 function gr_draw_contour(series, x, y, z, clims)
     GR.setprojectiontype(0)
     GR.setspace(clims[1], clims[2], 0, 90)
-    gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
+    gr_set_line(get_linewidth(series), get_linestyle(series), get_line_color(series), series)
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] !== nothing
         GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
     else
         black = plot_color(:black)
-        coff = plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1_000
+        coff = plot_color(series[:line_color]) in (black, [black]) ? 0 : 1_000
         GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
     end
     nothing
@@ -1893,7 +1893,7 @@ function gr_draw_surface(series, x, y, z, clims)
         fillalpha = get_fillalpha(series)
         facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
         GR.setborderwidth(get_linewidth(series))
-        GR.setbordercolorind(gr_getcolorind(get_linecolor(series)))
+        GR.setbordercolorind(gr_getcolorind(get_line_color(series)))
         GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))
     else
         throw(ArgumentError("Not handled !"))

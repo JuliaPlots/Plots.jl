@@ -356,11 +356,11 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
     if (perm = plotattributes[:permute]) !== :none
         letter1, letter2 = perm
-        ms = plotattributes[:markershape]
+        ms = plotattributes[:marker_shape]
         if ms === :hline && (perm == (:x, :y) || perm == (:y, :x))
-            plotattributes[:markershape] = :vline
+            plotattributes[:marker_shape] = :vline
         elseif ms === :vline && (perm == (:x, :y) || perm == (:y, :x))
-            plotattributes[:markershape] = :hline
+            plotattributes[:marker_shape] = :hline
         end
         plotattributes[letter1], plotattributes[letter2] =
             plotattributes[letter2], plotattributes[letter1]

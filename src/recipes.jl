@@ -46,19 +46,19 @@ RecipesBase.apply_recipe(plotattributes::AKW, ::Type{T}, plt::AbstractPlot) wher
 const POTENTIAL_VECTOR_ARGUMENTS = [
     :seriescolor,
     :seriesalpha,
-    :linecolor,
-    :linealpha,
-    :linewidth,
-    :linestyle,
+    :line_color,
+    :line_alpha,
+    :line_width,
+    :line_style,
     :line_z,
     :fillcolor,
     :fillalpha,
     :fill_z,
-    :markercolor,
-    :markeralpha,
-    :markershape,
+    :marker_color,
+    :marker_alpha,
+    :marker_shape,
     :marker_z,
-    :markerstrokecolor,
+    :marker_stroke_color,
     :markerstrokealpha,
     :xerror,
     :yerror,
@@ -221,7 +221,7 @@ make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -246,7 +246,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, true)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -271,7 +271,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -319,7 +319,7 @@ end
     fillrange := nothing
     seriestype := :path
     if (
-        plotattributes[:linecolor] === :auto &&
+        plotattributes[:line_color] === :auto &&
         plotattributes[:marker_z] !== nothing &&
         plotattributes[:line_z] === nothing
     )
@@ -327,7 +327,7 @@ end
     end
 
     # create a primary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         primary := false
         @series begin
             seriestype := :scatter
@@ -677,7 +677,7 @@ end
     end
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := _bin_centers(edge)
@@ -960,7 +960,7 @@ end
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)  # COV_EXCL_LINE
     seriestype := :path3d
-    if plotattributes[:markershape] === :none
+    if plotattributes[:marker_shape] === :none
         markershape := :circle
     end
     linewidth := 0
@@ -999,12 +999,12 @@ export lens!
     series_plotindex := backup[:series_plotindex]
     seriestype := :path
     primary := false
-    linecolor := get(backup, :linecolor, :lightgray)
-    if haskey(backup, :linestyle)
-        linestyle := backup[:linestyle]
+    linecolor := get(backup, :line_color, :lightgray)
+    if haskey(backup, :line_style)
+        linestyle := backup[:line_style]
     end
-    if haskey(backup, :linewidth)
-        linewidth := backup[:linewidth]
+    if haskey(backup, :line_width)
+        linewidth := backup[:line_width]
     end
     bbx_mag = (x1 + x2) / 2
     bby_mag = (y1 + y2) / 2
@@ -1083,11 +1083,11 @@ end
     haskey(plotattributes, :marker_z) && reset_kw!(plotattributes, :marker_z)
     haskey(plotattributes, :line_z) && reset_kw!(plotattributes, :line_z)
 
-    msc = if (msc = plotattributes[:markerstrokecolor]) === :match
+    msc = if (msc = plotattributes[:marker_stroke_color]) === :match
         plotattributes[:subplot][:foreground_color_subplot]
     elseif msc === :auto
         get_series_color(
-            plotattributes[:linecolor],
+            plotattributes[:line_color],
             plotattributes[:subplot],
             plotattributes[:series_plotindex],
             plotattributes[:seriestype],
