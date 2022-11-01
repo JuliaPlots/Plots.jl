@@ -471,25 +471,12 @@ function add_layout_pct!(kw::AKW, v::Expr, idx::Integer, nidx::Integer)
     if v.head ≡ :call && v.args[1] ≡ :*
         num = v.args[2]
         if length(v.args) == 3 && isa(num, Number)
-            units = v.args[3]
-            if units ≡ :h
-                return kw[:h] = num
-            elseif units ≡ :w
-                return kw[:w] = num
-            elseif units in (:pct, :px, :mm, :cm, :inch)
-                idx == 1 && (kw[:w] = v)
-                (idx == 2 || nidx == 1) && (kw[:h] = v)
-                # return kw[idx == 1 ? :w : :h] = v
+            if (units = v.args[3]) ∈ (:h, :w)
+                return kw[units] = num
             end
         end
     end
     error("Couldn't match layout curly (idx=$idx): $v")
-end
-
-function add_layout_pct!(kw::AKW, v::Number, idx::Integer)
-    # kw[idx == 1 ? :w : :h] = v*pct
-    idx == 1 && (kw[:w] = v)
-    (idx == 2 || nidx == 1) && (kw[:h] = v)
 end
 
 isrow(v) = isa(v, Expr) && v.head in (:hcat, :row)
