@@ -107,8 +107,8 @@ end
 
 function pgf_linestyle(plotattributes, i = 1)
     lw = pgf_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)
-    lc = get_linecolor(plotattributes, i)
-    la = get_linealpha(plotattributes, i)
+    lc = get_line_color(plotattributes, i)
+    la = get_line_alpha(plotattributes, i)
     ls = get_linestyle(plotattributes, i)
     return pgf_linestyle(lw, lc, la, ls)
 end
@@ -119,9 +119,9 @@ function pgf_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
 end
 
 function pgf_marker(plotattributes, i = 1)
-    shape = _cycle(plotattributes[:markershape], i)
+    shape = _cycle(plotattributes[:marker_shape], i)
     cstr, a = pgf_color(
-        plot_color(get_markercolor(plotattributes, i), get_markeralpha(plotattributes, i)),
+        plot_color(get_marker_color(plotattributes, i), get_marker_alpha(plotattributes, i)),
     )
     cstr_stroke, a_stroke = pgf_color(
         plot_color(
@@ -641,7 +641,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         # As it is likely that all series within the same axis use the same
         # colormap this should not cause any problem.
         for series in series_list(sp)
-            for col in (:markercolor, :fillcolor, :linecolor)
+            for col in (:marker_color, :fillcolor, :line_color)
                 if typeof(series.plotattributes[col]) == ColorGradient
                     push!(
                         style,

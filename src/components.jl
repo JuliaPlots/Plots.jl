@@ -551,7 +551,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             shapes[i] =
                 scale(baseshape, msw * xscale / maxscale, msh * yscale / maxscale, (0, 0))
         end
-        series[:markershape] = shapes
+        series[:marker_shape] = shapes
         series[:markersize] = msize
     end
     nothing
@@ -833,3 +833,38 @@ end :match = (
     :legend_title_font_family,
     :legend_title_font_color,
 )
+
+### Line
+
+@add_attributes series struct Line
+    style = :solid
+    width = :auto
+    color = :auto
+    alpha = nothing
+end
+
+### Marker
+
+@add_attributes series struct Marker
+    shape = :none
+    # color = :match
+    alpha = nothing
+    stroke::Line = Line(:solid, 1, :match, nothing)
+end
+
+### Errorbars
+
+@add_attributes series struct XErrorBar
+    color = :match
+    shape = :hline
+
+end
+
+### Fills
+
+@add_attributes series struct YFill
+    range = nothing
+    color = :match
+    alpha = nothing
+    style = nothing
+end
