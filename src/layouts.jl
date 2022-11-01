@@ -288,8 +288,8 @@ end
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
 function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm, 0mm, 0mm])
     nr, nc = size(layout)
-    # # create a matrix for each minimum padding direction
-    # _update_min_padding!(layout)
+
+    # create a matrix for each minimum padding direction
     minpad_left   = map(leftpad, layout.grid)
     minpad_top    = map(toppad, layout.grid)
     minpad_right  = map(rightpad, layout.grid)
@@ -629,6 +629,7 @@ function twinx(sp::Subplot)
     twinsp[:xaxis][:grid] = false
     twinsp[:yaxis][:grid] = false
     twinsp[:xaxis][:showaxis] = false
+    twinsp[:xaxis][:ticks] = :none
     twinsp[:yaxis][:mirror] = true
     twinsp[:background_color_inside] = RGBA{Float64}(0, 0, 0, 0)
     link_axes!(sp[:xaxis], twinsp[:xaxis])

@@ -878,7 +878,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
     end
     if (title = gr_colorbar_title(sp)).str != ""
-        padding.right[] += @static if true
+        padding.right[] += @static if false
             sz = gr_text_size(title)
             l = is_horizontal(title) ? first(sz) : last(sz)
             l * width * px
@@ -886,6 +886,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             4mm
         end
     end
+
     sp.minpad = (
         dpi * padding.left[],
         dpi * padding.top[],
@@ -1516,34 +1517,34 @@ function gr_label_ticks_3d(sp, letter, ticks)
 end
 
 gr_label_axis(sp, letter, vp) =
-    if (axis = sp[get_attr_symbol(letter, :axis)])[:guide] != ""
-        mirror = axis[:mirror]
+    if (ax = sp[get_attr_symbol(letter, :axis)])[:guide] != ""
+        mirror = ax[:mirror]
         GR.savestate()
-        guide_position = axis[:guide_position]
-        rotation = float(axis[:guidefontrotation])  # github.com/JuliaPlots/Plots.jl/issues/3089
+        guide_position = ax[:guide_position]
+        rotation = float(ax[:guidefontrotation])  # github.com/JuliaPlots/Plots.jl/issues/3089
         if letter === :x
             # default rotation = 0. should yield GR.setcharup(0, 1) i.e. 90°
-            xpos = xposition(vp, position(axis[:guidefonthalign]))
-            halign = alignment(axis[:guidefonthalign])
+            xpos = xposition(vp, position(ax[:guidefonthalign]))
+            halign = alignment(ax[:guidefonthalign])
             ypos, valign =
                 if guide_position === :top || (guide_position === :auto && mirror)
-                    vp.ymax + 0.015 + (mirror ? gr_axis_height(sp, axis) : 0.015), :top
+                    vp.ymax + 0.015 + (mirror ? gr_axis_height(sp, ax) : 0.015), :top
                 else
-                    vp.ymin - 0.015 - (mirror ? 0.015 : gr_axis_height(sp, axis)), :bottom
+                    vp.ymin - 0.015 - (mirror ? 0.015 : gr_axis_height(sp, ax)), :bottom
                 end
         else
             rotation += 90  # default rotation = 0. should yield GR.setcharup(-1, 0) i.e. 180°
-            ypos = yposition(vp, position(axis[:guidefontvalign]))
-            halign = alignment(axis[:guidefontvalign])
+            ypos = yposition(vp, position(ax[:guidefontvalign]))
+            halign = alignment(ax[:guidefontvalign])
             xpos, valign =
                 if guide_position === :right || (guide_position === :auto && mirror)
-                    vp.xmax + 0.03 + mirror * gr_axis_width(sp, axis), :bottom
+                    vp.xmax + 0.03 + mirror * gr_axis_width(sp, ax), :bottom
                 else
-                    vp.xmin - 0.03 - !mirror * gr_axis_width(sp, axis), :top
+                    vp.xmin - 0.03 - !mirror * gr_axis_width(sp, ax), :top
                 end
         end
-        gr_set_font(guidefont(axis), sp; rotation, halign, valign)
-        gr_text(xpos, ypos, axis[:guide])
+        gr_set_font(guidefont(ax), sp; rotation, halign, valign)
+        gr_text(xpos, ypos, ax[:guide])
         GR.restorestate()
     end
 
