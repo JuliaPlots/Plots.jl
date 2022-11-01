@@ -20,7 +20,7 @@ function _prepare_series_data(a::AbstractArray{T}) where {T<:MaybeNumber}
     broadcast!(float_a, a) do x
         ismissing(x) || isinf(x) ? NaN : x
     end
-    return float_a
+    float_a
 end
 _prepare_series_data(a::Base.SkipMissing) = collect(a)
 _prepare_series_data(a::AbstractArray{<:Missing}) = fill(NaN, axes(a))
@@ -108,7 +108,7 @@ struct SliceIt end
 # The `SliceIt` recipe finishes user and type recipe processing.
 # It splits processed data into individual series data, stores in copied `plotattributes`
 # for each series and returns no arguments.
-@recipe function f(::Type{SliceIt}, x, y, z)
+@recipe function f(::Type{SliceIt}, x, y, z)  # COV_EXCL_LINE
     @nospecialize
     nice_error = (x isa AbstractVector) && (y isa AbstractMatrix) # only check in the trivial case
     # handle data with formatting attached

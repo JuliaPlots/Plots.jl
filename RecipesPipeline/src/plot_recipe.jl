@@ -17,7 +17,7 @@ function _process_plotrecipes!(plt, kw_list)
         next_kw = popfirst!(still_to_process)
         _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
     end
-    return kw_list
+    kw_list
 end
 
 function _process_plotrecipe(plt, kw, kw_list, still_to_process)
@@ -43,7 +43,7 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
     else
         push!(kw_list, kw)
     end
-    return
+    nothing
 end
 
 @specialize
