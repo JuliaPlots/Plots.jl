@@ -1,7 +1,15 @@
 is_ci() = get(ENV, "CI", "false") == "true"
+ci_tol() =
+    if Sys.islinux()
+        "1e-4"
+    elseif Sys.isapple()
+        "1e-3"
+    else
+        "1e-2"
+    end
 
 const TESTS_MODULE = Module(:PlotsTestsModule)
-const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "2e-3" : "1e-5"))
+const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 

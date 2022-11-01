@@ -1073,21 +1073,24 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
     xmirror = mirrored(xaxis, :top)
     ymirror = mirrored(yaxis, :right)
-    if (s = sp[:legend_position]) isa Real
-        return gr_legend_pos(s, leg, vp)
-    elseif s isa Tuple{<:Real,Symbol}
-        s[2] === :outer || return gr_legend_pos(s[1], leg, vp)
+    if (lp = sp[:legend_position]) isa Real
+        return gr_legend_pos(lp, leg, vp)
+    elseif lp isa Tuple{<:Real,Symbol}
+        lp[2] === :outer || return gr_legend_pos(lp[1], leg, vp)
         axisclearance = [
             !ymirror * gr_axis_width(sp, yaxis),
             ymirror * gr_axis_width(sp, yaxis),
             !xmirror * gr_axis_height(sp, xaxis),
             xmirror * gr_axis_height(sp, xaxis),
         ]
-        return gr_legend_pos(s[1], leg, vp; axisclearance)
-    elseif !(s isa Symbol)
-        return gr_legend_pos(s, vp)
+        return gr_legend_pos(lp[1], leg, vp; axisclearance)
+    elseif !(lp isa Symbol)
+        return gr_legend_pos(lp, vp)
     end
-    (str = string(s)) == "best" && (str = "topright")
+    if (str = string(lp)) == "best"
+        # str = ymirror ? "topleft" : "topright"  # for twinx
+        str = "topright"
+    end
     xpos = if occursin("left", str)
         if occursin("outer", str)
             -!ymirror * gr_axis_width(sp, yaxis) - 2leg.xoffset - leg.rightw - leg.textw
@@ -1104,13 +1107,13 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         vp.xmin + leg.leftw - leg.rightw - leg.textw - 2leg.xoffset
     end
     ypos = if occursin("bottom", str)
-        if s === :outerbottom
+        if lp === :outerbottom
             -leg.yoffset - leg.dy - !xmirror * gr_axis_height(sp, xaxis)
         else
             leg.yoffset + leg.h
         end + vp.ymin
     elseif occursin("top", str)
-        if s === :outertop
+        if lp === :outertop
             leg.yoffset + leg.h + xmirror * gr_axis_height(sp, xaxis)
         else
             -leg.yoffset - leg.dy
