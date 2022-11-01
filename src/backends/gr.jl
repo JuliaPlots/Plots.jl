@@ -1073,29 +1073,32 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
     xmirror = mirrored(xaxis, :top)
     ymirror = mirrored(yaxis, :right)
-    if (s = sp[:legend_position]) isa Real
-        return gr_legend_pos(s, leg, vp)
-    elseif s isa Tuple{<:Real,Symbol}
-        s[2] === :outer || return gr_legend_pos(s[1], leg, vp)
+    if (lp = sp[:legend_position]) isa Real
+        return gr_legend_pos(lp, leg, vp)
+    elseif lp isa Tuple{<:Real,Symbol}
+        lp[2] === :outer || return gr_legend_pos(lp[1], leg, vp)
         axisclearance = [
             !ymirror * gr_axis_width(sp, yaxis),
             ymirror * gr_axis_width(sp, yaxis),
             !xmirror * gr_axis_height(sp, xaxis),
             xmirror * gr_axis_height(sp, xaxis),
         ]
-        return gr_legend_pos(s[1], leg, vp; axisclearance)
-    elseif !(s isa Symbol)
-        return gr_legend_pos(s, vp)
+        return gr_legend_pos(lp[1], leg, vp; axisclearance)
+    elseif !(lp isa Symbol)
+        return gr_legend_pos(lp, vp)
     end
-    (str = string(s)) == "best" && (str = "topright")
-    xpos = if occursin("left", str)
-        if occursin("outer", str)
+    if (leg_str = string(lp)) == "best"
+        # leg_str = ymirror ? "topleft" : "topright"  # for twinx ?
+        leg_str = "topright"
+    end
+    xpos = if occursin("left", leg_str)
+        if occursin("outer", leg_str)
             -!ymirror * gr_axis_width(sp, yaxis) - 2leg.xoffset - leg.rightw - leg.textw
         else
             leg.leftw + leg.xoffset
         end + vp.xmin
-    elseif occursin("right", str)
-        if occursin("outer", str)  # per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
+    elseif occursin("right", leg_str)
+        if occursin("outer", leg_str)  # per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
             leg.xoffset + leg.leftw + ymirror * gr_axis_width(sp, yaxis)
         else
             -leg.rightw - leg.textw - leg.xoffset
@@ -1103,14 +1106,14 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     else
         vp.xmin + leg.leftw - leg.rightw - leg.textw - 2leg.xoffset
     end
-    ypos = if occursin("bottom", str)
-        if s === :outerbottom
+    ypos = if occursin("bottom", leg_str)
+        if lp === :outerbottom
             -leg.yoffset - leg.dy - !xmirror * gr_axis_height(sp, xaxis)
         else
             leg.yoffset + leg.h
         end + vp.ymin
-    elseif occursin("top", str)
-        if s === :outertop
+    elseif occursin("top", leg_str)
+        if lp === :outertop
             leg.yoffset + leg.h + xmirror * gr_axis_height(sp, xaxis)
         else
             -leg.yoffset - leg.dy
@@ -1186,8 +1189,8 @@ function gr_update_viewport_legend!(vp, sp, leg)
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
     xmirror = mirrored(xaxis, :top)
     ymirror = mirrored(yaxis, :right)
-    if (s = sp[:legend_position]) isa Tuple{<:Real,Symbol}
-        if s[2] === :outer
+    if (lp = sp[:legend_position]) isa Tuple{<:Real,Symbol}
+        if lp[2] === :outer
             x, y = gr_legend_pos(sp, leg, vp) # Dry run, to figure out
             if x < vp.xmin
                 vp.xmin +=
@@ -1207,7 +1210,7 @@ function gr_update_viewport_legend!(vp, sp, leg)
             end
         end
     end
-    leg_str = string(s)
+    leg_str = string(lp)
     if occursin("outer", leg_str)
         if occursin("right", leg_str)
             vp.xmax -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
@@ -1224,7 +1227,7 @@ function gr_update_viewport_legend!(vp, sp, leg)
             vp.ymin += leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, xaxis)
         end
     end
-    if s === :inline
+    if lp === :inline
         if yaxis[:mirror]
             vp.xmin += leg.w
         else

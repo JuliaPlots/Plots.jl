@@ -1,7 +1,15 @@
 is_ci() = get(ENV, "CI", "false") == "true"
+ci_tol() =
+    if Sys.islinux()
+        "5e-4"
+    elseif Sys.isapple()
+        "1e-3"
+    else
+        "1e-2"
+    end
 
 const TESTS_MODULE = Module(:PlotsTestsModule)
-const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? "2e-3" : "1e-5"))
+const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
@@ -63,29 +71,22 @@ function image_comparison_tests(
     tol = 1e-2,
 )
     example = Plots._examples[idx]
-    @info("Testing plot: $pkg:$idx:$(example.header)")
+    @info "Testing plot: $pkg:$idx:$(example.header)"
 
     reffn = reference_file(pkg, idx, Plots._current_plots_version)
     newfn = joinpath(reference_path(pkg, Plots._current_plots_version), "ref$idx.png")
-    @debug example.exprs
 
-    # test function
-    func =
-        fn -> begin
-            for ex in (
-                :(Plots._debugMode[] = $debug),
-                :(backend($(QuoteNode(pkg)))),
-                :(theme(:default)),
-                :(default(size = (500, 300), show = false, reuse = true)),
-                :(rng = StableRNG(Plots.PLOTS_SEED)),
-                something(example.imports, :()),
-                replace_rand(example.exprs),
-                :(png($fn)),
-            )
-                Base.eval(TESTS_MODULE, ex)
-            end
-        end
+    imports = something(example.imports, :())
+    exprs = quote
+        Plots.debugplots($debug)
+        backend($(QuoteNode(pkg)))
+        theme(:default)
+        rng = StableRNG(Plots.PLOTS_SEED)
+        $(replace_rand(example.exprs))
+    end
+    @debug imports exprs
 
+    func = fn -> Base.eval.(Ref(TESTS_MODULE), (imports, exprs, :(png($fn))))
     test_images(
         VisualTest(func, reffn),
         newfn = newfn,

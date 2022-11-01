@@ -43,10 +43,7 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     nothing
 end
 
-function _update_min_padding!(sp::Subplot{GastonBackend})
-    sp.minpad = 0mm, 0mm, 0mm, 0mm
-    nothing
-end
+_update_min_padding!(sp::Subplot{GastonBackend}) = sp.minpad = 0mm, 0mm, 0mm, 0mm
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
@@ -110,7 +107,7 @@ function gaston_saveopts(plt::Plot{GastonBackend})
         "fontscale $scaling lw $scaling dl $scaling",  # ps $scaling
     )
 
-    return join(saveopts, " ")
+    join(saveopts, " ")
 end
 
 function gaston_get_subplots(n, plt_subplots, layout)
@@ -125,7 +122,7 @@ function gaston_get_subplots(n, plt_subplots, layout)
             get(l.attr, :blank, false) ? nothing : plt_subplots[n += 1]
         end
     end
-    return n, sps
+    n, sps
 end
 
 function gaston_init_subplots(plt, sps)
@@ -139,7 +136,7 @@ function gaston_init_subplots(plt, sps)
             sz = max.(sz, size(sp))
         end
     end
-    return sz
+    sz
 end
 
 function gaston_init_subplot(
@@ -193,7 +190,7 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
             end
         end
     end
-    return dat
+    dat
 end
 
 function gaston_multiplot_pos_size!(dat)
@@ -349,7 +346,7 @@ function gaston_seriesconf!(
         @warn "Gaston: $st is not implemented yet"
     end
 
-    return [join(curveconf, " "), extra...]
+    [join(curveconf, " "), extra...]
 end
 
 function gaston_parse_axes_args(
@@ -451,7 +448,7 @@ function gaston_parse_axes_args(
         )
     end
 
-    return join(axesconf, "\n")
+    join(axesconf, "\n")
 end
 
 function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
@@ -539,7 +536,7 @@ function gaston_font(f; rot = true, align = true, color = true, scale = 1)
     align && push!(font, "$(gaston_halign(f.halign))")
     rot && push!(font, "rotate by $(f.rotation)")
     color && push!(font, "textcolor $(gaston_color(f.color))")
-    return join(font, " ")
+    join(font, " ")
 end
 
 function gaston_palette(gradient)
@@ -548,7 +545,7 @@ function gaston_palette(gradient)
     for rgba in gradient  # FIXME: naive conversion, inefficient ?
         push!(palette, "$(n += 1) $(rgba.r) $(rgba.g) $(rgba.b)")
     end
-    return '(' * join(palette, ", ") * ')'
+    '(' * join(palette, ", ") * ')'
 end
 
 function gaston_marker(marker, alpha)
@@ -567,13 +564,13 @@ function gaston_marker(marker, alpha)
     marker === :pentagon && return filled ? 15 : 14
 
     @warn "Gaston: unsupported marker $marker"
-    return 1
+    1
 end
 
 function gaston_color(col, alpha = 0)
     col = single_color(col)  # in case of gradients
     col = alphacolor(col, gaston_alpha(alpha))  # add a default alpha if non existent
-    return "rgb '#$(hex(col, :aarrggbb))'"
+    "rgb '#$(hex(col, :aarrggbb))'"
 end
 
 function gaston_linestyle(style)
@@ -587,5 +584,5 @@ end
 function gaston_enclose_tick_string(tick_string)
     findfirst("^", tick_string) === nothing && return tick_string
     base, power = split(tick_string, "^")
-    return "$base^{$power}"
+    "$base^{$power}"
 end

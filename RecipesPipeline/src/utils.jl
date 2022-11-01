@@ -14,6 +14,8 @@ struct DefaultsDict <: AbstractDict{Symbol,Any}
     defaults::KW
 end
 
+Base.merge(d1::DefaultsDict, d2::DefaultsDict) =
+    DefaultsDict(merge(d1.explicit, d2.explicit), merge(d1.defaults, d2.defaults))
 Base.getindex(dd::DefaultsDict, k) =
     if haskey(dd.explicit, k)
         dd.explicit[k]
@@ -31,7 +33,7 @@ Base.get!(dd::DefaultsDict, k, default) =
 function Base.delete!(dd::DefaultsDict, k)
     haskey(dd.explicit, k) && delete!(dd.explicit, k)
     haskey(dd.defaults, k) && delete!(dd.defaults, k)
-    return dd
+    dd
 end
 Base.length(dd::DefaultsDict) = length(union(keys(dd.explicit), keys(dd.defaults)))
 function Base.iterate(dd::DefaultsDict)
@@ -54,7 +56,7 @@ Base.setindex!(dd::DefaultsDict, v, k) = dd.explicit[k] = v
 # Reset to default value and return dict
 function reset_kw!(dd::DefaultsDict, k)
     is_explicit(dd, k) && delete!(dd.explicit, k)
-    return dd
+    dd
 end
 # Reset to default value and return old value
 pop_kw!(dd::DefaultsDict, k) = is_explicit(dd, k) ? pop!(dd.explicit, k) : dd.defaults[k]

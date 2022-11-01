@@ -529,6 +529,8 @@ const _suppress_warnings = Set{Symbol}([
     :primary,
     :smooth,
     :relative_bbox,
+    :layout_insets,
+    :force_minpad,
 ])
 
 is_subplot_attr(k) = k in _all_subplot_args
@@ -1732,7 +1734,7 @@ function slice_arg!(
     remove_pair::Bool,
 )
     v = get(plotattributes_in, k, plotattributes_out[k])
-    plotattributes_out[k] = if haskey(plotattributes_in, k) && !(k in _plot_args)
+    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ _plot_args
         slice_arg(v, idx)
     else
         v
@@ -1858,16 +1860,8 @@ function _update_plot_args(plt::Plot, plotattributes_in::AKW)
     end
 
     # handle colors
-    plotattributes = plt.attr
-    plt[:background_color] = plot_color(plotattributes[:background_color])
-    plt[:foreground_color] = fg_color(plotattributes)
-    # bg = plot_color(plt.attr[:background_color])
-    # fg = plt.attr[:foreground_color]
-    # if fg === :auto
-    #     fg = isdark(bg) ? colorant"white" : colorant"black"
-    # end
-    # plt.attr[:background_color] = bg
-    # plt.attr[:foreground_color] = plot_color(fg)
+    plt[:background_color] = plot_color(plt.attr[:background_color])
+    plt[:foreground_color] = fg_color(plt.attr)
     color_or_nothing!(plt.attr, :background_color_outside)
 end
 

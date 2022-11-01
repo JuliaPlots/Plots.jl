@@ -941,7 +941,7 @@ const _examples = PlotExample[
         "3D axis flip / mirror",
         :(using LinearAlgebra),
         quote
-            scalefontsizes(0.4)
+            scalefontsizes(0.5)
 
             x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
@@ -1140,6 +1140,38 @@ const _examples = PlotExample[
             plot(y .+ 1, fillrange = y, fillstyle = :/)
         end,
     ),
+    PlotExample(  # 63
+        "twinx - twiny",
+        "Share X or Y axis.",
+        quote
+            kw = (; lab = "", title_loc = :left)
+            x = π:0.1:(2π)
+
+            plot(
+                x,
+                sin.(x),
+                xaxis = "common X label",
+                yaxis = "Y label 1",
+                color = :red,
+                title = "twinx";
+                kw...,
+            )
+            pl = plot!(twinx(), x, 2cos.(x), yaxis = "Y label 2"; kw...)
+
+            plot(
+                x,
+                cos.(x),
+                xaxis = "X label 1",
+                yaxis = "common Y label",
+                color = :red,
+                title = "twiny";
+                kw...,
+            )
+            pr = plot!(twiny(), 2x, cos.(2x), xaxis = "X label 2"; kw...)
+
+            plot(pl, pr)
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -1184,6 +1216,7 @@ _backend_skips = Dict(
         50,  # TODO: 1D data not supported for pm3d
         60,  # :perspective projection unsupported
         62,  # fillstyle
+        63,  # un-identified bug
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
