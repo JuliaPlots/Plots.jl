@@ -529,6 +529,7 @@ const _suppress_warnings = Set{Symbol}([
     :primary,
     :smooth,
     :relative_bbox,
+    :layout_insets,
 ])
 
 is_subplot_attr(k) = k in _all_subplot_args

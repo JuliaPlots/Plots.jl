@@ -635,9 +635,9 @@ end
 
 # -------------------------------------------------------------------------
 
-"Adds a new, empty subplot overlayed on top of `sp`, with a mirrored y-axis and linked x-axis."
-function twinx(sp::Subplot)
+function twin(sp, letter)
     plt = sp.plt
+    plt[:layout_insets] = true
     plot!(
         plt,
         inset = (sp[:subplot_index], bbox(0, 0, 1, 1)),
@@ -647,14 +647,30 @@ function twinx(sp::Subplot)
         bottom_margin = sp[:bottom_margin],
     )
     twinsp = last(plt.subplots)
-    twinsp[:xaxis][:grid] = false
-    twinsp[:xaxis][:showaxis] = false
-    twinsp[:xaxis][:ticks] = :none
-    twinsp[:yaxis][:grid] = false
-    twinsp[:yaxis][:mirror] = true
+    letters = axes_letters(twinsp, letter)
+    tax, oax = map(l -> twinsp[get_attr_symbol(l, :axis)], letters)
+    tax[:grid] = false
+    tax[:showaxis] = false
+    tax[:ticks] = :none
+    oax[:grid] = false
+    oax[:mirror] = true
     twinsp[:background_color_inside] = RGBA{Float64}(0, 0, 0, 0)
-    link_axes!(sp[:xaxis], twinsp[:xaxis])
+    link_axes!(sp[get_attr_symbol(letter, :axis)], tax)
     twinsp
 end
 
+"""
+    twinx(sp)
+
+Adds a new, empty subplot overlayed on top of `sp`, with a mirrored y-axis and linked x-axis.
+"""
+twinx(sp::Subplot) = twin(sp, :x)
 twinx(plt::Plot = current()) = twinx(plt[1])
+
+"""
+    twiny(sp)
+
+Adds a new, empty subplot overlayed on top of `sp`, with a mirrored x-axis and linked y-axis.
+"""
+twiny(sp::Subplot) = twin(sp, :y)
+twiny(plt::Plot = current()) = twiny(plt[1])

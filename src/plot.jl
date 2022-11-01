@@ -250,7 +250,10 @@ function prepare_output(plt::Plot)
     end
 
     # now another pass down, to update the bounding boxes
-    update_child_bboxes!(plt.layout; insets = plt.inset_subplots)
+    update_child_bboxes!(
+        plt.layout;
+        insets = get(plt, :layout_insets, false) ? plt.inset_subplots : (),
+    )
 
     # update those bounding boxes of inset subplots
     update_inset_bboxes!(plt)
