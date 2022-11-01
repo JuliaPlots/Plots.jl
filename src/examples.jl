@@ -941,7 +941,7 @@ const _examples = PlotExample[
         "3D axis flip / mirror",
         :(using LinearAlgebra),
         quote
-            scalefontsizes(0.4)
+            scalefontsizes(0.5)
 
             x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
@@ -1142,10 +1142,10 @@ const _examples = PlotExample[
     ),
     PlotExample(  # 63
         "twinx - twiny",
+        "Share X or Y axis.",
         quote
-            x = π:0.1:(2π)
-
             kw = (; lab = "", title_loc = :left)
+            x = π:0.1:(2π)
 
             plot(
                 x,
@@ -1156,7 +1156,7 @@ const _examples = PlotExample[
                 title = "twinx";
                 kw...,
             )
-            p1 = plot!(twinx(), x, 2cos.(x), yaxis = "Y label 2"; kw...)
+            pl = plot!(twinx(), x, 2cos.(x), yaxis = "Y label 2"; kw...)
 
             plot(
                 x,
@@ -1167,10 +1167,9 @@ const _examples = PlotExample[
                 title = "twiny";
                 kw...,
             )
-            p2 = plot!(twiny(), 2x, cos.(2x), xaxis = "X label 2"; kw...)
+            pr = plot!(twiny(), 2x, cos.(2x), xaxis = "X label 2"; kw...)
 
-            pl = plot(p1, p2)
-            pl
+            plot(pl, pr)
         end,
     ),
 ]
