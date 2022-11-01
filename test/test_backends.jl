@@ -1,7 +1,7 @@
 is_ci() = get(ENV, "CI", "false") == "true"
 ci_tol() =
     if Sys.islinux()
-        "1e-4"
+        "5e-4"
     elseif Sys.isapple()
         "1e-3"
     else

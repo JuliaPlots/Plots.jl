@@ -140,7 +140,7 @@ function plot!(
     # TODO: replace this with proper processing from a merged user_attr KW
     # update plot args
     for p in plts
-        plt.attr = merge(p.attr, plt.attr)  # plt.attr preempts p.attr
+        plt.attr = merge(p.attr, plt.attr)  # plt.attr preempts p.attr (for `twinx`)
         plt.n += p.n
     end
     plt[:size] = last(sort(getindex.(plts, :size), by = x -> x[1] * x[2]))
