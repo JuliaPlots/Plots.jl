@@ -43,10 +43,7 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     nothing
 end
 
-function _update_min_padding!(sp::Subplot{GastonBackend})
-    sp.minpad = 0mm, 0mm, 0mm, 0mm
-    nothing
-end
+_update_min_padding!(sp::Subplot{GastonBackend}) = sp.minpad = 0mm, 0mm, 0mm, 0mm
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio

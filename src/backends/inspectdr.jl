@@ -20,12 +20,12 @@ is_marker_supported(::InspectDRBackend, shape::Shape) = true
 #Do we avoid Map to avoid possible pre-comile issues?
 function _inspectdr_mapglyph(s::Symbol)
     s === :rect && return :square
-    return s
+    s
 end
 
 function _inspectdr_mapglyph(s::Shape)
     x, y = coords(s)
-    return InspectDR.GlyphPolyline(x, y)
+    InspectDR.GlyphPolyline(x, y)
 end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
@@ -76,7 +76,7 @@ function _inspectdr_add_annotations(plot, x, y, val::PlotText)
         align = align,
     )
     InspectDR.add(plot, ann)
-    return
+    nothing
 end
 
 # ---------------------------------------------------------------------------
@@ -109,7 +109,7 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
         # keep current
     end
 
-    return gridlines #keep current
+    gridlines  # keep current
 end
 
 function _inspectdr_setticks(sp::Subplot, plot, strip, xaxis, yaxis)
@@ -135,7 +135,7 @@ end
 function _inspectdr_getscale(s::Symbol, yaxis::Bool)
     #TODO: Support :asinh, :sqrt
     kwargs = yaxis ? (:tgtmajor => 8, :tgtminor => 2) : () #More grid lines on y-axis
-    return if :log2 == s
+    if :log2 == s
         InspectDR.AxisScale(:log2; kwargs...)
     elseif :log10 == s
         InspectDR.AxisScale(:log10; kwargs...)
@@ -186,7 +186,7 @@ function _create_backend_figure(plt::Plot{InspectDRBackend})
     # break link with old subplots
     foreach(sp -> sp.o = nothing, plt.subplots)
 
-    return InspecDRPlotRef(mplot, gplot)
+    InspecDRPlotRef(mplot, gplot)
 end
 
 # ---------------------------------------------------------------------------
@@ -198,7 +198,7 @@ function _initialize_subplot(plt::Plot{InspectDRBackend}, sp::Subplot{InspectDRB
     plot === nothing && return
     plot.data = []
     plot.userannot = [] #Clear old markers/text annotation/polyline "annotation"
-    return plot
+    plot
 end
 
 # ---------------------------------------------------------------------------
@@ -321,7 +321,6 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     for (xi, yi, str, fnt) in EachAnn(anns, x, y)
         _inspectdr_add_annotations(plot, xi, yi, PlotText(str, fnt))
     end
-    return
 end
 
 # ---------------------------------------------------------------------------
@@ -401,7 +400,6 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
     l.frame_legend.fillcolor = _inspectdr_mapcolor(sp[:legend_background_color])
     #_round!() ensures values use integer spacings (looks better on screen):
     InspectDR._round!(InspectDR.autofit2font!(l, legend_width = 10.0)) #10 "em"s wide
-    return
 end
 
 # called just before updating layout bounding boxes... in case you need to prep
@@ -447,7 +445,7 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
     end
 
     foreach(series -> _series_added(plt, series), plt.series_list)
-    return
+    nothing
 end
 
 # ----------------------------------------------------------------
@@ -491,7 +489,7 @@ function _update_plot_object(plt::Plot{InspectDRBackend})
 
     gplot.src = mplot #Ensure still references current plot
     InspectDR.refresh(gplot)
-    return
+    nothing
 end
 
 # ----------------------------------------------------------------
@@ -530,5 +528,5 @@ function _display(plt::Plot{InspectDRBackend})
         # InspectDR.refresh(gplot)
     end
     plt.o = InspecDRPlotRef(mplot, gplot)
-    return gplot
+    gplot
 end

@@ -239,7 +239,6 @@ function prepare_output(plt::Plot)
     # One pass down and back up the tree to compute the minimum padding
     # of the children on the perimeter.  This is an backend callback.
     _update_min_padding!(plt.layout)
-    foreach(sp -> _update_min_padding!(sp), plt.inset_subplots)
 
     # spedific to :plot_title see _add_plot_title!
     force_minpad = get(plt, :force_minpad, ())
@@ -251,7 +250,7 @@ function prepare_output(plt::Plot)
     end
 
     # now another pass down, to update the bounding boxes
-    update_child_bboxes!(plt.layout)
+    update_child_bboxes!(plt.layout; insets = plt.inset_subplots)
 
     # update those bounding boxes of inset subplots
     update_inset_bboxes!(plt)
