@@ -1041,8 +1041,8 @@ function gr_add_legend(sp, leg, viewport_area)
             end
 
             if (msh = series[:marker_shape]) !== :none
-                msz = first(series[:markersize])
-                msw = first(series[:markerstrokewidth])
+                msz = first(series[:marker_size])
+                msw = first(series[:marker_stroke_width])
                 gr_draw_marker(
                     series,
                     xpos - 2leg.width_factor,
@@ -1728,8 +1728,8 @@ function gr_draw_markers(
     y,
     z,
     clims,
-    msize = series[:markersize],
-    strokewidth = series[:markerstrokewidth],
+    msize = series[:marker_size],
+    strokewidth = series[:marker_stroke_width],
 )
     isempty(x) && return
     GR.setfillintstyle(GR.INTSTYLE_SOLID)

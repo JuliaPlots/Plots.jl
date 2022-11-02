@@ -59,7 +59,7 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     :marker_shape,
     :marker_z,
     :marker_stroke_color,
-    :markerstrokealpha,
+    :marker_stroke_alpha,
     :xerror,
     :yerror,
     :zerror,
@@ -1114,7 +1114,7 @@ end
     markerstrokecolor --> msc
     markercolor --> msc
     linecolor --> msc
-    linewidth --> plotattributes[:markerstrokewidth]
+    linewidth --> plotattributes[:marker_stroke_width]
     label --> ""
 end
 

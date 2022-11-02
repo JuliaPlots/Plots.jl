@@ -341,7 +341,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
         if opt[:marker_shape] !== :none
             if (marker = _cycle(opt[:marker_shape], i)) isa Shape
                 scale_factor = 0.00125
-                msize = opt[:markersize] * scale_factor
+                msize = opt[:marker_size] * scale_factor
                 path = join(
                     map((x, y) -> "($(x * msize), $(y * msize))", marker.x, marker.y),
                     " -- ",
@@ -935,7 +935,7 @@ function pgfx_marker(plotattributes, i = 1)
     mark_size =
         pgfx_thickness_scaling(plotattributes) *
         0.75 *
-        _cycle(plotattributes[:markersize], i)
+        _cycle(plotattributes[:marker_size], i)
     mark_freq = if !any(isnan, plotattributes[:y]) && plotattributes[:marker_shape] isa AVec
         length(plotattributes[:marker_shape])
     else
@@ -953,7 +953,7 @@ function pgfx_marker(plotattributes, i = 1)
             "line width" =>
                 pgfx_thickness_scaling(plotattributes) *
                 0.75 *
-                _cycle(plotattributes[:markerstrokewidth], i),
+                _cycle(plotattributes[:marker_stroke_width], i),
             "rotate" => if shape === :dtriangle
                 180
             elseif shape === :rtriangle
@@ -963,7 +963,7 @@ function pgfx_marker(plotattributes, i = 1)
             else
                 0
             end,
-            pgfx_get_linestyle(_cycle(plotattributes[:markerstrokestyle], i)) =>
+            pgfx_get_linestyle(_cycle(plotattributes[:marker_stroke_style], i)) =>
                 nothing,
         ),
     )

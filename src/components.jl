@@ -552,7 +552,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
                 scale(baseshape, msw * xscale / maxscale, msh * yscale / maxscale, (0, 0))
         end
         series[:marker_shape] = shapes
-        series[:markersize] = msize
+        series[:marker_size] = msize
     end
     nothing
 end
@@ -847,9 +847,10 @@ end
 
 @add_attributes series struct Marker
     shape = :none
-    # color = :match
+    color = :match
     alpha = nothing
     stroke::Line = Line(:solid, 1, :match, nothing)
+    size = 4
 end
 
 ### Errorbars

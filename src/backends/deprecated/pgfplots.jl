@@ -131,14 +131,14 @@ function pgf_marker(plotattributes, i = 1)
     )
     return string(
         "mark = $(get(_pgfplots_markers, shape, "*")),\n",
-        "mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)),\n",
+        "mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:marker_size], i)),\n",
         plotattributes[:seriestype] === :scatter ? "only marks,\n" : "",
         "mark options = {
             color = $cstr_stroke, draw opacity = $a_stroke,
             fill = $cstr, fill opacity = $a,
-            line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i)),
+            line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:marker_stroke_width], i)),
             rotate = $(shape === :dtriangle ? 180 : 0),
-            $(get(_pgfplots_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid"))
+            $(get(_pgfplots_linestyles, _cycle(plotattributes[:marker_stroke_style], i), "solid"))
         }",
     )
 end
