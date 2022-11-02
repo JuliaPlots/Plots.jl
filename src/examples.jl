@@ -1141,7 +1141,7 @@ const _examples = PlotExample[
         end,
     ),
     PlotExample(  # 63
-        "Shared axes (twin).",
+        "Shared axes (twin)",
         "`twinx` (shared `x` axis) and `twiny` (shared `y` axis) example usage.",
         quote
             kw = (; lab = "", title_loc = :left)
