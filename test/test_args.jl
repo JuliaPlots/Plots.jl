@@ -50,8 +50,15 @@ end
         :legend_font_color,
         :legend_title_font_family,
         :legend_title_font_color,
+    ) :aliases = Dict(
+        (:legend, :leg, :key) => :legend_position,
+        (:bg_legend, :bg_color_legend, :background_legend, :background_colour_legend, :bg_colour_legend, :background_color_legend) => :legend_background_color
     )
-    @test true
+    @test Plots._subplot_defaults[:legend_font_family] == :match
+    @test Plots._subplot_defaults[:legend_column] == 1
+    @test Plots._keyAliases[:legend] == :legend_position
+    @test Plots._keyAliases[:legends] == :legend_position
+    @test Plots._keyAliases[:bgcolour_legend] == :legend_background_color
 end
 
 @testset "aspect_ratio" begin
