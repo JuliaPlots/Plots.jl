@@ -158,7 +158,7 @@ end
 end
 
 @testset "Slicing" begin
-    @test plot(1:5, fillrange = 0)[1][1][:fillrange] == 0
+    @test plot(1:5, fillrange = 0)[1][1][:yfill_range] == 0
     data4 = rand(4, 4)
     mat = reshape(1:8, 2, 4)
     sp = plot(data4, ribbon = (mat, mat))[1]
@@ -287,7 +287,7 @@ with(:gr) do
             y,
             z;
             connections = [
-                [1, 2, 4, 3], # Quadrangle 
+                [1, 2, 4, 3], # Quadrangle
                 [1, 2, 5], # Triangle
                 [2, 4, 5], # Triangle
                 [4, 3, 5], # Triangle

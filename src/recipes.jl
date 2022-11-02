@@ -51,8 +51,8 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     :line_width,
     :line_style,
     :line_z,
-    :fillcolor,
-    :fillalpha,
+    :yfill_color,
+    :yfill_alpha,
     :fill_z,
     :marker_color,
     :marker_alpha,
@@ -64,7 +64,7 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     :yerror,
     :zerror,
     :series_annotations,
-    :fillrange,
+    :yfill_range,
 ]
 
 @nospecialize
@@ -82,11 +82,11 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     end
 
     # a tuple as fillrange has to be handled differently
-    if typeof(plotattributes[:fillrange]) <: Tuple
-        lower, upper = plotattributes[:fillrange]
+    if typeof(plotattributes[:yfill_range]) <: Tuple
+        lower, upper = plotattributes[:yfill_range]
         typeof(lower) <: AVec && (lower = _cycle(lower, indices))
         typeof(upper) <: AVec && (upper = _cycle(upper, indices))
-        plotattributes[:fillrange] = (lower, upper)
+        plotattributes[:yfill_range] = (lower, upper)
     end
 
     typeof(z) <: AVec && (z := z[indices])
@@ -218,7 +218,7 @@ make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
     seriestype := :path
 
     # handle fillrange
-    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre, false)
+    plotattributes[:yfill_range] = make_steps(plotattributes[:yfill_range], :pre, false)
 
     # create a secondary series for the markers
     if plotattributes[:marker_shape] !== :none
@@ -243,7 +243,7 @@ end
     seriestype := :path
 
     # handle fillrange
-    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, true)
+    plotattributes[:yfill_range] = make_steps(plotattributes[:yfill_range], :post, true)
 
     # create a secondary series for the markers
     if plotattributes[:marker_shape] !== :none
@@ -268,7 +268,7 @@ end
     seriestype := :path
 
     # handle fillrange
-    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, false)
+    plotattributes[:yfill_range] = make_steps(plotattributes[:yfill_range], :post, false)
 
     # create a secondary series for the markers
     if plotattributes[:marker_shape] !== :none
@@ -430,7 +430,7 @@ end
     end
 
     # make fillto a vector... default fills to 0
-    if (fillto = plotattributes[:fillrange]) === nothing
+    if (fillto = plotattributes[:yfill_range]) === nothing
         fillto = 0
     end
     if yscale in _logScales && !all(_is_positive, fillto)
@@ -510,7 +510,7 @@ end
         y_pts[inds] .= [ye[i], ye[i], ye[i + 1], ye[i + 1], ye[i]]
         fz[k] = z.surf[i, j]
     end
-    ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
+    ensure_gradient!(plotattributes, :yfill_color, :yfill_alpha)
     fill_z := fz
     line_z := fz
     x := x_pts
@@ -1340,7 +1340,7 @@ end
         yflip --> true
         colorbar --> false
         aspect_ratio --> :equal
-        z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
+        z, plotattributes[:yfill_color] = replace_image_with_heatmap(mat)
         SliceIt, m, n, Surface(z)
     end
 end
@@ -1405,7 +1405,7 @@ end
         seriestype := :heatmap
         yflip --> true
         colorbar --> false
-        z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
+        z, plotattributes[:yfill_color] = replace_image_with_heatmap(mat)
         SliceIt, x, y, Surface(z)
     end
 end

@@ -50,7 +50,7 @@ function fixaxis!(attr, x, axisletter)
     ustripattribute!(attr, err, u)
     if axisletter === :y
         ustripattribute!(attr, :ribbon, u)
-        ustripattribute!(attr, :fillrange, u)
+        ustripattribute!(attr, :yfill_range, u)
     end
     fixaspectratio!(attr, u, axisletter)
     fixmarkercolor!(attr)

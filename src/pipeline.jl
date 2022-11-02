@@ -127,7 +127,7 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
                     :seriestype => :path,
                     :x => sx,
                     :y => sy,
-                    :fillrange => nothing,
+                    :yfill_range => nothing,
                     :label => "",
                     :primary => false,
                 ),
@@ -176,7 +176,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
         kw[:z_extrema] = ze
 
         rib = get(kw, :ribbon, default(:ribbon))
-        fr = get(kw, :fillrange, default(:fillrange))
+        fr = get(kw, :yfill_range, default(:yfill_range))
         # map ribbon if it's a Function
         if rib isa Function
             kw[:ribbon] = map(rib, kw[:x])
@@ -186,7 +186,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
             make_fillrange_from_ribbon(kw)
             # map fillrange if it's a Function
         elseif fr !== nothing && fr isa Function
-            kw[:fillrange] = map(fr, kw[:x])
+            kw[:yfill_range] = map(fr, kw[:x])
         end
     end
     nothing
