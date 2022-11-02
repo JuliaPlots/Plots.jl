@@ -283,7 +283,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         PGFPlotsX.Plot
                     end
                 if (
-                    series[:fillrange] !== nothing &&
+                    series[:yfill_range] !== nothing &&
                     series[:ribbon] === nothing &&
                     !isfilledcontour(series)
                 )
@@ -359,7 +359,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
             segment_opt = merge(segment_opt, pgfx_marker(opt, i))
         end
         # add fillrange
-        if (sf = opt[:fillrange]) !== nothing && !isfilledcontour(series)
+        if (sf = opt[:yfill_range]) !== nothing && !isfilledcontour(series)
             if sf isa Number || sf isa AVec
                 pgfx_fillrange_series!(axis, series, series_func, i, _cycle(sf, rng), rng)
             elseif sf isa Tuple && series[:ribbon] !== nothing

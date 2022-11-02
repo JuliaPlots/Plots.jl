@@ -151,11 +151,11 @@ end
 end
 
 @testset "Slicing" begin
-    @test plot(1:5, fillrange = 0)[1][1][:fillrange] == 0
+    @test plot(1:5, fillrange = 0)[1][1][:yfill_range] == 0
     data4 = rand(4, 4)
     mat = reshape(1:8, 2, 4)
     for i in axes(data4, 1)
-        for attribute in (:fillrange, :ribbon)
+        for attribute in (:yfill_range, :ribbon)
             get_attr(pl) = pl[1][i][attribute]
             @test plot(data4; NamedTuple{tuple(attribute)}(0)...) |> get_attr == 0
             @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1, 2]))...) |> get_attr ==
@@ -273,7 +273,7 @@ end
             y,
             z;
             connections = [
-                [1, 2, 4, 3], # Quadrangle 
+                [1, 2, 4, 3], # Quadrangle
                 [1, 2, 5], # Triangle
                 [2, 4, 5], # Triangle
                 [4, 3, 5], # Triangle

@@ -225,12 +225,12 @@ function pgf_series(sp::Subplot, series::Series)
 
             # add to legend?
             if i == 1 && sp[:legend_position] !== :none && should_add_to_legend(series)
-                if plotattributes[:fillrange] !== nothing
+                if plotattributes[:yfill_range] !== nothing
                     push!(style, "forget plot")
                     push!(series_collection, pgf_fill_legend_hack(plotattributes, args))
                 else
                     kw[:legendentry] = plotattributes[:label]
-                    if st === :shape # || plotattributes[:fillrange] !== nothing
+                    if st === :shape # || plotattributes[:yfill_range] !== nothing
                         push!(style, "area legend")
                     end
                 end
@@ -247,13 +247,13 @@ function pgf_series(sp::Subplot, series::Series)
             kw[:style] = join(style, ',')
 
             # add fillrange
-            if series[:fillrange] !== nothing && st !== :shape
+            if series[:yfill_range] !== nothing && st !== :shape
                 push!(
                     series_collection,
                     pgf_fillrange_series(
                         series,
                         i,
-                        _cycle(series[:fillrange], rng),
+                        _cycle(series[:yfill_range], rng),
                         seg_args...,
                     ),
                 )
@@ -641,7 +641,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         # As it is likely that all series within the same axis use the same
         # colormap this should not cause any problem.
         for series in series_list(sp)
-            for col in (:marker_color, :fillcolor, :line_color)
+            for col in (:marker_color, :yfill_color, :line_color)
                 if typeof(series.plotattributes[col]) == ColorGradient
                     push!(
                         style,

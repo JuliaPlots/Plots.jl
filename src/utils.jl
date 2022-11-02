@@ -369,8 +369,8 @@ function make_fillrange_from_ribbon(kw::AKW)
     rib = wraptuple(rib)
     rib1, rib2 = -first(rib), last(rib)
     # kw[:ribbon] = nothing
-    kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
-    (get(kw, :fillalpha, nothing) === nothing) && (kw[:fillalpha] = 0.5)
+    kw[:yfill_range] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
+    (get(kw, :yfill_alpha, nothing) === nothing) && (kw[:yfill_alpha] = 0.5)
 end
 
 #turn tuple of fillranges to one path
@@ -410,7 +410,7 @@ ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
 iscontour(series::Series) = series[:seriestype] in (:contour, :contour3d)
-isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
+isfilledcontour(series::Series) = iscontour(series) && series[:yfill_range] !== nothing
 
 function contour_levels(series::Series, clims)
     iscontour(series) || error("Not a contour series")
@@ -423,7 +423,7 @@ function contour_levels(series::Series, clims)
     levels
 end
 
-for comp in (:line_, :fill, :marker_)
+for comp in (:line_, :yfill_, :marker_)
     compcolor = string(comp, :color)
     get_compcolor = Symbol(:get_, compcolor)
     comp_z = string(comp, :z)
@@ -433,7 +433,7 @@ for comp in (:line_, :fill, :marker_)
 
     @eval begin
         function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
-            c = series[$Symbol($compcolor)]  # series[:line_color], series[:fillcolor], series[:marker_color]
+            c = series[$Symbol($compcolor)]  # series[:line_color], series[:yfill_color], series[:marker_color]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
@@ -460,7 +460,7 @@ end
 function get_colorgradient(series::Series)
     st = series[:seriestype]
     if st in (:surface, :heatmap) || isfilledcontour(series)
-        series[:fillcolor]
+        series[:yfill_color]
     elseif st in (:contour, :wireframe)
         series[:line_color]
     elseif series[:marker_z] !== nothing
@@ -468,7 +468,7 @@ function get_colorgradient(series::Series)
     elseif series[:line_z] !== nothing
         series[:line_color]
     elseif series[:fill_z] !== nothing
-        series[:fillcolor]
+        series[:yfill_color]
     end
 end
 
@@ -481,7 +481,7 @@ get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 
 get_linewidth(series, i::Int = 1) = _cycle(series[:line_width], i)
 get_linestyle(series, i::Int = 1) = _cycle(series[:line_style], i)
-get_fillstyle(series, i::Int = 1) = _cycle(series[:fillstyle], i)
+get_fillstyle(series, i::Int = 1) = _cycle(series[:yfill_style], i)
 
 function get_markerstrokecolor(series, i::Int = 1)
     msc = series[:marker_stroke_color]
@@ -498,9 +498,9 @@ const _segmenting_vector_attributes = (
     :line_alpha,
     :line_width,
     :line_style,
-    :fillcolor,
-    :fillalpha,
-    :fillstyle,
+    :yfill_color,
+    :yfill_alpha,
+    :yfill_style,
     :marker_color,
     :marker_alpha,
     :marker_size,
