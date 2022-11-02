@@ -503,8 +503,8 @@ function get_markerstrokecolor(series, i::Int = 1)
     isa(msc, ColorGradient) ? msc : _cycle(msc, i)
 end
 
-get_markerstrokealpha(series, i::Int = 1) = _cycle(series[:markerstrokealpha], i)
-get_markerstrokewidth(series, i::Int = 1) = _cycle(series[:markerstrokewidth], i)
+get_markerstrokealpha(series, i::Int = 1) = _cycle(series[:marker_stroke_alpha], i)
+get_markerstrokewidth(series, i::Int = 1) = _cycle(series[:marker_stroke_width], i)
 
 const _segmenting_vector_attributes = (
     :seriescolor,
@@ -518,10 +518,10 @@ const _segmenting_vector_attributes = (
     :fillstyle,
     :marker_color,
     :marker_alpha,
-    :markersize,
+    :marker_size,
     :marker_stroke_color,
-    :markerstrokealpha,
-    :markerstrokewidth,
+    :marker_stroke_alpha,
+    :marker_stroke_width,
     :marker_shape,
 )
 

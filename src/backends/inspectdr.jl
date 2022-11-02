@@ -302,11 +302,11 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
         # InspectDR does not control markerstrokewidth independently.
         if _style === :none
             # Use this property only if no line is displayed:
-            wfrm.line.width = series[:markerstrokewidth]
+            wfrm.line.width = series[:marker_stroke_width]
         end
         wfrm.glyph = InspectDR.glyph(
             shape = _inspectdr_mapglyph(series[:marker_shape]),
-            size = _inspectdr_mapglyphsize(series[:markersize]),
+            size = _inspectdr_mapglyphsize(series[:marker_size]),
             color = _inspectdr_mapcolor(
                 plot_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
             ),

@@ -329,14 +329,6 @@ const _series_defaults = KW(
     :fillcolor          => :match,
     :fillalpha          => nothing,
     :fillstyle          => nothing,
-    :marker_shape        => :none,
-    :marker_color        => :match,
-    :marker_alpha        => nothing,
-    :markersize         => 4,
-    :markerstrokestyle  => :solid,
-    :markerstrokewidth  => 1,
-    :marker_stroke_color  => :match,
-    :markerstrokealpha  => nothing,
     :bins               => :auto,        # number of bins for hists
     :smooth             => false,     # regression line?
     :group              => nothing,   # groupby vector
@@ -612,7 +604,7 @@ add_aliases(:seriescolor, :c, :color, :colour)
 add_aliases(:line_color, :lc, :lcolor, :lcolour, :linecolour)
 add_aliases(:marker_color, :mc, :mcolor, :mcolour, :markercolour)
 add_aliases(:marker_stroke_color, :msc, :mscolor, :mscolour, :markerstrokecolour)
-add_aliases(:markerstrokewidth, :msw, :mswidth)
+add_aliases(:marker_stroke_width, :msw, :mswidth)
 add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
 
 add_aliases(
@@ -830,7 +822,7 @@ add_aliases(
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
 add_aliases(:line_alpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
 add_aliases(:marker_alpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
-add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
+add_aliases(:marker_stroke_alpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 
 # axes attributes
@@ -915,7 +907,7 @@ add_aliases(:line_width, :w, :width, :lw)
 add_aliases(:line_style, :style, :s, :ls)
 add_aliases(:marker, :m, :mark)
 add_aliases(:marker_shape, :shape)
-add_aliases(:markersize, :ms, :msize)
+add_aliases(:marker_size, :ms, :msize)
 add_aliases(:marker_z, :markerz, :zcolor, :mz)
 add_aliases(:line_z, :linez, :zline, :lz)
 add_aliases(:fill, :f, :area)
@@ -1166,19 +1158,19 @@ function processMarkerArg(plotattributes::AKW, arg)
 
         # stroke style
     elseif allStyles(arg)
-        plotattributes[:markerstrokestyle] = arg
+        plotattributes[:marker_stroke_style] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width === nothing || (plotattributes[:markerstrokewidth] = arg.width)
+        arg.width === nothing || (plotattributes[:marker_stroke_width] = arg.width)
         arg.color === nothing || (
             plotattributes[:marker_stroke_color] =
                 arg.color === :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:markerstrokestyle] = arg.style)
+        arg.alpha === nothing || (plotattributes[:marker_stroke_alpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:marker_stroke_style] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size === nothing || (plotattributes[:markersize] = arg.size)
+        arg.size === nothing || (plotattributes[:marker_size] = arg.size)
         arg.color === nothing || (
             plotattributes[:marker_color] =
                 arg.color === :auto ? :auto : plot_color(arg.color)
@@ -1195,7 +1187,7 @@ function processMarkerArg(plotattributes::AKW, arg)
 
         # markersize
     elseif allReals(arg)
-        plotattributes[:markersize] = arg
+        plotattributes[:marker_size] = arg
 
         # markercolor
     elseif !handleColors!(plotattributes, arg, :marker_color)

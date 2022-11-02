@@ -590,7 +590,7 @@ Many updates, min julia 1.0
 - allow calling `plot!(sp, ...)` to update a target Subplot
 - PyPlot: zorder fix
 - new DataFrames logic/recipe: more flexible/robust and allow Symbols for:
-	- `(:fillrange, :line_z, :marker_z, :markersize, :ribbon, :weights, :xerror, :yerror)`
+	- `(:fillrange, :line_z, :marker_z, :marker_size, :ribbon, :weights, :xerror, :yerror)`
 - new `display_type` and `extra_kwargs` plot attributes
 - surface fix
 

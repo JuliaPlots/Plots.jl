@@ -510,7 +510,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 label = series[:label],
                 zorder = series[:series_plotindex] + 0.5,
                 marker = py_marker(_cycle(series[:marker_shape], i)),
-                s = py_thickness_scale(plt, _cycle(series[:markersize], i)) .^ 2,
+                s = py_thickness_scale(plt, _cycle(series[:marker_size], i)) .^ 2,
                 facecolors = py_color(
                     get_marker_color(series, i),
                     get_marker_alpha(series, i),
@@ -1533,7 +1533,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 markeredgewidth = py_thickness_scale(
                     plt,
                     0.8get_markerstrokewidth(series) * sp[:legend_font_pointsize] /
-                    first(series[:markersize]),
+                    first(series[:marker_size]),
                 ),   # retain the markersize/markerstroke ratio from the markers on the plot
             )
             push!(handles, handle)

@@ -527,7 +527,7 @@ gaston_lc_ls_lw(series::Series, clims, i::Int) = (
 
 gaston_mk_ms_mc(series::Series, clims, i::Int) = (
     gaston_marker(_cycle(series[:marker_shape], i), get_marker_alpha(series, i)),
-    _cycle(series[:markersize], i) * 1.3 / 5,
+    _cycle(series[:marker_size], i) * 1.3 / 5,
     gaston_color(get_marker_color(series, clims, i), get_marker_alpha(series, i)),
 )
 
