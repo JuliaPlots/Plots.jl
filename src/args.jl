@@ -2157,15 +2157,28 @@ _series_index(plotattributes, sp) =
 #--------------------------------------------------
 ## inspired by Base.@kwdef
 """
-    add_attributes(level, expr[, match_table])
+    add_attributes(level, expr, args...)
 
 Takes a `struct` definition and recurses into its fields to create keywords by chaining the field names with the structs' name with underscore.
 Also creates pluralized and non-underscore aliases for these keywords.
 - `level` indicates which group of `plot`, `subplot`, `series`, etc. the keywords belong to.
 - `expr` is the struct definition with default values like `Base.@kwdef`
-- `match_table` is an expression of the form `:match = (symbols)`, with symbols whose default value should be `:match`
+- `args` can be any of the following
+  - `match_table`: an expression of the form `:match = (symbols)`, with symbols whose default value should be `:match`
+  - `alias_dict`: an expression of the form `:aliases = Dict(symbol1 => symbol2)`, which will create aliases such that `symbol1` is an alias for `symbol2`
 """
-macro add_attributes(level, expr, match_table = :(:match = ()))
+macro add_attributes(level, expr, args...)
+    match_table = :(:match = ())
+    alias_dict = :(:aliases = Dict{Symbol, Symbol}())
+    for arg in args
+        if arg.head == :(=) && arg.args[1] == QuoteNode(:match)
+            match_table = arg
+        elseif arg.head == :(=) && arg.args[1] == QuoteNode(:aliases)
+            alias_dict = arg
+        else
+            @warn "Unsupported extra argument $arg will be ignored"
+        end
+    end
     expr = macroexpand(__module__, expr) # to expand @static
     expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
     if (T = expr.args[2]) isa Expr && T.head === :<:
