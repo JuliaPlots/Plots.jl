@@ -1141,8 +1141,8 @@ const _examples = PlotExample[
         end,
     ),
     PlotExample(  # 63
-        "twinx - twiny",
-        "Share X or Y axis.",
+        "Shared axes (twin).",
+        "`twinx` (shared `x` axis) and `twiny` (shared `y` axis) example usage.",
         quote
             kw = (; lab = "", title_loc = :left)
             x = π:0.1:(2π)
@@ -1178,8 +1178,23 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [],
-    :pyplot => [22, 56],  # NOTE: `22` breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
-    :plotlyjs => [21, 24, 25, 30, 49, 50, 51, 55, 56, 62],
+    :pyplot => [
+        22,  # breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
+        56,
+    ],
+    :plotlyjs => [
+        21,
+        24,
+        25,
+        30,
+        49,
+        50,
+        51,
+        55,
+        56,
+        62,
+        63,  # twin axes unsupported
+    ],
     :pgfplotsx => [
         6,  # images
         16,  # pgfplots thinks the upper panel is too small
@@ -1189,7 +1204,7 @@ _backend_skips = Dict(
         56,  # custom bar plot
     ],
     :inspectdr =>
-        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60, 62],
+        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60, 62, 63],
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
@@ -1208,6 +1223,7 @@ _backend_skips = Dict(
         55,  # mirror unsupported, resolution too low
         56,  # barplots
         62,  # fillstyle
+        63,  # twin axes unsupported
     ],
     :gaston => [
         2,   # animations
