@@ -2182,6 +2182,7 @@ macro add_attributes(level, expr, match_table = :(:match = ()))
     end
 
     key_dict = KW()
+    original = copy(expr)
     _splitdef!(expr.args[3], key_dict)
 
     insert_block = Expr(:block)
@@ -2212,7 +2213,7 @@ macro add_attributes(level, expr, match_table = :(:match = ()))
         )
     end
     quote
-        $expr
+        Base.@kwdef $original
         $insert_block
     end |> esc
 end
