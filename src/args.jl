@@ -1,5 +1,9 @@
 makeplural(s::Symbol) = last(string(s)) == 's' ? s : Symbol(string(s, "s"))
-make_non_underscore(s::Symbol) = Symbol(replace(string(s), "_" => ""))
+function make_non_underscore(s::Symbol)
+    str = string(s)
+    n = count("_", str)
+    Tuple(Symbol(replace(str, "_" => "", count = c)) for c in 1:n)
+end
 
 const _keyAliases = Dict{Symbol,Symbol}()
 
@@ -22,7 +26,9 @@ end
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k, v) in aliases
         if '_' in string(k)
-            aliases[make_non_underscore(k)] = v
+            for nu in make_non_underscore(k)
+                aliases[nu] = v
+            end
         end
     end
 end
@@ -547,19 +553,6 @@ aliases(aliasMap::Dict{Symbol,Symbol}, val) =
 
 # -----------------------------------------------------------------------------
 # legend
-add_aliases(:legend_position, :legend, :leg, :key, :legends)
-add_aliases(
-    :legend_background_color,
-    :bg_legend,
-    :bglegend,
-    :bgcolor_legend,
-    :bg_color_legend,
-    :background_legend,
-    :background_colour_legend,
-    :bgcolour_legend,
-    :bg_colour_legend,
-    :background_color_legend,
-)
 add_aliases(
     :legend_foreground_color,
     :fg_legend,
@@ -2169,12 +2162,12 @@ Also creates pluralized and non-underscore aliases for these keywords.
 """
 macro add_attributes(level, expr, args...)
     match_table = :(:match = ())
-    alias_dict = :(:aliases = Dict{Symbol, Symbol}())
+    alias_dict = KW()
     for arg in args
         if arg.head == :(=) && arg.args[1] == QuoteNode(:match)
             match_table = arg
         elseif arg.head == :(=) && arg.args[1] == QuoteNode(:aliases)
-            alias_dict = arg
+            alias_dict = eval(arg.args[2])
         else
             @warn "Unsupported extra argument $arg will be ignored"
         end
@@ -2198,6 +2191,7 @@ macro add_attributes(level, expr, args...)
             value = QuoteNode(:match)
         end
         field = QuoteNode(Symbol("_", level, "_defaults"))
+        aliases = get(alias_dict, exp_key, nothing)
         push!(
             insert_block.args,
             Expr(
@@ -2208,13 +2202,21 @@ macro add_attributes(level, expr, args...)
             :(Plots.add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
             :(Plots.add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(Plots.make_non_underscore(exp_key))),
+                $(QuoteNode(Plots.make_non_underscore(exp_key)))...,
             )),
             :(Plots.add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(Plots.make_non_underscore(pl_key))),
+                $(QuoteNode(Plots.make_non_underscore(pl_key)))...,
             )),
         )
+        if aliases !== nothing
+                pl_aliases = Plots.makeplural.(aliases)
+                push!(
+                    insert_block.args,
+                    :(Plots.add_aliases($(QuoteNode(exp_key)), $(aliases)..., $(pl_aliases)..., $(Iterators.flatten(Plots.make_non_underscore.(aliases)))..., $(Iterators.flatten(Plots.make_non_underscore.(pl_aliases)))...,
+                    ))
+                )
+        end
     end
     quote
         Base.@kwdef $original
