@@ -819,7 +819,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
                 sp,
                 ax;
                 halign = (:left, :hcenter, :right)[sign(rot) + 2],
-                valign = (ax[:mirror] ? :bottom : :top),
+                valign = ax[:mirror] ? :bottom : :top,
             )
             l = 0.01 + last(gr_get_ticks_size(tc, rot))
             m = max(m, 1mm + height * l * px)
@@ -834,7 +834,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             gr_set_tickfont(
                 sp,
                 zaxis;
-                halign = (zaxis[:mirror] ? :left : :right),
+                halign = zaxis[:mirror] ? :left : :right,
                 valign = (:top, :vcenter, :bottom)[sign(rot) + 2],
             )
             l = 0.01 + first(gr_get_ticks_size(zticks, rot))
@@ -1088,39 +1088,38 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         return gr_legend_pos(lp, vp)
     end
     if (leg_str = string(lp)) == "best"
-        # leg_str = ymirror ? "topleft" : "topright"  # for twinx ?
         leg_str = "topright"
     end
     xpos = if occursin("left", leg_str)
-        if occursin("outer", leg_str)
-            -!ymirror * gr_axis_width(sp, yaxis) - 2leg.xoffset - leg.rightw - leg.textw
+        vp.xmin + if occursin("outer", leg_str)
+            -!ymirror * gr_axis_width(sp, yaxis) - leg.rightw - leg.textw - 2leg.xoffset
         else
             leg.leftw + leg.xoffset
-        end + vp.xmin
+        end
     elseif occursin("right", leg_str)
-        if occursin("outer", leg_str)  # per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
+        vp.xmax + if occursin("outer", leg_str)  # per github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
             leg.xoffset + leg.leftw + ymirror * gr_axis_width(sp, yaxis)
         else
             -leg.rightw - leg.textw - leg.xoffset
-        end + vp.xmax
+        end
     else
-        vp.xmin + leg.leftw - leg.rightw - leg.textw - 2leg.xoffset
+        vp.xmin + 0.5width(vp) + leg.leftw - leg.rightw - leg.textw - 2leg.xoffset
     end
     ypos = if occursin("bottom", leg_str)
-        if lp === :outerbottom
+        vp.ymin + if lp === :outerbottom
             -leg.yoffset - leg.dy - !xmirror * gr_axis_height(sp, xaxis)
         else
             leg.yoffset + leg.h
-        end + vp.ymin
+        end
     elseif occursin("top", leg_str)
-        if lp === :outertop
+        vp.ymax + if lp === :outertop
             leg.yoffset + leg.h + xmirror * gr_axis_height(sp, xaxis)
         else
             -leg.yoffset - leg.dy
-        end + vp.ymax
+        end
     else
         # Adding min y to shift legend pos to correct graph (#2377)
-        0.5(height(vp) + leg.h) + vp.ymin
+        vp.ymin + 0.5(height(vp) + leg.h)
     end
     xpos, ypos
 end
