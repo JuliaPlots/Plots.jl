@@ -6,7 +6,7 @@ function make_non_underscore(s::Symbol)
 end
 
 const _keyAliases = Dict{Symbol,Symbol}()
-const _generalAliases = ("background" => "bg", "foreground" => "fg", "pointsize" => "size", "yfill" => "fill")
+const _generalAliases = ("background" => "bg", "foreground" => "fg", "pointsize" => "size", "yfill" => "fill", "alpha" => "a", "alpha" => "opacity", "alpha" => "α")
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
@@ -564,7 +564,6 @@ aliases(aliasMap::Dict{Symbol,Symbol}, val) =
     filter((x) -> x.second == val, aliasMap) |> keys |> collect |> sort
 
 # -----------------------------------------------------------------------------
-add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
 # margin
 add_aliases(:left_margin, :leftmargin)
 
@@ -574,11 +573,6 @@ add_aliases(:right_margin, :rightmargin)
 
 # colors
 add_aliases(:seriescolor, :c, :color, :colour)
-add_aliases(:line_color, :lc, :lcolor, :lcolour, :linecolour)
-add_aliases(:marker_color, :mc, :mcolor, :mcolour, :markercolour)
-add_aliases(:marker_stroke_color, :msc, :mscolor, :mscolour, :markerstrokecolour)
-add_aliases(:marker_stroke_width, :msw, :mswidth)
-add_aliases(:yfill_color, :fc, :fcolor, :fcolour, :fillcolour)
 
 add_aliases(
     :background_color,
@@ -793,10 +787,6 @@ add_aliases(
 
 # alphas
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
-add_aliases(:line_alpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
-add_aliases(:marker_alpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
-add_aliases(:marker_stroke_alpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
-add_aliases(:yfill_alpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 
 # axes attributes
 add_axes_aliases(:guide, :label, :lab, :l; generic = false)
@@ -876,15 +866,10 @@ add_axes_aliases(
 add_aliases(:seriestype, :st, :t, :typ, :linetype, :lt)
 add_aliases(:label, :lab)
 add_aliases(:line, :l)
-add_aliases(:line_width, :w, :width, :lw)
-add_aliases(:line_style, :style, :s, :ls)
 add_aliases(:marker, :m, :mark)
-add_aliases(:marker_shape, :shape)
-add_aliases(:marker_size, :ms, :msize)
 add_aliases(:marker_z, :markerz, :zcolor, :mz)
 add_aliases(:line_z, :linez, :zline, :lz)
 add_aliases(:fill, :f, :area)
-add_aliases(:yfill_range, :fillrng, :frange, :fillto, :fill_between)
 add_aliases(:group, :g, :grouping)
 add_aliases(:bins, :bin, :nbin, :nbins, :nb)
 add_aliases(:ribbon, :rib)

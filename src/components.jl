@@ -845,7 +845,13 @@ end :match = (
     width = :auto
     color = :auto
     alpha = nothing
-end
+end :aliases = Dict(
+    :line_color => (:lc, :lcolor, :lcolour, :line_colour),
+    :line_alpha => (:lalpha,),
+    :line_width => (:w, :width, :lw),
+    :line_style => (:s, :style, :ls),
+
+)
 
 ### Marker
 
@@ -855,7 +861,15 @@ end
     alpha = nothing
     stroke::Line = Line(:solid, 1, :match, nothing)
     size = 4
-end
+end :aliases = Dict(
+    :marker_color => (:mc, :mcolor, :mcolour, :marker_colour),
+    :marker_alpha => (:malpha,),
+    :marker_shape => (:shape,),
+    :marker_size => (:ms, :msize),
+    :marker_stroke_color => (:msc, :mscolor, :mscolour),
+    :marker_stroke_alpha => (:msalpha,),
+    :marker_stroke_width => (:msw, :mswidth),
+)
 
 ### Errorbars
 
@@ -872,4 +886,8 @@ end
     color = :match
     alpha = nothing
     style = nothing
-end
+end aliases = Dict(
+    :yfill_color => (:fc, :fcolor, :fcolour,),
+    :yfill_alpha => (:falpha,),
+    :yfill_range => (:yfill_rng, :frange, :yfill_to, :yfill_between)
+)
