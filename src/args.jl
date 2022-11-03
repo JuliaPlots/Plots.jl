@@ -6,9 +6,16 @@ function make_non_underscore(s::Symbol)
 end
 
 const _keyAliases = Dict{Symbol,Symbol}()
+const _generalAliases = ("background" => "bg", "foreground" => "fg", "pointsize" => "size", "yfill" => "fill")
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
+        str = string(alias)
+        for ga in _generalAliases
+            contains(str, ga.first) || continue
+            str2 = replace(str, ga)
+            _keyAliases[Symbol(str2)] = sym
+        end
         (haskey(_keyAliases, alias) || alias === sym) && return
         _keyAliases[alias] = sym
     end
@@ -557,29 +564,6 @@ aliases(aliasMap::Dict{Symbol,Symbol}, val) =
     filter((x) -> x.second == val, aliasMap) |> keys |> collect |> sort
 
 # -----------------------------------------------------------------------------
-# legend
-add_aliases(
-    :legend_foreground_color,
-    :fg_legend,
-    :fglegend,
-    :fgcolor_legend,
-    :fg_color_legend,
-    :foreground_legend,
-    :foreground_colour_legend,
-    :fgcolour_legend,
-    :fg_colour_legend,
-    :foreground_color_legend,
-)
-add_aliases(:legend_font_pointsize, :legendfontsize)
-add_aliases(
-    :legend_title,
-    :key_title,
-    :keytitle,
-    :label_title,
-    :labeltitle,
-    :leg_title,
-    :legtitle,
-)
 add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
 # margin
 add_aliases(:left_margin, :leftmargin)
