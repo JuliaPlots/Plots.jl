@@ -832,6 +832,10 @@ end :match = (
     :legend_font_color,
     :legend_title_font_family,
     :legend_title_font_color,
+) :aliases = Dict(
+        :legend_position => (:legend, :leg, :key),
+        :legend_background_color => (:background_legend, :background_colour_legend, :background_color_legend),
+        :legend_foreground_color => (:foreground_legend, :foreground_colour_legend, :foreground_colour_legend)
 )
 
 ### Line
