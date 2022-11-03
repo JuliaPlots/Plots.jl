@@ -113,20 +113,20 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
 end
 
 function _inspectdr_setticks(sp::Subplot, plot, strip, xaxis, yaxis)
-    InputXfrm1D = InspectDR.InputXfrm1D
-    _get_ticks(axis) = :native == axis[:ticks] ? (:native) : get_ticks(sp, axis)
-    wantnative(ticks) = (:native == ticks)
+    _get_ticks(axis) = axis[:ticks] === :native ? :native : get_ticks(sp, axis)
 
     xticks = _get_ticks(xaxis)
     yticks = _get_ticks(yaxis)
 
-    (wantnative(xticks) && wantnative(yticks)) && return  # Don't "eval" tick values
+    (xticks === :native && yticks === :native) && return  # Don't "eval" tick values
 
     # TODO: Allow InspectDR to independently "eval" x or y ticks
     ext = InspectDR.getextents_aloc(plot, 1)
     grid = InspectDR._eval(strip.grid, plot.xscale, strip.yscale, ext)
-    grid.xlines = _inspectdr_getaxisticks(xticks, grid.xlines, InputXfrm1D(plot.xscale))
-    grid.ylines = _inspectdr_getaxisticks(yticks, grid.ylines, InputXfrm1D(strip.yscale))
+    grid.xlines =
+        _inspectdr_getaxisticks(xticks, grid.xlines, InspectDR.InputXfrm1D(plot.xscale))
+    grid.ylines =
+        _inspectdr_getaxisticks(yticks, grid.ylines, InspectDR.InputXfrm1D(strip.yscale))
     strip.grid = grid
 end
 

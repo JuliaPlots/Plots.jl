@@ -160,7 +160,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             k_min = scale ∈ _logScales ? 2 : 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
             scale = scale,
-        )[1]
+        ) |> first
     elseif typeof(ticks) <: Int
         optimize_ticks(
             sf(amin),
@@ -172,13 +172,13 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
             scale = scale,
-        )[1]
+        ) |> first
     else
-        map(sf, (filter(t -> amin ≤ t ≤ amax, ticks)))
+        map(sf, filter(t -> amin ≤ t ≤ amax, ticks))
     end
     unscaled_ticks = map(RecipesPipeline.inverse_scale_func(scale), scaled_ticks)
 
-    labels = if any(isfinite, unscaled_ticks)
+    labels::Vector{String} = if any(isfinite, unscaled_ticks)
         if formatter in (:auto, :plain, :scientific, :engineering)
             map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
         elseif formatter === :latex
@@ -193,9 +193,6 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             map(formatter, unscaled_ticks)
             # if the formatter left us with numbers, still apply the default formatter
             # However it leave us with the problem of unicode number decoding by the backend
-            # if eltype(unscaled_ticks) <: Number
-            #     Showoff.showoff(unscaled_ticks, :auto)
-            # end
         end
     else
         String[]  # no finite ticks to show...
@@ -204,18 +201,18 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     unscaled_ticks, labels
 end
 
-# return (continuous_values, discrete_values) for the ticks on this axis
+# returns (continuous_values, discrete_values) for the ticks on this axis
 function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:formatter])
     if update || !haskey(axis.plotattributes, :optimized_ticks)
         dvals = axis[:discrete_values]
         ticks = _transform_ticks(axis[:ticks], axis)
         axis.plotattributes[:optimized_ticks] =
             if (
+                axis[:letter] === :x &&
                 ticks isa Symbol &&
                 ticks !== :none &&
-                ispolar(sp) &&
-                axis[:letter] === :x &&
-                !isempty(dvals)
+                !isempty(dvals) &&
+                ispolar(sp)
             )
                 collect(0:(π / 4):(7π / 4)), string.(0:45:315)
             else
@@ -285,22 +282,22 @@ for l in (:x, :y, :z)
 end
 # get_ticks from axis symbol :x, :y, or :z
 get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
-get_ticks(p::Plot, s::Symbol) = [get_ticks(sp, s) for sp in p.subplots]
+get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
 
 get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
     if ticks === :none
-        return T[], String[]
+        T[], String[]
     elseif !isempty(dvals)
         n = length(dvals)
         if ticks === :all || n < 16
-            return cvals, string.(dvals)
+            cvals, string.(dvals)
         else
             Δ = ceil(Int, n / 10)
             rng = Δ:Δ:n
-            return cvals[rng], string.(dvals[rng])
+            cvals[rng], string.(dvals[rng])
         end
     else
-        return optimal_ticks_and_labels(nothing, args...)
+        optimal_ticks_and_labels(nothing, args...)
     end
 
 get_ticks(ticks::AVec, cvals, dvals, args...) = optimal_ticks_and_labels(ticks, args...)
@@ -315,7 +312,8 @@ get_ticks(ticks::NTuple{2,Any}, args...) = ticks
 get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
 get_ticks(ticks::Bool, args...) =
     ticks ? get_ticks(:auto, args...) : get_ticks(nothing, args...)
-get_ticks(::T, args...) where {T} = error("Unknown ticks type in get_ticks: $T")
+get_ticks(::T, args...) where {T} =
+    throw(ArgumentError("Unknown ticks type in get_ticks: $T"))
 
 _transform_ticks(ticks, axis) = ticks
 _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
@@ -836,7 +834,7 @@ function axis_drawing_info(sp, letter)
                 oax,
                 oas,
                 oamM,
-                ticks[1],
+                first(ticks),
                 ax[:grid],
                 tick_segments,
                 grid_segments,
@@ -983,7 +981,7 @@ function axis_drawing_info_3d(sp, letter)
                 nas,
                 fas,
                 namM,
-                ticks[1],
+                first(ticks),
                 ax[:grid],
                 tick_segments,
                 grid_segments,

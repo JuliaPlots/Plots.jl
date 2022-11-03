@@ -298,7 +298,7 @@ function recompute_lengths(v)
     end
 
     # now fill in the blanks
-    Measure[(vi == 0pct ? leftover / cnt : vi) for vi in v]
+    map(x -> x == 0pct ? leftover / cnt : x, v)
 end
 
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
@@ -352,8 +352,8 @@ function update_child_bboxes!(
         child = layout[r, c]
 
         # get the top-left corner of this child... the first one is top-left of the parent (i.e. layout)
-        child_left = (c == 1 ? left(layout.bbox) : right(layout[r, c - 1].bbox))
-        child_top  = (r == 1 ? top(layout.bbox) : bottom(layout[r - 1, c].bbox))
+        child_left = c == 1 ? left(layout.bbox) : right(layout[r, c - 1].bbox)
+        child_top  = r == 1 ? top(layout.bbox) : bottom(layout[r - 1, c].bbox)
 
         # compute plot area
         plotarea_left   = child_left + pad_left[c]
@@ -385,7 +385,7 @@ end
 
 # for each inset (floating) subplot, resolve the relative position
 # to absolute canvas coordinates, relative to the parent's plotarea
-function update_inset_bboxes!(plt::Plot)
+update_inset_bboxes!(plt::Plot) =
     for sp in plt.inset_subplots
         p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
         plotarea!(sp, p_area)
@@ -400,18 +400,11 @@ function update_inset_bboxes!(plt::Plot)
             ),
         )
     end
-end
 
 # ----------------------------------------------------------------------
 
 calc_num_subplots(layout::AbstractLayout) = get(layout.attr, :blank, false) ? 0 : 1
-function calc_num_subplots(layout::GridLayout)
-    tot = 0
-    for l in layout.grid
-        tot += calc_num_subplots(l)
-    end
-    tot
-end
+calc_num_subplots(layout::GridLayout) = sum(map(l -> calc_num_subplots(l), layout.grid))
 
 function compute_gridsize(numplts::Int, nr::Int, nc::Int)
     # figure out how many rows/columns we need
@@ -479,7 +472,7 @@ layout_args(nt::NamedTuple) = EmptyLayout(; nt...), 1
 
 function layout_args(m::AbstractVecOrMat)
     sz = size(m)
-    nr = sz[1]
+    nr = first(sz)
     nc = get(sz, 2, 1)
     gl = GridLayout(nr, nc)
     for ci in CartesianIndices(m)
