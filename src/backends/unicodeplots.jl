@@ -105,6 +105,8 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
             width = width,
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
+            xflip = xaxis[:flip],
+            yflip = yaxis[:flip],
             border = border,
             xlim = xlim,
             ylim = ylim,
