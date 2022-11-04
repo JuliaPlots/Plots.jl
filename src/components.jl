@@ -871,22 +871,23 @@ end :aliases = Dict(
     :marker_stroke_width => (:msw, :mswidth),
 )
 
-### Errorbars
+for letter in (:X, :Y, :Z)
+    ### Errorbars
+    @eval @add_attributes series struct $(Symbol(letter, :ErrorBar))
+        marker::Marker = Marker(shape = getproperty(( X = :vline, Y = :hline, Z = :hline), letter))
+        line::Line = Line()
+    end
 
-@add_attributes series struct XErrorBar
-    marker::Marker = Marker(shape = :hline)
-    line::Line = Line()
+    ### Fills
+    @eval @add_attributes series struct $(Symbol(letter, :Fill))
+        range = nothing
+        color = :match
+        alpha = nothing
+        style = nothing
+    end :aliases = Dict(
+        :yfill_color => (:fc, :fcolor, :fcolour,),
+        :yfill_alpha => (:falpha,),
+        :yfill_range => (:yfill_rng, :frange, :yfill_to, :yfill_between)
+    )
 end
 
-### Fills
-
-@add_attributes series struct YFill
-    range = nothing
-    color = :match
-    alpha = nothing
-    style = nothing
-end aliases = Dict(
-    :yfill_color => (:fc, :fcolor, :fcolour,),
-    :yfill_alpha => (:falpha,),
-    :yfill_range => (:yfill_rng, :frange, :yfill_to, :yfill_between)
-)
