@@ -222,7 +222,8 @@ function addUnicodeSeries!(
             zscale = zscale,
             lines = lines,
         )
-        return UnicodePlots.surfaceplot(x, y, Array(series[:z]); kw...)
+        # NOTE: inconsistency between `contourplot` and `surfaceplot`
+        return UnicodePlots.surfaceplot(y, x, transpose(Array(series[:z])); kw...)
     elseif st === :mesh3d
         return UnicodePlots.lineplot!(
             up,
