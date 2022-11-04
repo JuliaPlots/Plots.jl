@@ -267,7 +267,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 extra_series, extra_series_opt = pgfx_split_extra_kw(series[:extra_kwargs])
                 series_opt = merge(
                     Options(
-                        "color" => single_color(opt[:linecolor]),
+                        "color" => single_color(opt[:line_color]),
                         "name path" => string(series_id),
                     ),
                     Options(extra_series_opt...),
@@ -283,7 +283,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         PGFPlotsX.Plot
                     end
                 if (
-                    series[:fillrange] !== nothing &&
+                    series[:yfill_range] !== nothing &&
                     series[:ribbon] === nothing &&
                     !isfilledcontour(series)
                 )
@@ -338,10 +338,10 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     for (k, segment) in enumerate(segments)
         i, rng = segment.attr_index, segment.range
         segment_opt = merge(Options(), pgfx_linestyle(opt, i))
-        if opt[:markershape] !== :none
-            if (marker = _cycle(opt[:markershape], i)) isa Shape
+        if opt[:marker_shape] !== :none
+            if (marker = _cycle(opt[:marker_shape], i)) isa Shape
                 scale_factor = 0.00125
-                msize = opt[:markersize] * scale_factor
+                msize = opt[:marker_size] * scale_factor
                 path = join(
                     map((x, y) -> "($(x * msize), $(y * msize))", marker.x, marker.y),
                     " -- ",
@@ -359,7 +359,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
             segment_opt = merge(segment_opt, pgfx_marker(opt, i))
         end
         # add fillrange
-        if (sf = opt[:fillrange]) !== nothing && !isfilledcontour(series)
+        if (sf = opt[:yfill_range]) !== nothing && !isfilledcontour(series)
             if sf isa Number || sf isa AVec
                 pgfx_fillrange_series!(axis, series, series_func, i, _cycle(sf, rng), rng)
             elseif sf isa Tuple && series[:ribbon] !== nothing
@@ -437,7 +437,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     end  # for segments
 
     # get that last marker
-    if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && opt[:markershape] isa AVec
+    if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && opt[:marker_shape] isa AVec
         push!(
             axis,
             PGFPlotsX.PlotInc(  # additional plot
@@ -893,8 +893,8 @@ pgfx_legend_col(n) = n
 
 function pgfx_linestyle(plotattributes, i = 1)
     lw = pgfx_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)
-    lc = single_color(get_linecolor(plotattributes, i))
-    la = get_linealpha(plotattributes, i)
+    lc = single_color(get_line_color(plotattributes, i))
+    la = get_line_alpha(plotattributes, i)
     ls = get_linestyle(plotattributes, i)
     return pgfx_linestyle(lw, lc, la, ls)
 end
@@ -925,9 +925,9 @@ pgfx_should_add_to_legend(series::Series) =
     )
 
 function pgfx_marker(plotattributes, i = 1)
-    shape = _cycle(plotattributes[:markershape], i)
+    shape = _cycle(plotattributes[:marker_shape], i)
     cstr =
-        plot_color(get_markercolor(plotattributes, i), get_markeralpha(plotattributes, i))
+        plot_color(get_marker_color(plotattributes, i), get_marker_alpha(plotattributes, i))
     cstr_stroke = plot_color(
         get_markerstrokecolor(plotattributes, i),
         get_markerstrokealpha(plotattributes, i),
@@ -935,9 +935,9 @@ function pgfx_marker(plotattributes, i = 1)
     mark_size =
         pgfx_thickness_scaling(plotattributes) *
         0.75 *
-        _cycle(plotattributes[:markersize], i)
-    mark_freq = if !any(isnan, plotattributes[:y]) && plotattributes[:markershape] isa AVec
-        length(plotattributes[:markershape])
+        _cycle(plotattributes[:marker_size], i)
+    mark_freq = if !any(isnan, plotattributes[:y]) && plotattributes[:marker_shape] isa AVec
+        length(plotattributes[:marker_shape])
     else
         1
     end
@@ -953,7 +953,7 @@ function pgfx_marker(plotattributes, i = 1)
             "line width" =>
                 pgfx_thickness_scaling(plotattributes) *
                 0.75 *
-                _cycle(plotattributes[:markerstrokewidth], i),
+                _cycle(plotattributes[:marker_stroke_width], i),
             "rotate" => if shape === :dtriangle
                 180
             elseif shape === :rtriangle
@@ -963,7 +963,7 @@ function pgfx_marker(plotattributes, i = 1)
             else
                 0
             end,
-            pgfx_get_linestyle(_cycle(plotattributes[:markerstrokestyle], i)) =>
+            pgfx_get_linestyle(_cycle(plotattributes[:marker_stroke_style], i)) =>
                 nothing,
         ),
     )

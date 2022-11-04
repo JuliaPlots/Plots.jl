@@ -85,9 +85,9 @@ end
     plot!(p, x, y; linestyle = :dash)
     yerror!(p, x, y; yerror, linestyle = :dot)
     @test length(p.series_list) == 3
-    @test p[1][1][:linestyle] == :solid
-    @test p[1][2][:linestyle] == :dash
-    @test p[1][3][:linestyle] == :dot
+    @test p[1][1][:line_style] == :solid
+    @test p[1][2][:line_style] == :dash
+    @test p[1][3][:line_style] == :dot
 end
 
 @testset "parametric" begin

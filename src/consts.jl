@@ -42,7 +42,7 @@ const _internal_args = [
     :plot_object,
     :series_plotindex,
     :series_index,
-    :markershape_to_add,
+    :marker_shape_to_add,
     :letter,
     :idxfilter,
 ]

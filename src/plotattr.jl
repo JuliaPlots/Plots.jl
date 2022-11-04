@@ -55,6 +55,7 @@ function plotattr()
     - $attrtype attribute
     - Default: $(d isa Symbol ? string(':', d) : d)
     - $(get(Plots._arg_desc, attr, ""))
+    - Aliases: $('`' * join(letter .* string.(aliases(attr)), "`, `") * '`')
     """)
 end
 # COV_EXCL_STOP

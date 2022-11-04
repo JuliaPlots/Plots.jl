@@ -6,22 +6,22 @@ const _arg_desc = KW(
     :seriescolor        => "Color Type. The base color for this series.  `:auto` (the default) will select a color from the subplot's `color_palette`, based on the order it was added to the subplot",
     :seriesalpha        => "Number in [0,1]. The alpha/opacity override for the series.  `nothing` (the default) means it will take the alpha value of the color.",
     :seriestype         => "Symbol. This is the identifier of the type of visualization for this series. Choose from $(_allTypes) or any series recipes which are defined.",
-    :linestyle          => "Symbol. Style of the line (for path and bar stroke).  Choose from $(_allStyles)",
-    :linewidth          => "Number. Width of the line (in pixels)",
-    :linecolor          => "Color Type. Color of the line (for path and bar stroke).  `:match` will take the value from `:seriescolor`, (though histogram/bar types use `:black` as a default).",
-    :linealpha          => "Number in [0,1]. The alpha/opacity override for the line.  `nothing` (the default) means it will take the alpha value of linecolor.",
-    :fillrange          => "Number or AbstractVector.  Fills area between fillrange and y for line-types, sets the base for bar/stick types, and similar for other types.",
-    :fillcolor          => "Color Type. Color of the filled area of path or bar types.  `:match` will take the value from `:seriescolor`.",
-    :fillalpha          => "Number in [0,1]. The alpha/opacity override for the fill area.  `nothing` (the default) means it will take the alpha value of fillcolor.",
-    :markershape        => "Symbol, Shape, or AbstractVector. Choose from $(_allMarkers).",
-    :fillstyle          => "Symbol. Style of the fill area. `nothing` (the default) means solid fill. Choose from :/, :\\, :|, :-, :+, :x",
-    :markercolor        => "Color Type. Color of the interior of the marker or shape. `:match` will take the value from `:seriescolor`.",
-    :markeralpha        => "Number in [0,1]. The alpha/opacity override for the marker interior.  `nothing` (the default) means it will take the alpha value of markercolor.",
-    :markersize         => "Number or AbstractVector. Size (radius pixels) of the markers",
-    :markerstrokestyle  => "Symbol. Style of the marker stroke (border).  Choose from $(_allStyles)",
-    :markerstrokewidth  => "Number. Width of the marker stroke (border) in pixels",
-    :markerstrokecolor  => "Color Type. Color of the marker stroke (border).  `:match` will take the value from `:foreground_color_subplot`.",
-    :markerstrokealpha  => "Number in [0,1]. The alpha/opacity override for the marker stroke (border).  `nothing` (the default) means it will take the alpha value of markerstrokecolor.",
+    :line_style          => "Symbol. Style of the line (for path and bar stroke).  Choose from $(_allStyles)",
+    :line_width          => "Number. Width of the line (in pixels)",
+    :line_color          => "Color Type. Color of the line (for path and bar stroke).  `:match` will take the value from `:seriescolor`, (though histogram/bar types use `:black` as a default).",
+    :line_alpha          => "Number in [0,1]. The alpha/opacity override for the line.  `nothing` (the default) means it will take the alpha value of linecolor.",
+    :yfill_range          => "Number or AbstractVector.  Fills area between fillrange and y for line-types, sets the base for bar/stick types, and similar for other types.",
+    :yfill_color          => "Color Type. Color of the filled area of path or bar types.  `:match` will take the value from `:seriescolor`.",
+    :yfill_alpha          => "Number in [0,1]. The alpha/opacity override for the fill area.  `nothing` (the default) means it will take the alpha value of fillcolor.",
+    :marker_shape        => "Symbol, Shape, or AbstractVector. Choose from $(_allMarkers).",
+    :yfill_style          => "Symbol. Style of the fill area. `nothing` (the default) means solid fill. Choose from :/, :\\, :|, :-, :+, :x",
+    :marker_color        => "Color Type. Color of the interior of the marker or shape. `:match` will take the value from `:seriescolor`.",
+    :marker_alpha        => "Number in [0,1]. The alpha/opacity override for the marker interior.  `nothing` (the default) means it will take the alpha value of markercolor.",
+    :marker_size         => "Number or AbstractVector. Size (radius pixels) of the markers",
+    :marker_stroke_style  => "Symbol. Style of the marker stroke (border).  Choose from $(_allStyles)",
+    :marker_stroke_width  => "Number. Width of the marker stroke (border) in pixels",
+    :marker_stroke_color  => "Color Type. Color of the marker stroke (border).  `:match` will take the value from `:foreground_color_subplot`.",
+    :marker_stroke_alpha  => "Number in [0,1]. The alpha/opacity override for the marker stroke (border).  `nothing` (the default) means it will take the alpha value of markerstrokecolor.",
     :bins               => "Integer, NTuple{2,Integer}, AbstractVector or Symbol. Default is :auto (the Freedman-Diaconis rule). For histogram-types, defines the approximate number of bins to aim for, or the auto-binning algorithm to use (:sturges, :sqrt, :rice, :scott or :fd). For fine-grained control pass a Vector of break values, e.g. `range(minimum(x), stop = maximum(x), length = 25)`",
     :smooth             => "Bool.  Add a regression line?",
     :group              => "AbstractVector. Data is split into a separate series, one for each unique value in `group`",
@@ -187,7 +187,7 @@ const _arg_desc = KW(
     :showaxis                    => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`",
     :widen                       => """
                                     Bool, Number or :auto. Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
-                                    If set to `true`, scale the axis limits by the default factor of $(default_widen_factor). 
+                                    If set to `true`, scale the axis limits by the default factor of $(default_widen_factor).
                                     A different factor may be specified by setting `widen` to a number.
                                     Defaults to `:auto`, which widens by the default factor unless limits were manually set.
                                     See also the `scale_limits!` function for scaling axis limits in an existing plot.

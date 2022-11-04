@@ -551,8 +551,8 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             shapes[i] =
                 scale(baseshape, msw * xscale / maxscale, msh * yscale / maxscale, (0, 0))
         end
-        series[:markershape] = shapes
-        series[:markersize] = msize
+        series[:marker_shape] = shapes
+        series[:marker_size] = msize
     end
     nothing
 end
@@ -832,4 +832,62 @@ end :match = (
     :legend_font_color,
     :legend_title_font_family,
     :legend_title_font_color,
+) :aliases = Dict(
+        :legend_position => (:legend, :leg, :key),
+        :legend_background_color => (:background_legend, :background_colour_legend, :background_color_legend),
+        :legend_foreground_color => (:foreground_legend, :foreground_colour_legend, :foreground_colour_legend)
 )
+
+### Line
+
+@add_attributes series struct Line
+    style = :solid
+    width = :auto
+    color = :auto
+    alpha = nothing
+end :aliases = Dict(
+    :line_color => (:lc, :lcolor, :lcolour, :line_colour),
+    :line_alpha => (:lalpha,),
+    :line_width => (:w, :width, :lw),
+    :line_style => (:s, :style, :ls),
+
+)
+
+### Marker
+
+@add_attributes series struct Marker
+    shape = :none
+    color = :match
+    alpha = nothing
+    stroke::Line = Line(:solid, 1, :match, nothing)
+    size = 4
+end :aliases = Dict(
+    :marker_color => (:mc, :mcolor, :mcolour, :marker_colour),
+    :marker_alpha => (:malpha,),
+    :marker_shape => (:shape,),
+    :marker_size => (:ms, :msize),
+    :marker_stroke_color => (:msc, :mscolor, :mscolour),
+    :marker_stroke_alpha => (:msalpha,),
+    :marker_stroke_width => (:msw, :mswidth),
+)
+
+for letter in (:X, :Y, :Z)
+    ### Errorbars
+    @eval @add_attributes series struct $(Symbol(letter, :ErrorBar))
+        marker::Marker = Marker(shape = getproperty(( X = :vline, Y = :hline, Z = :hline), letter))
+        line::Line = Line()
+    end
+
+    ### Fills
+    @eval @add_attributes series struct $(Symbol(letter, :Fill))
+        range = nothing
+        color = :match
+        alpha = nothing
+        style = nothing
+    end :aliases = Dict(
+        :yfill_color => (:fc, :fcolor, :fcolour,),
+        :yfill_alpha => (:falpha,),
+        :yfill_range => (:yfill_rng, :frange, :yfill_to, :yfill_between)
+    )
+end
+

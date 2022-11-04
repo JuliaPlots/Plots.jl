@@ -50,7 +50,7 @@ function fixaxis!(attr, x, axisletter)
     ustripattribute!(attr, err, u)
     if axisletter === :y
         ustripattribute!(attr, :ribbon, u)
-        ustripattribute!(attr, :fillrange, u)
+        ustripattribute!(attr, :yfill_range, u)
     end
     fixaspectratio!(attr, u, axisletter)
     fixmarkercolor!(attr)
@@ -155,7 +155,7 @@ function fixmarkercolor!(attr)
     ustripattribute!(attr, :clims, u)
     u == Unitful.NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
 end
-fixmarkersize!(attr) = ustripattribute!(attr, :markersize)
+fixmarkersize!(attr) = ustripattribute!(attr, :marker_size)
 fixlinecolor!(attr) = ustripattribute!(attr, :line_z)
 
 # strip unit from attribute[key]

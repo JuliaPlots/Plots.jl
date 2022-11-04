@@ -368,9 +368,9 @@ function gr_draw_marker(series, xi, yi, zi, clims, i, msize, strokewidth, shape:
     xs, ys = getindex.(xs_ys, 1), getindex.(xs_ys, 2)
 
     # draw the interior
-    mc = get_markercolor(series, clims, i)
+    mc = get_marker_color(series, clims, i)
     gr_set_fill(mc)
-    gr_set_transparency(mc, get_markeralpha(series, i))
+    gr_set_transparency(mc, get_marker_alpha(series, i))
     GR.fillarea(xs, ys)
 
     # draw the shapes
@@ -385,8 +385,8 @@ end
 function gr_draw_marker(series, xi, yi, zi, clims, i, msize, strokewidth, shape::Symbol)
     GR.setborderwidth(strokewidth)
     gr_set_bordercolor(get_markerstrokecolor(series, i))
-    gr_set_markercolor(get_markercolor(series, clims, i))
-    gr_set_transparency(get_markeralpha(series, i))
+    gr_set_markercolor(get_marker_color(series, clims, i))
+    gr_set_transparency(get_marker_alpha(series, i))
     GR.setmarkertype(gr_markertypes[shape])
     GR.setmarkersize(0.3msize / gr_nominal_size(series))
     if zi === nothing
@@ -582,10 +582,10 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         gr_set_line(
             _cbar_unique(get_linewidth.(series), "line width"),
             _cbar_unique(get_linestyle.(series), "line style"),
-            _cbar_unique(get_linecolor.(series, Ref(clims)), "line color"),
+            _cbar_unique(get_line_color.(series, Ref(clims)), "line color"),
             sp,
         )
-        gr_set_transparency(_cbar_unique(get_linealpha.(series), "line alpha"))
+        gr_set_transparency(_cbar_unique(get_line_alpha.(series), "line alpha"))
         levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         colors = gr_colorbar_colors(last(series), clims)
         for (line, color) in zip(levels, colors)
@@ -1000,7 +1000,7 @@ function gr_add_legend(sp, leg, viewport_area)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
             clims = gr_clims(sp, series)
-            lc = get_linecolor(series, clims)
+            lc = get_line_color(series, clims)
             lfps = sp[:legend_font_pointsize]
             gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
 
@@ -1008,7 +1008,7 @@ function gr_add_legend(sp, leg, viewport_area)
                 0.5leg.width_factor, 3.5leg.width_factor, 0.4leg.dy, 0.4leg.dy
 
             if (
-                (st === :shape || series[:fillrange] !== nothing) &&
+                (st === :shape || series[:yfill_range] !== nothing) &&
                 series[:ribbon] === nothing
             )
                 (fc = get_fillcolor(series, clims)) |> gr_set_fill
@@ -1019,30 +1019,30 @@ function gr_add_legend(sp, leg, viewport_area)
                 y = [b, b, t, t, b]
                 gr_set_transparency(fc, get_fillalpha(series))
                 gr_polyline(x, y, GR.fillarea)
-                lc = get_linecolor(series, clims)
-                gr_set_transparency(lc, get_linealpha(series))
+                lc = get_line_color(series, clims)
+                gr_set_transparency(lc, get_line_alpha(series))
                 gr_set_line(get_linewidth(series), get_linestyle(series), lc, sp)
                 st === :shape && gr_polyline(x, y)
             end
 
             maxmarkersize = Inf
             if st in (:path, :straightline, :path3d)
-                gr_set_transparency(lc, get_linealpha(series))
-                # This is to prevent that linestyle is obscured by large markers. 
-                # We are trying to get markers to not be larger than half the line length. 
+                gr_set_transparency(lc, get_line_alpha(series))
+                # This is to prevent that linestyle is obscured by large markers.
+                # We are trying to get markers to not be larger than half the line length.
                 # 1 / leg.dy translates width_factor to line length units (important in the context of size kwarg)
                 # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
                 maxmarkersize = gr_legend_marker_to_line_factor[] * 0.5(rgt - lft) / leg.dy
-                if series[:fillrange] === nothing || series[:ribbon] !== nothing
+                if series[:yfill_range] === nothing || series[:ribbon] !== nothing
                     GR.polyline([xpos - rgt, xpos - lft], [ypos, ypos])
                 else
                     GR.polyline([xpos - rgt, xpos - lft], [ypos + bot, ypos + top])
                 end
             end
 
-            if (msh = series[:markershape]) !== :none
-                msz = first(series[:markersize])
-                msw = first(series[:markerstrokewidth])
+            if (msh = series[:marker_shape]) !== :none
+                msz = first(series[:marker_size])
+                msw = first(series[:marker_stroke_width])
                 gr_draw_marker(
                     series,
                     xpos - 2leg.width_factor,
@@ -1613,7 +1613,7 @@ function gr_add_series(sp, series)
 
     x, y, z = map(letter -> handle_surface(series[letter]), (:x, :y, :z))
     xscale, yscale = sp[:xaxis][:scale], sp[:yaxis][:scale]
-    frng = series[:fillrange]
+    frng = series[:yfill_range]
 
     # recompute data
     if ispolar(sp) && z === nothing
@@ -1637,14 +1637,14 @@ function gr_add_series(sp, series)
             x, y = straightline_data(series)
         end
         gr_draw_segments(series, x, y, nothing, frng, clims)
-        if series[:markershape] !== :none
+        if series[:marker_shape] !== :none
             gr_draw_markers(series, x, y, nothing, clims)
         end
     elseif st === :shape
         gr_draw_shapes(series, clims)
     elseif st in (:path3d, :scatter3d)
         gr_draw_segments(series, x, y, z, nothing, clims)
-        if st === :scatter3d || series[:markershape] !== :none
+        if st === :scatter3d || series[:marker_shape] !== :none
             gr_draw_markers(series, x, y, z, clims)
         end
     elseif st === :contour
@@ -1708,9 +1708,9 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
             gr_set_transparency(fc, get_fillalpha(series, i))
             GR.fillarea(fx, fy)
         end
-        (lc = get_linecolor(series, clims, i)) |> gr_set_fillcolor
+        (lc = get_line_color(series, clims, i)) |> gr_set_fillcolor
         gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
-        gr_set_transparency(lc, get_linealpha(series, i))
+        gr_set_transparency(lc, get_line_alpha(series, i))
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
         elseif is2d
@@ -1730,12 +1730,12 @@ function gr_draw_markers(
     y,
     z,
     clims,
-    msize = series[:markersize],
-    strokewidth = series[:markerstrokewidth],
+    msize = series[:marker_size],
+    strokewidth = series[:marker_stroke_width],
 )
     isempty(x) && return
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
-    (shapes = series[:markershape]) === :none && return
+    (shapes = series[:marker_shape]) === :none && return
     for segment in series_segments(series, :scatter)
         rng = intersect(eachindex(IndexLinear(), x), segment.range)
         isempty(rng) && continue
@@ -1779,9 +1779,9 @@ function gr_draw_shapes(series, clims)
             GR.fillarea(xseg, yseg)
 
             # draw the shapes
-            lc = get_linecolor(series, clims, i)
+            lc = get_line_color(series, clims, i)
             gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
-            gr_set_transparency(lc, get_linealpha(series, i))
+            gr_set_transparency(lc, get_line_alpha(series, i))
             GR.polyline(xseg, yseg)
         end
     end
@@ -1790,14 +1790,14 @@ end
 function gr_draw_contour(series, x, y, z, clims)
     GR.setprojectiontype(0)
     GR.setspace(clims[1], clims[2], 0, 90)
-    gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
+    gr_set_line(get_linewidth(series), get_linestyle(series), get_line_color(series), series)
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
-    if series[:fillrange] !== nothing
+    if series[:yfill_range] !== nothing
         GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
     else
         black = plot_color(:black)
-        coff = plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1_000
+        coff = plot_color(series[:line_color]) in (black, [black]) ? 0 : 1_000
         GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
     end
     nothing
@@ -1849,15 +1849,15 @@ function gr_draw_surface(series, x, y, z, clims)
             ArgumentError |>
             throw
         end
-        facecolor = if series[:fillcolor] isa AbstractArray
-            series[:fillcolor]
+        facecolor = if series[:yfill_color] isa AbstractArray
+            series[:yfill_color]
         else
-            fill(series[:fillcolor], length(cns))
+            fill(series[:yfill_color], length(cns))
         end
         fillalpha = get_fillalpha(series)
         facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
         GR.setborderwidth(get_linewidth(series))
-        GR.setbordercolorind(gr_getcolorind(get_linecolor(series)))
+        GR.setbordercolorind(gr_getcolorind(get_line_color(series)))
         GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))
     else
         throw(ArgumentError("Not handled !"))
@@ -1866,7 +1866,7 @@ function gr_draw_surface(series, x, y, z, clims)
 end
 
 function gr_draw_heatmap(series, x, y, z, clims)
-    fillgrad = _as_gradient(series[:fillcolor])
+    fillgrad = _as_gradient(series[:yfill_color])
     GR.setprojectiontype(0)
     GR.setspace(clims..., 0, 90)
     w, h = length(x) - 1, length(y) - 1
@@ -1878,18 +1878,18 @@ function gr_draw_heatmap(series, x, y, z, clims)
         # Note that drawimage draws uniformly spaced data correctly
         # even on log scales, where it is visually non-uniform.
         colors, _z = if sp[:colorbar_scale] === :identity
-            plot_color.(get(fillgrad, z, clims), series[:fillalpha]), z
+            plot_color.(get(fillgrad, z, clims), series[:yfill_alpha]), z
         elseif sp[:colorbar_scale] === :log10
             z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
             z_normalized = get_z_normalized.(z_log, log10.(clims)...)
-            plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
+            plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:yfill_alpha]), z_log
         end
         for i in eachindex(colors)
             isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i]))
         end
         GR.drawimage(first(x), last(x), last(y), first(y), w, h, gr_color.(colors))
     else
-        if something(series[:fillalpha], 1) < 1
+        if something(series[:yfill_alpha], 1) < 1
             @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
         end
         z_normalized, _z = if sp[:colorbar_scale] === :identity

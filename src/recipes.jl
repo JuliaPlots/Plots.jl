@@ -46,25 +46,25 @@ RecipesBase.apply_recipe(plotattributes::AKW, ::Type{T}, plt::AbstractPlot) wher
 const POTENTIAL_VECTOR_ARGUMENTS = [
     :seriescolor,
     :seriesalpha,
-    :linecolor,
-    :linealpha,
-    :linewidth,
-    :linestyle,
+    :line_color,
+    :line_alpha,
+    :line_width,
+    :line_style,
     :line_z,
-    :fillcolor,
-    :fillalpha,
+    :yfill_color,
+    :yfill_alpha,
     :fill_z,
-    :markercolor,
-    :markeralpha,
-    :markershape,
+    :marker_color,
+    :marker_alpha,
+    :marker_shape,
     :marker_z,
-    :markerstrokecolor,
-    :markerstrokealpha,
+    :marker_stroke_color,
+    :marker_stroke_alpha,
     :xerror,
     :yerror,
     :zerror,
     :series_annotations,
-    :fillrange,
+    :yfill_range,
 ]
 
 @nospecialize
@@ -82,11 +82,11 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     end
 
     # a tuple as fillrange has to be handled differently
-    if typeof(plotattributes[:fillrange]) <: Tuple
-        lower, upper = plotattributes[:fillrange]
+    if typeof(plotattributes[:yfill_range]) <: Tuple
+        lower, upper = plotattributes[:yfill_range]
         typeof(lower) <: AVec && (lower = _cycle(lower, indices))
         typeof(upper) <: AVec && (upper = _cycle(upper, indices))
-        plotattributes[:fillrange] = (lower, upper)
+        plotattributes[:yfill_range] = (lower, upper)
     end
 
     typeof(z) <: AVec && (z := z[indices])
@@ -218,10 +218,10 @@ make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
     seriestype := :path
 
     # handle fillrange
-    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre, false)
+    plotattributes[:yfill_range] = make_steps(plotattributes[:yfill_range], :pre, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -243,10 +243,10 @@ end
     seriestype := :path
 
     # handle fillrange
-    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, true)
+    plotattributes[:yfill_range] = make_steps(plotattributes[:yfill_range], :post, true)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -268,10 +268,10 @@ end
     seriestype := :path
 
     # handle fillrange
-    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, false)
+    plotattributes[:yfill_range] = make_steps(plotattributes[:yfill_range], :post, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -292,7 +292,7 @@ end
 # create vertical line segments from fill
 @recipe function f(::Type{Val{:sticks}}, x, y, z)  # COV_EXCL_LINE
     n = length(x)
-    fr = plotattributes[:fillrange]
+    fr = plotattributes[:yfill_range]
     if fr === nothing
         sp = plotattributes[:subplot]
         fr = if sp[:yaxis][:scale] === :identity
@@ -321,7 +321,7 @@ end
     fillrange := nothing
     seriestype := :path
     if (
-        plotattributes[:linecolor] === :auto &&
+        plotattributes[:line_color] === :auto &&
         plotattributes[:marker_z] !== nothing &&
         plotattributes[:line_z] === nothing
     )
@@ -329,7 +329,7 @@ end
     end
 
     # create a primary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         primary := false
         @series begin
             seriestype := :scatter
@@ -368,7 +368,7 @@ end
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)  # COV_EXCL_LINE
     args = z !== nothing ? (x, y, z) : (x, y)
     newx, newy = zeros(0), zeros(0)
-    fr = plotattributes[:fillrange]
+    fr = plotattributes[:yfill_range]
     newfr = fr !== nothing ? zeros(0) : nothing
     newz = z !== nothing ? zeros(0) : nothing
 
@@ -433,7 +433,7 @@ end
     end
 
     # make fillto a vector... default fills to 0
-    if (fillto = plotattributes[:fillrange]) === nothing
+    if (fillto = plotattributes[:yfill_range]) === nothing
         fillto = 0
     end
     if yscale in _logScales && !all(_is_positive, fillto)
@@ -518,7 +518,7 @@ end
         y_pts[inds] .= [ye[i], ye[i], ye[i + 1], ye[i + 1], ye[i]]
         fz[k] = z.surf[i, j]
     end
-    ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
+    ensure_gradient!(plotattributes, :yfill_color, :yfill_alpha)
     fill_z := fz
     line_z := fz
     x := x_pts
@@ -690,7 +690,7 @@ end
     end
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := _bin_centers(edge)
@@ -971,7 +971,7 @@ end
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)  # COV_EXCL_LINE
     seriestype := :path3d
-    if plotattributes[:markershape] === :none
+    if plotattributes[:marker_shape] === :none
         markershape := :circle
     end
     linewidth := 0
@@ -1010,12 +1010,12 @@ export lens!
     series_plotindex := backup[:series_plotindex]
     seriestype := :path
     primary := false
-    linecolor := get(backup, :linecolor, :lightgray)
-    if haskey(backup, :linestyle)
-        linestyle := backup[:linestyle]
+    linecolor := get(backup, :line_color, :lightgray)
+    if haskey(backup, :line_style)
+        linestyle := backup[:line_style]
     end
-    if haskey(backup, :linewidth)
-        linewidth := backup[:linewidth]
+    if haskey(backup, :line_width)
+        linewidth := backup[:line_width]
     end
     bbx_mag = (x1 + x2) / 2
     bby_mag = (y1 + y2) / 2
@@ -1097,11 +1097,11 @@ end
     haskey(plotattributes, :marker_z) && reset_kw!(plotattributes, :marker_z)
     haskey(plotattributes, :line_z) && reset_kw!(plotattributes, :line_z)
 
-    msc = if (msc = plotattributes[:markerstrokecolor]) === :match
+    msc = if (msc = plotattributes[:marker_stroke_color]) === :match
         plotattributes[:subplot][:foreground_color_subplot]
     elseif msc === :auto
         get_series_color(
-            plotattributes[:linecolor],
+            plotattributes[:line_color],
             plotattributes[:subplot],
             plotattributes[:series_plotindex],
             plotattributes[:seriestype],
@@ -1114,7 +1114,7 @@ end
     markerstrokecolor --> msc
     markercolor --> msc
     linecolor --> msc
-    linewidth --> plotattributes[:markerstrokewidth]
+    linewidth --> plotattributes[:marker_stroke_width]
     label --> ""
 end
 
@@ -1354,7 +1354,7 @@ end
         yflip --> true
         colorbar --> false
         aspect_ratio --> :equal
-        z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
+        z, plotattributes[:yfill_color] = replace_image_with_heatmap(mat)
         SliceIt, m, n, Surface(z)
     end
 end
@@ -1419,7 +1419,7 @@ end
         seriestype := :heatmap
         yflip --> true
         colorbar --> false
-        z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
+        z, plotattributes[:yfill_color] = replace_image_with_heatmap(mat)
         SliceIt, x, y, Surface(z)
     end
 end
