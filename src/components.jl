@@ -874,9 +874,8 @@ end :aliases = Dict(
 ### Errorbars
 
 @add_attributes series struct XErrorBar
-    color = :match
-    shape = :hline
-
+    marker::Marker = Marker(shape = :hline)
+    line::Line = Line()
 end
 
 ### Fills

@@ -6,7 +6,7 @@ function make_non_underscore(s::Symbol)
 end
 
 const _keyAliases = Dict{Symbol,Symbol}()
-const _generalAliases = ("background" => "bg", "foreground" => "fg", "pointsize" => "size", "yfill" => "fill", "alpha" => "a", "alpha" => "opacity", "alpha" => "α")
+const _generalAliases = ("background" => "bg", "foreground" => "fg", "pointsize" => "size", "yfill" => "fill", "alpha" => "a", "alpha" => "opacity", "alpha" => "α", "errorbar" => "error")
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
