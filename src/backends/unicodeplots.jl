@@ -81,6 +81,7 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         azimuth, elevation = sp[:camera]
         # use the same convention as `gr`, `PyPlot`, `PlotlyJS`, and wrap in range [-180, 180]
         azimuth = mod(azimuth + 180 - 90, 360) - 180
+        # => this defaults to azimuth = -60, elevation = 30
         projection = if plot_3d
             (
                 auto = :ortho,  # we choose to unify backends by using `:ortho` proj when `:auto`
@@ -99,21 +100,21 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
             xlabel = texmath2unicode(xaxis[:guide]),
             ylabel = texmath2unicode(yaxis[:guide]),
             labels = !plot_3d,  # guide labels and limits do not make sense in 3d
-            grid = grid,
-            blend = blend,
-            height = height,
-            width = width,
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],
             xflip = xaxis[:flip],
             yflip = yaxis[:flip],
-            border = border,
-            xlim = xlim,
-            ylim = ylim,
+            border,
+            height,
+            width,
+            blend,
+            grid,
+            xlim,
+            ylim,
             # 3d
-            projection = projection,
-            elevation = elevation,
-            azimuth = azimuth,
+            projection,
+            elevation,
+            azimuth,
             zoom = get(sp_kw, :zoom, 1),
             up = get(sp_kw, :up, :z),
         )
@@ -198,18 +199,13 @@ function addUnicodeSeries!(
             colormap = colormap === :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
         )
+        z = Array(series[:z])
         if st === :contour
             isfilledcontour(series) &&
                 @warn "Plots(UnicodePlots): filled contour is not implemented"
-            return UnicodePlots.contourplot(
-                x,
-                y,
-                Array(series[:z]);
-                kw...,
-                levels = series[:levels],
-            )
+            return UnicodePlots.contourplot(x, y, z; kw..., levels = series[:levels])
         elseif st === :heatmap
-            return UnicodePlots.heatmap(Array(series[:z]); fix_ar = fix_ar, kw...)
+            return UnicodePlots.heatmap(z; fix_ar = fix_ar, kw...)
         end
     elseif st in (:surface, :wireframe)  # 3D
         colormap = get(se_kw, :colormap, :none)
@@ -218,14 +214,14 @@ function addUnicodeSeries!(
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
+            color = st === :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
             colormap = colormap === :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
-            color = st === :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
-            zscale = zscale,
-            lines = lines,
+            zscale,
+            lines,
         )
-        # NOTE: inconsistency between `contourplot` and `surfaceplot`
-        return UnicodePlots.surfaceplot(y, x, transpose(Array(series[:z])); kw...)
+        z = Array(series[:z])
+        return UnicodePlots.surfaceplot(x, y, z isa AMat ? transpose(z) : z; kw...)
     elseif st === :mesh3d
         return UnicodePlots.lineplot!(
             up,
