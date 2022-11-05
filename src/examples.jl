@@ -941,51 +941,48 @@ const _examples = PlotExample[
         "3D axis flip / mirror",
         :(using LinearAlgebra),
         quote
-            scalefontsizes(0.5)
+            with(scalefonts=0.5) do
+                x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
-            x, y = collect(-6:0.5:10), collect(-8:0.5:8)
+                args = x, y, (x, y) -> sinc(norm([x, y]) / π)
+                kw = (xlabel = "x", ylabel = "y", zlabel = "z", grid = true, minorgrid = true)
 
-            args = x, y, (x, y) -> sinc(norm([x, y]) / π)
-            kw = (xlabel = "x", ylabel = "y", zlabel = "z", grid = true, minorgrid = true)
+                plots = [wireframe(args..., title = "wire"; kw...)]
 
-            plots = [wireframe(args..., title = "wire"; kw...)]
+                for ax in (:x, :y, :z)
+                    push!(
+                        plots,
+                        wireframe(
+                            args...,
+                            title = "wire-flip-$ax",
+                            xflip = ax === :x,
+                            yflip = ax === :y,
+                            zflip = ax === :z;
+                            kw...,
+                        ),
+                    )
+                end
 
-            for ax in (:x, :y, :z)
-                push!(
-                    plots,
-                    wireframe(
-                        args...,
-                        title = "wire-flip-$ax",
-                        xflip = ax === :x,
-                        yflip = ax === :y,
-                        zflip = ax === :z;
-                        kw...,
-                    ),
+                for ax in (:x, :y, :z)
+                    push!(
+                        plots,
+                        wireframe(
+                            args...,
+                            title = "wire-mirror-$ax",
+                            xmirror = ax === :x,
+                            ymirror = ax === :y,
+                            zmirror = ax === :z;
+                            kw...,
+                        ),
+                    )
+                end
+
+                plot(
+                    plots...,
+                    layout = (@layout [_ ° _; ° ° °; ° ° °]),
+                    margin = 0Plots.px,
                 )
             end
-
-            for ax in (:x, :y, :z)
-                push!(
-                    plots,
-                    wireframe(
-                        args...,
-                        title = "wire-mirror-$ax",
-                        xmirror = ax === :x,
-                        ymirror = ax === :y,
-                        zmirror = ax === :z;
-                        kw...,
-                    ),
-                )
-            end
-
-            plt = plot(
-                plots...,
-                layout = (@layout [_ ° _; ° ° °; ° ° °]),
-                margin = 0Plots.px,
-            )
-
-            resetfontsizes()
-            plt
         end,
     ),
     PlotExample( # 56
@@ -1170,6 +1167,16 @@ const _examples = PlotExample[
             pr = plot!(twiny(), 2x, cos.(2x), xaxis = "X label 2"; kw...)
 
             plot(pl, pr)
+        end,
+    ),
+    PlotExample(  # 63
+        "Legend positions",
+        "Horizontal or vertical legends, at different locations.",
+        quote
+            with(scalefonts=0.5) do
+                leg_plots(prefix; kw...) = [plot(0:1; marker=:circle, leg_title="leg", leg=Symbol(prefix, leg), kw...) for leg in (:topleft, :top, :topright, :bottomleft, :bottom, :bottomright)]
+                plot(leg_plots("")..., leg_plots("outer", legend_column=-1)...; layout=(4, 3))
+            end
         end,
     ),
 ]

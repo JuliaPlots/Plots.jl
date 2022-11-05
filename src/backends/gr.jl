@@ -995,7 +995,7 @@ function gr_add_legend(sp, leg, viewport_area)
             gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
             deb && gr_legend_bbox(xpos, ypos, leg)
             if vertical
-                gr_text(xpos - 0.03 + 0.5leg.w, ypos, string(ttl))
+                gr_text(xpos - 1.5leg.base_factor + 0.5leg.w, ypos, string(ttl))
                 ypos -= leg.dy
             else
                 gr_text(xpos, ypos, string(ttl))
@@ -1234,7 +1234,7 @@ function gr_update_viewport_legend!(vp, sp, leg)
         yoff = if leg.vertical
             leg.h + leg.dy + leg.yoffset
         else
-            leg.topp + leg.texth + leg.bottomp + leg.yoffset
+            leg.pad + leg.texth + leg.pad + leg.yoffset
         end
         if occursin("right", leg_str)
             vp.xmax -= xoff
