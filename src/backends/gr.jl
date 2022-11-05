@@ -975,26 +975,26 @@ function gr_add_legend(sp, leg, viewport_area)
     GR.setscale(0)
     vertical = leg.vertical
     if getfield(leg, vertical ? :w : :h) > 0
-        xpos, ypos = gr_legend_pos(sp, leg, viewport_area)
+        xpos, ypos = gr_legend_pos(sp, leg, viewport_area)  # position between the legend line and text (see ref(1))
+        @show vertical leg.w leg.h leg.span (xpos, ypos)
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
         gr_set_fillcolor(sp[:legend_background_color])
-        rect = if vertical  # xmin, xmax, ymin, ymax
-            (xpos - leg.leftw, xpos + leg.textw + leg.rightw, ypos + leg.dy, ypos - leg.h)
-        else
-            # TODO: fix these !
-            xpos -= leg.w
-            (xpos - leg.dx, xpos + leg.w, ypos - leg.dx, ypos + leg.h)
-        end
-        GR.fillrect(rect...)  # Allocating white space for actual legend width here
+        # ymax
+        # |
+        # |
+        # o ----- xmax
+        xs, ys = (xpos - leg.pad - leg.span, xpos + leg.w + leg.pad), (ypos - leg.h, ypos + leg.dy)
+        # xmin, xmax, ymin, ymax
+        GR.fillrect(xs..., ys...)  # allocating white space for actual legend width here
         gr_set_line(1, :solid, sp[:legend_foreground_color], sp)
-        GR.drawrect(rect...)  # Drawing actual legend width here
+        GR.drawrect(xs..., ys...)  # drawing actual legend width here
         if (ttl = sp[:legend_title]) !== nothing
             gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
             if vertical
                 gr_text(xpos - 0.03 + 0.5leg.w, ypos, string(ttl))
                 ypos -= leg.dy
             else
-                gr_text(xpos - leg.dx, ypos + leg.h, string(ttl))
+                gr_text(xpos, ypos, string(ttl))
                 xpos += leg.dx
             end
         end
@@ -1007,12 +1007,8 @@ function gr_add_legend(sp, leg, viewport_area)
             lfps = sp[:legend_font_pointsize]
             gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
 
-            lft, rgt, bot, top = if vertical
-                -0.5leg.width_factor, -3.5leg.width_factor, 0.4leg.dy, 0.4leg.dy
-            else
-                0, -3.0leg.width_factor, 0.4leg.dy, 0.4leg.dy
-                # 0, 3.5leg.height_factor, 0.4leg.dx, 0.4leg.dx  # NOTE: still an horizontal line !
-            end
+            lft, rgt, bot, top = 
+                -0.5leg.base_factor, -0.5leg.base_factor - leg.span, 0.4leg.dy, 0.4leg.dy
 
             if (
                 (st === :shape || series[:fillrange] !== nothing) &&
@@ -1041,9 +1037,9 @@ function gr_add_legend(sp, leg, viewport_area)
                 gr_set_transparency(lc, get_linealpha(series))
                 # This is to prevent that linestyle is obscured by large markers. 
                 # We are trying to get markers to not be larger than half the line length. 
-                # 1 / leg.dy translates width_factor to line length units (important in the context of size kwarg)
+                # 1 / leg.dy translates base_factor to line length units (important in the context of size kwarg)
                 # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
-                maxmarkersize = gr_legend_marker_to_line_factor[] * leg.width_factor / leg.dy  # NOTE: base on horizontal measures !
+                maxmarkersize = gr_legend_marker_to_line_factor[] * leg.base_factor / leg.dy  # NOTE: base on horizontal measures !
                 xs = xpos .+ [rgt, lft]
                 ys = ypos .+ if (filled = series[:fillrange] === nothing || series[:ribbon] !== nothing)
                     [0, 0]
@@ -1056,7 +1052,7 @@ function gr_add_legend(sp, leg, viewport_area)
             if (msh = series[:markershape]) !== :none
                 msz = first(series[:markersize])
                 msw = first(series[:markerstrokewidth])
-                xp, yp = xpos - 2leg.width_factor, ypos
+                xp, yp = xpos - 2leg.base_factor, ypos
                 gr_draw_marker(
                     series,
                     xp,
@@ -1110,18 +1106,18 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     end
     xpos = if occursin("left", leg_str)
         vp.xmin + if occursin("outer", leg_str)
-            -leg.rightw - leg.textw - 2leg.xoffset - !ymirror * gr_axis_width(sp, yaxis)
+            -leg.pad - leg.w - 2leg.xoffset - !ymirror * gr_axis_width(sp, yaxis)
         else
-            leg.leftw + leg.xoffset
+            leg.pad + leg.xoffset
         end
-    elseif occursin("right", leg_str)
+    elseif occursin("right", leg_str)  # default / best
         vp.xmax + if occursin("outer", leg_str)  # per github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            leg.xoffset + leg.leftw + ymirror * gr_axis_width(sp, yaxis)
+            leg.xoffset + leg.pad + ymirror * gr_axis_width(sp, yaxis)
         else
-            -leg.rightw - leg.textw - leg.xoffset
+            -leg.pad - leg.w - leg.xoffset
         end
     else
-        vp.xmin + 0.5width(vp) + leg.leftw - leg.rightw - leg.textw - 2leg.xoffset
+        vp.xmin + 0.5width(vp) + leg.pad - leg.pad - leg.w - 2leg.xoffset
     end
     ypos = if occursin("bottom", leg_str)
         vp.ymin + if lp === :outerbottom
@@ -1129,45 +1125,42 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         else
             leg.yoffset + leg.h
         end
-    elseif occursin("top", leg_str)
+    elseif occursin("top", leg_str)  # default / best
         vp.ymax + if lp === :outertop
             leg.yoffset + leg.h + xmirror * gr_axis_height(sp, xaxis)
         else
             -leg.yoffset - leg.dy
         end
     else
-        # Adding min y to shift legend pos to correct graph (#2377)
+        # adding min y to shift legend pos to correct graph (#2377)
         vp.ymin + 0.5height(vp) + 0.5leg.h
     end
     xpos, ypos
 end
 
 function gr_get_legend_geometry(vp, sp)
+    textw = texth = 0.0
     entries = 0
-    textw = dy = 0.0  # vertical
-    texth = dx = 0.0  # horizontal ?
-
     vertical = (legend_column = sp[:legend_column]) == 1
+    has_title = false
     if sp[:legend_position] !== :none
         GR.savestate()
         GR.selntran(0)
         GR.setcharup(0, 1)
         GR.setscale(0)
-        if (ttl = sp[:legend_title]) !== nothing
+        ttl = sp[:legend_title]
+        if (has_title = ttl !== nothing)
             gr_set_font(legendtitlefont(sp), sp)
             (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(ttl)))
-            textw = dx = r - l
-            texth = dy = t - b
-            entries += 1
+            texth = t - b
+            textw = r - l
         end
         gr_set_font(legendfont(sp), sp)
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(series[:label])))
-            dy = max(dy, t - b)
-            dx = max(dx, r - l)
-            textw = max(textw, r - l) # Holds text width right now
             texth = max(texth, t - b)
+            textw = max(textw, r - l)  # holds text width right now
             entries += 1
         end
         GR.setscale(GR.OPTION_X_LOG)
@@ -1175,66 +1168,38 @@ function gr_get_legend_geometry(vp, sp)
         GR.restorestate()
     end
 
-    # TODO: this will benefit from a ascii drawing here embedded in the code ...
+    base_factor = width(vp) / 45  # determines legend box width base (arbitrary)
 
-    if true
-        width_factor = width(vp) / 45  # determines the width of legend box
-        height_factor = height(vp) / 45  # determines the height of legend box
+    # legend box conventions ref(1)
+    #  ____________________________
+    # |<pad> <span>   <text> <pad>|
+    # |      ---o--  ⋅  y1        |
+    # |______________↑____________|
+    #           (xpos,ypos)
 
-        # vertical
-        rightw = width_factor
-        leftw = 4width_factor
+    pad = 1base_factor  # legend padding
+    span = 3base_factor  # horizontal span of the legend line: line x marker x line = 3base_factor
 
-        # horizontal
-        toph = height_factor
-        bottomh = 4height_factor
+    # increment between each legend entry
+    dy = texth * get(sp[:extra_kwargs], :legend_hfactor, 1)
+    dx = (textw + (vertical ? 0 : span)) * get(sp[:extra_kwargs], :legend_wfactor, 1)
 
-        dy *= get(sp[:extra_kwargs], :legend_hfactor, 1)
-        dx *= get(sp[:extra_kwargs], :legend_wfactor, 1)
-
-        (
-            xoffset = width(vp) / 30,
-            yoffset = height(vp) / 30,
-            w = vertical ? textw : (dx * entries),
-            h = vertical ? (dy * entries) : texth,
-            vertical,
-            height_factor,
-            width_factor,
-            entries,
-            texth,
-            textw,
-            leftw,
-            rightw,
-            bottomh,
-            toph,
-            dy,
-            dx,
-        )
-    else
-        legend_width_factor = width(vp) / 45 # Determines the width of legend box
-        legend_textw = textw
-        legend_rightw = legend_width_factor
-        legend_leftw = 4legend_width_factor
-        total_legendw = legend_textw + legend_leftw + legend_rightw
-
-        x_legend_offset = width(vp) / 30
-        y_legend_offset = height(vp) / 30
-
-        dy *= get(sp[:extra_kwargs], :legend_hfactor, 1)
-        texth = dy * entries
-
-        (
-            w = textw,
-            h = texth,
-            dy = dy,
-            leftw = legend_leftw,
-            textw = legend_textw,
-            rightw = legend_rightw,
-            xoffset = x_legend_offset,
-            yoffset = y_legend_offset,
-            width_factor = legend_width_factor,
-        )
-    end
+    (
+        xoffset = width(vp) / 30,
+        yoffset = height(vp) / 30,
+        w = vertical ? dx : (dx * entries),
+        h = vertical ? (dy * (entries + (has_title ? 1 : 0))) : dy,
+        base_factor,
+        has_title,
+        vertical,
+        entries,
+        span,
+        pad,
+        texth,
+        textw,
+        dy,
+        dx,
+    )
 end
 
 ## Viewport, window and scale
@@ -1253,14 +1218,14 @@ function gr_update_viewport_legend!(vp, sp, leg)
     end
     if occursin("outer", leg_str)
         xoff = if leg.vertical
-            leg.leftw + leg.textw + leg.rightw + leg.xoffset
+            leg.pad + leg.textw + leg.pad + leg.xoffset
         else
             leg.w + leg.dx + leg.xoffset
         end
         yoff = if leg.vertical
             leg.h + leg.dy + leg.yoffset
         else
-            leg.toph + leg.texth + leg.bottomh + leg.yoffset
+            leg.topp + leg.texth + leg.bottomp + leg.yoffset
         end
         if occursin("right", leg_str)
             vp.xmax -= xoff
