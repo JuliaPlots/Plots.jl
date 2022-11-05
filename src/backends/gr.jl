@@ -968,15 +968,19 @@ end
 
 const gr_legend_marker_to_line_factor = Ref(8.0)
 
+gr_legend_bbox(xpos, ypos, leg) =
+    GR.drawrect(xpos - 0.5leg.dx, xpos + 0.5leg.dx, ypos - 0.5leg.dy, ypos + 0.5leg.dy)
+
 function gr_add_legend(sp, leg, viewport_area)
     sp[:legend_position] ∈ (:none, :inline) && return
     GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
     vertical = leg.vertical
+    deb = false  # NOTE: turn this on for debugging legend bboxes
     if getfield(leg, vertical ? :w : :h) > 0
         xpos, ypos = gr_legend_pos(sp, leg, viewport_area)  # position between the legend line and text (see ref(1))
-        @show vertical leg.w leg.h leg.span (xpos, ypos)
+        # @show vertical leg.w leg.h leg.pad leg.span leg.entries (xpos, ypos) leg.dx leg.dy
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
         gr_set_fillcolor(sp[:legend_background_color])
         # ymax
@@ -990,6 +994,7 @@ function gr_add_legend(sp, leg, viewport_area)
         GR.drawrect(xs..., ys...)  # drawing actual legend width here
         if (ttl = sp[:legend_title]) !== nothing
             gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
+            deb && gr_legend_bbox(xpos, ypos, leg)
             if vertical
                 gr_text(xpos - 0.03 + 0.5leg.w, ypos, string(ttl))
                 ypos -= leg.dy
@@ -1001,6 +1006,7 @@ function gr_add_legend(sp, leg, viewport_area)
         gr_set_font(legendfont(sp), sp; halign = :left, valign = :center)
         for series in series_list(sp)
             should_add_to_legend(series) || continue
+            deb && gr_legend_bbox(xpos, ypos, leg)
             st = series[:seriestype]
             clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
@@ -1154,6 +1160,7 @@ function gr_get_legend_geometry(vp, sp)
             (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(ttl)))
             texth = t - b
             textw = r - l
+            entries += 1
         end
         gr_set_font(legendfont(sp), sp)
         for series in series_list(sp)
@@ -1187,8 +1194,8 @@ function gr_get_legend_geometry(vp, sp)
     (
         xoffset = width(vp) / 30,
         yoffset = height(vp) / 30,
-        w = vertical ? dx : (dx * entries),
-        h = vertical ? (dy * (entries + (has_title ? 1 : 0))) : dy,
+        w = vertical ? dx : dx * entries - span,  # NOTE: `- span`, since span `joins` labels
+        h = vertical ? dy * entries : dy,
         base_factor,
         has_title,
         vertical,
