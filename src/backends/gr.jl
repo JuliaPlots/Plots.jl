@@ -980,7 +980,7 @@ function gr_add_legend(sp, leg, viewport_area)
     GR.setscale(0)
     vertical = leg.vertical
     deb = false  # NOTE: toggle this flag for debugging legend bboxes
-    if getfield(leg, vertical ? :w : :h) > 0
+    if leg.w > 0 || leg.h > 0
         xpos, ypos = gr_legend_pos(sp, leg, viewport_area)  # position between the legend line and text (see ref(1))
         # @show vertical leg.w leg.h leg.pad leg.span leg.entries (xpos, ypos) leg.dx leg.dy leg.textw leg.texth
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
@@ -1043,22 +1043,19 @@ function gr_add_legend(sp, leg, viewport_area)
 
             max_markersize = Inf
             if st in (:path, :straightline, :path3d)
-                filled = series[:fillrange] !== nothing && series[:ribbon] === nothing
-                gr_set_transparency(lc, get_linealpha(series))
                 max_markersize = leg.base_markersize
-                xs = xpos .+ [lft, rgt]
-                ys = ypos .+ (filled ? [top, top] : [0, 0])
-                GR.polyline(xs, ys)
+                gr_set_transparency(lc, get_linealpha(series))
+                filled = series[:fillrange] !== nothing && series[:ribbon] === nothing
+                GR.polyline(xpos .+ [lft, rgt], ypos .+ (filled ? [top, top] : [0, 0]))
             end
 
             if (msh = series[:markershape]) !== :none
                 msz = first(series[:markersize])
                 msw = first(series[:markerstrokewidth])
-                xp, yp = xpos - 2leg.base_factor, ypos
                 gr_draw_marker(
                     series,
-                    xp,
-                    yp,
+                    xpos - 2leg.base_factor,
+                    ypos,
                     nothing,
                     clims,
                     1,
@@ -1193,7 +1190,7 @@ function gr_get_legend_geometry(vp, sp)
     # increment between each legend entry
     ekw = sp[:extra_kwargs]
     dy = texth * get(ekw, :legend_hfactor, 1)
-    dx = (textw + (vertical ? 0 : span + space)) * get(ekw, :legend_wfactor, 1)
+    dx = (textw + (vertical ? 0 : span + pad)) * get(ekw, :legend_wfactor, 1)
 
     # This is to prevent that linestyle is obscured by large markers. 
     # We are trying to get markers to not be larger than half the line length. 
@@ -1204,7 +1201,7 @@ function gr_get_legend_geometry(vp, sp)
     (
         xoffset = width(vp) / 30,
         yoffset = height(vp) / 30,
-        w = (vertical ? dx : dx * entries - span) - space,  # NOTE: substract 1 x `span`, since it joins labels when horizontal
+        w = (vertical ? dx : dx * entries - (span + pad)) - space,  # NOTE: substract `span + pad`, since it joins labels when horizontal
         h = vertical ? dy * entries : dy,
         space,
         base_markersize,
