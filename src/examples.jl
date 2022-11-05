@@ -128,9 +128,8 @@ const _examples = PlotExample[
         series.
         """,
         quote
-            ys = Vector[rand(10), rand(20)]
             plot(
-                ys,
+                [rand(10), rand(20)],
                 color = [:black :orange],
                 line = (:dot, 4),
                 marker = ([:hex :d], 12, 0.8, Plots.stroke(3, :gray)),
@@ -941,11 +940,17 @@ const _examples = PlotExample[
         "3D axis flip / mirror",
         :(using LinearAlgebra),
         quote
-            with(scalefonts=0.5) do
+            with(scalefonts = 0.5) do
                 x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
                 args = x, y, (x, y) -> sinc(norm([x, y]) / π)
-                kw = (xlabel = "x", ylabel = "y", zlabel = "z", grid = true, minorgrid = true)
+                kw = (
+                    xlabel = "x",
+                    ylabel = "y",
+                    zlabel = "z",
+                    grid = true,
+                    minorgrid = true,
+                )
 
                 plots = [wireframe(args..., title = "wire"; kw...)]
 
@@ -1173,10 +1178,12 @@ const _examples = PlotExample[
         "Legend positions",
         "Horizontal or vertical legends, at different locations.",
         quote
-            with(scalefonts=0.5) do
-                leg_plots(; kw...) =
-                    [plot(0:1; marker=:circle, leg_title="leg", leg, kw...) for leg in (:topleft, :top, :topright, :bottomleft, :bottom, :bottomright)]
-                plot(leg_plots()..., leg_plots(legend_column=-1)...; layout=(4, 3))
+            with(scalefonts = 0.5) do
+                leg_plots(; kw...) = [
+                    plot(0:1; marker = :circle, leg_title = "leg", leg, kw...) for
+                    leg in (:topleft, :top, :topright, :bottomleft, :bottom, :bottomright)
+                ]
+                plot(leg_plots()..., leg_plots(legend_column = -1)...; layout = (4, 3))
             end
         end,
     ),
@@ -1184,10 +1191,18 @@ const _examples = PlotExample[
         "Outer legend positions",
         "Horizontal or vertical legends, at different locations.",
         quote
-            with(scalefonts=0.5) do
-                leg_plots(; kw...) =
-                    [plot(0:1; marker=:circle, leg_title="leg", leg=Symbol("outer", leg), kw...) for leg in (:topleft, :top, :topright, :bottomleft, :bottom, :bottomright)]
-                plot(leg_plots()..., leg_plots(legend_column=-1)...; layout=(4, 3))
+            with(scalefonts = 0.5) do
+                leg_plots(; kw...) = [
+                    plot(
+                        0:1;
+                        marker = :circle,
+                        leg_title = "leg",
+                        leg = Symbol("outer", leg),
+                        kw...,
+                    ) for leg in
+                    (:topleft, :top, :topright, :bottomleft, :bottom, :bottomright)
+                ]
+                plot(leg_plots()..., leg_plots(legend_column = -1)...; layout = (4, 3))
             end
         end,
     ),

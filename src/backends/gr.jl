@@ -1044,7 +1044,7 @@ function gr_add_legend(sp, leg, viewport_area)
                 gr_set_transparency(lc, get_linealpha(series))
                 max_markersize = leg.base_markersize
                 xs = xpos .+ [lft, rgt]
-                ys = ypos .+ (filled ? [bot, top] : [0, 0])
+                ys = ypos .+ (filled ? [top, top] : [0, 0])
                 GR.polyline(xs, ys)
             end
 
@@ -1137,7 +1137,7 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     xpos, ypos
 end
 
-const gr_legend_marker_to_line_factor = Ref(8.0)
+const gr_legend_marker_to_line_factor = Ref(2.0)
 
 function gr_get_legend_geometry(vp, sp)
     textw = texth = 0.0
@@ -1190,7 +1190,7 @@ function gr_get_legend_geometry(vp, sp)
     # We are trying to get markers to not be larger than half the line length. 
     # 1 / leg.dy translates base_factor to line length units (important in the context of size kwarg)
     # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
-    base_markersize = gr_legend_marker_to_line_factor[] * base_factor / dy  # NOTE: arbitrarily based on horizontal measures !
+    base_markersize = gr_legend_marker_to_line_factor[] * span / dy  # NOTE: arbitrarily based on horizontal measures !
 
     (
         xoffset = width(vp) / 30,
