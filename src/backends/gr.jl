@@ -1107,16 +1107,16 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         vp.xmin + if occursin("outer", leg_str)
             -leg.pad - leg.w - 2leg.xoffset - !ymirror * gr_axis_width(sp, yaxis)
         else
-            leg.pad + leg.xoffset
+            leg.pad + leg.span + leg.xoffset
         end
     elseif occursin("right", leg_str)  # default / best
         vp.xmax + if occursin("outer", leg_str)  # per github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            leg.xoffset + leg.pad + ymirror * gr_axis_width(sp, yaxis)
+            leg.xoffset + leg.pad + leg.span + ymirror * gr_axis_width(sp, yaxis)
         else
             -leg.pad - leg.w - leg.xoffset
         end
     else
-        vp.xmin + 0.5width(vp) + leg.pad - leg.pad - leg.w - 2leg.xoffset
+        vp.xmin + 0.5width(vp) + leg.span - 2leg.xoffset
     end
     ypos = if occursin("bottom", leg_str)
         vp.ymin + if lp === :outerbottom
@@ -1173,7 +1173,7 @@ function gr_get_legend_geometry(vp, sp)
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
     # legend box conventions ref(1)
-    #  ____________________________
+    #  ___________________________
     # |<pad> <span>   <text> <pad>|
     # |      ---o--  ⋅  y1        |
     # |______________↑____________|
@@ -1195,7 +1195,7 @@ function gr_get_legend_geometry(vp, sp)
     (
         xoffset = width(vp) / 30,
         yoffset = height(vp) / 30,
-        w = vertical ? dx : dx * entries - span,  # NOTE: `- span`, since span `joins` labels
+        w = vertical ? dx : dx * entries - span,  # NOTE: substract 1 x `span`, since it joins labels
         h = vertical ? dy * entries : dy,
         base_markersize,
         base_factor,
@@ -1227,14 +1227,14 @@ function gr_update_viewport_legend!(vp, sp, leg)
     end
     if occursin("outer", leg_str)
         xoff = if leg.vertical
-            leg.pad + leg.textw + leg.pad + leg.xoffset
+            leg.pad + leg.span + leg.textw + leg.pad + leg.xoffset
         else
             leg.w + leg.dx + leg.xoffset
         end
         yoff = if leg.vertical
             leg.h + leg.dy + leg.yoffset
         else
-            leg.pad + leg.texth + leg.pad + leg.yoffset
+            leg.pad + leg.span + leg.texth + leg.pad + leg.yoffset
         end
         if occursin("right", leg_str)
             vp.xmax -= xoff

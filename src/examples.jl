@@ -1174,8 +1174,20 @@ const _examples = PlotExample[
         "Horizontal or vertical legends, at different locations.",
         quote
             with(scalefonts=0.5) do
-                leg_plots(prefix; kw...) = [plot(0:1; marker=:circle, leg_title="leg", leg=Symbol(prefix, leg), kw...) for leg in (:topleft, :top, :topright, :bottomleft, :bottom, :bottomright)]
-                plot(leg_plots("")..., leg_plots("outer", legend_column=-1)...; layout=(4, 3))
+                leg_plots(; kw...) =
+                    [plot(0:1; marker=:circle, leg_title="leg", leg, kw...) for leg in (:topleft, :top, :topright, :bottomleft, :bottom, :bottomright)]
+                plot(leg_plots()..., leg_plots(legend_column=-1)...; layout=(4, 3))
+            end
+        end,
+    ),
+    PlotExample(  # 64
+        "Outer legend positions",
+        "Horizontal or vertical legends, at different locations.",
+        quote
+            with(scalefonts=0.5) do
+                leg_plots(; kw...) =
+                    [plot(0:1; marker=:circle, leg_title="leg", leg=Symbol("outer", leg), kw...) for leg in (:topleft, :top, :topright, :bottomleft, :bottom, :bottomright)]
+                plot(leg_plots()..., leg_plots(legend_column=-1)...; layout=(4, 3))
             end
         end,
     ),
