@@ -874,7 +874,7 @@ end :aliases = Dict(
 for letter in (:X, :Y, :Z)
     ### Errorbars
     @eval @add_attributes series struct $(Symbol(letter, :ErrorBar))
-        marker::Marker = Marker(shape = getproperty(( X = :vline, Y = :hline, Z = :hline), letter))
+        marker::Marker = Marker(shape = $(QuoteNode(getproperty(( X = :vline, Y = :hline, Z = :hline), letter))))
         line::Line = Line()
     end
 
