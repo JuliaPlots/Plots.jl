@@ -1097,24 +1097,11 @@ end
     haskey(plotattributes, :marker_z) && reset_kw!(plotattributes, :marker_z)
     haskey(plotattributes, :line_z) && reset_kw!(plotattributes, :line_z)
 
-    msc = if (msc = plotattributes[:marker_stroke_color]) === :match
-        plotattributes[:subplot][:foreground_color_subplot]
-    elseif msc === :auto
-        get_series_color(
-            plotattributes[:line_color],
-            plotattributes[:subplot],
-            plotattributes[:series_plotindex],
-            plotattributes[:seriestype],
-        )
-    else
-        msc
+    for property in propertynames(getproperty(Plots, Symbol("$(uppercase(first(string(plotattributes[:seriestype]))))ErrorBar")))
+        @show property
+        # TODO: make this work
     end
-
     seriestype := :path
-    markerstrokecolor --> msc
-    markercolor --> msc
-    linecolor --> msc
-    linewidth --> plotattributes[:marker_stroke_width]
     label --> ""
 end
 
@@ -1148,7 +1135,7 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)  # COV_EXCL_LINE
     error_style!(plotattributes)
-    markershape --> :vline
+    markershape --> plotattributes[:xerrorbar_marker_shape]
     xerr = error_zipit(plotattributes[:xerror])
     if z === nothing
         plotattributes[:x], plotattributes[:y] = error_coords(xerr, x, y)
@@ -1165,7 +1152,7 @@ end
 
 @recipe function f(::Type{Val{:yerror}}, x, y, z)  # COV_EXCL_LINE
     error_style!(plotattributes)
-    markershape --> :hline
+    markershape --> plotattributes[:yerrorbar_marker_shape]
     yerr = error_zipit(plotattributes[:yerror])
     if z === nothing
         plotattributes[:y], plotattributes[:x] = error_coords(yerr, y, x)
@@ -1182,7 +1169,7 @@ end
 
 @recipe function f(::Type{Val{:zerror}}, x, y, z)  # COV_EXCL_LINE
     error_style!(plotattributes)
-    markershape --> :hline
+    markershape --> plotattributes[:zerrorbar_marker_shape]
     if z !== nothing
         zerr = error_zipit(plotattributes[:zerror])
         plotattributes[:z], plotattributes[:x], plotattributes[:y] =
