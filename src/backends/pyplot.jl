@@ -919,9 +919,7 @@ py_set_scale(ax, sp::Subplot, axis::Axis) =
     py_set_scale(ax, sp, axis[:scale], axis[:letter])
 
 py_set_spine_color(spines, color) =
-    for loc in spines
-        getproperty(spines, loc)."set_color"(color)
-    end
+    foreach(loc -> getproperty(spines, loc)."set_color"(color), spines)
 
 py_set_spine_color(spines::Dict, color) =
     for (_, spine) in spines
@@ -947,6 +945,8 @@ function py_set_axis_colors(sp, ax, a::Axis)
 end
 
 # --------------------------------------------------------------------------
+py_hide_spines(ax) =
+    foreach(spine -> getproperty(ax.spines, string(spine))."set_visible"(false), ax.spines)
 
 function _before_layout_calcs(plt::Plot{PyPlotBackend})
     # update the fig
@@ -1149,9 +1149,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     ax.spines."left"."set_position"("zero")
                 end
             elseif sp[:framestyle] in (:grid, :none, :zerolines)
-                for spine in ax.spines
-                    getproperty(ax.spines, string(spine))."set_visible"(false)
-                end
+                py_hide_spines(ax)
                 if sp[:framestyle] === :zerolines
                     ax."axhline"(
                         y = 0,
@@ -1337,7 +1335,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         if RecipesPipeline.is3d(sp)
             # convert azimuth to match GR behaviour
             azimuth, elevation = sp[:camera] .- (90, 0)
-            # signature: view_init(elevation, azimuth), so reverse :camera args
             ax."view_init"(elevation, azimuth)
         end
 
@@ -1349,8 +1346,12 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
         # link axes
         x_ax_link, y_ax_link = sp[:xaxis].sps[1].o, sp[:yaxis].sps[1].o
-        ax != x_ax_link && ax."get_shared_x_axes"()."join"(ax, x_ax_link)
-        ax != y_ax_link && ax."get_shared_y_axes"()."join"(ax, y_ax_link)
+        if (twinx = ax != x_ax_link)
+            ax."get_shared_x_axes"()."join"(ax, x_ax_link)
+        end
+        if (twiny = ax != y_ax_link)
+            ax."get_shared_y_axes"()."join"(ax, y_ax_link)
+        end
     end
     py_drawfig(fig)
 end
