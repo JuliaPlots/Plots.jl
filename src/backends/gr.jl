@@ -966,8 +966,6 @@ end
 
 ## Legend
 
-const gr_legend_marker_to_line_factor = Ref(8.0)
-
 gr_legend_bbox(xpos, ypos, leg) =
     GR.drawrect(xpos - 0.5leg.dx, xpos + 0.5leg.dx, ypos - 0.5leg.dy, ypos + 0.5leg.dy)
 
@@ -987,7 +985,8 @@ function gr_add_legend(sp, leg, viewport_area)
         # |
         # |
         # o ----- xmax
-        xs, ys = (xpos - leg.pad - leg.span, xpos + leg.w + leg.pad), (ypos - leg.h, ypos + leg.dy)
+        xs, ys = (xpos - leg.pad - leg.span, xpos + leg.w + leg.pad),
+        (ypos - leg.h, ypos + leg.dy)
         # xmin, xmax, ymin, ymax
         GR.fillrect(xs..., ys...)  # allocating white space for actual legend width here
         gr_set_line(1, :solid, sp[:legend_foreground_color], sp)
@@ -1013,8 +1012,8 @@ function gr_add_legend(sp, leg, viewport_area)
             lfps = sp[:legend_font_pointsize]
             gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
 
-            lft, rgt, bot, top = 
-                -0.5leg.base_factor, -0.5leg.base_factor - leg.span, 0.4leg.dy, 0.4leg.dy
+            lft, rgt, bot, top =
+                -0.5leg.base_factor - leg.span, -0.5leg.base_factor, -0.4leg.dy, 0.4leg.dy
 
             if (
                 (st === :shape || series[:fillrange] !== nothing) &&
@@ -1023,13 +1022,14 @@ function gr_add_legend(sp, leg, viewport_area)
                 (fc = get_fillcolor(series, clims)) |> gr_set_fill
                 gr_set_fillstyle(get_fillstyle(series, 0))
                 l, r = xpos + lft, xpos + rgt
-                b, t = ypos - bot, ypos + top
-                x, y = if vertical
-                    [l, r, r, l, l], [b, b, t, t, b]
-                else
-                    # FIXME: update these ?
-                    [l, r, r, l, l], [b, b, t, t, b]
-                end
+                b, t = ypos + bot, ypos + top
+                #   4     <--     3
+                # (l,t) ------- (r,t)
+                #   |             |
+                #   |             |
+                # (l,b) ------- (r,b)
+                #   1     -->     2
+                x, y = [l, r, r, l, l], [b, b, t, t, b]
                 gr_set_transparency(fc, get_fillalpha(series))
                 gr_polyline(x, y, GR.fillarea)
                 lc = get_linecolor(series, clims)
@@ -1038,20 +1038,13 @@ function gr_add_legend(sp, leg, viewport_area)
                 st === :shape && gr_polyline(x, y)
             end
 
-            maxmarkersize = Inf
+            max_markersize = Inf
             if st in (:path, :straightline, :path3d)
+                filled = series[:fillrange] !== nothing && series[:ribbon] === nothing
                 gr_set_transparency(lc, get_linealpha(series))
-                # This is to prevent that linestyle is obscured by large markers. 
-                # We are trying to get markers to not be larger than half the line length. 
-                # 1 / leg.dy translates base_factor to line length units (important in the context of size kwarg)
-                # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
-                maxmarkersize = gr_legend_marker_to_line_factor[] * leg.base_factor / leg.dy  # NOTE: base on horizontal measures !
-                xs = xpos .+ [rgt, lft]
-                ys = ypos .+ if (filled = series[:fillrange] === nothing || series[:ribbon] !== nothing)
-                    [0, 0]
-                else
-                    [bot, top]
-                end
+                max_markersize = leg.base_markersize
+                xs = xpos .+ [lft, rgt]
+                ys = ypos .+ (filled ? [bot, top] : [0, 0])
                 GR.polyline(xs, ys)
             end
 
@@ -1066,8 +1059,8 @@ function gr_add_legend(sp, leg, viewport_area)
                     nothing,
                     clims,
                     1,
-                    min(maxmarkersize, msz > 0 ? 0.8lfps : 0),
-                    min(maxmarkersize, 0.8lfps * msw / (msz > 0 ? msz : 8)),
+                    min(max_markersize, msz > 0 ? 0.8lfps : 0),
+                    min(max_markersize, 0.8lfps * msw / (msz > 0 ? msz : 8)),
                     Plots._cycle(msh, 1),
                 )
             end
@@ -1144,6 +1137,8 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     xpos, ypos
 end
 
+const gr_legend_marker_to_line_factor = Ref(8.0)
+
 function gr_get_legend_geometry(vp, sp)
     textw = texth = 0.0
     entries = 0
@@ -1175,7 +1170,7 @@ function gr_get_legend_geometry(vp, sp)
         GR.restorestate()
     end
 
-    base_factor = width(vp) / 45  # determines legend box width base (arbitrary)
+    base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
     # legend box conventions ref(1)
     #  ____________________________
@@ -1191,11 +1186,18 @@ function gr_get_legend_geometry(vp, sp)
     dy = texth * get(sp[:extra_kwargs], :legend_hfactor, 1)
     dx = (textw + (vertical ? 0 : span)) * get(sp[:extra_kwargs], :legend_wfactor, 1)
 
+    # This is to prevent that linestyle is obscured by large markers. 
+    # We are trying to get markers to not be larger than half the line length. 
+    # 1 / leg.dy translates base_factor to line length units (important in the context of size kwarg)
+    # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
+    base_markersize = gr_legend_marker_to_line_factor[] * base_factor / dy  # NOTE: arbitrarily based on horizontal measures !
+
     (
         xoffset = width(vp) / 30,
         yoffset = height(vp) / 30,
         w = vertical ? dx : dx * entries - span,  # NOTE: `- span`, since span `joins` labels
         h = vertical ? dy * entries : dy,
+        base_markersize,
         base_factor,
         has_title,
         vertical,
