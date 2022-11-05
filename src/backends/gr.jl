@@ -1144,7 +1144,7 @@ const gr_legend_marker_to_line_factor = Ref(2.0)
 
 function gr_get_legend_geometry(vp, sp)
     textw = texth = 0.0
-    entries = 0
+    entries = nseries = 0
     vertical = (legend_column = sp[:legend_column]) == 1
     has_title = false
     if sp[:legend_position] !== :none
@@ -1166,11 +1166,15 @@ function gr_get_legend_geometry(vp, sp)
             (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(series[:label])))
             texth = max(texth, t - b)
             textw = max(textw, r - l)  # holds text width right now
-            entries += 1
+            nseries += 1
         end
         GR.setscale(GR.OPTION_X_LOG)
         GR.selntran(1)
         GR.restorestate()
+    end
+    entries += nseries
+    if !vertical && legend_column > 0 && legend_column != nseries
+        @warn "legend_column=$legend_column is not compatible with n°series=$nseries"
     end
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
@@ -1253,14 +1257,10 @@ function gr_update_viewport_legend!(vp, sp, leg)
         end
     end
     if lp === :inline
-        if leg.vertical
-            if yaxis[:mirror]
-                vp.xmin += leg.w
-            else
-                vp.xmax -= leg.w
-            end
+        if yaxis[:mirror]
+            vp.xmin += leg.w
         else
-            # FIXME: update these when horizontal
+            vp.xmax -= leg.w
         end
     end
     nothing
