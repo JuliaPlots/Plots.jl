@@ -966,8 +966,12 @@ end
 
 ## Legend
 
-gr_legend_bbox(xpos, ypos, leg) =
-    GR.drawrect(xpos - 0.5leg.dx, xpos + 0.5leg.dx, ypos - 0.5leg.dy, ypos + 0.5leg.dy)
+gr_legend_bbox(xpos, ypos, leg) = GR.drawrect(
+    xpos - leg.space - leg.span,
+    xpos + leg.textw,
+    ypos - 0.5leg.dy,
+    ypos + 0.5leg.dy,
+)
 
 function gr_add_legend(sp, leg, viewport_area)
     sp[:legend_position] ∈ (:none, :inline) && return
@@ -975,10 +979,10 @@ function gr_add_legend(sp, leg, viewport_area)
     GR.selntran(0)
     GR.setscale(0)
     vertical = leg.vertical
-    deb = false  # NOTE: turn this on for debugging legend bboxes
+    deb = false  # NOTE: toggle this flag for debugging legend bboxes
     if getfield(leg, vertical ? :w : :h) > 0
         xpos, ypos = gr_legend_pos(sp, leg, viewport_area)  # position between the legend line and text (see ref(1))
-        # @show vertical leg.w leg.h leg.pad leg.span leg.entries (xpos, ypos) leg.dx leg.dy
+        # @show vertical leg.w leg.h leg.pad leg.span leg.entries (xpos, ypos) leg.dx leg.dy leg.textw leg.texth
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
         gr_set_fillcolor(sp[:legend_background_color])
         # ymax
@@ -995,7 +999,7 @@ function gr_add_legend(sp, leg, viewport_area)
             gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
             deb && gr_legend_bbox(xpos, ypos, leg)
             if vertical
-                gr_text(xpos - 1.5leg.base_factor + 0.5leg.w, ypos, string(ttl))
+                gr_text(xpos - leg.pad - leg.space + 0.5leg.w, ypos, string(ttl))
                 ypos -= leg.dy
             else
                 gr_text(xpos, ypos, string(ttl))
@@ -1005,15 +1009,14 @@ function gr_add_legend(sp, leg, viewport_area)
         gr_set_font(legendfont(sp), sp; halign = :left, valign = :center)
         for series in series_list(sp)
             should_add_to_legend(series) || continue
-            deb && gr_legend_bbox(xpos, ypos, leg)
             st = series[:seriestype]
             clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
             lfps = sp[:legend_font_pointsize]
             gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
+            deb && gr_legend_bbox(xpos, ypos, leg)
 
-            lft, rgt, bot, top =
-                -0.5leg.base_factor - leg.span, -0.5leg.base_factor, -0.4leg.dy, 0.4leg.dy
+            lft, rgt, bot, top = -leg.space - leg.span, -leg.space, -0.4leg.dy, 0.4leg.dy
 
             if (
                 (st === :shape || series[:fillrange] !== nothing) &&
@@ -1173,18 +1176,20 @@ function gr_get_legend_geometry(vp, sp)
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
     # legend box conventions ref(1)
-    #  ___________________________
-    # |<pad> <span>   <text> <pad>|
-    # |      ---o--  ⋅  y1        |
-    # |______________↑____________|
-    #           (xpos,ypos)
+    #  ______________________________
+    # |<pad><span><space><text> <pad>|
+    # |     ---o--       ⋅ y1        |
+    # |__________________↑___________|
+    #               (xpos,ypos)
 
     pad = 1base_factor  # legend padding
     span = 3base_factor  # horizontal span of the legend line: line x marker x line = 3base_factor
+    space = 0.5base_factor  # white space between text and legend / markers
 
     # increment between each legend entry
-    dy = texth * get(sp[:extra_kwargs], :legend_hfactor, 1)
-    dx = (textw + (vertical ? 0 : span)) * get(sp[:extra_kwargs], :legend_wfactor, 1)
+    ekw = sp[:extra_kwargs]
+    dy = texth * get(ekw, :legend_hfactor, 1)
+    dx = (textw + (vertical ? 0 : span + space)) * get(ekw, :legend_wfactor, 1)
 
     # This is to prevent that linestyle is obscured by large markers. 
     # We are trying to get markers to not be larger than half the line length. 
@@ -1195,8 +1200,9 @@ function gr_get_legend_geometry(vp, sp)
     (
         xoffset = width(vp) / 30,
         yoffset = height(vp) / 30,
-        w = vertical ? dx : dx * entries - span,  # NOTE: substract 1 x `span`, since it joins labels
+        w = (vertical ? dx : dx * entries - span) - space,  # NOTE: substract 1 x `span`, since it joins labels when horizontal
         h = vertical ? dy * entries : dy,
+        space,
         base_markersize,
         base_factor,
         has_title,
@@ -1254,7 +1260,7 @@ function gr_update_viewport_legend!(vp, sp, leg)
                 vp.xmax -= leg.w
             end
         else
-            # FIXME: update these when vertical
+            # FIXME: update these when horizontal
         end
     end
     nothing
