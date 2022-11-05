@@ -630,6 +630,15 @@ end
 function twin(sp, letter)
     plt = sp.plt
     plt[:layout_insets] = true
+    orig_sp = first(plt.subplots)
+    for letter in filter(!=(letter), axes_letters(orig_sp, letter))
+        ax = orig_sp[get_attr_symbol(letter, :axis)]
+        ax[:grid] = false  # disable the grid (overlaps with twin axis)
+    end
+    if orig_sp[:framestyle] === :box
+        # incompatible with shared axes (see github.com/JuliaPlots/Plots.jl/issues/2894)
+        orig_sp[:framestyle] = :axes
+    end
     plot!(
         plt,
         inset = (sp[:subplot_index], bbox(0, 0, 1, 1)),
@@ -638,17 +647,17 @@ function twin(sp, letter)
         top_margin = sp[:top_margin],
         bottom_margin = sp[:bottom_margin],
     )
-    twinsp = last(plt.subplots)
-    letters = axes_letters(twinsp, letter)
-    tax, oax = map(l -> twinsp[get_attr_symbol(l, :axis)], letters)
+    twin_sp = last(plt.subplots)
+    letters = axes_letters(twin_sp, letter)
+    tax, oax = map(l -> twin_sp[get_attr_symbol(l, :axis)], letters)
     tax[:grid] = false
     tax[:showaxis] = false
     tax[:ticks] = :none
     oax[:grid] = false
     oax[:mirror] = true
-    twinsp[:background_color_inside] = RGBA{Float64}(0, 0, 0, 0)
+    twin_sp[:background_color_inside] = RGBA{Float64}(0, 0, 0, 0)
     link_axes!(sp[get_attr_symbol(letter, :axis)], tax)
-    twinsp
+    twin_sp
 end
 
 """
