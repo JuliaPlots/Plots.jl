@@ -1126,59 +1126,71 @@ end
 
 function gr_get_legend_geometry(vp, sp)
     legendn = 0
-    legendw = dy = 0.0
+    legendw = dy = 0.0  # vertical
+    legendh = dx = 0.0  # horizontal
+
+    vertical = (legend_column = sp[:legend_column]) == 1
     if sp[:legend_position] !== :none
         GR.savestate()
         GR.selntran(0)
         GR.setcharup(0, 1)
         GR.setscale(0)
-        if sp[:legend_title] !== nothing
+        if (ttl = sp[:legend_title]) !== nothing
             gr_set_font(legendtitlefont(sp), sp)
-            tbx, tby = gr_inqtext(0, 0, string(sp[:legend_title]))
-            l, r = extrema(tbx)
-            b, t = extrema(tby)
-            dy = t - b
-            legendw = r - l
+            (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(ttl)))
+            legendh = dy = t - b
+            legendw = dx = r - l
             legendn += 1
         end
         gr_set_font(legendfont(sp), sp)
         for series in series_list(sp)
             should_add_to_legend(series) || continue
-            tbx, tby = gr_inqtext(0, 0, string(series[:label]))
-            l, r = extrema(tbx)
-            b, t = extrema(tby)
+            (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(series[:label])))
             dy = max(dy, t - b)
+            dx = max(dx, r - l)
             legendw = max(legendw, r - l) # Holds text width right now
+            legendh = max(legendh, t - b)
             legendn += 1
         end
-
         GR.setscale(GR.OPTION_X_LOG)
         GR.selntran(1)
         GR.restorestate()
     end
 
-    legend_width_factor = width(vp) / 45 # Determines the width of legend box
-    legend_textw = legendw
-    legend_rightw = legend_width_factor
-    legend_leftw = 4legend_width_factor
-    total_legendw = legend_textw + legend_leftw + legend_rightw
+    # TODO: this will benefit from a ascii drawing here embedded in the code ...
 
-    x_legend_offset = width(vp) / 30
-    y_legend_offset = height(vp) / 30
+    leg_w_factor = width(vp) / 45  # determines the width of legend box
+    leg_h_factor = height(vp) / 45
+
+    # vertical
+    rightw = leg_w_factor
+    leftw = 4leg_w_factor
+
+    # horizontal
+    toph = leg_h_factor
+    bottomh = 4leg_h_factor
 
     dy *= get(sp[:extra_kwargs], :legend_hfactor, 1)
-    legendh = dy * legendn
+    dx *= get(sp[:extra_kwargs], :legend_wfactor, 1)
+
+    leg_h = dy * legendn
+    leg_w = dx * legendn
 
     (
-        w = legendw,
-        h = legendh,
-        dy = dy,
-        leftw = legend_leftw,
-        textw = legend_textw,
-        rightw = legend_rightw,
-        xoffset = x_legend_offset,
-        yoffset = y_legend_offset,
-        width_factor = legend_width_factor,
+        height_factor = leg_h_factor,
+        width_factor = leg_w_factor,
+        textw = legendw,
+        texth = legendh,
+        xoffset = width(vp) / 30,
+        yoffset = height(vp) / 30,
+        w = vertical ? legendw : legendh,
+        h = vertical ? leg_h : leg_w,
+        rightw,
+        leftw,
+        toph,
+        bottomh,
+        dy,
+        dx,
     )
 end
 
