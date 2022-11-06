@@ -181,6 +181,7 @@ end
 
 @testset "GR - reference images" begin
     with(:gr) do
+        # NOTE: use `ENV["VISUAL_REGRESSION_TESTS_AUTO"] = true;` to automatically replace reference images
         @test backend() == Plots.GRBackend()
         @test backend_name() === :gr
         withenv("PLOTS_TEST" => true, "GKSwstype" => "nul") do

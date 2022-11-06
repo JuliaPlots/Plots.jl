@@ -1163,7 +1163,7 @@ const _examples = PlotExample[
             plot(pl, pr)
         end,
     ),
-    PlotExample(  # 63
+    PlotExample(  # 64
         "Legend positions",
         "Horizontal or vertical legends, at different locations.",
         quote
@@ -1182,7 +1182,7 @@ const _examples = PlotExample[
             end
         end,
     ),
-    PlotExample(  # 64
+    PlotExample(  # 65
         "Outer legend positions",
         "Horizontal or vertical legends, at different locations.",
         quote
@@ -1253,6 +1253,8 @@ _backend_skips = Dict(
         56,  # barplots
         62,  # fillstyle
         63,  # twin axes unsupported
+        64,  # legend pos unsupported
+        65,  # legend pos unsupported
     ],
     :gaston => [
         2,   # animations
