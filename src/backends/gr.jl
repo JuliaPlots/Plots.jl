@@ -3,6 +3,7 @@
 import GR
 export GR
 
+const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
 const gr_linetypes = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)
 const gr_fill_styles = ((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6)
 const gr_arrowstyles = (
@@ -53,8 +54,6 @@ const gr_valigns = (
     center = GR.TEXT_VALIGN_HALF,
     bottom = GR.TEXT_VALIGN_BOTTOM,
 )
-const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
-
 const gr_font_family = Dict(
     # compat
     "times" => 101,
@@ -516,8 +515,10 @@ end
 function _cbar_unique(values, propname)
     out = last(values)
     if any(x != out for x in values)
-        @warn "Multiple series with different $propname share a colorbar. " *
-              "Colorbar may not reflect all series correctly."
+        @warn """
+        Multiple series with different $propname share a colorbar.
+        Colorbar may not reflect all series correctly.
+        """
     end
     out
 end
@@ -704,13 +705,9 @@ function gr_text_size(str)
     GR.savestate()
     GR.selntran(0)
     GR.setcharup(0, 1)
-    xs, ys = gr_inqtext(0, 0, string(str))
-    l, r = extrema(xs)
-    b, t = extrema(ys)
-    w = r - l
-    h = t - b
+    (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(str)))
     GR.restorestate()
-    w, h
+    r - l, t - b  # w, h
 end
 
 # size of the text with rotation applied
@@ -718,13 +715,9 @@ function gr_text_size(str, rot)
     GR.savestate()
     GR.selntran(0)
     GR.setcharup(0, 1)
-    xs, ys = gr_inqtext(0, 0, string(str))
-    l, r = extrema(xs)
-    b, t = extrema(ys)
-    w = text_box_width(r - l, t - b, rot)
-    h = text_box_height(r - l, t - b, rot)
+    (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(str)))
     GR.restorestate()
-    w, h
+    text_box_width(r - l, t - b, rot), text_box_height(r - l, t - b, rot)  # w, h
 end
 
 text_box_width(w, h, rot) = abs(cosd(rot)) * w + abs(cosd(rot + 90)) * h
@@ -733,7 +726,6 @@ text_box_height(w, h, rot) = abs(sind(rot)) * w + abs(sind(rot + 90)) * h
 function gr_get_3d_axis_angle(cvs, nt, ft, letter)
     length(cvs) < 2 && return 0
     tickpoints = map(cv -> gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...), cvs)
-
     dx = tickpoints[2][1] - tickpoints[1][1]
     dy = tickpoints[2][2] - tickpoints[1][2]
     atand(dy, dx)
@@ -1171,7 +1163,7 @@ function gr_get_legend_geometry(vp, sp)
     end
     entries += nseries
     if !vertical && legend_column > 0 && legend_column != nseries
-        @warn "legend_column=$legend_column is not compatible with n°series=$nseries"
+        @warn "n° of legend_column=$legend_column is not compatible with n° of series=$nseries"
     end
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
@@ -1190,7 +1182,8 @@ function gr_get_legend_geometry(vp, sp)
     # increment between each legend entry
     ekw = sp[:extra_kwargs]
     dy = texth * get(ekw, :legend_hfactor, 1)
-    dx = (textw + (vertical ? 0 : span + pad)) * get(ekw, :legend_wfactor, 1)
+    span_hspace = span + pad  # part of the horizontal increment
+    dx = (textw + (vertical ? 0 : span_hspace)) * get(ekw, :legend_wfactor, 1)
 
     # This is to prevent that linestyle is obscured by large markers. 
     # We are trying to get markers to not be larger than half the line length. 
@@ -1198,23 +1191,27 @@ function gr_get_legend_geometry(vp, sp)
     # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
     base_markersize = gr_legend_marker_to_line_factor[] * span / dy  # NOTE: arbitrarily based on horizontal measures !
 
+    # NOTE: substract `span_hspace`, since it joins labels in horizontal mode
+    w = (vertical ? dx : dx * entries - span_hspace) - space
+    h = vertical ? dy * entries : dy
+
     (
-        xoffset = width(vp) / 30,
         yoffset = height(vp) / 30,
-        w = (vertical ? dx : dx * entries - (span + pad)) - space,  # NOTE: substract `span + pad`, since it joins labels when horizontal
-        h = vertical ? dy * entries : dy,
-        space,
+        xoffset = width(vp) / 30,
         base_markersize,
         base_factor,
         has_title,
         vertical,
         entries,
-        span,
-        pad,
+        space,
         texth,
         textw,
+        span,
+        pad,
         dy,
         dx,
+        w,
+        h,
     )
 end
 
@@ -1255,9 +1252,9 @@ function gr_update_viewport_legend!(vp, sp, leg)
     end
     if lp === :inline
         if yaxis[:mirror]
-            vp.xmin += leg.w
+            vp.xmin += leg.textw
         else
-            vp.xmax -= leg.w
+            vp.xmax -= leg.textw
         end
     end
     nothing
