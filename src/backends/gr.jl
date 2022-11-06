@@ -959,7 +959,7 @@ end
 ## Legend
 
 gr_legend_bbox(xpos, ypos, leg) = GR.drawrect(
-    xpos - leg.space - leg.span,
+    xpos - leg.space - leg.span,  # see ref(1)
     xpos + leg.textw,
     ypos - 0.5leg.dy,
     ypos + 0.5leg.dy,
@@ -971,7 +971,6 @@ function gr_add_legend(sp, leg, viewport_area)
     GR.selntran(0)
     GR.setscale(0)
     vertical = leg.vertical
-    deb = false  # NOTE: toggle this flag for debugging legend bboxes
     if leg.w > 0 || leg.h > 0
         xpos, ypos = gr_legend_pos(sp, leg, viewport_area)  # position between the legend line and text (see ref(1))
         # @show vertical leg.w leg.h leg.pad leg.span leg.entries (xpos, ypos) leg.dx leg.dy leg.textw leg.texth
@@ -989,7 +988,7 @@ function gr_add_legend(sp, leg, viewport_area)
         GR.drawrect(xs..., ys...)  # drawing actual legend width here
         if (ttl = sp[:legend_title]) !== nothing
             gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
-            deb && gr_legend_bbox(xpos, ypos, leg)
+            _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
             if vertical
                 gr_text(xpos - leg.pad - leg.space + 0.5leg.w, ypos, string(ttl))
                 ypos -= leg.dy
@@ -999,16 +998,17 @@ function gr_add_legend(sp, leg, viewport_area)
             end
         end
         gr_set_font(legendfont(sp), sp; halign = :left, valign = :center)
+
+        lft, rgt, bot, top = -leg.space - leg.span, -leg.space, -0.4leg.dy, 0.4leg.dy
+        lfps = sp[:legend_font_pointsize]
+
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
             clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
-            lfps = sp[:legend_font_pointsize]
             gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
-            deb && gr_legend_bbox(xpos, ypos, leg)
-
-            lft, rgt, bot, top = -leg.space - leg.span, -leg.space, -0.4leg.dy, 0.4leg.dy
+            _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
 
             if (
                 (st === :shape || series[:fillrange] !== nothing) &&
@@ -1093,7 +1093,7 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         return gr_legend_pos(lp, vp)
     end
     if (leg_str = string(lp)) == "best"
-        leg_str = "topright"
+        leg_str = "topright"  # NOTE: can we do better auto-positioning, as `PyPlot` does ?
     end
     xpos = if occursin("left", leg_str)
         vp.xmin + if occursin("outer", leg_str)
@@ -1132,10 +1132,10 @@ end
 const gr_legend_marker_to_line_factor = Ref(2.0)
 
 function gr_get_legend_geometry(vp, sp)
-    textw = texth = 0.0
-    entries = nseries = 0
     vertical = (legend_column = sp[:legend_column]) == 1
+    textw = texth = 0.0
     has_title = false
+    nseries = 0
     if sp[:legend_position] !== :none
         GR.savestate()
         GR.selntran(0)
@@ -1147,7 +1147,6 @@ function gr_get_legend_geometry(vp, sp)
             (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(ttl)))
             texth = t - b
             textw = r - l
-            entries += 1
         end
         gr_set_font(legendfont(sp), sp)
         for series in series_list(sp)
@@ -1161,7 +1160,6 @@ function gr_get_legend_geometry(vp, sp)
         GR.selntran(1)
         GR.restorestate()
     end
-    entries += nseries
     if !vertical && legend_column > 0 && legend_column != nseries
         @warn "n° of legend_column=$legend_column is not compatible with n° of series=$nseries"
     end
@@ -1190,6 +1188,8 @@ function gr_get_legend_geometry(vp, sp)
     # 1 / leg.dy translates base_factor to line length units (important in the context of size kwarg)
     # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
     base_markersize = gr_legend_marker_to_line_factor[] * span / dy  # NOTE: arbitrarily based on horizontal measures !
+
+    entries = has_title + nseries  # number of legend entries
 
     # NOTE: substract `span_hspace`, since it joins labels in horizontal mode
     w = (vertical ? dx : dx * entries - span_hspace) - space
