@@ -481,12 +481,8 @@ function layout_args(m::AbstractVecOrMat)
     layout_args(gl)
 end
 
-# compute number of subplots
-function layout_args(layout::GridLayout)
-    # recursively get the size of the grid
-    n = calc_num_subplots(layout)
-    layout, n
-end
+# recursively get the size of the grid
+layout_args(layout::GridLayout) = layout, calc_num_subplots(layout)
 
 layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) =
     layout_args(layout)

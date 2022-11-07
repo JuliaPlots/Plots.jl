@@ -1167,18 +1167,30 @@ const _examples = PlotExample[
         "Legend positions",
         "Horizontal or vertical legends, at different locations.",
         quote
-            with(scalefonts = 0.4) do
-                leg_plots(; kw...) = map(
-                    leg -> plot(
-                        [0:1, reverse(0:1)];
-                        marker = :circle,
-                        ticks = :none,
-                        leg_title = leg,
-                        leg,
-                        kw...,
-                    ),
-                    (:topleft, :top, :topright, :left, :inside, :right, :bottomleft, :bottom, :bottomright),
-                )
+            legs = (
+                :topleft,
+                :top,
+                :topright,
+                :left,
+                :inside,
+                :right,
+                :bottomleft,
+                :bottom,
+                :bottomright,
+            )
+            leg_plots(; kw...) = map(
+                leg -> plot(
+                    [0:1, reverse(0:1)];
+                    marker = :circle,
+                    ticks = :none,
+                    leg_title = leg,
+                    leg,
+                    kw...,
+                ),
+                legs,
+            )
+            w, h = Plots._plot_defaults[:size]
+            with(scalefonts = 0.5, size = (2w, 2h)) do
                 plot(leg_plots()..., leg_plots(legend_column = -1)...; layout = (6, 3))
             end
         end,
@@ -1187,18 +1199,30 @@ const _examples = PlotExample[
         "Outer legend positions",
         "Horizontal or vertical legends, at different locations.",
         quote
-            with(scalefonts = 0.4) do
-                leg_plots(; kw...) = map(
-                    leg -> plot(
-                        [0:1, reverse(0:1)];
-                        marker = :circle,
-                        ticks = :none,
-                        leg_title = "leg",
-                        leg = leg isa Symbol ? Symbol(:outer, leg) : :none,
-                        kw...,
-                    ),
-                    (:topleft, :top, :topright, :left, nothing, :right, :bottomleft, :bottom, :bottomright),
-                )
+            legs = (
+                :topleft,
+                :top,
+                :topright,
+                :left,
+                nothing,
+                :right,
+                :bottomleft,
+                :bottom,
+                :bottomright,
+            )
+            leg_plots(; kw...) = map(
+                leg -> plot(
+                    [0:1, reverse(0:1)];
+                    marker = :circle,
+                    ticks = :none,
+                    leg_title = leg,
+                    leg = leg isa Symbol ? Symbol(:outer, leg) : :none,
+                    kw...,
+                ),
+                legs,
+            )
+            w, h = Plots._plot_defaults[:size]
+            with(scalefonts = 0.5, size = (2w, 2h)) do
                 plot(leg_plots()..., leg_plots(legend_column = -1)...; layout = (6, 3))
             end
         end,

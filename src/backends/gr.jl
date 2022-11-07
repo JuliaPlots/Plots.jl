@@ -1131,10 +1131,8 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     xpos, ypos
 end
 
-gr_legend_pos(v::NTuple{2,Real}, vp) = (
-    vp.xmin + v[1] * (vp.xmax - vp.xmin),
-    vp.ymin + v[2] * (vp.ymax - vp.ymin)
-)
+gr_legend_pos(v::NTuple{2,Real}, vp) =
+    (vp.xmin + v[1] * (vp.xmax - vp.xmin), vp.ymin + v[2] * (vp.ymax - vp.ymin))
 
 function gr_legend_pos(theta::Real, leg, vp; axisclearance = nothing)
     if isnothing(axisclearance)  # inner
