@@ -1080,13 +1080,16 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     if (lp = sp[:legend_position]) isa Real
         return gr_legend_pos(lp, leg, vp)
     elseif lp isa Tuple{<:Real,Symbol}
-        lp[2] === :outer || return gr_legend_pos(lp[1], leg, vp)
-        axisclearance = [
-            !ymirror * gr_axis_width(sp, yaxis),
-            ymirror * gr_axis_width(sp, yaxis),
-            !xmirror * gr_axis_height(sp, xaxis),
-            xmirror * gr_axis_height(sp, xaxis),
-        ]
+        axisclearance = if lp[2] === :outer
+            [
+                !ymirror * gr_axis_width(sp, yaxis),
+                ymirror * gr_axis_width(sp, yaxis),
+                !xmirror * gr_axis_height(sp, xaxis),
+                xmirror * gr_axis_height(sp, xaxis),
+            ]
+        else
+            nothing
+        end
         return gr_legend_pos(lp[1], leg, vp; axisclearance)
     elseif !(lp isa Symbol)
         return gr_legend_pos(lp, vp)
@@ -1126,6 +1129,27 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         vp.ymin + 0.5height(vp) + 0.5leg.h - 2leg.yoffset
     end
     xpos, ypos
+end
+
+gr_legend_pos(v::NTuple{2,Real}, vp) = (
+    vp.xmin + v[1] * (vp.xmax - vp.xmin),
+    vp.ymin + v[2] * (vp.ymax - vp.ymin)
+)
+
+function gr_legend_pos(theta::Real, leg, vp; axisclearance = nothing)
+    if isnothing(axisclearance)  # inner
+        # rectangle where the anchor can legally be
+        xmin = vp.xmin + leg.xoffset + leg.pad + leg.span
+        xmax = vp.xmax - leg.xoffset - leg.pad - leg.textw
+        ymin = vp.ymin + leg.yoffset + leg.h
+        ymax = vp.ymax - leg.yoffset - leg.dy
+    else  # outer
+        xmin = vp.xmin - leg.xoffset - leg.pad - leg.textw - axisclearance[1]
+        xmax = vp.xmax + leg.xoffset + leg.pad + leg.span + axisclearance[2]
+        ymin = vp.ymin - leg.yoffset - leg.dy - axisclearance[3]
+        ymax = vp.ymax + leg.yoffset + leg.h + axisclearance[4]
+    end
+    legend_pos_from_angle(theta, xmin, xcenter(vp), xmax, ymin, ycenter(vp), ymax)
 end
 
 const gr_legend_marker_to_line_factor = Ref(2.0)
