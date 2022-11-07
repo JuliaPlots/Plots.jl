@@ -1260,8 +1260,30 @@ _backend_skips = Dict(
         51,  # image with custom axes
         56,  # custom bar plot
     ],
-    :inspectdr =>
-        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60, 62, 63, 64, 65],
+    :inspectdr => [
+        4,
+        6,
+        10,
+        22,
+        24,
+        28,
+        30,
+        38,
+        43,
+        45,
+        47,
+        48,
+        49,
+        50,
+        51,
+        55,
+        56,
+        60,
+        62,
+        63,
+        64,
+        65,
+    ],
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
