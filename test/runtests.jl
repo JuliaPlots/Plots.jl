@@ -50,6 +50,9 @@ for name in (
     "backends",
 )
     @testset "$name" begin
+        if get(ENV, "VISUAL_REGRESSION_TESTS_AUTO", "false") == "true" && name != "backends"
+            continue  # skip the majority of tests if we only want to update reference images
+        end
         gr()  # reset to default backend
         include("test_$name.jl")
     end

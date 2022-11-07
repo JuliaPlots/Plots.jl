@@ -17,7 +17,7 @@ reference_dir(args...) =
     if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) !== nothing
         ref_dir
     else
-        joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+        joinpath(homedir(), ".julia", "dev", "PlotReferenceImages.jl", args...)
     end
 reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 
@@ -181,6 +181,7 @@ end
 
 @testset "GR - reference images" begin
     with(:gr) do
+        # NOTE: use `ENV["VISUAL_REGRESSION_TESTS_AUTO"] = true;` to automatically replace reference images
         @test backend() == Plots.GRBackend()
         @test backend_name() === :gr
         withenv("PLOTS_TEST" => true, "GKSwstype" => "nul") do

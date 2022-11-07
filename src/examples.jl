@@ -128,9 +128,8 @@ const _examples = PlotExample[
         series.
         """,
         quote
-            ys = Vector[rand(10), rand(20)]
             plot(
-                ys,
+                [rand(10), rand(20)],
                 color = [:black :orange],
                 line = (:dot, 4),
                 marker = ([:hex :d], 12, 0.8, Plots.stroke(3, :gray)),
@@ -156,7 +155,7 @@ const _examples = PlotExample[
         quote
             linetypes = [:path :steppre :steppost :sticks :scatter]
             n = length(linetypes)
-            x = Vector[sort(rand(20)) for i in 1:n]
+            x = map(_ -> sort(rand(20)), 1:n)
             y = rand(20, n)
             plot(x, y, line = (linetypes, 3), lab = map(string, linetypes), ms = 15)
         end,
@@ -169,10 +168,8 @@ const _examples = PlotExample[
                 [:solid, :dash, :dot, :dashdot, :dashdotdot],
             )
             styles = reshape(styles, 1, length(styles)) # Julia 0.6 unfortunately gives an error when transposing symbol vectors
-            n = length(styles)
-            y = cumsum(randn(20, n), dims = 1)
             plot(
-                y,
+                cumsum(randn(20, length(styles)), dims = 1),
                 line = (5, styles),
                 label = map(string, styles),
                 legendtitle = "linestyle",
@@ -347,11 +344,9 @@ const _examples = PlotExample[
                 (0.2, 0.2),
                 (-0.2, -0.6),
             ]
-            x = 0.1:0.2:0.9
-            y = 0.7 * rand(5) .+ 0.15
             plot(
-                x,
-                y,
+                0.1:0.2:0.9,
+                0.7rand(5) .+ 0.15,
                 line = (3, :dash, :lightblue),
                 marker = (Shape(verts), 30, RGBA(0, 0, 0, 0.2)),
                 bg = :pink,
@@ -393,12 +388,10 @@ const _examples = PlotExample[
         quote
             n = 100
             ts = range(0, stop = 8π, length = n)
-            x = ts .* map(cos, ts)
-            y = 0.1ts .* map(sin, ts)
             z = 1:n
             plot(
-                x,
-                y,
+                ts .* map(cos, ts),
+                0.1ts .* map(sin, ts),
                 z,
                 zcolor = reverse(z),
                 m = (10, 0.8, :blues, Plots.stroke(0)),
@@ -584,8 +577,7 @@ const _examples = PlotExample[
         quote
             Random.seed!(111)
             tickers = ["IBM", "Google", "Apple", "Intel"]
-            N = 10
-            D = length(tickers)
+            N, D = 10, length(tickers)
             weights = rand(N, D)
             weights ./= sum(weights, dims = 2)
             returns = sort!((1:N) + D * randn(N))
@@ -694,12 +686,7 @@ const _examples = PlotExample[
     PlotExample( # 43
         "Heatmap with DateTime axis",
         :(using Dates),
-        quote
-            z = rand(5, 5)
-            x = DateTime.(2016:2020)
-            y = 1:5
-            heatmap(x, y, z)
-        end,
+        :(heatmap(DateTime.(2016:2020), 1:5, rand(5, 5))),
     ),
     PlotExample( # 44
         "Linked axes",
@@ -841,17 +828,18 @@ const _examples = PlotExample[
     PlotExample( # 50
         "3D surface with axis guides",
         quote
-            func(x, a) = 1 / x + a * x^2
             xs = collect(0.1:0.05:2.0)
-            as = collect(0.2:0.1:2.0)
+            ys = collect(0.2:0.1:2.0)
 
-            x_grid = [x for x in xs for y in as]
-            a_grid = [y for x in xs for y in as]
+            X = [x for x in xs for _ in ys]
+            Y = [y for _ in xs for y in ys]
+
+            surf = (x, y) -> 1 / x + y * x^2
 
             plot(
-                x_grid,
-                a_grid,
-                func.(x_grid, a_grid),
+                X,
+                Y,
+                surf.(X, Y),
                 st = :surface,
                 xlabel = "longer xlabel",
                 ylabel = "longer ylabel",
@@ -890,9 +878,9 @@ const _examples = PlotExample[
             y = vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
             z = vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
 
-            u = 0.1 * vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
-            v = 0.1 * vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
-            w = 0.1 * vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            u = 0.1vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            v = 0.1vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            w = 0.1vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
 
             quiver(x, y, z, quiver = (u, v, w))
         end,
@@ -941,51 +929,54 @@ const _examples = PlotExample[
         "3D axis flip / mirror",
         :(using LinearAlgebra),
         quote
-            scalefontsizes(0.5)
+            with(scalefonts = 0.5) do
+                x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
-            x, y = collect(-6:0.5:10), collect(-8:0.5:8)
+                args = x, y, (x, y) -> sinc(norm([x, y]) / π)
+                kw = (
+                    xlabel = "x",
+                    ylabel = "y",
+                    zlabel = "z",
+                    grid = true,
+                    minorgrid = true,
+                )
 
-            args = x, y, (x, y) -> sinc(norm([x, y]) / π)
-            kw = (xlabel = "x", ylabel = "y", zlabel = "z", grid = true, minorgrid = true)
+                plots = [wireframe(args..., title = "wire"; kw...)]
 
-            plots = [wireframe(args..., title = "wire"; kw...)]
+                for ax in (:x, :y, :z)
+                    push!(
+                        plots,
+                        wireframe(
+                            args...,
+                            title = "wire-flip-$ax",
+                            xflip = ax === :x,
+                            yflip = ax === :y,
+                            zflip = ax === :z;
+                            kw...,
+                        ),
+                    )
+                end
 
-            for ax in (:x, :y, :z)
-                push!(
-                    plots,
-                    wireframe(
-                        args...,
-                        title = "wire-flip-$ax",
-                        xflip = ax === :x,
-                        yflip = ax === :y,
-                        zflip = ax === :z;
-                        kw...,
-                    ),
+                for ax in (:x, :y, :z)
+                    push!(
+                        plots,
+                        wireframe(
+                            args...,
+                            title = "wire-mirror-$ax",
+                            xmirror = ax === :x,
+                            ymirror = ax === :y,
+                            zmirror = ax === :z;
+                            kw...,
+                        ),
+                    )
+                end
+
+                plot(
+                    plots...,
+                    layout = (@layout [_ ° _; ° ° °; ° ° °]),
+                    margin = 0Plots.px,
                 )
             end
-
-            for ax in (:x, :y, :z)
-                push!(
-                    plots,
-                    wireframe(
-                        args...,
-                        title = "wire-mirror-$ax",
-                        xmirror = ax === :x,
-                        ymirror = ax === :y,
-                        zmirror = ax === :z;
-                        kw...,
-                    ),
-                )
-            end
-
-            plt = plot(
-                plots...,
-                layout = (@layout [_ ° _; ° ° °; ° ° °]),
-                margin = 0Plots.px,
-            )
-
-            resetfontsizes()
-            plt
         end,
     ),
     PlotExample( # 56
@@ -1172,6 +1163,70 @@ const _examples = PlotExample[
             plot(pl, pr)
         end,
     ),
+    PlotExample(  # 64
+        "Legend positions",
+        "Horizontal or vertical legends, at different locations.",
+        quote
+            legs = (
+                :topleft,
+                :top,
+                :topright,
+                :left,
+                :inside,
+                :right,
+                :bottomleft,
+                :bottom,
+                :bottomright,
+            )
+            leg_plots(; kw...) = map(
+                leg -> plot(
+                    [0:1, reverse(0:1)];
+                    marker = :circle,
+                    ticks = :none,
+                    leg_title = leg,
+                    leg,
+                    kw...,
+                ),
+                legs,
+            )
+            w, h = Plots._plot_defaults[:size]
+            with(scalefonts = 0.5, size = (2w, 2h)) do
+                plot(leg_plots()..., leg_plots(legend_column = -1)...; layout = (6, 3))
+            end
+        end,
+    ),
+    PlotExample(  # 65
+        "Outer legend positions",
+        "Horizontal or vertical legends, at different locations.",
+        quote
+            legs = (
+                :topleft,
+                :top,
+                :topright,
+                :left,
+                nothing,
+                :right,
+                :bottomleft,
+                :bottom,
+                :bottomright,
+            )
+            leg_plots(; kw...) = map(
+                leg -> plot(
+                    [0:1, reverse(0:1)];
+                    marker = :circle,
+                    ticks = :none,
+                    leg_title = leg,
+                    leg = leg isa Symbol ? Symbol(:outer, leg) : :none,
+                    kw...,
+                ),
+                legs,
+            )
+            w, h = Plots._plot_defaults[:size]
+            with(scalefonts = 0.5, size = (2w, 2h)) do
+                plot(leg_plots()..., leg_plots(legend_column = -1)...; layout = (6, 3))
+            end
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -1224,6 +1279,8 @@ _backend_skips = Dict(
         56,  # barplots
         62,  # fillstyle
         63,  # twin axes unsupported
+        64,  # legend pos unsupported
+        65,  # legend pos unsupported
     ],
     :gaston => [
         2,   # animations

@@ -590,7 +590,7 @@ with(:gr, size=(400,400), type=:histogram) do
 end
 ```
 """
-function with(f::Function, args...; kw...)
+function with(f::Function, args...; scalefonts = nothing, kw...)
     newdefs = KW(kw)
 
     if :canvas in args
@@ -633,11 +633,13 @@ function with(f::Function, args...; kw...)
 
     # now set all those defaults
     default(; newdefs...)
+    scalefonts ≡ nothing || scalefontsizes(scalefonts)
 
     # call the function
     ret = f()
 
     # put the defaults back
+    scalefonts ≡ nothing || resetfontsizes()
     default(; olddefs...)
 
     # revert the backend

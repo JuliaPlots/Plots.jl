@@ -52,12 +52,10 @@ function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
     mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
 end
 
-function Base.show(io::IO, bbox::BoundingBox)
-    print(
-        io,
-        "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}",
-    )
-end
+Base.show(io::IO, bbox::BoundingBox) = print(
+    io,
+    "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}",
+)
 
 # -----------------------------------------------------------
 # AbstractLayout
@@ -481,12 +479,8 @@ function layout_args(m::AbstractVecOrMat)
     layout_args(gl)
 end
 
-# compute number of subplots
-function layout_args(layout::GridLayout)
-    # recursively get the size of the grid
-    n = calc_num_subplots(layout)
-    layout, n
-end
+# recursively get the size of the grid
+layout_args(layout::GridLayout) = layout, calc_num_subplots(layout)
 
 layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) =
     layout_args(layout)
