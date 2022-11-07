@@ -1099,18 +1099,18 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     end
     xpos = if occursin("left", leg_str)
         vp.xmin + if occursin("outer", leg_str)
-            -leg.pad - leg.w - 2leg.xoffset - !ymirror * gr_axis_width(sp, yaxis)
+            -leg.pad - leg.w - leg.xoffset - !ymirror * gr_axis_width(sp, yaxis)
         else
             leg.pad + leg.span + leg.xoffset
         end
     elseif occursin("right", leg_str)  # default / best
         vp.xmax + if occursin("outer", leg_str)  # per github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            leg.xoffset + leg.pad + leg.span + ymirror * gr_axis_width(sp, yaxis)
+            leg.pad + leg.span + leg.xoffset + ymirror * gr_axis_width(sp, yaxis)
         else
             -leg.pad - leg.w - leg.xoffset
         end
     else
-        vp.xmin + 0.5width(vp) - 0.5leg.w + leg.xoffset  # + 0.5(leg.w + leg.span)
+        vp.xmin + 0.5width(vp) - 0.5leg.w + leg.xoffset
     end
     ypos = if occursin("bottom", leg_str)
         vp.ymin + if lp === :outerbottom
