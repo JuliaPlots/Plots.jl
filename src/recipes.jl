@@ -1093,13 +1093,13 @@ end
 # Error Bars
 
 @attributes function error_style!(plotattributes::AKW)
-    # errorbar color should soley determined by markerstrokecolor
     haskey(plotattributes, :marker_z) && reset_kw!(plotattributes, :marker_z)
     haskey(plotattributes, :line_z) && reset_kw!(plotattributes, :line_z)
-
-    for property in propertynames(getproperty(Plots, Symbol("$(uppercase(first(string(plotattributes[:seriestype]))))ErrorBar")))
-        @show property
-        # TODO: make this work
+    type = getproperty(Plots, Symbol("$(uppercase(first(string(plotattributes[:seriestype]))))ErrorBar"))
+    for (tproperty, property) in zip(attributes(type), propertynames(type))
+        tproperty == :marker && continue #FIXME
+        tproperty == :line   && continue #FIXME
+        tproperty --> plotattributes[property]
     end
     seriestype := :path
     label --> ""

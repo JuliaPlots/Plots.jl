@@ -2151,10 +2151,14 @@ macro add_attributes(level, expr, args...)
     original = copy(expr)
     _splitdef!(expr.args[3], key_dict)
 
+    exp_keys = Symbol[]
+    keys = Symbol[]
     insert_block = Expr(:block)
     for (key, value) in key_dict
         # e.g. _series_defualts[key] = value
         exp_key = Symbol(lowercase(string(T)), "_", key)
+        push!(exp_keys, exp_key)
+        push!(keys, key)
         pl_key = makeplural(exp_key)
         if QuoteNode(exp_key) in match_table.args[2].args
             value = QuoteNode(:match)
@@ -2189,6 +2193,8 @@ macro add_attributes(level, expr, args...)
     end
     quote
         Base.@kwdef $original
+        Base.propertynames(::Type{$T}) = $(Tuple(exp_keys))
+        attributes(::Type{$T}) = $(Tuple(keys))
         $insert_block
     end |> esc
 end

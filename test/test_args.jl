@@ -1,3 +1,4 @@
+using Plots, Test
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
         @test pl[1].primary_series_count == 2

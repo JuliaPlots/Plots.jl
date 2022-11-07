@@ -1,4 +1,4 @@
-using OffsetArrays
+using Plots, Test, OffsetArrays
 
 @testset "User recipes" begin
     struct LegendPlot end
@@ -88,6 +88,9 @@ end
     @test p[1][1][:line_style] == :solid
     @test p[1][2][:line_style] == :dash
     @test p[1][3][:line_style] == :dot
+    @test_nowarn p2 = plot(1:10,1:10,yerr=0.5,shape=:o, yerror_markershape=:o)
+    @test p2[1][1][:marker_shape] = :o
+    @test p2[1][2][:marker_shape] = :o
 end
 
 @testset "parametric" begin
