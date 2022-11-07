@@ -1249,6 +1249,8 @@ _backend_skips = Dict(
         56,
         62,
         63,  # twin axes unsupported
+        64,  # legend pos unsupported
+        65,  # legend pos unsupported
     ],
     :pgfplotsx => [
         6,  # images
@@ -1259,7 +1261,7 @@ _backend_skips = Dict(
         56,  # custom bar plot
     ],
     :inspectdr =>
-        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60, 62, 63],
+        [4, 6, 10, 22, 24, 28, 30, 38, 43, 45, 47, 48, 49, 50, 51, 55, 56, 60, 62, 63, 64, 65],
     :unicodeplots => [
         5,  # limits issue
         6,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
