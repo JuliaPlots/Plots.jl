@@ -52,8 +52,10 @@ function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
     mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
 end
 
-Base.show(io::IO, bbox::BoundingBox) =
-    print(io, "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}")
+Base.show(io::IO, bbox::BoundingBox) = print(
+    io,
+    "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}",
+)
 
 # -----------------------------------------------------------
 # AbstractLayout

@@ -1251,16 +1251,8 @@ function gr_update_viewport_legend!(vp, sp, leg)
         string(lp)
     end
     if occursin("outer", leg_str)
-        xoff = if leg.vertical
-            leg.pad + leg.span + leg.textw + leg.pad + leg.xoffset
-        else
-            leg.w + leg.dx + leg.xoffset
-        end
-        yoff = if leg.vertical
-            leg.h + leg.dy + leg.yoffset
-        else
-            leg.pad + leg.span + leg.texth + leg.pad + leg.yoffset
-        end
+        xoff = leg.xoffset + leg.w + leg.pad + leg.span + leg.pad
+        yoff = leg.yoffset + leg.h + leg.dy
         if occursin("right", leg_str)
             vp.xmax -= xoff
         elseif occursin("left", leg_str)
@@ -1311,7 +1303,6 @@ gr_set_window(sp, vp) =
         else
             true
         end
-
         if x_max > x_min && y_max > y_min && zok
             scaleop = 0
             sp[:xaxis][:scale] === :log10 && (scaleop |= GR.OPTION_X_LOG)
