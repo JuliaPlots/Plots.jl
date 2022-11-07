@@ -1460,9 +1460,10 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
 
     # gotta do this to ensure both axes are included
     labels, handles = [], []
+    nseries = 0
     for series in series_list(sp)
         should_add_to_legend(series) || continue
-
+        nseries += 1
         clims = get_clims(sp, series)
         # add a line/marker and a label
         if series[:seriestype] === :shape || series[:fillrange] !== nothing
@@ -1545,9 +1546,18 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
     # if anything was added, call ax.legend and set the colors
     if !isempty(handles)
         leg = legend_angle(leg)
+        ncol = if (lc = sp[:legend_column]) < 0
+            nseries
+        elseif lc > 1
+            lc == nseries ||
+                @warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
+            nseries
+        else
+            1
+        end
         leg = ax."legend"(
             handles,
-            labels,
+            labels;
             loc = py_legend_pos(leg),
             bbox_to_anchor = py_legend_bbox(leg),
             scatterpoints = 1,
@@ -1557,6 +1567,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             framealpha = alpha(plot_color(sp[:legend_background_color])),
             fancybox = false,  # makes the legend box square
             borderpad = 0.8,      # to match GR legendbox
+            ncol,
         )
         leg."get_frame"()."set_linewidth"(py_thickness_scale(plt, 1))
         leg."set_zorder"(1_000)
