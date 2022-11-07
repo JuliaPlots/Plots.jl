@@ -989,11 +989,10 @@ function gr_add_legend(sp, leg, viewport_area)
         if (ttl = sp[:legend_title]) !== nothing
             gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
             _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
+            gr_text(xpos - leg.pad - leg.space + 0.5leg.textw, ypos, string(ttl))
             if vertical
-                gr_text(xpos - leg.pad - leg.space + 0.5leg.w, ypos, string(ttl))
                 ypos -= leg.dy
             else
-                gr_text(xpos, ypos, string(ttl))
                 xpos += leg.dx
             end
         end
@@ -1108,7 +1107,7 @@ function gr_legend_pos(sp::Subplot, leg, vp)
             -leg.pad - leg.w - leg.xoffset
         end
     else
-        vp.xmin + 0.5width(vp) + leg.span - 2leg.xoffset
+        vp.xmin + 0.5width(vp) - 0.5leg.w + leg.xoffset  # + 0.5(leg.w + leg.span)
     end
     ypos = if occursin("bottom", leg_str)
         vp.ymin + if lp === :outerbottom
@@ -1124,7 +1123,7 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         end
     else
         # adding min y to shift legend pos to correct graph (#2377)
-        vp.ymin + 0.5height(vp) + 0.5leg.h
+        vp.ymin + 0.5height(vp) + 0.5leg.h - 2leg.yoffset
     end
     xpos, ypos
 end
