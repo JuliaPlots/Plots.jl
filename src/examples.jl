@@ -1192,6 +1192,7 @@ const _examples = PlotExample[
                     leg -> plot(
                         [0:1, reverse(0:1)];
                         marker = :circle,
+                        ticks = :none,
                         leg_title = "leg",
                         leg = leg isa Symbol ? Symbol(:outer, leg) : :none,
                         kw...,
