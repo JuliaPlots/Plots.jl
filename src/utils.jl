@@ -69,6 +69,15 @@ function iter_segments(args...)
     NaNSegmentsIterator(tup, n1, n2)
 end
 
+"floor number x in base b"
+floor_base(x, b) = b^floor(log(b, x))
+
+nan_min_max(::Any, ::Any) = nothing
+function nan_min_max(x::AbstractArray{<:Number}, ex)
+    mn, mx = extrema(x)
+    NaNMath.min(ex[1], mn), NaNMath.max(ex[2], mx)
+end
+
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
     x, y, z = series[:x], series[:y], series[:z]
     (x === nothing || isempty(x)) && return UnitRange{Int}[]

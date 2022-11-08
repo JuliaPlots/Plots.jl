@@ -555,11 +555,9 @@ _scale_adjusted_values(
     scale::Symbol,
 ) where {T<:AbstractFloat} = scale in _logScales ? _positive_else_nan.(T, V) : T.(V)
 
-round_base(x, b) = b^floor(log(b, x))
-
 _binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real} =
     if scale in _logScales
-        isnan(min_value) ? T(1e-3) : round_base(min_value, _logScaleBases[scale])
+        isnan(min_value) ? T(1e-3) : floor_base(min_value, _logScaleBases[scale])
     else
         zero(T)
     end
