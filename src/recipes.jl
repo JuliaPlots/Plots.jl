@@ -437,7 +437,8 @@ end
         fillto = 0
     end
     if yscale in _logScales && !all(_is_positive, fillto)
-        fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
+        # fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
+        fillto = 1  # github.com/JuliaPlots/Plots.jl/issues/4502
     end
 
     xseg, yseg = map(_ -> Segments(), 1:2)
