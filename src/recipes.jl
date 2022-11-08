@@ -413,7 +413,7 @@ end
     procx = if nx == ny
         cv
     elseif nx == ny + 1
-        0.5diff(cv) + cv[1:(end - 1)]
+        0.5diff(cv) + @view(cv[1:(end - 1)])
     else
         error(
             "bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))",
@@ -440,7 +440,7 @@ end
         fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
     end
 
-    xseg, yseg = Segments(), Segments()
+    xseg, yseg = map(_ -> Segments(), 1:2)
     for i in 1:ny
         yi = procy[i]
         if !isnan(yi)
@@ -539,7 +539,7 @@ RecipesPipeline.is_surface(::Type{Val{:hexbin}}) = true
 # ---------------------------------------------------------------------------
 # Histograms
 
-_bin_centers(v::AVec) = (v[1:(end - 1)] + v[2:end]) / 2
+_bin_centers(v::AVec) = (@view(v[1:(end - 1)]) + @view(v[2:end])) / 2
 
 _is_positive(x) = (x > 0) && !(x ≈ 0)
 
@@ -549,16 +549,13 @@ _scale_adjusted_values(
     ::Type{T},
     V::AbstractVector,
     scale::Symbol,
-) where {T<:AbstractFloat} =
-    if scale in _logScales
-        [_positive_else_nan(T, x) for x in V]
-    else
-        [T(x) for x in V]
-    end
+) where {T<:AbstractFloat} = scale in _logScales ? _positive_else_nan.(T, V) : T.(V)
+
+round_base(x, b) = b^floor(log(b, x))
 
 _binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real} =
     if scale in _logScales
-        isnan(min_value) ? T(1e-3) : min_value / T(_logScaleBases[scale]^log10(2))
+        isnan(min_value) ? T(1e-3) : round_base(min_value, _logScaleBases[scale])
     else
         zero(T)
     end
