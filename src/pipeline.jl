@@ -151,6 +151,28 @@ function RecipesPipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
 end
 
 function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_list)
+    min_x = min_y = min_z = +Inf
+    max_x = max_y = max_z = -Inf
+
+    # determine global extrema
+    for kw in kw_list
+        if (x = kw[:x]) ≢ nothing
+            mn, mx = extrema(x)
+            min_x = NaNMath.min(min_x, mn)
+            max_x = NaNMath.max(max_x, mx)
+        end
+        if (y = kw[:y]) ≢ nothing
+            mn, mx = extrema(y)
+            min_y = NaNMath.min(min_y, mn)
+            max_y = NaNMath.max(max_y, mx)
+        end
+        if (z = kw[:z]) ≢ nothing
+            mn, mx = extrema(z)
+            min_z = NaNMath.min(min_z, mn)
+            max_z = NaNMath.max(max_z, mx)
+        end
+    end
+
     # swap errors
     err_inds =
         findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
@@ -163,6 +185,10 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
     end
 
     for kw in kw_list
+        kw[:ex] = min_x, max_x
+        kw[:ey] = min_y, max_y
+        kw[:ez] = min_z, max_z
+
         rib = get(kw, :ribbon, default(:ribbon))
         fr = get(kw, :fillrange, default(:fillrange))
         # map ribbon if it's a Function
