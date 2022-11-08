@@ -409,7 +409,7 @@ end
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
     axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
-    cv = [discrete_value!(plotattributes, :x, xi)[1] for xi in procx]
+    cv = map(xi -> discrete_value!(plotattributes, :x, xi)[1], procx)
     procx = if nx == ny
         cv
     elseif nx == ny + 1
@@ -439,28 +439,19 @@ end
     if yscale in _logScales && !all(_is_positive, fillto)
         # github.com/JuliaPlots/Plots.jl/issues/4502
         T = float(eltype(y))
-        min_y, _ = plotattributes[:ey]
+        min_y, _ = plotattributes[:y_extrema]
         baseline = floor_base(min_y, _logScaleBases[yscale])
         fillto = map(x -> _is_positive(x) ? T(x) : T(baseline), fillto)
     end
 
     xseg, yseg = map(_ -> Segments(), 1:2)
     for i in 1:ny
-        yi = procy[i]
-        if !isnan(yi)
-            center = procx[i]
-            hwi = _cycle(hw, i)
-            fi = _cycle(fillto, i)
-            push!(
-                xseg,
-                center - hwi,
-                center - hwi,
-                center + hwi,
-                center + hwi,
-                center - hwi,
-            )
-            push!(yseg, yi, fi, fi, yi, yi)
-        end
+        (yi = procy[i]) |> isnan && continue
+        center = procx[i]
+        hwi = _cycle(hw, i)
+        fi = _cycle(fillto, i)
+        push!(xseg, center - hwi, center - hwi, center + hwi, center + hwi, center - hwi)
+        push!(yseg, yi, fi, fi, yi, yi)
     end
 
     # widen limits out a bit
@@ -513,11 +504,11 @@ end
 @recipe function f(::Type{Val{:plots_heatmap}}, x, y, z)  # COV_EXCL_LINE
     xe, ye = heatmap_edges(x), heatmap_edges(y)
     m, n = size(z.surf)
-    x_pts, y_pts = fill(NaN, 6 * m * n), fill(NaN, 6 * m * n)
+    x_pts, y_pts = fill(NaN, 6m * n), fill(NaN, 6m * n)
     fz = zeros(m * n)
     for i in 1:m, j in 1:n  # i ≡ y, j ≡ x
         k = (j - 1) * m + i
-        inds = (6 * (k - 1) + 1):(6 * k - 1)
+        inds = (6(k - 1) + 1):(6k - 1)
         x_pts[inds] .= [xe[j], xe[j + 1], xe[j + 1], xe[j], xe[j]]
         y_pts[inds] .= [ye[i], ye[i], ye[i + 1], ye[i + 1], ye[i]]
         fz[k] = z.surf[i, j]
@@ -733,9 +724,11 @@ function _auto_binning_nbins(
 
     # The nd estimator is the key to most automatic binning methods, and is modified for twodimensional histograms to include correlation
     nd = n_samples^(1 / (2 + N))
-    nd =
-        N == 2 ?
-        min(n_samples^(1 / (2 + N)), nd / (1 - cor(first(vs), last(vs))^2)^(3 // 8)) : nd # the >2-dimensional case does not have a nice solution to correlations
+    nd = if N == 2
+        min(n_samples^(1 / (2 + N)), nd / (1 - cor(first(vs), last(vs))^2)^(3 // 8))
+    else # the >2-dimensional case does not have a nice solution to correlations
+        nd
+    end
 
     v = vs[dim]
     mode === :auto && (mode = :fd)
@@ -1061,20 +1054,17 @@ function intersection_point(xA, yA, xB, yB, h, w)
     hh, hw = h / 2, w / 2
     # left or right?
     if -hh <= s * hw <= hh
-        if xA > xB
-            # right
-            return xB + hw, yB + s * hw
-        else # left
-            return xB - hw, yB - s * hw
+        if xA > xB  # right
+            xB + hw, yB + s * hw
+        else  # left
+            xB - hw, yB - s * hw
         end
         # top or bot?
     elseif -hw <= hh / s <= hw
-        if yA > yB
-            # top
-            return xB + hh / s, yB + hh
-        else
-            # bottom
-            return xB - hh / s, yB - hh
+        if yA > yB  # top
+            xB + hh / s, yB + hh
+        else  # bottom
+            xB - hh / s, yB - hh
         end
     end
 end
@@ -1125,7 +1115,7 @@ error_tuple(x::Tuple) = x
 
 function error_coords(errorbar, errordata, otherdata...)
     ed = Vector{float_extended_type(errordata)}(undef, 0)
-    od = [Vector{float_extended_type(odi)}(undef, 0) for odi in otherdata]
+    od = map(odi -> Vector{float_extended_type(odi)}(undef, 0), otherdata)
     for (i, edi) in enumerate(errordata)
         for (j, odj) in enumerate(otherdata)
             odi = _cycle(odj, i)

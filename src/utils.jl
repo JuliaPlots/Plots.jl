@@ -72,9 +72,9 @@ end
 "floor number x in base b, since `Base.floor(x; base=b)` only supports integers"
 floor_base(x::T, b) where {T} = T(b^floor(log(b, x)))
 
-nan_min_max(::Any, ::Any) = nothing
-function nan_min_max(x::AbstractArray{<:Number}, ex)
-    mn, mx = extrema(x)
+ignorenan_min_max(::Any, ex) = ex
+function ignorenan_min_max(x::AbstractArray{<:AbstractFloat}, ex::Tuple)
+    mn, mx = ignorenan_extrema(x)
     NaNMath.min(ex[1], mn), NaNMath.max(ex[2], mx)
 end
 
