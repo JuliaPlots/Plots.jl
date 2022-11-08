@@ -451,7 +451,7 @@ with(:pgfplotsx) do
         @test plot(plt1, plt2, layout = (1, 2), plot_titles = ["(a)" "(b)"]) !== nothing
     end
 
-    if Sys.islinux()
+    if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
         @testset "Issues - actually compile `.tex`" begin
             # Plots.jl/issues/4308
             fn = tempname() * ".pdf"
