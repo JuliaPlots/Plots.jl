@@ -440,7 +440,7 @@ end
         # github.com/JuliaPlots/Plots.jl/issues/4502
         T = float(eltype(y))
         min_y, _ = plotattributes[:ey]
-        baseline = round_base(min_y, _logScaleBases[yscale])
+        baseline = floor_base(min_y, _logScaleBases[yscale])
         fillto = map(x -> _is_positive(x) ? T(x) : T(baseline), fillto)
     end
 

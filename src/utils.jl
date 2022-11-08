@@ -69,8 +69,8 @@ function iter_segments(args...)
     NaNSegmentsIterator(tup, n1, n2)
 end
 
-"floor number x in base b"
-floor_base(x, b) = b^floor(log(b, x))
+"floor number x in base b, since `floor(x; base=b)` only supports integers"
+floor_base(x::T, b) = T(b^floor(log(b, x)))
 
 nan_min_max(::Any, ::Any) = nothing
 function nan_min_max(x::AbstractArray{<:Number}, ex)

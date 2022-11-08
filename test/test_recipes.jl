@@ -77,54 +77,50 @@ end
     @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :no
 end
 
-@testset "error bars" begin
-    x = y = 1:10
-    yerror = fill(1, length(y))
-    xerror = fill(0.2, length(x))
-    p = Plots.xerror(x, y; xerror, linestyle = :solid)
-    plot!(p, x, y; linestyle = :dash)
-    yerror!(p, x, y; yerror, linestyle = :dot)
-    @test length(p.series_list) == 3
-    @test p[1][1][:linestyle] == :solid
-    @test p[1][2][:linestyle] == :dash
-    @test p[1][3][:linestyle] == :dot
-end
-
-@testset "parametric" begin
-    @test plot(sin, sin, cos, 0, 2π) isa Plot
-    @test plot(sin, sin, cos, collect((-2π):(π / 4):(2π))) isa Plot
-end
-
-@testset "dict" begin
-    @test plot(Dict(1 => 2, 3 => -1)) isa Plot
-end
-
-@testset "gray image" begin
-    with(:gr) do
-        @test plot(rand(Gray, 2, 2)) isa Plot
+with(:gr) do
+    @testset "error bars" begin
+        x = y = 1:10
+        yerror = fill(1, length(y))
+        xerror = fill(0.2, length(x))
+        p = Plots.xerror(x, y; xerror, linestyle = :solid)
+        plot!(p, x, y; linestyle = :dash)
+        yerror!(p, x, y; yerror, linestyle = :dot)
+        @test length(p.series_list) == 3
+        @test p[1][1][:linestyle] == :solid
+        @test p[1][2][:linestyle] == :dash
+        @test p[1][3][:linestyle] == :dot
     end
-end
 
-@testset "plots_heatmap" begin
-    with(:gr) do
-        @test plots_heatmap(rand(RGBA, 2, 2)) isa Plot
+    @testset "parametric" begin
+        @test plot(sin, sin, cos, 0, 2π) isa Plot
+        @test plot(sin, sin, cos, collect((-2π):(π / 4):(2π))) isa Plot
     end
-end
 
-@testset "scatter3d" begin
-    with(:gr) do
-        @test scatter3d(1:2, 1:2, 1:2) isa Plot
+    @testset "dict" begin
+        show(devnull, plot(Dict(1 => 2, 3 => -1)))
     end
-end
 
-@testset "sticks" begin
-    with(:gr) do
-        @test sticks(1:2, marker = :circle) isa Plot
+    @testset "gray image" begin
+        show(devnull, plot(rand(Gray, 2, 2)))
     end
-end
 
-@testset "stephist" begin
-    with(:gr) do
-        @test stephist([1, 2], marker = :circle) isa Plot
+    @testset "plots_heatmap" begin
+        show(devnull, plots_heatmap(rand(RGBA, 2, 2)))
+    end
+
+    @testset "scatter3d" begin
+        show(devnull, scatter3d(1:2, 1:2, 1:2))
+    end
+
+    @testset "sticks" begin
+        show(devnull, sticks(1:2, marker = :circle))
+    end
+
+    @testset "stephist" begin
+        show(devnull, stephist([1, 2], marker = :circle))
+    end
+
+    @testset "bar with logscales" begin
+        show(devnull, bar([1 2 3], [0.02 125 10_000]; yscale = :log10))
     end
 end
