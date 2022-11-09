@@ -152,11 +152,11 @@ end
 
 function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_list)
     # determine global extrema
-    ex = ey = ez = +Inf, -Inf
+    xe = xe = ze = NaN, NaN
     for kw in kw_list
-        ex = ignorenan_min_max(get(kw, :x, nothing), ex)
-        ey = ignorenan_min_max(get(kw, :y, nothing), ey)
-        ez = ignorenan_min_max(get(kw, :z, nothing), ez)
+        xe = ignorenan_min_max(get(kw, :x, nothing), xe)
+        ye = ignorenan_min_max(get(kw, :y, nothing), ye)
+        ze = ignorenan_min_max(get(kw, :z, nothing), ze)
     end
 
     # swap errors
@@ -171,9 +171,9 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
     end
 
     for kw in kw_list
-        kw[:x_extrema] = ex
-        kw[:y_extrema] = ey
-        kw[:z_extrema] = ez
+        kw[:x_extrema] = xe
+        kw[:y_extrema] = ye
+        kw[:z_extrema] = ze
 
         rib = get(kw, :ribbon, default(:ribbon))
         fr = get(kw, :fillrange, default(:fillrange))
