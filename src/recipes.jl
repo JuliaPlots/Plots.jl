@@ -292,8 +292,7 @@ end
 # create vertical line segments from fill
 @recipe function f(::Type{Val{:sticks}}, x, y, z)  # COV_EXCL_LINE
     n = length(x)
-    fr = plotattributes[:fillrange]
-    if fr === nothing
+    if (fr = plotattributes[:fillrange]) === nothing
         sp = plotattributes[:subplot]
         fr = if sp[:yaxis][:scale] === :identity
             0.0
@@ -301,8 +300,7 @@ end
             NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
         end
     end
-    newx, newy = zeros(3n), zeros(3n)
-    newz = z !== nothing ? zeros(3n) : nothing
+    newx, newy, newz = zeros(3n), zeros(3n), z !== nothing ? zeros(3n) : nothing
     for (i, (xi, yi, zi)) in enumerate(zip(x, y, z !== nothing ? z : 1:n))
         rng = (3i - 2):(3i)
         newx[rng] = [xi, xi, NaN]
@@ -368,8 +366,7 @@ end
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)  # COV_EXCL_LINE
     args = z !== nothing ? (x, y, z) : (x, y)
     newx, newy = zeros(0), zeros(0)
-    fr = plotattributes[:fillrange]
-    newfr = fr !== nothing ? zeros(0) : nothing
+    newfr = (fr = plotattributes[:fillrange]) !== nothing ? zeros(0) : nothing
     newz = z !== nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
@@ -1276,7 +1273,7 @@ function quiver_using_hack(plotattributes::AKW)
         arrow_h = 0.1dist          # height of arrowhead
         arrow_w = 0.5arrow_h       # halfwidth of arrowhead
         U1 = v ./ dist             # vector of arrowhead height
-        U2 = P2((-U1[2], U1[1]))     # vector of arrowhead halfwidth
+        U2 = P2((-U1[2], U1[1]))   # vector of arrowhead halfwidth
         U1 = U1 .* arrow_h
         U2 = U2 .* arrow_w
 

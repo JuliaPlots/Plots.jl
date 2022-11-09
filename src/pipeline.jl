@@ -152,7 +152,7 @@ end
 
 function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_list)
     # determine global extrema
-    xe = xe = ze = NaN, NaN
+    xe = ye = ze = NaN, NaN
     for kw in kw_list
         xe = ignorenan_min_max(get(kw, :x, nothing), xe)
         ye = ignorenan_min_max(get(kw, :y, nothing), ye)
