@@ -69,6 +69,15 @@ end
     @test showtheme(:dark) isa Plot
 end
 
+@testset "maths" begin
+    @test Plots.floor_base(15.0, 10.0) ≈ 10
+    @test Plots.ceil_base(15.0, 10.0) ≈ 10^2
+    @test Plots.floor_base(4.2, 2.0) ≈ 2^2
+    @test Plots.ceil_base(4.2, 2.0) ≈ 2^3
+    @test Plots.floor_base(1.5 * ℯ, ℯ) ≈ ℯ
+    @test Plots.ceil_base(1.5 * ℯ, ℯ) ≈ ℯ^2
+end
+
 @testset "plotattr" begin
     tmp = tempname()
     open(tmp, "w") do io
