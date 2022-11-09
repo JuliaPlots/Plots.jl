@@ -69,6 +69,21 @@ function iter_segments(args...)
     NaNSegmentsIterator(tup, n1, n2)
 end
 
+"floor number x in base b, note this is different from using Base.round(...; base=b) !"
+floor_base(x, b) = round_base(x, b, RoundDown)
+
+"ceil number x in base b"
+ceil_base(x, b) = round_base(x, b, RoundUp)
+
+round_base(x::T, b, ::RoundingMode{:Down}) where {T} = T(b^floor(log(b, x)))
+round_base(x::T, b, ::RoundingMode{:Up}) where {T} = T(b^ceil(log(b, x)))
+
+ignorenan_min_max(::Any, ex) = ex
+function ignorenan_min_max(x::AbstractArray{<:AbstractFloat}, ex::Tuple)
+    mn, mx = ignorenan_extrema(x)
+    NaNMath.min(ex[1], mn), NaNMath.max(ex[2], mx)
+end
+
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
     x, y, z = series[:x], series[:y], series[:z]
     (x === nothing || isempty(x)) && return UnitRange{Int}[]

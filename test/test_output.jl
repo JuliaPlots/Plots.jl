@@ -60,7 +60,7 @@ with(:plotly) do
     # @test_save :eps
 end
 
-if Sys.islinux()
+if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
     with(:pgfplotsx) do
         @test_save :tex
         @test_save :png

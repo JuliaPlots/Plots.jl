@@ -4,7 +4,14 @@
     scatter(x,y)
     scatter!(x,y)
 
-Make a scatter plot of y vs x.
+Make a scatter plot of `y` vs `x`.
+
+# Keyword arguments
+- $(_document_argument("markersize"))
+- $(_document_argument("markercolor"))
+- $(_document_argument("markershape"))
+- $(_document_argument("markercolor"))
+- $(_document_argument("markeralpha"))
 
 # Examples
 ```julia-repl
@@ -18,14 +25,14 @@ julia> scatter([(1,4),(2,5),(3,6)])
     bar(x,y)
     bar!(x,y)
 
-Make a bar plot of y vs x.
+Make a bar plot of `y` vs `x`.
 
-# Arguments
-
+# Keyword arguments
 - $(_document_argument("bar_position"))
 - $(_document_argument("bar_width"))
 - $(_document_argument("bar_edges"))
-- $(_document_argument("orientation"))
+- $(_document_argument("fillrange"))
+- $(_document_argument("permute"))
 
 # Examples
 ```julia-repl
@@ -44,7 +51,6 @@ julia> bar([(1,4),(2,5),(3,6)])
 Plot a histogram.
 
 # Arguments
-
 - `x`: AbstractVector of values to be binned
 - $(_document_argument("bins"))
 - `weights`: Vector of weights for the values in `x`, for weighted bin counts
@@ -52,7 +58,7 @@ Plot a histogram.
 - $(_document_argument("bar_position"))
 - $(_document_argument("bar_width"))
 - $(_document_argument("bar_edges"))
-- $(_document_argument("orientation"))
+- $(_document_argument("permute"))
 
 # Example
 ```julia-repl
@@ -95,7 +101,6 @@ instead of bars). See `histogram`.
 Plot a two-dimensional histogram.
 
 # Arguments
-
 - `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`)
 - `weights`: Vector of weights for the values in `x`. Each entry of x contributes
              its weight to the height of its bin.
@@ -114,11 +119,9 @@ julia> histogram2d(randn(10_000),randn(10_000))
 Make a line plot of a kernel density estimate of x. The smoothness of the density plot is defined from `bandwidth` (real positive number).
 
 # Arguments
-
 - `x`: AbstractVector of samples for probability density estimation
 
 # Keyword arguments
-
 - `trim`::Bool: enables cutting off the distribution tails.
 - `bandwidth`::Number: a low bandwidth induces under-smoothing, whilst a high bandwidth induces over-smoothing.
 
@@ -145,6 +148,9 @@ julia> density(randn(100_000))
 
 Plot a heatmap of the rectangular array `z`.
 
+# Keyword arguments
+- $(_document_argument("aspect_ratio"))
+
 # Example
 ```julia-repl
 julia> heatmap(randn(10,10))
@@ -158,7 +164,7 @@ julia> heatmap(randn(10,10))
     hexbin!(x,y)
 
 Make a hexagonal binning plot (a histogram of the observations `(x[i],y[i])`
-with hexagonal bins)
+with hexagonal bins).
 
 # Example
 ```julia-repl
@@ -171,7 +177,11 @@ julia> hexbin(randn(10_000), randn(10_000))
     sticks(x,y)
     sticks!(x,y)
 
-Draw a stick plot of y vs x.
+Draw a stick plot of `y` vs `x`.
+
+# Arguments
+- $(_document_argument("fillrange"))
+- $(_document_argument("markershape"))
 
 # Example
 ```julia-repl
@@ -185,7 +195,7 @@ julia> sticks(1:10)
     hline!(y)
 
 Draw horizontal lines at positions specified by the values in
-the AbstractVector `y`
+the AbstractVector `y`.
 
 # Example
 ```julia-repl
@@ -199,7 +209,7 @@ julia> hline([-1,0,2])
     vline!(x)
 
 Draw vertical lines at positions specified by the values in
-the AbstractVector `x`
+the AbstractVector `x`.
 
 # Example
 ```julia-repl
@@ -216,6 +226,7 @@ and the horizontal line at position `y[2]`. If `length(y) ≥ 4`,
 then further rectangles are drawn between `y[3]` and `y[4]`,
 `y[5]` and `y[6]`, and so on. If `length(y)` is odd, then the
 last entry of `y` is ignored.
+
 # Example
 ```julia-repl
 julia> hspan(1:6)
@@ -231,6 +242,7 @@ and the vertical line at position `x[2]`. If `length(x) ≥ 4`,
 then further rectangles are drawn between `x[3]` and `x[4]`,
 `x[5]` and `x[6]`, and so on. If `length(x)` is odd, then the
 last entry of `x` is ignored.
+
 # Example
 ```julia-repl
 julia> vspan(1:6)
@@ -259,7 +271,7 @@ julia> ohlc(y)
     contour(x,y,z)
     contour!(x,y,z)
 
-Draw contour lines of the `Surface` z.
+Draw contour lines of the surface `z`.
 
 # Arguments
 - `levels`: Contour levels (if `AbstractVector`) or number of levels (if `Integer`)
@@ -395,6 +407,9 @@ julia> violin(repeat([1,2,3],outer=100),randn(300))
 Make a quiver (vector field) plot. The `i`th vector extends
 from `(x[i],y[i])` to `(x[i] + u[i], y[i] + v[i])`.
 
+# Keyword arguments
+- $(_document_argument("arrow"))
+
 # Example
 ```julia-repl
 julia> quiver([1,2,3],[3,2,1],quiver=([1,1,1],[1,2,3]))
@@ -407,7 +422,10 @@ julia> quiver([1,2,3],[3,2,1],quiver=([1,1,1],[1,2,3]))
     curves!(x,y)
 
 Draw a Bezier curve from `(x[1],y[1])` to `(x[end],y[end])`
-with control points `(x[2],y[2]), ..., (x[end-1],y[end]-1)`
+with control points `(x[2],y[2]), ..., (x[end-1],y[end]-1)`.
+
+# Keyword arguments
+- $(_document_argument("fillrange"))
 
 # Example
 ```julia-repl
@@ -416,7 +434,18 @@ julia> curves([1,2,3,4],[1,1,2,4])
 """
 @shorthands curves
 
-"Plot a pie diagram"
+"""
+    pie(x, y)
+
+Plot a pie diagram.
+
+# Example
+```julia-repl
+x = ["Nerds","Hackers","Scientists"]
+y = [0.4,0.35,0.25]
+pie(x, y, title="The Julia Community")
+```
+"""
 @shorthands pie
 
 "Plot with seriestype :path3d"

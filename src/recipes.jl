@@ -292,8 +292,7 @@ end
 # create vertical line segments from fill
 @recipe function f(::Type{Val{:sticks}}, x, y, z)  # COV_EXCL_LINE
     n = length(x)
-    fr = plotattributes[:fillrange]
-    if fr === nothing
+    if (fr = plotattributes[:fillrange]) === nothing
         sp = plotattributes[:subplot]
         fr = if sp[:yaxis][:scale] === :identity
             0.0
@@ -301,8 +300,7 @@ end
             NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
         end
     end
-    newx, newy = zeros(3n), zeros(3n)
-    newz = z !== nothing ? zeros(3n) : nothing
+    newx, newy, newz = zeros(3n), zeros(3n), z !== nothing ? zeros(3n) : nothing
     for (i, (xi, yi, zi)) in enumerate(zip(x, y, z !== nothing ? z : 1:n))
         rng = (3i - 2):(3i)
         newx[rng] = [xi, xi, NaN]
@@ -368,8 +366,7 @@ end
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)  # COV_EXCL_LINE
     args = z !== nothing ? (x, y, z) : (x, y)
     newx, newy = zeros(0), zeros(0)
-    fr = plotattributes[:fillrange]
-    newfr = fr !== nothing ? zeros(0) : nothing
+    newfr = (fr = plotattributes[:fillrange]) !== nothing ? zeros(0) : nothing
     newz = z !== nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
@@ -406,14 +403,14 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)  # COV_EXCL_LINE
-    procx, procy, xscale, yscale, baseline = _preprocess_barlike(plotattributes, x, y)
+    procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
     axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
-    cv = [discrete_value!(plotattributes, :x, xi)[1] for xi in procx]
+    cv = map(xi -> discrete_value!(plotattributes, :x, xi)[1], procx)
     procx = if nx == ny
         cv
     elseif nx == ny + 1
-        0.5diff(cv) + cv[1:(end - 1)]
+        0.5diff(cv) + @view(cv[1:(end - 1)])
     else
         error(
             "bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))",
@@ -437,26 +434,21 @@ end
         fillto = 0
     end
     if yscale in _logScales && !all(_is_positive, fillto)
-        fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
+        # github.com/JuliaPlots/Plots.jl/issues/4502
+        T = float(eltype(y))
+        min_y, _ = plotattributes[:y_extrema]
+        baseline = floor_base(min_y, _logScaleBases[yscale])
+        fillto = map(x -> _is_positive(x) ? T(x) : T(baseline), fillto)
     end
 
-    xseg, yseg = Segments(), Segments()
+    xseg, yseg = map(_ -> Segments(), 1:2)
     for i in 1:ny
-        yi = procy[i]
-        if !isnan(yi)
-            center = procx[i]
-            hwi = _cycle(hw, i)
-            fi = _cycle(fillto, i)
-            push!(
-                xseg,
-                center - hwi,
-                center - hwi,
-                center + hwi,
-                center + hwi,
-                center - hwi,
-            )
-            push!(yseg, yi, fi, fi, yi, yi)
-        end
+        (yi = procy[i]) |> isnan && continue
+        center = procx[i]
+        hwi = _cycle(hw, i)
+        fi = _cycle(fillto, i)
+        push!(xseg, center - hwi, center - hwi, center + hwi, center + hwi, center - hwi)
+        push!(yseg, yi, fi, fi, yi, yi)
     end
 
     # widen limits out a bit
@@ -509,11 +501,11 @@ end
 @recipe function f(::Type{Val{:plots_heatmap}}, x, y, z)  # COV_EXCL_LINE
     xe, ye = heatmap_edges(x), heatmap_edges(y)
     m, n = size(z.surf)
-    x_pts, y_pts = fill(NaN, 6 * m * n), fill(NaN, 6 * m * n)
+    x_pts, y_pts = fill(NaN, 6m * n), fill(NaN, 6m * n)
     fz = zeros(m * n)
     for i in 1:m, j in 1:n  # i ≡ y, j ≡ x
         k = (j - 1) * m + i
-        inds = (6 * (k - 1) + 1):(6 * k - 1)
+        inds = (6(k - 1) + 1):(6k - 1)
         x_pts[inds] .= [xe[j], xe[j + 1], xe[j + 1], xe[j], xe[j]]
         y_pts[inds] .= [ye[i], ye[i], ye[i + 1], ye[i + 1], ye[i]]
         fz[k] = z.surf[i, j]
@@ -539,7 +531,7 @@ RecipesPipeline.is_surface(::Type{Val{:hexbin}}) = true
 # ---------------------------------------------------------------------------
 # Histograms
 
-_bin_centers(v::AVec) = (v[1:(end - 1)] + v[2:end]) / 2
+_bin_centers(v::AVec) = (@view(v[1:(end - 1)]) + @view(v[2:end])) / 2
 
 _is_positive(x) = (x > 0) && !(x ≈ 0)
 
@@ -549,16 +541,11 @@ _scale_adjusted_values(
     ::Type{T},
     V::AbstractVector,
     scale::Symbol,
-) where {T<:AbstractFloat} =
-    if scale in _logScales
-        [_positive_else_nan(T, x) for x in V]
-    else
-        [T(x) for x in V]
-    end
+) where {T<:AbstractFloat} = scale in _logScales ? _positive_else_nan.(T, V) : T.(V)
 
 _binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real} =
     if scale in _logScales
-        isnan(min_value) ? T(1e-3) : min_value / T(_logScaleBases[scale]^log10(2))
+        isnan(min_value) ? T(1e-3) : floor_base(min_value, _logScaleBases[scale])
     else
         zero(T)
     end
@@ -734,9 +721,11 @@ function _auto_binning_nbins(
 
     # The nd estimator is the key to most automatic binning methods, and is modified for twodimensional histograms to include correlation
     nd = n_samples^(1 / (2 + N))
-    nd =
-        N == 2 ?
-        min(n_samples^(1 / (2 + N)), nd / (1 - cor(first(vs), last(vs))^2)^(3 // 8)) : nd # the >2-dimensional case does not have a nice solution to correlations
+    nd = if N == 2
+        min(n_samples^(1 / (2 + N)), nd / (1 - cor(first(vs), last(vs))^2)^(3 // 8))
+    else # the >2-dimensional case does not have a nice solution to correlations
+        nd
+    end
 
     v = vs[dim]
     mode === :auto && (mode = :fd)
@@ -1062,20 +1051,17 @@ function intersection_point(xA, yA, xB, yB, h, w)
     hh, hw = h / 2, w / 2
     # left or right?
     if -hh <= s * hw <= hh
-        if xA > xB
-            # right
-            return xB + hw, yB + s * hw
-        else # left
-            return xB - hw, yB - s * hw
+        if xA > xB  # right
+            xB + hw, yB + s * hw
+        else  # left
+            xB - hw, yB - s * hw
         end
         # top or bot?
     elseif -hw <= hh / s <= hw
-        if yA > yB
-            # top
-            return xB + hh / s, yB + hh
-        else
-            # bottom
-            return xB - hh / s, yB - hh
+        if yA > yB  # top
+            xB + hh / s, yB + hh
+        else  # bottom
+            xB - hh / s, yB - hh
         end
     end
 end
@@ -1126,7 +1112,7 @@ error_tuple(x::Tuple) = x
 
 function error_coords(errorbar, errordata, otherdata...)
     ed = Vector{float_extended_type(errordata)}(undef, 0)
-    od = [Vector{float_extended_type(odi)}(undef, 0) for odi in otherdata]
+    od = map(odi -> Vector{float_extended_type(odi)}(undef, 0), otherdata)
     for (i, edi) in enumerate(errordata)
         for (j, odj) in enumerate(otherdata)
             odi = _cycle(odj, i)
@@ -1287,7 +1273,7 @@ function quiver_using_hack(plotattributes::AKW)
         arrow_h = 0.1dist          # height of arrowhead
         arrow_w = 0.5arrow_h       # halfwidth of arrowhead
         U1 = v ./ dist             # vector of arrowhead height
-        U2 = P2((-U1[2], U1[1]))     # vector of arrowhead halfwidth
+        U2 = P2((-U1[2], U1[1]))   # vector of arrowhead halfwidth
         U1 = U1 .* arrow_h
         U2 = U2 .* arrow_w
 
