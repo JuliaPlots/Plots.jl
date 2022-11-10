@@ -871,23 +871,3 @@ end :aliases = Dict(
     :marker_stroke_width => (:msw, :mswidth),
 )
 
-### Errorbars
-
-@add_attributes series struct XErrorBar
-    color = :match
-    shape = :hline
-
-end
-
-### Fills
-
-@add_attributes series struct YFill
-    range = nothing
-    color = :match
-    alpha = nothing
-    style = nothing
-end aliases = Dict(
-    :yfill_color => (:fc, :fcolor, :fcolour,),
-    :yfill_alpha => (:falpha,),
-    :yfill_range => (:yfill_rng, :frange, :yfill_to, :yfill_between)
-)
