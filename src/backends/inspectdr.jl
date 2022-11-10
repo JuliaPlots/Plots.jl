@@ -240,7 +240,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     end
 
     #= TODO: Eventually support
-        series[:yfill_color] #I think this is fill under line
+        series[:fillcolor] #I think this is fill under line
         zorder = series[:series_plotindex]
 
     For st in :shape:

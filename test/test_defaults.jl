@@ -12,9 +12,9 @@ Plots._plots_theme_defaults()
 
 @testset "default" begin
     default(fillrange = 0)
-    @test Plots._series_defaults[:yfill_range] == 0
+    @test Plots._series_defaults[:fillrange] == 0
     pl = plot(1:5)
-    @test pl[1][1][:yfill_range] == 0
+    @test pl[1][1][:fillrange] == 0
     @test_nowarn default(legendfont = font(5))
     pl = plot(1:5)
     @test pl[1][:legend_font_pointsize] == 5

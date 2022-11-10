@@ -338,6 +338,10 @@ const _series_defaults = KW(
     :seriescolor        => :auto,
     :seriesalpha        => nothing,
     :seriestype         => :path,
+    :fillrange          => nothing,   # ribbons, areas, etc
+    :fillcolor          => :match,
+    :fillalpha          => nothing,
+    :fillstyle          => nothing,
     :bins               => :auto,        # number of bins for hists
     :smooth             => false,     # regression line?
     :group              => nothing,   # groupby vector
@@ -573,6 +577,7 @@ add_aliases(:right_margin, :rightmargin)
 
 # colors
 add_aliases(:seriescolor, :c, :color, :colour)
+add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
 
 add_aliases(
     :background_color,
@@ -787,6 +792,7 @@ add_aliases(
 
 # alphas
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
+add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 
 # axes attributes
 add_axes_aliases(:guide, :label, :lab, :l; generic = false)
@@ -870,6 +876,7 @@ add_aliases(:marker, :m, :mark)
 add_aliases(:marker_z, :markerz, :zcolor, :mz)
 add_aliases(:line_z, :linez, :zline, :lz)
 add_aliases(:fill, :f, :area)
+add_aliases(:fillrange, :fillrng, :frange, :fillto, :fill_between)
 add_aliases(:group, :g, :grouping)
 add_aliases(:bins, :bin, :nbin, :nbins, :nb)
 add_aliases(:ribbon, :rib)
@@ -1084,13 +1091,13 @@ function processLineArg(plotattributes::AKW, arg)
         arg.style === nothing || (plotattributes[:line_style] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size === nothing || (plotattributes[:yfill_range] = arg.size)
+        arg.size === nothing || (plotattributes[:fillrange] = arg.size)
         arg.color === nothing || (
-            plotattributes[:yfill_color] =
+            plotattributes[:fillcolor] =
                 arg.color === :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:yfill_alpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:yfill_style] = arg.style)
+        arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
 
     elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
         plotattributes[:arrow] = arg
@@ -1154,35 +1161,35 @@ function processMarkerArg(plotattributes::AKW, arg)
 end
 
 function processFillArg(plotattributes::AKW, arg)
-    # fr = get(plotattributes, :yfill_range, 0)
+    # fr = get(plotattributes, :fillrange, 0)
     if typeof(arg) <: Brush
-        arg.size === nothing || (plotattributes[:yfill_range] = arg.size)
+        arg.size === nothing || (plotattributes[:fillrange] = arg.size)
         arg.color === nothing || (
-            plotattributes[:yfill_color] =
+            plotattributes[:fillcolor] =
                 arg.color === :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:yfill_alpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:yfill_style] = arg.style)
+        arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
 
     elseif typeof(arg) <: Bool
-        plotattributes[:yfill_range] = arg ? 0 : nothing
+        plotattributes[:fillrange] = arg ? 0 : nothing
 
         # fillrange function
     elseif allFunctions(arg)
-        plotattributes[:yfill_range] = arg
+        plotattributes[:fillrange] = arg
 
         # fillalpha
     elseif allAlphas(arg)
-        plotattributes[:yfill_alpha] = arg
+        plotattributes[:fillalpha] = arg
 
         # fillrange provided as vector or number
     elseif typeof(arg) <: Union{AbstractArray{<:Real},Real}
-        plotattributes[:yfill_range] = arg
+        plotattributes[:fillrange] = arg
 
-    elseif !handleColors!(plotattributes, arg, :yfill_color)
-        plotattributes[:yfill_range] = arg
+    elseif !handleColors!(plotattributes, arg, :fillcolor)
+        plotattributes[:fillrange] = arg
     end
-    # plotattributes[:yfill_range] = fr
+    # plotattributes[:fillrange] = fr
     nothing
 end
 
@@ -2039,7 +2046,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     )
 
     # update alphas
-    for asym in (:line_alpha, :marker_alpha, :yfill_alpha)
+    for asym in (:line_alpha, :marker_alpha, :fillalpha)
         if plotattributes[asym] === nothing
             plotattributes[asym] = plotattributes[:seriesalpha]
         end
@@ -2054,7 +2061,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
     # update other colors
-    for s in (:line_, :marker_, :yfill_)
+    for s in (:line_, :marker_, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] === :auto
             plot_color(if has_black_border_for_default(stype) && s === :line
@@ -2086,7 +2093,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
         ensure_gradient!(plotattributes, :line_color, :line_alpha)
     end
     if plotattributes[:fill_z] !== nothing
-        ensure_gradient!(plotattributes, :yfill_color, :yfill_alpha)
+        ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     end
 
     # scatter plots don't have a line, but must have a shape

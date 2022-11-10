@@ -37,7 +37,7 @@ function _process_seriesrecipe(plt, plotattributes)
 
     # shapes shouldn't have fillrange set
     if plotattributes[:seriestype] == :shape
-        plotattributes[:yfill_range] = nothing
+        plotattributes[:fillrange] = nothing
     end
 
     # if it's natively supported, finalize processing and pass along to the backend,

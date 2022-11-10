@@ -590,7 +590,7 @@ Many updates, min julia 1.0
 - allow calling `plot!(sp, ...)` to update a target Subplot
 - PyPlot: zorder fix
 - new DataFrames logic/recipe: more flexible/robust and allow Symbols for:
-	- `(:yfill_range, :line_z, :marker_z, :marker_size, :ribbon, :weights, :xerror, :yerror)`
+	- `(:fillrange, :line_z, :marker_z, :marker_size, :ribbon, :weights, :xerror, :yerror)`
 - new `display_type` and `extra_kwargs` plot attributes
 - surface fix
 
@@ -808,7 +808,7 @@ Many updates, min julia 1.0
 - New dependency on Requires, allows auto-loading of DataFrames support
 - Support for plotting lists of Tuples and FixedSizeArrays
 - new `@animate` macro for super simple animations (see https://github.com/tbreloff/Plots.jl/issues/111#issuecomment-181515616)
-- allow Function for `:yfill_range` and `zcolor` arguments (for example: `scatter(sin, 0:10, marker=15, fill=(cos,0.4), zcolor=sin)`)
+- allow Function for `:fillrange` and `zcolor` arguments (for example: `scatter(sin, 0:10, marker=15, fill=(cos,0.4), zcolor=sin)`)
 - allow vectors of PlotText without x/y coords (for example: `scatter(rand(10), m=20, ann=map(text, 1:10))`)
 - Lots and lots of fixes
 

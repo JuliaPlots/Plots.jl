@@ -453,7 +453,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
     # end
 
     # expand for fillrange
-    fr = plotattributes[:yfill_range]
+    fr = plotattributes[:fillrange]
     if fr === nothing && plotattributes[:seriestype] === :bar
         fr = 0.0
     end
@@ -512,7 +512,7 @@ end
     scale_lims!([plt], [letter], factor)
 
 Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by the
-given `factor` around the limits' middle point.
+given `factor` around the limits' middle point. 
 If `letter` is omitted, all axes are affected.
 """
 function scale_lims!(sp::Subplot, letter, factor)

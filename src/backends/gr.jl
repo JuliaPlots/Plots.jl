@@ -1010,7 +1010,7 @@ function gr_add_legend(sp, leg, viewport_area)
             _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
 
             if (
-                (st === :shape || series[:yfill_range] !== nothing) &&
+                (st === :shape || series[:fillrange] !== nothing) &&
                 series[:ribbon] === nothing
             )
                 (fc = get_fillcolor(series, clims)) |> gr_set_fill
@@ -1649,7 +1649,7 @@ function gr_add_series(sp, series)
 
     x, y, z = map(letter -> handle_surface(series[letter]), (:x, :y, :z))
     xscale, yscale = sp[:xaxis][:scale], sp[:yaxis][:scale]
-    frng = series[:yfill_range]
+    frng = series[:fillrange]
 
     # recompute data
     if ispolar(sp) && z === nothing
@@ -1829,7 +1829,7 @@ function gr_draw_contour(series, x, y, z, clims)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_line_color(series), series)
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
-    if series[:yfill_range] !== nothing
+    if series[:fillrange] !== nothing
         GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
     else
         black = plot_color(:black)
@@ -1885,10 +1885,10 @@ function gr_draw_surface(series, x, y, z, clims)
             ArgumentError |>
             throw
         end
-        facecolor = if series[:yfill_color] isa AbstractArray
-            series[:yfill_color]
+        facecolor = if series[:fillcolor] isa AbstractArray
+            series[:fillcolor]
         else
-            fill(series[:yfill_color], length(cns))
+            fill(series[:fillcolor], length(cns))
         end
         fillalpha = get_fillalpha(series)
         facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
@@ -1902,7 +1902,7 @@ function gr_draw_surface(series, x, y, z, clims)
 end
 
 function gr_draw_heatmap(series, x, y, z, clims)
-    fillgrad = _as_gradient(series[:yfill_color])
+    fillgrad = _as_gradient(series[:fillcolor])
     GR.setprojectiontype(0)
     GR.setspace(clims..., 0, 90)
     w, h = length(x) - 1, length(y) - 1
@@ -1914,18 +1914,18 @@ function gr_draw_heatmap(series, x, y, z, clims)
         # Note that drawimage draws uniformly spaced data correctly
         # even on log scales, where it is visually non-uniform.
         colors, _z = if sp[:colorbar_scale] === :identity
-            plot_color.(get(fillgrad, z, clims), series[:yfill_alpha]), z
+            plot_color.(get(fillgrad, z, clims), series[:fillalpha]), z
         elseif sp[:colorbar_scale] === :log10
             z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
             z_normalized = get_z_normalized.(z_log, log10.(clims)...)
-            plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:yfill_alpha]), z_log
+            plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
         end
         for i in eachindex(colors)
             isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i]))
         end
         GR.drawimage(first(x), last(x), last(y), first(y), w, h, gr_color.(colors))
     else
-        if something(series[:yfill_alpha], 1) < 1
+        if something(series[:fillalpha], 1) < 1
             @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
         end
         z_normalized, _z = if sp[:colorbar_scale] === :identity

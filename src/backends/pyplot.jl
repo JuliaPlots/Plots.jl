@@ -246,7 +246,7 @@ py_linecolormap(series::Series) =
 py_markercolormap(series::Series) =
     py_colormap(cgrad(series[:marker_color], alpha = get_marker_alpha(series)))
 py_fillcolormap(series::Series) =
-    py_colormap(cgrad(series[:yfill_color], alpha = get_fillalpha(series)))
+    py_colormap(cgrad(series[:fillcolor], alpha = get_fillalpha(series)))
 
 # ---------------------------------------------------------------------------
 
@@ -537,7 +537,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             C = series[:weights],
             gridsize = series[:bins] === :auto ? 100 : series[:bins],  # 100 is the default value
             linewidths = py_thickness_scale(plt, series[:line_width]),
-            alpha = series[:yfill_alpha],
+            alpha = series[:fillalpha],
             cmap = py_fillcolormap(series),  # applies to the pcolorfast object
             zorder = series[:series_plotindex],
             extrakw...,
@@ -577,7 +577,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
 
         # contour fills
-        if series[:yfill_range] !== nothing
+        if series[:fillrange] !== nothing
             handle = ax."contourf"(
                 x,
                 y,
@@ -585,7 +585,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 levelargs...;
                 label = series[:label],
                 zorder = series[:series_plotindex] + 0.5,
-                alpha = series[:yfill_alpha],
+                alpha = series[:fillalpha],
                 extrakw...,
             )
             push!(handles, handle)
@@ -601,7 +601,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 if series[:fill_z] !== nothing
                     # the surface colors are different than z-value
                     extrakw[:facecolors] =
-                        py_shading(series[:yfill_color], py_handle_surface(series[:fill_z]))
+                        py_shading(series[:fillcolor], py_handle_surface(series[:fill_z]))
                     extrakw[:shade] = false
                 else
                     extrakw[:cmap] = py_fillcolormap(series)
@@ -685,14 +685,14 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             polygons,
             linewidths = py_thickness_scale(plt, series[:line_width]),
             edgecolor = py_color(get_line_color(series)),
-            facecolor = py_color(series[:yfill_color]),
+            facecolor = py_color(series[:fillcolor]),
             alpha = get_fillalpha(series),
             zorder = series[:series_plotindex],
         )
         handle = ax."add_collection3d"(col)
         # Fix for handle: https://stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
         # It seems there aren't two different alpha values for edge and face
-        handle._facecolors2d = py_color(series[:yfill_color])
+        handle._facecolors2d = py_color(series[:fillcolor])
         handle._edgecolors2d = py_color(get_line_color(series))
         push!(handles, handle)
     end
@@ -740,7 +740,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             label = series[:label],
             zorder = series[:series_plotindex],
             cmap = py_fillcolormap(series),
-            alpha = series[:yfill_alpha],
+            alpha = series[:fillalpha],
             # edgecolors = (series[:line_width] > 0 ? py_linecolor(series) : "face"),
             extrakw...,
         )
@@ -802,7 +802,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # handleSmooth(plt, ax, series, series[:smooth])
 
     # handle area filling
-    fillrange = series[:yfill_range]
+    fillrange = series[:fillrange]
     if fillrange !== nothing && st !== :contour
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
@@ -1466,7 +1466,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         nseries += 1
         clims = get_clims(sp, series)
         # add a line/marker and a label
-        if series[:seriestype] === :shape || series[:yfill_range] !== nothing
+        if series[:seriestype] === :shape || series[:fillrange] !== nothing
             lc = get_line_color(series, clims)
             fc = get_fillcolor(series, clims)
             la = get_line_alpha(series)

@@ -544,7 +544,7 @@ function plotly_series(plt::Plot, series::Series)
     hasline = st in (:path, :path3d, :straightline)
     hasfillrange =
         st in (:path, :scatter, :scattergl, :straightline) &&
-        (isa(series[:yfill_range], AbstractVector) || isa(series[:yfill_range], Tuple))
+        (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     plotattributes_out[:colorbar] = KW(:title => sp[:colorbar_title])
 
@@ -562,7 +562,7 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:type] = "heatmap"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
         plotattributes_out[:colorscale] =
-            plotly_colorscale(series[:yfill_color], series[:yfill_alpha])
+            plotly_colorscale(series[:fillcolor], series[:fillalpha])
         plotattributes_out[:showscale] = hascolorbar(sp)
 
     elseif st === :contour
@@ -617,8 +617,8 @@ function plotly_series(plt::Plot, series::Series)
             plotattributes_out[:showscale] = false
         else
             plotattributes_out[:colorscale] =
-                plotly_colorscale(series[:yfill_color], series[:yfill_alpha])
-            plotattributes_out[:opacity] = series[:yfill_alpha]
+                plotly_colorscale(series[:fillcolor], series[:fillalpha])
+            plotattributes_out[:opacity] = series[:fillalpha]
             if series[:fill_z] !== nothing
                 plotattributes_out[:surfacecolor] = handle_surface(series[:fill_z])
             end
@@ -661,10 +661,10 @@ function plotly_series(plt::Plot, series::Series)
             end
         end
         plotattributes_out[:colorscale] =
-            plotly_colorscale(series[:yfill_color], series[:yfill_alpha])
+            plotly_colorscale(series[:fillcolor], series[:fillalpha])
         plotattributes_out[:color] =
-            rgba_string(plot_color(series[:yfill_color], series[:yfill_alpha]))
-        plotattributes_out[:opacity] = series[:yfill_alpha]
+            rgba_string(plot_color(series[:fillcolor], series[:fillalpha]))
+        plotattributes_out[:opacity] = series[:fillalpha]
         if series[:fill_z] !== nothing
             plotattributes_out[:surfacecolor] = handle_surface(series[:fill_z])
         end
@@ -742,7 +742,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
                 :x => vcat(x[rng], x[rng[1]]),
                 :y => vcat(y[rng], y[rng[1]]),
                 :fill => "tozeroy",
-                :yfill_color => rgba_string(
+                :fillcolor => rgba_string(
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 ),
             ),
@@ -782,7 +782,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
     hasline = st in (:path, :path3d, :straightline)
     hasfillrange =
         st in (:path, :scatter, :scattergl, :straightline) &&
-        (isa(series[:yfill_range], AbstractVector) || isa(series[:yfill_range], Tuple))
+        (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     segments = collect(series_segments(series, st))
     plotattributes_outs = fill(KW(), (hasfillrange ? 2 : 1) * length(segments))
@@ -804,20 +804,20 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             else
                 hasline ? "lines" : "none"
             end
-            if series[:yfill_range] == true ||
-               series[:yfill_range] == 0 ||
-               isa(series[:yfill_range], Tuple)
+            if series[:fillrange] == true ||
+               series[:fillrange] == 0 ||
+               isa(series[:fillrange], Tuple)
                 plotattributes_out[:fill] = "tozeroy"
-                plotattributes_out[:yfill_color] = rgba_string(
+                plotattributes_out[:fillcolor] = rgba_string(
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 )
-            elseif typeof(series[:yfill_range]) <: Union{AbstractVector{<:Real},Real}
+            elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real},Real}
                 plotattributes_out[:fill] = "tonexty"
-                plotattributes_out[:yfill_color] = rgba_string(
+                plotattributes_out[:fillcolor] = rgba_string(
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 )
-            elseif !(series[:yfill_range] in (false, nothing))
-                @warn "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:yfill_range])"
+            elseif !(series[:fillrange] in (false, nothing))
+                @warn "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
             end
             plotattributes_out[:x], plotattributes_out[:y] = x[rng], y[rng]
 
@@ -901,29 +901,29 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             plotattributes_out_fillrange = deepcopy(plotattributes_out)
             plotattributes_out_fillrange[:showlegend] = false
             # if fillrange is provided as real or tuple of real, expand to array
-            if typeof(series[:yfill_range]) <: Real
-                plotattributes_out[:yfill_range] = fill(series[:yfill_range], length(rng))
-            elseif typeof(series[:yfill_range]) <: Tuple
+            if typeof(series[:fillrange]) <: Real
+                plotattributes_out[:fillrange] = fill(series[:fillrange], length(rng))
+            elseif typeof(series[:fillrange]) <: Tuple
                 f1 =
-                    (fr1 = series[:yfill_range][1]) |> typeof <: Real ?
+                    (fr1 = series[:fillrange][1]) |> typeof <: Real ?
                     fill(fr1, length(rng)) : fr1[rng]
                 f2 =
-                    (fr2 = series[:yfill_range][2]) |> typeof <: Real ?
+                    (fr2 = series[:fillrange][2]) |> typeof <: Real ?
                     fill(fr2, length(rng)) : fr2[rng]
-                plotattributes_out[:yfill_range] = (f1, f2)
+                plotattributes_out[:fillrange] = (f1, f2)
             end
-            if isa(series[:yfill_range], AbstractVector)
-                plotattributes_out_fillrange[:y] = series[:yfill_range][rng]
+            if isa(series[:fillrange], AbstractVector)
+                plotattributes_out_fillrange[:y] = series[:fillrange][rng]
                 delete!(plotattributes_out_fillrange, :fill)
-                delete!(plotattributes_out_fillrange, :yfill_color)
+                delete!(plotattributes_out_fillrange, :fillcolor)
             else
                 # if fillrange is a tuple with upper and lower limit, plotattributes_out_fillrange
                 # is the series that will do the filling
                 plotattributes_out_fillrange[:x], plotattributes_out_fillrange[:y] =
-                    concatenate_fillrange(x[rng], series[:yfill_range])
+                    concatenate_fillrange(x[rng], series[:fillrange])
                 plotattributes_out_fillrange[:line][:width] = 0
                 delete!(plotattributes_out, :fill)
-                delete!(plotattributes_out, :yfill_color)
+                delete!(plotattributes_out, :fillcolor)
             end
 
             plotattributes_outs[(2k - 1):(2k)] =
