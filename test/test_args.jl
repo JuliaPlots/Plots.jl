@@ -1,3 +1,4 @@
+using Plots, Test
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
         @test pl[1].primary_series_count == 2
@@ -53,7 +54,7 @@ end
     ) :aliases = Dict(
         :legend_position => (:legend, :leg, :key),
         :legend_background_color => (:background_legend, :background_colour_legend, :background_color_legend),
-        :legend_title = (:key_title, :label_title, :leg_title),
+        :legend_title => (:key_title, :label_title, :leg_title),
     )
     @test Plots._subplot_defaults[:legend_font_family] == :match
     @test Plots._subplot_defaults[:legend_column] == 1
