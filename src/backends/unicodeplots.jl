@@ -210,7 +210,7 @@ function addUnicodeSeries!(
     elseif st in (:surface, :wireframe)  # 3D
         colormap = get(se_kw, :colormap, :none)
         lines = get(se_kw, :lines, st === :wireframe)
-        zscale = get(se_kw, :zscale, :identity)
+        zscale = get(se_kw, :zscale, :aspect)
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
