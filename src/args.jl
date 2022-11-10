@@ -16,7 +16,7 @@ function add_aliases(sym::Symbol, aliases::Symbol...)
             str2 = replace(str, ga)
             _keyAliases[Symbol(str2)] = sym
         end
-        (haskey(_keyAliases, alias) || alias === sym) && return
+        (haskey(_keyAliases, alias) || alias === sym) && continue
         _keyAliases[alias] = sym
     end
     nothing
@@ -2157,7 +2157,8 @@ macro add_attributes(level, expr, args...)
 
     insert_block = Expr(:block)
     for (key, value) in key_dict
-        # e.g. _series_defualts[key] = value
+        @show value
+        # e.g. _series_defaults[key] = value
         exp_key = Symbol(lowercase(string(T)), "_", key)
         pl_key = makeplural(exp_key)
         if QuoteNode(exp_key) in match_table.args[2].args
@@ -2224,7 +2225,10 @@ function _splitdef!(blk, key_dict)
                     continue
                 end
                 defexpr = ei.args[2]  # defexpr
-                key_dict[var] = defexpr
+                # filter e.g. marker::Marker = Marker(...)
+                if !(defexpr isa Expr && defexpr.head == :call && defexpr.args[1] == ei.args[1].args[2])
+                    key_dict[var] = defexpr
+                end
                 blk.args[i] = lhs
             elseif ei.head === :(::) && ei.args[1] isa Symbol
                 # var::Typ

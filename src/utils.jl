@@ -441,7 +441,7 @@ end
 for comp in (:line_, :fill, :marker_)
     compcolor = string(comp, :color)
     get_compcolor = Symbol(:get_, compcolor)
-    comp_z = string(comp, :z)
+    comp_z = string(comp, comp === :fill ? :_z : :z)
 
     compalpha = string(comp, :alpha)
     get_compalpha = Symbol(:get_, compalpha)
