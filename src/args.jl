@@ -2022,6 +2022,8 @@ get_series_color(c, sp::Subplot, n::Int, seriestype) =
         like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
         _cycle(sp[:color_palette], c)
+    else
+        c
     end |> plot_color
 
 get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
