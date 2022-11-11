@@ -5,7 +5,7 @@
 """
     warn_on_recipe_aliases!(plt, plotattributes, recipe_type, args...)
 
-Warn if an alias is dedected in `plotattributes` after a recipe of type `recipe_type` is
+Warn if an alias is detected in `plotattributes` after a recipe of type `recipe_type` is
 applied to 'args'. `recipe_type` is either `:user`, `:type`, `:plot` or `:series`.
 """
 function warn_on_recipe_aliases!(

@@ -10,7 +10,8 @@ function RecipesPipeline.warn_on_recipe_aliases!(
 )
     pkeys = keys(plotattributes)
     for k in pkeys
-        if (dk = get(_keyAliases, k, nothing)) !== nothing
+        dk = get(_keyAliases, k, nothing)
+        if dk !== nothing
             kv = RecipesPipeline.pop_kw!(plotattributes, k)
             dk ∈ pkeys || (plotattributes[dk] = kv)
         end
