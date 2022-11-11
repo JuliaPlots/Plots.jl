@@ -151,7 +151,7 @@ end
 up_color(col::UnicodePlots.UserColorType) = col
 up_color(col::RGBA) =
     (c = convert(ARGB32, col); map(Int, (red(c).i, green(c).i, blue(c).i)))
-up_color(col) = :auto
+up_color(::Any) = :auto
 
 up_cmap(series) = map(
     c -> (red(c), green(c), blue(c)),
@@ -179,9 +179,7 @@ function addUnicodeSeries!(
         series[:x], series[:y]
     end
 
-    if ispolar(sp) || ispolar(series)
-        return UnicodePlots.polarplot(x, y)
-    end
+    (ispolar(sp) || ispolar(series)) && return UnicodePlots.polarplot(x, y)
 
     # special handling (src/interface)
     fix_ar = get(se_kw, :fix_ar, true)
@@ -271,27 +269,32 @@ function addUnicodeSeries!(
     up
 end
 
+function unsupported_layout_error()
+    """
+    Plots(UnicodePlots): complex nested layout is currently unsupported.
+    Consider using plain `UnicodePlots` commands and `grid` from Term.jl as an alternative.
+    """ |>
+    ArgumentError |>
+    throw
+    nothing
+end
+
 # ------------------------------------------------------------------------------------------
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
     prepare_output(plt)
     nr, nc = size(plt.layout)
-    s1 = zeros(Int, nr, nc)
-    s2 = zeros(Int, nr, nc)
+    s1, s2 = map(_ -> zeros(Int, nr, nc), 1:2)
     canvas_type = nothing
     imgs = []
     sps = 0
     for r in 1:nr, c in 1:nc
         if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
-            "Plots(UnicodePlots): complex nested layout is currently unsupported" |>
-            ArgumentError |>
-            throw
+            unsupported_layout_error()
         else
             img = UnicodePlots.png_image(plt.o[sps += 1]; pixelsize = 32)
             canvas_type = eltype(img)
-            h, w = size(img)
-            s1[r, c] = h
-            s2[r, c] = w
+            s1[r, c], s2[r, c] = size(img)
             push!(imgs, img)
         end
     end
@@ -304,8 +307,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
         for r in 1:nr
             n2 = 1
             for c in 1:nc
-                sp = imgs[sps += 1]
-                h, w = size(sp)
+                h, w = (sp = imgs[sps += 1]) |> size
                 img[n1:(n1 + (h - 1)), n2:(n2 + (w - 1))] = sp
                 n2 += m2[c]
             end
@@ -332,43 +334,41 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
         end
     else
         have_color = Base.get_have_color()
-        lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
+        lines_colored = Array{Union{Nothing,Vector{String}}}(nothing, nr, nc)
         lines_uncolored = have_color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
+        nsp = length(plt.o)
         sps = 0
         for r in 1:nr
             lmax = 0
             for c in 1:nc
                 if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
-                    "Plots(UnicodePlots): complex nested layout is currently unsupported" |>
-                    ArgumentError |>
-                    throw
+                    unsupported_layout_error()
                 else
                     if get(l.attr, :blank, false)
-                        lines_colored[r, c] = lines_uncolored[r, c] = nothing
-                    else
-                        sp = plt.o[sps += 1]
-                        colored = string(sp; color = have_color)
-                        lines_colored[r, c] = lu = lc = split(colored, '\n')
-                        if have_color
-                            uncolored = UnicodePlots.no_ansi_escape(colored)
-                            lines_uncolored[r, c] = lu = split(uncolored, '\n')
-                        end
-                        lmax = max(length(lc), lmax)
-                        w_max[c] = max(maximum(length.(lu)), w_max[c])
+                        continue
+                    elseif (sps += 1) > nsp
+                        continue
                     end
+                    colored = string(plt.o[sps]; color = have_color)
+                    lines_colored[r, c] = lu = lc = split(colored, '\n')
+                    if have_color
+                        uncolored = UnicodePlots.no_ansi_escape(colored)
+                        lines_uncolored[r, c] = lu = split(uncolored, '\n')
+                    end
+                    lmax = max(length(lc), lmax)
+                    w_max[c] = max(maximum(length.(lu)), w_max[c])
                 end
             end
             l_max[r] = lmax
         end
-        empty = String[' '^w for w in w_max]
+        empty = map(w -> ' '^w, w_max)
         for r in 1:nr
             for n in 1:l_max[r]
                 for c in 1:nc
                     pre = c == 1 ? '\0' : ' '
-                    lc = lines_colored[r, c]
-                    if lc === nothing || length(lc) < n
+                    if (lc = lines_colored[r, c]) === nothing || length(lc) < n
                         print(io, pre, empty[c])
                     else
                         lu = lines_uncolored[r, c]
