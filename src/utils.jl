@@ -447,6 +447,7 @@ for comp in (:line, :fill, :marker)
     get_compalpha = Symbol(:get_, compalpha)
 
     @eval begin
+        # defines `get_linecolor`, `get_fillcolor` and `get_markercolor` <- for grep
         function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
             c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]

@@ -151,7 +151,7 @@ end
 up_color(col::UnicodePlots.UserColorType) = col
 up_color(col::RGBA) =
     (c = convert(ARGB32, col); map(Int, (red(c).i, green(c).i, blue(c).i)))
-up_color(col) = :auto
+up_color(::Any) = :auto
 
 up_cmap(series) = map(
     c -> (red(c), green(c), blue(c)),
