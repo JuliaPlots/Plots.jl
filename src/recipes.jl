@@ -463,6 +463,7 @@ end
     # reset orientation
     orientation := default(:orientation)
 
+    @show RecipesPipeline.explicitkeys(plotattributes)
     # draw the bar shapes
     @series begin
         seriestype := :shape
@@ -471,7 +472,7 @@ end
         x := xseg.pts
         y := yseg.pts
         # expand attributes to match indices in new series data
-        for k in _segmenting_vector_attributes ∪ _segmenting_array_attributes
+        for k in _all_segmenting_attributes
             if (v = get(plotattributes, k, nothing)) isa AVec
                 if eachindex(v) != eachindex(y)
                     @warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
@@ -492,6 +493,7 @@ end
     fillrange := nothing
     x := x
     y := y
+    @show plotattributes
     ()
 end
 @deps bar shape
@@ -1356,7 +1358,7 @@ end
     seriestype --> :shape
     # For backwards compatibility, column vectors of segmenting attributes are
     # interpreted as having one element per shape
-    for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
+    for attr in _all_segmenting_attributes
         v = get(plotattributes, attr, nothing)
         if v isa AVec || v isa AMat && size(v, 2) == 1
             @warn """
