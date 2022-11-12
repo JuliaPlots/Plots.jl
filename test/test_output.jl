@@ -41,7 +41,9 @@ end
 
 with(:unicodeplots) do
     @test_save :txt
-    @test_save :png
+    if Plots.UnicodePlots.get_font_face() ≢ nothing
+        @test_save :png
+    end
 end
 
 with(:plotlyjs) do
