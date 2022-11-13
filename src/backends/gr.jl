@@ -244,10 +244,11 @@ function gr_polyline3d(x, y, z, func = GR.polyline3d)
     end
 end
 
+has_latex_inline_math(s::AbstractString) = occursin(r".*\$[^\$]+?\$.*", s) !== nothing
+
 gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 gr_inqtext(x, y, s::AbstractString) =
-    if (occursin('\\', s) || occursin("10^{", s)) &&
-       match(r".*\$[^\$]+?\$.*", String(s)) === nothing
+    if (occursin('\\', s) || occursin("^{", s)) && !has_latex_inline_math(s)
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -255,8 +256,7 @@ gr_inqtext(x, y, s::AbstractString) =
 
 gr_text(x, y, s) = gr_text(x, y, string(s))
 gr_text(x, y, s::AbstractString) =
-    if (occursin('\\', s) || occursin("10^{", s)) &&
-       match(r".*\$[^\$]+?\$.*", String(s)) === nothing
+    if (occursin('\\', s) || occursin("^{", s)) && !has_latex_inline_math(s)
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
