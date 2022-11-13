@@ -97,7 +97,7 @@ end
     uf = UnitFunction(f, [u])
     recipedata = RecipesBase.apply_recipe(plotattributes, uf)
     _, xmin, xmax = recipedata[1].args
-    return f, xmin * u, xmax * u
+    f, xmin * u, xmax * u
 end
 
 """
@@ -123,10 +123,8 @@ Attribute fixing
 ===============#
 # Aspect ratio
 function fixaspectratio!(attr, u, axisletter)
-    aspect_ratio = get(attr, :aspect_ratio, :auto)
-    if aspect_ratio in (:auto, :none)
-        # Keep the default behavior (let Plots figure it out)
-        return
+    if (aspect_ratio = get(attr, :aspect_ratio, :auto)) in (:auto, :none)
+        return  # keep the default behavior (let Plots figure it out)
     end
     if aspect_ratio === :equal
         aspect_ratio = 1
@@ -146,7 +144,7 @@ function fixaspectratio!(attr, u, axisletter)
     elseif axisletter === :x
         attr[:aspect_ratio] = aspect_ratio / u
     end
-    return
+    nothing
 end
 
 # Markers / lines
@@ -164,9 +162,9 @@ ustripattribute!(attr, key) =
         v = attr[key]
         u = unit(eltype(v))
         attr[key] = ustrip.(u, v)
-        return u
+        u
     else
-        return Unitful.NoUnits
+        Unitful.NoUnits
     end
 # If supplied, use the unit (optional 3rd argument)
 function ustripattribute!(attr, key, u)

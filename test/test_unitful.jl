@@ -1,4 +1,3 @@
-
 # Some helper functions to access the subplot labels and the series inside each test plot
 xguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:xaxis].plotattributes[:guide]
 yguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:yaxis].plotattributes[:guide]
@@ -9,16 +8,16 @@ zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:
 
 testfile = tempname() * ".png"
 
-macro isplot(ex) # @isplot macro to streamline tests
+macro isplot(ex)  # @isplot macro to streamline tests
     :(@test $(esc(ex)) isa Plot)
 end
 
 @testset "heatmap" begin
     x = (1:3)m
-    @isplot heatmap(x * x', clims = (1, 7)) # unitless
-    @isplot heatmap(x * x', clims = (2m^2, 8m^2)) # units
-    @isplot heatmap(x * x', clims = (2e6u"mm^2", 7e-6u"km^2")) # conversion
-    @isplot heatmap(1:3, (1:3)m, x * x', clims = (1m^2, 7e-6u"km^2")) # mixed
+    @isplot heatmap(x * x', clims = (1, 7))  # unitless
+    @isplot heatmap(x * x', clims = (2m^2, 8m^2))  # units
+    @isplot heatmap(x * x', clims = (2e6u"mm^2", 7e-6u"km^2"))  # conversion
+    @isplot heatmap(1:3, (1:3)m, x * x', clims = (1m^2, 7e-6u"km^2"))  # mixed
 end
 
 @testset "plot(y)" begin
@@ -43,7 +42,7 @@ end
         @test yseries(plot(y, yunit = cm)) ≈ ustrip.(cm, y)
     end
 
-    @testset "ylims" begin # Using all(lims .≈ lims) because of uncontrolled type conversions?
+    @testset "ylims" begin  # using all(lims .≈ lims) because of uncontrolled type conversions?
         @test all(ylims(plot(y, ylims = (-1, 3))) .≈ (-1, 3))
         @test all(ylims(plot(y, ylims = (-1m, 3m))) .≈ (-1, 3))
         @test all(ylims(plot(y, ylims = (-100cm, 300cm))) .≈ (-1, 3))
@@ -148,7 +147,7 @@ end
         f(x) = x^2
         @test plot(f, x * m) isa Plot
         @test plot(x * m, f) isa Plot
-        g(x) = x * m # If the unit comes from the function only then it throws
+        g(x) = x * m  # if the unit comes from the function only then it throws
         @test_throws DimensionError plot(x, g)
         @test_throws DimensionError plot(g, x)
     end
@@ -157,7 +156,7 @@ end
         @test plot(x * m, y * s, f) isa Plot
         @test plot(x * m, y, f) isa Plot
         @test plot(x, y * s, f) isa Plot
-        g(x, y) = x * y * m # If the unit comes from the function only then it throws
+        g(x, y) = x * y * m  # if the unit comes from the function only then it throws
         @test_throws DimensionError plot(x, y, g)
     end
     @testset "plot(f, u)" begin
@@ -277,7 +276,7 @@ end
     pl = plot!(pl, x2)
     @test yguide(pl) == "m"
     @test yseries(pl) ≈ ustrip.(x2) / 100
-    @test_throws DimensionError plot!(pl, x3) # can't place seconds on top of meters!
+    @test_throws DimensionError plot!(pl, x3)  # can't place seconds on top of meters!
 end
 
 @testset "Bare units" begin
@@ -338,10 +337,10 @@ end
 
 @testset "Aspect ratio" begin
     pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = :equal)
-    savefig(pl, testfile) # Force a render, to make it evaluate aspect ratio
+    savefig(pl, testfile)  # force a render, to make it evaluate aspect ratio
     @test abs(-(ylims(pl)...)) > 50
     plot!(pl, (3:4)u"m", (4:5)u"m")
-    @test first(pl.subplots)[:aspect_ratio] == 1 // 10 # This is what "equal" means when yunit==xunit/10
+    @test first(pl.subplots)[:aspect_ratio] == 1 // 10  # this is what "equal" means when yunit==xunit/10
     pl = plot((1:10)u"m", (1:10)u"dm"; aspect_ratio = 2)
     savefig(pl, testfile)
     @test 25 < abs(-(ylims(pl)...)) < 50
@@ -354,14 +353,14 @@ end
     )
 end
 
-# https://github.com/jw3126/UnitfulRecipes.jl/issues/60
+# github.com/jw3126/UnitfulRecipes.jl/issues/60
 @testset "Start with empty plot" begin
     pl = plot()
     plot!(pl, (1:3)m)
     @test yguide(pl) == "m"
 end
 
-# https://github.com/jw3126/UnitfulRecipes.jl/issues/79
+# github.com/jw3126/UnitfulRecipes.jl/issues/79
 @testset "Annotate" begin
     pl = plot([0, 1]u"s", [0, 1]u"m")
     annotate!(pl, [0.25]u"s", [0.5]u"m", text("annotation"))
