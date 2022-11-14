@@ -64,8 +64,10 @@ function __init__()
             )
         end,
     )
-    @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
-        include(BACKEND_PATH_GR)
+    if _default_backend() != :gr
+        @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
+            include(BACKEND_PATH_GR)
+        end
     end
 
     @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin

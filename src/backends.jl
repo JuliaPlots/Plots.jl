@@ -36,8 +36,6 @@ macro init_backend(s)
     end |> esc
 end
 
-# include("backends/web.jl")
-
 # ---------------------------------------------------------
 
 # don't do anything as a default
@@ -131,21 +129,25 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
 
-_fallback_default_backend() = backend(GRBackend())
-
-function _pick_default_backend()
-    if (env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")) != ""
-        if (sym = Symbol(lowercase(env_default))) in _backends
-            backend(sym)
-        else
-            @warn """You have set PLOTS_DEFAULT_BACKEND=$env_default, but it is not a valid backend package.
-            Choose from: \n\t$(join(sort(_backends), "\n\t"))
-            """
-            _fallback_default_backend()
-        end
+_fallback_default_backend() = :gr
+function _default_backend()
+    env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
+    if env_default != ""
+        Symbol(lowercase(env_default))
     else
         _fallback_default_backend()
     end
+end
+
+function _pick_default_backend()
+        if (sym = _default_backend()) in _backends
+            backend(sym)
+        else
+            @warn """You have set $sym as the default backend, but it is not a valid backend package.
+            Choose from: \n\t$(join(sort(_backends), "\n\t"))
+            """
+            backend(_fallback_default_backend())
+        end
 end
 
 # ---------------------------------------------------------
