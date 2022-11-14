@@ -140,14 +140,14 @@ function _default_backend()
 end
 
 function _pick_default_backend()
-        if (sym = _default_backend()) in _backends
-            backend(sym)
-        else
-            @warn """You have set $sym as the default backend, but it is not a valid backend package.
-            Choose from: \n\t$(join(sort(_backends), "\n\t"))
-            """
-            backend(_fallback_default_backend())
-        end
+    if (sym = _default_backend()) in _backends
+        backend(sym)
+    else
+        @warn """You have set $sym as the default backend, but it is not a valid backend package.
+        Choose from: \n\t$(join(sort(_backends), "\n\t"))
+        """
+        backend(_fallback_default_backend())
+    end
 end
 
 # ---------------------------------------------------------
