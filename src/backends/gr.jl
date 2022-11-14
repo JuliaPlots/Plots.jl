@@ -1204,8 +1204,8 @@ function gr_get_legend_geometry(vp, sp)
     span_hspace = span + pad  # part of the horizontal increment
     dx = (textw + (vertical ? 0 : span_hspace)) * get(ekw, :legend_wfactor, 1)
 
-    # This is to prevent that linestyle is obscured by large markers. 
-    # We are trying to get markers to not be larger than half the line length. 
+    # This is to prevent that linestyle is obscured by large markers.
+    # We are trying to get markers to not be larger than half the line length.
     # 1 / leg.dy translates base_factor to line length units (important in the context of size kwarg)
     # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
     base_markersize = gr_legend_marker_to_line_factor[] * span / dy  # NOTE: arbitrarily based on horizontal measures !

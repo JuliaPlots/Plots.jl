@@ -3,6 +3,7 @@ using Scratch
 using REPL
 
 const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+const BACKEND_PATH_GR = @path joinpath(@__DIR__, "backends", "gr.jl")
 const BACKEND_PATH_GASTON = @path joinpath(@__DIR__, "backends", "gaston.jl")
 const BACKEND_PATH_HDF5 = @path joinpath(@__DIR__, "backends", "hdf5.jl")
 const BACKEND_PATH_INSPECTDR = @path joinpath(@__DIR__, "backends", "inspectdr.jl")
@@ -63,6 +64,9 @@ function __init__()
             )
         end,
     )
+    @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
+        include(BACKEND_PATH_GR)
+    end
 
     @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
         include(BACKEND_PATH_HDF5)

@@ -199,7 +199,6 @@ include("init.jl")
 
 include("backends/plotly.jl")
 include("backends/web.jl")
-include("backends/gr.jl")
 
 include("shorthands.jl")
 include("precompile.jl")
