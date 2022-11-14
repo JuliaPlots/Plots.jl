@@ -1,6 +1,6 @@
 using Plots, Test
 
-const plots_path = "\"$(pkgdir(Plots))\""
+const plots_path = replace("\"$(pkgdir(Plots))\"", raw"\" => raw"\\")
 
 @testset "Default Backend" begin
     out = withenv("PLOTS_DEFAULT_BACKEND" => "Plotly") do
