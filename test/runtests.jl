@@ -48,6 +48,7 @@ for name in (
     "animations",
     "output",
     "backends",
+    "init",
 )
     @testset "$name" begin
         if get(ENV, "VISUAL_REGRESSION_TESTS_AUTO", "false") == "true" && name != "backends"

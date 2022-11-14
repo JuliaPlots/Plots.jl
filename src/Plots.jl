@@ -194,7 +194,6 @@ include("fileio.jl")
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 const CURRENT_BACKEND = CurrentBackend(:none)
 const PLOTS_SEED = 1234
-backend(_pick_default_backend())
 
 include("init.jl")
 
@@ -202,7 +201,7 @@ include("backends/plotly.jl")
 include("backends/web.jl")
 
 include("shorthands.jl")
-@static if backend() == GRBackend()
+@static if backend(_pick_default_backend()) == GRBackend()
     include("backends/gr.jl")
     include("precompile.jl")
 end
