@@ -1106,12 +1106,10 @@ end
 # if arg is a valid color value, then set plotattributes[csym] and return true
 function handleColors!(plotattributes::AKW, arg, csym::Symbol)
     try
-        if arg === :auto
-            plotattributes[csym] = :auto
+        plotattributes[csym] = if arg === :auto
+            :auto
         else
-            # c = colorscheme(arg)
-            c = plot_color(arg)
-            plotattributes[csym] = c
+            plot_color(arg)
         end
         return true
     catch
@@ -2019,14 +2017,14 @@ has_black_border_for_default(st::Symbol) =
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
-function get_series_color(c, sp::Subplot, n::Int, seriestype)
+get_series_color(c, sp::Subplot, n::Int, seriestype) =
     if c === :auto
-        c = like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
+        like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
-        c = _cycle(sp[:color_palette], c)
-    end
-    plot_color(c)
-end
+        _cycle(sp[:color_palette], c)
+    else
+        c
+    end |> plot_color
 
 get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
     map(x -> get_series_color(x, sp, n, seriestype), c)
@@ -2107,7 +2105,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     stype = plotattributes[:seriestype]
     plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
-    # update other colors
+    # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] === :auto

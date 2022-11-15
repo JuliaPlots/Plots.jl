@@ -164,6 +164,9 @@ end
         pl = plot(map(plot, 1:4)..., layout = (2, 2))
         @test show(io, pl) isa Nothing
 
+        pl = plot(map(plot, 1:3)..., layout = (2, 2))
+        @test show(io, pl) isa Nothing
+
         pl = plot(map(plot, 1:2)..., layout = @layout([° _; _ °]))
         @test show(io, pl) isa Nothing
 
