@@ -1494,7 +1494,7 @@ end
     seriestype := :spy
     mat = g.args[1]
     n, m = axes(mat)
-    Plots.SliceIt, m, n, Surface(mat)
+    SliceIt, m, n, Surface(mat)
 end
 
 @recipe function f(::Type{Val{:spy}}, x, y, z)  # COV_EXCL_LINE

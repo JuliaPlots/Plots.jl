@@ -1723,7 +1723,7 @@ slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
 slice_arg(v, idx) = v
 
-# given an argument key (k), extract the argument value for this index,
+# given an argument key `k`, extract the argument value for this index,
 # and set into plotattributes[k]. Matrices are sliced by column.
 # if nothing is set (or container is empty), return the existing value.
 function slice_arg!(
@@ -1898,6 +1898,14 @@ function _update_subplot_colors(sp::Subplot)
     nothing
 end
 
+_update_margins(sp::Subplot) =
+    for sym in (:margin, :left_margin, :top_margin, :right_margin, :bottom_margin)
+        if (margin = get(sp.attr, sym, nothing)) isa Tuple
+            # transform e.g. (1, :mm) => 1 * Plots.mm
+            sp.attr[sym] = margin[1] * getfield(@__MODULE__, margin[2])
+        end
+    end
+
 function _update_axis(
     plt::Plot,
     sp::Subplot,
@@ -1986,6 +1994,7 @@ function _update_subplot_args(
     end
 
     _update_subplot_colors(sp)
+    _update_margins(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
