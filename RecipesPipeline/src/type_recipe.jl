@@ -35,7 +35,10 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     warn_on_recipe_aliases!(plt, plotattributes, :type, v)
     # If the type did not change try it element-wise
     if typeof(v) == typeof(w)
-        isempty(skipmissing(v)) && return Float64[]
+        if isempty(skipmissing(v))
+            postprocess_axis_args!(plt, plotattributes, letter)
+            return Float64[]
+        end
         x = first(skipmissing(v))
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
         warn_on_recipe_aliases!(plt, plotattributes, :type, x)
