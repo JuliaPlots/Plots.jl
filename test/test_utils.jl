@@ -109,7 +109,7 @@
     @test Plots.get_attr_symbol(:x, "lims") === :xlims
     @test Plots.get_attr_symbol(:x, :lims) === :xlims
 
-    @test contains(Plots._document_argument("bar_position"), "bar_position")
+    @test contains(Plots._document_argument(:bar_position), "bar_position")
 
     @test Plots.limsType((1, 1)) === :limits
     @test Plots.limsType(:undefined) === :invalid

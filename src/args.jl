@@ -27,6 +27,11 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     end
 end
 
+macro attributes(expr::Expr)
+    RecipesBase.process_recipe_body!(expr)
+    expr
+end
+
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
@@ -564,7 +569,7 @@ end
 
 aliases(val) = aliases(_keyAliases, val)
 aliases(aliasMap::Dict{Symbol,Symbol}, val) =
-    filter((x) -> x.second == val, aliasMap) |> keys |> collect |> sort
+    filter(x -> x.second == val, aliasMap) |> keys |> collect |> sort
 
 # -----------------------------------------------------------------------------
 # legend
