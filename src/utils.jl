@@ -1106,10 +1106,10 @@ function _fmt_paragraph(
         read(io, String)
     else
         if column_count + length(m[1]) ≤ fillwidth
-            print(io, "$(m[1]) ")
+            print(io, m[1], ' ')
             _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kw...)
         else
-            print(io, "\n" * " "^leadingspaces * "$(m[1]) ")
+            print(io, '\n', ' '^leadingspaces, m[1], ' ')
             _fmt_paragraph(io, m[2], leadingspaces; kw...)
         end
     end
@@ -1117,15 +1117,9 @@ end
 
 function _document_argument(s::Symbol)
     aliases = if (al = Plots.aliases(s)) |> length > 0
-        " aliases=" * string(Tuple(al)) * '.'
+        " Aliases: " * string(Tuple(al)) * '.'
     else
         ""
     end
-    _fmt_paragraph(
-        "`$s::$(get(_arg_desc, s, _arg_desc[:seriescolor])[1])`: $(rstrip(get(_arg_desc, s, _arg_desc[:seriescolor])[2], '.'))." *
-        aliases,
-        leadingspaces = 6 + length(string(s)),
-    )
-    # _document_argument(s::Symbol) =
-    #     _fmt_paragraph("`$s::$(_arg_desc[s][1])`: $(rstrip(_arg_desc[s][2], '.'))." * aliases, leadingspaces = 6 + length(string(s)))
+    _fmt_paragraph("`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], "\n" => ""), '.'))." * aliases, leadingspaces = 6 + length(string(s)))
 end
