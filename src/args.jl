@@ -1902,7 +1902,8 @@ end
 _update_margins(sp::Subplot) =
     for sym in (:margin, :left_margin, :top_margin, :right_margin, :bottom_margin)
         if (margin = get(sp.attr, sym, nothing)) isa Tuple
-            sp.attr[sym] = margin[1] * getfield(Plots, margin[2])  # e.g. (1, :mm) => 1 * Plots.mm
+            # transform e.g. (1, :mm) => 1 * Plots.mm
+            sp.attr[sym] = margin[1] * getfield(@__MODULE__, margin[2])
         end
     end
 
