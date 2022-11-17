@@ -1122,7 +1122,8 @@ _argument_description(s::Symbol) =
         else
             ""
         end
-        "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." * aliases
+        "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." *
+        aliases
     else
         ""
     end

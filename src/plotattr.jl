@@ -9,10 +9,9 @@ const _attribute_defaults = Dict(
 attrtypes() = join(keys(_attribute_defaults), ", ")
 attributes(attrtype::Symbol) = sort(collect(keys(_attribute_defaults[attrtype])))
 
-function lookup_aliases(attrtype, attribute)
-    attribute = Symbol(attribute)
-    attribute = in(attribute, keys(_keyAliases)) ? _keyAliases[attribute] : attribute
-    attribute in keys(_attribute_defaults[attrtype]) && return attribute
+function lookup_aliases(attrtype::Symbol, attribute::Symbol)
+    attribute = attribute ∈ keys(_keyAliases) ? _keyAliases[attribute] : attribute
+    attribute ∈ keys(_attribute_defaults[attrtype]) && return attribute
     error("There is no attribute named $attribute in $attrtype")
 end
 
@@ -29,20 +28,20 @@ The information is the same as that given on https://docs.juliaplots.org/latest/
 function plotattr()
     attr = Symbol(JLFzf.inter_fzf(collect(Plots._all_args), "--read0", "--height=80%"))
     letter = ""
-    attrtype = if attr in _all_series_args
+    attrtype = if attr ∈ _all_series_args
         "Series"
-    elseif attr in _all_subplot_args
+    elseif attr ∈ _all_subplot_args
         "Subplot"
-    elseif attr in _lettered_all_axis_args
+    elseif attr ∈ _lettered_all_axis_args
         if attr ∉ _all_axis_args
             letters = collect(String(attr))
             letter = first(letters)
             attr = Symbol(join(letters[2:end]))
         end
         "Axis"
-    elseif attr in _all_plot_args
+    elseif attr ∈ _all_plot_args
         "Plot"
-    elseif attr in _all_magic_args
+    elseif attr ∈ _all_magic_args
         "Magic"
     else
         "Unkown"
@@ -60,22 +59,21 @@ end
 # COV_EXCL_STOP
 
 function plotattr(attrtype::Symbol)
-    attrtype in keys(_attribute_defaults) || error("Viable options are $(attrtypes())")
+    attrtype ∈ keys(_attribute_defaults) || error("Viable options are $(attrtypes())")
     println("Defined $attrtype attributes are:\n$(join(attributes(attrtype), ", "))")
 end
 
 function plotattr(attribute::AbstractString)
     attribute = Symbol(attribute)
-    attribute = attribute in keys(_keyAliases) ? _keyAliases[attribute] : attribute
+    attribute = attribute ∈ keys(_keyAliases) ? _keyAliases[attribute] : attribute
     for (k, v) in _attribute_defaults
-        attribute in keys(v) && return plotattr(k, attribute)
+        attribute ∈ keys(v) && return plotattr(k, attribute)
     end
     error("There is no attribute named $attribute")
 end
 
-
 function plotattr(attrtype::Symbol, attribute::Symbol)
-    attrtype in keys(_attribute_defaults) ||
+    attrtype ∈ keys(_attribute_defaults) ||
         ArgumentError("`attrtype` must match one of $(attrtypes())")
 
     attribute = lookup_aliases(attrtype, attribute)
@@ -86,6 +84,7 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
     println(
         "`$attribute` is of type $type.\n\n",
         "$desc\n\n",
-        "$attrtype attribute, ", def == "" ? "" : " defaults to `$def`.",
+        "$attrtype attribute, ",
+        def == "" ? "" : " defaults to `$def`.",
     )
 end
