@@ -154,10 +154,9 @@ const _arg_desc = KW(
     :guide_position              => (Symbol, "Position of axis guides. Choose from (:top, :bottom, :left, :right)."),
     :lims                        => (Union{NTuple{2,Real},Symbol}, """
                                     Force axis limits. Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example).
-                                    `:round` widens the limit to the nearest round number ie. [0.1,3.6]=>[0.0,4.0]
+                                    `:round` widens the limit to the nearest round number ie. [0.1,3.6]=>[0.0,4.0].
                                     `:symmetric` sets the limits to be symmetric around zero.
-                                    Set widen=true to widen the specified limits (as occurs when lims are not specified).
-                                    """),
+                                    Set `widen=true` to widen the specified limits (as occurs when lims are not specified)."""),
     :ticks                       => (TicksType, "Tick values, (tickvalues, ticklabels), or `:auto`."),
     :scale                       => (Symbol, "Scale of the axis. Choose from $(_allScales)."),
     :rotation                    => (Real, "Degrees rotation of tick labels."),

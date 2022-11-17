@@ -1115,11 +1115,17 @@ function _fmt_paragraph(
     end
 end
 
-function _document_argument(s::Symbol)
-    aliases = if (al = Plots.aliases(s)) |> length > 0
-        " Aliases: " * string(Tuple(al)) * '.'
+_argument_description(s::Symbol) =
+    if s ∈ keys(_arg_desc)
+        aliases = if (al = Plots.aliases(s)) |> length > 0
+            " Aliases: " * string(Tuple(al)) * '.'
+        else
+            ""
+        end
+        "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." * aliases
     else
         ""
     end
-    _fmt_paragraph("`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], "\n" => ""), '.'))." * aliases, leadingspaces = 6 + length(string(s)))
-end
+
+_document_argument(s::Symbol) =
+    _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
