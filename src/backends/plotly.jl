@@ -549,7 +549,8 @@ function plotly_series(plt::Plot, series::Series)
         st in (:path, :scatter, :scattergl, :straightline) &&
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
-    plotattributes_out[:colorbar] = KW(:title => sp[:colorbar_title])
+    _, y_domain = plotly_domain(sp)
+    plotattributes_out[:colorbar] = KW(:title => sp[:colorbar_title], :y => mean(y_domain), :len => diff(y_domain)[1])
 
     if is_2tuple(clims)
         plotattributes_out[:zmin], plotattributes_out[:zmax] = clims
