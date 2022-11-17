@@ -61,17 +61,14 @@ function _recipedata_vector(plt, plotattributes, args)
 
     # if we were passed a vector/matrix of seriestypes and there's more than one row,
     # we want to duplicate the inputs, once for each seriestype row.
-    if !isempty(args)
+    isempty(args) ||
         append!(still_to_process, _expand_seriestype_array(plotattributes, args))
-    end
 
     # remove subplot and axis args from plotattributes...
     # they will be passed through in the kw_list
-    if !isempty(args)
-        for (k, v) in plotattributes
-            if is_subplot_attribute(plt, k) || is_axis_attribute(plt, k)
-                reset_kw!(plotattributes, k)
-            end
+    isempty(args) || for (k, v) in plotattributes
+        if is_subplot_attribute(plt, k) || is_axis_attribute(plt, k)
+            reset_kw!(plotattributes, k)
         end
     end
 
@@ -118,12 +115,9 @@ end
 @recipe function f(x, y, z)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, x, y, z)
     did_replace = false
-    newx = _apply_type_recipe(plotattributes, x, :x)
-    x === newx || (did_replace = true)
-    newy = _apply_type_recipe(plotattributes, y, :y)
-    y === newy || (did_replace = true)
-    newz = _apply_type_recipe(plotattributes, z, :z)
-    z === newz || (did_replace = true)
+    did_replace |= x !== (newx = _apply_type_recipe(plotattributes, x, :x))
+    did_replace |= y !== (newy = _apply_type_recipe(plotattributes, y, :y))
+    did_replace |= z !== (newz = _apply_type_recipe(plotattributes, z, :z))
     if did_replace
         newx, newy, newz
     else
@@ -133,10 +127,8 @@ end
 @recipe function f(x, y)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, x, y)
     did_replace = false
-    newx = _apply_type_recipe(plotattributes, x, :x)
-    x === newx || (did_replace = true)
-    newy = _apply_type_recipe(plotattributes, y, :y)
-    y === newy || (did_replace = true)
+    did_replace |= x !== (newx = _apply_type_recipe(plotattributes, x, :x))
+    did_replace |= y !== (newy = _apply_type_recipe(plotattributes, y, :y))
     if did_replace
         newx, newy
     else
@@ -145,8 +137,7 @@ end
 end
 @recipe function f(y)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, y)
-    newy = _apply_type_recipe(plotattributes, y, :y)
-    if y !== newy
+    if y !== (newy = _apply_type_recipe(plotattributes, y, :y))
         newy
     else
         SliceIt, nothing, y, nothing
@@ -159,17 +150,13 @@ end
     did_replace = false
     newargs = map(
         v -> begin
-            newv = _apply_type_recipe(plotattributes, v, :unknown)
-            if newv !== v
-                did_replace = true
-            end
+            did_replace |= v !== (newv = _apply_type_recipe(plotattributes, v, :unknown))
             newv
         end,
         (v1, v2, v3, v4, vrest...),
     )
-    if !did_replace
+    did_replace ||
         error("Couldn't process recipe args: $(map(typeof, (v1, v2, v3, v4, vrest...)))")
-    end
     newargs
 end
 
@@ -180,11 +167,8 @@ wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::AMat) = wrap_surfaces!(plota
 wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::Surface) =
     wrap_surfaces!(plotattributes)
 wrap_surfaces!(plotattributes) =
-    if haskey(plotattributes, :fill_z)
-        v = plotattributes[:fill_z]
-        if !isa(v, Surface)
-            plotattributes[:fill_z] = Surface(v)
-        end
+    if (v = get(plotattributes, :fill_z, nothing)) !== nothing
+        v isa Surface || (plotattributes[:fill_z] = Surface(v))
     end
 
 # --------------------------------
@@ -277,11 +261,11 @@ end
 # parametric functions
 # special handling... xmin/xmax with parametric function(s)
 @recipe function f(f::Function, xmin::Number, xmax::Number)  # COV_EXCL_LINE
-    xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
+    xscale, yscale = map(sym -> get(plotattributes, sym, :identity), (:xscale, :yscale))
     _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
 end
 @recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where {F<:Function}  # COV_EXCL_LINE
-    xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
+    xscale, yscale = map(sym -> get(plotattributes, sym, :identity), (:xscale, :yscale))
     unzip(_scaled_adapted_grid.(vec(fs), xscale, yscale, xmin, xmax))
 end
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function} =

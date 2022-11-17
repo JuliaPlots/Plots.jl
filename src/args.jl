@@ -1594,7 +1594,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     for k in explicitkeys(plotattributes)
         (is_attr_supported(pkg, k) && k ∉ keys(_deprecated_attributes)) && continue
         k in _suppress_warnings && continue
-        if (default_value = default(k)) |> ismissing
+        if ismissing(default(k))
             extra_kwargs[k] = pop_kw!(plotattributes, k)
         elseif plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)

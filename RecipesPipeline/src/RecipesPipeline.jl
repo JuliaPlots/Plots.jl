@@ -102,7 +102,7 @@ function recipe_pipeline!(plt, plotattributes, args)
     # Return processed plot object
     # --------------------------------
 
-    return plt
+    plt
 end
 
 # COV_EXCL_START
