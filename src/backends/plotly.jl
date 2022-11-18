@@ -81,6 +81,12 @@ function plotly_domain(sp::Subplot)
     pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
     x_domain = [pcts[1], pcts[1] + pcts[3]]
     y_domain = [pcts[2], pcts[2] + pcts[4]]
+    if hascolorbar(sp)
+        subplot_width = pcts[3]
+        colorbar_fractional_size = 0.25
+        colorbar_width = subplot_width * colorbar_fractional_size
+        x_domain[2] = x_domain[2] - colorbar_width
+    end
     x_domain, y_domain
 end
 
@@ -712,9 +718,13 @@ function plotly_series(plt::Plot, series::Series)
 end
 
 function plotly_colorbar(sp::Subplot)
-    _, y_domain = plotly_domain(sp)
-    plot_attribute =
-        KW(:title => sp[:colorbar_title], :y => mean(y_domain), :len => diff(y_domain)[1])
+    x_domain, y_domain = plotly_domain(sp)
+    plot_attribute = KW(
+        :title => sp[:colorbar_title],
+        :y => mean(y_domain),
+        :len => diff(y_domain)[1],
+        :x => x_domain[2],
+    )
     return plot_attribute
 end
 
