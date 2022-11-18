@@ -823,11 +823,6 @@ end
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
 
-const PX_PER_INCH = 100
-const DPI         = PX_PER_INCH
-const MM_PER_INCH = 25.4
-const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
-
 inch2px(inches::Real) = float(inches * PX_PER_INCH)
 px2inch(px::Real)     = float(px / PX_PER_INCH)
 inch2mm(inches::Real) = float(inches * MM_PER_INCH)
@@ -1041,39 +1036,6 @@ end
 construct_categorical_data(x::AbstractArray, axis::Axis) =
     (map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x))
 
-_fmt_paragraph(paragraph::AbstractString; kw...) =
-    _fmt_paragraph(IOBuffer(), paragraph, 0; kw...)
-
-function _fmt_paragraph(
-    io::IOBuffer,
-    remaining_text::AbstractString,
-    column_count::Integer;
-    fillwidth = 60,
-    leadingspaces = 0,
-)
-    kw = (fillwidth = fillwidth, leadingspaces = leadingspaces)
-
-    if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
-        if column_count + length(remaining_text) ≤ fillwidth
-            print(io, remaining_text)
-        else
-            print(io, "\n" * " "^leadingspaces * remaining_text)
-        end
-        String(take!(io))
-    else
-        if column_count + length(m[1]) ≤ fillwidth
-            print(io, "$(m[1]) ")
-            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kw...)
-        else
-            print(io, "\n" * " "^leadingspaces * "$(m[1]) ")
-            _fmt_paragraph(io, m[2], leadingspaces; kw...)
-        end
-    end
-end
-
-_document_argument(S::AbstractString) =
-    _fmt_paragraph("`$S`: " * _arg_desc[Symbol(S)], leadingspaces = 6 + length(S))
-
 function add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
     m = 4(I - 1) + 1
     n = m + 1
@@ -1123,7 +1085,48 @@ get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyw
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))
 
-macro attributes(expr::Expr)
-    RecipesBase.process_recipe_body!(expr)
-    expr
+_fmt_paragraph(paragraph::AbstractString; kw...) =
+    _fmt_paragraph(PipeBuffer(), paragraph, 0; kw...)
+
+function _fmt_paragraph(
+    io::IOBuffer,
+    remaining_text::AbstractString,
+    column_count::Integer;
+    fillwidth = 60,
+    leadingspaces = 0,
+)
+    kw = (; fillwidth, leadingspaces)
+
+    if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
+        if column_count + length(remaining_text) ≤ fillwidth
+            print(io, remaining_text)
+        else
+            print(io, '\n', ' '^leadingspaces, remaining_text)
+        end
+        read(io, String)
+    else
+        if column_count + length(m[1]) ≤ fillwidth
+            print(io, m[1], ' ')
+            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kw...)
+        else
+            print(io, '\n', ' '^leadingspaces, m[1], ' ')
+            _fmt_paragraph(io, m[2], leadingspaces; kw...)
+        end
+    end
 end
+
+_argument_description(s::Symbol) =
+    if s ∈ keys(_arg_desc)
+        aliases = if (al = Plots.aliases(s)) |> length > 0
+            " Aliases: " * string(Tuple(al)) * '.'
+        else
+            ""
+        end
+        "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." *
+        aliases
+    else
+        ""
+    end
+
+_document_argument(s::Symbol) =
+    _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))

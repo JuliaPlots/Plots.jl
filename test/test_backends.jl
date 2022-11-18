@@ -176,7 +176,7 @@ end
     end
 end
 
-const blacklist = if VERSION.major == 1 && VERSION.minor == 9
+const blacklist = if VERSION.major == 1 && VERSION.minor ∈ (9, 10)
     [41]  # FIXME: github.com/JuliaLang/julia/issues/47261
 else
     []

@@ -21,7 +21,7 @@ function _apply_type_recipe(plotattributes, v, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
     warn_on_recipe_aliases!(plotattributes[:plot_object], plotattributes, :type, v)
     postprocess_axis_args!(plt, plotattributes, letter)
-    return rdvec[1].args[1]
+    rdvec[1].args[1]
 end
 
 # Handle type recipes when the recipe is defined on the elements.
@@ -35,20 +35,23 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     warn_on_recipe_aliases!(plt, plotattributes, :type, v)
     # If the type did not change try it element-wise
     if typeof(v) == typeof(w)
-        isempty(skipmissing(v)) && return Float64[]
-        x = first(skipmissing(v))
+        if (smv = skipmissing(v)) |> isempty
+            postprocess_axis_args!(plt, plotattributes, letter)
+            return Float64[]
+        end
+        x = first(smv)
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
         warn_on_recipe_aliases!(plt, plotattributes, :type, x)
         postprocess_axis_args!(plt, plotattributes, letter)
-        if length(args) == 2 && all(arg -> arg isa Function, args)
+        return if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
-            return Formatted(map(numfunc, v), formatter)
+            Formatted(map(numfunc, v), formatter)
         else
-            return v
+            v
         end
     end
     postprocess_axis_args!(plt, plotattributes, letter)
-    return w
+    w
 end
 
 # special handling for Surface... need to properly unwrap and re-wrap

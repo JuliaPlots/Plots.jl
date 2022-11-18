@@ -92,7 +92,6 @@ end
     str = join(readlines(tmp), "")
     @test occursin("seriestype", str)
     @test occursin("Plot attributes", str)
-    @test Plots.printnothing(nothing) == "nothing"
     @test Plots.attrtypes() == "Series, Subplot, Plot, Axis"
 end
 
@@ -126,8 +125,8 @@ end
 
     @testset "orientation" begin
         for f in (histogram, barhist, stephist, scatterhist), o in (:vertical, :horizontal)
-            @test f(data, orientation = o).subplots[1].attr[:title] ==
-                  (o ≡ :vertical ? "x" : "y")
+            sp = f(data, orientation = o).subplots[1]
+            @test sp.attr[:title] == (o ≡ :vertical ? "x" : "y")
         end
     end
 
