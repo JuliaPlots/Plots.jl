@@ -322,7 +322,7 @@ _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis)
 
 function get_minor_ticks(sp, axis, ticks_and_labels)
     axis[:minorgrid] || return nothing
-    axis[:minorticks] ∈ (:none, nothing, false) && return nothing
+    axis[:minorticks] ∈ (:none, nothing) && return nothing
     ticks = first(ticks_and_labels)
     length(ticks) < 2 && return nothing
 
@@ -343,8 +343,8 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
     end
 
     # default to 9 intervals between major ticks for log10 scale and 5 intervals otherwise
-    n = if typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1
-        axis[:minorticks]
+    n = if typeof(axis[:minorticks]) <: Integer && axis[:minorticks] ≥ 0
+        axis[:minorticks] + 1
     else
         scale === :log10 ? 9 : 5
     end
