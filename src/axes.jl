@@ -323,9 +323,10 @@ _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis)
 const DEFAULT_MINOR_TICKS = Ref(4)
 
 function get_minor_ticks(sp, axis, ticks_and_labels)
-    n_minor_ticks = axis[:minorticks]
-    (n_minor_ticks ∈ (:none, nothing) && !axis[:minorgrid]) && return nothing
-    n_minor_ticks === false && return  # must be tested with `===` since Bool <: Integer
+    (n_minor_ticks = axis[:minorticks]) === false && return  # must be tested with `===` since Bool <: Integer
+    n_minor_ticks ∈ (:none, nothing) && return
+    (n_minor_ticks === :auto && !axis[:minorgrid]) && return nothing
+
     ticks = first(ticks_and_labels)
     length(ticks) < 2 && return
 
@@ -350,7 +351,7 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
            typeof(n_minor_ticks) <: Integer &&
            n_minor_ticks ≥ 0
             n_minor_ticks
-        else
+        else   # :auto
             # defaults to `9` intervals between major ticks for `log10` scale and `5` intervals otherwise
             scale === :log10 ? 8 : DEFAULT_MINOR_TICKS[]
         end + 1

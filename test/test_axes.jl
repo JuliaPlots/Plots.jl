@@ -212,9 +212,13 @@ end
 end
 
 @testset "minor ticks" begin
-    for minorticks in (false, true, 0, 1, 2, 3, 4, 5)
+    for minorticks in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
         n_minor_ticks_per_major = if minorticks isa Bool
             minorticks ? Plots.DEFAULT_MINOR_TICKS[] : 0
+        elseif minorticks === :auto
+            Plots.DEFAULT_MINOR_TICKS[]
+        elseif minorticks === :none || minorticks isa Nothing
+            0
         else
             minorticks
         end
@@ -231,6 +235,11 @@ end
                     @test minor_ticks isa Nothing
                     0
                 end
+            elseif minorticks === :auto
+                length(minor_ticks)
+            elseif minorticks === :none || minorticks isa Nothing
+                @test minor_ticks isa Nothing
+                0
             else
                 length(minor_ticks)
             end
