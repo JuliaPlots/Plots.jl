@@ -1263,9 +1263,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."grid"(false)
             end
 
-            if axis[:minorticks] > 1
+            if !no_minor_ticks(axis) && axis[:minorticks] <: Integer
                 pyaxis."set_minor_locator"(
-                    PyPlot.matplotlib.ticker.AutoMinorLocator(axis[:minorticks]),
+                    # NOTE: AutoMinorLocator expects a number of intervals == number of ticks + 1
+                    PyPlot.matplotlib.ticker.AutoMinorLocator(axis[:minorticks] + 1),
                 )
                 pyaxis."set_tick_params"(
                     which = "minor",
@@ -1276,7 +1277,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
 
             if axis[:minorgrid]
-                axis[:minorticks] > 1 || ax."minorticks_on"()  # Check if ticks were already configured
+                no_minor_ticks(axis) || ax."minorticks_on"()  # Check if ticks were already configured
                 pyaxis."set_tick_params"(
                     which = "minor",
                     direction = axis[:tick_direction] === :out ? "out" : "in",

@@ -322,11 +322,17 @@ _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis)
 
 const DEFAULT_MINOR_TICKS = Ref(4)
 
-function get_minor_ticks(sp, axis, ticks_and_labels)
-    (n_minor_ticks = axis[:minorticks]) === false && return  # must be tested with `===` since Bool <: Integer
-    n_minor_ticks ∈ (:none, nothing) && return
-    (n_minor_ticks === :auto && !axis[:minorgrid]) && return nothing
+function no_minor_ticks(axis)
+    (n_minor_ticks = axis[:minorticks]) === false && return true  # must be tested with `===` since Bool <: Integer
+    n_minor_ticks ∈ (:none, nothing) && return true
+    (n_minor_ticks === :auto && !axis[:minorgrid]) && return true
+    false
+end
 
+function get_minor_ticks(sp, axis, ticks_and_labels)
+    no_minor_ticks(axis) && return
+
+    n_minor_ticks = axis[:minorticks]
     ticks = first(ticks_and_labels)
     length(ticks) < 2 && return
 
