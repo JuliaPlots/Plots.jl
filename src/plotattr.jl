@@ -79,12 +79,18 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
     attribute = lookup_aliases(attrtype, attribute)
     type, desc = _arg_desc[attribute]
     def = _attribute_defaults[attrtype][attribute]
+    aliases = if (al = Plots.aliases(attribute)) |> length > 0
+        "Aliases: " * string(Tuple(al)) * ".\n\n"
+    else
+        ""
+    end
 
     # Looks up the different elements and plots them
     println(
-        "`$attribute` is of type $type.\n\n",
         "$desc\n\n",
-        "$attrtype attribute",
+        aliases,
+        "Type: $type.\n\n",
+        "`$attrtype` attribute",
         def == "" ? "" : ", defaults to `$def`.",
     )
 end
