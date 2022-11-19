@@ -321,7 +321,8 @@ _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
 function get_minor_ticks(sp, axis, ticks_and_labels)
-    axis[:minorticks] ∈ (:none, nothing, false) && !axis[:minorgrid] && return nothing
+    axis[:minorgrid] || return nothing
+    axis[:minorticks] ∈ (:none, nothing, false) && return nothing
     ticks = first(ticks_and_labels)
     length(ticks) < 2 && return nothing
 
