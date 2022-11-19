@@ -210,3 +210,31 @@ end
     pl = plot(100:100:300, hcat([1, 2, 4], [-1, -2, -4]); yformatter = :none)
     @test pl[1][:yaxis][:formatter] === :none
 end
+
+@testset "minor ticks" begin
+    for minorticks in (false, true, 0, 1, 2, 3, 4, 5)
+        n_minor_ticks_per_major = if minorticks isa Bool
+            minorticks ? Plots.DEFAULT_MINOR_TICKS[] : 0
+        else
+            minorticks
+        end
+        pl = plot(1:4; minorgrid = true, minorticks)
+        sp = first(pl)
+        for axis in (:xaxis, :yaxis)
+            ticks = Plots.get_ticks(sp, sp[axis], update = false)
+            n_expected_minor_ticks = (length(first(ticks)) - 1) * n_minor_ticks_per_major
+            minor_ticks = Plots.get_minor_ticks(sp, sp[axis], ticks)
+            n_minor_ticks = if minorticks isa Bool
+                if minorticks
+                    length(minor_ticks)
+                else
+                    @test minor_ticks isa Nothing
+                    0
+                end
+            else
+                length(minor_ticks)
+            end
+            @test n_minor_ticks == n_expected_minor_ticks
+        end
+    end
+end
