@@ -640,6 +640,8 @@ const _examples = PlotExample[
             plot(
                 [(0, 0), (0, 0.9), (1, 0.9), (2, 1), (3, 0.9), (80, 0)],
                 legend = :outertopright,
+                minorgrid = true,
+                minorticks = 1,
             )
             plot!([(0, 0), (0, 0.9), (2, 0.9), (3, 1), (4, 0.9), (80, 0)])
             plot!([(0, 0), (0, 0.9), (3, 0.9), (4, 1), (5, 0.9), (80, 0)])
@@ -1320,9 +1322,11 @@ _backend_skips[:plotly] = _backend_skips[:plotlyjs]
 
 # ---------------------------------------------------------------------------------
 # make and display one plot
+test_examples(i::Integer; kw...) = test_examples(:gr, i; kw...)
+
 function test_examples(
     pkgname::Symbol,
-    i::Int;
+    i::Integer;
     debug = false,
     disp = true,
     callback = nothing,
