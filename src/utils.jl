@@ -6,8 +6,7 @@ treats_y_as_x(seriestype) =
 function replace_image_with_heatmap(z::AbstractMatrix{<:Colorant})
     n, m = size(z)
     colors = palette(vec(z))
-    newz = reshape(1:(n * m), n, m)
-    newz, colors
+    reshape(1:(n * m), n, m), colors
 end
 
 # ---------------------------------------------------------------
@@ -131,8 +130,7 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
         maximum(map(seg -> last(seg.range), segments)),
     )
     for attr in _segmenting_vector_attributes
-        v = get(series, attr, nothing)
-        if v isa AVec && eachindex(v) != seg_range
+        if (v = get(series, attr, nothing)) isa AVec && eachindex(v) != seg_range
             @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
             if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
@@ -227,8 +225,8 @@ function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
-    extra_min = ispolar ? min(v[1], (v[2] - v[1]) / 2) : (v[2] - v[1]) / 2
-    extra_max = (v[end] - v[end - 1]) / 2
+    extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
+    extra_max = 0.5(v[end] - v[end - 1])
     vcat(vmin - extra_min, 0.5(v[1:(end - 1)] + v[2:end]), vmax + extra_max)
 end
 
@@ -264,16 +262,16 @@ function heatmap_edges(
     heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
 end
 
-function is_uniformly_spaced(v; tol = 1e-6)
-    dv = diff(v)
-    maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
-end
+is_uniformly_spaced(v; tol = 1e-6) =
+    let dv = diff(v)
+        maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+    end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     rmin, rmax = r_extrema
-    r = (r .- rmin) ./ (rmax .- rmin)
-    x = r .* cos.(theta)
-    y = r .* sin.(theta)
+    r = @. (r - rmin) / (rmax - rmin)
+    x = @. r * cos(theta)
+    y = @. r * sin(theta)
     x, y
 end
 

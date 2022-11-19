@@ -2,6 +2,7 @@ const AStr = AbstractString
 const ColorType = Union{Nothing,Symbol,Colorant,PlotUtils.ColorSchemes.ColorScheme,Integer}
 const TicksType = Union{AVec{Real},Tuple{AVec{Real},AVec{AStr}},Symbol}
 
+# NOTE: when updating `arg_desc`, don't forget to modify `PlotDocs.make_attr_df` accordingly.
 const _arg_desc = KW(
     # series args
     :label              => (AStr, "The label for a series, which appears in a legend. If empty, no legend entry is added."),
