@@ -321,10 +321,11 @@ _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
 function get_minor_ticks(sp, axis, ticks_and_labels)
-    axis[:minorgrid] || return nothing
-    axis[:minorticks] ∈ (:none, nothing) && return nothing
+    axis[:minorgrid] || return
+    (n_minor_ticks = axis[:minorticks]) ∈ (:none, nothing) && return
+    n_minor_ticks === false && return  # must be tested with `===` since Bool <: Integer
     ticks = first(ticks_and_labels)
-    length(ticks) < 2 && return nothing
+    length(ticks) < 2 && return
 
     amin, amax = axis_limits(sp, axis[:letter])
     scale = axis[:scale]
@@ -342,14 +343,17 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
         ticks = [ticks[1] - first_step / ratio; ticks; ticks[end] + last_step * ratio]
     end
 
-    # default to 9 intervals between major ticks for log10 scale and 5 intervals otherwise
-    n = if typeof(axis[:minorticks]) <: Integer && axis[:minorticks] ≥ 0
-        axis[:minorticks] + 1
-    else
-        scale === :log10 ? 9 : 5
-    end
+    n_intervals =
+        if !(n_minor_ticks isa Bool) &&
+           typeof(n_minor_ticks) <: Integer &&
+           n_minor_ticks ≥ 0
+            n_minor_ticks + 1
+        else
+            # defaults to `9` intervals between major ticks for `log10` scale and `5` intervals otherwise
+            scale === :log10 ? 9 : 5
+        end
 
-    minorticks = sizehint!(eltype(ticks)[], n * sub * length(ticks))
+    minorticks = sizehint!(eltype(ticks)[], n_intervals * sub * length(ticks))
     for i in 2:length(ticks)
         lo = ticks[i - 1]
         hi = ticks[i]
@@ -358,12 +362,12 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
             for e in 1:sub
                 lo_ = lo * base^(e - 1)
                 hi_ = lo_ * base
-                step = (hi_ - lo_) / n
+                step = (hi_ - lo_) / n_intervals
                 rng = (lo_ + (e > 1 ? 0 : step)):step:(hi_ - (e < sub ? 0 : step / 2))
                 append!(minorticks, collect(rng))
             end
         else
-            step = (hi - lo) / n
+            step = (hi - lo) / n_intervals
             append!(minorticks, collect((lo + step):step:(hi - step / 2)))
         end
     end
@@ -571,7 +575,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
 
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims === :round) && return nothing
+    (lims isa Tuple || lims === :round) && return
     for sp in axis.sps, series in series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end
