@@ -84,7 +84,7 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
     println(
         "`$attribute` is of type $type.\n\n",
         "$desc\n\n",
-        "$attrtype attribute, ",
-        def == "" ? "" : " defaults to `$def`.",
+        "$attrtype attribute",
+        def == "" ? "" : ", defaults to `$def`.",
     )
 end
