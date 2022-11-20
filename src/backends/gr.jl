@@ -1006,7 +1006,10 @@ function gr_add_legend(sp, leg, viewport_area)
             st = series[:seriestype]
             clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
-            gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
+            lw = get_linewidth(series)
+            ls = get_linestyle(series)
+            la = get_linealpha(series)
+            gr_set_line(lfps * lw / 8, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
             _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
 
             if (
@@ -1026,16 +1029,15 @@ function gr_add_legend(sp, leg, viewport_area)
                 x, y = [l, r, r, l, l], [b, b, t, t, b]
                 gr_set_transparency(fc, get_fillalpha(series))
                 gr_polyline(x, y, GR.fillarea)
-                lc = get_linecolor(series, clims)
-                gr_set_transparency(lc, get_linealpha(series))
-                gr_set_line(get_linewidth(series), get_linestyle(series), lc, sp)
+                gr_set_transparency(lc, la)
+                gr_set_line(lw, ls, lc, sp)
                 st === :shape && gr_polyline(x, y)
             end
 
             max_markersize = Inf
             if st in (:path, :straightline, :path3d)
                 max_markersize = leg.base_markersize
-                gr_set_transparency(lc, get_linealpha(series))
+                gr_set_transparency(lc, la)
                 filled = series[:fillrange] !== nothing && series[:ribbon] === nothing
                 GR.polyline(xpos .+ [lft, rgt], ypos .+ (filled ? [top, top] : [0, 0]))
             end
