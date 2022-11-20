@@ -320,7 +320,7 @@ _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
     Dates.value.(ticks)
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
-const DEFAULT_MINOR_TICKS = Ref(4)
+const DEFAULT_MINOR_TICKS = Ref(4)  # 4 ticks -> 5 intervals
 
 no_minor_ticks(axis) =
     if (n_minor_ticks = axis[:minorticks]) === false
@@ -356,12 +356,11 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
         ticks = [ticks[1] - first_step / ratio; ticks; ticks[end] + last_step * ratio]
     end
 
-    n_intervals =
+    n_intervals::Int =
         if !(n_minor_ticks isa Bool) && n_minor_ticks isa Integer && n_minor_ticks ≥ 0
             n_minor_ticks
         else   # `:auto` or `true`
-            # defaults to `9` intervals between major ticks for `log10` scale and `5` intervals otherwise
-            scale === :log10 ? 8 : DEFAULT_MINOR_TICKS[]
+            (log_scaled && base == 10) ? Int(base - 2) : DEFAULT_MINOR_TICKS[]
         end + 1
 
     minorticks = sizehint!(eltype(ticks)[], n_intervals * sub * length(ticks))
