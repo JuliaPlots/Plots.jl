@@ -212,37 +212,39 @@ end
 end
 
 @testset "minor ticks" begin
-    for minorticks in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
-        n_minor_ticks_per_major = if minorticks isa Bool
-            minorticks ? Plots.DEFAULT_MINOR_TICKS[] : 0
-        elseif minorticks === :auto
-            Plots.DEFAULT_MINOR_TICKS[]
-        elseif minorticks === :none || minorticks isa Nothing
+    # FIXME in 2.0: this is awful to read, because `minorticks` represent the number of `intervals`
+    for minor_intervals in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
+        n_minor_ticks_per_major = if minor_intervals isa Bool
+            minor_intervals ? Plots.DEFAULT_MINOR_INTERVALS[] - 1 : 0
+        elseif minor_intervals === :auto
+            Plots.DEFAULT_MINOR_INTERVALS[] - 1
+        elseif minor_intervals === :none || minor_intervals isa Nothing
             0
         else
-            minorticks
+            max(0, minor_intervals - 1)
         end
-        pl = plot(1:4; minorgrid = true, minorticks)
+        pl = plot(1:4; minorgrid = true, minorticks = minor_intervals)
         sp = first(pl)
         for axis in (:xaxis, :yaxis)
             ticks = Plots.get_ticks(sp, sp[axis], update = false)
             n_expected_minor_ticks = (length(first(ticks)) - 1) * n_minor_ticks_per_major
             minor_ticks = Plots.get_minor_ticks(sp, sp[axis], ticks)
-            n_minor_ticks = if minorticks isa Bool
-                if minorticks
+            n_minor_ticks = if minor_intervals isa Bool
+                if minor_intervals
                     length(minor_ticks)
                 else
                     @test minor_ticks isa Nothing
                     0
                 end
-            elseif minorticks === :auto
+            elseif minor_intervals === :auto
                 length(minor_ticks)
-            elseif minorticks === :none || minorticks isa Nothing
+            elseif minor_intervals === :none || minor_intervals isa Nothing
                 @test minor_ticks isa Nothing
                 0
             else
                 length(minor_ticks)
             end
+            display(pl)
             @test n_minor_ticks == n_expected_minor_ticks
         end
     end
