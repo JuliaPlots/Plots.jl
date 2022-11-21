@@ -1151,12 +1151,11 @@ end
 # closest point is chosen as the best position.
 #
 function _find_best_legend_position(plt;nsamples=50)
-    xlims = xlims(plt)
-    ylims = ylims(plt)
-    dmin_max = zero(promote_type(eltype(xlims),eltype(ylims)))
+    xl = xlims(plt)
+    yl = ylims(plt)
+    dmin_max = zero(promote_type(eltype(xl),eltype(yl)))
     ibest = 0
-    for (i, lim) in enumerate(Iterators.product(xlims,ylims))
-
+    for (i, lim) in enumerate(Iterators.product(xl,yl))
         for series in plt.series_list
             x = series[:x]
             y = series[:y]
