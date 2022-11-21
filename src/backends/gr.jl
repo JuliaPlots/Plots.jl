@@ -980,8 +980,8 @@ function gr_add_legend(sp, leg, viewport_area)
         # |
         # |
         # o ----- xmax
-        xs, ys = (xpos - leg.pad - leg.span, xpos + leg.w + leg.pad),
-        (ypos - leg.h, ypos + leg.dy)
+        xs = xpos - leg.pad - leg.span, xpos + leg.w + leg.pad
+        ys = ypos - leg.h, ypos + leg.dy
         # xmin, xmax, ymin, ymax
         GR.fillrect(xs..., ys...)  # allocating white space for actual legend width here
         gr_set_line(1, :solid, sp[:legend_foreground_color], sp)
@@ -1009,7 +1009,8 @@ function gr_add_legend(sp, leg, viewport_area)
             lw = get_linewidth(series)
             ls = get_linestyle(series)
             la = get_linealpha(series)
-            gr_set_line(lfps * lw / 8, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
+            clamped_lw = (lfps / 8) * clamp(lw, 0.5, 10)  # arbitrarily clamped
+            gr_set_line(clamped_lw, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
             _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
 
             if (
@@ -1030,7 +1031,7 @@ function gr_add_legend(sp, leg, viewport_area)
                 gr_set_transparency(fc, get_fillalpha(series))
                 gr_polyline(x, y, GR.fillarea)
                 gr_set_transparency(lc, la)
-                gr_set_line(lw, ls, lc, sp)
+                gr_set_line(clamped_lw, ls, lc, sp)
                 st === :shape && gr_polyline(x, y)
             end
 
