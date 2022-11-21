@@ -1155,9 +1155,8 @@ function _find_best_legend_position(plt;nsamples=50)
     ylims = ylims(plt)
     dmin_max = zero(promote_type(eltype(xlims),eltype(ylims)))
     ibest = 0
-    i = 0
-    for lim in Iterators.product(xlims,ylims)
-        i += 1
+    for (i, lim) in enumerate(Iterators.product(xlims,ylims))
+
         for series in plt.series_list
             x = series[:x]
             y = series[:y]
