@@ -1138,8 +1138,7 @@ function _dmin_series(lim,x,y,nsamples)
     step = max(1,div(length(x),nsamples))
     for i in 1:min(nsamples,length(x))
         isample = firstindex(x) + (i-1)*step
-        d = sum(abs2, lim .- (x[isample],y[isample]))
-        dmin = ifelse(d < dmin, d, dmin)
+        dmin = min(dmin, sum(abs2, lim .- (x[isample],y[isample])))
     end
     return dmin
 end
@@ -1151,25 +1150,27 @@ end
 # closest point is chosen as the best position.
 #
 function _guess_best_legend_position(lp::Symbol,plt;nsamples=50)
+    println("entrou")
     lp === :best || return lp
     xl = xlims(plt)
     yl = ylims(plt)
-    dmin_max = typemax(promote_type(eltype(xl),eltype(yl)))
-    ibest = 0
-    for (i, lim) in enumerate(Iterators.product(xl,yl))
-        for series in plt.series_list
-            x = series[:x]
-            y = series[:y]
+    T = promote_type(eltype(xl),eltype(yl))
+    distance_to_lims = ntuple(_ -> typemax(T),4)
+    for series in plt.series_list
+        x = series[:x]
+        y = series[:y]
+        for (i, lim) in enumerate(Iterators.product(xl,yl))
+            @show lim
             dmin = _dmin_series(lim,x,y,nsamples)
-            if dmin > dmin_max
-                dmin_max = dmin
-                ibest = i
+            if dmin < distance_to_lims[i]
+                distance_to_lims = ntuple(4) do j
+                    ifelse(j == i, dmin, distance_to_lims[j])
+                end
             end
         end
     end
-    ibest == 1 && return :bottomleft
-    ibest == 2 && return :bottomright
-    ibest == 3 && return :topleft
-    return :topright
+    @show distance_to_lims
+    ibest = findmax(distance_to_lims)[2]
+    return (:bottomleft, :bottomright, :topleft, :topright)[ibest]
 end
 
