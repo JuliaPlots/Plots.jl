@@ -965,6 +965,8 @@ gr_legend_bbox(xpos, ypos, leg) = GR.drawrect(
     ypos + 0.5leg.dy,
 )
 
+const gr_lw_clamp_factor = Ref(5)
+
 function gr_add_legend(sp, leg, viewport_area)
     sp[:legend_position] ∈ (:none, :inline) && return
     GR.savestate()
@@ -980,8 +982,8 @@ function gr_add_legend(sp, leg, viewport_area)
         # |
         # |
         # o ----- xmax
-        xs, ys = (xpos - leg.pad - leg.span, xpos + leg.w + leg.pad),
-        (ypos - leg.h, ypos + leg.dy)
+        xs = xpos - leg.pad - leg.span, xpos + leg.w + leg.pad
+        ys = ypos - leg.h, ypos + leg.dy
         # xmin, xmax, ymin, ymax
         GR.fillrect(xs..., ys...)  # allocating white space for actual legend width here
         gr_set_line(1, :solid, sp[:legend_foreground_color], sp)
@@ -1001,12 +1003,19 @@ function gr_add_legend(sp, leg, viewport_area)
         lft, rgt, bot, top = -leg.space - leg.span, -leg.space, -0.4leg.dy, 0.4leg.dy
         lfps = sp[:legend_font_pointsize]
 
+        min_lw = DEFAULT_LINEWIDTH[] / gr_lw_clamp_factor[]
+        max_lw = DEFAULT_LINEWIDTH[] * gr_lw_clamp_factor[]
+
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
             clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
-            gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
+            lw = get_linewidth(series)
+            ls = get_linestyle(series)
+            la = get_linealpha(series)
+            clamped_lw = (lfps / 8) * clamp(lw, min_lw, max_lw)
+            gr_set_line(clamped_lw, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
             _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
 
             if (
@@ -1026,16 +1035,15 @@ function gr_add_legend(sp, leg, viewport_area)
                 x, y = [l, r, r, l, l], [b, b, t, t, b]
                 gr_set_transparency(fc, get_fillalpha(series))
                 gr_polyline(x, y, GR.fillarea)
-                lc = get_linecolor(series, clims)
-                gr_set_transparency(lc, get_linealpha(series))
-                gr_set_line(get_linewidth(series), get_linestyle(series), lc, sp)
+                gr_set_transparency(lc, la)
+                gr_set_line(clamped_lw, ls, lc, sp)
                 st === :shape && gr_polyline(x, y)
             end
 
             max_markersize = Inf
             if st in (:path, :straightline, :path3d)
                 max_markersize = leg.base_markersize
-                gr_set_transparency(lc, get_linealpha(series))
+                gr_set_transparency(lc, la)
                 filled = series[:fillrange] !== nothing && series[:ribbon] === nothing
                 GR.polyline(xpos .+ [lft, rgt], ypos .+ (filled ? [top, top] : [0, 0]))
             end
