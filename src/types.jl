@@ -133,6 +133,7 @@ should_add_to_legend(series::Series) =
     )
 
 # -----------------------------------------------------------------------
+Base.iterate(plt::Plot) = iterate(plt.subplots)
 
 Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
 Base.length(plt::Plot) = length(plt.subplots)

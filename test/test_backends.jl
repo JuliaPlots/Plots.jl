@@ -211,7 +211,7 @@ end
 end
 
 @testset "Examples" begin
-    if Sys.islinux()
+    if Sys.islinux() && get(ENV, "JULIA_PKGEVAL", "false") == "false"  # NOTE: for `PkgEval` timeout
         callback(m, pkgname, i) = begin
             pl = m.Plots.current()
             save_func = (; pgfplotsx = m.Plots.pdf, unicodeplots = m.Plots.txt)  # fastest `savefig` for each backend

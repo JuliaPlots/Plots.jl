@@ -1240,7 +1240,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
                         axis[:minorgridalpha],
                         axis[:minorgridstyle],
                     ),
-                    if (mt = axis[:minorticks]) > 1 && typeof(mt) <: Integer || mt
+                    if length(minor_ticks) > 0
                         "major tick length" => "0.1cm"
                     else
                         "major tick length" => "0"
