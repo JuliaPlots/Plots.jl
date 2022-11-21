@@ -226,12 +226,12 @@ append_unit_if_needed!(attr, key, u::Unitful.Units) =
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 append_unit_if_needed!(attr, key, label::Nothing, u) =
-    attr[key] = UnitfulString(string(u), u)
-append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString} =
-    if !isempty(label)
-        attr[key] =
-            UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
-    end
+    (attr[key] = UnitfulString(string(u), u))
+function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
+    isempty(label) && return attr[key] = UnitfulString(label, u)
+    return attr[key] =
+        UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
+end
 
 #=============================================
 Surround unit string with specified delimiters
