@@ -1151,8 +1151,8 @@ end
 # closest point is chosen as the best position.
 #
 function _find_best_legend_position(plt;nsamples=50)
-    xlims = Plots.xlims(plt)
-    ylims = Plots.ylims(plt)
+    xlims = xlims(plt)
+    ylims = ylims(plt)
     dmin_max = zero(promote_type(eltype(xlims),eltype(ylims)))
     ibest = 0
     i = 0
