@@ -1139,6 +1139,9 @@ function _dmin_series(lim,x,y,nsamples)
     for i in 1:min(nsamples,length(x))
         isample = firstindex(x) + (i-1)*step
         dmin = min(dmin, sum(abs2, lim .- (x[isample],y[isample])))
+        @show isample, dmin, step
+        @show lim
+        @show x[isample], y[isample]
     end
     return dmin
 end
@@ -1150,7 +1153,6 @@ end
 # closest point is chosen as the best position.
 #
 function _guess_best_legend_position(lp::Symbol,plt;nsamples=50)
-    println("entrou")
     lp === :best || return lp
     xl = xlims(plt)
     yl = ylims(plt)
@@ -1160,7 +1162,7 @@ function _guess_best_legend_position(lp::Symbol,plt;nsamples=50)
         x = series[:x]
         y = series[:y]
         for (i, lim) in enumerate(Iterators.product(xl,yl))
-            @show lim
+            @show i "--------"
             dmin = _dmin_series(lim,x,y,nsamples)
             if dmin < distance_to_lims[i]
                 distance_to_lims = ntuple(4) do j
