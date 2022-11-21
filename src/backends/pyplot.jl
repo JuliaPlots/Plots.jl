@@ -290,7 +290,7 @@ py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
 
 # get the bounding box of the union of the objects
 function py_bbox(v::AVec)
-    bbox_union = defaultbox
+    bbox_union = DEFAULT_BBOX[]
     for obj in v
         bbox_union += py_bbox(obj)
     end
@@ -318,7 +318,7 @@ end
 
 # bounding box: axis title
 function py_bbox_title(ax)
-    bb = defaultbox
+    bb = DEFAULT_BBOX[]
     for s in (:title, :_left_title, :_right_title)
         bb += py_bbox(getproperty(ax, s))
     end

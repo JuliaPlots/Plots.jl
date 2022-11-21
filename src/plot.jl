@@ -166,9 +166,7 @@ function plot!(
     for (idx, sp) in enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
         serieslist = series_list(sp)
-        if sp in sp.plt.inset_subplots
-            push!(plt.inset_subplots, sp)
-        end
+        append!(plt.inset_subplots, sp.plt.inset_subplots)
         sp.plt = plt
         sp.attr[:subplot_index] = idx
         for series in serieslist
@@ -250,10 +248,7 @@ function prepare_output(plt::Plot)
     end
 
     # now another pass down, to update the bounding boxes
-    update_child_bboxes!(
-        plt.layout;
-        insets = get(plt, :layout_insets, false) ? plt.inset_subplots : (),
-    )
+    update_child_bboxes!(plt.layout)
 
     # update those bounding boxes of inset subplots
     update_inset_bboxes!(plt)

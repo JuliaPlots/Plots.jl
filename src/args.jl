@@ -534,7 +534,6 @@ const _suppress_warnings = Set{Symbol}([
     :primary,
     :smooth,
     :relative_bbox,
-    :layout_insets,
     :force_minpad,
     :x_extrema,
     :y_extrema,

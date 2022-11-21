@@ -1338,7 +1338,7 @@ function test_examples(
     # prevent leaking variables (esp. functions) directly into Plots namespace
     Base.eval(m, quote
         using Plots
-        Plots.debugplots($debug)
+        Plots.debug!($debug)
         backend($(QuoteNode(pkgname)))
         theme(:default)
     end)

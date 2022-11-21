@@ -4,8 +4,8 @@
 to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
-const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
-const defaultminpad = 20mm, 5mm, 2mm, 10mm
+const DEFAULT_BBOX = Ref(BoundingBox(0mm, 0mm, 0mm, 0mm))
+const DEFAULT_MINPAD = Ref((20mm, 5mm, 2mm, 10mm))
 
 origin(bbox::BoundingBox) = left(bbox) + width(bbox) / 2, top(bbox) + height(bbox) / 2
 left(bbox::BoundingBox) = bbox.x0[1]
@@ -163,8 +163,8 @@ struct RootLayout <: AbstractLayout end
 
 Base.show(io::IO, layout::RootLayout) = Base.show_default(io, layout)
 Base.parent(::RootLayout) = nothing
-parent_bbox(::RootLayout) = defaultbox
-bbox(::RootLayout) = defaultbox
+parent_bbox(::RootLayout) = DEFAULT_BBOX[]
+bbox(::RootLayout) = DEFAULT_BBOX[]
 
 # -----------------------------------------------------------
 # EmptyLayout
@@ -176,13 +176,14 @@ mutable struct EmptyLayout <: AbstractLayout
     attr::KW  # store label, width, and height for initialization
     # label  # this is the label that the subplot will take (since we create a layout before initialization)
 end
-EmptyLayout(parent = RootLayout(); kw...) = EmptyLayout(parent, defaultbox, KW(kw))
+EmptyLayout(parent = RootLayout(); kw...) = EmptyLayout(parent, DEFAULT_BBOX[], KW(kw))
 
 Base.size(layout::EmptyLayout) = (0, 0)
 Base.length(layout::EmptyLayout) = 0
 Base.getindex(layout::EmptyLayout, r::Int, c::Int) = nothing
 
 _update_min_padding!(layout::EmptyLayout) = nothing
+_update_inset_padding!(layout::EmptyLayout) = nothing
 
 # -----------------------------------------------------------
 # GridLayout
@@ -217,8 +218,8 @@ function GridLayout(
     grid = Matrix{AbstractLayout}(undef, dims...)
     layout = GridLayout(
         parent,
-        defaultminpad,
-        defaultbox,
+        DEFAULT_MINPAD[],
+        DEFAULT_BBOX[],
         grid,
         Measure[w * pct for w in widths],
         Measure[h * pct for h in heights],
@@ -263,15 +264,25 @@ end
 
 compute_minpad(args...) = map(maximum, paddings(args...))
 
+_update_inset_padding!(layout::GridLayout) = map(_update_inset_padding!, layout.grid)
+_update_inset_padding!(sp::Subplot) =
+    for isp in sp.plt.inset_subplots
+        parent(isp) == sp || continue
+        _update_min_padding!(isp)
+        sp.minpad = max.(sp.minpad, isp.minpad)
+    end
+
 # leftpad, toppad, rightpad, bottompad
 function _update_min_padding!(layout::GridLayout)
     map(_update_min_padding!, layout.grid)
+    map(_update_inset_padding!, layout.grid)
     layout.minpad = compute_minpad(
         layout.grid[:, 1],
         layout.grid[1, :],
         layout.grid[:, end],
         layout.grid[end, :],
     )
+    layout.minpad
 end
 
 update_position!(layout::GridLayout) = map(update_position!, layout.grid)
@@ -300,11 +311,7 @@ function recompute_lengths(v)
 end
 
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
-function update_child_bboxes!(
-    layout::GridLayout,
-    minimum_perimeter = [0mm, 0mm, 0mm, 0mm];
-    insets = [],
-)
+function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm, 0mm, 0mm])
     nr, nc = size(layout)
 
     # create a matrix for each minimum padding direction
@@ -318,17 +325,11 @@ function update_child_bboxes!(
     pad_right  = maximum(minpad_right, dims = 1)
     pad_bottom = maximum(minpad_bottom, dims = 2)
 
-    inset_perim = if length(insets) > 0
-        compute_minpad(map(x -> _update_min_padding!(x), insets))
-    else
-        minimum_perimeter
-    end
-
     # make sure the perimeter match the parent
-    pad_left[1]     = max(pad_left[1], leftpad(minimum_perimeter), leftpad(inset_perim))
-    pad_top[1]      = max(pad_top[1], toppad(minimum_perimeter), toppad(inset_perim))
-    pad_right[end]  = max(pad_right[end], rightpad(minimum_perimeter), rightpad(inset_perim))
-    pad_bottom[end] = max(pad_bottom[end], bottompad(minimum_perimeter), bottompad(inset_perim))
+    pad_left[1]     = max(pad_left[1], leftpad(minimum_perimeter))
+    pad_top[1]      = max(pad_top[1], toppad(minimum_perimeter))
+    pad_right[end]  = max(pad_right[end], rightpad(minimum_perimeter))
+    pad_bottom[end] = max(pad_bottom[end], bottompad(minimum_perimeter))
 
     # scale this up to the total padding in each direction, and limit padding to 95%
     total_pad_horizontal = min(0.95width(layout), sum(pad_left + pad_right))
@@ -370,14 +371,13 @@ function update_child_bboxes!(
         # this is the minimum perimeter as decided by this child's parent, so that
         # all children on this border have the same value
         min_child_perim = [
-            max(c == 1 ? leftpad(layout) : pad_left[c], leftpad(inset_perim)),
-            max(r == 1 ? toppad(layout) : pad_top[r], toppad(inset_perim)),
-            max(c == nc ? rightpad(layout) : pad_right[c], rightpad(inset_perim)),
-            max(r == nr ? bottompad(layout) : pad_bottom[r], bottompad(inset_perim)),
+            c == 1 ? leftpad(layout) : pad_left[c],
+            r == 1 ? toppad(layout) : pad_top[r],
+            c == nc ? rightpad(layout) : pad_right[c],
+            r == nr ? bottompad(layout) : pad_bottom[r],
         ]
-
         # recursively update the child's children
-        update_child_bboxes!(child, min_child_perim; insets)
+        update_child_bboxes!(child, min_child_perim)
     end
 end
 
@@ -385,20 +385,8 @@ end
 # to absolute canvas coordinates, relative to the parent's plotarea
 update_inset_bboxes!(plt::Plot) =
     for sp in plt.inset_subplots
-        p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
-        plotarea!(sp, p_area)
-
-        bbox!(
-            sp,
-            bbox(
-                left(p_area) - leftpad(sp),
-                top(p_area) - toppad(sp),
-                width(p_area) + leftpad(sp) + rightpad(sp),
-                height(p_area) + toppad(sp) + bottompad(sp),
-            ),
-        )
+        plotarea!(sp, Measures.resolve(plotarea(parent(sp)), sp[:relative_bbox]))
     end
-
 # ----------------------------------------------------------------------
 
 calc_num_subplots(layout::AbstractLayout) = get(layout.attr, :blank, false) ? 0 : 1
@@ -623,7 +611,6 @@ end
 
 function twin(sp, letter)
     plt = sp.plt
-    plt[:layout_insets] = true
     orig_sp = first(plt.subplots)
     for letter in filter(!=(letter), axes_letters(orig_sp, letter))
         ax = orig_sp[get_attr_symbol(letter, :axis)]
@@ -634,12 +621,12 @@ function twin(sp, letter)
         orig_sp[:framestyle] = :axes
     end
     plot!(
-        plt,
+        plt;
         inset = (sp[:subplot_index], bbox(0, 0, 1, 1)),
-        right_margin = sp[:right_margin],
-        left_margin = sp[:left_margin],
-        top_margin = sp[:top_margin],
-        bottom_margin = sp[:bottom_margin],
+        left_margin = orig_sp[:left_margin],
+        top_margin = orig_sp[:top_margin],
+        right_margin = orig_sp[:right_margin],
+        bottom_margin = orig_sp[:bottom_margin],
     )
     twin_sp = last(plt.subplots)
     letters = axes_letters(twin_sp, letter)
@@ -660,7 +647,7 @@ end
 Adds a new, empty subplot overlayed on top of `sp`, with a mirrored y-axis and linked x-axis.
 """
 twinx(sp::Subplot) = twin(sp, :x)
-twinx(plt::Plot = current()) = twinx(plt[1])
+twinx(plt::Plot = current()) = twinx(first(plt))
 
 """
     twiny(sp)
@@ -668,4 +655,4 @@ twinx(plt::Plot = current()) = twinx(plt[1])
 Adds a new, empty subplot overlayed on top of `sp`, with a mirrored x-axis and linked y-axis.
 """
 twiny(sp::Subplot) = twin(sp, :y)
-twiny(plt::Plot = current()) = twiny(plt[1])
+twiny(plt::Plot = current()) = twiny(first(plt))

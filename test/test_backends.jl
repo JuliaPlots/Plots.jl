@@ -78,7 +78,7 @@ function image_comparison_tests(
 
     imports = something(example.imports, :())
     exprs = quote
-        Plots.debugplots($debug)
+        Plots.debug!($debug)
         backend($(QuoteNode(pkg)))
         theme(:default)
         rng = StableRNG(Plots.PLOTS_SEED)
@@ -106,9 +106,7 @@ function image_comparison_facts(
 )
     for i in setdiff(1:length(Plots._examples), skip)
         if only === nothing || i in only
-            @test success(
-                image_comparison_tests(pkg, i, debug = debug, sigma = sigma, tol = tol),
-            )
+            @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
         end
     end
 end
