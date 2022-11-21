@@ -1150,7 +1150,10 @@ end
 # edges of the plot. The edge that is found to more distant to the 
 # closest point is chosen as the best position.
 #
-function _find_best_legend_position(plt;nsamples=50)
+function _guess_best_legend_position(lp::Symbol,plt;nsamples=50)
+    if lp != :best
+        return lp
+    end
     xl = xlims(plt)
     yl = ylims(plt)
     dmin_max = zero(promote_type(eltype(xl),eltype(yl)))
@@ -1166,9 +1169,9 @@ function _find_best_legend_position(plt;nsamples=50)
             end
         end
     end
-    ibest == 1 && return "bottomleft"
-    ibest == 2 && return "bottomright"
-    ibest == 3 && return "topleft"
-    return "topright"
+    ibest == 1 && return :bottomleft
+    ibest == 2 && return :bottomright
+    ibest == 3 && return :topleft
+    return :topright
 end
 
