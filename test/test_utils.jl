@@ -189,3 +189,43 @@ end
     # `CSV` produces `SentinelArrays` data
     @test scatter(ChainedVector([[1, 2], [3, 4]]), 1:4) isa Plot
 end
+
+@testset "Best legend position" begin
+    x = 0:0.01:2
+    plt = plot(x,x,label="linear")
+    plt = plot!(x,x.^2,label="quadratic")
+    plt = plot!(x,x.^3,label="cubic")
+    @test Plots._find_best_legend_position(plt) == "topleft"
+
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
+    plt = plot(x,x,label="linear")
+    plt = plot!(x,x.^2,label="quadratic")
+    plt = plot!(x,x.^3,label="cubic")
+    @test Plots._find_best_legend_position(plt) == "topleft"
+
+    x = 0:0.01:2
+    plt = plot(x,-x,label="linear")
+    plt = plot!(x,-x.^2,label="quadratic")
+    plt = plot!(x,-x.^3,label="cubic")
+    @test Plots._find_best_legend_position(plt) == "bottomleft"
+
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
+    plt = plot(x,-x,label="linear")
+    plt = plot!(x,-x.^2,label="quadratic")
+    plt = plot!(x,-x.^3,label="cubic")
+    @test Plots._find_best_legend_position(plt) == "bottomleft"
+
+    x = [0,1,0,1]
+    y = [0,0,1,1]
+    plt = scatter(x,y,xlims=[0.0,1.3],ylims=[0.0,1.3],label="test")
+    @test Plots._find_best_legend_position(plt) == "topright"
+    
+    plt = scatter(x,y,xlims=[-0.3,1.0],ylims=[-0.3,1.0],label="test")
+    @test Plots._find_best_legend_position(plt) == "bottomleft"
+
+    plt = scatter(x,y,xlims=[0.0,1.3],ylims=[-0.3,1.0],label="test")
+    @test Plots._find_best_legend_position(plt) == "bottomright"
+
+    plt = scatter(x,y,xlims=[-0.3,1.0],ylims=[0.0,1.3],label="test")
+    @test Plots._find_best_legend_position(plt) == "topleft"
+end

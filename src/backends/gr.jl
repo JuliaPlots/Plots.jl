@@ -1103,7 +1103,7 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         return gr_legend_pos(lp, vp)
     end
     if (leg_str = string(lp)) == "best"
-        leg_str = "topright"  # NOTE: can we do better auto-positioning, as `PyPlot` does ?
+        leg_str = _find_best_legend_position(sp) 
     end
     xpos = if occursin("left", leg_str)
         vp.xmin + if occursin("outer", leg_str)

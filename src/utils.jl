@@ -1128,3 +1128,49 @@ _argument_description(s::Symbol) =
 
 _document_argument(s::Symbol) =
     _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
+
+#
+# Computes the distance of the plot limit to a sample of points
+# equally spaced in the set and keeps the minimum distance found.
+#
+function _dmin_series(lim,x,y,nsamples)
+    dmin = typemax(eltype(lim))
+    step = max(1,div(length(x),nsamples))
+    for i in 1:min(nsamples,length(x))
+        isample = firstindex(x) + (i-1)*step
+        d = sum(abs2, lim .- (x[isample],y[isample]))
+        dmin = ifelse(d < dmin, d, dmin)
+    end
+    return dmin
+end
+
+#
+# This function guesses which is the best legend position by computing
+# the distance of uniform set of points of the data set to each of the 
+# edges of the plot. The edge that is found to more distant to the 
+# closest point is chosen as the best position.
+#
+function _find_best_legend_position(plt;nsamples=50)
+    xlims = Plots.xlims(plt)
+    ylims = Plots.ylims(plt)
+    dmin_max = zero(promote_type(eltype(xlims),eltype(ylims)))
+    ibest = 0
+    i = 0
+    for lim in Iterators.product(xlims,ylims)
+        i += 1
+        for series in plt.series_list
+            x = series[:x]
+            y = series[:y]
+            dmin = _dmin_series(lim,x,y,nsamples)
+            if dmin > dmin_max
+                dmin_max = dmin
+                ibest = i
+            end
+        end
+    end
+    ibest == 1 && return "bottomleft"
+    ibest == 2 && return "bottomright"
+    ibest == 3 && return "topleft"
+    return "topright"
+end
+
