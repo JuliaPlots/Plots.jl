@@ -965,6 +965,8 @@ gr_legend_bbox(xpos, ypos, leg) = GR.drawrect(
     ypos + 0.5leg.dy,
 )
 
+const gr_lw_clamp_factor = Ref(5)
+
 function gr_add_legend(sp, leg, viewport_area)
     sp[:legend_position] ∈ (:none, :inline) && return
     GR.savestate()
@@ -1001,6 +1003,9 @@ function gr_add_legend(sp, leg, viewport_area)
         lft, rgt, bot, top = -leg.space - leg.span, -leg.space, -0.4leg.dy, 0.4leg.dy
         lfps = sp[:legend_font_pointsize]
 
+        min_lw = DEFAULT_LINEWIDTH[] / gr_lw_clamp_factor[]
+        max_lw = DEFAULT_LINEWIDTH[] * gr_lw_clamp_factor[]
+
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
@@ -1009,7 +1014,7 @@ function gr_add_legend(sp, leg, viewport_area)
             lw = get_linewidth(series)
             ls = get_linestyle(series)
             la = get_linealpha(series)
-            clamped_lw = (lfps / 8) * clamp(lw, 0.5, 10)  # arbitrarily clamped
+            clamped_lw = (lfps / 8) * clamp(lw, min_lw, max_lw)
             gr_set_line(clamped_lw, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
             _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
 
