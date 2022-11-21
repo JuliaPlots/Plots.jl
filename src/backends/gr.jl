@@ -1103,16 +1103,7 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         return gr_legend_pos(lp, vp)
     end
     if (leg_str = string(lp)) == "best"
-        lp = _guess_best_legend_position(:best,sp) 
-        if lp == :topleft
-            leg_str = "topleft"
-        elseif lp == :bottomleft
-            leg_str = "bottomleft"
-        elseif lp == :bottomright
-            leg_str = "bottomright"
-        else lp == :topright
-            leg_str = "topright"
-        end
+    leg_str = string(_guess_best_legend_position(lp, sp))
     end
     xpos = if occursin("left", leg_str)
         vp.xmin + if occursin("outer", leg_str)
