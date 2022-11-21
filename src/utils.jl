@@ -1151,9 +1151,7 @@ end
 # closest point is chosen as the best position.
 #
 function _guess_best_legend_position(lp::Symbol,plt;nsamples=50)
-    if lp != :best
-        return lp
-    end
+    lp === :best || return lp
     xl = xlims(plt)
     yl = ylims(plt)
     dmin_max = zero(promote_type(eltype(xl),eltype(yl)))
