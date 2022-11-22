@@ -1168,8 +1168,9 @@ function _guess_best_legend_position(xl, yl, plt, nsamples)
             dist_to_lims[i] = min(dist_to_lims[i], _dmin_series(lim, scale, x, y, nsamples))
         end
     end
-    ibest = findmax(dist_to_lims)[2]
-    return (:bottomleft, :bottomright, :topleft, :topright)[ibest]
+    # this inversion favors :topright in case of draws, without cost
+    ibest = findmax(dist_to_lims[i] for i in 4:-1:1)[2]
+    return (:topright, :topleft, :bottomright, :bottomleft)[ibest]
 end
 
 # Main function
