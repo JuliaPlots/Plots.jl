@@ -1177,7 +1177,7 @@ function _guess_best_legend_position(xl, yl, plt, nsamples)
         end
     end
     # this inversion favors :topright in case of draws, without cost
-    ibest = findmax(dist_to_lims[i] for i in 4:-1:1)[2]
+    ibest = findmax(@view(dist_to_lims[4:-1:1]))[2]
     return (:topright, :topleft, :bottomright, :bottomleft)[ibest]
 end
 
