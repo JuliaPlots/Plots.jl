@@ -320,10 +320,25 @@ _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
     Dates.value.(ticks)
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
+const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
+
+no_minor_intervals(axis) =
+    if (n_intervals = axis[:minorticks]) === false
+        true  # must be tested with `===` since Bool <: Integer
+    elseif n_intervals ∈ (:none, nothing)
+        true
+    elseif (n_intervals === :auto && !axis[:minorgrid])
+        true
+    else
+        false
+    end
+
 function get_minor_ticks(sp, axis, ticks_and_labels)
-    axis[:minorticks] ∈ (:none, nothing, false) && !axis[:minorgrid] && return nothing
+    no_minor_intervals(axis) && return
+
+    n_intervals = axis[:minorticks]
     ticks = first(ticks_and_labels)
-    length(ticks) < 2 && return nothing
+    length(ticks) < 2 && return
 
     amin, amax = axis_limits(sp, axis[:letter])
     scale = axis[:scale]
@@ -341,14 +356,16 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
         ticks = [ticks[1] - first_step / ratio; ticks; ticks[end] + last_step * ratio]
     end
 
-    # default to 9 intervals between major ticks for log10 scale and 5 intervals otherwise
-    n = if typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1
-        axis[:minorticks]
-    else
-        scale === :log10 ? 9 : 5
-    end
+    # FIXME: `minorticks` should be fixed in `2.0` to be the number of ticks, not intervals
+    # see github.com/JuliaPlots/Plots.jl/pull/4528
+    n_minor_intervals::Int =
+        if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
+            max(1, n_intervals)  # 0 intervals makes no sense
+        else   # `:auto` or `true`
+            (log_scaled && base == 10) ? Int(base - 1) : DEFAULT_MINOR_INTERVALS[]
+        end
 
-    minorticks = sizehint!(eltype(ticks)[], n * sub * length(ticks))
+    minorticks = sizehint!(eltype(ticks)[], n_minor_intervals * sub * length(ticks))
     for i in 2:length(ticks)
         lo = ticks[i - 1]
         hi = ticks[i]
@@ -357,12 +374,12 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
             for e in 1:sub
                 lo_ = lo * base^(e - 1)
                 hi_ = lo_ * base
-                step = (hi_ - lo_) / n
+                step = (hi_ - lo_) / n_minor_intervals
                 rng = (lo_ + (e > 1 ? 0 : step)):step:(hi_ - (e < sub ? 0 : step / 2))
                 append!(minorticks, collect(rng))
             end
         else
-            step = (hi - lo) / n
+            step = (hi - lo) / n_minor_intervals
             append!(minorticks, collect((lo + step):step:(hi - step / 2)))
         end
     end
@@ -570,7 +587,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
 
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims === :round) && return nothing
+    (lims isa Tuple || lims === :round) && return
     for sp in axis.sps, series in series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end

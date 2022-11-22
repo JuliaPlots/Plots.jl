@@ -1,7 +1,8 @@
 const AStr = AbstractString
-const ColorType = Union{Nothing,Symbol,Colorant,PlotUtils.ColorSchemes.ColorScheme,Integer}
+const ColorType = Union{Symbol,Colorant,PlotUtils.ColorSchemes.ColorScheme,Integer}
 const TicksType = Union{AVec{Real},Tuple{AVec{Real},AVec{AStr}},Symbol}
 
+# NOTE: when updating `arg_desc`, don't forget to modify `PlotDocs.make_attr_df` accordingly.
 const _arg_desc = KW(
     # series args
     :label              => (AStr, "The label for a series, which appears in a legend. If empty, no legend entry is added."),
@@ -186,7 +187,7 @@ const _arg_desc = KW(
     :gridlinewidth               => (Real, "Width of the grid lines (in pixels)."),
     :foreground_color_minor_grid => (ColorType, "Color of minor grid lines (`:match` matches `:foreground_color_subplot`)."),
     :minorgrid                   => (Bool, "Adds minor grid lines and ticks to the plot. Set minorticks to change number of gridlines."),
-    :minorticks                  => (Integer, "Intervals to divide the gap between major ticks into."),
+    :minorticks                  => (Integer, "Number of minor intervals between major ticks."),
     :minorgridalpha              => (Real, "The alpha/opacity override for the minorgrid lines."),
     :minorgridstyle              => (Symbol, "Style of the minor grid lines. Choose from $(_allStyles)."),
     :minorgridlinewidth          => (Real, "Width of the minor grid lines (in pixels)."),

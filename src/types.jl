@@ -35,9 +35,9 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
         parent,
         Series[],
         0,
-        defaultminpad,
-        defaultbox,
-        defaultbox,
+        DEFAULT_MINPAD[],
+        DEFAULT_BBOX[],
+        DEFAULT_BBOX[],
         DefaultsDict(KW(), _subplot_defaults),
         nothing,
         nothing,
@@ -93,9 +93,9 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         sp = deepcopy(osp)  # FIXME: fails `PlotlyJS` ?
         plt.layout.grid[1, 1] = sp
         # reset some attributes
-        sp.minpad = defaultminpad
-        sp.bbox = defaultbox
-        sp.plotarea = defaultbox
+        sp.minpad = DEFAULT_MINPAD[]
+        sp.bbox = DEFAULT_BBOX[]
+        sp.plotarea = DEFAULT_BBOX[]
         sp.plt = plt  # change the enclosing plot
         push!(plt.subplots, sp)
         plt
@@ -133,6 +133,7 @@ should_add_to_legend(series::Series) =
     )
 
 # -----------------------------------------------------------------------
+Base.iterate(plt::Plot) = iterate(plt.subplots)
 
 Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
 Base.length(plt::Plot) = length(plt.subplots)

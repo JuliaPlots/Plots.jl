@@ -514,7 +514,7 @@ const _axis_defaults = KW(
     :minorgridstyle              => :solid,
     :minorgridlinewidth          => 0.5,
     :tick_direction              => :in,
-    :minorticks                  => false,
+    :minorticks                  => :auto,
     :minorgrid                   => false,
     :showaxis                    => true,
     :widen                       => :auto,
@@ -534,7 +534,6 @@ const _suppress_warnings = Set{Symbol}([
     :primary,
     :smooth,
     :relative_bbox,
-    :layout_insets,
     :force_minpad,
     :x_extrema,
     :y_extrema,
@@ -2053,12 +2052,14 @@ ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
             cgrad(alpha = plotattributes[asym])
     end
 
-_replace_linewidth(plotattributes::AKW) =
+const DEFAULT_LINEWIDTH = Ref(1)
+
 # get a good default linewidth... 0 for surface and heatmaps
+_replace_linewidth(plotattributes::AKW) =
     if plotattributes[:linewidth] === :auto
-        plotattributes[:linewidth] = (
-            get(plotattributes, :seriestype, :path) in (:surface, :heatmap, :image) ? 0 : 1
-        )
+        plotattributes[:linewidth] =
+            (get(plotattributes, :seriestype, :path) ∉ (:surface, :heatmap, :image)) *
+            DEFAULT_LINEWIDTH[]
     end
 
 function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)

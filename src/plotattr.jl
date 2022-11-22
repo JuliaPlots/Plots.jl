@@ -10,7 +10,7 @@ attrtypes() = join(keys(_attribute_defaults), ", ")
 attributes(attrtype::Symbol) = sort(collect(keys(_attribute_defaults[attrtype])))
 
 function lookup_aliases(attrtype::Symbol, attribute::Symbol)
-    attribute = attribute ∈ keys(_keyAliases) ? _keyAliases[attribute] : attribute
+    attribute = get(_keyAliases, attribute, attribute)
     attribute ∈ keys(_attribute_defaults[attrtype]) && return attribute
     error("There is no attribute named $attribute in $attrtype")
 end
@@ -65,7 +65,7 @@ end
 
 function plotattr(attribute::AbstractString)
     attribute = Symbol(attribute)
-    attribute = attribute ∈ keys(_keyAliases) ? _keyAliases[attribute] : attribute
+    attribute = get(_keyAliases, attribute, attribute)
     for (k, v) in _attribute_defaults
         attribute ∈ keys(v) && return plotattr(k, attribute)
     end
@@ -79,12 +79,18 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
     attribute = lookup_aliases(attrtype, attribute)
     type, desc = _arg_desc[attribute]
     def = _attribute_defaults[attrtype][attribute]
+    aliases = if (al = Plots.aliases(attribute)) |> length > 0
+        "Aliases: " * string(Tuple(al)) * ".\n\n"
+    else
+        ""
+    end
 
     # Looks up the different elements and plots them
     println(
-        "`$attribute` is of type $type.\n\n",
         "$desc\n\n",
-        "$attrtype attribute, ",
-        def == "" ? "" : " defaults to `$def`.",
+        aliases,
+        "Type: $type.\n\n",
+        "`$attrtype` attribute",
+        def == "" ? "" : ", defaults to `$def`.",
     )
 end
