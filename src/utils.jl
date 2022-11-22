@@ -1137,15 +1137,23 @@ _document_argument(s::Symbol) =
 # Computes the distance of the plot limit to a sample of points
 # equally spaced in the set and keeps the minimum distance found.
 #
+function _dmin_point(dmin, x, y, lim, scale)
+    p_scaled = (x / scale[1], y / scale[2])
+    d = sum(abs2, lim .- p_scaled)
+    dmin = ifelse(d < dmin, d, dmin) # preferred relative to min because x < NaN === false 
+    return dmin
+end
 function _dmin_series(lim, scale, x, y, nsamples)
     dmin = +Inf
     step = max(1, div(length(x), nsamples))
     lim = lim ./ scale
-    for i in 1:min(nsamples, length(x))
-        isample = firstindex(x) + (i - 1) * step
-        p_scaled = (x[isample] / scale[1], y[isample] / scale[2])
-        d = sum(abs2, lim .- p_scaled)
-        dmin = ifelse(d < dmin, d, dmin)
+    n = max(1,div(min(nsamples,length(x)),2))
+    # Run from the extremes of the dataset inwards
+    for isample in firstindex(x):step:n
+        dmin = _dmin_point(dmin, x[isample], y[isample], lim, scale)
+    end
+    for isample in lastindex(x):(-step):(lastindex(x)-n)
+        dmin = _dmin_point(dmin, x[isample], y[isample], lim, scale)
     end
     return dmin
 end
