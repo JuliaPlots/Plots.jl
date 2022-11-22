@@ -1140,7 +1140,8 @@ function _dmin_series(lim, scale, x, y, nsamples)
     for i in 1:min(nsamples, length(x))
         isample = firstindex(x) + (i - 1) * step
         p_scaled = (x[isample] / scale[1], y[isample] / scale[2])
-        dmin = min(dmin, sum(abs2, lim .- p_scaled))
+        d = sum(abs2, lim .- p_scaled)
+        dmin = ifelse(d < dmin, d, dmin)
     end
     return dmin
 end
@@ -1155,7 +1156,7 @@ function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
     lp === :best || return lp
     xl = xlims(plt)
     yl = ylims(plt)
-    scale = ((xl[2] - xl[1]), (yl[2] - yl[1]))
+    scale = ( maximum(xl) - minimum(xl), maximum(yl) - minimum(yl) )
     T = promote_type(eltype(xl), eltype(yl))
     distance_to_lims = ntuple(_ -> typemax(T), 4)
     for series in plt.series_list
