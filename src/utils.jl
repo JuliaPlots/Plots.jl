@@ -1133,12 +1133,12 @@ _document_argument(s::Symbol) =
 # Computes the distance of the plot limit to a sample of points
 # equally spaced in the set and keeps the minimum distance found.
 #
-function _dmin_series(lim,scale,x,y,nsamples)
+function _dmin_series(lim, scale, x, y, nsamples)
     dmin = typemax(eltype(lim))
-    step = max(1,div(length(x),nsamples))
+    step = max(1, div(length(x), nsamples))
     lim = lim ./ scale
-    for i in 1:min(nsamples,length(x))
-        isample = firstindex(x) + (i-1)*step
+    for i in 1:min(nsamples, length(x))
+        isample = firstindex(x) + (i - 1) * step
         p_scaled = (x[isample] / scale[1], y[isample] / scale[2])
         dmin = min(dmin, sum(abs2, lim .- p_scaled))
     end
@@ -1151,18 +1151,18 @@ end
 # edges of the plot. The edge that is found to more distant to the 
 # closest point is chosen as the best position.
 #
-function _guess_best_legend_position(lp::Symbol,plt;nsamples=50)
+function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
     lp === :best || return lp
     xl = xlims(plt)
     yl = ylims(plt)
     scale = ((xl[2] - xl[1]), (yl[2] - yl[1]))
-    T = promote_type(eltype(xl),eltype(yl))
-    distance_to_lims = ntuple(_ -> typemax(T),4)
+    T = promote_type(eltype(xl), eltype(yl))
+    distance_to_lims = ntuple(_ -> typemax(T), 4)
     for series in plt.series_list
         x = series[:x]
         y = series[:y]
-        for (i, lim) in enumerate(Iterators.product(xl,yl))
-            dmin = _dmin_series(lim,scale,x,y,nsamples)
+        for (i, lim) in enumerate(Iterators.product(xl, yl))
+            dmin = _dmin_series(lim, scale, x, y, nsamples)
             if dmin < distance_to_lims[i]
                 distance_to_lims = ntuple(4) do j
                     ifelse(j == i, dmin, distance_to_lims[j])
@@ -1173,4 +1173,3 @@ function _guess_best_legend_position(lp::Symbol,plt;nsamples=50)
     ibest = findmax(distance_to_lims)[2]
     return (:bottomleft, :bottomright, :topleft, :topright)[ibest]
 end
-
