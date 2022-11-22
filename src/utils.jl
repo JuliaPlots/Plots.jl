@@ -1156,7 +1156,7 @@ function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
     lp === :best || return lp
     xl = xlims(plt)
     yl = ylims(plt)
-    scale = ( maximum(xl) - minimum(xl), maximum(yl) - minimum(yl) )
+    scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
     T = promote_type(eltype(xl), eltype(yl))
     distance_to_lims = ntuple(_ -> typemax(T), 4)
     for series in plt.series_list
