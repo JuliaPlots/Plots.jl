@@ -194,3 +194,13 @@ end
     # `CSV` produces `SentinelArrays` data
     @test scatter(ChainedVector([[1, 2], [3, 4]]), 1:4) isa Plot
 end
+
+@testset "performance" begin
+    with(:gr) do
+        pl = heatmap(rand(10, 10); xscale = :log10, yscale = :log10)
+        @test show(devnull, pl) isa Nothing
+
+        pl = plot(Shape([(1, 1), (2, 1), (2, 2), (1, 2)]); xscale = :log10, yscale = :log10)
+        @test show(devnull, pl) isa Nothing
+    end
+end
