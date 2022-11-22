@@ -1145,7 +1145,7 @@ function _dmin_point(dmin, x, y, lim, scale)
 end
 function _dmin_series(lim, scale, x, y, nsamples)
     dmin = +Inf
-    step = max(1, div(length(x), nsamples))
+    step = 1
     lim = lim ./ scale
     n = max(1, div(min(nsamples, length(x)), 2))
     # Run from the extremes of the dataset inwards
@@ -1182,7 +1182,7 @@ function _guess_best_legend_position(xl, yl, plt, nsamples)
 end
 
 # Main function
-function _guess_best_legend_position(lp::Symbol, plt; nsamples = 100)
+function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
     lp === :best || return lp
     xl = xlims(plt)
     yl = ylims(plt)
