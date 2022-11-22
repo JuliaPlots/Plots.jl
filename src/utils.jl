@@ -219,23 +219,29 @@ replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
 replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
     foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
 
-function _heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
-    length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
+scale_inverse_scale_func(scale::Symbol) = (
+    RecipesPipeline.scale_func(scale),
+    RecipesPipeline.inverse_scale_func(scale),
+    scale === :identity,
+)
+
+function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
+    (n = length(v)) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
     isedges && return v
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
     extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
-    extra_max = 0.5(v[end] - v[end - 1])
-    vcat(vmin - extra_min, 0.5(v[1:(end - 1)] + v[2:end]), vmax + extra_max)
+    extra_max = 0.5(v[n] - v[n - 1])
+    vcat(vmin - extra_min, 0.5(v[1:(n - 1)] + v[2:n]), vmax + extra_max)
 end
 
 _heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
-    _heatmap_edges(v, isedges, ispolar)
+    __heatmap_edges(v, isedges, ispolar)
 
 function _heatmap_edges(::Val{false}, v::AVec, scale::Symbol, isedges::Bool, ispolar::Bool)
-    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
-    map(invf, _heatmap_edges(map(f, v), isedges, ispolar))
+    f, invf = scale_inverse_scale_func(scale)
+    invf.(__heatmap_edges(f.(v), isedges, ispolar))
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
@@ -942,45 +948,7 @@ function convert_sci_unicode(label::AbstractString)
     label
 end
 
-function straightline_data(series, expansion_factor = 1)
-    sp = series[:subplot]
-    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
-
-    # handle axes scales
-    xscale = sp[:xaxis][:scale]
-    xf = RecipesPipeline.scale_func(xscale)
-    xinvf = RecipesPipeline.inverse_scale_func(xscale)
-    yscale = sp[:yaxis][:scale]
-    yf = RecipesPipeline.scale_func(yscale)
-    yinvf = RecipesPipeline.inverse_scale_func(yscale)
-
-    xl, yl = xf.(xl), yf.(yl)
-    x, y = xf.(series[:x]), yf.(series[:y])
-    n = length(x)
-
-    xdata, ydata = if n == 2
-        straightline_data(xl, yl, x, y, expansion_factor)
-    else
-        k, r = divrem(n, 3)
-        if r == 0
-            xdata, ydata = fill(NaN, n), fill(NaN, n)
-            for i in 1:k
-                inds = (3 * i - 2):(3 * i - 1)
-                xdata[inds], ydata[inds] =
-                    straightline_data(xl, yl, x[inds], y[inds], expansion_factor)
-            end
-            xdata, ydata
-        else
-            error(
-                "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n",
-            )
-        end
-    end
-
-    xinvf.(xdata), yinvf.(ydata)
-end
-
-function straightline_data(xl, yl, x, y, expansion_factor = 1)
+function ___straightline_data(xl, yl, x, y, exp_fact)
     x_vals, y_vals = if y[1] == y[2]
         if x[1] == x[2]
             error("Two identical points cannot be used to describe a straight line.")
@@ -1004,28 +972,85 @@ function straightline_data(xl, yl, x, y, expansion_factor = 1)
     end
     # expand the data outside the axis limits, by a certain factor too improve
     # plotly(js) and interactive behaviour
-    x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* expansion_factor .* [-1, 1]
-    y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* expansion_factor .* [-1, 1]
-    x_vals, y_vals
+    (
+        x_vals .+ (x_vals[2] - x_vals[1]) .* exp_fact,
+        y_vals .+ (y_vals[2] - y_vals[1]) .* exp_fact,
+    )
 end
 
-function _shape_data!(::Val{false}, x, xl, xf::Function, xinvf::Function, expansion_factor)
+__straightline_data(xl, yl, x, y, exp_fact) =
+    if (n = length(x)) == 2
+        ___straightline_data(xl, yl, x, y, exp_fact)
+    else
+        k, r = divrem(n, 3)
+        @assert r == 0 "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
+        xdata, ydata = fill(NaN, n), fill(NaN, n)
+        for i in 1:k
+            inds = (3i - 2):(3i - 1)
+            xdata[inds], ydata[inds] =
+                ___straightline_data(xl, yl, x[inds], y[inds], exp_fact)
+        end
+        xdata, ydata
+    end
+
+_straightline_data(::Val{true}, ::Function, ::Function, ::Function, ::Function, args...) =
+    __straightline_data(args...)
+
+function _straightline_data(
+    ::Val{false},
+    xf::Function,
+    xinvf::Function,
+    yf::Function,
+    yinvf::Function,
+    xl,
+    yl,
+    x,
+    y,
+    exp_fact,
+)
+    xdata, ydata = __straightline_data(xf.(xl), yf.(yl), xf.(x), yf.(y), exp_fact)
+    xinvf.(xdata), yinvf.(ydata)
+end
+
+function straightline_data(series, expansion_factor = 1)
+    sp = series[:subplot]
+    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+
+    # handle axes scales
+    xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
+    yf, yinvf, ynoop = scale_inverse_scale_func(sp[:yaxis][:scale])
+
+    _straightline_data(
+        Val(xnoop && ynoop),
+        xf,
+        xinvf,
+        yf,
+        yinvf,
+        xl,
+        yl,
+        series[:x],
+        series[:y],
+        [-expansion_factor, +expansion_factor],
+    )
+end
+
+function _shape_data!(::Val{false}, xf::Function, xinvf::Function, x, xl, exp_fact)
     @inbounds for i in eachindex(x)
         if x[i] == -Inf
-            x[i] = xinvf(xf(xl[1]) - expansion_factor * (xf(xl[2]) - xf(xl[1])))
+            x[i] = xinvf(xf(xl[1]) - exp_fact * (xf(xl[2]) - xf(xl[1])))
         elseif x[i] == +Inf
-            x[i] = xinvf(xf(xl[2]) + expansion_factor * (xf(xl[2]) - xf(xl[1])))
+            x[i] = xinvf(xf(xl[2]) + exp_fact * (xf(xl[2]) - xf(xl[1])))
         end
     end
     x
 end
 
-function _shape_data!(::Val{true}, x, xl, ::Function, ::Function, expansion_factor)
+function _shape_data!(::Val{true}, ::Function, ::Function, x, xl, exp_fact)
     @inbounds for i in eachindex(x)
         if x[i] == -Inf
-            x[i] = xl[1] - expansion_factor * (xl[2] - xl[1])
+            x[i] = xl[1] - exp_fact * (xl[2] - xl[1])
         elseif x[i] == +Inf
-            x[i] = xl[2] + expansion_factor * (xl[2] - xl[1])
+            x[i] = xl[2] + exp_fact * (xl[2] - xl[1])
         end
     end
     x
@@ -1036,30 +1061,12 @@ function shape_data(series, expansion_factor = 1)
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
 
     # handle axes scales
-    xscale = sp[:xaxis][:scale]
-    xf, xinvf =
-        RecipesPipeline.scale_func(xscale), RecipesPipeline.inverse_scale_func(xscale)
-    yscale = sp[:yaxis][:scale]
-    yf, yinvf =
-        RecipesPipeline.scale_func(yscale), RecipesPipeline.inverse_scale_func(yscale)
+    xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
+    yf, yinvf, ynoop = scale_inverse_scale_func(sp[:yaxis][:scale])
 
     (
-        _shape_data!(
-            Val(xscale === :identity),
-            copy(series[:x]),
-            xl,
-            xf,
-            xinvf,
-            expansion_factor,
-        ),
-        _shape_data!(
-            Val(yscale === :identity),
-            copy(series[:y]),
-            yl,
-            yf,
-            yinvf,
-            expansion_factor,
-        ),
+        _shape_data!(Val(xnoop), xf, xinvf, copy(series[:x]), xl, expansion_factor),
+        _shape_data!(Val(ynoop), yf, yinvf, copy(series[:y]), yl, expansion_factor),
     )
 end
 
