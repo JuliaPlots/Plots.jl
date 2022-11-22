@@ -905,6 +905,17 @@ function gr_clims(sp, args...)
     lo, hi
 end
 
+function gr_viewport_bbox(vp, sp, color)
+    GR.savestate()
+    GR.selntran(0)
+    GR.setscale(0)
+    gr_set_line(1, :solid, plot_color(color), sp)
+    GR.drawrect(vp.xmin, vp.xmax, vp.ymin, vp.ymax)
+    GR.selntran(1)
+    GR.restorestate()
+    nothing
+end
+
 function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     _update_min_padding!(sp)
 
@@ -929,6 +940,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     # draw the axes
     gr_draw_axes(sp, vp_plt)
     gr_add_title(sp, vp_plt, vp_sp)
+
+    _debug[] && gr_viewport_bbox(vp_sp, sp, :red)
+    _debug[] && gr_viewport_bbox(vp_plt, sp, :green)
 
     # this needs to be here to point the colormap to the right indices
     GR.setcolormap(1_000 + GR.COLORMAP_COOLWARM)
@@ -990,7 +1004,7 @@ function gr_add_legend(sp, leg, viewport_area)
         GR.drawrect(xs..., ys...)  # drawing actual legend width here
         if (ttl = sp[:legend_title]) !== nothing
             gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
-            _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
+            _debug[] && gr_legend_bbox(xpos, ypos, leg)
             gr_text(xpos - leg.pad - leg.space + 0.5leg.textw, ypos, string(ttl))
             if vertical
                 ypos -= leg.dy
@@ -1016,7 +1030,7 @@ function gr_add_legend(sp, leg, viewport_area)
             la = get_linealpha(series)
             clamped_lw = (lfps / 8) * clamp(lw, min_lw, max_lw)
             gr_set_line(clamped_lw, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
-            _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
+            _debug[] && gr_legend_bbox(xpos, ypos, leg)
 
             if (
                 (st === :shape || series[:fillrange] !== nothing) &&

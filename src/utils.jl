@@ -665,14 +665,14 @@ end
 
 # ---------------------------------------------------------------
 
-const _debugMode = Ref(false)
+const _debug = Ref(false)
 
-debugplots(on = true) = _debugMode[] = on
+debug!(on = true) = _debug[] = on
 debugshow(io, x) = show(io, x)
 debugshow(io, x::AbstractArray) = print(io, summary(x))
 
 function dumpdict(io::IO, plotattributes::AKW, prefix = "")
-    _debugMode[] || return
+    _debug[] || return
     println(io)
     prefix == "" || println(io, prefix, ":")
     for k in sort(collect(keys(plotattributes)))

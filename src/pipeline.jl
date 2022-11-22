@@ -226,7 +226,7 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
             else
                 plt.layout
             end
-            sp = Subplot(backend(), parent = parent)
+            sp = Subplot(backend(); parent)
             sp.plt = plt
             push!(plt.subplots, sp)
             push!(plt.inset_subplots, sp)

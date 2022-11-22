@@ -72,7 +72,7 @@
     Plots.makekw(foo = 1, bar = 2) isa Dict
 
     ######################
-    Plots.debugplots(true)
+    Plots.debug!(true)
 
     io = PipeBuffer()
     Plots.debugshow(io, nothing)
@@ -82,7 +82,12 @@
     Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
     show(devnull, pl[1][:xaxis])
 
-    Plots.debugplots(false)
+    # bounding boxes
+    with(:gr) do
+        show(devnull, plot(1:2))
+    end
+
+    Plots.debug!(false)
     ######################
 
     let pl = plot(1)
