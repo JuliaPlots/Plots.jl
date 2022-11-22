@@ -257,7 +257,7 @@ function heatmap_edges(
     xscale::Symbol,
     y::AVec,
     yscale::Symbol,
-    z_size::Tuple{Int,Int},
+    z_size::NTuple{2,Int},
     ispolar::Bool = false,
 )
     nx, ny = length(x), length(y)
@@ -265,11 +265,14 @@ function heatmap_edges(
     # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
     ismidpoints = prod(z_size) == (ny * nx)
     isedges = z_size == (ny - 1, nx - 1)
-    (ismidpoints || isedges) || error("""
-                                      Length of x & y does not match the size of z.
-                                      Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
-                                      or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).
-                                      """)
+    (ismidpoints || isedges) ||
+        """
+        Length of x & y does not match the size of z.
+        Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+        or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).
+        """ |>
+        ArgumentError |>
+        throw
     (
         _heatmap_edges(Val(xscale === :identity), x, xscale, isedges, false),
         _heatmap_edges(Val(yscale === :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
