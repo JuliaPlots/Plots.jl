@@ -1073,10 +1073,7 @@ function shape_data(series, expansion_factor = 1)
     )
 end
 
-construct_categorical_data(x::AbstractArray, axis::Axis) =
-    (map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x))
-
-function add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
+function _add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
     m = 4(I - 1) + 1
     n = m + 1
     o = m + 2
@@ -1101,7 +1098,7 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     Y = zeros(eltype(y), 4length(cj))
     Z = zeros(eltype(z), 4length(ck))
     @inbounds for I in eachindex(ci)  # connections are 0-based
-        add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
+        _add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
     end
     X, Y, Z
 end
@@ -1111,7 +1108,7 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
     @inbounds for I in eachindex(cns)  # connections are 1-based
-        add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
+        _add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
     end
     X, Y, Z
 end
