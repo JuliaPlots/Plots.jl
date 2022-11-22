@@ -1130,11 +1130,15 @@ _document_argument(s::Symbol) =
     _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
 
 #
+#
+# The following functions implement the guess of the optimal legend position,
+# from the data series.
+#
 # Computes the distance of the plot limit to a sample of points
 # equally spaced in the set and keeps the minimum distance found.
 #
 function _dmin_series(lim, scale, x, y, nsamples)
-    dmin = typemax(eltype(lim))
+    dmin = +Inf
     step = max(1, div(length(x), nsamples))
     lim = lim ./ scale
     for i in 1:min(nsamples, length(x))
@@ -1152,25 +1156,26 @@ end
 # edges of the plot. The edge that is found to more distant to the 
 # closest point is chosen as the best position.
 #
-function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
-    lp === :best || return lp
-    xl = xlims(plt)
-    yl = ylims(plt)
+# Function barrier because lims are type-unstable
+#
+function _guess_best_legend_position(xl, yl, plt, nsamples)
     scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
-    T = promote_type(eltype(xl), eltype(yl))
-    distance_to_lims = ntuple(_ -> typemax(T), 4)
+    dist_to_lims = fill(+Inf, 4) # faster than tuple
     for series in plt.series_list
         x = series[:x]
         y = series[:y]
         for (i, lim) in enumerate(Iterators.product(xl, yl))
-            dmin = _dmin_series(lim, scale, x, y, nsamples)
-            if dmin < distance_to_lims[i]
-                distance_to_lims = ntuple(4) do j
-                    ifelse(j == i, dmin, distance_to_lims[j])
-                end
-            end
+            dist_to_lims[i] = min(dist_to_lims[i], _dmin_series(lim, scale, x, y, nsamples))
         end
     end
-    ibest = findmax(distance_to_lims)[2]
+    ibest = findmax(dist_to_lims)[2]
     return (:bottomleft, :bottomright, :topleft, :topright)[ibest]
+end
+
+# Main function
+function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
+    lp === :best || return lp
+    xl = xlims(plt)
+    yl = ylims(plt)
+    return _guess_best_legend_position(xl, yl, plt, nsamples)
 end
