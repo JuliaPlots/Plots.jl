@@ -245,4 +245,11 @@ end
     plt = plot(1:10, y1)
     plt = plot!(1:3, y2, xlims = (0, 10), ylims = (0, 1))
     @test Plots._guess_best_legend_position(:best, plt) == :topright
+
+    # test empty plot
+    plt = plot([])
+    @test Plots._guess_best_legend_position(:best, plt) == :topright
+
+    # test that we didn't overlap other placements
+    @test Plots._guess_best_legend_position(:bottomleft, plt) == :bottomleft
 end
