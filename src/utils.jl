@@ -1147,12 +1147,12 @@ function _dmin_series(lim, scale, x, y, nsamples)
     dmin = +Inf
     step = max(1, div(length(x), nsamples))
     lim = lim ./ scale
-    n = max(1,div(min(nsamples,length(x)),2))
+    n = max(1, div(min(nsamples, length(x)), 2))
     # Run from the extremes of the dataset inwards
     for isample in firstindex(x):step:n
         dmin = _dmin_point(dmin, x[isample], y[isample], lim, scale)
     end
-    for isample in lastindex(x):(-step):(lastindex(x)-n)
+    for isample in lastindex(x):(-step):(lastindex(x) - n)
         dmin = _dmin_point(dmin, x[isample], y[isample], lim, scale)
     end
     return dmin
