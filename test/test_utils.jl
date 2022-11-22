@@ -257,5 +257,4 @@ end
 
     # test that we didn't overlap other placements
     @test Plots._guess_best_legend_position(:bottomleft, plt) === :bottomleft
-
 end
