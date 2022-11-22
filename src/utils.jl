@@ -219,7 +219,7 @@ replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
 replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
     foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
 
-function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
+function _heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
     length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
     isedges && return v
     # `isedges = true` means that v is a vector which already describes edges
@@ -230,16 +230,21 @@ function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
     vcat(vmin - extra_min, 0.5(v[1:(end - 1)] + v[2:end]), vmax + extra_max)
 end
 
+_heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
+    _heatmap_edges(v, isedges, ispolar)
+
+function _heatmap_edges(::Val{false}, v::AVec, scale::Symbol, isedges::Bool, ispolar::Bool)
+    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
+    map(invf, _heatmap_edges(map(f, v), isedges, ispolar))
+end
+
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(
+heatmap_edges(
     v::AVec,
     scale::Symbol = :identity,
     isedges::Bool = false,
     ispolar::Bool = false,
-)
-    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
-    map(invf, _heatmap_edges(map(f, v), isedges, ispolar))
-end
+) = _heatmap_edges(Val(scale === :identity), v, scale, isedges, ispolar)
 
 function heatmap_edges(
     x::AVec,
@@ -254,12 +259,15 @@ function heatmap_edges(
     # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
     ismidpoints = prod(z_size) == (ny * nx)
     isedges = z_size == (ny - 1, nx - 1)
-    if !ismidpoints && !isedges
-        error("""Length of x & y does not match the size of z.
-              Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
-              or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
-    end
-    heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
+    (ismidpoints || isedges) || error("""
+                                      Length of x & y does not match the size of z.
+                                      Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+                                      or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).
+                                      """)
+    (
+        _heatmap_edges(Val(xscale === :identity), x, xscale, isedges, false),
+        _heatmap_edges(Val(yscale === :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
+    )
 end
 
 is_uniformly_spaced(v; tol = 1e-6) =
@@ -1001,34 +1009,58 @@ function straightline_data(xl, yl, x, y, expansion_factor = 1)
     x_vals, y_vals
 end
 
+function _shape_data!(::Val{false}, x, xl, xf::Function, xinvf::Function, expansion_factor)
+    @inbounds for i in eachindex(x)
+        if x[i] == -Inf
+            x[i] = xinvf(xf(xl[1]) - expansion_factor * (xf(xl[2]) - xf(xl[1])))
+        elseif x[i] == +Inf
+            x[i] = xinvf(xf(xl[2]) + expansion_factor * (xf(xl[2]) - xf(xl[1])))
+        end
+    end
+    x
+end
+
+function _shape_data!(::Val{true}, x, xl, ::Function, ::Function, expansion_factor)
+    @inbounds for i in eachindex(x)
+        if x[i] == -Inf
+            x[i] = xl[1] - expansion_factor * (xl[2] - xl[1])
+        elseif x[i] == +Inf
+            x[i] = xl[2] + expansion_factor * (xl[2] - xl[1])
+        end
+    end
+    x
+end
+
 function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
 
     # handle axes scales
     xscale = sp[:xaxis][:scale]
-    xf = RecipesPipeline.scale_func(xscale)
-    xinvf = RecipesPipeline.inverse_scale_func(xscale)
+    xf, xinvf =
+        RecipesPipeline.scale_func(xscale), RecipesPipeline.inverse_scale_func(xscale)
     yscale = sp[:yaxis][:scale]
-    yf = RecipesPipeline.scale_func(yscale)
-    yinvf = RecipesPipeline.inverse_scale_func(yscale)
+    yf, yinvf =
+        RecipesPipeline.scale_func(yscale), RecipesPipeline.inverse_scale_func(yscale)
 
-    x, y = copy(series[:x]), copy(series[:y])
-    for i in eachindex(x)
-        if x[i] == -Inf
-            x[i] = xinvf(xf(xl[1]) - expansion_factor * (xf(xl[2]) - xf(xl[1])))
-        elseif x[i] == Inf
-            x[i] = xinvf(xf(xl[2]) + expansion_factor * (xf(xl[2]) - xf(xl[1])))
-        end
-    end
-    for i in eachindex(y)
-        if y[i] == -Inf
-            y[i] = yinvf(yf(yl[1]) - expansion_factor * (yf(yl[2]) - yf(yl[1])))
-        elseif y[i] == Inf
-            y[i] = yinvf(yf(yl[2]) + expansion_factor * (yf(yl[2]) - yf(yl[1])))
-        end
-    end
-    x, y
+    (
+        _shape_data!(
+            Val(xscale === :identity),
+            copy(series[:x]),
+            xl,
+            xf,
+            xinvf,
+            expansion_factor,
+        ),
+        _shape_data!(
+            Val(yscale === :identity),
+            copy(series[:y]),
+            yl,
+            yf,
+            yinvf,
+            expansion_factor,
+        ),
+    )
 end
 
 construct_categorical_data(x::AbstractArray, axis::Axis) =
