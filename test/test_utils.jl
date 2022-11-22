@@ -81,7 +81,7 @@
     pl = plot(1:2)
     Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
     show(devnull, pl[1][:xaxis])
-    
+
     # bounding boxes
     with(:gr) do
         show(devnull, plot(1:2))
