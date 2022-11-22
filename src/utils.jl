@@ -1130,12 +1130,11 @@ _document_argument(s::Symbol) =
     _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
 
 #
-#
 # The following functions implement the guess of the optimal legend position,
 # from the data series.
 #
-# Computes the distance of the plot limit to a sample of points
-# equally spaced in the set and keeps the minimum distance found.
+# Computes the distances of the plot limits to a sample of points at the extremes of 
+# the ranges, and places the legend at the corner where the maximum distance to the limits is found.
 #
 function _dmin_point(dmin, x, y, lim, scale)
     p_scaled = (x / scale[1], y / scale[2])
@@ -1158,12 +1157,6 @@ function _dmin_series(lim, scale, x, y, nsamples)
     end
     return dmin
 end
-
-#
-# This function guesses which is the best legend position by computing
-# the distance of uniform set of points of the data set to each of the 
-# edges of the plot. The edge that is found to more distant to the 
-# closest point is chosen as the best position.
 #
 # Function barrier because lims are type-unstable
 #
@@ -1181,7 +1174,6 @@ function _guess_best_legend_position(xl, yl, plt, nsamples)
     ibest = findmax(@view(dist_to_lims[4:-1:1]))[2]
     return (:topright, :topleft, :bottomright, :bottomleft)[ibest]
 end
-
 # Main function
 function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
     lp === :best || return lp
