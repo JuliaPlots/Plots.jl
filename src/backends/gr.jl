@@ -1102,9 +1102,9 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     elseif !(lp isa Symbol)
         return gr_legend_pos(lp, vp)
     end
-    if (leg_str = string(lp)) == "best"
-        leg_str = string(_guess_best_legend_position(lp, sp))
-    end
+
+    leg_str = string(_guess_best_legend_position(lp, sp))
+
     xpos = if occursin("left", leg_str)
         vp.xmin + if occursin("outer", leg_str)
             -leg.pad - leg.w - leg.xoffset - !ymirror * gr_axis_width(sp, yaxis)
