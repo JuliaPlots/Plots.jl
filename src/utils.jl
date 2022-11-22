@@ -1144,6 +1144,7 @@ function _dmin_point(dmin, x, y, lim, scale)
     return dmin
 end
 function _dmin_series(lim, scale, x, y, nsamples)
+    length(x) > 0 || return +Inf
     dmin = +Inf
     step = 1
     lim = lim ./ scale
