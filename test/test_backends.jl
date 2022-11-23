@@ -185,7 +185,7 @@ end
         # NOTE: use `ENV["VISUAL_REGRESSION_TESTS_AUTO"] = true;` to automatically replace reference images
         @test backend() == Plots.GRBackend()
         @test backend_name() === :gr
-        withenv("PLOTS_TEST" => true, "GKSwstype" => "nul", "GR3_USE_SR" => 1) do
+        withenv("PLOTS_TEST" => true, "GKSwstype" => "nul") do
             @static if haskey(ENV, "APPVEYOR")
                 @info "Skipping GR image comparison tests on AppVeyor"
             else
