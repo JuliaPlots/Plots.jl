@@ -144,11 +144,16 @@ Base.size(plt::Plot) = size(plt.layout)
 Base.size(plt::Plot, i::Integer) = size(plt.layout)[i]
 Base.ndims(plt::Plot) = 2
 
+# clear out series list, but retain subplots
+Base.empty!(plt::Plot) = foreach(sp -> empty!(sp.series_list), plt.subplots)
+
 # attr(plt::Plot, k::Symbol) = plt.attr[k]
 # attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 
 Base.getindex(sp::Subplot, i::Union{Vector{<:Integer},Integer}) = series_list(sp)[i]
 Base.lastindex(sp::Subplot) = length(series_list(sp))
+
+Base.empty!(sp::Subplot) = empty!(sp.series_list)
 
 # -----------------------------------------------------------------------
 

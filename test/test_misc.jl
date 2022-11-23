@@ -139,7 +139,7 @@ end
     end
 end
 
-@testset "plot" begin
+@testset "tex_output_standalone" begin
     pl = plot(1:5)
     pl2 = plot(pl, tex_output_standalone = true)
     @test !pl[:tex_output_standalone]
@@ -189,6 +189,20 @@ end
     series = first(first(pl2.subplots).series_list)
     @test series[:x] == x2
     @test series[:y] == y2
+end
+
+@testset "Empty Plot / Subplots" begin
+    pl = plot(map(_ -> plot(1:2, [1:2 2:3]), 1:2)...)
+    empty!(pl)
+    @test length(pl.subplots) == 2
+    @test length(first(pl).series_list) == 0
+    @test length(last(pl).series_list) == 0
+
+    pl = plot(map(_ -> plot(1:2, [1:2 2:3]), 1:2)...)
+    empty!(first(pl))  # clear out only the first subplot
+    @test length(pl.subplots) == 2
+    @test length(first(pl).series_list) == 0
+    @test length(last(pl).series_list) == 2
 end
 
 @testset "Measures" begin
