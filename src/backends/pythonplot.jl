@@ -217,7 +217,6 @@ py_renderer(fig) = py_canvas(fig).get_renderer()
 
 # draw commands... paint the screen (probably updating internals too)
 py_drawfig(fig) = fig.draw(py_renderer(fig))
-# py_drawax(ax) = ax[:draw](py_renderer(ax[:get_figure]()))
 
 # get a vector [left, right, bottom, top] in PythonPlot coords (origin is bottom-left (0, 0)!)
 py_extents(obj) = PythonCall.PyArray(obj.get_window_extent().get_points())
@@ -555,19 +554,17 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             ) |> push_h
 
             # contours on the axis planes
-            if series[:contours]
-                for (zdir, mat) in (("x", x), ("y", y), ("z", z))
-                    offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat)
-                    ax.contourf(
-                        x,
-                        y,
-                        z,
-                        levelargs...;
-                        zdir = zdir,
-                        cmap = py_fillcolormap(series),
-                        offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat),  # where to draw the contour plane
-                    ) |> push_h
-                end
+            series[:contours] && for (zdir, mat) in (("x", x), ("y", y), ("z", z))
+                offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat)
+                ax.contourf(
+                    x,
+                    y,
+                    z,
+                    levelargs...;
+                    zdir = zdir,
+                    cmap = py_fillcolormap(series),
+                    offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat),  # where to draw the contour plane
+                ) |> push_h
             end
 
         elseif typeof(z) <: AbstractVector
@@ -591,10 +588,10 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     if st === :mesh3d
         polygons = if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
             # Combination of any polygon types
-            broadcast(inds -> broadcast(i -> [x[i], y[i], z[i]], inds), series[:connections])
+            map(inds -> map(i -> [x[i], y[i], z[i]], inds), series[:connections])
         elseif series[:connections] isa AbstractVector{NTuple{N,Int}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
-            broadcast(inds -> broadcast(i -> [x[i], y[i], z[i]], inds), series[:connections])
+            map(inds -> map(i -> [x[i], y[i], z[i]], inds), series[:connections])
         elseif series[:connections] isa NTuple{3,<:AbstractVector{Int}}
             # Only triangles - connections have to be 0-based (indexing)
             ci, cj, ck = series[:connections]
@@ -603,8 +600,8 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 ArgumentError |>
                 throw
             end
-            broadcast(
-                j -> broadcast(i -> [x[i], y[i], z[i]], [ci[j] + 1, cj[j] + 1, ck[j] + 1]),
+            map(
+                j -> reduce(hcat, map(i -> [x[i], y[i], z[i]], [ci[j] + 1, cj[j] + 1, ck[j] + 1])),
                 eachindex(ci),
             )
         else
