@@ -126,7 +126,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     amin, amax = alims
 
     # scale the limits
-    sf = RecipesPipeline.scale_func(scale)
+    sf, invsf, noop = scale_inverse_scale_func(scale)
 
     # If the axis input was a Date or DateTime use a special logic to find
     # "round" Date(Time)s as ticks
@@ -135,7 +135,8 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     # or DateTime) is chosen based on the time span between amin and amax
     # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
-    if ticks === nothing && scale === :identity
+
+    if ticks === nothing && noop
         if formatter == RecipesPipeline.dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
@@ -159,7 +160,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             sf(amax);
             k_min = scale ∈ _logScales ? 2 : 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
-            scale = scale,
+            scale,
         ) |> first
     elseif typeof(ticks) <: Int
         optimize_ticks(
@@ -171,12 +172,12 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # `strict_span = false` rewards cases where the span of the
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
-            scale = scale,
+            scale,
         ) |> first
     else
         map(sf, filter(t -> amin ≤ t ≤ amax, ticks))
     end
-    unscaled_ticks = map(RecipesPipeline.inverse_scale_func(scale), scaled_ticks)
+    unscaled_ticks = noop ? scaled_ticks : map(invsf, scaled_ticks)
 
     labels::Vector{String} = if any(isfinite, unscaled_ticks)
         if formatter in (:auto, :plain, :scientific, :engineering)
@@ -520,9 +521,14 @@ function scale_lims(from, to, factor)
     mid .+ (-span, span) .* factor
 end
 
-function scale_lims(from, to, factor, scale)
-    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
+_scale_lims(::Val{true}, ::Function, ::Function, from, to, factor) =
+    scale_lims(from, to, factor)
+_scale_lims(::Val{false}, f::Function, invf::Function, from, to, factor) =
     invf.(scale_lims(f(from), f(to), factor))
+
+function scale_lims(from, to, factor, scale)
+    f, invf, noop = scale_inverse_scale_func(scale)
+    _scale_lims(Val(noop), f, invf, from, to, factor)
 end
 
 """
@@ -534,9 +540,8 @@ If `letter` is omitted, all axes are affected.
 """
 function scale_lims!(sp::Subplot, letter, factor)
     axis = Plots.get_axis(sp, letter)
-    scale = axis[:scale]
     from, to = Plots.get_sp_lims(sp, letter)
-    axis[:lims] = scale_lims(from, to, factor, scale)
+    axis[:lims] = scale_lims(from, to, factor, axis[:scale])
 end
 function scale_lims!(plt::Plot, letter, factor)
     foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
@@ -770,8 +775,7 @@ function add_major_or_minor_segments_2d(
 )
     ticks === nothing && return
     if cond
-        f = RecipesPipeline.scale_func(oax[:scale])
-        invf = RecipesPipeline.inverse_scale_func(oax[:scale])
+        f, invf = scale_inverse_scale_func(oax[:scale])
         tick_start, tick_stop = if sp[:framestyle] === :origin
             oamin, oamax = oamM
             t = invf(f(0) + factor * (f(oamax) - f(oamin)))
@@ -904,8 +908,7 @@ function add_major_or_minor_segments_3d(
 )
     ticks === nothing && return
     if cond
-        f = RecipesPipeline.scale_func(nax[:scale])
-        invf = RecipesPipeline.inverse_scale_func(nax[:scale])
+        f, invf = scale_inverse_scale_func(nax[:scale])
         tick_start, tick_stop = if sp[:framestyle] === :origin
             namin, namax = namM
             t = invf(f(0) + factor * (f(namax) - f(namin)))

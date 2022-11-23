@@ -1236,8 +1236,7 @@ _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [],
     :pyplot => [
-        22,  # breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
-        56,
+        56,  # blank image produced
     ],
     :plotlyjs => [
         21,

@@ -81,7 +81,7 @@
     pl = plot(1:2)
     Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
     show(devnull, pl[1][:xaxis])
-    
+
     # bounding boxes
     with(:gr) do
         show(devnull, plot(1:2))
@@ -193,4 +193,14 @@ end
     # discourse.julialang.org/t/plots-borking-on-sentinelarrays-produced-by-csv-read/89505
     # `CSV` produces `SentinelArrays` data
     @test scatter(ChainedVector([[1, 2], [3, 4]]), 1:4) isa Plot
+end
+
+@testset "dispatch" begin
+    with(:gr) do
+        pl = heatmap(rand(10, 10); xscale = :log10, yscale = :log10)
+        @test show(devnull, pl) isa Nothing
+
+        pl = plot(Shape([(1, 1), (2, 1), (2, 2), (1, 2)]); xscale = :log10)
+        @test show(devnull, pl) isa Nothing
+    end
 end

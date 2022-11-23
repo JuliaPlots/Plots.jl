@@ -32,7 +32,9 @@ end
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
         @test yguide(plot(y, ylabel = P"hello")) == "hello"
-        @test yguide(plot(y, ylabel = "")) == ""
+        pl = plot(y, ylabel = "")
+        @test yguide(pl) == ""
+        @test yguide(plot!(pl, -y)) == ""
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
         @test yguide(pl) == "hello (m)"
