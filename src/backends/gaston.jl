@@ -302,13 +302,13 @@ function gaston_seriesconf!(
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
         fs = get_fillstyle(series, i)  # FIXME: add fillstyle support ?
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
-        if fr !== nothing # filled curves, but not filled curves with markers
-            pcurveconf *= "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt"
+        curveconf *= if fr !== nothing  # filled curves, but not filled curves with markers
+            "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt"
         elseif series[:markershape] === :none  # simplepath
-            curveconf *= "w lines lc $lc dt $dt lw $lw"
+            "w lines lc $lc dt $dt lw $lw"
         else
             pt, ps, mc = gaston_mk_ms_mc(series, clims, i)
-            curveconf *= "w lp lc $mc dt $dt lw $lw pt $pt ps $ps"
+            "w lp lc $mc dt $dt lw $lw pt $pt ps $ps"
         end
     elseif st === :shape
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
@@ -354,7 +354,7 @@ function gaston_seriesconf!(
     elseif st === :quiver
         curveconf *= "w vectors filled"
     else
-        @warn "Gaston: $st is not implemented yet"
+        @warn "Plots(Gaston): $st is not implemented yet"
     end
 
     [curveconf, extra_curves...]
@@ -574,7 +574,7 @@ function gaston_marker(marker, alpha)
     marker === :diamond && return filled ? 13 : 12
     marker === :pentagon && return filled ? 15 : 14
 
-    @warn "Gaston: unsupported marker $marker"
+    @debug "Plots(Gaston): unsupported marker $marker"
     1
 end
 

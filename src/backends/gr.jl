@@ -6,9 +6,12 @@ export GR
 const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
 const gr_linetypes = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)
 const gr_fill_styles = ((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6)
-const gr_x_log_scales = (ln = GR.OPTION_X_LN, log2 = GR.OPTION_X_LOG2, log10 = GR.OPTION_X_LOG)
-const gr_y_log_scales = (ln = GR.OPTION_Y_LN, log2 = GR.OPTION_Y_LOG2, log10 = GR.OPTION_Y_LOG)
-const gr_z_log_scales = (ln = GR.OPTION_Z_LN, log2 = GR.OPTION_Z_LOG2, log10 = GR.OPTION_Z_LOG)
+const gr_x_log_scales =
+    (ln = GR.OPTION_X_LN, log2 = GR.OPTION_X_LOG2, log10 = GR.OPTION_X_LOG)
+const gr_y_log_scales =
+    (ln = GR.OPTION_Y_LN, log2 = GR.OPTION_Y_LOG2, log10 = GR.OPTION_Y_LOG)
+const gr_z_log_scales =
+    (ln = GR.OPTION_Z_LN, log2 = GR.OPTION_Z_LOG2, log10 = GR.OPTION_Z_LOG)
 
 const gr_arrowstyles = (
     simple = 1,
@@ -1331,9 +1334,15 @@ gr_set_window(sp, vp) =
         end
         if x_max > x_min && y_max > y_min && zok
             scaleop = 0
-            (xscale = sp[:xaxis][:scale]) ∈ _logScales && (scaleop |= gr_x_log_scales[xscale])
-            (yscale = sp[:yaxis][:scale]) ∈ _logScales && (scaleop |= gr_y_log_scales[yscale])
-            (needs_3d && (zscale = sp[:zaxis][:scale] ∈ _logScales)) && (scaleop |= gr_z_log_scales[zscale])
+            if (xscale = sp[:xaxis][:scale]) ∈ _logScales
+                scaleop |= gr_x_log_scales[xscale]
+            end
+            if (yscale = sp[:yaxis][:scale]) ∈ _logScales
+                scaleop |= gr_y_log_scales[yscale]
+            end
+            if needs_3d && (zscale = sp[:zaxis][:scale] ∈ _logScales)
+                scaleop |= gr_z_log_scales[zscale]
+            end
             sp[:xaxis][:flip] && (scaleop |= GR.OPTION_FLIP_X)
             sp[:yaxis][:flip] && (scaleop |= GR.OPTION_FLIP_Y)
             (needs_3d && sp[:zaxis][:flip]) && (scaleop |= GR.OPTION_FLIP_Z)
@@ -1928,9 +1937,9 @@ function gr_draw_surface(series, x, y, z, clims)
 end
 
 function gr_z_normalized_log_scaled(scale, z, clims)
-    log_base = getfield(Base, scale)
-    z_log = replace(x -> isinf(x) ? NaN : x, log_base.(z))
-    z_log, get_z_normalized.(z_log, log_base.(clims)...)
+    sf = RecipesPipeline.scale_func(scale)
+    z_log = replace(x -> isinf(x) ? NaN : x, sf.(z))
+    z_log, get_z_normalized.(z_log, sf.(clims)...)
 end
 
 function gr_draw_heatmap(series, x, y, z, clims)
