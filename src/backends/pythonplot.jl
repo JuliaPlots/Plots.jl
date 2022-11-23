@@ -593,7 +593,10 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 throw
             end
             map(
-                j -> reduce(hcat, map(i -> [x[i], y[i], z[i]], [ci[j] + 1, cj[j] + 1, ck[j] + 1])),
+                j -> reduce(
+                    hcat,
+                    map(i -> [x[i], y[i], z[i]], [ci[j] + 1, cj[j] + 1, ck[j] + 1]),
+                ),
                 eachindex(ci),
             )
         else
@@ -980,12 +983,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 elseif sp[:colorbar] === :bottom
                     cax.xaxis.set_ticks_position("bottom")
                 end
-                cb = fig.colorbar(
-                    handle;
-                    orientation = colorbar_orientation,
-                    cax,
-                    kw...,
-                )
+                cb = fig.colorbar(handle; orientation = colorbar_orientation, cax, kw...)
             end
 
             cb.set_label(
@@ -1115,10 +1113,10 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
 
             # Set ticks
             fontProperties = Dict(
-                "family" => axis[:tickfontfamily],
+                "family"          => axis[:tickfontfamily],
                 "math_fontfamily" => py_get_matching_math_font(axis[:tickfontfamily]),
-                "size" => py_thickness_scale(plt, axis[:tickfontsize]),
-                "rotation" => axis[:tickfontrotation],
+                "size"            => py_thickness_scale(plt, axis[:tickfontsize]),
+                "rotation"        => axis[:tickfontrotation],
             )
 
             positions = getproperty(ax, Symbol("get_", letter, "ticks"))()
@@ -1516,8 +1514,13 @@ function _update_plot_object(plt::Plot{PythonPlotBackend})
         (ax = sp.o) === nothing && return
         figw, figh = sp.plt[:size]
         figw, figh = figw * px, figh * px
-        pcts = bbox_to_pcts(sp.plotarea, figw, figh)
-        ax.set_position(pcts)
+
+        # FIXME: wrong in 3D for `PythonPlot`
+        # ==> sp.plotarea[3] == width is incorrect
+        @static if false
+            # ax.set_position: `[left, bottom, width, height]`
+            bbox_to_pcts(sp.plotarea, figw, figh) |> ax.set_position
+        end
 
         if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)   # 2D plots are completely handled by axis dividers
             bb = sp.attr[:cbar_bbox]
@@ -1529,13 +1532,8 @@ function _update_plot_object(plt::Plot{PythonPlotBackend})
                 width(bb),  # width
                 height(sp.bbox) - 2pad,  # height
             )
-            pcts = get(
-                sp[:extra_kwargs],
-                "3d_colorbar_axis",
-                bbox_to_pcts(cb_bbox, figw, figh),
-            )
-
-            sp.attr[:cbar_ax].set_position(pcts)
+            get(sp[:extra_kwargs], "3d_colorbar_axis", bbox_to_pcts(cb_bbox, figw, figh)) |>
+            sp.attr[:cbar_ax].set_position
         end
     end
     PythonPlot.draw()
