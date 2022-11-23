@@ -383,46 +383,48 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         if maximum(series[:linewidth]) > 0
             for (k, segment) in enumerate(series_segments(series, st; check = true))
                 i, rng = segment.attr_index, segment.range
-                append!(handles, ax.plot(
-                    (arg[rng] for arg in xyargs)...;
-                    # label = k == 1 ? series[:label] : "",
-                    # zorder = series[:series_plotindex],
-                    # color = py_color(
-                    #     single_color(get_linecolor(series, clims, i)),
-                    #     get_linealpha(series, i),
-                    # ),
-                    # linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
-                    # linestyle = py_linestyle(st, get_linestyle(series, i)),
-                    # solid_capstyle = "butt",
-                    # dash_capstyle = "butt",
-                    # drawstyle = py_stepstyle(st),
-                ))
+                append!(
+                    handles,
+                    ax.plot(
+                        (arg[rng] for arg in xyargs)...;
+                        label = k == 1 ? series[:label] : "",
+                        zorder = series[:series_plotindex],
+                        color = py_color(
+                            single_color(get_linecolor(series, clims, i)),
+                            get_linealpha(series, i),
+                        ),
+                        linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
+                        linestyle = py_linestyle(st, get_linestyle(series, i)),
+                        solid_capstyle = "butt",
+                        dash_capstyle = "butt",
+                        drawstyle = py_stepstyle(st),
+                    ),
+                )
             end
 
-            a = series[:arrow]
-            if a !== nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
+            if (a = series[:arrow]) !== nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
                 if typeof(a) != Arrow
                     @warn "Unexpected type for arrow: $(typeof(a))"
                 else
-                    arrowprops = KW(
-                        :arrowstyle => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
-                        :shrinkA => 0,
-                        :shrinkB => 0,
-                        :edgecolor => py_color(get_linecolor(series)),
-                        :facecolor => py_color(get_linecolor(series)),
-                        :linewidth => py_thickness_scale(plt, get_linewidth(series)),
-                        :linestyle => py_linestyle(st, get_linestyle(series)),
+                    arrowprops = Dict(
+                        "arrowstyle" => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
+                        "edgecolor"  => py_color(get_linecolor(series)),
+                        "facecolor"  => py_color(get_linecolor(series)),
+                        "linewidth"  => py_thickness_scale(plt, get_linewidth(series)),
+                        "linestyle"  => py_linestyle(st, get_linestyle(series)),
+                        "shrinkA"    => 0,
+                        "shrinkB"    => 0,
                     )
                     add_arrows(x, y) do xyprev, xy
                         ax.annotate(
-                            "",
+                            "";
                             xytext = (
                                 0.001xyprev[1] + 0.999xy[1],
                                 0.001xyprev[2] + 0.999xy[2],
                             ),
-                            xy = xy,
-                            arrowprops = arrowprops,
                             zorder = 999,
+                            arrowprops,
+                            xy,
                         )
                     end
                 end
