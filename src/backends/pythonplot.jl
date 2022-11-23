@@ -45,7 +45,7 @@ py_handle_surface(v) = v
 py_handle_surface(z::Surface) = z.surf
 
 py_color(s) = py_color(parse(Colorant, string(s)))
-py_color(c::Colorant) = (red(c), green(c), blue(c), alpha(c))
+py_color(c::Colorant) = [red(c), green(c), blue(c), alpha(c)]  # NOTE: tuple unsupported by `PythonPlot`
 py_color(cs::AVec) = map(py_color, cs)
 py_color(grad::PlotUtils.AbstractColorList) = py_color(color_list(grad))
 py_color(c::Colorant, α) = py_color(plot_color(c, α))
@@ -161,14 +161,6 @@ function py_get_matching_math_font(parent_fontfamily)
     matching_font(font) = occursin("serif", lowercase(font)) ? "dejavuserif" : "dejavusans"
     get(py_math_supported_fonts, parent_fontfamily, matching_font(parent_fontfamily))
 end
-
-# # untested... return a FontProperties object from a Plots.Font
-# function py_font(font::Font)
-#     pyfont["FontProperties"](
-#         family = font.family,
-#         size = font.size
-#     )
-# end
 
 get_locator_and_formatter(vals::AVec) =
     pyticker.FixedLocator(eachindex(vals)), pyticker.FixedFormatter(vals)
@@ -310,7 +302,7 @@ function py_init_subplot(plt::Plot{PythonPlotBackend}, sp::Subplot{PythonPlotBac
         (;)
     end
     # add a new axis, and force it to create a new one by setting a distinct label
-    ax = fig.add_subplot(; label = string(gensym()), projection = projection, kw...)
+    ax = fig.add_subplot(; label = string(gensym()), projection, kw...)
     sp.o = ax
 end
 
@@ -555,14 +547,14 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
             # contours on the axis planes
             series[:contours] && for (zdir, mat) in (("x", x), ("y", y), ("z", z))
-                offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat)
+                offset = zdir == "y" ? ignorenan_maximum(mat) : ignorenan_minimum(mat)
                 ax.contourf(
                     x,
                     y,
                     z,
                     levelargs...;
                     cmap = py_fillcolormap(series),
-                    offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat),  # where to draw the contour plane
+                    offset,  # where to draw the contour plane
                     zdir,
                 ) |> push_h
             end
@@ -1460,7 +1452,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 ),   # retain the markersize/markerstroke ratio from the markers on the plot
             ) |> push_h
         else
-            series[:serieshandle][1] |> push_h
+            first(series[:serieshandle]) |> push_h
         end
         push!(labels, series[:label])
     end
