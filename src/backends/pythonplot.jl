@@ -362,6 +362,8 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
     # holds references to any python object representing the matplotlib series
     handles = []
+    push_h(x) = push!(handles, x)
+
     discrete_colorbar_values = nothing
 
     # pass in an integer value as an arg, but a levels list as a keyword arg
@@ -383,23 +385,20 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         if maximum(series[:linewidth]) > 0
             for (k, segment) in enumerate(series_segments(series, st; check = true))
                 i, rng = segment.attr_index, segment.range
-                append!(
-                    handles,
-                    ax.plot(
-                        (arg[rng] for arg in xyargs)...;
-                        label = k == 1 ? series[:label] : "",
-                        zorder = series[:series_plotindex],
-                        color = py_color(
-                            single_color(get_linecolor(series, clims, i)),
-                            get_linealpha(series, i),
-                        ),
-                        linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
-                        linestyle = py_linestyle(st, get_linestyle(series, i)),
-                        solid_capstyle = "butt",
-                        dash_capstyle = "butt",
-                        drawstyle = py_stepstyle(st),
+                ax.plot(
+                    (arg[rng] for arg in xyargs)...;
+                    label = k == 1 ? series[:label] : "",
+                    zorder = series[:series_plotindex],
+                    color = py_color(
+                        single_color(get_linecolor(series, clims, i)),
+                        get_linealpha(series, i),
                     ),
-                )
+                    linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
+                    linestyle = py_linestyle(st, get_linestyle(series, i)),
+                    solid_capstyle = "butt",
+                    dash_capstyle = "butt",
+                    drawstyle = py_stepstyle(st),
+                ) |> push_h
             end
 
             if (a = series[:arrow]) !== nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
@@ -442,11 +441,9 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             else
                 x[rng], y[rng]
             end
-            if RecipesPipeline.is3d(sp)
-                args = (args..., z[rng])
-            end
+            RecipesPipeline.is3d(sp) && (args = (args..., z[rng]))
 
-            handle = ax.scatter(
+            ax.scatter(
                 args...;
                 label = series[:label],
                 zorder = series[:series_plotindex] + 0.5,
@@ -462,8 +459,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 ),
                 linewidths = py_thickness_scale(plt, get_markerstrokewidth(series, i)),
                 extrakw...,
-            )
-            push!(handles, handle)
+            ) |> push_h
         end
     end
 
@@ -471,7 +467,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         sekw = series[:extra_kwargs]
         extrakw[:mincnt] = get(sekw, :mincnt, nothing)
         extrakw[:edgecolors] = get(sekw, :edgecolors, py_color(get_linecolor(series)))
-        handle = ax.hexbin(
+        ax.hexbin(
             x,
             y;
             label = series[:label],
@@ -482,8 +478,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             cmap = py_fillcolormap(series),  # applies to the pcolorfast object
             zorder = series[:series_plotindex],
             extrakw...,
-        )
-        push!(handles, handle)
+        ) |> push_h
     end
 
     if st in (:contour, :contour3d)
@@ -501,7 +496,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         end
 
         # contour lines
-        handle = ax.contour(
+        ax.contour(
             x,
             y,
             z,
@@ -511,15 +506,14 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             linewidths = py_thickness_scale(plt, series[:linewidth]),
             linestyles = py_linestyle(st, series[:linestyle]),
             extrakw...,
-        )
+        ) |> push_h
         if series[:contour_labels] == true
             ax.clabel(handle, handle.levels)
         end
-        push!(handles, handle)
 
         # contour fills
         if series[:fillrange] !== nothing
-            handle = ax.contourf(
+            ax.contourf(
                 x,
                 y,
                 z,
@@ -528,8 +522,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 zorder = series[:series_plotindex] + 0.5,
                 alpha = series[:fillalpha],
                 extrakw...,
-            )
-            push!(handles, handle)
+            ) |> push_h
         end
     end
 
@@ -548,7 +541,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     extrakw[:cmap] = py_fillcolormap(series)
                 end
             end
-            handle = getproperty(ax, st === :surface ? :plot_surface : :plot_wireframe)(
+            getproperty(ax, st === :surface ? :plot_surface : :plot_wireframe)(
                 x,
                 y,
                 z;
@@ -559,14 +552,13 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 linewidth = py_thickness_scale(plt, series[:linewidth]),
                 edgecolor = py_color(get_linecolor(series)),
                 extrakw...,
-            )
-            push!(handles, handle)
+            ) |> push_h
 
             # contours on the axis planes
             if series[:contours]
                 for (zdir, mat) in (("x", x), ("y", y), ("z", z))
                     offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat)
-                    handle = ax.contourf(
+                    ax.contourf(
                         x,
                         y,
                         z,
@@ -574,14 +566,13 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                         zdir = zdir,
                         cmap = py_fillcolormap(series),
                         offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat),  # where to draw the contour plane
-                    )
-                    push!(handles, handle)
+                    ) |> push_h
                 end
             end
 
         elseif typeof(z) <: AbstractVector
-            # tri-surface plot (https://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
-            handle = ax.plot_trisurf(
+            # tri-surface plot (matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
+            ax.plot_trisurf(
                 x,
                 y,
                 z;
@@ -591,8 +582,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 linewidth = py_thickness_scale(plt, series[:linewidth]),
                 edgecolor = py_color(get_linecolor(series)),
                 extrakw...,
-            )
-            push!(handles, handle)
+            ) |> push_h
         else
             error("Unsupported z type $(typeof(z)) for seriestype=$st")
         end
@@ -622,20 +612,20 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             ArgumentError |>
             throw
         end
-        col = mplot3d.art3d.Poly3DCollection(
+        mplot3d.art3d.Poly3DCollection(
             polygons,
             linewidths = py_thickness_scale(plt, series[:linewidth]),
             edgecolor = py_color(get_linecolor(series)),
             facecolor = py_color(series[:fillcolor]),
             alpha = get_fillalpha(series),
             zorder = series[:series_plotindex],
-        )
-        handle = ax.add_collection3d(col)
+        ) |>
+        ax.add_collection3d |>
+        push_h
         # Fix for handle: https://stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
         # It seems there aren't two different alpha values for edge and face
-        handle._facecolors2d = py_color(series[:fillcolor])
-        handle._edgecolors2d = py_color(get_linecolor(series))
-        push!(handles, handle)
+        handles[end]._facecolors2d = py_color(series[:fillcolor])
+        handles[end]._edgecolors2d = py_color(get_linecolor(series))
     end
 
     if st === :image
@@ -655,18 +645,17 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         else
             z  # hopefully it's in a data format that will "just work" with imshow
         end
-        handle = ax.imshow(
+        ax.imshow(
             z;
             zorder = series[:series_plotindex],
             cmap = py_colormap(cgrad(plot_color([:black, :white]))),
             vmin = 0.0,
             vmax = 1.0,
             extent = (xmin - dx, xmax + dx, ymax + dy, ymin - dy),
-        )
-        push!(handles, handle)
+        ) |> push_h
 
         # expand extrema... handle is AxesImage object
-        xmin, xmax, ymax, ymin = handle.get_extent() |> to_vec
+        xmin, xmax, ymax, ymin = handles[end].get_extent() |> to_vec
         expand_extrema!(sp, xmin, xmax, ymin, ymax)
         # sp[:yaxis].series[:flip] = true
     end
@@ -679,7 +668,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         dvals = sp[:zaxis][:discrete_values]
         isempty(dvals) || (discrete_colorbar_values = dvals)
 
-        handle = ax.pcolormesh(
+        ax.pcolormesh(
             x,
             y,
             py_mask_nans(z);
@@ -689,12 +678,10 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             alpha = series[:fillalpha],
             # edgecolors = (series[:linewidth] > 0 ? py_linecolor(series) : "face"),
             extrakw...,
-        )
-        push!(handles, handle)
+        ) |> push_h
     end
 
     if st === :shape
-        handle = []
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
             if length(rng) > 1
@@ -709,7 +696,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 path = pypath.Path(hcat(x[rng], y[rng]))
 
                 # shape outline (and potentially solid fill)
-                patches = pypatches.PathPatch(
+                pypatches.PathPatch(
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
@@ -718,13 +705,14 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
                     linestyle = py_linestyle(st, ls),
                     fill = !has_fs,
-                )
-                push!(handle, ax.add_patch(patches))
+                ) |>
+                ax.add_patch |>
+                push_h
 
                 # shape hatched fill
                 # hatch color/alpha are controlled by edge (not face) color/alpha
                 if has_fs
-                    patches = pypatches.PathPatch(
+                    pypatches.PathPatch(
                         path;
                         label = "",
                         zorder = series[:series_plotindex],
@@ -734,12 +722,12 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                         linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
                         linestyle = py_linestyle(st, ls),
                         fill = false,
-                    )
-                    push!(handle, ax.add_patch(patches))
+                    ) |>
+                    ax.add_patch |>
+                    push_h
                 end
             end
         end
-        push!(handles, handle)
     end
 
     series[:serieshandle] = handles
@@ -770,7 +758,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             fs = get_fillstyle(series, i)
             has_fs = !isnothing(fs)
 
-            handle = getproperty(ax, f)(
+            getproperty(ax, f)(
                 args...,
                 trues(n),
                 false,
@@ -782,8 +770,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 facecolor = py_color(fc, has_fs ? 0 : fa),
                 hatch = py_fillstyle(fs),
                 linewidths = 0,
-            )
-            push!(handles, handle)
+            ) |> push_h
         end
     end
 
@@ -1404,6 +1391,8 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
 
     # gotta do this to ensure both axes are included
     labels, handles = [], []
+    push_h(x) = push!(handles, x)
+
     nseries = 0
     for series in series_list(sp)
         should_add_to_legend(series) || continue
@@ -1420,35 +1409,33 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             has_fs = !isnothing(fs)
 
             # line (and potentially solid fill)
-            line_handle = pypatches.Patch(
+            pypatches.Patch(
                 edgecolor = py_color(single_color(lc), la),
                 facecolor = py_color(single_color(fc), has_fs ? 0 : fa),
                 linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                 linestyle = py_linestyle(series[:seriestype], ls),
                 capstyle = "butt",
-            )
-            push!(handles, line_handle)
+            ) |> push_h
 
             # hatched fill
             # hatch color/alpha are controlled by edge (not face) color/alpha
             if has_fs
-                fill_handle = pypatches.Patch(
+                pypatches.Patch(
                     edgecolor = py_color(single_color(fc), fa),
                     facecolor = py_color(single_color(fc), 0), # don't fill with solid background
                     hatch = py_fillstyle(fs),
                     linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
                     linestyle = py_linestyle(series[:seriestype], ls),
                     capstyle = "butt",
-                )
+                ) |> push_h
 
                 # plot two handles on top of each other by passing in a tuple
-                # https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html
-                push!(handles, fill_handle)
+                # matplotlib.org/stable/tutorials/intermediate/legend_guide.html
             end
         elseif series[:seriestype] in
                (:path, :straightline, :scatter, :steppre, :stepmid, :steppost)
             has_line = get_linewidth(series) > 0
-            handle = PythonPlot.pyplot.Line2D(
+            PythonPlot.pyplot.Line2D(
                 (0, 1),
                 (0, 0),
                 color = py_color(
@@ -1479,61 +1466,61 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     0.8get_markerstrokewidth(series) * sp[:legend_font_pointsize] /
                     first(series[:markersize]),
                 ),   # retain the markersize/markerstroke ratio from the markers on the plot
-            )
-            push!(handles, handle)
+            ) |> push_h
         else
-            push!(handles, series[:serieshandle][1])
+            series[:serieshandle][1] |> push_h
         end
         push!(labels, series[:label])
     end
 
     # if anything was added, call ax.legend and set the colors
-    if !isempty(handles)
-        leg = legend_angle(leg)
-        ncol = if (lc = sp[:legend_column]) < 0
-            nseries
-        elseif lc > 1
-            lc == nseries ||
-                @warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
-            nseries
-        else
-            1
-        end
-        leg = ax.legend(
-            handles,
-            labels;
-            loc = py_legend_pos(leg),
-            bbox_to_anchor = py_legend_bbox(leg),
-            scatterpoints = 1,
-            fontsize = py_thickness_scale(plt, sp[:legend_font_pointsize]),
-            facecolor = py_color(sp[:legend_background_color]),
-            edgecolor = py_color(sp[:legend_foreground_color]),
-            framealpha = alpha(plot_color(sp[:legend_background_color])),
-            fancybox = false,  # makes the legend box square
-            borderpad = 0.8,      # to match GR legendbox
-            ncol,
-        )
-        leg.get_frame().set_linewidth(py_thickness_scale(plt, 1))
-        leg.set_zorder(1_000)
-        if sp[:legend_title] !== nothing
-            leg.set_title(sp[:legend_title])
-            PythonPlot.setp(
-                leg.get_title(),
-                color = py_color(sp[:legend_title_font_color]),
-                family = sp[:legend_title_font_family],
-                fontsize = py_thickness_scale(plt, sp[:legend_title_font_pointsize]),
-            )
-        end
+    isempty(handles) && return
 
-        for txt in leg.get_texts()
-            PythonPlot.setp(
-                txt,
-                color = py_color(sp[:legend_font_color]),
-                family = sp[:legend_font_family],
-                fontsize = py_thickness_scale(plt, sp[:legend_font_pointsize]),
-            )
-        end
+    leg = legend_angle(leg)
+    ncol = if (lc = sp[:legend_column]) < 0
+        nseries
+    elseif lc > 1
+        lc == nseries ||
+            @warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
+        nseries
+    else
+        1
     end
+    leg = ax.legend(
+        handles,
+        labels;
+        loc = py_legend_pos(leg),
+        bbox_to_anchor = py_legend_bbox(leg),
+        scatterpoints = 1,
+        fontsize = py_thickness_scale(plt, sp[:legend_font_pointsize]),
+        facecolor = py_color(sp[:legend_background_color]),
+        edgecolor = py_color(sp[:legend_foreground_color]),
+        framealpha = alpha(plot_color(sp[:legend_background_color])),
+        fancybox = false,  # makes the legend box square
+        borderpad = 0.8,      # to match GR legendbox
+        ncol,
+    )
+    leg.get_frame().set_linewidth(py_thickness_scale(plt, 1))
+    leg.set_zorder(1_000)
+    if sp[:legend_title] !== nothing
+        leg.set_title(sp[:legend_title])
+        PythonPlot.setp(
+            leg.get_title(),
+            color = py_color(sp[:legend_title_font_color]),
+            family = sp[:legend_title_font_family],
+            fontsize = py_thickness_scale(plt, sp[:legend_title_font_pointsize]),
+        )
+    end
+
+    for txt in leg.get_texts()
+        PythonPlot.setp(
+            txt,
+            color = py_color(sp[:legend_font_color]),
+            family = sp[:legend_font_family],
+            fontsize = py_thickness_scale(plt, sp[:legend_font_pointsize]),
+        )
+    end
+    nothing
 end
 
 # -----------------------------------------------------------------
