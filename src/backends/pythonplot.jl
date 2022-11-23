@@ -181,7 +181,7 @@ end
 labelfunc(scale::Symbol, backend::PythonPlotBackend) =
     PythonPlot.LaTeXStrings.latexstring ∘ labelfunc_tex(scale)
 
-py_mask_nans(z) = PythonPlot.pycall(pynp.ma.masked_invalid, Any, z)
+py_mask_nans(z) = PythonPlot.pycall(pynp.ma.masked_invalid, z)
 
 # ---------------------------------------------------------------------------
 
@@ -205,19 +205,6 @@ py_markercolormap(series::Series) =
     py_colormap(cgrad(series[:markercolor], alpha = get_markeralpha(series)))
 py_fillcolormap(series::Series) =
     py_colormap(cgrad(series[:fillcolor], alpha = get_fillalpha(series)))
-
-# ---------------------------------------------------------------------------
-
-# TODO: these can probably be removed eventually... right now they're just keeping things working before cleanup
-
-# getAxis(sp::Subplot) = sp.o
-
-# function getAxis(plt::Plot{PythonPlotBackend}, series::Series)
-#     sp = get_subplot(plt, get(series.plotattributes, :subplot, 1))
-#     getAxis(sp)
-# end
-
-# getfig(o) = o
 
 # ---------------------------------------------------------------------------
 # Figure utils -- F*** matplotlib for making me work so hard to figure this crap out
@@ -271,8 +258,7 @@ py_bbox_ticks(ax, letter) =
     end
 
 # bounding box: axis guide
-py_bbox_axislabel(ax, letter) =
-    getproperty(ax, get_axis(letter, :axis))().label |> py_bbox
+py_bbox_axislabel(ax, letter) = getproperty(ax, get_axis(letter, :axis))().label |> py_bbox
 
 # bounding box: union of axis ticks and guide
 function py_bbox_axis(ax, letter)
@@ -299,17 +285,8 @@ py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_s
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{PythonPlotBackend})
     w, h = map(px2inch, Tuple(s * plt[:dpi] / Plots.DPI for s in plt[:size]))
-
-    # # reuse the current figure?
-    fig = if plt[:overwrite_figure]
-        PythonPlot.gcf()
-    else
-        PythonPlot.figure()
-    end
-
-    # clear the figure
-    # PythonPlot.clf()
-    fig
+    # reuse the current figure?
+    plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end
 
 # Set up the subplot within the backend object.
@@ -667,7 +644,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         z = if eltype(z) <: Colors.AbstractGray
             float(z)
         elseif eltype(z) <: Colorant
-            rgba = Array{Float64, 3}(undef, (size(z)..., 4))
+            rgba = Array{Float64,3}(undef, (size(z)..., 4))
             rgba[:, :, 1] = red.(z)
             rgba[:, :, 2] = green.(z)
             rgba[:, :, 3] = blue.(z)
@@ -1343,12 +1320,8 @@ function _update_min_padding!(sp::Subplot{PythonPlotBackend})
     # figure out how much the axis components and title "stick out" from the plot area
     padding = [0mm, 0mm, 0mm, 0mm]  # leftpad, toppad, rightpad, bottompad
 
-    for bb in (
-        py_bbox_axis(ax, :x),
-        py_bbox_axis(ax, :y),
-        py_bbox_title(ax),
-        py_bbox_legend(ax),
-    )
+    for bb in
+        (py_bbox_axis(ax, :x), py_bbox_axis(ax, :y), py_bbox_title(ax), py_bbox_legend(ax))
         expand_padding!(padding, bb, plotbb)
     end
 
