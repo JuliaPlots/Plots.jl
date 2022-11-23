@@ -561,9 +561,9 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     y,
                     z,
                     levelargs...;
-                    zdir = zdir,
                     cmap = py_fillcolormap(series),
                     offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat),  # where to draw the contour plane
+                    zdir,
                 ) |> push_h
             end
 
@@ -915,12 +915,11 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             else
                 :title
             end)
-            func.set_text(sp[:title])
+            func.set_text(string(sp[:title]))
             func.set_fontsize(py_thickness_scale(plt, sp[:titlefontsize]))
             func.set_family(sp[:titlefontfamily])
             func.set_math_fontfamily(py_get_matching_math_font(sp[:titlefontfamily]))
             func.set_color(py_color(sp[:titlefontcolor]))
-            # ax[:set_title](sp[:title], loc = loc)
         end
 
         # add the colorbar legend
@@ -957,17 +956,14 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             kw[:spacing] = "proportional"
 
             if RecipesPipeline.is3d(sp) || ispolar(sp)
-                cbax = fig.add_axes(
+                cax = fig.add_axes(
                     [0.9, 0.1, 0.03, 0.8],
                     label = string("cbar", sp[:subplot_index]),
                 )
-                cb = fig.colorbar(handle; cax = cbax, kw...)
+                cb = fig.colorbar(handle; cax, kw...)
             else
                 # divider approach works only with 2d plots
                 divider = axes_grid1.make_axes_locatable(ax)
-                # width = axes_grid1.axes_size.AxesY(ax, aspect=1.0 / 3.5)
-                # pad = axes_grid1.axes_size.Fraction(0.5, width)  # Colorbar is spaced 0.5 of its size away from the ax
-                # cbax = divider.append_axes("right", size=width, pad=pad)   # This approach does not work well in subplots
                 colorbar_position, colorbar_pad, colorbar_orientation =
                     if sp[:colorbar] === :left
                         string(sp[:colorbar]), "5%", "vertical"
@@ -979,26 +975,25 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                         "right", "2.5%", "vertical"
                     end
 
-                cbax = divider.append_axes(
+                cax = divider.append_axes(
                     colorbar_position,
                     size = "5%",
                     pad = colorbar_pad,
                     label = string("cbar", sp[:subplot_index]),
                 )  # Reasonable value works most of the usecases
+                if sp[:colorbar] === :left
+                    cax.yaxis.set_ticks_position("left")
+                elseif sp[:colorbar] === :top
+                    cax.xaxis.set_ticks_position("top")
+                elseif sp[:colorbar] === :bottom
+                    cax.xaxis.set_ticks_position("bottom")
+                end
                 cb = fig.colorbar(
                     handle;
-                    cax = cbax,
                     orientation = colorbar_orientation,
+                    cax,
                     kw...,
                 )
-
-                if sp[:colorbar] === :left
-                    cbax.yaxis.set_ticks_position("left")
-                elseif sp[:colorbar] === :top
-                    cbax.xaxis.set_ticks_position("top")
-                elseif sp[:colorbar] === :bottom
-                    cbax.xaxis.set_ticks_position("bottom")
-                end
             end
 
             cb.set_label(
@@ -1043,7 +1038,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             cb.outline.set_linewidth(py_thickness_scale(plt, 1))
 
             sp.attr[:cbar_handle] = cb
-            sp.attr[:cbar_ax] = cbax
+            sp.attr[:cbar_ax] = cax
         end
 
         # framestyle
@@ -1113,7 +1108,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             pyaxis = getproperty(ax, axissym)
 
             if axis[:guide_position] !== :auto && letter !== :z
-                pyaxis.set_label_position(axis[:guide_position])
+                pyaxis.set_label_position(string(axis[:guide_position]))
             end
 
             py_set_scale(ax, sp, axis)
@@ -1500,7 +1495,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
     leg.get_frame().set_linewidth(py_thickness_scale(plt, 1))
     leg.set_zorder(1_000)
     if sp[:legend_title] !== nothing
-        leg.set_title(sp[:legend_title])
+        leg.set_title(string(sp[:legend_title]))
         PythonPlot.setp(
             leg.get_title(),
             color = py_color(sp[:legend_title_font_color]),
