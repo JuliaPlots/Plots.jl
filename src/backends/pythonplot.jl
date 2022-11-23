@@ -235,8 +235,13 @@ py_drawfig(fig) = fig.draw(py_renderer(fig))
 # get a vector [left, right, bottom, top] in PythonPlot coords (origin is bottom-left (0, 0)!)
 py_extents(obj) = PythonCall.PyArray(obj.get_window_extent().get_points())
 
+# see cjdoris.github.io/PythonCall.jl/stable/conversion-to-julia/#py2jl-conversion
+to_vec(x) = PythonCall.pyconvert(Vector, x)
+to_str(x) = PythonCall.pyconvert(String, x)
+
 # compute a bounding box (with origin top-left), however PythonPlot gives coords with origin bottom-left
 function py_bbox(obj)
+    PythonCall.pyisnone(obj) && return py_bbox(nothing)
     fl, fr, fb, ft = bb = py_extents(obj.get_figure())
     l, r, b, t = ex = py_extents(obj)
     # @show obj bb ex
@@ -255,22 +260,19 @@ function py_bbox(v::AVec)
     bbox_union
 end
 
+get_axis(l::Symbol, x::Union{Symbol,AbstractString}) = Symbol(:get_, l, x)
+
 # bounding box: union of axis tick labels
 py_bbox_ticks(ax, letter) =
     if ax.name == "3d"
         py_bbox(nothing)  # FIXME: broken in `3d`
     else
-        py_bbox(
-            PythonCall.pyconvert(
-                Vector,
-                getproperty(ax, Symbol("get_" * letter * "ticklabels"))(),
-            ),
-        )
+        getproperty(ax, get_axis(letter, :ticklabels))() |> to_vec |> py_bbox
     end
 
 # bounding box: axis guide
 py_bbox_axislabel(ax, letter) =
-    py_bbox(getproperty(ax, Symbol("get_" * letter * "axis"))().label)
+    getproperty(ax, get_axis(letter, :axis))().label |> py_bbox
 
 # bounding box: union of axis ticks and guide
 function py_bbox_axis(ax, letter)
@@ -1337,8 +1339,8 @@ function _update_min_padding!(sp::Subplot{PythonPlotBackend})
     padding = [0mm, 0mm, 0mm, 0mm]  # leftpad, toppad, rightpad, bottompad
 
     for bb in (
-        py_bbox_axis(ax, "x"),
-        py_bbox_axis(ax, "y"),
+        py_bbox_axis(ax, :x),
+        py_bbox_axis(ax, :y),
         py_bbox_title(ax),
         py_bbox_legend(ax),
     )
