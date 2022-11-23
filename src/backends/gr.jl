@@ -1954,11 +1954,11 @@ function gr_draw_heatmap(series, x, y, z, clims)
         # pdf output, and also supports alpha values.
         # Note that drawimage draws uniformly spaced data correctly
         # even on log scales, where it is visually non-uniform.
-        colors, _z = if (scale = sp[:colorbar_scale]) === :identity
-            plot_color.(get(fillgrad, z, clims), series[:fillalpha]), z
+        _z, colors = if (scale = sp[:colorbar_scale]) === :identity
+            z, plot_color.(get(fillgrad, z, clims), series[:fillalpha])
         elseif scale ∈ _logScales
             z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
-            plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
+            z_log, plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha])
         end
         for i in eachindex(colors)
             isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i]))
