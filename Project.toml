@@ -60,6 +60,7 @@ PlotlyJS = "0.18"
 PlotlyKaleido = "1"
 PyCall = "1"
 PyPlot = "2"
+PythonPlot = "1"
 RecipesBase = "1.3.1"
 RecipesPipeline = "0.6.10"
 Reexport = "0.2, 1"
@@ -96,6 +97,7 @@ PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
 PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
+PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 SentinelArrays = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
 StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
@@ -108,4 +110,4 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["Aqua", "Colors", "Conda", "Distributions", "FileIO", "FilePathsBase", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyCall", "PyPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+test = ["Aqua", "Colors", "Conda", "Distributions", "FileIO", "FilePathsBase", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyCall", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]

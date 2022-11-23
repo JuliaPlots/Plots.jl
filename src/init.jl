@@ -11,6 +11,7 @@ const BACKEND_PATH_PGFPLOTS =
     @path joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")
 const BACKEND_PATH_PGFPLOTSX = @path joinpath(@__DIR__, "backends", "pgfplotsx.jl")
 const BACKEND_PATH_PLOTLYJS = @path joinpath(@__DIR__, "backends", "plotlyjs.jl")
+const BACKEND_PATH_PYTHONPLOT = @path joinpath(@__DIR__, "backends", "pythonplot.jl")
 const BACKEND_PATH_PYPLOT = @path joinpath(@__DIR__, "backends", "pyplot.jl")
 const BACKEND_PATH_UNICODEPLOTS = @path joinpath(@__DIR__, "backends", "unicodeplots.jl")
 
@@ -94,6 +95,10 @@ function __init__()
 
     @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
         include(BACKEND_PATH_PYPLOT)
+    end
+
+    @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
+        include(BACKEND_PATH_PYTHONPLOT)
     end
 
     @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
