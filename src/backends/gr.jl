@@ -6,6 +6,10 @@ export GR
 const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
 const gr_linetypes = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)
 const gr_fill_styles = ((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6)
+const gr_x_log_scales = (ln = GR.OPTION_X_LN, log2 = GR.OPTION_X_LOG2, log10 = GR.OPTION_X_LOG)
+const gr_y_log_scales = (ln = GR.OPTION_Y_LN, log2 = GR.OPTION_Y_LOG2, log10 = GR.OPTION_Y_LOG)
+const gr_z_log_scales = (ln = GR.OPTION_Z_LN, log2 = GR.OPTION_Z_LOG2, log10 = GR.OPTION_Z_LOG)
+
 const gr_arrowstyles = (
     simple = 1,
     hollow = 3,
@@ -505,7 +509,7 @@ function gr_colorbar_colors(series::Series, clims)
         else
             clims  # GR.contour uses a color range according to data range
         end
-        1_000 .+ 255 .* (levels .- zrange[1]) ./ (zrange[2] - zrange[1])
+        @. 1_000 + 255 * (levels - zrange[1]) / (zrange[2] - zrange[1])
     else
         1_000:1_255
     end
@@ -597,8 +601,8 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
 
     z_tick = 0.5GR.tick(z_min, z_max)
     gr_set_line(1, :solid, plot_color(:black), sp)
-    sp[:colorbar_scale] === :log10 && GR.setscale(GR.OPTION_Y_LOG)
-    # gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
+    (yscale = sp[:colorbar_scale]) ∈ _logScales && GR.setscale(gr_y_log_scales[yscale])
+    # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
     GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
 
     title = gr_colorbar_title(sp)
@@ -1327,9 +1331,9 @@ gr_set_window(sp, vp) =
         end
         if x_max > x_min && y_max > y_min && zok
             scaleop = 0
-            sp[:xaxis][:scale] === :log10 && (scaleop |= GR.OPTION_X_LOG)
-            sp[:yaxis][:scale] === :log10 && (scaleop |= GR.OPTION_Y_LOG)
-            (needs_3d && sp[:zaxis][:scale] === :log10) && (scaleop |= GR.OPTION_Z_LOG)
+            (xscale = sp[:xaxis][:scale]) ∈ _logScales && (scaleop |= gr_x_log_scales[xscale])
+            (yscale = sp[:yaxis][:scale]) ∈ _logScales && (scaleop |= gr_y_log_scales[yscale])
+            (needs_3d && (zscale = sp[:zaxis][:scale] ∈ _logScales)) && (scaleop |= gr_z_log_scales[zscale])
             sp[:xaxis][:flip] && (scaleop |= GR.OPTION_FLIP_X)
             sp[:yaxis][:flip] && (scaleop |= GR.OPTION_FLIP_Y)
             (needs_3d && sp[:zaxis][:flip]) && (scaleop |= GR.OPTION_FLIP_Z)
@@ -1852,11 +1856,11 @@ function gr_draw_contour(series, x, y, z, clims)
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] !== nothing
-        GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
+        GR.contourf(x, y, h, z, Int(series[:contour_labels] == true))
     else
         black = plot_color(:black)
         coff = plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1_000
-        GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
+        GR.contour(x, y, h, z, coff + Int(series[:contour_labels] == true))
     end
     nothing
 end
@@ -1923,6 +1927,12 @@ function gr_draw_surface(series, x, y, z, clims)
     nothing
 end
 
+function gr_z_normalized_log_scaled(scale, z, clims)
+    log_base = getfield(Base, scale)
+    z_log = replace(x -> isinf(x) ? NaN : x, log_base.(z))
+    z_log, get_z_normalized.(z_log, log_base.(clims)...)
+end
+
 function gr_draw_heatmap(series, x, y, z, clims)
     fillgrad = _as_gradient(series[:fillcolor])
     GR.setprojectiontype(0)
@@ -1937,9 +1947,8 @@ function gr_draw_heatmap(series, x, y, z, clims)
         # even on log scales, where it is visually non-uniform.
         colors, _z = if sp[:colorbar_scale] === :identity
             plot_color.(get(fillgrad, z, clims), series[:fillalpha]), z
-        elseif sp[:colorbar_scale] === :log10
-            z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
-            z_normalized = get_z_normalized.(z_log, log10.(clims)...)
+        elseif (scale = sp[:colorbar_scale]) ∈ _logScales
+            z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
             plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
         end
         for i in eachindex(colors)
@@ -1950,11 +1959,10 @@ function gr_draw_heatmap(series, x, y, z, clims)
         if something(series[:fillalpha], 1) < 1
             @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
         end
-        z_normalized, _z = if sp[:colorbar_scale] === :identity
-            get_z_normalized.(z, clims...), z
-        elseif sp[:colorbar_scale] === :log10
-            z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
-            get_z_normalized.(z_log, log10.(clims)...), z_log
+        _z, z_normalized = if sp[:colorbar_scale] === :identity
+            z, get_z_normalized.(z, clims...)
+        elseif (scale = sp[:colorbar_scale]) ∈ _logScales
+            z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
         end
         rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)
         bg_rgba = gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))
