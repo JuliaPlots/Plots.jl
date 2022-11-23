@@ -1954,9 +1954,9 @@ function gr_draw_heatmap(series, x, y, z, clims)
         # pdf output, and also supports alpha values.
         # Note that drawimage draws uniformly spaced data correctly
         # even on log scales, where it is visually non-uniform.
-        colors, _z = if sp[:colorbar_scale] === :identity
+        colors, _z = if (scale = sp[:colorbar_scale]) === :identity
             plot_color.(get(fillgrad, z, clims), series[:fillalpha]), z
-        elseif (scale = sp[:colorbar_scale]) ∈ _logScales
+        elseif scale ∈ _logScales
             z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
             plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
         end
@@ -1968,9 +1968,9 @@ function gr_draw_heatmap(series, x, y, z, clims)
         if something(series[:fillalpha], 1) < 1
             @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
         end
-        _z, z_normalized = if sp[:colorbar_scale] === :identity
+        _z, z_normalized = if (scale = sp[:colorbar_scale]) === :identity
             z, get_z_normalized.(z, clims...)
-        elseif (scale = sp[:colorbar_scale]) ∈ _logScales
+        elseif scale ∈ _logScales
             z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
         end
         rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)
