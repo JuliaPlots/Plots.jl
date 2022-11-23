@@ -667,7 +667,12 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         z = if eltype(z) <: Colors.AbstractGray
             float(z)
         elseif eltype(z) <: Colorant
-            map(c -> Float64[red(c), green(c), blue(c), alpha(c)], z)
+            rgba = Array{Float64, 3}(undef, (size(z)..., 4))
+            rgba[:, :, 1] = red.(z)
+            rgba[:, :, 2] = green.(z)
+            rgba[:, :, 3] = blue.(z)
+            rgba[:, :, 4] = alpha.(z)
+            rgba
         else
             z  # hopefully it's in a data format that will "just work" with imshow
         end
@@ -682,7 +687,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         push!(handles, handle)
 
         # expand extrema... handle is AxesImage object
-        xmin, xmax, ymax, ymin = handle.get_extent()
+        xmin, xmax, ymax, ymin = handle.get_extent() |> to_vec
         expand_extrema!(sp, xmin, xmax, ymin, ymax)
         # sp[:yaxis].series[:flip] = true
     end
@@ -982,8 +987,8 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 else
                     py_markercolormap
                 end
-                cmap = pycmap.ScalarMappable(norm = norm, cmap = f(colorbar_series))
-                cmap.set_array([])
+                cmap = pycmap.ScalarMappable(; cmap = f(colorbar_series), norm)
+                cmap.set_array(PythonCall.pylist([]))
                 handle = cmap
             end
             kw[:spacing] = "proportional"
@@ -1350,14 +1355,14 @@ function _update_min_padding!(sp::Subplot{PythonPlotBackend})
     if haskey(sp.attr, :cbar_ax) # Treat colorbar the same way
         cbar_ax = sp.attr[:cbar_handle].ax
         for bb in
-            (py_bbox_axis(cbar_ax, "x"), py_bbox_axis(cbar_ax, "y"), py_bbox_title(cbar_ax))
+            (py_bbox_axis(cbar_ax, :x), py_bbox_axis(cbar_ax, :y), py_bbox_title(cbar_ax))
             expand_padding!(padding, bb, plotbb)
         end
     end
 
     # optionally add the width of colorbar labels and colorbar to rightpad
     if RecipesPipeline.is3d(sp)
-        expand_padding!(padding, py_bbox_axis(ax, "z"), plotbb)
+        expand_padding!(padding, py_bbox_axis(ax, :z), plotbb)
         if haskey(sp.attr, :cbar_ax)
             sp.attr[:cbar_bbox] = py_bbox(sp.attr[:cbar_handle].ax)
         end
