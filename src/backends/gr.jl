@@ -1487,6 +1487,7 @@ gr_draw_ticks(sp, axis, segments, func = gr_polyline) =
 function gr_label_ticks(sp, letter, ticks)
     letters = axes_letters(sp, letter)
     ax, oax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
+    ax[:showaxis] || return
     _, (oamin, oamax) = map(l -> axis_limits(sp, l), letters)
 
     gr_set_tickfont(sp, letter)
@@ -1530,6 +1531,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     letters = axes_letters(sp, letter)
     _, (namin, namax), (famin, famax) = map(l -> axis_limits(sp, l), letters)
     ax = sp[get_attr_symbol(letter, :axis)]
+    ax[:showaxis] || return
 
     isy, isz = letter .=== (:y, :z)
     n0, n1 = isy ? (namax, namin) : (namin, namax)
