@@ -737,7 +737,7 @@ zvalues(
 # -----------------------------------------------------------------------
 
 function expand_extrema!(a::Axis, surf::Surface)
-    ex = a[:extrema]
+    ex = a[:extrema]::Extrema
     for vi in surf.surf
         expand_extrema!(ex, vi)
     end
