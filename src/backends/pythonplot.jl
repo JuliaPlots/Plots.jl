@@ -1083,7 +1083,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 tcs, labs = ticks
                 if sp[:framestyle] === :origin
                     # don't show the 0 tick label for the origin framestyle
-                    labs[tcs[1] .== 0] .= ""
+                    labs[tcs .== 0] .= ""
                 end
                 length(tcs) > 0
             else
@@ -1161,7 +1161,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 else
                     pyticker.LogLocator(
                         base = _logScaleBases[scale],
-                        numticks = n_minor_intervals + 1,
+                        subs = 1:n_minor_intervals, 
                     )
                 end |> pyaxis.set_minor_locator
                 pyaxis.set_tick_params(
