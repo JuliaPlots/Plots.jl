@@ -1190,10 +1190,10 @@ function _dinv_series(lim, scale, x, y, nsamples)
     n = max(1, div(min(nsamples, length(x)), 2))
     # Run from the extremes of the dataset inwards
     for isample in firstindex(x):step:n
-        dinv += 1 / (1 + weight * d_point(x[isample], y[isample], lim, scale))
+        dinv += inv(1 + weight * d_point(x[isample], y[isample], lim, scale))
     end
     for isample in lastindex(x):(-step):(lastindex(x) - n)
-        dinv += 1 / (1 + weight * d_point(x[isample], y[isample], lim, scale))
+        dinv += inv(1 + weight * d_point(x[isample], y[isample], lim, scale))
     end
     return dinv
 end
