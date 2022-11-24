@@ -657,7 +657,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     extrakw[:cmap] = py_fillcolormap(series)
                 end
             end
-            getproperty(ax, st === :surface ? :plot_surface : :plot_wireframe)(
+            getproperty(ax, Symbol(:plot_, st))(
                 x,
                 y,
                 z;
@@ -1076,46 +1076,53 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             (ispolar(sp) && letter === :y) && ax.set_rlabel_position(90)
             ticks = sp[:framestyle] === :none ? nothing : get_ticks(sp, axis)
 
+            has_major_ticks = ticks ∉ (:none, nothing, false)
+            has_major_ticks &= if (ttype = ticksType(ticks)) === :ticks
+                length(ticks) > 0
+            elseif ttype === :ticks_and_labels
+                length(first(ticks)) > 0
+            else
+                true
+            end
+
             # don't show the 0 tick label for the origin framestyle
-            if sp[:framestyle] === :origin && length(ticks) > 1
-                ticks[2][ticks[1] .== 0] .= ""
+            if sp[:framestyle] === :origin && ttype === :ticks_and_labels
+                tcs, labs = ticks
+                labs[tcs[1] .== 0] .= ""
             end
 
             # Set ticks
-            fontProperties = Dict(
-                "math_fontfamily" => py_get_matching_math_font(axis[:tickfontfamily]),
-                "size"            => py_thickness_scale(plt, axis[:tickfontsize]),
-                "rotation"        => axis[:tickfontrotation],
-                "family"          => axis[:tickfontfamily],
-            )
-
-            positions = getproperty(ax, get_axis(letter, :ticks))()
-            pyaxis.set_major_locator(pyticker.FixedLocator(positions))
-
-            kw = if RecipesPipeline.is3d(sp)
-                NamedTuple(Symbol(k) => v for (k, v) in fontProperties)
-            else
-                (; fontdict = PythonPlot.PyDict(fontProperties))
-            end
-
-            getproperty(ax, set_axis(letter, :ticklabels))(positions; kw...)
-
-            py_set_ticks(sp, ax, ticks, letter)
-
             if axis[:ticks] === :native # it is easier to reset than to account for this
                 py_set_lims(ax, sp, axis)
                 pyaxis.set_major_locator(pyticker.AutoLocator())
                 pyaxis.set_major_formatter(pyticker.ScalarFormatter())
-            end
+            elseif has_major_ticks
+                fontProperties = Dict(
+                    "math_fontfamily" => py_get_matching_math_font(axis[:tickfontfamily]),
+                    "size"            => py_thickness_scale(plt, axis[:tickfontsize]),
+                    "rotation"        => axis[:tickfontrotation],
+                    "family"          => axis[:tickfontfamily],
+                )
+                kw = if RecipesPipeline.is3d(sp)
+                    NamedTuple(Symbol(k) => v for (k, v) in fontProperties)
+                else
+                    (; fontdict = PythonPlot.PyDict(fontProperties))
+                end
+                positions = getproperty(ax, get_axis(letter, :ticks))()
+                pyaxis.set_major_locator(pyticker.FixedLocator(positions))
+                getproperty(ax, set_axis(letter, :ticklabels))(positions; kw...)
+                py_set_ticks(sp, ax, ticks, letter)
 
-            # Tick marks
-            intensity = 0.5  # this value corresponds to scaling of other grid elements
-            pyaxis.set_tick_params(
-                direction = axis[:tick_direction] === :out ? "out" : "in",
-                width = py_thickness_scale(plt, intensity),
-                length = axis[:tick_direction] === :none ? 0 :
-                         5py_thickness_scale(plt, intensity),
-            )
+                intensity = 0.5  # this value corresponds to scaling of other grid elements
+                pyaxis.set_tick_params(
+                    direction = axis[:tick_direction] === :out ? "out" : "in",
+                    width = py_thickness_scale(plt, intensity),
+                    length = axis[:tick_direction] === :none ? 0 :
+                             5py_thickness_scale(plt, intensity),
+                )
+            else
+                pyaxis.set_major_locator(pyticker.NullLocator())
+            end
 
             getproperty(ax, set_axis(letter, :label))(axis[:guide])
             axis[:flip] && getproperty(ax, Symbol(:invert_, letter, :axis))()
@@ -1134,7 +1141,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 axis[:guidefontrotation]
             end |> pyaxis.label.set_rotation
 
-            if axis[:grid] && ticks ∉ (:none, nothing, false)
+            if axis[:grid] && has_major_ticks
                 pyaxis.grid(
                     true,
                     color = py_color(axis[:foreground_color_grid]),
@@ -1147,9 +1154,9 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 pyaxis.grid(false)
             end
 
-            if !no_minor_intervals(axis)
+            # minorticks
+            if !no_minor_intervals(axis) && has_major_ticks
                 ax.minorticks_on()
-                ticks = get_ticks(sp, axis, update = false)
                 minor_ticks = get_minor_ticks(sp, axis, ticks)
                 n_minor_intervals = floor(Int, length(minor_ticks) / length(first(ticks)))
                 locator = if (scale = axis[:scale]) === :identity
@@ -1169,22 +1176,14 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 )
             end
 
-            if axis[:minorgrid]
-                pyaxis.set_tick_params(
-                    which = "minor",
-                    direction = axis[:tick_direction] === :out ? "out" : "in",
-                    length = axis[:tick_direction] === :none ? 0 :
-                             py_thickness_scale(plt, intensity),
-                )
-                pyaxis.grid(
-                    true;
-                    which = "minor",
-                    color = py_color(axis[:foreground_color_grid]),
-                    linestyle = py_linestyle(:line, axis[:minorgridstyle]),
-                    linewidth = py_thickness_scale(plt, axis[:minorgridlinewidth]),
-                    alpha = axis[:minorgridalpha],
-                )
-            end
+            axis[:minorgrid] && pyaxis.grid(
+                true;
+                which = "minor",
+                color = py_color(axis[:foreground_color_grid]),
+                linestyle = py_linestyle(:line, axis[:minorgridstyle]),
+                linewidth = py_thickness_scale(plt, axis[:minorgridlinewidth]),
+                alpha = axis[:minorgridalpha],
+            )
 
             py_set_axis_colors(sp, ax, axis)
         end
@@ -1270,7 +1269,6 @@ function _update_min_padding!(sp::Subplot{PythonPlotBackend})
         (py_bbox_axis(ax, :x), py_bbox_axis(ax, :y), py_bbox_title(ax), py_bbox_legend(ax))
         expand_padding!(padding, bb, plotbb)
     end
-
     if haskey(sp.attr, :cbar_ax) # Treat colorbar the same way
         cbar_ax = sp.attr[:cbar_handle].ax
         for bb in
@@ -1290,9 +1288,7 @@ function _update_min_padding!(sp::Subplot{PythonPlotBackend})
     # add ∈ the user-specified margin
     padding .+= [sp[:left_margin], sp[:top_margin], sp[:right_margin], sp[:bottom_margin]]
 
-    dpi_factor = Plots.DPI / sp.plt[:dpi]
-
-    sp.minpad = Tuple(dpi_factor .* padding)
+    sp.minpad = Tuple((Plots.DPI / sp.plt[:dpi]) .* padding)
 end
 
 # -----------------------------------------------------------------
@@ -1328,12 +1324,9 @@ function py_legend_pos(pos::Tuple{<:Real,Symbol})
     join([yanchors[legend_anchor_index(s)], xanchors[legend_anchor_index(c)]], ' ')
 end
 
-function py_legend_bbox(pos::Tuple{T,Symbol}) where {T<:Real}
-    pos[2] === :outer &&
-        return legend_pos_from_angle(pos[1], -0.15, 0.5, 1.0, -0.15, 0.5, 1.0)
+# legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
+py_legend_bbox(pos::Tuple{<:Real,Symbol}) =
     legend_pos_from_angle(pos[1], 0.0, 0.5, 1.0, 0.0, 0.5, 1.0)
-end
-
 py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
@@ -1445,7 +1438,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         edgecolor = py_color(sp[:legend_foreground_color]),
         framealpha = alpha(plot_color(sp[:legend_background_color])),
         fancybox = false,  # makes the legend box square
-        borderpad = 0.8,      # to match GR legendbox
+        # borderpad = 0.8,  # to match GR legendbox
         ncol,
     )
     leg.get_frame().set_linewidth(py_thickness_scale(plt, 1))
