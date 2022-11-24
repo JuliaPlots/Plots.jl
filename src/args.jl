@@ -2027,11 +2027,13 @@ has_black_border_for_default(st::Function) =
 has_black_border_for_default(st::Symbol) =
     like_histogram(st) || st in (:hexbin, :bar, :shape)
 
+default_cgrad() = PlotUtils.DEFAULT_COLOR_GRADIENT[] # MOVE TO PLOTUTILS
+
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
 get_series_color(c, sp::Subplot, n::Int, seriestype) =
     if c === :auto
-        like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
+        like_surface(seriestype) ? default_cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
         _cycle(sp[:color_palette], c)
     else
