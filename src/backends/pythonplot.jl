@@ -767,14 +767,16 @@ function py_set_ticks(sp, ax, ticks, letter)
         return
     end
 
-    if (ttype = ticksType(ticks)) === :ticks
-        axis.set_ticks(ticks)
+    tick_values, tick_labels = if (ttype = ticksType(ticks)) === :ticks
+        ticks, []
     elseif ttype === :ticks_and_labels
-        axis.set_ticks(ticks[1])
-        axis.set_ticklabels(ticks[2])
+        ticks
     else
         error("Invalid input for $(letter)ticks: $ticks")
     end
+    length(tick_values) > 0 && axis.set_ticks(tick_values)
+    length(tick_labels) > 0 && axis.set_ticklabels(tick_labels)
+    nothing
 end
 
 function py_compute_axis_minval(sp::Subplot, axis::Axis)
