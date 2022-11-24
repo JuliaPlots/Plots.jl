@@ -146,7 +146,7 @@ py_fillstyle(fillstyle::Symbol) = string(fillstyle)
 
 function py_get_matching_math_font(parent_fontfamily)
     # matplotlib supported math fonts according to
-    # https://matplotlib.org/stable/tutorials/text/mathtext.html
+    # matplotlib.org/stable/tutorials/text/mathtext.html
     py_math_supported_fonts = Dict{String,String}(
         "sans-serif" => "dejavusans",
         "serif" => "dejavuserif",
@@ -799,8 +799,10 @@ function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
         "symlog",
         KW(
             get_attr_symbol(:base, Symbol()) => _logScaleBases[scale],
-            get_attr_symbol(:linthresh, Symbol()) =>
-                NaNMath.max(1e-16, py_compute_axis_minval(sp, axis)),
+            get_attr_symbol(:linthresh, Symbol()) => NaNMath.max(
+                1e-16,
+                py_compute_axis_minval(sp, sp[get_attr_symbol(letter, :axis)]),
+            ),
         )
     end
     getproperty(ax, set_axis(letter, :scale))(scl; kw...)
@@ -1139,12 +1141,17 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 pyaxis.grid(false)
             end
 
-            n_minor_intervals = axis[:minorticks]
-            if !no_minor_intervals(axis) && n_minor_intervals isa Integer
-                n_minor_intervals isa Bool || pyaxis.set_minor_locator(
-                    # NOTE: AutoMinorLocator expects a number of intervals
-                    PythonPlot.matplotlib.ticker.AutoMinorLocator(n_minor_intervals),
-                )
+            if !no_minor_intervals(axis)
+                ax.minorticks_on()
+                ticks = get_ticks(sp, axis, update = false)
+                minor_ticks = get_minor_ticks(sp, axis, ticks)
+                n_minor_intervals = floor(Int, length(minor_ticks) / length(first(ticks)))
+                locator = if (scale = axis[:scale]) === :identity
+                    pyticker.AutoMinorLocator(n_minor_intervals)
+                else
+                    pyticker.LogLocator(base=_logScaleBases[scale], numticks=n_minor_intervals + 1)
+                end
+                pyaxis.set_minor_locator(locator)
                 pyaxis.set_tick_params(
                     which = "minor",
                     direction = axis[:tick_direction] === :out ? "out" : "in",
@@ -1154,14 +1161,12 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             end
 
             if axis[:minorgrid]
-                no_minor_intervals(axis) || ax.minorticks_on()  # Check if ticks were already configured
                 pyaxis.set_tick_params(
                     which = "minor",
                     direction = axis[:tick_direction] === :out ? "out" : "in",
                     length = axis[:tick_direction] === :none ? 0 :
                              py_thickness_scale(plt, intensity),
                 )
-
                 pyaxis.grid(
                     true;
                     which = "minor",
