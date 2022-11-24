@@ -2,7 +2,7 @@
 
 is_marker_supported(::PythonPlotBackend, shape::Shape) = true
 
-# --------------------------------------------------------------------------------------
+const PythonCall = PythonPlot.PythonCall
 
 # problem: https://github.com/tbreloff/Plots.jl/issues/308
 # solution: hack from @stevengj: https://github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
@@ -23,9 +23,6 @@ pytransforms = PythonPlot.pyimport("matplotlib.transforms")
 pycollections = PythonPlot.pyimport("matplotlib.collections")
 pyrcparams = PythonPlot.PyDict(PythonPlot.matplotlib.rcParams)
 
-const PythonCall = PythonPlot.PythonCall
-
-# "support" matplotlib v3.4
 if PythonPlot.version < v"3.4"
     @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
     officialy supported by the Plots community. To ensure smooth Plots.jl
@@ -36,7 +33,7 @@ end
 for k in (:linthresh, :base, :label)
     # add PythonPlot specific symbols to cache
     _attrsymbolcache[k] = Dict{Symbol,Symbol}()
-    for letter in (:x, :y, :z, Symbol(""), :top, :bottom, :left, :right)
+    for letter in (:x, :y, :z, Symbol(), :top, :bottom, :left, :right)
         _attrsymbolcache[k][letter] = Symbol(k, letter)
     end
 end
@@ -65,11 +62,12 @@ function py_colormap(cg::PlotUtils.CategoricalColorGradient)
 end
 py_colormap(c) = py_colormap(_as_gradient(c))
 
-function py_shading(c, z)
-    cmap = py_colormap(c)
-    ls = pycolors.LightSource(270, 45)
-    ls.shade(z, cmap, vert_exag = 0.1, blend_mode = "soft")
-end
+py_shading(c, z) = pycolors.LightSource(270, 45).shade(
+    z,
+    py_colormap(c),
+    vert_exag = 0.1,
+    blend_mode = "soft",
+)
 
 # get the style (solid, dashed, etc)
 function py_linestyle(seriestype::Symbol, linestyle::Symbol)
@@ -79,14 +77,14 @@ function py_linestyle(seriestype::Symbol, linestyle::Symbol)
     linestyle === :dot && return ":"
     linestyle === :dashdot && return "-."
     @warn "Unknown linestyle $linestyle"
-    return "-"
+    "-"
 end
 
 function py_marker(marker::Shape)
     x, y = coords(marker)
     n = length(x)
     mat = zeros(n + 1, 2)
-    for i in eachindex(x)
+    @inbounds for i in eachindex(x)
         mat[i, 1] = x[i]
         mat[i, 2] = y[i]
     end
@@ -114,7 +112,7 @@ function py_marker(marker::Symbol)
     haskey(_shapes, marker) && return py_marker(_shapes[marker])
 
     @warn "Unknown marker $marker"
-    return "o"
+    "o"
 end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
@@ -133,14 +131,14 @@ function py_stepstyle(seriestype::Symbol)
     seriestype === :steppost && return "steps-post"
     seriestype === :stepmid && return "steps-mid"
     seriestype === :steppre && return "steps-pre"
-    return "default"
+    "default"
 end
 
 function py_fillstepstyle(seriestype::Symbol)
     seriestype === :steppost && return "post"
     seriestype === :stepmid && return "mid"
     seriestype === :steppre && return "pre"
-    return nothing
+    nothing
 end
 
 py_fillstyle(::Nothing) = nothing
@@ -210,7 +208,7 @@ py_renderer(fig) = py_canvas(fig).get_renderer()
 # draw commands... paint the screen (probably updating internals too)
 py_drawfig(fig) = fig.draw(py_renderer(fig))
 
-# get a vector [left, right, bottom, top] in PythonPlot coords (origin is bottom-left (0, 0)!)
+# `get_points` returns a numpy array in the form [x0 y0; x1 y1] coords (origin is bottom-left (0, 0)!)
 py_extents(obj) = PythonCall.PyArray(obj.get_window_extent().get_points())
 
 # see cjdoris.github.io/PythonCall.jl/stable/conversion-to-julia/#py2jl-conversion
@@ -223,8 +221,9 @@ function py_bbox(obj)
     fl, fr, fb, ft = bb = py_extents(obj.get_figure())
     l, r, b, t = ex = py_extents(obj)
     # @show obj bb ex
-    # BoundingBox(x0, y0, width, height)
-    BoundingBox(l * px, (ft - t) * px, (r - l) * px, (t - b) * px)
+    x0, y0, width, height = l * px, (ft - t) * px, (r - l) * px, (t - b) * px
+    # @show width height
+    BoundingBox(x0, y0, width, height)
 end
 
 py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
@@ -239,11 +238,12 @@ function py_bbox(v::AVec)
 end
 
 get_axis(l::Symbol, x::Union{Symbol,AbstractString}) = Symbol(:get_, l, x)
+set_axis(l::Symbol, x::Union{Symbol,AbstractString}) = Symbol(:set_, l, x)
 
 # bounding box: union of axis tick labels
 py_bbox_ticks(ax, letter) =
-    if ax.name == "3d"
-        py_bbox(nothing)  # FIXME: broken in `3d`
+    if to_str(ax.name) == "3d"
+        py_bbox(nothing)  # FIXME: broken in `3d` (huge extents)
     else
         getproperty(ax, get_axis(letter, :ticklabels))() |> to_vec |> py_bbox
     end
@@ -285,7 +285,7 @@ end
 
 function py_init_subplot(plt::Plot{PythonPlotBackend}, sp::Subplot{PythonPlotBackend})
     fig = plt.o
-    projection = (proj = sp[:projection]) in (nothing, :none) ? nothing : string(proj)
+    projection = (proj = sp[:projection]) ∈ (nothing, :none) ? nothing : string(proj)
     kw = if projection == "3d"
         # PythonPlot defaults to "persp" projection by default, we choose to unify backends
         # by using a default "ortho" proj when `:auto`
@@ -302,11 +302,14 @@ function py_init_subplot(plt::Plot{PythonPlotBackend}, sp::Subplot{PythonPlotBac
         (;)
     end
     # add a new axis, and force it to create a new one by setting a distinct label
-    ax = fig.add_subplot(; label = string(gensym()), projection, kw...)
-    sp.o = ax
+    sp.o = fig.add_subplot(; label = string(gensym()), projection, kw...)
 end
 
 # ---------------------------------------------------------------------------
+const py_line_series = :path, :path3d, :steppre, :stepmid, :steppost, :straightline
+const py_marker_series =
+    :path, :scatter, :path3d, :scatter3d, :steppre, :stepmid, :steppost, :bar
+const py_legend_series = :path, :straightline, :scatter, :steppre, :stepmid, :steppost
 
 function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     # plotattributes = series.plotattributes
@@ -325,18 +328,15 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         x, y = shape_data(series)
     end
 
-    if ispolar(series)
-        # make negative radii positive and flip the angle
-        # (PythonPlot ignores negative radii)
-        for i in eachindex(y)
-            if y[i] < 0
-                y[i] = -y[i]
-                x[i] -= π
-            end
+    # make negative radii positive and flip the angle (PythonPlot ignores negative radii)
+    ispolar(series) && for i in eachindex(y)
+        if y[i] < 0
+            y[i] = -y[i]
+            x[i] -= π
         end
     end
 
-    xyargs = st in _3dTypes ? (x, y, z) : (x, y)
+    xyargs = st ∈ _3dTypes ? (x, y, z) : (x, y)
 
     # handle zcolor and get c/cmap
     needs_colorbar = hascolorbar(sp)
@@ -359,72 +359,62 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
     # pass in an integer value as an arg, but a levels list as a keyword arg
     levels = series[:levels]
-    levelargs = if isscalar(levels)
-        levels
-    elseif isvector(levels)
-        extrakw[:levels] = levels
-        ()
-    end
+    levelargs = isscalar(levels) ? levels : ()
+    isvector(levels) && (extrakw[:levels] = levels)
 
     # add custom frame shapes to markershape?
     series_annotations_shapes!(series, :xy)
 
     # for each plotting command, optionally build and add a series handle to the list
 
-    # line plot
-    if st in (:path, :path3d, :steppre, :stepmid, :steppost, :straightline)
-        if maximum(series[:linewidth]) > 0
-            for (k, segment) in enumerate(series_segments(series, st; check = true))
-                i, rng = segment.attr_index, segment.range
-                ax.plot(
-                    (arg[rng] for arg in xyargs)...;
-                    label = k == 1 ? series[:label] : "",
-                    zorder = series[:series_plotindex],
-                    color = py_color(
-                        single_color(get_linecolor(series, clims, i)),
-                        get_linealpha(series, i),
-                    ),
-                    linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
-                    linestyle = py_linestyle(st, get_linestyle(series, i)),
-                    solid_capstyle = "butt",
-                    dash_capstyle = "butt",
-                    drawstyle = py_stepstyle(st),
-                ) |> push_h
-            end
+    # add lines ?
+    if st ∈ py_line_series && maximum(series[:linewidth]) > 0
+        for (k, segment) in enumerate(series_segments(series, st; check = true))
+            i, rng = segment.attr_index, segment.range
+            ax.plot(
+                map(arg -> arg[rng], xyargs)...;
+                label = k == 1 ? series[:label] : "",
+                zorder = series[:series_plotindex],
+                color = py_color(
+                    single_color(get_linecolor(series, clims, i)),
+                    get_linealpha(series, i),
+                ),
+                linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
+                linestyle = py_linestyle(st, get_linestyle(series, i)),
+                solid_capstyle = "butt",
+                dash_capstyle = "butt",
+                drawstyle = py_stepstyle(st),
+            ) |> push_h
+        end
 
-            if (a = series[:arrow]) !== nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
-                if typeof(a) != Arrow
-                    @warn "Unexpected type for arrow: $(typeof(a))"
-                else
-                    arrowprops = Dict(
-                        "arrowstyle" => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
-                        "edgecolor"  => py_color(get_linecolor(series)),
-                        "facecolor"  => py_color(get_linecolor(series)),
-                        "linewidth"  => py_thickness_scale(plt, get_linewidth(series)),
-                        "linestyle"  => py_linestyle(st, get_linestyle(series)),
-                        "shrinkA"    => 0,
-                        "shrinkB"    => 0,
+        if (a = series[:arrow]) !== nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
+            if typeof(a) != Arrow
+                @warn "Unexpected type for arrow: $(typeof(a))"
+            else
+                arrowprops = Dict(
+                    "arrowstyle" => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
+                    "edgecolor"  => py_color(get_linecolor(series)),
+                    "facecolor"  => py_color(get_linecolor(series)),
+                    "linewidth"  => py_thickness_scale(plt, get_linewidth(series)),
+                    "linestyle"  => py_linestyle(st, get_linestyle(series)),
+                    "shrinkA"    => 0,
+                    "shrinkB"    => 0,
+                )
+                add_arrows(x, y) do xyprev, xy
+                    ax.annotate(
+                        "";
+                        xytext = (0.001xyprev[1] + 0.999xy[1], 0.001xyprev[2] + 0.999xy[2]),
+                        zorder = 999,
+                        arrowprops,
+                        xy,
                     )
-                    add_arrows(x, y) do xyprev, xy
-                        ax.annotate(
-                            "";
-                            xytext = (
-                                0.001xyprev[1] + 0.999xy[1],
-                                0.001xyprev[2] + 0.999xy[2],
-                            ),
-                            zorder = 999,
-                            arrowprops,
-                            xy,
-                        )
-                    end
                 end
             end
         end
     end
 
-    # add markers?
-    if series[:markershape] !== :none &&
-       st in (:path, :scatter, :path3d, :scatter3d, :steppre, :stepmid, :steppost, :bar)
+    # add markers ?
+    if series[:markershape] !== :none && st ∈ py_marker_series
         for segment in series_segments(series, :scatter)
             i, rng = segment.attr_index, segment.range
             args = if st === :bar && !isvertical(series)
@@ -454,7 +444,144 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         end
     end
 
-    if st === :hexbin
+    if st === :shape
+        for segment in series_segments(series)
+            i, rng = segment.attr_index, segment.range
+            if length(rng) > 1
+                lc = get_linecolor(series, clims, i)
+                fc = get_fillcolor(series, clims, i)
+                la = get_linealpha(series, i)
+                fa = get_fillalpha(series, i)
+                ls = get_linestyle(series, i)
+                fs = get_fillstyle(series, i)
+                has_fs = !isnothing(fs)
+
+                path = pypath.Path(hcat(x[rng], y[rng]))
+
+                # shape outline (and potentially solid fill)
+                pypatches.PathPatch(
+                    path;
+                    label = series[:label],
+                    zorder = series[:series_plotindex],
+                    edgecolor = py_color(lc, la),
+                    facecolor = py_color(fc, has_fs ? 0 : fa),
+                    linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
+                    linestyle = py_linestyle(st, ls),
+                    fill = !has_fs,
+                ) |>
+                ax.add_patch |>
+                push_h
+
+                # shape hatched fill
+                # hatch color/alpha are controlled by edge (not face) color/alpha
+                if has_fs
+                    pypatches.PathPatch(
+                        path;
+                        label = "",
+                        zorder = series[:series_plotindex],
+                        edgecolor = py_color(fc, fa),
+                        facecolor = py_color(fc, 0), # don't fill with solid background
+                        hatch = py_fillstyle(fs),
+                        linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
+                        linestyle = py_linestyle(st, ls),
+                        fill = false,
+                    ) |>
+                    ax.add_patch |>
+                    push_h
+                end
+            end
+        end
+    elseif st === :image
+        xmin, xmax = ignorenan_extrema(series[:x])
+        ymin, ymax = ignorenan_extrema(series[:y])
+        dx = (xmax - xmin) / (length(series[:x]) - 1) / 2
+        dy = (ymax - ymin) / (length(series[:y]) - 1) / 2
+        z = if eltype(z) <: Colors.AbstractGray
+            float(z)
+        elseif eltype(z) <: Colorant
+            rgba = Array{Float64,3}(undef, (size(z)..., 4))
+            rgba[:, :, 1] = red.(z)
+            rgba[:, :, 2] = green.(z)
+            rgba[:, :, 3] = blue.(z)
+            rgba[:, :, 4] = alpha.(z)
+            rgba
+        else
+            z  # hopefully it's in a data format that will "just work" with imshow
+        end
+        ax.imshow(
+            z;
+            zorder = series[:series_plotindex],
+            cmap = py_colormap(cgrad(plot_color([:black, :white]))),
+            vmin = 0.0,
+            vmax = 1.0,
+            extent = (xmin - dx, xmax + dx, ymax + dy, ymin - dy),
+        ) |> push_h
+
+        # expand extrema... handle is AxesImage object
+        xmin, xmax, ymax, ymin = handles[end].get_extent() |> to_vec
+        expand_extrema!(sp, xmin, xmax, ymin, ymax)
+        # sp[:yaxis].series[:flip] = true
+    elseif st === :heatmap
+        x, y = heatmap_edges(x, sp[:xaxis][:scale], y, sp[:yaxis][:scale], size(z))
+
+        expand_extrema!(sp[:xaxis], x)
+        expand_extrema!(sp[:yaxis], y)
+        dvals = sp[:zaxis][:discrete_values]
+        isempty(dvals) || (discrete_colorbar_values = dvals)
+
+        ax.pcolormesh(
+            x,
+            y,
+            py_mask_nans(z);
+            label = series[:label],
+            zorder = series[:series_plotindex],
+            cmap = py_fillcolormap(series),
+            alpha = series[:fillalpha],
+            # edgecolors = (series[:linewidth] > 0 ? py_linecolor(series) : "face"),
+            extrakw...,
+        ) |> push_h
+    elseif st === :mesh3d
+        polygons = if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
+            # Combination of any polygon types
+            map(inds -> map(i -> [x[i], y[i], z[i]], inds), series[:connections])
+        elseif series[:connections] isa AbstractVector{NTuple{N,Int}} where {N}
+            # Only N-gons - connections have to be 1-based (indexing)
+            map(inds -> map(i -> [x[i], y[i], z[i]], inds), series[:connections])
+        elseif series[:connections] isa NTuple{3,<:AbstractVector{Int}}
+            # Only triangles - connections have to be 0-based (indexing)
+            ci, cj, ck = series[:connections]
+            if !(length(ci) == length(cj) == length(ck))
+                "Argument connections must consist of equally sized arrays." |>
+                ArgumentError |>
+                throw
+            end
+            map(
+                j -> reduce(
+                    hcat,
+                    map(i -> [x[i], y[i], z[i]], [ci[j] + 1, cj[j] + 1, ck[j] + 1]),
+                ),
+                eachindex(ci),
+            )
+        else
+            "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st" |>
+            ArgumentError |>
+            throw
+        end
+        mplot3d.art3d.Poly3DCollection(
+            polygons,
+            linewidths = py_thickness_scale(plt, series[:linewidth]),
+            edgecolor = py_color(get_linecolor(series)),
+            facecolor = py_color(series[:fillcolor]),
+            alpha = get_fillalpha(series),
+            zorder = series[:series_plotindex],
+        ) |>
+        ax.add_collection3d |>
+        push_h
+        # Fix for handle: https://stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
+        # It seems there aren't two different alpha values for edge and face
+        handles[end]._facecolors2d = py_color(series[:fillcolor])
+        handles[end]._edgecolors2d = py_color(get_linecolor(series))
+    elseif st === :hexbin
         sekw = series[:extra_kwargs]
         extrakw[:mincnt] = get(sekw, :mincnt, nothing)
         extrakw[:edgecolors] = get(sekw, :edgecolors, py_color(get_linecolor(series)))
@@ -470,9 +597,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             zorder = series[:series_plotindex],
             extrakw...,
         ) |> push_h
-    end
-
-    if st in (:contour, :contour3d)
+    elseif st ∈ (:contour, :contour3d)
         if st === :contour3d
             extrakw[:extend3d] = true
             if !ismatrix(x) || !ismatrix(y)
@@ -498,12 +623,10 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             linestyles = py_linestyle(st, series[:linestyle]),
             extrakw...,
         ) |> push_h
-        if series[:contour_labels] == true
-            ax.clabel(handle, handle.levels)
-        end
+        series[:contour_labels] === true && ax.clabel(handle, handle.levels)
 
         # contour fills
-        if series[:fillrange] !== nothing
+        series[:fillrange] !== nothing &&
             ax.contourf(
                 x,
                 y,
@@ -514,10 +637,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 alpha = series[:fillalpha],
                 extrakw...,
             ) |> push_h
-        end
-    end
-
-    if st in (:surface, :wireframe)
+    elseif st ∈ (:surface, :wireframe)
         if z isa AbstractMatrix
             if !ismatrix(x) || !ismatrix(y)
                 x, y = repeat(x', length(y), 1), repeat(y, 1, length(x))
@@ -577,159 +697,13 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         end
     end
 
-    if st === :mesh3d
-        polygons = if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
-            # Combination of any polygon types
-            map(inds -> map(i -> [x[i], y[i], z[i]], inds), series[:connections])
-        elseif series[:connections] isa AbstractVector{NTuple{N,Int}} where {N}
-            # Only N-gons - connections have to be 1-based (indexing)
-            map(inds -> map(i -> [x[i], y[i], z[i]], inds), series[:connections])
-        elseif series[:connections] isa NTuple{3,<:AbstractVector{Int}}
-            # Only triangles - connections have to be 0-based (indexing)
-            ci, cj, ck = series[:connections]
-            if !(length(ci) == length(cj) == length(ck))
-                "Argument connections must consist of equally sized arrays." |>
-                ArgumentError |>
-                throw
-            end
-            map(
-                j -> reduce(
-                    hcat,
-                    map(i -> [x[i], y[i], z[i]], [ci[j] + 1, cj[j] + 1, ck[j] + 1]),
-                ),
-                eachindex(ci),
-            )
-        else
-            "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st" |>
-            ArgumentError |>
-            throw
-        end
-        mplot3d.art3d.Poly3DCollection(
-            polygons,
-            linewidths = py_thickness_scale(plt, series[:linewidth]),
-            edgecolor = py_color(get_linecolor(series)),
-            facecolor = py_color(series[:fillcolor]),
-            alpha = get_fillalpha(series),
-            zorder = series[:series_plotindex],
-        ) |>
-        ax.add_collection3d |>
-        push_h
-        # Fix for handle: https://stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
-        # It seems there aren't two different alpha values for edge and face
-        handles[end]._facecolors2d = py_color(series[:fillcolor])
-        handles[end]._edgecolors2d = py_color(get_linecolor(series))
-    end
-
-    if st === :image
-        xmin, xmax = ignorenan_extrema(series[:x])
-        ymin, ymax = ignorenan_extrema(series[:y])
-        dx = (xmax - xmin) / (length(series[:x]) - 1) / 2
-        dy = (ymax - ymin) / (length(series[:y]) - 1) / 2
-        z = if eltype(z) <: Colors.AbstractGray
-            float(z)
-        elseif eltype(z) <: Colorant
-            rgba = Array{Float64,3}(undef, (size(z)..., 4))
-            rgba[:, :, 1] = red.(z)
-            rgba[:, :, 2] = green.(z)
-            rgba[:, :, 3] = blue.(z)
-            rgba[:, :, 4] = alpha.(z)
-            rgba
-        else
-            z  # hopefully it's in a data format that will "just work" with imshow
-        end
-        ax.imshow(
-            z;
-            zorder = series[:series_plotindex],
-            cmap = py_colormap(cgrad(plot_color([:black, :white]))),
-            vmin = 0.0,
-            vmax = 1.0,
-            extent = (xmin - dx, xmax + dx, ymax + dy, ymin - dy),
-        ) |> push_h
-
-        # expand extrema... handle is AxesImage object
-        xmin, xmax, ymax, ymin = handles[end].get_extent() |> to_vec
-        expand_extrema!(sp, xmin, xmax, ymin, ymax)
-        # sp[:yaxis].series[:flip] = true
-    end
-
-    if st === :heatmap
-        x, y = heatmap_edges(x, sp[:xaxis][:scale], y, sp[:yaxis][:scale], size(z))
-
-        expand_extrema!(sp[:xaxis], x)
-        expand_extrema!(sp[:yaxis], y)
-        dvals = sp[:zaxis][:discrete_values]
-        isempty(dvals) || (discrete_colorbar_values = dvals)
-
-        ax.pcolormesh(
-            x,
-            y,
-            py_mask_nans(z);
-            label = series[:label],
-            zorder = series[:series_plotindex],
-            cmap = py_fillcolormap(series),
-            alpha = series[:fillalpha],
-            # edgecolors = (series[:linewidth] > 0 ? py_linecolor(series) : "face"),
-            extrakw...,
-        ) |> push_h
-    end
-
-    if st === :shape
-        for segment in series_segments(series)
-            i, rng = segment.attr_index, segment.range
-            if length(rng) > 1
-                lc = get_linecolor(series, clims, i)
-                fc = get_fillcolor(series, clims, i)
-                la = get_linealpha(series, i)
-                fa = get_fillalpha(series, i)
-                ls = get_linestyle(series, i)
-                fs = get_fillstyle(series, i)
-                has_fs = !isnothing(fs)
-
-                path = pypath.Path(hcat(x[rng], y[rng]))
-
-                # shape outline (and potentially solid fill)
-                pypatches.PathPatch(
-                    path;
-                    label = series[:label],
-                    zorder = series[:series_plotindex],
-                    edgecolor = py_color(lc, la),
-                    facecolor = py_color(fc, has_fs ? 0 : fa),
-                    linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
-                    linestyle = py_linestyle(st, ls),
-                    fill = !has_fs,
-                ) |>
-                ax.add_patch |>
-                push_h
-
-                # shape hatched fill
-                # hatch color/alpha are controlled by edge (not face) color/alpha
-                if has_fs
-                    pypatches.PathPatch(
-                        path;
-                        label = "",
-                        zorder = series[:series_plotindex],
-                        edgecolor = py_color(fc, fa),
-                        facecolor = py_color(fc, 0), # don't fill with solid background
-                        hatch = py_fillstyle(fs),
-                        linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
-                        linestyle = py_linestyle(st, ls),
-                        fill = false,
-                    ) |>
-                    ax.add_patch |>
-                    push_h
-                end
-            end
-        end
-    end
-
     series[:serieshandle] = handles
 
     # # smoothing
     # handleSmooth(plt, ax, series, series[:smooth])
 
     # handle area filling
-    fillrange = series[:fillrange]
-    if fillrange !== nothing && st !== :contour
+    if (fillrange = series[:fillrange]) !== nothing && st !== :contour
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
             f, dim1, dim2 = if isvertical(series)
@@ -778,7 +752,7 @@ end
 function py_set_lims(ax, sp::Subplot, axis::Axis)
     letter = axis[:letter]
     lfrom, lto = axis_limits(sp, letter)
-    getproperty(ax, Symbol("set_", letter, "lim"))(lfrom, lto)
+    getproperty(ax, set_axis(letter, :lim))(lfrom, lto)
 end
 
 function py_set_ticks(sp, ax, ticks, letter)
@@ -818,15 +792,13 @@ function py_compute_axis_minval(sp::Subplot, axis::Axis)
 end
 
 function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
-    scale in supported_scales() ||
-        return @warn "Unhandled scale value in PythonPlot: $scale"
-    func = getproperty(ax, Symbol("set_", letter, "scale"))
-    pyletter = PythonPlot.version ≥ v"3.3" ? Symbol("") : letter  # https://matplotlib.org/3.3.0/api/api_changes.html
+    scale ∈ supported_scales() || return @warn "Unhandled scale value in PythonPlot: $scale"
+    func = getproperty(ax, set_axis(letter, :scale))
     kw = KW()
     arg = if scale === :identity
         "linear"
     else
-        kw[get_attr_symbol(:base, pyletter)] = if scale === :ln
+        kw[get_attr_symbol(:base, Symbol())] = if scale === :ln
             ℯ
         elseif scale === :log2
             2
@@ -834,7 +806,7 @@ function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
             10
         end
         axis = sp[get_attr_symbol(letter, :axis)]
-        kw[get_attr_symbol(:linthresh, pyletter)] =
+        kw[get_attr_symbol(:linthresh, Symbol())] =
             NaNMath.max(1e-16, py_compute_axis_minval(sp, axis))
         "symlog"
     end
@@ -856,7 +828,7 @@ function py_set_axis_colors(sp, ax, a::Axis)
     axissym = get_attr_symbol(a[:letter], :axis)
     if hasproperty(ax, axissym)
         tickcolor =
-            sp[:framestyle] in (:zerolines, :grid) ?
+            sp[:framestyle] ∈ (:zerolines, :grid) ?
             py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) :
             py_color(a[:foreground_color_axis])
         ax.tick_params(
@@ -901,7 +873,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         end
 
         # title
-        if !isempty(sp[:title])
+        if sp[:title] != ""  # support symbols
             loc = lowercase(string(sp[:titlelocation]))
             func = getproperty(ax, if loc == "left"
                 :_left_title
@@ -926,27 +898,26 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             kw = KW()
             if !isempty(sp[:zaxis][:discrete_values]) &&
                colorbar_series[:seriestype] === :heatmap
-                locator, formatter = get_locator_and_formatter(sp[:zaxis][:discrete_values])
+                kw[:ticks], kw[:format] =
+                    get_locator_and_formatter(sp[:zaxis][:discrete_values])
                 # kw[:values] = eachindex(sp[:zaxis][:discrete_values])
                 kw[:values] = sp[:zaxis][:continuous_values]
-                kw[:ticks] = locator
-                kw[:format] = formatter
                 kw[:boundaries] = vcat(0, kw[:values] + 0.5)
             elseif any(
                 colorbar_series[attr] !== nothing for attr in (:line_z, :fill_z, :marker_z)
             )
                 cmin, cmax = get_clims(sp)
                 norm = pycolors.Normalize(vmin = cmin, vmax = cmax)
-                f = if colorbar_series[:line_z] !== nothing
-                    py_linecolormap
+                cmap = if colorbar_series[:line_z] !== nothing
+                    py_linecolormap(colorbar_series)
                 elseif colorbar_series[:fill_z] !== nothing
-                    py_fillcolormap
+                    py_fillcolormap(colorbar_series)
                 else
-                    py_markercolormap
+                    py_markercolormap(colorbar_series)
                 end
-                cmap = pycmap.ScalarMappable(; cmap = f(colorbar_series), norm)
-                cmap.set_array(PythonCall.pylist([]))
-                handle = cmap
+                c_map = pycmap.ScalarMappable(; cmap, norm)
+                c_map.set_array(PythonCall.pylist([]))
+                handle = c_map
             end
             kw[:spacing] = "proportional"
 
@@ -987,19 +958,19 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             end
 
             cb.set_label(
-                sp[:colorbar_title],
+                sp[:colorbar_title];
                 size = py_thickness_scale(plt, sp[:colorbar_titlefontsize]),
                 family = sp[:colorbar_titlefontfamily],
                 math_fontfamily = py_get_matching_math_font(sp[:colorbar_titlefontfamily]),
                 color = py_color(sp[:colorbar_titlefontcolor]),
             )
 
-            # cb.formatter.set_useOffset(false)   # This for some reason does not work, must be a pyplot bug, instead this is a workaround:
+            # cb.formatter.set_useOffset(false)  # this for some reason does not work, must be a pyplot bug, instead this is a workaround:
             cb.formatter.set_powerlimits((-Inf, Inf))
             cb.update_ticks()
 
             ticks = get_colorbar_ticks(sp)
-            axis, cbar_axis, ticks_letter = if sp[:colorbar] in (:top, :bottom)
+            axis, cbar_axis, ticks_letter = if sp[:colorbar] ∈ (:top, :bottom)
                 sp[:xaxis], cb.ax.xaxis, :x  # colorbar inherits from x axiss
             else
                 sp[:yaxis], cb.ax.yaxis, :y  # colorbar inherits from y axis
@@ -1052,7 +1023,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             elseif sp[:framestyle] === :box
                 ax.tick_params(top = true)   # Add ticks too
                 ax.tick_params(right = true) # Add ticks too
-            elseif sp[:framestyle] in (:axes, :origin)
+            elseif sp[:framestyle] ∈ (:axes, :origin)
                 getproperty(ax.spines, sp[:xaxis][:mirror] ? "bottom" : "top").set_visible(
                     false,
                 )
@@ -1063,7 +1034,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                     ax.spines.bottom.set_position("zero")
                     ax.spines.left.set_position("zero")
                 end
-            elseif sp[:framestyle] in (:grid, :none, :zerolines)
+            elseif sp[:framestyle] ∈ (:grid, :none, :zerolines)
                 py_hide_spines(ax)
                 if sp[:framestyle] === :zerolines
                     ax.axhline(
@@ -1113,13 +1084,13 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
 
             # Set ticks
             fontProperties = Dict(
-                "family"          => axis[:tickfontfamily],
                 "math_fontfamily" => py_get_matching_math_font(axis[:tickfontfamily]),
                 "size"            => py_thickness_scale(plt, axis[:tickfontsize]),
                 "rotation"        => axis[:tickfontrotation],
+                "family"          => axis[:tickfontfamily],
             )
 
-            positions = getproperty(ax, Symbol("get_", letter, "ticks"))()
+            positions = getproperty(ax, get_axis(letter, :ticks))()
             pyaxis.set_major_locator(pyticker.FixedLocator(positions))
 
             kw = if RecipesPipeline.is3d(sp)
@@ -1128,7 +1099,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 (; fontdict = PythonPlot.PyDict(fontProperties))
             end
 
-            getproperty(ax, Symbol("set_", letter, "ticklabels"))(positions; kw...)
+            getproperty(ax, set_axis(letter, :ticklabels))(positions; kw...)
 
             py_set_ticks(sp, ax, ticks, letter)
 
@@ -1147,10 +1118,9 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                          5py_thickness_scale(plt, intensity),
             )
 
-            getproperty(ax, Symbol("set_", letter, "label"))(axis[:guide])
-            if get(axis.plotattributes, :flip, false)
-                getproperty(ax, Symbol("invert_", letter, "axis"))()
-            end
+            getproperty(ax, set_axis(letter, :label))(axis[:guide])
+            axis[:flip] && getproperty(ax, Symbol(:invert_, letter, :axis))()
+
             pyaxis.label.set_fontsize(py_thickness_scale(plt, axis[:guidefontsize]))
             pyaxis.label.set_family(axis[:guidefontfamily])
             pyaxis.label.set_math_fontfamily(
@@ -1202,7 +1172,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 )
 
                 pyaxis.grid(
-                    true,
+                    true;
                     which = "minor",
                     color = py_color(axis[:foreground_color_grid]),
                     linestyle = py_linestyle(:line, axis[:minorgridstyle]),
@@ -1312,7 +1282,7 @@ function _update_min_padding!(sp::Subplot{PythonPlotBackend})
         end
     end
 
-    # add in the user-specified margin
+    # add ∈ the user-specified margin
     padding .+= [sp[:left_margin], sp[:top_margin], sp[:right_margin], sp[:bottom_margin]]
 
     dpi_factor = Plots.DPI / sp.plt[:dpi]
@@ -1322,28 +1292,21 @@ end
 
 # -----------------------------------------------------------------
 
-function py_add_annotations(sp::Subplot{PythonPlotBackend}, x, y, val)
-    ax = sp.o
-    ax.annotate(val, xy = (x, y), zorder = 999, annotation_clip = false)
-end
+py_add_annotations(sp::Subplot{PythonPlotBackend}, x, y, val) =
+    sp.o.annotate(val, xy = (x, y), annotation_clip = false, zorder = 999)
 
-function py_add_annotations(sp::Subplot{PythonPlotBackend}, x, y, val::PlotText)
-    ax = sp.o
-    ax.annotate(
-        val.str,
-        xy = (x, y),
-        family = val.font.family,
-        color = py_color(val.font.color),
-        horizontalalignment = val.font.halign === :hcenter ? "center" :
-                              string(val.font.halign),
-        verticalalignment = val.font.valign === :vcenter ? "center" :
-                            string(val.font.valign),
-        rotation = val.font.rotation,
-        size = py_thickness_scale(sp.plt, val.font.pointsize),
-        zorder = 999,
-        annotation_clip = false,
-    )
-end
+py_add_annotations(sp::Subplot{PythonPlotBackend}, x, y, val::PlotText) = sp.o.annotate(
+    val.str,
+    xy = (x, y),
+    size = py_thickness_scale(sp.plt, val.font.pointsize),
+    horizontalalignment = val.font.halign === :hcenter ? "center" : string(val.font.halign),
+    verticalalignment = val.font.valign === :vcenter ? "center" : string(val.font.valign),
+    color = py_color(val.font.color),
+    rotation = val.font.rotation,
+    family = val.font.family,
+    annotation_clip = false,
+    zorder = 999,
+)
 
 # -----------------------------------------------------------------
 
@@ -1399,9 +1362,12 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 capstyle = "butt",
             ) |> push_h
 
+            # plot two handles on top of each other by passing in a tuple
+            # matplotlib.org/stable/tutorials/intermediate/legend_guide.html
+
             # hatched fill
             # hatch color/alpha are controlled by edge (not face) color/alpha
-            if has_fs
+            has_fs &&
                 pypatches.Patch(
                     edgecolor = py_color(single_color(fc), fa),
                     facecolor = py_color(single_color(fc), 0), # don't fill with solid background
@@ -1410,12 +1376,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     linestyle = py_linestyle(series[:seriestype], ls),
                     capstyle = "butt",
                 ) |> push_h
-
-                # plot two handles on top of each other by passing in a tuple
-                # matplotlib.org/stable/tutorials/intermediate/legend_guide.html
-            end
-        elseif series[:seriestype] in
-               (:path, :straightline, :scatter, :steppre, :stepmid, :steppost)
+        elseif series[:seriestype] ∈ py_legend_series
             has_line = get_linewidth(series) > 0
             PythonPlot.pyplot.Line2D(
                 (0, 1),
@@ -1515,12 +1476,8 @@ function _update_plot_object(plt::Plot{PythonPlotBackend})
         figw, figh = sp.plt[:size]
         figw, figh = figw * px, figh * px
 
-        # FIXME: wrong in 3D for `PythonPlot`
-        # ==> sp.plotarea[3] == width is incorrect
-        @static if false
-            # ax.set_position: `[left, bottom, width, height]`
-            bbox_to_pcts(sp.plotarea, figw, figh) |> ax.set_position
-        end
+        # ax.set_position signature: `[left, bottom, width, height]`
+        bbox_to_pcts(sp.plotarea, figw, figh) |> ax.set_position
 
         if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)   # 2D plots are completely handled by axis dividers
             bb = sp.attr[:cbar_bbox]
