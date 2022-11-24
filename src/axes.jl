@@ -323,6 +323,21 @@ _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis)
 
 const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
 
+function num_minor_intervals(axis)
+    # FIXME: `minorticks` should be fixed in `2.0` to be the number of ticks, not intervals
+    # see github.com/JuliaPlots/Plots.jl/pull/4528
+    n_intervals = axis[:minorticks]
+    if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
+        max(1, n_intervals)  # 0 intervals makes no sense
+    else   # `:auto` or `true`
+        if (base = get(_logScaleBases, axis[:scale], nothing)) == 10
+            Int(base - 1)
+        else
+            DEFAULT_MINOR_INTERVALS[]
+        end
+    end::Int
+end
+
 no_minor_intervals(axis) =
     if (n_intervals = axis[:minorticks]) === false
         true  # must be tested with `===` since Bool <: Integer
@@ -336,8 +351,6 @@ no_minor_intervals(axis) =
 
 function get_minor_ticks(sp, axis, ticks_and_labels)
     no_minor_intervals(axis) && return
-
-    n_intervals = axis[:minorticks]
     ticks = first(ticks_and_labels)
     length(ticks) < 2 && return
 
@@ -357,15 +370,7 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
         ticks = [ticks[1] - first_step / ratio; ticks; ticks[end] + last_step * ratio]
     end
 
-    # FIXME: `minorticks` should be fixed in `2.0` to be the number of ticks, not intervals
-    # see github.com/JuliaPlots/Plots.jl/pull/4528
-    n_minor_intervals::Int =
-        if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
-            max(1, n_intervals)  # 0 intervals makes no sense
-        else   # `:auto` or `true`
-            (log_scaled && base == 10) ? Int(base - 1) : DEFAULT_MINOR_INTERVALS[]
-        end
-
+    n_minor_intervals = num_minor_intervals(axis)
     minorticks = sizehint!(eltype(ticks)[], n_minor_intervals * sub * length(ticks))
     for i in 2:length(ticks)
         lo = ticks[i - 1]
