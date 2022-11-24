@@ -1177,7 +1177,5 @@ end
 # Main function
 function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
     lp === :best || return lp
-    xl = xlims(plt)
-    yl = ylims(plt)
-    return _guess_best_legend_position(xl, yl, plt, nsamples)
+    return _guess_best_legend_position(xlims(plt), ylims(plt), plt, nsamples)
 end
