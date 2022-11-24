@@ -195,6 +195,70 @@ end
     @test scatter(ChainedVector([[1, 2], [3, 4]]), 1:4) isa Plot
 end
 
+@testset "Best legend position" begin
+    x = 0:0.01:2
+    plt = plot(x, x, label = "linear")
+    plt = plot!(x, x .^ 2, label = "quadratic")
+    plt = plot!(x, x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, plt) === :topleft
+
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
+    plt = plot(x, x, label = "linear")
+    plt = plot!(x, x .^ 2, label = "quadratic")
+    plt = plot!(x, x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, plt) === :topleft
+
+    x = 0:0.01:2
+    plt = plot(x, -x, label = "linear")
+    plt = plot!(x, -x .^ 2, label = "quadratic")
+    plt = plot!(x, -x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, plt) === :bottomleft
+
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
+    plt = plot(x, -x, label = "linear")
+    plt = plot!(x, -x .^ 2, label = "quadratic")
+    plt = plot!(x, -x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, plt) === :bottomleft
+
+    x = [0, 1, 0, 1]
+    y = [0, 0, 1, 1]
+    plt = scatter(x, y, xlims = [0.0, 1.3], ylims = [0.0, 1.3], label = "test")
+    @test Plots._guess_best_legend_position(:best, plt) === :topright
+
+    plt = scatter(x, y, xlims = [-0.3, 1.0], ylims = [-0.3, 1.0], label = "test")
+    @test Plots._guess_best_legend_position(:best, plt) === :bottomleft
+
+    plt = scatter(x, y, xlims = [0.0, 1.3], ylims = [-0.3, 1.0], label = "test")
+    @test Plots._guess_best_legend_position(:best, plt) === :bottomright
+
+    plt = scatter(x, y, xlims = [-0.3, 1.0], ylims = [0.0, 1.3], label = "test")
+    @test Plots._guess_best_legend_position(:best, plt) === :topleft
+
+    y1 = [
+        0.6640202072697099,
+        0.04435946459047402,
+        0.4819421561655691,
+        0.7812872333045798,
+        0.9468591660437995,
+        0.5530071466041402,
+        0.22969207890925003,
+        0.48741164266779236,
+        0.0546763558355734,
+        0.1432072797975329,
+    ]
+    y2 = [0.40089741940615464, 0.6687326060649715, 0.6844117863127116]
+    plt = plot(1:10, y1)
+    plt = plot!(1:3, y2, xlims = (0, 10), ylims = (0, 1))
+    @test Plots._guess_best_legend_position(:best, plt) === :topright
+
+    # test empty plot
+    plt = plot([])
+    @test Plots._guess_best_legend_position(:best, plt) === :topright
+
+    # test that we didn't overlap other placements
+    @test Plots._guess_best_legend_position(:bottomleft, plt) === :bottomleft
+end
+
 @testset "dispatch" begin
     with(:gr) do
         pl = heatmap(rand(10, 10); xscale = :log10, yscale = :log10)

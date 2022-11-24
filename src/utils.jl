@@ -1167,3 +1167,55 @@ _argument_description(s::Symbol) =
 
 _document_argument(s::Symbol) =
     _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
+
+#
+# The following functions implement the guess of the optimal legend position,
+# from the data series.
+#
+# Computes the distances of the plot limits to a sample of points at the extremes of 
+# the ranges, and places the legend at the corner where the maximum distance to the limits is found.
+#
+function d_point(x, y, lim, scale)
+    p_scaled = (x / scale[1], y / scale[2])
+    d = sum(abs2, lim .- p_scaled)
+    isnan(d) && return 0.0
+    return d
+end
+function _dinv_series(lim, scale, x, y, nsamples)
+    length(x) > 0 || return +Inf
+    dinv = 0.0
+    step = 1
+    lim = lim ./ scale
+    weight = 100.0
+    n = max(1, div(min(nsamples, length(x)), 2))
+    # Run from the extremes of the dataset inwards
+    for isample in firstindex(x):step:n
+        dinv += inv(1 + weight * d_point(x[isample], y[isample], lim, scale))
+    end
+    for isample in lastindex(x):(-step):(lastindex(x) - n)
+        dinv += inv(1 + weight * d_point(x[isample], y[isample], lim, scale))
+    end
+    return dinv
+end
+#
+# Function barrier because lims are type-unstable
+#
+function _guess_best_legend_position(xl, yl, plt, nsamples)
+    scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
+    dist_to_lims = zeros(4) # faster than tuple
+    for series in plt.series_list
+        x = series[:x]
+        y = series[:y]
+        for (i, lim) in enumerate(Iterators.product(xl, yl))
+            dist_to_lims[i] += _dinv_series(lim, scale, x, y, nsamples)
+        end
+    end
+    # this inversion favors :topright in case of draws, without cost
+    ibest = findmin(@view(dist_to_lims[4:-1:1]))[2]
+    return (:topright, :topleft, :bottomright, :bottomleft)[ibest]
+end
+# Main function
+function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
+    lp === :best || return lp
+    return _guess_best_legend_position(xlims(plt), ylims(plt), plt, nsamples)
+end
