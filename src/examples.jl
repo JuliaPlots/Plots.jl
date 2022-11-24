@@ -1235,9 +1235,7 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [],
-    :pyplot => [
-        56,  # blank image produced
-    ],
+    :pyplot => [],
     :plotlyjs => [
         21,
         24,
