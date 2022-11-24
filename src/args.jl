@@ -5,12 +5,10 @@ const _keyAliases = Dict{Symbol,Symbol}()
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
-        if haskey(_keyAliases, alias) || alias === sym
-            return nothing
-        end
+        (haskey(_keyAliases, alias) || alias === sym) && return
         _keyAliases[alias] = sym
     end
-    return nothing
+    nothing
 end
 
 function add_axes_aliases(sym::Symbol, aliases::Symbol...; generic::Bool = true)
@@ -23,21 +21,17 @@ end
 
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k, v) in aliases
-        s = string(k)
-        if '_' in s
+        if '_' in string(k)
             aliases[make_non_underscore(k)] = v
         end
     end
 end
 
-function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{Symbol})
-    for arg in args
-        s = string(arg)
-        if '_' in s
-            aliases[make_non_underscore(arg)] = arg
-        end
-    end
+macro attributes(expr::Expr)
+    RecipesBase.process_recipe_body!(expr)
+    expr
 end
+
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
@@ -274,9 +268,7 @@ function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
-        @warn(
-            "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
-        )
+        @warn "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
         true
     end
 end
@@ -314,9 +306,7 @@ function showaxis(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
-        @warn(
-            "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
-        )
+        @warn "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
         true
     end
 end
@@ -524,7 +514,7 @@ const _axis_defaults = KW(
     :minorgridstyle              => :solid,
     :minorgridlinewidth          => 0.5,
     :tick_direction              => :in,
-    :minorticks                  => false,
+    :minorticks                  => :auto,
     :minorgrid                   => false,
     :showaxis                    => true,
     :widen                       => :auto,
@@ -544,6 +534,10 @@ const _suppress_warnings = Set{Symbol}([
     :primary,
     :smooth,
     :relative_bbox,
+    :force_minpad,
+    :x_extrema,
+    :y_extrema,
+    :z_extrema,
 ])
 
 is_subplot_attr(k) = k in _all_subplot_args
@@ -552,7 +546,6 @@ is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
 is_axis_attr_noletter(k) = k in _all_axis_args
 
 RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
-is_default_attribute(k) = k in _internal_args || k in _all_args || is_axis_attr_noletter(k)
 
 # -----------------------------------------------------------------------------
 autopick_ignore_none_auto(arr::AVec, idx::Integer) =
@@ -575,7 +568,7 @@ end
 
 aliases(val) = aliases(_keyAliases, val)
 aliases(aliasMap::Dict{Symbol,Symbol}, val) =
-    sortedkeys(filter((x) -> x.second == val, aliasMap))
+    filter(x -> x.second == val, aliasMap) |> keys |> collect |> sort
 
 # -----------------------------------------------------------------------------
 # legend
@@ -1043,11 +1036,10 @@ add_aliases(:warn_on_unsupported, :warn)
 function parse_axis_kw(s::Symbol)
     s = string(s)
     for letter in ('x', 'y', 'z')
-        if startswith(s, letter)
+        startswith(s, letter) &&
             return (Symbol(letter), Symbol(chop(s, head = 1, tail = 0)))
-        end
     end
-    return nothing
+    nothing
 end
 
 # update the defaults globally
@@ -1065,19 +1057,15 @@ end
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
     for defaults in _all_defaults
-        if haskey(defaults, k)
-            return defaults[k]
-        end
+        haskey(defaults, k) && return defaults[k]
     end
-    if haskey(_axis_defaults, k)
-        return _axis_defaults[k]
-    end
+    haskey(_axis_defaults, k) && return _axis_defaults[k]
     if (axis_k = parse_axis_kw(k)) !== nothing
         letter, key = axis_k
         return _axis_defaults_byletter[letter][key]
     end
     k === :letter && return k # for type recipe processing
-    return missing
+    missing
 end
 
 function default(k::Symbol, v)
@@ -1101,9 +1089,7 @@ function default(k::Symbol, v)
 end
 
 function default(; reset = true, kw...)
-    if reset && isempty(kw)
-        reset_defaults()
-    end
+    (reset && isempty(kw)) && reset_defaults()
     kw = KW(kw)
     Plots.preprocess_attributes!(kw)
     for (k, v) in kw
@@ -1124,12 +1110,10 @@ end
 # if arg is a valid color value, then set plotattributes[csym] and return true
 function handleColors!(plotattributes::AKW, arg, csym::Symbol)
     try
-        if arg === :auto
-            plotattributes[csym] = :auto
+        plotattributes[csym] = if arg === :auto
+            :auto
         else
-            # c = colorscheme(arg)
-            c = plot_color(arg)
-            plotattributes[csym] = c
+            plot_color(arg)
         end
         return true
     catch
@@ -1177,7 +1161,7 @@ function processLineArg(plotattributes::AKW, arg)
 
         # color
     elseif !handleColors!(plotattributes, arg, :linecolor)
-        @warn("Skipped line arg $arg.")
+        @warn "Skipped line arg $arg."
     end
 end
 
@@ -1221,7 +1205,7 @@ function processMarkerArg(plotattributes::AKW, arg)
 
         # markercolor
     elseif !handleColors!(plotattributes, arg, :markercolor)
-        @warn("Skipped marker arg $arg.")
+        @warn "Skipped marker arg $arg."
     end
 end
 
@@ -1255,7 +1239,7 @@ function processFillArg(plotattributes::AKW, arg)
         plotattributes[:fillrange] = arg
     end
     # plotattributes[:fillrange] = fr
-    return
+    nothing
 end
 
 function processGridArg!(plotattributes::AKW, arg, letter)
@@ -1291,7 +1275,7 @@ function processGridArg!(plotattributes::AKW, arg, letter)
         arg,
         get_attr_symbol(letter, :foreground_color_grid),
     )
-        @warn("Skipped grid arg $arg.")
+        @warn "Skipped grid arg $arg."
     end
 end
 
@@ -1334,7 +1318,7 @@ function processMinorGridArg!(plotattributes::AKW, arg, letter)
     )
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
     else
-        @warn("Skipped grid arg $arg.")
+        @warn "Skipped grid arg $arg."
     end
 end
 
@@ -1381,7 +1365,7 @@ end
     elseif typeof(arg) <: Real
         Symbol(fontname, :rotation) --> convert(Float64, arg)
     else
-        @warn("Skipped font arg: $arg ($(typeof(arg)))")
+        @warn "Skipped font arg: $arg ($(typeof(arg)))"
     end
 end
 
@@ -1590,11 +1574,9 @@ function preprocess_attributes!(plotattributes::AKW)
         Base.loaded_modules,
         Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
     )
-        @warn(
-            "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
-        )
+        @warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
     end
-    return
+    nothing
 end
 RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Plots.preprocess_attributes!(plotattributes)
@@ -1614,10 +1596,9 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     end
     extra_kwargs = Dict{Symbol,Any}()
     for k in explicitkeys(plotattributes)
-        is_attr_supported(pkg, k) && !(k in keys(_deprecated_attributes)) && continue
+        (is_attr_supported(pkg, k) && k ∉ keys(_deprecated_attributes)) && continue
         k in _suppress_warnings && continue
-        default_value = default(k)
-        if ismissing(default_value)
+        if ismissing(default(k))
             extra_kwargs[k] = pop_kw!(plotattributes, k)
         elseif plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)
@@ -1629,18 +1610,16 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
             if k in keys(_deprecated_attributes)
-                @warn("""
+                @warn """
                 Keyword argument `$k` is deprecated.
                 Please use `$(_deprecated_attributes[k])` instead.
-                """)
+                """
             else
-                @warn(
-                    "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
-                )
+                @warn "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
             end
         end
     end
-    return extra_kwargs
+    extra_kwargs
 end
 
 # _markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supported_markers(pkg)
@@ -1648,37 +1627,25 @@ end
 # _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
-    if !get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
-        return
-    end
-    if !is_seriestype_supported(pkg, plotattributes[:seriestype])
-        @warn(
-            "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))"
-        )
-    end
-    if !is_style_supported(pkg, plotattributes[:linestyle])
-        @warn(
-            "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))"
-        )
-    end
-    if !is_marker_supported(pkg, plotattributes[:markershape])
-        @warn(
-            "markershape $(plotattributes[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))"
-        )
-    end
+    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
+    is_seriestype_supported(pkg, plotattributes[:seriestype]) ||
+        @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
+    is_style_supported(pkg, plotattributes[:linestyle]) ||
+        @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
+    is_marker_supported(pkg, plotattributes[:markershape]) ||
+        @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
-    if !get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
-        return
-    end
+    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
     for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(plotattributes, k)
             v = plotattributes[k]
             if !all(is_scale_supported.(Ref(pkg), v))
-                @warn(
-                    "scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))"
-                )
+                @warn """
+                scale $v is unsupported with $pkg.
+                Choose from: $(supported_scales(pkg))
+                """
             end
         end
     end
@@ -1724,7 +1691,7 @@ convertLegendValue(val::Real) = val
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Nothing) = :none
 convertLegendValue(v::Union{Tuple,NamedTuple}) = convertLegendValue.(v)
-convertLegendValue(v::Tuple{S,T}) where {S<:Real,T<:Real} = v
+convertLegendValue(v::Tuple{<:Real,<:Real}) = v
 convertLegendValue(v::Tuple{<:Real,Symbol}) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
@@ -1734,17 +1701,13 @@ convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 or `levels` is less than 1"""
 function check_contour_levels(levels)
     if !(levels isa Union{Integer,AVec})
-        throw(
-            ArgumentError(
-                "the levels keyword argument must be an integer or AbstractVector",
-            ),
-        )
+        "the levels keyword argument must be an integer or AbstractVector" |>
+        ArgumentError |>
+        throw
     elseif levels isa Integer && levels <= 0
-        throw(
-            ArgumentError(
-                "must pass a positive number of contours to the levels keyword argument",
-            ),
-        )
+        "must pass a positive number of contours to the levels keyword argument" |>
+        ArgumentError |>
+        throw
     end
 end
 
@@ -1764,7 +1727,7 @@ slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
 slice_arg(v, idx) = v
 
-# given an argument key (k), extract the argument value for this index,
+# given an argument key `k`, extract the argument value for this index,
 # and set into plotattributes[k]. Matrices are sliced by column.
 # if nothing is set (or container is empty), return the existing value.
 function slice_arg!(
@@ -1775,22 +1738,20 @@ function slice_arg!(
     remove_pair::Bool,
 )
     v = get(plotattributes_in, k, plotattributes_out[k])
-    plotattributes_out[k] = if haskey(plotattributes_in, k) && !(k in _plot_args)
+    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ _plot_args
         slice_arg(v, idx)
     else
         v
     end
-    if remove_pair
-        RecipesPipeline.reset_kw!(plotattributes_in, k)
-    end
-    return
+    remove_pair && RecipesPipeline.reset_kw!(plotattributes_in, k)
+    nothing
 end
 
 # -----------------------------------------------------------------------------
 
 function color_or_nothing!(plotattributes, k::Symbol)
     plotattributes[k] = (v = plotattributes[k]) === :match ? v : plot_color(v)
-    return
+    nothing
 end
 
 # -----------------------------------------------------------------------------
@@ -1896,14 +1857,6 @@ function fg_color(plotattributes::AKW)
     end
 end
 
-function fg_color_sp(plotattributes::AKW)
-    if (fg = get(plotattributes, :foreground_color_subplot, :match)) === :match
-        fg_color(plotattributes)
-    else
-        plot_color(fg)
-    end
-end
-
 # update attr from an input dictionary
 function _update_plot_args(plt::Plot, plotattributes_in::AKW)
     for (k, v) in _plot_defaults
@@ -1911,16 +1864,8 @@ function _update_plot_args(plt::Plot, plotattributes_in::AKW)
     end
 
     # handle colors
-    plotattributes = plt.attr
-    plt[:background_color] = plot_color(plotattributes[:background_color])
-    plt[:foreground_color] = fg_color(plotattributes)
-    # bg = plot_color(plt.attr[:background_color])
-    # fg = plt.attr[:foreground_color]
-    # if fg === :auto
-    #     fg = isdark(bg) ? colorant"white" : colorant"black"
-    # end
-    # plt.attr[:background_color] = bg
-    # plt.attr[:foreground_color] = plot_color(fg)
+    plt[:background_color] = plot_color(plt.attr[:background_color])
+    plt[:foreground_color] = fg_color(plt.attr)
     color_or_nothing!(plt.attr, :background_color_outside)
 end
 
@@ -1940,7 +1885,7 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     if sp.attr[:colorbar] === :legend
         sp.attr[:colorbar] = sp.attr[:legend_position]
     end
-    return
+    nothing
 end
 
 function _update_subplot_colors(sp::Subplot)
@@ -1954,8 +1899,16 @@ function _update_subplot_colors(sp::Subplot)
     color_or_nothing!(sp.attr, :foreground_color_subplot)
     color_or_nothing!(sp.attr, :legend_foreground_color)
     color_or_nothing!(sp.attr, :foreground_color_title)
-    return
+    nothing
 end
+
+_update_margins(sp::Subplot) =
+    for sym in (:margin, :left_margin, :top_margin, :right_margin, :bottom_margin)
+        if (margin = get(sp.attr, sym, nothing)) isa Tuple
+            # transform e.g. (1, :mm) => 1 * Plots.mm
+            sp.attr[sym] = margin[1] * getfield(@__MODULE__, margin[2])
+        end
+    end
 
 function _update_axis(
     plt::Plot,
@@ -1976,7 +1929,7 @@ function _update_axis(
 
     _update_axis_colors(axis)
     _update_axis_links(plt, axis, letter)
-    return
+    nothing
 end
 
 function _update_axis(
@@ -2004,7 +1957,7 @@ function _update_axis(
 
     # update the axis
     attr!(axis; kw...)
-    return
+    nothing
 end
 
 function _update_axis_colors(axis::Axis)
@@ -2015,21 +1968,18 @@ function _update_axis_colors(axis::Axis)
     color_or_nothing!(axis.plotattributes, :foreground_color_text)
     color_or_nothing!(axis.plotattributes, :foreground_color_grid)
     color_or_nothing!(axis.plotattributes, :foreground_color_minor_grid)
-    return
+    nothing
 end
 
 function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
     # handle linking here.  if we're passed a list of
     # other subplots to link to, link them together
-    link = axis[:link]
-    if !isempty(link)
-        for other_sp in link
-            other_sp = get_subplot(plt, other_sp)
-            link_axes!(axis, get_axis(other_sp, letter))
-        end
-        axis.plotattributes[:link] = []
+    (link = axis[:link]) |> isempty && return
+    for other_sp in link
+        link_axes!(axis, get_axis(get_subplot(plt, other_sp), letter))
     end
-    return
+    axis.plotattributes[:link] = []
+    nothing
 end
 
 # update a subplots args and axes
@@ -2048,6 +1998,7 @@ function _update_subplot_args(
     end
 
     _update_subplot_colors(sp)
+    _update_margins(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
@@ -2058,7 +2009,7 @@ function _update_subplot_args(
         if !lims_warned &&
            haskey(plotattributes_in, lk) &&
            plotattributes_in[lk] isa AbstractRange
-            @warn("lims should be a Tuple, not $(typeof(plotattributes_in[lk])).")
+            @warn "lims should be a Tuple, not $(typeof(plotattributes_in[lk]))."
             lims_warned = true
         end
     end
@@ -2078,62 +2029,59 @@ has_black_border_for_default(st::Symbol) =
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
-function get_series_color(c, sp::Subplot, n::Int, seriestype)
+get_series_color(c, sp::Subplot, n::Int, seriestype) =
     if c === :auto
-        c = like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
+        like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
-        c = _cycle(sp[:color_palette], c)
-    end
-    plot_color(c)
-end
+        _cycle(sp[:color_palette], c)
+    else
+        c
+    end |> plot_color
 
 get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
     map(x -> get_series_color(x, sp, n, seriestype), c)
 
-function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
+ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
     if plotattributes[csym] isa ColorPalette
         α = nothing
-        if !(plotattributes[asym] isa AbstractVector)
-            α = plotattributes[asym]
-        end
+        plotattributes[asym] isa AbstractVector || (α = plotattributes[asym])
         plotattributes[csym] = cgrad(plotattributes[csym], categorical = true, alpha = α)
     elseif !(plotattributes[csym] isa ColorGradient)
         plotattributes[csym] =
             typeof(plotattributes[asym]) <: AbstractVector ? cgrad() :
             cgrad(alpha = plotattributes[asym])
     end
-end
 
-function _replace_linewidth(plotattributes::AKW)
-    # get a good default linewidth... 0 for surface and heatmaps
+const DEFAULT_LINEWIDTH = Ref(1)
+
+# get a good default linewidth... 0 for surface and heatmaps
+_replace_linewidth(plotattributes::AKW) =
     if plotattributes[:linewidth] === :auto
-        plotattributes[:linewidth] = (
-            get(plotattributes, :seriestype, :path) in (:surface, :heatmap, :image) ? 0 : 1
-        )
+        plotattributes[:linewidth] =
+            (get(plotattributes, :seriestype, :path) ∉ (:surface, :heatmap, :image)) *
+            DEFAULT_LINEWIDTH[]
     end
-end
 
 function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
     for k in keys(_series_defaults)
         haskey(plotattributes, k) &&
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
     end
-    return plotattributes
+    plotattributes
 end
 
 label_to_string(label::Bool, series_plotindex) =
     label ? label_to_string(:auto, series_plotindex) : ""
 label_to_string(label::Nothing, series_plotindex) = ""
 label_to_string(label::Missing, series_plotindex) = ""
-function label_to_string(label::Symbol, series_plotindex)
+label_to_string(label::Symbol, series_plotindex) =
     if label === :auto
-        return string("y", series_plotindex)
+        string("y", series_plotindex)
     elseif label === :none
-        return ""
+        ""
     else
         throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
     end
-end
 label_to_string(label, series_plotindex) = string(label)  # Fallback to string promotion
 
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
@@ -2171,7 +2119,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     stype = plotattributes[:seriestype]
     plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
-    # update other colors
+    # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] === :auto
@@ -2245,13 +2193,11 @@ Also creates pluralized and non-underscore aliases for these keywords.
 macro add_attributes(level, expr, match_table)
     expr = macroexpand(__module__, expr) # to expand @static
     expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
-    T = expr.args[2]
-    if T isa Expr && T.head === :<:
+    if (T = expr.args[2]) isa Expr && T.head === :<:
         T = T.args[1]
     end
 
     key_dict = KW()
-
     _splitdef!(expr.args[3], key_dict)
 
     insert_block = Expr(:block)
@@ -2262,34 +2208,26 @@ macro add_attributes(level, expr, match_table)
         if QuoteNode(exp_key) in match_table.args[2].args
             value = QuoteNode(:match)
         end
+        field = QuoteNode(Symbol("_", level, "_defaults"))
         push!(
             insert_block.args,
             Expr(
                 :(=),
-                Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(exp_key)),
+                Expr(:ref, Expr(:call, getfield, Plots, field), QuoteNode(exp_key)),
                 value,
             ),
-        )
-        push!(
-            insert_block.args,
-            :(add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
-        )
-        push!(
-            insert_block.args,
-            :(add_aliases(
+            :(Plots.add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
+            :(Plots.add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(make_non_underscore(exp_key))),
+                $(QuoteNode(Plots.make_non_underscore(exp_key))),
             )),
-        )
-        push!(
-            insert_block.args,
-            :(add_aliases(
+            :(Plots.add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(make_non_underscore(pl_key))),
+                $(QuoteNode(Plots.make_non_underscore(pl_key))),
             )),
         )
     end
-    return quote
+    quote
         $expr
         $insert_block
     end |> esc
@@ -2297,8 +2235,7 @@ end
 
 function _splitdef!(blk, key_dict)
     for i in eachindex(blk.args)
-        ei = blk.args[i]
-        if ei isa Symbol
+        if (ei = blk.args[i]) isa Symbol
             #  var
             continue
         elseif ei isa Expr

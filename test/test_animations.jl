@@ -35,9 +35,14 @@ end
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end every 5
 
-    Plots.@apng for i in 1:n
+    @gif for i in 1:n
+        circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
+    end when i % 5 == 0
+
+    anim = Plots.@apng for i in 1:n
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end every 5
+    @test showable(MIME("image/png"), anim)
 end
 
 @testset "html" begin
@@ -62,4 +67,28 @@ end
         show(io, MIME("text/html"), agif)
     end
     @test filesize(html) > 10_000
+end
+
+@testset "animate" begin
+    anim = animate([1:2, 2:3]; show_msg = false, fps = 1 // 10)
+    @test anim isa Plots.AnimatedGif
+    @test showable(MIME("image/gif"), anim)
+
+    fn = tempname() * ".apng"
+    open(fn, "w") do io
+        show(io, MIME("image/png"), anim)
+    end
+    @test filesize(fn) > 1_000
+
+    fn = tempname() * ".gif"
+    open(fn, "w") do io
+        show(io, MIME("image/gif"), anim)
+    end
+    @test filesize(fn) > 1_000
+end
+
+@testset "coverage" begin
+    @test animate([1:2, 2:3]; variable_palette = true, show_msg = false) isa
+          Plots.AnimatedGif
+    @test Plots.FrameIterator([1:2, 2:3]).every == 1
 end

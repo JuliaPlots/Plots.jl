@@ -1,7 +1,7 @@
 name = "RecipesPipeline"
 uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 authors = ["Michael Krabbe Borregaard <mkborregaard@snm.ku.dk>"]
-version = "0.6.7"
+version = "0.6.11"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -13,13 +13,14 @@ SnoopPrecompile = "66db9d55-30c0-4569-8b51-7e840670fc0c"
 [compat]
 NaNMath = "0.3, 1"
 PlotUtils = "0.6.5, 1"
-RecipesBase = "0.8, 1"
+RecipesBase = "1.3.1"
 SnoopPrecompile = "1"
 julia = "1.6"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BenchmarkTools", "Test"]
+test = ["BenchmarkTools", "StableRNGs", "Test"]

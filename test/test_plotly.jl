@@ -41,10 +41,12 @@ with(:plotly) do
                 @test pl[1][1].plotattributes[:levels] == levels
                 series_dict = @test_logs (
                     :warn,
-                    "setting arbitrary contour levels with Plotly backend " *
-                    "is not supported; use a range to set equally-spaced contours or an " *
-                    "integer to set the approximate number of contours with the keyword " *
-                    "`levels`. Setting levels to -1.0:0.5:1.0",
+                    """
+             setting arbitrary contour levels with Plotly backend is not supported;
+             use a range to set equally-spaced contours or an integer to set the
+             approximate number of contours with the keyword `levels`.
+             Setting levels to -1.0:0.5:1.0
+             """,
                 ) Plots.plotly_series(pl)
                 @test series_dict[1][:contours][:start] == first(levels_range)
                 @test series_dict[1][:contours][:end] == last(levels_range)

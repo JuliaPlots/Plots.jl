@@ -32,7 +32,9 @@ end
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
         @test yguide(plot(y, ylabel = P"hello")) == "hello"
-        @test yguide(plot(y, ylabel = "")) == ""
+        pl = plot(y, ylabel = "")
+        @test yguide(pl) == ""
+        @test yguide(plot!(pl, -y)) == ""
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
         @test yguide(pl) == "hello (m)"
@@ -149,8 +151,8 @@ end
         @test plot(f, x * m) isa Plot
         @test plot(x * m, f) isa Plot
         g(x) = x * m # If the unit comes from the function only then it throws
-        @test_throws DimensionError plot(x, g) isa Plot
-        @test_throws DimensionError plot(g, x) isa Plot
+        @test_throws DimensionError plot(x, g)
+        @test_throws DimensionError plot(g, x)
     end
     @testset "plot(x, y, f)" begin
         f(x, y) = x * y
@@ -158,13 +160,13 @@ end
         @test plot(x * m, y, f) isa Plot
         @test plot(x, y * s, f) isa Plot
         g(x, y) = x * y * m # If the unit comes from the function only then it throws
-        @test_throws DimensionError plot(x, y, g) isa Plot
+        @test_throws DimensionError plot(x, y, g)
     end
     @testset "plot(f, u)" begin
         f(x) = x^2
         pl = plot(x * m, f.(x * m))
         @test plot!(pl, f, m) isa Plot
-        @test_throws DimensionError plot!(pl, f, s) isa Plot
+        @test_throws DimensionError plot!(pl, f, s)
         pl = plot(f, m)
         @test xguide(pl) == string(m)
         @test yguide(pl) == string(m^2)
@@ -366,4 +368,13 @@ end
     pl = plot([0, 1]u"s", [0, 1]u"m")
     annotate!(pl, [0.25]u"s", [0.5]u"m", text("annotation"))
     @test show(devnull, pl) isa Nothing
+end
+
+@testset "AbstractProtectedString" begin
+    str = P"mass"
+    @test pointer(str) isa Ptr
+    @test pointer(str, 1) isa Ptr
+    @test isvalid(str, 1)
+    @test ncodeunits(str) == 4
+    @test codeunit(str) == UInt8
 end

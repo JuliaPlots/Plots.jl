@@ -120,9 +120,6 @@ For the example above, the following code is generated.  In it, you can see the 
 
 ```julia
 function RecipesBase.apply_recipe(d::Dict{Symbol,Any},::T,n=1)
-    if RecipesBase._debug_recipes[1]
-        println("apply_recipe args: ",Any[:(::T),:(n=1)])
-    end
     begin
         customcolor = get!(d,:customcolor,:green)
     end
@@ -134,7 +131,7 @@ function RecipesBase.apply_recipe(d::Dict{Symbol,Any},::T,n=1)
             get!(d,:zrotation,90)
             rand(10,n)
         end
-    if func_return != nothing
+    if func_return !== nothing
         push!(series_list,RecipesBase.RecipeData(d,RecipesBase.wrap_tuple(func_return)))
     end
     begin

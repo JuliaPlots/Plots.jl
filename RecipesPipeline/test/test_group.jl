@@ -5,18 +5,15 @@ function _extract_group_attributes_old_slow_known_good_implementation(
 )
     group_labels = collect(unique(sort(v)))
     n = length(group_labels)
-    #if n > 100
-    #    @warn("You created n=$n groups... Is that intended?")
-    #end
     group_indices =
         Vector{Int}[filter(i -> v[i] == glab, eachindex(v)) for glab in group_labels]
     RecipesPipeline.GroupBy(map(legend_entry, group_labels), group_indices)
 end
 
 sc = ["C", "C", "C", "A", "A", "A", "B", "B", "D"]
-mc = rand(["xx" * "$(i%6)" for i in 1:6], 300)
-mp = rand(["xx" * "$(i%73)" for i in 1:73], 1000)
-lp = ["xx" * "$(i%599)" for i in 1:2000]
+mc = rand(StableRNG(1), map(i -> "xx" * "$(i % 6)", 1:6), 300)
+mp = rand(StableRNG(1), map(i -> "xx" * "$(i % 73)", 1:73), 1_000)
+lp = map(i -> "xx" * "$(i % 599)", 1:2_000)
 
 @testset "All" begin
     @testset "Correctness" begin
@@ -43,4 +40,10 @@ lp = ["xx" * "$(i%599)" for i in 1:2000]
         t2 = @benchmark res2 = RecipesPipeline._extract_group_attributes(lp)
         @test BenchmarkTools.isimprovement(judge(median(t2), median(t1)))
     end
+
+    @test RecipesPipeline._extract_group_attributes(Tuple(sc)) isa RecipesPipeline.GroupBy
+    @test RecipesPipeline._extract_group_attributes((; A = [1], B = [2])) isa
+          RecipesPipeline.GroupBy
+    @test RecipesPipeline._extract_group_attributes(Dict(:A => [1], :B => [2])) isa
+          RecipesPipeline.GroupBy
 end

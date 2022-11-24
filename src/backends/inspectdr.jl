@@ -20,49 +20,47 @@ is_marker_supported(::InspectDRBackend, shape::Shape) = true
 #Do we avoid Map to avoid possible pre-comile issues?
 function _inspectdr_mapglyph(s::Symbol)
     s === :rect && return :square
-    return s
+    s
 end
 
 function _inspectdr_mapglyph(s::Shape)
     x, y = coords(s)
-    return InspectDR.GlyphPolyline(x, y)
+    InspectDR.GlyphPolyline(x, y)
 end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
 function _inspectdr_mapglyph(markers::AVec)
-    @warn("Vectors of markers are currently unsupported in InspectDR.")
+    @warn "Vectors of markers are currently unsupported in InspectDR."
     _inspectdr_mapglyph(markers[1])
 end
 
 _inspectdr_mapglyphsize(v::Real) = v
 function _inspectdr_mapglyphsize(v::Vector)
-    @warn("Vectors of marker sizes are currently unsupported in InspectDR.")
+    @warn "Vectors of marker sizes are currently unsupported in InspectDR."
     _inspectdr_mapglyphsize(v[1])
 end
 
 _inspectdr_mapcolor(v::Colorant) = v
 function _inspectdr_mapcolor(g::PlotUtils.ColorGradient)
-    @warn("Color gradients are currently unsupported in InspectDR.")
-    #Pick middle color:
+    @warn "Color gradients are currently unsupported in InspectDR."
+    # Pick middle color:
     _inspectdr_mapcolor(g.colors[div(1 + end, 2)])
 end
 function _inspectdr_mapcolor(v::AVec)
-    @warn("Vectors of colors are currently unsupported in InspectDR.")
-    #Pick middle color:
+    @warn "Vectors of colors are currently unsupported in InspectDR."
+    # Pick middle color:
     _inspectdr_mapcolor(v[div(1 + end, 2)])
 end
 
-#Hack: suggested point size does not seem adequate relative to plot size, for some reason.
+# Hack: suggested point size does not seem adequate relative to plot size, for some reason.
 _inspectdr_mapptsize(v) = 1.5 * v
 
-function _inspectdr_add_annotations(plot, x, y, val)
-    #What kind of annotation is this?
-end
+_inspectdr_add_annotations(plot, x, y, val) = nothing  # What kind of annotation is this?
 
 #plot::InspectDR.Plot2D
 function _inspectdr_add_annotations(plot, x, y, val::PlotText)
-    vmap = Dict{Symbol,Symbol}(:top => :t, :bottom => :b) #:vcenter
-    hmap = Dict{Symbol,Symbol}(:left => :l, :right => :r) #:hcenter
+    vmap = Dict{Symbol,Symbol}(:top => :t, :bottom => :b)  # :vcenter
+    hmap = Dict{Symbol,Symbol}(:left => :l, :right => :r)  # :hcenter
     align = Symbol(get(vmap, val.font.valign, :c), get(hmap, val.font.halign, :c))
     fnt = InspectDR.Font(
         val.font.family,
@@ -78,7 +76,7 @@ function _inspectdr_add_annotations(plot, x, y, val::PlotText)
         align = align,
     )
     InspectDR.add(plot, ann)
-    return
+    nothing
 end
 
 # ---------------------------------------------------------------------------
@@ -89,7 +87,7 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
 
     ttype = ticksType(ticks)
     if ticks === :native
-        #keep current
+        # keep current
     elseif ttype === :ticks_and_labels
         pos = ticks[1]
         labels = ticks[2]
@@ -107,31 +105,28 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
     elseif isnothing(ticks)
         gridlines.major = []
         gridlines.minor = []
-    else #Assume ticks === :native
-        #keep current
+    else  # Assume ticks === :native
+        # keep current
     end
 
-    return gridlines #keep current
+    gridlines  # keep current
 end
 
 function _inspectdr_setticks(sp::Subplot, plot, strip, xaxis, yaxis)
-    InputXfrm1D = InspectDR.InputXfrm1D
-    _get_ticks(axis) = :native == axis[:ticks] ? (:native) : get_ticks(sp, axis)
-    wantnative(ticks) = (:native == ticks)
+    _get_ticks(axis) = axis[:ticks] === :native ? :native : get_ticks(sp, axis)
 
     xticks = _get_ticks(xaxis)
     yticks = _get_ticks(yaxis)
 
-    if wantnative(xticks) && wantnative(yticks)
-        #Don't "eval" tick values
-        return
-    end
+    (xticks === :native && yticks === :native) && return  # Don't "eval" tick values
 
-    #TODO: Allow InspectDR to independently "eval" x or y ticks
+    # TODO: Allow InspectDR to independently "eval" x or y ticks
     ext = InspectDR.getextents_aloc(plot, 1)
     grid = InspectDR._eval(strip.grid, plot.xscale, strip.yscale, ext)
-    grid.xlines = _inspectdr_getaxisticks(xticks, grid.xlines, InputXfrm1D(plot.xscale))
-    grid.ylines = _inspectdr_getaxisticks(yticks, grid.ylines, InputXfrm1D(strip.yscale))
+    grid.xlines =
+        _inspectdr_getaxisticks(xticks, grid.xlines, InspectDR.InputXfrm1D(plot.xscale))
+    grid.ylines =
+        _inspectdr_getaxisticks(yticks, grid.ylines, InspectDR.InputXfrm1D(strip.yscale))
     strip.grid = grid
 end
 
@@ -141,13 +136,13 @@ function _inspectdr_getscale(s::Symbol, yaxis::Bool)
     #TODO: Support :asinh, :sqrt
     kwargs = yaxis ? (:tgtmajor => 8, :tgtminor => 2) : () #More grid lines on y-axis
     if :log2 == s
-        return InspectDR.AxisScale(:log2; kwargs...)
+        InspectDR.AxisScale(:log2; kwargs...)
     elseif :log10 == s
-        return InspectDR.AxisScale(:log10; kwargs...)
+        InspectDR.AxisScale(:log10; kwargs...)
     elseif :ln == s
-        return InspectDR.AxisScale(:ln; kwargs...)
+        InspectDR.AxisScale(:ln; kwargs...)
     else #identity
-        return InspectDR.AxisScale(:lin; kwargs...)
+        InspectDR.AxisScale(:lin; kwargs...)
     end
 end
 
@@ -177,43 +172,33 @@ function _create_backend_figure(plt::Plot{InspectDRBackend})
     mplot = _inspectdr_getmplot(plt.o)
     gplot = _inspectdr_getgui(plt.o)
 
-    #:overwrite_figure: want to reuse current figure
+    # :overwrite_figure: want to reuse current figure
     if plt[:overwrite_figure] && mplot !== nothing
-        mplot.subplots = [] #Reset
-        if gplot !== nothing #Ensure still references current plot
+        mplot.subplots = []  # Reset
+        if gplot !== nothing  # Ensure still references current plot
             gplot.src = mplot
         end
-    else #want new one:
+    else  # want new one:
         mplot = InspectDR.Multiplot()
-        gplot = nothing #Will be created later
+        gplot = nothing  # Will be created later
     end
 
-    #break link with old subplots
-    for sp in plt.subplots
-        sp.o = nothing
-    end
+    # break link with old subplots
+    foreach(sp -> sp.o = nothing, plt.subplots)
 
-    return InspecDRPlotRef(mplot, gplot)
+    InspecDRPlotRef(mplot, gplot)
 end
-
-# ---------------------------------------------------------------------------
-
-# # this is called early in the pipeline, use it to make the plot current or something
-# function _prepare_plot_object(plt::Plot{InspectDRBackend})
-# end
 
 # ---------------------------------------------------------------------------
 
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{InspectDRBackend}, sp::Subplot{InspectDRBackend})
     plot = sp.o
-    #Don't do anything without a "subplot" object:  Will process later.
-    if nothing == plot
-        return
-    end
+    # Don't do anything without a "subplot" object:  Will process later.
+    plot === nothing && return
     plot.data = []
     plot.userannot = [] #Clear old markers/text annotation/polyline "annotation"
-    return plot
+    plot
 end
 
 # ---------------------------------------------------------------------------
@@ -225,13 +210,11 @@ end
 function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     st = series[:seriestype]
     sp = series[:subplot]
-    plot = sp.o
-    clims = get_clims(sp, series)
 
-    #Don't do anything without a "subplot" object:  Will process later.
-    if nothing == plot
-        return
-    end
+    # Don't do anything without a "subplot" object:  Will process later.
+    (plot = sp.o) === nothing && return
+
+    clims = get_clims(sp, series)
 
     _vectorize(v) = isa(v, Vector) ? v : collect(v) #InspectDR only supports vectors
     x, y = if st === :straightline
@@ -240,7 +223,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
         _vectorize(series[:x]), _vectorize(series[:y])
     end
 
-    #No support for polar grid... but can still perform polar transformation:
+    # No support for polar grid... but can still perform polar transformation:
     if ispolar(sp)
         Θ = x
         r = y
@@ -249,8 +232,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     end
 
     # doesn't handle mismatched x/y - wrap data (pyplot behaviour):
-    nx = length(x)
-    ny = length(y)
+    nx, ny = map(length, (x, y))
     if nx < ny
         series[:x] = Float64[x[mod1(i, nx)] for i in 1:ny]
     elseif ny > nx
@@ -307,9 +289,9 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
             )
         end
     elseif st in (:path, :scatter, :straightline) #, :steppre, :stepmid, :steppost)
-        #NOTE: In Plots.jl, :scatter plots have 0-linewidths (I think).
+        # NOTE: In Plots.jl, :scatter plots have 0-linewidths (I think).
         linewidth = series[:linewidth]
-        #More efficient & allows some support for markerstrokewidth:
+        # More efficient & allows some support for markerstrokewidth:
         _style = (0 == linewidth ? :none : series[:linestyle])
         wfrm = InspectDR.add(plot, x, y, id = series[:label])
         wfrm.line = InspectDR.line(
@@ -317,9 +299,9 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
             width = series[:linewidth],
             color = plot_color(get_linecolor(series), get_linealpha(series)),
         )
-        #InspectDR does not control markerstrokewidth independently.
-        if :none == _style
-            #Use this property only if no line is displayed:
+        # InspectDR does not control markerstrokewidth independently.
+        if _style === :none
+            # Use this property only if no line is displayed:
             wfrm.line.width = series[:markerstrokewidth]
         end
         wfrm.glyph = InspectDR.glyph(
@@ -339,16 +321,13 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     for (xi, yi, str, fnt) in EachAnn(anns, x, y)
         _inspectdr_add_annotations(plot, xi, yi, PlotText(str, fnt))
     end
-    return
 end
 
 # ---------------------------------------------------------------------------
 
 # When series data is added/changed, this callback can do dynamic updates to the backend object.
 # note: if the backend rebuilds the plot from scratch on display, then you might not do anything here.
-function _series_updated(plt::Plot{InspectDRBackend}, series::Series)
-    #Nothing to do
-end
+_series_updated(plt::Plot{InspectDRBackend}, series::Series) = nothing
 
 # ---------------------------------------------------------------------------
 
@@ -421,21 +400,17 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
     l.frame_legend.fillcolor = _inspectdr_mapcolor(sp[:legend_background_color])
     #_round!() ensures values use integer spacings (looks better on screen):
     InspectDR._round!(InspectDR.autofit2font!(l, legend_width = 10.0)) #10 "em"s wide
-    return
 end
 
 # called just before updating layout bounding boxes... in case you need to prep
 # for the calcs
 function _before_layout_calcs(plt::Plot{InspectDRBackend})
-    mplot = _inspectdr_getmplot(plt.o)
-    if nothing == mplot
-        return
-    end
+    (mplot = _inspectdr_getmplot(plt.o)) === nothing && return
 
     mplot.title = plt[:plot_title]
-    if "" == mplot.title
-        #Don't use window_title... probably not what you want.
-        #mplot.title = plt[:window_title]
+    if isempty(mplot.title)
+        # Don't use window_title... probably not what you want.
+        # mplot.title = plt[:window_title]
     end
 
     mplot.layout[:frame].fillcolor = _inspectdr_mapcolor(plt[:background_color_outside])
@@ -443,9 +418,7 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
     resize!(mplot.subplots, length(plt.subplots))
     nsubplots = length(plt.subplots)
     for (i, sp) in enumerate(plt.subplots)
-        if !isassigned(mplot.subplots, i)
-            mplot.subplots[i] = InspectDR.Plot2D()
-        end
+        isassigned(mplot.subplots, i) || (mplot.subplots[i] = InspectDR.Plot2D())
         sp.o = mplot.subplots[i]
         plot = sp.o
         _initialize_subplot(plt, sp)
@@ -457,24 +430,22 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
         end
     end
 
-    #Do not yet support absolute plot positionning.
-    #Just try to make things look more-or less ok:
-    if nsubplots <= 1
-        mplot.layout[:ncolumns] = 1
+    # Do not yet support absolute plot positionning.
+    # Just try to make things look more-or less ok:
+    mplot.layout[:ncolumns] = if nsubplots <= 1
+        1
     elseif nsubplots <= 4
-        mplot.layout[:ncolumns] = 2
+        2
     elseif nsubplots <= 6
-        mplot.layout[:ncolumns] = 3
+        3
     elseif nsubplots <= 12
-        mplot.layout[:ncolumns] = 4
+        4
     else
-        mplot.layout[:ncolumns] = 5
+        5
     end
 
-    for series in plt.series_list
-        _series_added(plt, series)
-    end
-    return
+    foreach(series -> _series_added(plt, series), plt.series_list)
+    nothing
 end
 
 # ----------------------------------------------------------------
@@ -483,13 +454,11 @@ end
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{InspectDRBackend})
     plot = sp.o
-    if !isa(plot, InspectDR.Plot2D)
-        return sp.minpad
-    end
-    #Computing plotbounds with 0-BoundingBox returns required padding:
+    isa(plot, InspectDR.Plot2D) || return sp.minpad
+    # Computing plotbounds with 0-BoundingBox returns required padding:
     bb = InspectDR.plotbounds(plot.layout.values, InspectDR.BoundingBox(0, 0, 0, 0))
-    #NOTE: plotbounds always pads for titles, legends, etc. even if not in use.
-    #TODO: possibly zero-out items not in use??
+    # NOTE: plotbounds always pads for titles, legends, etc. even if not in use.
+    # TODO: possibly zero-out items not in use??
 
     # add in the user-specified margin to InspectDR padding:
     leftpad   = abs(bb.xmin) * px + sp[:left_margin]
@@ -503,10 +472,7 @@ end
 
 # Override this to update plot items (title, xlabel, etc), and add annotations (plotattributes[:annotations])
 function _update_plot_object(plt::Plot{InspectDRBackend})
-    mplot = _inspectdr_getmplot(plt.o)
-    if nothing == mplot
-        return
-    end
+    (mplot = _inspectdr_getmplot(plt.o)) === nothing && return
     mplot.bblist = InspectDR.BoundingBox[]
 
     for (i, sp) in enumerate(plt.subplots)
@@ -519,23 +485,19 @@ function _update_plot_object(plt::Plot{InspectDRBackend})
         push!(mplot.bblist, bb)
     end
 
-    gplot = _inspectdr_getgui(plt.o)
-    if nothing == gplot
-        return
-    end
+    (gplot = _inspectdr_getgui(plt.o)) === nothing && return
 
     gplot.src = mplot #Ensure still references current plot
     InspectDR.refresh(gplot)
-    return
+    nothing
 end
 
 # ----------------------------------------------------------------
 
 _inspectdr_show(io::IO, mime::MIME, ::Nothing, w, h) =
     throw(ErrorException("Cannot show(::IO, ...) plot - not yet generated"))
-function _inspectdr_show(io::IO, mime::MIME, mplot, w, h)
+_inspectdr_show(io::IO, mime::MIME, mplot, w, h) =
     InspectDR._show(io, mime, mplot, Float64(w), Float64(h))
-end
 
 function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{InspectDRBackend})
     dpi = plt[:dpi] # TODO: support
@@ -557,18 +519,14 @@ end
 
 # Display/show the plot (open a GUI window, or browser page, for example).
 function _display(plt::Plot{InspectDRBackend})
-    mplot = _inspectdr_getmplot(plt.o)
-    if nothing == mplot
-        return
-    end
-    gplot = _inspectdr_getgui(plt.o)
+    (mplot = _inspectdr_getmplot(plt.o)) === nothing && return
 
-    if nothing == gplot
+    if (gplot = _inspectdr_getgui(plt.o)) === nothing
         gplot = display(InspectDR.GtkDisplay(), mplot)
     else
-        #redundant... Plots.jl will call _update_plot_object:
-        #InspectDR.refresh(gplot)
+        # redundant... Plots.jl will call _update_plot_object:
+        # InspectDR.refresh(gplot)
     end
     plt.o = InspecDRPlotRef(mplot, gplot)
-    return gplot
+    gplot
 end

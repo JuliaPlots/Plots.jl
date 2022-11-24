@@ -35,9 +35,9 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
         parent,
         Series[],
         0,
-        defaultminpad,
-        defaultbox,
-        defaultbox,
+        DEFAULT_MINPAD[],
+        DEFAULT_BBOX[],
+        DEFAULT_BBOX[],
         DefaultsDict(KW(), _subplot_defaults),
         nothing,
         nothing,
@@ -90,18 +90,12 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     function Plot(osp::Subplot)
         plt = Plot()
         plt.layout = GridLayout(1, 1)
-        @static if true
-            sp = deepcopy(osp)  # NOTE: fails `PlotlyJS`
-        else
-            sp = Subplot(plt.backend; parent = plt.layout)
-            sp.series_list = copy(osp.series_list)
-            sp.attr = copy(osp.attr)
-        end
+        sp = deepcopy(osp)  # FIXME: fails `PlotlyJS` ?
         plt.layout.grid[1, 1] = sp
         # reset some attributes
-        sp.minpad = defaultminpad
-        sp.bbox = defaultbox
-        sp.plotarea = defaultbox
+        sp.minpad = DEFAULT_MINPAD[]
+        sp.bbox = DEFAULT_BBOX[]
+        sp.plotarea = DEFAULT_BBOX[]
         sp.plt = plt  # change the enclosing plot
         push!(plt.subplots, sp)
         plt
@@ -117,7 +111,6 @@ wrap(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
 
 # -----------------------------------------------------------
-
 attr(series::Series, k::Symbol) = series.plotattributes[k]
 attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 
@@ -140,6 +133,7 @@ should_add_to_legend(series::Series) =
     )
 
 # -----------------------------------------------------------------------
+Base.iterate(plt::Plot) = iterate(plt.subplots)
 
 Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
 Base.length(plt::Plot) = length(plt.subplots)
@@ -150,11 +144,16 @@ Base.size(plt::Plot) = size(plt.layout)
 Base.size(plt::Plot, i::Integer) = size(plt.layout)[i]
 Base.ndims(plt::Plot) = 2
 
+# clear out series list, but retain subplots
+Base.empty!(plt::Plot) = foreach(sp -> empty!(sp.series_list), plt.subplots)
+
 # attr(plt::Plot, k::Symbol) = plt.attr[k]
 # attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 
 Base.getindex(sp::Subplot, i::Union{Vector{<:Integer},Integer}) = series_list(sp)[i]
 Base.lastindex(sp::Subplot) = length(series_list(sp))
+
+Base.empty!(sp::Subplot) = empty!(sp.series_list)
 
 # -----------------------------------------------------------------------
 
@@ -182,7 +181,6 @@ get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
 get_subplot(plt::Plot, k) = plt.spmap[k]
 get_subplot(series::Series) = series.plotattributes[:subplot]
 
-get_subplot_index(plt::Plot, idx::Integer) = Int(idx)
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
 
 series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)

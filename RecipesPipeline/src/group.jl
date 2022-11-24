@@ -57,9 +57,7 @@ end
 
 function _filter_input_data!(plotattributes::AKW)
     idxfilter = pop!(plotattributes, :idxfilter, nothing)
-    if idxfilter !== nothing
-        filter_data!(plotattributes, idxfilter)
-    end
+    idxfilter ≡ nothing || filter_data!(plotattributes, idxfilter)
 end
 
 function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
@@ -74,19 +72,19 @@ function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
         yi = y[groupby.group_indices[i]]
         y_mat[getindex.(Ref(x_ind), xi), i] = yi
     end
-    return y_mat
+    y_mat
 end
 
 groupedvec2mat(x_ind, x, y::Tuple, groupby) =
     Tuple(groupedvec2mat(x_ind, x, v, groupby) for v in y)
 
-group_as_matrix(t) = false
+group_as_matrix(t) = false  # used in `StatsPlots`
 
 # split the group into 1 series per group, and set the label and idxfilter for each
-@recipe function f(groupby::GroupBy, args...)
+@recipe function f(groupby::GroupBy, args...)  # COV_EXCL_LINE
     plt = plotattributes[:plot_object]
     group_length = maximum(union(groupby.group_indices...))
-    if !(group_as_matrix(args[1]))
+    if !group_as_matrix(args[1])
         for (i, glab) in enumerate(groupby.group_labels)
             @series begin
                 label --> string(glab)

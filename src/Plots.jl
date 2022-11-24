@@ -85,6 +85,7 @@ export
     default,
     with,
     twinx,
+    twiny,
 
     pie,
     pie!,
@@ -166,6 +167,11 @@ using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 
+const PX_PER_INCH = 100
+const DPI         = PX_PER_INCH
+const MM_PER_INCH = 25.4
+const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
+
 include("types.jl")
 include("utils.jl")
 include("colorbars.jl")
@@ -178,10 +184,10 @@ include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
 include("layouts.jl")
+include("arg_desc.jl")
 include("recipes.jl")
 include("animation.jl")
 include("examples.jl")
-include("arg_desc.jl")
 include("plotattr.jl")
 include("backends.jl")
 include("output.jl")
@@ -201,6 +207,6 @@ include("backends/web.jl")
 include("backends/gr.jl")
 
 include("shorthands.jl")
-include("precompilation.jl")
+include("precompile.jl")
 
 end

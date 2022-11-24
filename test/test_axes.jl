@@ -7,15 +7,19 @@
     @test Plots.ignorenan_extrema(axis) == (0.5, 1.5)
     @test axis[:discrete_map] == Dict{Any,Any}(:yo => 2, "HI" => 1)
 
-    Plots.discrete_value!(axis, ["x$i" for i in 1:5])
-    Plots.discrete_value!(axis, ["x$i" for i in 0:2])
+    Plots.discrete_value!(axis, map(i -> "x$i", 1:5))
+    Plots.discrete_value!(axis, map(i -> "x$i", 0:2))
     @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
 
-    # JuliaPlots/Plots.jl/issues/4375
+    # github.com/JuliaPlots/Plots.jl/issues/4375
     for lab in ("foo", :foo)
         pl = plot(1:2, xlabel = lab, ylabel = lab, title = lab)
         show(devnull, pl)
     end
+
+    @test Plots.labelfunc_tex(:log10)(1) == "10^{1}"
+    @test Plots.labelfunc_tex(:log2)(1) == "2^{1}"
+    @test Plots.labelfunc_tex(:ln)(1) == "e^{1}"
 end
 
 @testset "Showaxis" begin
@@ -81,7 +85,7 @@ end
         @test plims == default_widen(1, 5)
     end
 
-    @testset "JuliaPlots/Plots.jl/issues/4379" begin
+    @testset "#4379" begin
         for ylims in ((-5, :auto), [-5, :auto])
             pl = plot([-2, 3], ylims = ylims, widen = false)
             @test Plots.ylims(pl) == (-5.0, 3.0)
@@ -172,4 +176,76 @@ end
     @test compare(pl, :minorgridlinewidth, 0.01, ≈)
     pl = plot(1:2, tickor = :out)
     @test compare(pl, :tick_direction, :out, ===)
+end
+
+@testset "scale_lims!" begin
+    let pl = plot(1:2)
+        xl, yl = xlims(pl), ylims(pl)
+        Plots.scale_lims!(:x, 1.1)
+        @test first(xlims(pl)) < first(xl)
+        @test last(xlims(pl)) > last(xl)
+        @test ylims(pl) == yl
+    end
+
+    let pl = plot(1:2)
+        xl, yl = xlims(pl), ylims(pl)
+        Plots.scale_lims!(pl, 1.1)
+        @test first(xlims(pl)) < first(xl)
+        @test last(xlims(pl)) > last(xl)
+        @test first(ylims(pl)) < first(yl)
+        @test last(ylims(pl)) > last(yl)
+    end
+end
+
+@testset "reset_extrema!" begin
+    pl = plot(1:2)
+    Plots.reset_extrema!(pl[1])
+    ax = pl[1][:xaxis]
+    @test Plots.expand_extrema!(ax, nothing) == ax[:extrema]
+    @test Plots.expand_extrema!(ax, true) == ax[:extrema]
+end
+
+@testset "no labels" begin
+    # github.com/JuliaPlots/Plots.jl/issues/4475
+    pl = plot(100:100:300, hcat([1, 2, 4], [-1, -2, -4]); yformatter = :none)
+    @test pl[1][:yaxis][:formatter] === :none
+end
+
+@testset "minor ticks" begin
+    # FIXME in 2.0: this is awful to read, because `minorticks` represent the number of `intervals`
+    for minor_intervals in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
+        n_minor_ticks_per_major = if minor_intervals isa Bool
+            minor_intervals ? Plots.DEFAULT_MINOR_INTERVALS[] - 1 : 0
+        elseif minor_intervals === :auto
+            Plots.DEFAULT_MINOR_INTERVALS[] - 1
+        elseif minor_intervals === :none || minor_intervals isa Nothing
+            0
+        else
+            max(0, minor_intervals - 1)
+        end
+        pl = plot(1:4; minorgrid = true, minorticks = minor_intervals)
+        sp = first(pl)
+        for axis in (:xaxis, :yaxis)
+            ticks = Plots.get_ticks(sp, sp[axis], update = false)
+            n_expected_minor_ticks = (length(first(ticks)) - 1) * n_minor_ticks_per_major
+            minor_ticks = Plots.get_minor_ticks(sp, sp[axis], ticks)
+            n_minor_ticks = if minor_intervals isa Bool
+                if minor_intervals
+                    length(minor_ticks)
+                else
+                    @test minor_ticks isa Nothing
+                    0
+                end
+            elseif minor_intervals === :auto
+                length(minor_ticks)
+            elseif minor_intervals === :none || minor_intervals isa Nothing
+                @test minor_ticks isa Nothing
+                0
+            else
+                length(minor_ticks)
+            end
+            display(pl)
+            @test n_minor_ticks == n_expected_minor_ticks
+        end
+    end
 end

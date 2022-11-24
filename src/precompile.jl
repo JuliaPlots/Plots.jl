@@ -1,5 +1,6 @@
 using SnoopPrecompile
 
+# COV_EXCL_START
 if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
     @precompile_setup begin
         n = length(_examples)
@@ -35,3 +36,4 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
         end
     end
 end
+# COV_EXCL_STOP

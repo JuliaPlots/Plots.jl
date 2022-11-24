@@ -3,11 +3,10 @@
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
 
-function replace_image_with_heatmap(z::Array{T}) where {T<:Colorant}
+function replace_image_with_heatmap(z::AbstractMatrix{<:Colorant})
     n, m = size(z)
     colors = palette(vec(z))
-    newz = reshape(1:(n * m), n, m)
-    newz, colors
+    reshape(1:(n * m), n, m), colors
 end
 
 # ---------------------------------------------------------------
@@ -31,29 +30,24 @@ to_nan(::Type{NTuple{3,Float64}}) = (NaN, NaN, NaN)
 
 coords(segs::Segments{Float64}) = segs.pts
 coords(segs::Segments{NTuple{2,Float64}}) =
-    Float64[p[1] for p in segs.pts], Float64[p[2] for p in segs.pts]
-coords(segs::Segments{NTuple{3,Float64}}) = Float64[p[1] for p in segs.pts],
-Float64[p[2] for p in segs.pts],
-Float64[p[3] for p in segs.pts]
+    (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
+coords(segs::Segments{NTuple{3,Float64}}) =
+    (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
-    for v in vs
-        push!(segments.pts, convert(T, v))
-    end
+    foreach(v -> push!(segments.pts, convert(T, v)), vs)
     segments
 end
 
 function Base.push!(segments::Segments{T}, vs::AVec) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
-    for v in vs
-        push!(segments.pts, convert(T, v))
-    end
+    foreach(v -> push!(segments.pts, convert(T, v)), vs)
     segments
 end
 
 struct SeriesSegment
-    # indexes of this segement in series data vectors
+    # indexes of this segment in series data vectors
     range::UnitRange
     # index into vector-valued attributes corresponding to this segment
     attr_index::Int
@@ -74,6 +68,21 @@ function iter_segments(args...)
     NaNSegmentsIterator(tup, n1, n2)
 end
 
+"floor number x in base b, note this is different from using Base.round(...; base=b) !"
+floor_base(x, b) = round_base(x, b, RoundDown)
+
+"ceil number x in base b"
+ceil_base(x, b) = round_base(x, b, RoundUp)
+
+round_base(x::T, b, ::RoundingMode{:Down}) where {T} = T(b^floor(log(b, x)))
+round_base(x::T, b, ::RoundingMode{:Up}) where {T} = T(b^ceil(log(b, x)))
+
+ignorenan_min_max(::Any, ex) = ex
+function ignorenan_min_max(x::AbstractArray{<:AbstractFloat}, ex::Tuple)
+    mn, mx = ignorenan_extrema(x)
+    NaNMath.min(ex[1], mn), NaNMath.max(ex[2], mx)
+end
+
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
     x, y, z = series[:x], series[:y], series[:z]
     (x === nothing || isempty(x)) && return UnitRange{Int}[]
@@ -84,36 +93,34 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     if check
         scales = :xscale, :yscale, :zscale
         for (n, s) in enumerate(args)
-            scale = get(series, scales[n], :identity)
-            if scale ∈ _logScales
-                for (i, v) in enumerate(s)
-                    if v <= 0
-                        @warn "Invalid negative or zero value $v found at series index $i for $(scale) based $(scales[n])"
-                        @debug "" exception = (DomainError(v), stacktrace())
-                        break
-                    end
+            (scale = get(series, scales[n], :identity)) ∈ _logScales || continue
+            for (i, v) in enumerate(s)
+                if v <= 0
+                    @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
+                    @debug "" exception = (DomainError(v), stacktrace())
+                    break
                 end
             end
         end
     end
 
     segments = if has_attribute_segments(series)
-        Iterators.flatten(map(nan_segments) do r
-                if seriestype === :shape
-                    warn_on_inconsistent_shape_attr(series, x, y, z, r)
-                    (SeriesSegment(r, first(r)),)
-                elseif seriestype in (:scatter, :scatter3d)
-                    (SeriesSegment(i:i, i) for i in r)
-                else
-                    (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
-                end
-            end)
+        map(nan_segments) do r
+            if seriestype === :shape
+                warn_on_inconsistent_shape_attr(series, x, y, z, r)
+                (SeriesSegment(r, first(r)),)
+            elseif seriestype in (:scatter, :scatter3d)
+                (SeriesSegment(i:i, i) for i in r)
+            else
+                (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
+            end
+        end |> Iterators.flatten
     else
         (SeriesSegment(r, 1) for r in nan_segments)
     end
 
     warn_on_attr_dim_mismatch(series, x, y, z, segments)
-    return segments
+    segments
 end
 
 function warn_on_attr_dim_mismatch(series, x, y, z, segments)
@@ -123,12 +130,11 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
         maximum(map(seg -> last(seg.range), segments)),
     )
     for attr in _segmenting_vector_attributes
-        v = get(series, attr, nothing)
-        if v isa AVec && eachindex(v) != seg_range
+        if (v = get(series, attr, nothing)) isa AVec && eachindex(v) != seg_range
             @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
             if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
-                    If you intend elements of `$attr` to apply to individual NaN-separated segements in the data,
+                    If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
                     pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
                     may be suppressed by passing an empty label.
                     For example,
@@ -160,8 +166,7 @@ anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
 function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
-    i = findfirst(!anynan(itr.args), nextidx:(itr.n2))
-    i === nothing && return
+    (i = findfirst(!anynan(itr.args), nextidx:(itr.n2))) === nothing && return
     nextval = nextidx + i - 1
 
     j = findfirst(anynan(itr.args), nextval:(itr.n2))
@@ -169,19 +174,15 @@ function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
 
     nextval:(nextnan - 1), nextnan
 end
-Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()
+Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()  # COV_EXCL_LINE
 
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
 
 float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
-float_extended_type(x::AbstractArray{T}) where {T<:Real} = Float64
+float_extended_type(x::AbstractArray{Real}) = Float64
 
 # ------------------------------------------------------------------------------------
-
-nop() = nothing
-notimpl() = error("This has not been implemented yet")
-
 _cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
 _cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
@@ -206,85 +207,57 @@ makevec(v::T) where {T} = T[v]
 
 "duplicate a single value, or pass the 2-tuple through"
 maketuple(x::Real) = (x, x)
-maketuple(x::Tuple{T,S}) where {T,S} = x
+maketuple(x::Tuple) = x
 
-RecipesPipeline.unzip(v) = unzip(v)
-# given 2-element lims and a vector of data x, widen lims to account for the extrema of x
-function _expand_limits(lims, x)
-    try
-        e1, e2 = ignorenan_extrema(x)
-        lims[1] = NaNMath.min(lims[1], e1)
-        lims[2] = NaNMath.max(lims[2], e2)
-    catch
-    end
-    nothing
-end
+RecipesPipeline.unzip(v) = unzip(v)  # COV_EXCL_LINE
 
-expand_data(v, n::Integer) = [_cycle(v, i) for i in 1:n]
-
-# if the type exists in a list, replace the first occurence.  otherwise add it to the end
-function addOrReplace(v::AbstractVector, t::DataType, args...; kw...)
-    for (i, vi) in enumerate(v)
-        if isa(vi, t)
-            v[i] = t(args...; kw...)
-            return
-        end
-    end
-    push!(v, t(args...; kw...))
-    return
-end
-
-function replaceType(vec, val)
-    filter!(x -> !isa(x, typeof(val)), vec)
-    push!(vec, val)
-end
-
-function replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol})
+replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
     if haskey(aliases, k)
         plotattributes[aliases[k]] = RecipesPipeline.pop_kw!(plotattributes, k)
     end
-end
 
-function replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol})
-    for k in collect(keys(plotattributes))
-        replaceAlias!(plotattributes, k, aliases)
-    end
-end
+replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
+    foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
 
-createSegments(z) = collect(repeat(reshape(z, 1, :), 2, 1))[2:end]
+scale_inverse_scale_func(scale::Symbol) = (
+    RecipesPipeline.scale_func(scale),
+    RecipesPipeline.inverse_scale_func(scale),
+    scale === :identity,
+)
 
-sortedkeys(plotattributes::Dict) = sort(collect(keys(plotattributes)))
-
-function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
-    length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
-    if isedges
-        return v
-    end
+function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
+    (n = length(v)) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
+    isedges && return v
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
-    extra_min = ispolar ? min(v[1], (v[2] - v[1]) / 2) : (v[2] - v[1]) / 2
-    extra_max = (v[end] - v[end - 1]) / 2
-    vcat(vmin - extra_min, 0.5 * (v[1:(end - 1)] + v[2:end]), vmax + extra_max)
+    extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
+    extra_max = 0.5(v[n] - v[n - 1])
+    vcat(vmin - extra_min, 0.5(v[1:(n - 1)] + v[2:n]), vmax + extra_max)
+end
+
+_heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
+    __heatmap_edges(v, isedges, ispolar)
+
+function _heatmap_edges(::Val{false}, v::AVec, scale::Symbol, isedges::Bool, ispolar::Bool)
+    f, invf = scale_inverse_scale_func(scale)
+    invf.(__heatmap_edges(f.(v), isedges, ispolar))
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(
+heatmap_edges(
     v::AVec,
     scale::Symbol = :identity,
     isedges::Bool = false,
     ispolar::Bool = false,
-)
-    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
-    map(invf, _heatmap_edges(map(f, v), isedges, ispolar))
-end
+) = _heatmap_edges(Val(scale === :identity), v, scale, isedges, ispolar)
 
 function heatmap_edges(
     x::AVec,
     xscale::Symbol,
     y::AVec,
     yscale::Symbol,
-    z_size::Tuple{Int,Int},
+    z_size::NTuple{2,Int},
     ispolar::Bool = false,
 )
     nx, ny = length(x), length(y)
@@ -292,25 +265,30 @@ function heatmap_edges(
     # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
     ismidpoints = prod(z_size) == (ny * nx)
     isedges = z_size == (ny - 1, nx - 1)
-    if !ismidpoints && !isedges
-        error("""Length of x & y does not match the size of z.
-              Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
-              or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
-    end
-    x, y = heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
-    return x, y
+    (ismidpoints || isedges) ||
+        """
+        Length of x & y does not match the size of z.
+        Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+        or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).
+        """ |>
+        ArgumentError |>
+        throw
+    (
+        _heatmap_edges(Val(xscale === :identity), x, xscale, isedges, false),
+        _heatmap_edges(Val(yscale === :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
+    )
 end
 
-function is_uniformly_spaced(v; tol = 1e-6)
-    dv = diff(v)
-    maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
-end
+is_uniformly_spaced(v; tol = 1e-6) =
+    let dv = diff(v)
+        maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+    end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     rmin, rmax = r_extrema
-    r = (r .- rmin) ./ (rmax .- rmin)
-    x = r .* cos.(theta)
-    y = r .* sin.(theta)
+    r = @. (r - rmin) / (rmax - rmin)
+    x = @. r * cos(theta)
+    y = @. r * sin(theta)
     x, y
 end
 
@@ -319,7 +297,7 @@ fakedata(sz::Int...) = fakedata(Random.seed!(PLOTS_SEED), sz...)
 function fakedata(rng::AbstractRNG, sz...)
     y = zeros(sz...)
     for r in 2:size(y, 1)
-        y[r, :] = 0.95 * vec(y[r - 1, :]) + randn(rng, size(y, 2))
+        y[r, :] = 0.95vec(y[r - 1, :]) + randn(rng, size(y, 2))
     end
     y
 end
@@ -342,13 +320,12 @@ isvertical(plotattributes::AKW) =
     get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
 isvertical(series::Series) = isvertical(series.plotattributes)
 
-ticksType(ticks::AVec{T}) where {T<:Real} = :ticks
-ticksType(ticks::AVec{T}) where {T<:AbstractString} = :labels
-ticksType(ticks::Tuple{T,S}) where {T<:Union{AVec,Tuple},S<:Union{AVec,Tuple}} =
-    :ticks_and_labels
+ticksType(ticks::AVec{<:Real}) = :ticks
+ticksType(ticks::AVec{<:AbstractString}) = :labels
+ticksType(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
 ticksType(ticks) = :invalid
 
-limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real} = :limits
+limsType(lims::Tuple{<:Real,<:Real}) = :limits
 limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
@@ -361,8 +338,8 @@ recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)
 # if values are not AbstractDicts, take the last definition (as does merge)
 recursive_merge(x...) = x[end]
 
-nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
-nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
+nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b); nothing)
+nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b); nothing)
 
 function nansplit(v::AVec)
     vs = Vector{eltype(v)}[]
@@ -381,20 +358,25 @@ end
 
 function nanvcat(vs::AVec)
     v_out = zeros(0)
-    for v in vs
-        nanappend!(v_out, v)
-    end
+    foreach(v -> nanappend!(v_out, v), vs)
     v_out
 end
 
-# given an array of discrete values, turn it into an array of indices of the unique values
-# returns the array of indices (znew) and a vector of unique values (vals)
-function indices_and_unique_values(z::AbstractArray)
-    vals = sort(unique(z))
-    vmap = Dict([(v, i) for (i, v) in enumerate(vals)])
-    newz = map(zi -> vmap[zi], z)
-    newz, vals
-end
+sort_3d_axes(x, y, z, letter) =
+    if letter === :x
+        x, y, z
+    elseif letter === :y
+        y, x, z
+    else
+        z, y, x
+    end
+
+axes_letters(sp, letter) =
+    if RecipesPipeline.is3d(sp)
+        sort_3d_axes(:x, :y, :z, letter)
+    else
+        letter === :x ? (:x, :y) : (:y, :x)
+    end
 
 handle_surface(z) = z
 handle_surface(z::Surface) = permutedims(z.surf)
@@ -424,9 +406,7 @@ end
 #turn tuple of fillranges to one path
 function concatenate_fillrange(x, y::Tuple)
     rib1, rib2 = collect(first(y)), collect(last(y)) # collect needed until https://github.com/JuliaLang/julia/pull/37629 is merged
-    yline = vcat(rib1, reverse(rib2))
-    xline = vcat(x, reverse(x))
-    return xline, yline
+    vcat(x, reverse(x)), vcat(rib1, reverse(rib2))  # x, y
 end
 
 get_sp_lims(sp::Subplot, letter::Symbol) = axis_limits(sp, letter)
@@ -468,9 +448,7 @@ function contour_levels(series::Series, clims)
     levels = series[:levels]
     if levels isa Integer
         levels = range(zmin, stop = zmax, length = levels + 2)
-        if !isfilledcontour(series)
-            levels = levels[2:(end - 1)]
-        end
+        isfilledcontour(series) || (levels = levels[2:(end - 1)])
     end
     levels
 end
@@ -484,9 +462,10 @@ for comp in (:line, :fill, :marker)
     get_compalpha = Symbol(:get_, compalpha)
 
     @eval begin
+        # defines `get_linecolor`, `get_fillcolor` and `get_markercolor` <- for grep
         function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
-            c = series[$Symbol($compcolor)]
-            z = series[$Symbol($comp_z)]
+            c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
+            z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
@@ -564,27 +543,35 @@ const _segmenting_vector_attributes = (
 
 const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 
-function has_attribute_segments(series::Series)
-    # we want to check if a series needs to be split into segments just because
-    # of its attributes
-    # check relevant attributes if they have multiple inputs
-    return any(
+# we want to check if a series needs to be split into segments just because
+# of its attributes
+# check relevant attributes if they have multiple inputs
+has_attribute_segments(series::Series) =
+    any(
         series[attr] isa AbstractVector && length(series[attr]) > 1 for
         attr in _segmenting_vector_attributes
     ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
-end
+
+check_aspect_ratio(ar::AbstractVector) = nothing  # for PyPlot
+check_aspect_ratio(ar::Number) = nothing
+check_aspect_ratio(ar::Symbol) =
+    ar in (:none, :equal, :auto) || throw(ArgumentError("Invalid `aspect_ratio` = $ar"))
+check_aspect_ratio(ar::T) where {T} =
+    throw(ArgumentError("Invalid `aspect_ratio`::$T = $ar "))
 
 function get_aspect_ratio(sp)
-    aspect_ratio = sp[:aspect_ratio]
-    if aspect_ratio === :auto
-        aspect_ratio = :none
+    ar = sp[:aspect_ratio]
+    check_aspect_ratio(ar)
+    if ar === :auto
+        ar = :none
         for series in series_list(sp)
             if series[:seriestype] === :image
-                aspect_ratio = :equal
+                ar = :equal
             end
         end
     end
-    return aspect_ratio
+    ar isa Bool && (ar = Int(ar))  # NOTE: Bool <: ... <: Number
+    ar
 end
 
 get_size(series::Series) = get_size(series.plotattributes[:subplot])
@@ -634,7 +621,7 @@ with(:gr, size=(400,400), type=:histogram) do
 end
 ```
 """
-function with(f::Function, args...; kw...)
+function with(f::Function, args...; scalefonts = nothing, kw...)
     newdefs = KW(kw)
 
     if :canvas in args
@@ -651,29 +638,16 @@ function with(f::Function, args...; kw...)
     end
 
     # save the backend
-    if CURRENT_BACKEND.sym === :none
-        _pick_default_backend()
-    end
+    CURRENT_BACKEND.sym === :none && _pick_default_backend()
     oldbackend = CURRENT_BACKEND.sym
 
     for arg in args
         # change backend?
-        if arg in backends()
-            backend(arg)
-        end
+        arg in backends() && backend(arg)
 
         # TODO: generalize this strategy to allow args as much as possible
         #       as in:  with(:gr, :scatter, :legend, :grid) do; ...; end
         # TODO: can we generalize this enough to also do something similar in the plot commands??
-
-        # k = :seriestype
-        # if arg in _allTypes
-        #     olddefs[k] = default(k)
-        #     newdefs[k] = arg
-        # elseif haskey(_typeAliases, arg)
-        #     olddefs[k] = default(k)
-        #     newdefs[k] = _typeAliases[arg]
-        # end
 
         k = :legend
         if arg in (k, :leg)
@@ -688,97 +662,49 @@ function with(f::Function, args...; kw...)
         end
     end
 
-    # display(olddefs)
-    # display(newdefs)
-
     # now set all those defaults
     default(; newdefs...)
+    scalefonts ≡ nothing || scalefontsizes(scalefonts)
 
     # call the function
     ret = f()
 
     # put the defaults back
+    scalefonts ≡ nothing || resetfontsizes()
     default(; olddefs...)
 
     # revert the backend
-    if CURRENT_BACKEND.sym != oldbackend
-        backend(oldbackend)
-    end
+    CURRENT_BACKEND.sym != oldbackend && backend(oldbackend)
 
     # return the result of the function
     ret
 end
 
 # ---------------------------------------------------------------
-# ---------------------------------------------------------------
 
-mutable struct DebugMode
-    on::Bool
-end
-const _debugMode = DebugMode(false)
+const _debug = Ref(false)
 
-debugplots(on = true) = _debugMode.on = on
+debug!(on = true) = _debug[] = on
 debugshow(io, x) = show(io, x)
 debugshow(io, x::AbstractArray) = print(io, summary(x))
 
-function dumpdict(io::IO, plotattributes::AKW, prefix = "", alwaysshow = false)
-    _debugMode.on || alwaysshow || return
+function dumpdict(io::IO, plotattributes::AKW, prefix = "")
+    _debug[] || return
     println(io)
     prefix == "" || println(io, prefix, ":")
     for k in sort(collect(keys(plotattributes)))
-        @printf("%14s: ", k)
+        @printf(io, "%14s: ", k)
         debugshow(io, plotattributes[k])
         println(io)
     end
     println(io)
 end
-DD(io::IO, plotattributes::AKW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
-DD(plotattributes::AKW, prefix = "") = DD(stdout, plotattributes, prefix)
-
-dumpcallstack() = error()  # well... you wanted the stacktrace, didn't you?!?
-
-# -------------------------------------------------------
-# NOTE: backends should implement the following methods to get/set the x/y/z data objects
-
-tovec(v::AbstractVector) = v
-tovec(v::Nothing) = zeros(0)
-
-function getxy(plt::Plot, i::Integer)
-    plotattributes = plt.series_list[i].plotattributes
-    tovec(plotattributes[:x]), tovec(plotattributes[:y])
-end
-
-function getxyz(plt::Plot, i::Integer)
-    plotattributes = plt.series_list[i].plotattributes
-    tovec(plotattributes[:x]), tovec(plotattributes[:y]), tovec(plotattributes[:z])
-end
-
-function setxy!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y}
-    series = plt.series_list[i]
-    series.plotattributes[:x], series.plotattributes[:y] = xy
-    sp = series.plotattributes[:subplot]
-    reset_extrema!(sp)
-    _series_updated(plt, series)
-end
-
-function setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z}
-    series = plt.series_list[i]
-    series.plotattributes[:x], series.plotattributes[:y], series.plotattributes[:z] = xyz
-    sp = series.plotattributes[:subplot]
-    reset_extrema!(sp)
-    _series_updated(plt, series)
-end
-
-setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z<:AbstractMatrix} =
-    (setxyz!(plt, (xyz[1], xyz[2], Surface(xyz[3])), i))
 
 # -------------------------------------------------------
 # indexing notation
 
-Base.setindex!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y} =
-    (setxy!(plt, xy, i); plt)
-Base.setindex!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z} =
-    (setxyz!(plt, xyz, i); plt)
+Base.setindex!(plt::Plot, xy::NTuple{2}, i::Integer) = (setxy!(plt, xy, i); plt)
+Base.setindex!(plt::Plot, xyz::Tuple{3}, i::Integer) = (setxyz!(plt, xyz, i); plt)
 
 # -------------------------------------------------------
 # operate on individual series
@@ -790,38 +716,30 @@ function extend_series!(series::Series, yi)
     y = extend_series_data!(series, yi, :y)
     x = extend_to_length!(series[:x], length(y))
     expand_extrema!(series[:subplot][:xaxis], x)
-    return x, y
+    x, y
 end
 
-function extend_series!(series::Series, xi, yi)
-    x = extend_series_data!(series, xi, :x)
-    y = extend_series_data!(series, yi, :y)
-    return x, y
-end
+extend_series!(series::Series, xi, yi) =
+    (extend_series_data!(series, xi, :x), extend_series_data!(series, yi, :y))
 
-function extend_series!(series::Series, xi, yi, zi)
-    x = extend_series_data!(series, xi, :x)
-    y = extend_series_data!(series, yi, :y)
-    z = extend_series_data!(series, zi, :z)
-    return x, y, z
-end
+extend_series!(series::Series, xi, yi, zi) = (
+    extend_series_data!(series, xi, :x),
+    extend_series_data!(series, yi, :y),
+    extend_series_data!(series, zi, :z),
+)
 
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
     d = extend_by_data!(series[letter], v)
     expand_extrema!(series[:subplot][get_attr_symbol(letter, :axis)], d)
-    return d
+    d
 end
 
 function copy_series!(series, letter)
     plt = series[:plot_object]
-    for s in plt.series_list
-        for l in (:x, :y, :z)
-            if s !== series || l !== letter
-                if s[l] === series[letter]
-                    series[letter] = copy(series[letter])
-                end
-            end
+    for s in plt.series_list, l in (:x, :y, :z)
+        if (s !== series || l !== letter) && s[l] === series[letter]
+            series[letter] = copy(series[letter])
         end
     end
 end
@@ -844,7 +762,7 @@ function attr!(series::Series; kw...)
         if haskey(_series_defaults, k)
             series[k] = v
         else
-            @warn("unused key $k in series attr")
+            @warn "unused key $k in series attr"
         end
     end
     _series_updated(series[:subplot].plt, series)
@@ -858,7 +776,7 @@ function attr!(sp::Subplot; kw...)
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else
-            @warn("unused key $k in subplot attr")
+            @warn "unused key $k in subplot attr"
         end
     end
     sp
@@ -869,7 +787,7 @@ end
 
 Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
 Base.push!(plt::Plot, i::Integer, args::Real...) = push!(plt.series_list[i], args...)
-Base.append!(plt::Plot, args::AbstractVector...) = append!(plt, 1, args...)
+Base.append!(plt::Plot, args::AbstractVector) = append!(plt, 1, args...)
 Base.append!(plt::Plot, i::Integer, args::Real...) = append!(plt.series_list[i], args...)
 
 # tuples
@@ -919,11 +837,6 @@ end
 
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
-
-const PX_PER_INCH = 100
-const DPI         = PX_PER_INCH
-const MM_PER_INCH = 25.4
-const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
 
 inch2px(inches::Real) = float(inches * PX_PER_INCH)
 px2inch(px::Real)     = float(px / PX_PER_INCH)
@@ -1038,45 +951,7 @@ function convert_sci_unicode(label::AbstractString)
     label
 end
 
-function straightline_data(series, expansion_factor = 1)
-    sp = series[:subplot]
-    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
-
-    # handle axes scales
-    xscale = sp[:xaxis][:scale]
-    xf = RecipesPipeline.scale_func(xscale)
-    xinvf = RecipesPipeline.inverse_scale_func(xscale)
-    yscale = sp[:yaxis][:scale]
-    yf = RecipesPipeline.scale_func(yscale)
-    yinvf = RecipesPipeline.inverse_scale_func(yscale)
-
-    xl, yl = xf.(xl), yf.(yl)
-    x, y = xf.(series[:x]), yf.(series[:y])
-    n = length(x)
-
-    xdata, ydata = if n == 2
-        straightline_data(xl, yl, x, y, expansion_factor)
-    else
-        k, r = divrem(n, 3)
-        if r == 0
-            xdata, ydata = fill(NaN, n), fill(NaN, n)
-            for i in 1:k
-                inds = (3 * i - 2):(3 * i - 1)
-                xdata[inds], ydata[inds] =
-                    straightline_data(xl, yl, x[inds], y[inds], expansion_factor)
-            end
-            xdata, ydata
-        else
-            error(
-                "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n",
-            )
-        end
-    end
-
-    return xinvf.(xdata), yinvf.(ydata)
-end
-
-function straightline_data(xl, yl, x, y, expansion_factor = 1)
+function ___straightline_data(xl, yl, x, y, exp_fact)
     x_vals, y_vals = if y[1] == y[2]
         if x[1] == x[2]
             error("Two identical points cannot be used to describe a straight line.")
@@ -1100,9 +975,88 @@ function straightline_data(xl, yl, x, y, expansion_factor = 1)
     end
     # expand the data outside the axis limits, by a certain factor too improve
     # plotly(js) and interactive behaviour
-    x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* expansion_factor .* [-1, 1]
-    y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* expansion_factor .* [-1, 1]
-    return x_vals, y_vals
+    (
+        x_vals .+ (x_vals[2] - x_vals[1]) .* exp_fact,
+        y_vals .+ (y_vals[2] - y_vals[1]) .* exp_fact,
+    )
+end
+
+__straightline_data(xl, yl, x, y, exp_fact) =
+    if (n = length(x)) == 2
+        ___straightline_data(xl, yl, x, y, exp_fact)
+    else
+        k, r = divrem(n, 3)
+        @assert r == 0 "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
+        xdata, ydata = fill(NaN, n), fill(NaN, n)
+        for i in 1:k
+            inds = (3i - 2):(3i - 1)
+            xdata[inds], ydata[inds] =
+                ___straightline_data(xl, yl, x[inds], y[inds], exp_fact)
+        end
+        xdata, ydata
+    end
+
+_straightline_data(::Val{true}, ::Function, ::Function, ::Function, ::Function, args...) =
+    __straightline_data(args...)
+
+function _straightline_data(
+    ::Val{false},
+    xf::Function,
+    xinvf::Function,
+    yf::Function,
+    yinvf::Function,
+    xl,
+    yl,
+    x,
+    y,
+    exp_fact,
+)
+    xdata, ydata = __straightline_data(xf.(xl), yf.(yl), xf.(x), yf.(y), exp_fact)
+    xinvf.(xdata), yinvf.(ydata)
+end
+
+function straightline_data(series, expansion_factor = 1)
+    sp = series[:subplot]
+    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+
+    # handle axes scales
+    xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
+    yf, yinvf, ynoop = scale_inverse_scale_func(sp[:yaxis][:scale])
+
+    _straightline_data(
+        Val(xnoop && ynoop),
+        xf,
+        xinvf,
+        yf,
+        yinvf,
+        xl,
+        yl,
+        series[:x],
+        series[:y],
+        [-expansion_factor, +expansion_factor],
+    )
+end
+
+function _shape_data!(::Val{false}, xf::Function, xinvf::Function, x, xl, exp_fact)
+    @inbounds for i in eachindex(x)
+        if x[i] == -Inf
+            x[i] = xinvf(xf(xl[1]) - exp_fact * (xf(xl[2]) - xf(xl[1])))
+        elseif x[i] == +Inf
+            x[i] = xinvf(xf(xl[2]) + exp_fact * (xf(xl[2]) - xf(xl[1])))
+        end
+    end
+    x
+end
+
+function _shape_data!(::Val{true}, ::Function, ::Function, x, xl, exp_fact)
+    @inbounds for i in eachindex(x)
+        if x[i] == -Inf
+            x[i] = xl[1] - exp_fact * (xl[2] - xl[1])
+        elseif x[i] == +Inf
+            x[i] = xl[2] + exp_fact * (xl[2] - xl[1])
+        end
+    end
+    x
 end
 
 function shape_data(series, expansion_factor = 1)
@@ -1110,68 +1064,16 @@ function shape_data(series, expansion_factor = 1)
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
 
     # handle axes scales
-    xscale = sp[:xaxis][:scale]
-    xf = RecipesPipeline.scale_func(xscale)
-    xinvf = RecipesPipeline.inverse_scale_func(xscale)
-    yscale = sp[:yaxis][:scale]
-    yf = RecipesPipeline.scale_func(yscale)
-    yinvf = RecipesPipeline.inverse_scale_func(yscale)
+    xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
+    yf, yinvf, ynoop = scale_inverse_scale_func(sp[:yaxis][:scale])
 
-    x, y = copy(series[:x]), copy(series[:y])
-    for i in eachindex(x)
-        if x[i] == -Inf
-            x[i] = xinvf(xf(xl[1]) - expansion_factor * (xf(xl[2]) - xf(xl[1])))
-        elseif x[i] == Inf
-            x[i] = xinvf(xf(xl[2]) + expansion_factor * (xf(xl[2]) - xf(xl[1])))
-        end
-    end
-    for i in eachindex(y)
-        if y[i] == -Inf
-            y[i] = yinvf(yf(yl[1]) - expansion_factor * (yf(yl[2]) - yf(yl[1])))
-        elseif y[i] == Inf
-            y[i] = yinvf(yf(yl[2]) + expansion_factor * (yf(yl[2]) - yf(yl[1])))
-        end
-    end
-    return x, y
+    (
+        _shape_data!(Val(xnoop), xf, xinvf, copy(series[:x]), xl, expansion_factor),
+        _shape_data!(Val(ynoop), yf, yinvf, copy(series[:y]), yl, expansion_factor),
+    )
 end
 
-construct_categorical_data(x::AbstractArray, axis::Axis) =
-    (map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x))
-
-_fmt_paragraph(paragraph::AbstractString; kw...) =
-    _fmt_paragraph(IOBuffer(), paragraph, 0; kw...)
-
-function _fmt_paragraph(
-    io::IOBuffer,
-    remaining_text::AbstractString,
-    column_count::Integer;
-    fillwidth = 60,
-    leadingspaces = 0,
-)
-    kw = (fillwidth = fillwidth, leadingspaces = leadingspaces)
-
-    if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
-        if column_count + length(remaining_text) ≤ fillwidth
-            print(io, remaining_text)
-        else
-            print(io, "\n" * " "^leadingspaces * remaining_text)
-        end
-        String(take!(io))
-    else
-        if column_count + length(m[1]) ≤ fillwidth
-            print(io, "$(m[1]) ")
-            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kw...)
-        else
-            print(io, "\n" * " "^leadingspaces * "$(m[1]) ")
-            _fmt_paragraph(io, m[2], leadingspaces; kw...)
-        end
-    end
-end
-
-_document_argument(S::AbstractString) =
-    _fmt_paragraph("`$S`: " * _arg_desc[Symbol(S)], leadingspaces = 6 + length(S))
-
-function add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
+function _add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
     m = 4(I - 1) + 1
     n = m + 1
     o = m + 2
@@ -1196,9 +1098,9 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     Y = zeros(eltype(y), 4length(cj))
     Z = zeros(eltype(z), 4length(ck))
     @inbounds for I in eachindex(ci)  # connections are 0-based
-        add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
+        _add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
     end
-    return X, Y, Z
+    X, Y, Z
 end
 
 function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
@@ -1206,9 +1108,9 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
     @inbounds for I in eachindex(cns)  # connections are 1-based
-        add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
+        _add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
     end
-    return X, Y, Z
+    X, Y, Z
 end
 
 # cache joined symbols so they can be looked up instead of constructed each time
@@ -1220,7 +1122,100 @@ get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyw
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))
 
-macro attributes(expr::Expr)
-    RecipesBase.process_recipe_body!(expr)
-    return expr
+_fmt_paragraph(paragraph::AbstractString; kw...) =
+    _fmt_paragraph(PipeBuffer(), paragraph, 0; kw...)
+
+function _fmt_paragraph(
+    io::IOBuffer,
+    remaining_text::AbstractString,
+    column_count::Integer;
+    fillwidth = 60,
+    leadingspaces = 0,
+)
+    kw = (; fillwidth, leadingspaces)
+
+    if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
+        if column_count + length(remaining_text) ≤ fillwidth
+            print(io, remaining_text)
+        else
+            print(io, '\n', ' '^leadingspaces, remaining_text)
+        end
+        read(io, String)
+    else
+        if column_count + length(m[1]) ≤ fillwidth
+            print(io, m[1], ' ')
+            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kw...)
+        else
+            print(io, '\n', ' '^leadingspaces, m[1], ' ')
+            _fmt_paragraph(io, m[2], leadingspaces; kw...)
+        end
+    end
+end
+
+_argument_description(s::Symbol) =
+    if s ∈ keys(_arg_desc)
+        aliases = if (al = Plots.aliases(s)) |> length > 0
+            " Aliases: " * string(Tuple(al)) * '.'
+        else
+            ""
+        end
+        "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." *
+        aliases
+    else
+        ""
+    end
+
+_document_argument(s::Symbol) =
+    _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
+
+#
+# The following functions implement the guess of the optimal legend position,
+# from the data series.
+#
+# Computes the distances of the plot limits to a sample of points at the extremes of 
+# the ranges, and places the legend at the corner where the maximum distance to the limits is found.
+#
+function d_point(x, y, lim, scale)
+    p_scaled = (x / scale[1], y / scale[2])
+    d = sum(abs2, lim .- p_scaled)
+    isnan(d) && return 0.0
+    return d
+end
+function _dinv_series(lim, scale, x, y, nsamples)
+    length(x) > 0 || return +Inf
+    dinv = 0.0
+    step = 1
+    lim = lim ./ scale
+    weight = 100.0
+    n = max(1, div(min(nsamples, length(x)), 2))
+    # Run from the extremes of the dataset inwards
+    for isample in firstindex(x):step:n
+        dinv += inv(1 + weight * d_point(x[isample], y[isample], lim, scale))
+    end
+    for isample in lastindex(x):(-step):(lastindex(x) - n)
+        dinv += inv(1 + weight * d_point(x[isample], y[isample], lim, scale))
+    end
+    return dinv
+end
+#
+# Function barrier because lims are type-unstable
+#
+function _guess_best_legend_position(xl, yl, plt, nsamples)
+    scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
+    dist_to_lims = zeros(4) # faster than tuple
+    for series in plt.series_list
+        x = series[:x]
+        y = series[:y]
+        for (i, lim) in enumerate(Iterators.product(xl, yl))
+            dist_to_lims[i] += _dinv_series(lim, scale, x, y, nsamples)
+        end
+    end
+    # this inversion favors :topright in case of draws, without cost
+    ibest = findmin(@view(dist_to_lims[4:-1:1]))[2]
+    return (:topright, :topleft, :bottomright, :bottomleft)[ibest]
+end
+# Main function
+function _guess_best_legend_position(lp::Symbol, plt; nsamples = 50)
+    lp === :best || return lp
+    return _guess_best_legend_position(xlims(plt), ylims(plt), plt, nsamples)
 end

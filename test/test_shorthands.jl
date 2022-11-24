@@ -36,6 +36,8 @@ end
     @test sp[:xaxis][:guide] == "xlabel"
     ylabel!(pl, "ylabel")
     @test sp[:yaxis][:guide] == "ylabel"
+    zlabel!(pl, "zlabel")
+    @test sp[:zaxis][:guide] == "zlabel"
 end
 
 @testset "Misc" begin

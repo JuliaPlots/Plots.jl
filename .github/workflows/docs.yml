@@ -3,10 +3,9 @@ name: docs
 on:
  workflow_dispatch:
  push:
-  branches:
-    - master
+  branches: [master]
   tags: '*'
- 
+
 jobs:
   Build_docs:
     runs-on: ubuntu-latest

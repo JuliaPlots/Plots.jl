@@ -3,11 +3,10 @@
 
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
 
-function standalone_html(
+standalone_html(
     plt::AbstractPlot;
     title::AbstractString = get(plt.attr, :window_title, "Plots.jl"),
-)
-    """
+) = """
     <!DOCTYPE html>
     <html>
         <head>
@@ -20,7 +19,6 @@ function standalone_html(
         </body>
     </html>
     """
-end
 
 embeddable_html(plt::AbstractPlot) = html_head(plt) * html_body(plt)
 
@@ -34,7 +32,7 @@ function open_browser_window(filename::AbstractString)
     @static if Sys.iswindows()
         return run(`$(ENV["COMSPEC"]) /c start "" "$(filename)"`)
     end
-    @warn("Unknown OS... cannot open browser window.")
+    @warn "Unknown OS... cannot open browser window."
 end
 
 function write_temp_html(plt::AbstractPlot)
@@ -59,11 +57,9 @@ function standalone_html_window(plt::AbstractPlot)
 end
 
 # uses wkhtmltopdf/wkhtmltoimage: http://wkhtmltopdf.org/downloads.html
-function html_to_png(html_fn, png_fn, w, h)
-    run(
-        `wkhtmltoimage -f png -q --width $w --height $h --disable-smart-width $html_fn $png_fn`,
-    )
-end
+html_to_png(html_fn, png_fn, w, h) = run(
+    `wkhtmltoimage -f png -q --width $w --height $h --disable-smart-width $html_fn $png_fn`,
+)
 
 function show_png_from_html(io::IO, plt::AbstractPlot)
     # write html to a temporary file

@@ -1,10 +1,8 @@
-using Plots, Test
-
 @testset "Plotting plots" begin
-    pl = @test_nowarn plot(plot(1:2), plot(1:2, size = (1200, 400)))
-    @test pl[:size] == (1200, 400)
-    pl = @test_nowarn plot(plot(1:2), plot(1:2), size = (1200, 400))
-    @test pl[:size] == (1200, 400)
+    pl = @test_nowarn plot(plot(1:2), plot(1:2, size = (1_200, 400)))
+    @test pl[:size] == (1_200, 400)
+    pl = @test_nowarn plot(plot(1:2), plot(1:2), size = (1_200, 400))
+    @test pl[:size] == (1_200, 400)
 end
 
 @testset "Subplot sclicing" begin
@@ -44,17 +42,17 @@ end
     pl = plot(plot(1:2); layout = grid(2, 2))
     @test length(pl) == 1
 
-    pl = plot((plot(1:2) for _ in 1:2)...; layout = grid(2, 2))
+    pl = plot(map(_ -> plot(1:2), 1:2)...; layout = grid(2, 2))
     @test length(pl) == 2
 
-    pl = plot((plot(1:2) for _ in 1:3)...; layout = grid(2, 2))
+    pl = plot(map(_ -> plot(1:2), 1:3)...; layout = grid(2, 2))
     @test length(pl) == 3
     @test length(plot!(pl, plot(1:2))) == 4
 
-    pl = plot((plot(1:2) for _ in 1:4)...; layout = grid(2, 2))
+    pl = plot(map(_ -> plot(1:2), 1:4)...; layout = grid(2, 2))
     @test length(pl) == 4
 
-    @test_throws ErrorException plot((plot(1:2) for _ in 1:5)...; layout = grid(2, 2))
+    @test_throws ErrorException plot(map(_ -> plot(1:2), 1:5)...; layout = grid(2, 2))
 end
 
 @testset "Invalid viewport" begin
@@ -64,7 +62,7 @@ end
 end
 
 @testset "Coverage" begin
-    pl = plot((plot(i) for i in 1:4)..., layout = (2, 2))
+    pl = plot(map(plot, 1:4)..., layout = (2, 2))
 
     sp = pl[end]
     @test sp isa Plots.Subplot
@@ -98,8 +96,8 @@ end
 
     @test Plots.to_pixels(1Plots.mm) isa AbstractFloat
     @test Plots.ispositive(1Plots.mm)
-    @test size(Plots.defaultbox) == (0Plots.mm, 0Plots.mm)
-    show(io, Plots.defaultbox)
+    @test size(Plots.DEFAULT_BBOX[]) == (0Plots.mm, 0Plots.mm)
+    show(io, Plots.DEFAULT_BBOX[])
     show(io, pl.layout)
 
     @test Plots.make_measure_hor(1Plots.mm) == 1Plots.mm
@@ -111,8 +109,12 @@ end
     rl = Plots.RootLayout()
     show(io, rl)
     @test parent(rl) === nothing
-    @test Plots.parent_bbox(rl) == Plots.defaultbox
-    @test Plots.bbox(rl) == Plots.defaultbox
+    @test Plots.parent_bbox(rl) == Plots.DEFAULT_BBOX[]
+    @test Plots.bbox(rl) == Plots.DEFAULT_BBOX[]
+    @test Plots.origin(Plots.DEFAULT_BBOX[]) == (0Plots.mm, 0Plots.mm)
+    for h_anchor in (:left, :right, :hcenter), v_anchor in (:top, :bottom, :vcenter)
+        @test Plots.bbox(0, 0, 1, 1, h_anchor, v_anchor) isa Plots.BoundingBox
+    end
 
     el = Plots.EmptyLayout()
     @test Plots.update_position!(el) === nothing
@@ -125,5 +127,11 @@ end
     @test Plots.right(el) == 0Plots.mm
     @test Plots.bottom(el) == 0Plots.mm
 
-    @test_throws ErrorException Plots.layout_args(nothing)
+    plot(map(plot, 1:4)..., layout = (2, :))
+    plot(map(plot, 1:4)..., layout = (:, 2))
+end
+
+@testset "Link" begin
+    plot(map(plot, 1:4)..., link = :all)
+    plot(map(plot, 1:4)..., link = :square)
 end

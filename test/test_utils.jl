@@ -1,4 +1,3 @@
-using Plots, Test, GeometryBasics
 @testset "Utils" begin
     zipped = (
         [(1, 2)],
@@ -40,8 +39,6 @@ using Plots, Test, GeometryBasics
     @test !Plots.ismatrix(nothing)
     @test Plots.isscalar(1.0)
     @test !Plots.isscalar(nothing)
-    @test Plots.tovec([]) isa AbstractVector
-    @test Plots.tovec(nothing) isa AbstractVector
     @test Plots.anynan(1, 3, (1, NaN, 3))
     @test Plots.allnan(1, 2, (NaN, NaN, 1))
     @test Plots.makevec([]) isa AbstractVector
@@ -54,9 +51,6 @@ using Plots, Test, GeometryBasics
     @test !Plots.ok((1, 2, NaN))
     @test Plots.nansplit([1, 2, NaN, 3, 4]) == [[1.0, 2.0], [3.0, 4.0]]
     @test Plots.nanvcat([1, NaN]) |> length == 4
-
-    @test Plots.nop() === nothing
-    @test_throws ErrorException Plots.notimpl()
 
     @test Plots.inch2px(1) isa AbstractFloat
     @test Plots.px2inch(1) isa AbstractFloat
@@ -72,28 +66,45 @@ using Plots, Test, GeometryBasics
 
     @test_throws ErrorException Plots.inline()
     @test_throws ErrorException Plots._do_plot_show(plot(), :inline)
-    @test_throws ErrorException Plots.dumpcallstack()
 
     @test plot(-1:10, xscale = :log10) isa Plots.Plot
 
     Plots.makekw(foo = 1, bar = 2) isa Dict
 
-    Plots.debugplots(true)
-    Plots.debugplots(false)
+    ######################
+    Plots.debug!(true)
 
     io = PipeBuffer()
     Plots.debugshow(io, nothing)
     Plots.debugshow(io, [1])
 
-    pl = plot(1)
-    push!(pl, 1.5)
-    push!(pl, 1, 1.5)
-    # append!(pl, [1., 2.])
-    append!(pl, 1, 2.5, 2.5)
-    push!(pl, (1.5, 2.5))
-    push!(pl, 1, (1.5, 2.5))
-    append!(pl, (1.5, 2.5))
-    append!(pl, 1, (1.5, 2.5))
+    pl = plot(1:2)
+    Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
+    show(devnull, pl[1][:xaxis])
+
+    # bounding boxes
+    with(:gr) do
+        show(devnull, plot(1:2))
+    end
+
+    Plots.debug!(false)
+    ######################
+
+    let pl = plot(1)
+        push!(pl, 1.5)
+        push!(pl, 1, 1.5)
+        append!(pl, [1.0, 2.0])
+        append!(pl, 1, 2.5, 2.5)
+        push!(pl, (1.5, 2.5))
+        push!(pl, 1, (1.5, 2.5))
+        append!(pl, (1.5, 2.5))
+        append!(pl, 1, (1.5, 2.5))
+    end
+
+    pl = scatter(1:2, 1:2)
+    push!(pl, 2:3)
+    pl = scatter(1:2, 1:2, 1:2)
+    push!(pl, 1:2, 2:3, 3:4)
 
     pl = plot([1, 2, 3], [4, 5, 6])
     @test Plots.xmin(pl) == 1
@@ -103,7 +114,40 @@ using Plots, Test, GeometryBasics
     @test Plots.get_attr_symbol(:x, "lims") === :xlims
     @test Plots.get_attr_symbol(:x, :lims) === :xlims
 
-    @test contains(Plots._document_argument("bar_position"), "bar_position")
+    @test contains(Plots._document_argument(:bar_position), "bar_position")
+
+    @test Plots.limsType((1, 1)) === :limits
+    @test Plots.limsType(:undefined) === :invalid
+    @test Plots.limsType(:auto) === :auto
+    @test Plots.limsType(NaN) === :invalid
+
+    @test Plots.ticksType([1, 2]) === :ticks
+    @test Plots.ticksType(["1", "2"]) === :labels
+    @test Plots.ticksType(([1, 2], ["1", "2"])) === :ticks_and_labels
+    @test Plots.ticksType(((1, 2), ("1", "2"))) === :ticks_and_labels
+    @test Plots.ticksType(:undefined) === :invalid
+
+    pl = plot(1:2, 1:2, 1:2, proj_type = :ortho)
+    @test Plots.isortho(first(pl.subplots))
+    pl = plot(1:2, 1:2, 1:2, proj_type = :persp)
+    @test Plots.ispersp(first(pl.subplots))
+
+    let pl = plot(1:2)
+        series = first(pl.series_list)
+        label = "fancy label"
+        attr!(series; label)
+        @test series[:label] == label
+        @test Plots.attr(series, :label) == label
+
+        label = "another label"
+        attr!(series, label, :label)
+        @test Plots.attr(series, :label) == label
+
+        sp = first(pl.subplots)
+        title = "fancy title"
+        attr!(sp; title)
+        @test sp[:title] == title
+    end
 end
 
 @testset "NaN-separated Segments" begin
@@ -118,6 +162,13 @@ end
     @test segments([nan10; 1:5; nan10; 1:5; nan10]) == [11:15, 26:30]
     @test segments([NaN; 1], 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
     @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
+end
+
+@testset "Invalid scale values" begin
+    @test_logs match_mode = :any (:warn, r"Invalid negative or zero value.*") png(
+        plot([0, 1], yscale = :log10),
+        tempname(),
+    )
 end
 
 @testset "Triangulation" begin
@@ -136,4 +187,84 @@ end
 
     X, Y, Z = Plots.mesh3d_triangles(x, y, z, cns)
     @test length(X) == length(Y) == length(Z) == 4length(i)
+end
+
+@testset "SentinelArrays - _cycle" begin
+    # discourse.julialang.org/t/plots-borking-on-sentinelarrays-produced-by-csv-read/89505
+    # `CSV` produces `SentinelArrays` data
+    @test scatter(ChainedVector([[1, 2], [3, 4]]), 1:4) isa Plot
+end
+
+@testset "Best legend position" begin
+    x = 0:0.01:2
+    plt = plot(x, x, label = "linear")
+    plt = plot!(x, x .^ 2, label = "quadratic")
+    plt = plot!(x, x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, plt) === :topleft
+
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
+    plt = plot(x, x, label = "linear")
+    plt = plot!(x, x .^ 2, label = "quadratic")
+    plt = plot!(x, x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, plt) === :topleft
+
+    x = 0:0.01:2
+    plt = plot(x, -x, label = "linear")
+    plt = plot!(x, -x .^ 2, label = "quadratic")
+    plt = plot!(x, -x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, plt) === :bottomleft
+
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
+    plt = plot(x, -x, label = "linear")
+    plt = plot!(x, -x .^ 2, label = "quadratic")
+    plt = plot!(x, -x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, plt) === :bottomleft
+
+    x = [0, 1, 0, 1]
+    y = [0, 0, 1, 1]
+    plt = scatter(x, y, xlims = [0.0, 1.3], ylims = [0.0, 1.3], label = "test")
+    @test Plots._guess_best_legend_position(:best, plt) === :topright
+
+    plt = scatter(x, y, xlims = [-0.3, 1.0], ylims = [-0.3, 1.0], label = "test")
+    @test Plots._guess_best_legend_position(:best, plt) === :bottomleft
+
+    plt = scatter(x, y, xlims = [0.0, 1.3], ylims = [-0.3, 1.0], label = "test")
+    @test Plots._guess_best_legend_position(:best, plt) === :bottomright
+
+    plt = scatter(x, y, xlims = [-0.3, 1.0], ylims = [0.0, 1.3], label = "test")
+    @test Plots._guess_best_legend_position(:best, plt) === :topleft
+
+    y1 = [
+        0.6640202072697099,
+        0.04435946459047402,
+        0.4819421561655691,
+        0.7812872333045798,
+        0.9468591660437995,
+        0.5530071466041402,
+        0.22969207890925003,
+        0.48741164266779236,
+        0.0546763558355734,
+        0.1432072797975329,
+    ]
+    y2 = [0.40089741940615464, 0.6687326060649715, 0.6844117863127116]
+    plt = plot(1:10, y1)
+    plt = plot!(1:3, y2, xlims = (0, 10), ylims = (0, 1))
+    @test Plots._guess_best_legend_position(:best, plt) === :topright
+
+    # test empty plot
+    plt = plot([])
+    @test Plots._guess_best_legend_position(:best, plt) === :topright
+
+    # test that we didn't overlap other placements
+    @test Plots._guess_best_legend_position(:bottomleft, plt) === :bottomleft
+end
+
+@testset "dispatch" begin
+    with(:gr) do
+        pl = heatmap(rand(10, 10); xscale = :log10, yscale = :log10)
+        @test show(devnull, pl) isa Nothing
+
+        pl = plot(Shape([(1, 1), (2, 1), (2, 2), (1, 2)]); xscale = :log10)
+        @test show(devnull, pl) isa Nothing
+    end
 end

@@ -28,25 +28,24 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
 
     plt.o.layout = gaston_init_subplots(plt, sps)
 
-    # Then add the series (curves in gaston)
-    for series in plt.series_list
-        gaston_add_series(plt, series)
-    end
+    # then add the series (curves in gaston)
+    foreach(series -> gaston_add_series(plt, series), plt.series_list)
 
     for sp in plt.subplots
         sp === nothing && continue
         for ann in sp[:annotations]
             x, y, val = locate_annotation(sp, ann...)
-            sp.o.axesconf *= "\nset label '$(val.str)' at $x,$y $(gaston_font(val.font))"
+            sp.o.axesconf *= "; set label '$(val.str)' at $x,$y $(gaston_font(val.font))"
+        end
+        if _debug[]
+            println(replace(sp.o.axesconf, "; " => "\n"))
+            # foreach(println, sp.o.curves)
         end
     end
     nothing
 end
 
-function _update_min_padding!(sp::Subplot{GastonBackend})
-    sp.minpad = 0mm, 0mm, 0mm, 0mm
-    nothing
-end
+_update_min_padding!(sp::Subplot{GastonBackend}) = sp.minpad = 0mm, 0mm, 0mm, 0mm
 
 function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
@@ -93,6 +92,9 @@ _display(plt::Plot{GastonBackend}) = display(plt.o)
 function gaston_saveopts(plt::Plot{GastonBackend})
     saveopts = String["size $(join(plt.attr[:size], ","))"]
 
+    # Scale all plot elements to match Plots.jl DPI standard
+    scaling = plt.attr[:dpi] / Plots.DPI
+
     push!(
         saveopts,
         gaston_font(
@@ -102,17 +104,12 @@ function gaston_saveopts(plt::Plot{GastonBackend})
             color = false,
             scale = 1,
         ),
+        "background $(gaston_color(plt.attr[:background_color]))",
+        # "title '$(plt.attr[:window_title])'",
+        "fontscale $scaling lw $scaling dl $scaling",  # ps $scaling
     )
 
-    push!(saveopts, "background $(gaston_color(plt.attr[:background_color]))")
-
-    # push!(saveopts, "title '$(plt.attr[:window_title])'")
-
-    # Scale all plot elements to match Plots.jl DPI standard
-    scaling = plt.attr[:dpi] / Plots.DPI
-    push!(saveopts, "fontscale $scaling lw $scaling dl $scaling")  #  ps $scaling
-
-    return join(saveopts, " ")
+    join(saveopts, " ")
 end
 
 function gaston_get_subplots(n, plt_subplots, layout)
@@ -120,14 +117,14 @@ function gaston_get_subplots(n, plt_subplots, layout)
     sps = Array{Any}(nothing, nr, nc)
     for r in 1:nr, c in 1:nc  # NOTE: col major
         l = layout[r, c]
-        if l isa GridLayout
+        sps[r, c] = if l isa GridLayout
             n, sub = gaston_get_subplots(n, plt_subplots, l)
-            sps[r, c] = size(sub) == (1, 1) ? only(sub) : sub
+            size(sub) == (1, 1) ? only(sub) : sub
         else
-            sps[r, c] = get(l.attr, :blank, false) ? nothing : plt_subplots[n += 1]
+            get(l.attr, :blank, false) ? nothing : plt_subplots[n += 1]
         end
     end
-    return n, sps
+    n, sps
 end
 
 function gaston_init_subplots(plt, sps)
@@ -141,7 +138,7 @@ function gaston_init_subplots(plt, sps)
             sz = max.(sz, size(sp))
         end
     end
-    return sz
+    sz
 end
 
 function gaston_init_subplot(
@@ -162,11 +159,8 @@ function gaston_init_subplot(
             end
             any_label |= should_add_to_legend(series)
         end
-        sp.o = Gaston.Plot(
-            dims = dims,
-            curves = [],
-            axesconf = gaston_parse_axes_args(plt, sp, dims, any_label),
-        )
+        axesconf = gaston_parse_axes_args(plt, sp, dims, any_label)
+        sp.o = Gaston.Plot(dims = dims, curves = []; axesconf)
         push!(plt.o.subplots, sp.o)
     end
     nothing
@@ -190,15 +184,15 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
             prev_c isa Array && (prev_c = prev_c[end, end])
             x = prev_c !== nothing ? prev_c[1] + prev_c[3] : parent_xy_wh[1]
             y = prev_r !== nothing ? prev_r[2] + prev_r[4] : parent_xy_wh[2]
-            if l isa GridLayout
+            dat[r, c] = if l isa GridLayout
                 sub = gaston_multiplot_pos_size(l, (x, y, w, h))
-                dat[r, c] = size(sub) == (1, 1) ? only(sub) : sub
+                size(sub) == (1, 1) ? only(sub) : sub
             else
-                dat[r, c] = x, y, w, h, l
+                x, y, w, h, l
             end
         end
     end
-    return dat
+    dat
 end
 
 function gaston_multiplot_pos_size!(dat)
@@ -212,7 +206,7 @@ function gaston_multiplot_pos_size!(dat)
             sp === nothing && continue
             sp.o === nothing && continue
             # gnuplot screen coordinates: bottom left at 0,0 and top right at 1,1
-            sp.o.axesconf = "set origin $x, $(1 - y - h)\nset size $w, $h\n" * sp.o.axesconf
+            sp.o.axesconf = "set origin $x, $(1 - y - h); set size $w, $h; " * sp.o.axesconf
         end
     end
     nothing
@@ -264,6 +258,9 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     nothing
 end
 
+gaston_palette_conf(series) =
+    "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
+
 function gaston_seriesconf!(
     sp::Subplot{GastonBackend},
     series::Series,
@@ -291,34 +288,32 @@ function gaston_seriesconf!(
     =#
     gsp = sp.o
     st = series[:seriestype]
-    extra = []
     add_to_legend &= should_add_to_legend(series)
-    curveconf = String[add_to_legend ? "title '$(series[:label])'" : "notitle"]
+    curveconf = add_to_legend ? "title '$(series[:label])' " : "notitle "
+    extra_curves = String[]
 
     clims = get_clims(sp, series)
     if st ∈ (:scatter, :scatter3d)
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         pt, ps, mc = gaston_mk_ms_mc(series, clims, i)
-        push!(curveconf, "w points pt $pt ps $ps lc $mc")
+        curveconf *= "w points pt $pt ps $ps lc $mc"
     elseif st ∈ (:path, :straightline, :path3d)
         fr = series[:fillrange]
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
+        fs = get_fillstyle(series, i)  # FIXME: add fillstyle support ?
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
-        if fr !== nothing # filled curves, but not filled curves with markers
-            push!(
-                curveconf,
-                "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt",
-            )
+        curveconf *= if fr !== nothing  # filled curves, but not filled curves with markers
+            "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt"
         elseif series[:markershape] === :none  # simplepath
-            push!(curveconf, "w lines lc $lc dt $dt lw $lw")
+            "w lines lc $lc dt $dt lw $lw"
         else
             pt, ps, mc = gaston_mk_ms_mc(series, clims, i)
-            push!(curveconf, "w lp lc $mc dt $dt lw $lw pt $pt ps $ps")
+            "w lp lc $mc dt $dt lw $lw pt $pt ps $ps"
         end
     elseif st === :shape
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
-        lc, _ = gaston_lc_ls_lw(series, clims, i)
-        push!(curveconf, "w filledcurves fc $fc fs solid border lc $lc")
+        lc, = gaston_lc_ls_lw(series, clims, i)
+        curveconf *= "w filledcurves fc $fc fs solid border lc $lc"
     elseif st ∈ (:steppre, :stepmid, :steppost)
         step = if st === :steppre
             "fsteps"
@@ -327,33 +322,42 @@ function gaston_seriesconf!(
         elseif st === :steppost
             "steps"
         end
-        push!(curveconf, "w $step")
+        curveconf *= "w $step"
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
-        push!(extra, "w points lc $lc dt $dt lw $lw notitle")
+        push!(extra_curves, "w points lc $lc dt $dt lw $lw notitle")
     elseif st === :image
-        palette = gaston_palette(series[:seriescolor])
-        gsp.axesconf *= "\nset palette model RGB defined $palette"
-        push!(curveconf, "w image pixels")
+        gsp.axesconf *= gaston_palette_conf(series)
+        curveconf *= "w image pixels"
     elseif st ∈ (:contour, :contour3d)
-        push!(curveconf, "w lines")
-        st === :contour && (gsp.axesconf *= "\nset view map\nunset surface")  # 2D
-        levels = join(map(string, collect(contour_levels(series, clims))), ", ")
-        gsp.axesconf *= "\nset contour base\nset cntrparam levels discrete $levels"
+        filled = isfilledcontour(series)
+        curveconf *= filled ? "w pm3d" : "w lines"
+        if series[:contour_labels] == true
+            gsp.axesconf *= "; set cntrlabel interval -1"
+            push!(extra_curves, "w labels notitle")
+        end
+        levels = collect(contour_levels(series, clims))
+        if st === :contour  # 2D
+            gsp.axesconf *= if filled
+                "; set view map; set palette maxcolors $(length(levels))"
+            else
+                "; set view map; unset surface"
+            end
+        end
+        gsp.axesconf *= "; set contour both; set cntrparam levels discrete $(join(map(string, levels), ", "))"
     elseif st ∈ (:surface, :heatmap)
-        push!(curveconf, "w pm3d")
-        palette = gaston_palette(series[:seriescolor])
-        gsp.axesconf *= "\nset palette model RGB defined $palette"
-        st === :heatmap && (gsp.axesconf *= "\nset view map")
+        curveconf *= "w pm3d"
+        gsp.axesconf *= gaston_palette_conf(series)
+        st === :heatmap && (gsp.axesconf *= "; set view map")
     elseif st ∈ (:wireframe, :mesh3d)
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
-        push!(curveconf, "w lines lc $lc dt $dt lw $lw")
+        curveconf *= "w lines lc $lc dt $dt lw $lw"
     elseif st === :quiver
-        push!(curveconf, "w vectors filled")
+        curveconf *= "w vectors filled"
     else
-        @warn "Gaston: $st is not implemented yet"
+        @warn "Plots(Gaston): $st is not implemented yet"
     end
 
-    return [join(curveconf, " "), extra...]
+    [curveconf, extra_curves...]
 end
 
 function gaston_parse_axes_args(
@@ -377,20 +381,20 @@ function gaston_parse_axes_args(
         )
         mirror = axis[:mirror] ? "mirror" : "nomirror"
 
-        if axis[:scale] === :identity
-            logscale, base = "nologscale", ""
+        logscale, base = if axis[:scale] === :identity
+            "nologscale", ""
         elseif axis[:scale] === :log10
-            logscale, base = "logscale", "10"
+            "logscale", "10"
         elseif axis[:scale] === :log2
-            logscale, base = "logscale", "2"
+            "logscale", "2"
         elseif axis[:scale] === :ln
-            logscale, base = "logscale", "e"
+            "logscale", "e"
         end
         push!(axesconf, "set $logscale $letter $base")
 
         # handle ticks
         if polar
-            push!(axesconf, "set size square\nunset $(letter)tics")
+            push!(axesconf, "set size square; unset $(letter)tics")
         else
             push!(
                 axesconf,
@@ -422,24 +426,21 @@ function gaston_parse_axes_args(
                 push!(axesconf, "set grid " * (polar ? "polar" : "m$(letter)tics"))
         end
 
-        ratio = get_aspect_ratio(sp)
-        if ratio !== :none
+        if (ratio = get_aspect_ratio(sp)) !== :none
             ratio === :equal && (ratio = -1)
             push!(axesconf, "set size ratio $ratio")
         end
     end
     gaston_set_legend!(axesconf, sp, any_label)
 
-    if hascolorbar(sp)
-        push!(axesconf, "set cbtics $(gaston_font(colorbartitlefont(sp)))")
-    end
+    hascolorbar(sp) && push!(axesconf, "set cbtics $(gaston_font(colorbartitlefont(sp)))")
 
     if sp[:title] !== nothing
         push!(axesconf, "set title '$(sp[:title])' $(gaston_font(titlefont(sp)))")
     end
 
     if polar
-        push!(axesconf, "unset border\nset polar\nset border polar")
+        push!(axesconf, "unset border; set polar; set border polar")
         tmin, tmax = axis_limits(sp, :x, false, false)
         rmin, rmax = axis_limits(sp, :y, false, false)
         rticks = get_ticks(sp, :y)
@@ -450,20 +451,15 @@ function gaston_parse_axes_args(
         end
         push!(
             axesconf,
-            "set rtics ( " *
-            join(gaston_ticks, ", ") *
-            " ) $(gaston_font(tickfont(sp.attr[:yaxis])))",
-        )
-        push!(axesconf, "set trange [$(min(0, tmin)):$(max(2π, tmax))]")
-        push!(axesconf, "set rrange [$rmin:$rmax]")
-        push!(
-            axesconf,
+            "set rtics ( $(join(gaston_ticks, ", ")) ) $(gaston_font(tickfont(sp.attr[:yaxis])))",
+            "set trange [$(min(0, tmin)):$(max(2π, tmax))]",
+            "set rrange [$rmin:$rmax]",
             "set ttics 0,30 format \"%g\".GPVAL_DEGREE_SIGN $(gaston_font(tickfont(sp.attr[:xaxis])))",
+            "set mttics 3",
         )
-        push!(axesconf, "set mttics 3")
     end
 
-    return join(axesconf, "\n")
+    join(axesconf, "; ")
 end
 
 function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
@@ -493,7 +489,7 @@ function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
         end
     else
         gaston_ticks = nothing
-        @error "Gaston: invalid input for $(maj_min)$(letter)ticks: $ticks"
+        @error "Gaston: invalid input for $(maj_min)$(letter)ticks: $ticks ($ttype)"
     end
     if gaston_ticks !== nothing
         push!(axesconf, "set $(letter)tics $add (" * join(gaston_ticks, ", ") * ")")
@@ -518,8 +514,7 @@ function gaston_set_legend!(axesconf, sp, any_label)
             # NOTE: cannot use legendtitlefont(sp) as it will override legendfont
             push!(axesconf, "set key title '$(sp[:legend_title])'")
         end
-        push!(axesconf, "set key box lw 1 opaque")
-        push!(axesconf, "set border back")
+        push!(axesconf, "set key box lw 1 opaque", "set border back")
     else
         push!(axesconf, "set key off")
     end
@@ -552,7 +547,7 @@ function gaston_font(f; rot = true, align = true, color = true, scale = 1)
     align && push!(font, "$(gaston_halign(f.halign))")
     rot && push!(font, "rotate by $(f.rotation)")
     color && push!(font, "textcolor $(gaston_color(f.color))")
-    return join(font, " ")
+    join(font, " ")
 end
 
 function gaston_palette(gradient)
@@ -561,7 +556,7 @@ function gaston_palette(gradient)
     for rgba in gradient  # FIXME: naive conversion, inefficient ?
         push!(palette, "$(n += 1) $(rgba.r) $(rgba.g) $(rgba.b)")
     end
-    return '(' * join(palette, ", ") * ')'
+    '(' * join(palette, ", ") * ')'
 end
 
 function gaston_marker(marker, alpha)
@@ -579,14 +574,14 @@ function gaston_marker(marker, alpha)
     marker === :diamond && return filled ? 13 : 12
     marker === :pentagon && return filled ? 15 : 14
 
-    @warn "Gaston: unsupported marker $marker"
-    return 1
+    @debug "Plots(Gaston): unsupported marker $marker"
+    1
 end
 
 function gaston_color(col, alpha = 0)
     col = single_color(col)  # in case of gradients
     col = alphacolor(col, gaston_alpha(alpha))  # add a default alpha if non existent
-    return "rgb '#$(hex(col, :aarrggbb))'"
+    "rgb '#$(hex(col, :aarrggbb))'"
 end
 
 function gaston_linestyle(style)
@@ -600,5 +595,5 @@ end
 function gaston_enclose_tick_string(tick_string)
     findfirst("^", tick_string) === nothing && return tick_string
     base, power = split(tick_string, "^")
-    return "$base^{$power}"
+    "$base^{$power}"
 end

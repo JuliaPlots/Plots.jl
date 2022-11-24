@@ -2,14 +2,46 @@
 # that objects like `AbstractPlot` are properly prefixed with `RecipesBase.` in
 # the macros.
 import RecipesBase
-using Test, Random
+using StableRNGs
+using Test
 
 const KW = Dict{Symbol,Any}
 
 RecipesBase.is_key_supported(k::Symbol) = true
 
-for t in [Symbol(:T, i) for i in 1:5]
+for t in map(i -> Symbol(:T, i), 1:5)
     @eval struct $t end
+end
+
+struct Dummy end
+
+RecipesBase.@recipe function plot(t::Dummy, args...) end
+
+@testset "coverage" begin
+    @test !RecipesBase.group_as_matrix(nothing)
+    @test RecipesBase.apply_recipe(KW(:foo => 1)) == ()
+
+    @test RecipesBase.to_symbol(:x) ≡ :x
+    @test RecipesBase.to_symbol(QuoteNode(:x)) ≡ :x
+
+    @test RecipesBase._equals_symbol(:x, :x)
+    @test RecipesBase._equals_symbol(QuoteNode(:x), :x)
+    @test !RecipesBase._equals_symbol(nothing, :x)
+
+    @test RecipesBase.gettypename(:x) ≡ :x
+    @test RecipesBase.gettypename(:(Foo{T})) ≡ :Foo
+
+    RecipesBase.recipetype(::Val{:Dummy}, args...) = nothing
+    @test RecipesBase.recipetype(:Dummy, 1:10) isa Nothing
+    @test_throws ErrorException RecipesBase.recipetype(:NotDefined)
+end
+
+@testset "layout" begin
+    grid(x, y) = (x, y)  # fake `grid` function for `Plots`
+    @test RecipesBase.@layout([a b; c]) isa Matrix
+    @test RecipesBase.@layout([a{0.3w}; b{0.2h}]) isa Matrix
+    @test RecipesBase.@layout([a{0.3w} [grid(3, 3); b{0.2h}]]) isa Matrix
+    @test RecipesBase.@layout([_ ° _; ° ° °; ° ° °]) isa Matrix
 end
 
 @testset "@recipe" begin
@@ -22,7 +54,7 @@ end
         plotattributes = KW(:customcolor => :red)
 
         data_list = RecipesBase.apply_recipe(plotattributes, T(), 2)
-        @test data_list[1].args == (Random.seed!(1); (rand(10, 2),))
+        @test data_list[1].args == (rand(StableRNG(1), 10, 2),)
         @test plotattributes == expect
     end
 
@@ -38,10 +70,9 @@ end
             :markercolor --> customcolor, :force
             :xrotation --> 5
             :zrotation --> 6, :quiet
-            rand(10, n)
+            rand(StableRNG(1), 10, n)
         end
 
-        Random.seed!(1)
         check_apply_recipe(
             T1,
             KW(
@@ -66,10 +97,9 @@ end
             :markercolor --> customcolor, :force
             :xrotation --> 5
             :zrotation --> 6, :quiet
-            rand(10, n)
+            rand(StableRNG(1), 10, n)
         end
 
-        Random.seed!(1)
         check_apply_recipe(
             T2,
             KW(
@@ -95,10 +125,9 @@ end
             :markercolor --> customcolor, :force
             :xrotation --> 5
             :zrotation --> 6, :quiet
-            rand(10, n)
+            rand(StableRNG(1), 10, n)
         end
 
-        Random.seed!(1)
         check_apply_recipe(
             T3,
             KW(
@@ -121,9 +150,8 @@ end
             :zrotation --> 6, :quiet
             plotattributes[:hello] = "hi"
             plotattributes[:world] = "world"
-            rand(10, n)
+            rand(StableRNG(1), 10, n)
         end
-        Random.seed!(1)
         check_apply_recipe(
             T4,
             KW(
@@ -143,10 +171,9 @@ end
 
         RecipesBase.@recipe function plot(t::T5, n::Integer = 1)
             customcolor --> :notred
-            rand(10, n)
+            rand(StableRNG(1), 10, n)
         end
 
-        Random.seed!(1)
         check_apply_recipe(T5, KW(:customcolor => :red))
     end
 end  # @testset "@recipe"
@@ -160,5 +187,5 @@ RecipesBase.@userplot MyPlot
     @test typeof(myplot!) <: Function
     @test length(methods(myplot!)) == 2
     m = MyPlot(:my_arg)
-    @test m.args == :my_arg
+    @test m.args ≡ :my_arg
 end

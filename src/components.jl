@@ -4,10 +4,11 @@ const P3 = NTuple{3,Float64}
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
 
-nanpush!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); push!(a, b))
-nanappend!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); append!(a, b))
-nanpush!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); push!(a, b))
-nanappend!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); append!(a, b))
+nanpush!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); push!(a, b); nothing)
+nanappend!(a::AVec{P2}, b) = (push!(a, (NaN, NaN)); append!(a, b); nothing)
+nanpush!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); push!(a, b); nothing)
+nanappend!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); append!(a, b); nothing)
+
 compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angle)
 
 # -------------------------------------------------------------
@@ -112,11 +113,12 @@ const _shapes = KW(
     :xcross    => makecross(),
     :vline     => Shape([(0, 1), (0, -1)]),
     :hline     => Shape([(1, 0), (-1, 0)]),
+    :star4     => makestar(4),
+    :star5     => makestar(5),
+    :star6     => makestar(6),
+    :star7     => makestar(7),
+    :star8     => makestar(8),
 )
-
-for n in 4:8
-    _shapes[Symbol("star$n")] = makestar(n)
-end
 
 Shape(k::Symbol) = deepcopy(_shapes[k])
 
@@ -371,6 +373,8 @@ text(str, args...; kw...) = PlotText(string(str), font(args...; kw...))
 
 Base.length(t::PlotText) = length(t.str)
 
+is_horizontal(t::PlotText) = abs(sind(t.font.rotation)) ≤ sind(45)
+
 # -----------------------------------------------------------------------
 
 struct Stroke
@@ -466,7 +470,7 @@ series_annotations(::Nothing) = nothing
 
 function series_annotations(anns::AMat{SeriesAnnotations})
     @assert size(anns, 1) == 1 "matrix of SeriesAnnotations must be a row vector"
-    return anns
+    anns
 end
 
 function series_annotations(anns::AMat, outer_args...)
@@ -476,9 +480,9 @@ function series_annotations(anns::AMat, outer_args...)
     # whole_series types can only be in a row vector
     if size(anns, 1) > 1
         for ann in Iterators.filter(ann -> ann isa whole_series, anns)
-            (throw ∘ ArgumentError)(
-                "Given series annotation must be the only element in its column:\n$ann",
-            )
+            "Given series annotation must be the only element in its column:\n$ann" |>
+            ArgumentError |>
+            throw
         end
     end
 
@@ -490,7 +494,7 @@ function series_annotations(anns::AMat, outer_args...)
         series_annotations(strs, outer_args..., inner_args...)
     end
 
-    return permutedims(ann_vec)
+    permutedims(ann_vec)
 end
 
 function series_annotations(strs::AVec, args...)
@@ -514,27 +518,12 @@ function series_annotations(strs::AVec, args...)
             @warn "Unused SeriesAnnotations arg: $arg ($(typeof(arg)))"
         end
     end
-    # if scalefactor != 1
-    #     for s in get(shp)
-    #         scale!(s, scalefactor, scalefactor, (0, 0))
-    #     end
-    # end
-    SeriesAnnotations([_text_label(s, fnt) for s in strs], fnt, shp, scalefactor)
+    SeriesAnnotations(map(s -> _text_label(s, fnt), strs), fnt, shp, scalefactor)
 end
 
 function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     anns = series[:series_annotations]
-    # msw, msh = anns.scalefactor
-    # ms = series[:markersize]
-    # msw, msh = if isa(ms, AVec)
-    #     1, 1
-    # elseif is_2tuple(ms)
-    #     ms
-    # else
-    #     ms, ms
-    # end
 
-    # @show msw msh
     if anns !== nothing && anns.baseshape !== nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
@@ -550,7 +539,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # how much to scale the base shape?
             # note: it's a rough assumption that the shape fills the unit box [-1, -1, 1, 1],
             #       so we scale the length-2 shape by 1/2 the total length
-            scalar = (backend() == PyPlotBackend() ? 1.7 : 1.0)
+            scalar = backend() == PyPlotBackend() ? 1.7 : 1.0
             xscale = 0.5to_pixels(sw) * scalar
             yscale = 0.5to_pixels(sh) * scalar
 
@@ -565,7 +554,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         series[:markershape] = shapes
         series[:markersize] = msize
     end
-    return
+    nothing
 end
 
 mutable struct EachAnn
@@ -575,9 +564,7 @@ mutable struct EachAnn
 end
 
 function Base.iterate(ea::EachAnn, i = 1)
-    if ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)
-        return
-    end
+    (ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)) && return
 
     tmp = _cycle(ea.anns.strs, i)
     str, fnt = if isa(tmp, PlotText)
@@ -585,7 +572,7 @@ function Base.iterate(ea::EachAnn, i = 1)
     else
         tmp, ea.anns.font
     end
-    ((_cycle(ea.x, i), _cycle(ea.y, i), str, fnt), i + 1)
+    (_cycle(ea.x, i), _cycle(ea.y, i), str, fnt), i + 1
 end
 
 # -----------------------------------------------------------------------
@@ -645,7 +632,6 @@ function process_annotation(
 end
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
-
     # !TODO Add more scales in the future (asinh, sqrt) ?
     if scale === :log || scale === :ln
         exp(log(xmin) + pos.value * log(xmax / xmin))
@@ -653,25 +639,30 @@ function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
         exp10(log10(xmin) + pos.value * log10(xmax / xmin))
     elseif scale === :log2
         exp2(log2(xmin) + pos.value * log2(xmax / xmin))
-    else # :identity (linear scale)
+    else  # :identity (linear scale)
         xmin + pos.value * (xmax - xmin)
     end
 end
 
-# Give each annotation coordinates based on specified position
-function locate_annotation(
-    sp::Subplot,
-    pos::Symbol,
-    label::PlotText;
-    position_multiplier = Dict{Symbol,Tuple{Float64,Float64}}(
-        :topleft      => (0.1pct, 0.9pct),
-        :topcenter    => (0.5pct, 0.9pct),
-        :topright     => (0.9pct, 0.9pct),
-        :bottomleft   => (0.1pct, 0.1pct),
-        :bottomcenter => (0.5pct, 0.1pct),
-        :bottomright  => (0.9pct, 0.1pct),
-    ),
+const position_multiplier = Dict(
+    :N            => (0.5pct, 0.9pct),
+    :NE           => (0.9pct, 0.9pct),
+    :E            => (0.9pct, 0.5pct),
+    :SE           => (0.9pct, 0.1pct),
+    :S            => (0.5pct, 0.1pct),
+    :SW           => (0.1pct, 0.1pct),
+    :W            => (0.1pct, 0.5pct),
+    :NW           => (0.1pct, 0.9pct),
+    :topleft      => (0.1pct, 0.9pct),
+    :topcenter    => (0.5pct, 0.9pct),
+    :topright     => (0.9pct, 0.9pct),
+    :bottomleft   => (0.1pct, 0.1pct),
+    :bottomcenter => (0.5pct, 0.1pct),
+    :bottomright  => (0.9pct, 0.1pct),
 )
+
+# Give each annotation coordinates based on specified position
+function locate_annotation(sp::Subplot, pos::Symbol, label::PlotText)
     x, y = position_multiplier[pos]
     (
         _relative_position(
@@ -721,26 +712,12 @@ locate_annotation(sp::Subplot, rel::NTuple{3,<:Number}, label::PlotText) = (
     ),
     label,
 )
-# -----------------------------------------------------------------------
-
-"type which represents z-values for colors and sizes (and anything else that might come up)"
-struct ZValues
-    values::Vector{Float64}
-    zrange::Tuple{Float64,Float64}
-end
-
-zvalues(
-    values::AVec{T},
-    zrange::Tuple{T,T} = (ignorenan_minimum(values), ignorenan_maximum(values)),
-) where {T<:Real} = ZValues(collect(float(values)), map(Float64, zrange))
 
 # -----------------------------------------------------------------------
 
 function expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]::Extrema
-    for vi in surf.surf
-        expand_extrema!(ex, vi)
-    end
+    foreach(x -> expand_extrema!(ex, x), surf.surf)
     ex
 end
 
@@ -771,8 +748,7 @@ Define arrowheads to apply to lines - args are `style` (`:open` or `:closed`),
 `side` (`:head`, `:tail` or `:both`), `headlength` and `headwidth`
 """
 function arrow(args...)
-    style = :simple
-    side = :head
+    style, side = :simple, :head
     headlength = headwidth = 0.3
     setlength = false
     for arg in args

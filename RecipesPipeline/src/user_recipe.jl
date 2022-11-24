@@ -61,17 +61,14 @@ function _recipedata_vector(plt, plotattributes, args)
 
     # if we were passed a vector/matrix of seriestypes and there's more than one row,
     # we want to duplicate the inputs, once for each seriestype row.
-    if !isempty(args)
+    isempty(args) ||
         append!(still_to_process, _expand_seriestype_array(plotattributes, args))
-    end
 
     # remove subplot and axis args from plotattributes...
     # they will be passed through in the kw_list
-    if !isempty(args)
-        for (k, v) in plotattributes
-            if is_subplot_attribute(plt, k) || is_axis_attribute(plt, k)
-                reset_kw!(plotattributes, k)
-            end
+    isempty(args) || for (k, v) in plotattributes
+        if is_subplot_attribute(plt, k) || is_axis_attribute(plt, k)
+            reset_kw!(plotattributes, k)
         end
     end
 
@@ -115,38 +112,32 @@ end
 # series.jl.
 
 # handle "type recipes" by converting inputs, and then either re-calling or slicing
-@recipe function f(x, y, z)
+@recipe function f(x, y, z)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, x, y, z)
     did_replace = false
-    newx = _apply_type_recipe(plotattributes, x, :x)
-    x === newx || (did_replace = true)
-    newy = _apply_type_recipe(plotattributes, y, :y)
-    y === newy || (did_replace = true)
-    newz = _apply_type_recipe(plotattributes, z, :z)
-    z === newz || (did_replace = true)
+    did_replace |= x !== (newx = _apply_type_recipe(plotattributes, x, :x))
+    did_replace |= y !== (newy = _apply_type_recipe(plotattributes, y, :y))
+    did_replace |= z !== (newz = _apply_type_recipe(plotattributes, z, :z))
     if did_replace
         newx, newy, newz
     else
         SliceIt, x, y, z
     end
 end
-@recipe function f(x, y)
+@recipe function f(x, y)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, x, y)
     did_replace = false
-    newx = _apply_type_recipe(plotattributes, x, :x)
-    x === newx || (did_replace = true)
-    newy = _apply_type_recipe(plotattributes, y, :y)
-    y === newy || (did_replace = true)
+    did_replace |= x !== (newx = _apply_type_recipe(plotattributes, x, :x))
+    did_replace |= y !== (newy = _apply_type_recipe(plotattributes, y, :y))
     if did_replace
         newx, newy
     else
         SliceIt, x, y, nothing
     end
 end
-@recipe function f(y)
+@recipe function f(y)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, y)
-    newy = _apply_type_recipe(plotattributes, y, :y)
-    if y !== newy
+    if y !== (newy = _apply_type_recipe(plotattributes, y, :y))
         newy
     else
         SliceIt, nothing, y, nothing
@@ -155,21 +146,17 @@ end
 
 # if there's more than 3 inputs, it can't be passed directly to SliceIt
 # so we'll apply_type_recipe to all of them
-@recipe function f(v1, v2, v3, v4, vrest...)
+@recipe function f(v1, v2, v3, v4, vrest...)  # COV_EXCL_LINE
     did_replace = false
     newargs = map(
         v -> begin
-            newv = _apply_type_recipe(plotattributes, v, :unknown)
-            if newv !== v
-                did_replace = true
-            end
+            did_replace |= v !== (newv = _apply_type_recipe(plotattributes, v, :unknown))
             newv
         end,
         (v1, v2, v3, v4, vrest...),
     )
-    if !did_replace
+    did_replace ||
         error("Couldn't process recipe args: $(map(typeof, (v1, v2, v3, v4, vrest...)))")
-    end
     newargs
 end
 
@@ -177,15 +164,11 @@ end
 function wrap_surfaces!(plotattributes, args...) end
 wrap_surfaces!(plotattributes, x::AMat, y::AMat, z::AMat) = wrap_surfaces!(plotattributes)
 wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::AMat) = wrap_surfaces!(plotattributes)
-function wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::Surface)
+wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::Surface) =
     wrap_surfaces!(plotattributes)
-end
 wrap_surfaces!(plotattributes) =
-    if haskey(plotattributes, :fill_z)
-        v = plotattributes[:fill_z]
-        if !isa(v, Surface)
-            plotattributes[:fill_z] = Surface(v)
-        end
+    if (v = get(plotattributes, :fill_z, nothing)) !== nothing
+        v isa Surface || (plotattributes[:fill_z] = Surface(v))
     end
 
 # --------------------------------
@@ -222,18 +205,18 @@ wrap_surfaces!(plotattributes) =
     end
 
 # assume this is a Volume, so construct one
-@recipe function f(vol::AbstractArray{<:MaybeNumber,3}, args...)
+@recipe function f(vol::AbstractArray{<:MaybeNumber,3}, args...)  # COV_EXCL_LINE
     seriestype := :volume
     SliceIt, nothing, Volume(vol, args...), nothing
 end
 
 # Dicts: each entry is a data point (x,y)=(key,value)
-@recipe function f(d::AbstractDict)
+@recipe function f(d::AbstractDict)  # COV_EXCL_LINE
     seriestype --> :line
     collect(keys(d)), collect(values(d))
 end
 # function without range... use the current range of the x-axis
-@recipe function f(f::FuncOrFuncs{F}) where {F<:Function}
+@recipe function f(f::FuncOrFuncs{F}) where {F<:Function}  # COV_EXCL_LINE
     plt = plotattributes[:plot_object]
     xmin, xmax = if haskey(plotattributes, :xlims)
         plotattributes[:xlims]
@@ -254,7 +237,7 @@ end
 
 # if functions come first, just swap the order (not to be confused with parametric
 # functions... as there would be more than one function passed in)
-@recipe function f(f::FuncOrFuncs{F}, x) where {F<:Function}
+@recipe function f(f::FuncOrFuncs{F}, x) where {F<:Function}  # COV_EXCL_LINE
     F2 = typeof(x)
     @assert !(F2 <: Function || (F2 <: AbstractArray && F2.parameters[1] <: Function))
     # otherwise we'd hit infinite recursion here
@@ -265,12 +248,10 @@ end
 # 3 arguments
 
 # surface-like... function
-@recipe function f(x::AVec, y::AVec, zf::Function)
-    x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
-end
+@recipe f(x::AVec, y::AVec, zf::Function) = x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
 
 # surface-like... matrix grid
-@recipe function f(x::AVec, y::AVec, z::AMat)
+@recipe function f(x::AVec, y::AVec, z::AMat)  # COV_EXCL_LINE
     if !is_surface(plotattributes)
         plotattributes[:seriestype] = :contour
     end
@@ -279,12 +260,12 @@ end
 
 # parametric functions
 # special handling... xmin/xmax with parametric function(s)
-@recipe function f(f::Function, xmin::Number, xmax::Number)
-    xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
+@recipe function f(f::Function, xmin::Number, xmax::Number)  # COV_EXCL_LINE
+    xscale, yscale = map(sym -> get(plotattributes, sym, :identity), (:xscale, :yscale))
     _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
 end
-@recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where {F<:Function}
-    xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
+@recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where {F<:Function}  # COV_EXCL_LINE
+    xscale, yscale = map(sym -> get(plotattributes, sym, :identity), (:xscale, :yscale))
     unzip(_scaled_adapted_grid.(vec(fs), xscale, yscale, xmin, xmax))
 end
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function} =
@@ -298,47 +279,46 @@ end
 ) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
 
 # special handling... 3D parametric function(s)
-@recipe function f(
+@recipe f(
     fx::FuncOrFuncs{F},
     fy::FuncOrFuncs{G},
     fz::FuncOrFuncs{H},
     u::AVec,
-) where {F<:Function,G<:Function,H<:Function}
+) where {F<:Function,G<:Function,H<:Function} =
     _map_funcs(fx, u), _map_funcs(fy, u), _map_funcs(fz, u)
-end
-@recipe function f(
+
+@recipe f(
     fx::FuncOrFuncs{F},
     fy::FuncOrFuncs{G},
     fz::FuncOrFuncs{H},
     umin::Number,
     umax::Number,
     numPoints = 200,
-) where {F<:Function,G<:Function,H<:Function}
+) where {F<:Function,G<:Function,H<:Function} =
     fx, fy, fz, range(umin, stop = umax, length = numPoints)
-end
 
 # list of tuples
 @recipe f(v::AVec{<:Tuple}) = unzip(v)
 @recipe f(tup::Tuple) = [tup]
 
 # list of NamedTuples
-@recipe function f(ntv::AVec{<:NamedTuple{K,Tuple{S,T}}}) where {K,S,T}
+@recipe function f(ntv::AVec{<:NamedTuple{K,Tuple{S,T}}}) where {K,S,T}  # COV_EXCL_LINE
     xguide --> string(K[1])
     yguide --> string(K[2])
-    return Tuple.(ntv)
+    Tuple.(ntv)
 end
-@recipe function f(ntv::AVec{<:NamedTuple{K,Tuple{R,S,T}}}) where {K,R,S,T}
+@recipe function f(ntv::AVec{<:NamedTuple{K,Tuple{R,S,T}}}) where {K,R,S,T}  # COV_EXCL_LINE
     xguide --> string(K[1])
     yguide --> string(K[2])
     zguide --> string(K[3])
-    return Tuple.(ntv)
+    Tuple.(ntv)
 end
 
 @specialize
 
 function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
     (xf, xinv), (yf, yinv) =
-        ((scale_func(s), inverse_scale_func(s)) for s in (xscale, yscale))
+        map(s -> (scale_func(s), inverse_scale_func(s)), (xscale, yscale))
     xs, ys = PlotUtils.adapted_grid(yf ∘ f ∘ xinv, xf.((xmin, xmax)))
     xinv.(xs), yinv.(ys)
 end

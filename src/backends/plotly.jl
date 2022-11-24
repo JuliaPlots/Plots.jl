@@ -2,17 +2,14 @@
 
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
-function _plotly_framestyle(style::Symbol)
+_plotly_framestyle(style::Symbol) =
     if style in (:box, :axes, :zerolines, :grid, :none)
-        return style
+        style
     else
         default_style = get((semi = :box, origin = :zerolines), style, :axes)
-        @warn(
-            "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
-        )
+        @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
         default_style
     end
-end
 
 # --------------------------------------------------------------------------------------
 
@@ -22,7 +19,7 @@ using UUIDs
 
 function labelfunc(scale::Symbol, backend::PlotlyBackend)
     texfunc = labelfunc_tex(scale)
-    function (x)
+    x -> begin
         tex_x = texfunc(x)
         sup_x = replace(tex_x, r"\^{(.*)}" => s"<sup>\1</sup>")
         # replace dash with \minus (U+2212)
@@ -30,71 +27,35 @@ function labelfunc(scale::Symbol, backend::PlotlyBackend)
     end
 end
 
-function plotly_font(font::Font, color = font.color)
-    KW(
-        :family => font.family,
-        :size   => round(Int, font.pointsize * 1.4),
-        :color  => rgba_string(color),
-    )
-end
+plotly_font(font::Font, color = font.color) = KW(
+    :family => font.family,
+    :size   => round(Int, 1.4font.pointsize),
+    :color  => rgba_string(color),
+)
 
-function plotly_annotation_dict(x, y, val; xref = "paper", yref = "paper")
+plotly_annotation_dict(x, y, val; xref = "paper", yref = "paper") =
     KW(:text => val, :xref => xref, :x => x, :yref => yref, :y => y, :showarrow => false)
-end
 
-function plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper")
-    merge(
-        plotly_annotation_dict(x, y, ptxt.str; xref = xref, yref = yref),
-        KW(
-            :font => plotly_font(ptxt.font),
-            :xanchor => ptxt.font.halign === :hcenter ? :center : ptxt.font.halign,
-            :yanchor => ptxt.font.valign === :vcenter ? :middle : ptxt.font.valign,
-            :rotation => -ptxt.font.rotation,
-        ),
-    )
-end
+plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper") = merge(
+    plotly_annotation_dict(x, y, ptxt.str; xref = xref, yref = yref),
+    KW(
+        :font => plotly_font(ptxt.font),
+        :xanchor => ptxt.font.halign === :hcenter ? :center : ptxt.font.halign,
+        :yanchor => ptxt.font.valign === :vcenter ? :middle : ptxt.font.valign,
+        :rotation => -ptxt.font.rotation,
+    ),
+)
 
-# function get_annotation_dict_for_arrow(plotattributes::KW, xyprev::Tuple, xy::Tuple, a::Arrow)
-#     xdiff = xyprev[1] - xy[1]
-#     ydiff = xyprev[2] - xy[2]
-#     dist = sqrt(xdiff^2 + ydiff^2)
-#     KW(
-#         :showarrow => true,
-#         :x => xy[1],
-#         :y => xy[2],
-#         # :ax => xyprev[1] - xy[1],
-#         # :ay => xy[2] - xyprev[2],
-#         # :ax => 0,
-#         # :ay => -40,
-#         :ax => 10xdiff / dist,
-#         :ay => -10ydiff / dist,
-#         :arrowcolor => rgba_string(plotattributes[:linecolor]),
-#         :xref => "x",
-#         :yref => "y",
-#         :arrowsize => 10a.headwidth,
-#         # :arrowwidth => a.headlength,
-#         :arrowwidth => 0.1,
-#     )
-# end
-
-plotly_scale(scale::Symbol) =
-    if scale === :log10
-        "log"
-    else
-        "-"
-    end
+plotly_scale(scale::Symbol) = scale === :log10 ? "log" : "-"
 
 function shrink_by(lo, sz, ratio)
-    amt = 0.5 * (1.0 - ratio) * sz
+    amt = 0.5(1 - ratio) * sz
     lo + amt, sz - 2amt
 end
 
 function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
-    aspect_ratio = get_aspect_ratio(sp)
-    if aspect_ratio !== :none
-        if aspect_ratio === :equal
-            aspect_ratio = 1.0
-        end
+    if (aspect_ratio = get_aspect_ratio(sp)) !== :none
+        aspect_ratio === :equal && (aspect_ratio = 1.0)
         xmin, xmax = axis_limits(sp, :x)
         ymin, ymax = axis_limits(sp, :y)
         want_ratio = ((xmax - xmin) / (ymax - ymin)) / aspect_ratio
@@ -120,7 +81,7 @@ function plotly_domain(sp::Subplot)
     pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
     x_domain = [pcts[1], pcts[1] + pcts[3]]
     y_domain = [pcts[2], pcts[2] + pcts[4]]
-    return x_domain, y_domain
+    x_domain, y_domain
 end
 
 function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
@@ -143,12 +104,8 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         :mirror => framestyle === :box,
         :showticklabels => axis[:showaxis],
     )
-    if anchor !== nothing
-        ax[:anchor] = anchor
-    end
-    if domain !== nothing
-        ax[:domain] = domain
-    end
+    anchor === nothing || (ax[:anchor] = anchor)
+    domain === nothing || (ax[:domain] = domain)
 
     ax[:tickangle] = -axis[:rotation]
     ax[:type] = plotly_scale(axis[:scale])
@@ -184,9 +141,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     end
 
     # flip
-    if axis[:flip]
-        ax[:range] = reverse(ax[:range])
-    end
+    axis[:flip] && (ax[:range] = reverse(ax[:range]))
 
     ax
 end
@@ -200,7 +155,6 @@ function plotly_polaraxis(sp::Subplot, axis::Axis)
         ax[:range] = axis_limits(sp, :y)
         ax[:orientation] = -90
     end
-
     ax
 end
 
@@ -228,7 +182,7 @@ function plotly_layout(plt::Plot)
                 xmm, ymm = left(bb), top(bbox(sp))
                 halign, valign = :left, :top
             elseif tpos === :center
-                xmm, ymm = 0.5 * (left(bb) + right(bb)), top(bbox(sp))
+                xmm, ymm = 0.5(left(bb) + right(bb)), top(bbox(sp))
                 halign, valign = :hcenter, :top
             elseif tpos === :right
                 xmm, ymm = right(bb), top(bbox(sp))
@@ -271,9 +225,9 @@ function plotly_layout(plt::Plot)
                     #2.6 multiplier set camera eye such that whole plot can be seen
                     :camera => KW(
                         :eye => KW(
-                            :x => cosd(azim) * sind(theta) * 2.6,
-                            :y => sind(azim) * sind(theta) * 2.6,
-                            :z => cosd(theta) * 2.6,
+                            :x => 2.6cosd(azim) * sind(theta),
+                            :y => 2.6sind(azim) * sind(theta),
+                            :z => 2.6cosd(theta),
                         ),
                         :projection => (
                             auto = "orthographic",  # we choose to unify backends by using a default "orthographic" proj when `:auto`
@@ -336,9 +290,7 @@ function plotly_layout(plt::Plot)
         #     end
         # end
 
-        if ispolar(sp)
-            plotattributes_out[:direction] = "counterclockwise"
-        end
+        ispolar(sp) && (plotattributes_out[:direction] = "counterclockwise")
 
         plotattributes_out
     end
@@ -354,39 +306,33 @@ end
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     plotattributes_out[:showlegend] = sp[:legend_position] !== :none
     legend_position = plotly_legend_pos(sp[:legend_position])
-    if sp[:legend_position] !== :none
-        plotattributes_out[:legend] = KW(
-            :bgcolor => rgba_string(sp[:legend_background_color]),
-            :bordercolor => rgba_string(sp[:legend_foreground_color]),
-            :borderwidth => 1,
-            :traceorder => "normal",
-            :xanchor => legend_position.xanchor,
-            :yanchor => legend_position.yanchor,
-            :font => plotly_font(legendfont(sp)),
-            :tracegroupgap => 0,
-            :x => legend_position.coords[1],
-            :y => legend_position.coords[2],
-            :title => KW(
-                :text => sp[:legend_title] === nothing ? "" : string(sp[:legend_title]),
-                :font => plotly_font(legendtitlefont(sp)),
-            ),
-        )
-    end
+    sp[:legend_position] === :none && return
+    plotattributes_out[:legend] = KW(
+        :bgcolor => rgba_string(sp[:legend_background_color]),
+        :bordercolor => rgba_string(sp[:legend_foreground_color]),
+        :borderwidth => 1,
+        :traceorder => "normal",
+        :xanchor => legend_position.xanchor,
+        :yanchor => legend_position.yanchor,
+        :font => plotly_font(legendfont(sp)),
+        :tracegroupgap => 0,
+        :x => legend_position.coords[1],
+        :y => legend_position.coords[2],
+        :title => KW(
+            :text => sp[:legend_title] === nothing ? "" : string(sp[:legend_title]),
+            :font => plotly_font(legendtitlefont(sp)),
+        ),
+    )
 end
 
-function plotly_legend_pos(pos::Symbol)
-    xleft = 0.07
-    xright = 1.0
-    ybot = 0.07
-    ytop = 1.0
-    xcenter = 0.55
-    ycenter = 0.52
-    center = 0.5
-    youtertop = 1.1
-    youterbot = -0.15
-    xouterright = 1.05
-    xouterleft = -0.15
-    plotly_legend_position_mapping = (
+#! format: off
+plotly_legend_position_mapping = let center = 0.5,
+    xcenter = 0.55, ycenter = 0.52,
+    xleft = 0.07, xright = 1.0,
+    ybot = 0.07, ytop = 1.0,
+    youtertop = 1.1, youterbot = -0.15,
+    xouterright = 1.05, xouterleft = -0.15
+    (
         right = (coords = [xright, ycenter], xanchor = "right", yanchor = "middle"),
         left = (coords = [xleft, ycenter], xanchor = "left", yanchor = "middle"),
         top = (coords = [xcenter, ytop], xanchor = "center", yanchor = "top"),
@@ -417,10 +363,11 @@ function plotly_legend_pos(pos::Symbol)
         ),
         default = (coords = [xright, ytop], xanchor = "auto", yanchor = "auto"),
     )
-
-    legend_position =
-        get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
 end
+#! format: on
+
+plotly_legend_pos(pos::Symbol) =
+    get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
 
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real,T<:Real} =
     (coords = v, xanchor = "left", yanchor = "top")
@@ -433,11 +380,11 @@ function plotly_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
     yanchors = ["bottom", "middle", "top"]
 
     if v[2] === :inner
-        rect = (0.07, 0.5, 1.0, 0.07, 0.52, 1.0)
+        rect = 0.07, 0.5, 1.0, 0.07, 0.52, 1.0
         xanchor = xanchors[legend_anchor_index(c)]
         yanchor = yanchors[legend_anchor_index(s)]
     else
-        rect = (-0.15, 0.5, 1.05, -0.15, 0.52, 1.1)
+        rect = -0.15, 0.5, 1.05, -0.15, 0.52, 1.1
         xanchor = xanchors[4 - legend_anchor_index(c)]
         yanchor = yanchors[4 - legend_anchor_index(s)]
     end
@@ -451,26 +398,23 @@ end
 plotly_layout_json(plt::Plot) = JSON.json(plotly_layout(plt), 4)
 
 plotly_colorscale(cg::ColorGradient, α = nothing) =
-    [[v, rgba_string(plot_color(cg.colors[v], α))] for v in cg.values]
-function plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing)
+    map(v -> [v, rgba_string(plot_color(cg.colors[v], α))], cg.values)
+plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing) =
     if length(c) == 1
-        return [
-            [0.0, rgba_string(plot_color(c[1], α))],
-            [1.0, rgba_string(plot_color(c[1], α))],
-        ]
+        [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
     else
         vals = range(0.0, stop = 1.0, length = length(c))
-        return [[vals[i], rgba_string(plot_color(c[i], α))] for i in eachindex(c)]
+        map(i --> [vals[i], rgba_string(plot_color(c[i], α))], eachindex(c))
     end
-end
+
 function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
     n = length(cg)
     cinds = repeat(1:n, inner = 2)
     vinds = vcat((i:(i + 1) for i in 1:n)...)
-    return [
-        [cg.values[vinds[i]], rgba_string(plot_color(color_list(cg)[cinds[i]], α))] for
-        i in eachindex(cinds)
-    ]
+    map(
+        i -> [cg.values[vinds[i]], rgba_string(plot_color(color_list(cg)[cinds[i]], α))],
+        eachindex(cinds),
+    )
 end
 plotly_colorscale(c, α = nothing) = plotly_colorscale(_as_gradient(c), α)
 
@@ -531,18 +475,20 @@ plotly_data(v::AbstractArray) = v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 
-function plotly_native_data(axis::Axis, data::AbstractArray)
+plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
+plotly_native_data(axis::Axis, data::AbstractArray) =
     if !isempty(axis[:discrete_values])
-        construct_categorical_data(data, axis)
+        map(
+            xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)],
+            data,
+        )
     elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
         plotly_convert_to_datetime(data, axis[:formatter])
     else
         data
     end
-end
-plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
 
-function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
+plotly_convert_to_datetime(x::AbstractArray, formatter::Function) =
     if formatter == datetimeformatter
         map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
     elseif formatter == dateformatter
@@ -554,21 +500,17 @@ function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
             "Invalid DateTime formatter. Expected Plots.datetime/date/time formatter but got $formatter",
         )
     end
-end
+
 #ensures that a gradient is called if a single color is supplied where a gradient is needed (e.g. if a series recipe defines marker_z)
 as_gradient(grad::ColorGradient, α) = grad
 as_gradient(grad, α) = cgrad(alpha = α)
 
 # get a dictionary representing the series params (plotattributes is the Plots-dict, plotattributes_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
-    st = series[:seriestype]
-
     sp = series[:subplot]
     clims = get_clims(sp, series)
 
-    if st === :shape
-        return plotly_series_shapes(plt, series, clims)
-    end
+    (st = series[:seriestype]) === :shape && return plotly_series_shapes(plt, series, clims)
 
     plotattributes_out = KW()
 
@@ -648,12 +590,12 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:contours][:start] = first(levels_range)
                 plotattributes_out[:contours][:end] = last(levels_range)
                 plotattributes_out[:contours][:size] = step(levels_range)
-                @warn(
-                    "setting arbitrary contour levels with Plotly backend is not supported; " *
-                    "use a range to set equally-spaced contours or an integer to set the " *
-                    "approximate number of contours with the keyword `levels`. " *
-                    "Setting levels to $(levels_range)"
-                )
+                @warn """
+                setting arbitrary contour levels with Plotly backend is not supported;
+                use a range to set equally-spaced contours or an integer to set the
+                approximate number of contours with the keyword `levels`.
+                Setting levels to $(levels_range)
+                """
             elseif levels isa Integer
                 plotattributes_out[:ncontours] = levels + 2
             end
@@ -731,7 +673,7 @@ function plotly_series(plt::Plot, series::Series)
         end
         plotattributes_out[:showscale] = hascolorbar(sp)
     else
-        @warn("Plotly: seriestype $st isn't supported.")
+        @warn "Plotly: seriestype $st isn't supported."
         return KW()
     end
 
@@ -742,7 +684,7 @@ function plotly_series(plt::Plot, series::Series)
             :symbol =>
                 get_plotly_marker(series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
-            :size => 2 * _cycle(series[:markersize], inds),
+            :size => 2_cycle(series[:markersize], inds),
             :color =>
                 rgba_string.(
                     plot_color.(
@@ -766,12 +708,12 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(plotattributes_out, series)
     plotly_adjust_hover_label!(plotattributes_out, series[:hover])
 
-    return [merge(plotattributes_out, series[:extra_kwargs])]
+    [merge(plotattributes_out, series[:extra_kwargs])]
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
     segments = series_segments(series; check = true)
-    plotattributes_outs = [KW() for _ in 1:length(segments)]
+    plotattributes_outs = map(i -> KW(), 1:length(segments))
 
     # TODO: create a plotattributes_out for each polygon
     # x, y = series[:x], series[:y]
@@ -878,9 +820,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 )
             elseif !(series[:fillrange] in (false, nothing))
-                @warn(
-                    "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
-                )
+                @warn "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
             end
             plotattributes_out[:x], plotattributes_out[:y] = x[rng], y[rng]
 
@@ -900,23 +840,36 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             mcolor = rgba_string(
                 plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
             )
+            mcolor_next = if (mz = series[:marker_z]) !== nothing && i < length(mz)
+                plot_color(
+                    get_markercolor(series, clims, i + 1),
+                    get_markeralpha(series, i + 1),
+                ) |> rgba_string
+            else
+                mcolor
+            end
             lcolor = rgba_string(
                 plot_color(
                     get_markerstrokecolor(series, i),
                     get_markerstrokealpha(series, i),
                 ),
             )
+            lcolor_next =
+                plot_color(
+                    get_markerstrokecolor(series, i + 1),
+                    get_markerstrokealpha(series, i + 1),
+                ) |> rgba_string
+
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
                     _cycle(series[:markershape], i),
                     string(_cycle(series[:markershape], i)),
                 ),
                 # :opacity => needs_scatter_fix ? [1, 0] : 1,
-                :size => 2 * _cycle(series[:markersize], i),
-                :color => needs_scatter_fix ? [mcolor, "rgba(0, 0, 0, 0.000)"] : mcolor,
+                :size => 2_cycle(series[:markersize], i),
+                :color => needs_scatter_fix ? [mcolor, mcolor_next] : mcolor,
                 :line => KW(
-                    :color =>
-                        needs_scatter_fix ? [lcolor, "rgba(0, 0, 0, 0.000)"] : lcolor,
+                    :color => needs_scatter_fix ? [lcolor, lcolor_next] : lcolor,
                     :width => _cycle(series[:markerstrokewidth], i),
                 ),
             )
@@ -955,11 +908,11 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 plotattributes_out[:fillrange] = fill(series[:fillrange], length(rng))
             elseif typeof(series[:fillrange]) <: Tuple
                 f1 =
-                    typeof(series[:fillrange][1]) <: Real ?
-                    fill(series[:fillrange][1], length(rng)) : series[:fillrange][1][rng]
+                    (fr1 = series[:fillrange][1]) |> typeof <: Real ?
+                    fill(fr1, length(rng)) : fr1[rng]
                 f2 =
-                    typeof(series[:fillrange][2]) <: Real ?
-                    fill(series[:fillrange][2], length(rng)) : series[:fillrange][2][rng]
+                    (fr2 = series[:fillrange][2]) |> typeof <: Real ?
+                    fill(fr2, length(rng)) : fr2[rng]
                 plotattributes_out[:fillrange] = (f1, f2)
             end
             if isa(series[:fillrange], AbstractVector)
@@ -1022,33 +975,29 @@ function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symb
     return plotattributes_out
 end
 
-function plotly_polar!(plotattributes_out::KW, series::Series)
-    # convert polar plots x/y to theta/radius
-    if ispolar(series[:subplot])
+plotly_polar!(plotattributes_out::KW, series::Series) =
+    if ispolar(series[:subplot])  # convert polar plots x/y to theta/radius
         theta, r = pop!(plotattributes_out, :x), pop!(plotattributes_out, :y)
         plotattributes_out[:theta] = rad2deg.(theta)
         plotattributes_out[:r] = r
         plotattributes_out[:type] = :scatterpolar
     end
-end
 
 function plotly_adjust_hover_label!(plotattributes_out::KW, hover)
     if hover === nothing
-        return nothing
+        return
     elseif all(in([:none, false]), hover)
         plotattributes_out[:hoverinfo] = "none"
     elseif any(!isnothing, hover)
         plotattributes_out[:hoverinfo] = "text"
         plotattributes_out[:text] = hover
     end
-    return nothing
+    nothing
 end
 
 # get a list of dictionaries, each representing the series params
 function plotly_series(plt::Plot)
-    if isempty(plt.series_list)
-        return KW[]
-    end
+    isempty(plt.series_list) && return KW[]
     reduce(vcat, plotly_series(plt, series) for series in plt.series_list)
 end
 
@@ -1060,17 +1009,29 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt), 4)
 html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
-function plotly_html_head(plt::Plot)
-    plotly =
-        use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) :
+plotly_url() =
+    if use_local_dependencies[]
+        "file:///" * plotly_local_file_path[]
+    else
         "https://cdn.plot.ly/$(_plotly_min_js_filename)"
+    end
+
+function plotly_html_head(plt::Plot)
+    plotly = plotly_url()
 
     include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
-    mathjax_file =
-        include_mathjax != "cdn" ? ("file://" * include_mathjax) :
+
+    mathjax_file = if include_mathjax != "cdn"
+        "file://" * include_mathjax
+    else
         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
-    mathjax_head =
-        include_mathjax == "" ? "" : "<script src=\"$mathjax_file\"></script>\n\t\t"
+    end
+
+    mathjax_head = if isempty(include_mathjax)
+        ""
+    else
+        "<script src=\"$mathjax_file\"></script>\n\t\t"
+    end
 
     if isijulia()
         mathjax_head
@@ -1085,14 +1046,10 @@ function plotly_html_body(plt, style = nothing)
         style = "width:$(w)px;height:$(h)px;"
     end
 
-    requirejs_prefix = ""
-    requirejs_suffix = ""
+    requirejs_prefix = requirejs_suffix = ""
     if isijulia()
         # require.js adds .js automatically
-        plotly_no_ext =
-            use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) :
-            "https://cdn.plot.ly/$(_plotly_min_js_filename)"
-        plotly_no_ext = plotly_no_ext[1:(end - 3)]
+        plotly_no_ext = plotly_url() |> splitext |> first
 
         requirejs_prefix = """
             requirejs.config({
@@ -1117,25 +1074,18 @@ function plotly_html_body(plt, style = nothing)
     html
 end
 
-function js_body(plt::Plot, uuid)
-    js = """
-        Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
-    """
-end
+js_body(plt::Plot, uuid) =
+    "Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));"
 
-function plotly_show_js(io::IO, plot::Plot)
-    data = plotly_series(plot)
-    layout = plotly_layout(plot)
-    JSON.print(io, Dict(:data => data, :layout => layout))
-end
+plotly_show_js(io::IO, plot::Plot) =
+    JSON.print(io, Dict(:data => plotly_series(plot), :layout => plotly_layout(plot)))
 
 # ----------------------------------------------------------------
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyBackend}) = true
 
-function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend})
+_show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend}) =
     plotly_show_js(io, plot)
-end
 
 _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) = write(io, embeddable_html(plt))
 

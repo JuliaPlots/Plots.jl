@@ -16,7 +16,7 @@ const MissingOrQuantity = Union{Missing,<:Quantity}
 Main recipe
 ==========#
 
-@recipe function f(::Type{T}, x::T) where {T<:AbstractArray{<:MissingOrQuantity}}
+@recipe function f(::Type{T}, x::T) where {T<:AbstractArray{<:MissingOrQuantity}}  # COV_EXCL_LINE
     axisletter = plotattributes[:letter]   # x, y, or z
     clims_types = (:contour, :contourf, :heatmap, :surface)
     if axisletter === :z && get(plotattributes, :seriestype, :nothing) ∈ clims_types
@@ -61,7 +61,7 @@ function fixaxis!(attr, x, axisletter)
 end
 
 # Recipe for (x::AVec, y::AVec, z::Surface) types
-@recipe function f(x::AVec, y::AVec, z::AMat{T}) where {T<:Quantity}
+@recipe function f(x::AVec, y::AVec, z::AMat{T}) where {T<:Quantity}  # COV_EXCL_LINE
     u = get(plotattributes, :zunit, unit(eltype(z)))
     ustripattribute!(plotattributes, :clims, u)
     z = fixaxis!(plotattributes, z, :z)
@@ -70,13 +70,13 @@ end
 end
 
 # Recipe for vectors of vectors
-@recipe function f(::Type{T}, x::T) where {T<:AVec{<:AVec{<:MissingOrQuantity}}}
+@recipe function f(::Type{T}, x::T) where {T<:AVec{<:AVec{<:MissingOrQuantity}}}  # COV_EXCL_LINE
     axisletter = plotattributes[:letter]   # x, y, or z
     map(x -> fixaxis!(plotattributes, x, axisletter), x)
 end
 
 # Recipe for bare units
-@recipe function f(::Type{T}, x::T) where {T<:Units}
+@recipe function f(::Type{T}, x::T) where {T<:Units}  # COV_EXCL_LINE
     primary := false
     Float64[] * x
 end
@@ -86,14 +86,14 @@ end
 @recipe f(x::T, f::Function) where {T<:AVec{<:MissingOrQuantity}} = x, f.(x)
 @recipe f(x::T, y::AVec, f::Function) where {T<:AVec{<:MissingOrQuantity}} = x, y, f.(x', y)
 @recipe f(x::AVec, y::T, f::Function) where {T<:AVec{<:MissingOrQuantity}} = x, y, f.(x', y)
-@recipe function f(
+@recipe function f(  # COV_EXCL_LINE
     x::T1,
     y::T2,
     f::Function,
 ) where {T1<:AVec{<:MissingOrQuantity},T2<:AVec{<:MissingOrQuantity}}
     x, y, f.(x', y)
 end
-@recipe function f(f::Function, u::Units)
+@recipe function f(f::Function, u::Units)  # COV_EXCL_LINE
     uf = UnitFunction(f, [u])
     recipedata = RecipesBase.apply_recipe(plotattributes, uf)
     _, xmin, xmax = recipedata[1].args
@@ -143,11 +143,8 @@ function fixaspectratio!(attr, u, axisletter)
     =======================================================================================#
     if axisletter === :y
         attr[:aspect_ratio] = aspect_ratio * u
-        return
-    end
-    if axisletter === :x
+    elseif axisletter === :x
         attr[:aspect_ratio] = aspect_ratio / u
-        return
     end
     return
 end
@@ -223,21 +220,17 @@ end
 Append unit to labels when appropriate
 =====================================#
 
-function append_unit_if_needed!(attr, key, u::Unitful.Units)
-    label = get(attr, key, nothing)
-    append_unit_if_needed!(attr, key, label, u)
-end
+append_unit_if_needed!(attr, key, u::Unitful.Units) =
+    append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
 # dispatch on the type of `label`
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
-function append_unit_if_needed!(attr, key, label::Nothing, u)
-    attr[key] = UnitfulString(string(u), u)
-end
+append_unit_if_needed!(attr, key, label::Nothing, u) =
+    (attr[key] = UnitfulString(string(u), u))
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
-    if !isempty(label)
-        attr[key] =
-            UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
-    end
+    isempty(label) && return attr[key] = UnitfulString(label, u)
+    return attr[key] =
+        UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
 end
 
 #=============================================

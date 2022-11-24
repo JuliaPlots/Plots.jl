@@ -4,7 +4,6 @@ const _backendType = Dict{Symbol,DataType}(:none => NoBackend)
 const _backendSymbol = Dict{DataType,Symbol}(NoBackend => :none)
 const _backends = Symbol[]
 const _initialized_backends = Set{Symbol}()
-const _default_backends = (:none, :gr, :plotly)
 
 const _backend_packages = Dict{Symbol,Symbol}()
 
@@ -14,9 +13,8 @@ backends() = _backends
 "Returns the name of the current backend"
 backend_name() = CURRENT_BACKEND.sym
 
-function _backend_instance(sym::Symbol)::AbstractBackend
+_backend_instance(sym::Symbol)::AbstractBackend =
     haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
-end
 
 backend_package_name(sym::Symbol) = _backend_packages[sym]
 
@@ -25,7 +23,7 @@ macro init_backend(s)
     str = lowercase(package_str)
     sym = Symbol(str)
     T = Symbol(string(s) * "Backend")
-    esc(quote
+    quote
         struct $T <: AbstractBackend end
         export $sym
         $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
@@ -35,17 +33,15 @@ macro init_backend(s)
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
         _backend_packages[Symbol($str)] = Symbol($package_str)
-    end)
+    end |> esc
 end
 
 # include("backends/web.jl")
-# include("backends/supported.jl")
 
 # ---------------------------------------------------------
 
 # don't do anything as a default
 _create_backend_figure(plt::Plot) = nothing
-_prepare_plot_object(plt::Plot) = nothing
 _initialize_subplot(plt::Plot, sp::Subplot) = nothing
 
 _series_added(plt::Plot, series::Series) = nothing
@@ -55,6 +51,8 @@ _before_layout_calcs(plt::Plot) = nothing
 
 title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefontsize] * pt
 guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefontsize] * pt
+
+closeall(::AbstractBackend) = nothing
 
 "Returns the (width,height) of a text label."
 function text_size(lablen::Int, sz::Number, rot::Number = 0)
@@ -75,8 +73,7 @@ text_size(lab::PlotText, sz::Number, rot::Number = 0) = text_size(length(lab.str
 
 # account for the size/length/rotation of tick labels
 function tick_padding(sp::Subplot, axis::Axis)
-    ticks = get_ticks(sp, axis)
-    if ticks === nothing
+    if (ticks = get_ticks(sp, axis)) === nothing
         0mm
     else
         vals, labs = ticks
@@ -137,16 +134,13 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 _fallback_default_backend() = backend(GRBackend())
 
 function _pick_default_backend()
-    env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
-    if env_default != ""
-        sym = Symbol(lowercase(env_default))
-        if sym in _backends
+    if (env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")) != ""
+        if (sym = Symbol(lowercase(env_default))) in _backends
             backend(sym)
         else
-            @warn(
-                "You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t" *
-                join(sort(_backends), "\n\t")
-            )
+            @warn """You have set PLOTS_DEFAULT_BACKEND=$env_default, but it is not a valid backend package.
+            Choose from: \n\t$(join(sort(_backends), "\n\t"))
+            """
             _fallback_default_backend()
         end
     else
@@ -160,10 +154,7 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
-    if CURRENT_BACKEND.sym === :none
-        _pick_default_backend()
-    end
-
+    CURRENT_BACKEND.sym === :none && _pick_default_backend()
     CURRENT_BACKEND.pkg
 end
 
@@ -172,7 +163,7 @@ Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
-    if !(sym in _initialized_backends)
+    if sym ∉ _initialized_backends
         _initialize_backend(pkg)
         push!(_initialized_backends, sym)
     end
@@ -185,22 +176,12 @@ backend(sym::Symbol) =
     if sym in _backends
         backend(_backend_instance(sym))
     else
-        @warn("`:$sym` is not a supported backend.")
+        @warn "`:$sym` is not a supported backend."
         backend()
     end
 
 const _deprecated_backends =
     [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize, :pgfplots]
-
-function warn_on_deprecated_backend(bsym::Symbol)
-    if bsym in _deprecated_backends
-        if bsym === :pgfplots
-            @warn("Backend $bsym has been deprecated. Use pgfplotsx instead.")
-        else
-            @warn("Backend $bsym has been deprecated.")
-        end
-    end
-end
 
 # ---------------------------------------------------------
 
@@ -275,17 +256,17 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
     f2 = Symbol("supported_", s, "s")
     @eval begin
         $f(::AbstractBackend, $s) = false
-        $f(bend::AbstractBackend, $s::AbstractVector) = all(v -> $f(bend, v), $s)
+        $f(be::AbstractBackend, $s::AbstractVector) = all(v -> $f(be, v), $s)
         $f($s) = $f(backend(), $s)
         $f2() = $f2(backend())
     end
 
-    for bend in backends()
-        bend_type = typeof(_backend_instance(bend))
-        v = Symbol("_", bend, "_", s)
+    for be in backends()
+        be_type = typeof(_backend_instance(be))
+        v = Symbol("_", be, "_", s)
         @eval begin
-            $f(::$bend_type, $s::Symbol) = $s in $v
-            $f2(::$bend_type) = sort(collect($v))
+            $f(::$be_type, $s::Symbol) = $s in $v
+            $f2(::$be_type) = sort(collect($v))
         end
     end
 end
@@ -305,23 +286,10 @@ function _initialize_backend(pkg::AbstractBackend)
     end
 end
 
-_initialize_backend(pkg::GRBackend) = nothing
-
-function _initialize_backend(pkg::PlotlyBackend)
-    try
-        @eval Main begin
-            import PlotlyBase
-            import PlotlyKaleido
-        end
-        _check_compat(PlotlyBase)
-        _check_compat(PlotlyKaleido)
-    catch
-        @info "For saving to png with the Plotly backend PlotlyBase and PlotlyKaleido need to be installed."
-    end
-end
-
 # ------------------------------------------------------------------------------
 # gr
+
+_initialize_backend(pkg::GRBackend) = nothing  # COV_EXCL_LINE
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
@@ -434,11 +402,24 @@ const _gr_seriestype = [
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _gr_marker = vcat(_allMarkers, :pixel)
-const _gr_scale = [:identity, :log10]
+const _gr_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::GRBackend, shape::Shape) = true
 
 # ------------------------------------------------------------------------------
 # plotly
+
+function _initialize_backend(pkg::PlotlyBackend)
+    try
+        @eval Main begin
+            import PlotlyBase
+            import PlotlyKaleido
+        end
+        _check_compat(PlotlyBase)
+        _check_compat(PlotlyKaleido)
+    catch err
+        @warn "For saving to png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed." err
+    end
+end
 
 const _plotly_attr = merge_with_base_supported([
     :annotations,
@@ -664,11 +645,6 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # plotlyjs
 
-_initialize_backend(pkg::PlotlyJSBackend) = @eval Main begin
-    import PlotlyJS
-    export PlotlyJS
-end
-
 const _plotlyjs_attr       = _plotly_attr
 const _plotlyjs_seriestype = _plotly_seriestype
 const _plotlyjs_style      = _plotly_style
@@ -680,8 +656,8 @@ const _plotlyjs_scale      = _plotly_scale
 
 _initialize_backend(::PyPlotBackend) = @eval Main begin
     import PyPlot
-
     export PyPlot
+    $(_check_compat)(PyPlot)
 
     # we don't want every command to update the figure
     PyPlot.ioff()
@@ -714,6 +690,7 @@ const _pyplot_attr = merge_with_base_supported([
     :fillrange,
     :fillcolor,
     :fillalpha,
+    :fillstyle,
     :bins,
     :bar_width,
     :bar_edges,
@@ -808,11 +785,6 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # Gaston
-
-_initialize_backend(::GastonBackend) = @eval Main begin
-    import Gaston
-    export Gaston
-end
 
 const _gaston_attr = merge_with_base_supported([
     :annotations,
@@ -1082,11 +1054,11 @@ const _hdf5_marker = vcat(_allMarkers, :pixel)
 const _hdf5_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
-#Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
+# Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
 const HDF5PLOT_MAP_STR2TELEM = Dict{String,Type}()
 const HDF5PLOT_MAP_TELEM2STR = Dict{Type,String}()
 
-#Don't really like this global variable... Very hacky
+# Don't really like this global variable... Very hacky
 mutable struct HDF5Plot_PlotRef
     ref::Union{Plot,Nothing}
 end

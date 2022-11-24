@@ -6,6 +6,7 @@
         @test Plots.vertices(square) == [(0, 0), (1, 0), (1, 1), (0, 1)]
         @test isa(square, Shape{Int64,Float64})
         @test coords(square) isa Tuple{Vector{S},Vector{T}} where {T,S}
+        @test Shape(:circle) isa Shape
     end
 
     @testset "Copy" begin
@@ -104,14 +105,23 @@ end
 
 @testset "Text" begin
     t = Plots.PlotText("foo")
-    f = Plots.font()
-
-    @test Plots.PlotText(nothing).str == "nothing"
     @test length(t) == 3
+
+    f = Plots.font()
+    @test Plots.PlotText(nothing).str == "nothing"
     @test text(t).str == "foo"
     @test text(t, f).str == "foo"
     @test text("bar", f).str == "bar"
     @test text(true).str == "true"
+
+    for rotation in -180:5:180
+        t = text("foo"; rotation)
+        if abs(rotation) ≤ 45 || abs(rotation) ≥ 135
+            @test Plots.is_horizontal(t)
+        else
+            @test !Plots.is_horizontal(t)
+        end
+    end
 end
 
 @testset "Annotations" begin
@@ -133,6 +143,39 @@ end
     @test Plots.locate_annotation(sp, 1, 2, 3, t) == (1, 2, 3, t)
     @test Plots.locate_annotation(sp, (0.1, 0.2), t) isa Tuple
     @test Plots.locate_annotation(sp, (0.1, 0.2, 0.3), t) isa Tuple
+
+    # see github.com/JuliaPlots/Plots.jl/issues/4073
+    anns = [(["x", "y"], [10, 20], :hexagon) (["a", "b"], [3, 4], :circle)]
+    pl = plot(rand(2, 2), layout = 2, series_annotations = anns)
+
+    # github.com/JuliaPlots/Plots.jl/pull/3634#issue-940055478
+    let p = plot(
+            plot(rand(10) .* 15, aspect_ratio = :equal),
+            plot(rand(10) .* 10, aspect_ratio = :equal),
+            legend = false,
+            layout = grid(1, 2),
+            frame = :box,
+        )
+        annotate!(sp = 1, (0.03, 0.95), text("Cats&Dogs", :left))
+        annotate!(sp = 2, (0.03, 0.95), text("Cats&Dogs", :left))
+    end
+
+    for scale in Plots._logScales
+        pl = plot(xlim = (1, 10), xscale = scale)
+        annotate!(pl, (0.5, 0.5), "hello")
+    end
+
+    let pl = plot(1:2)
+        for loc in
+            (:topleft, :topcenter, :topright, :bottomleft, :bottomcenter, :bottomright)
+            annotate!(pl, loc, string(loc))
+        end
+    end
+    let pl = plot(1:2)
+        for loc in (:N, :NE, :E, :SE, :S, :SW, :W, :NW, :N)
+            annotate!(pl, loc, string(loc))
+        end
+    end
 end
 
 @testset "Fonts" begin

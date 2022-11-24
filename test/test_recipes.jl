@@ -6,10 +6,18 @@ using OffsetArrays
         legend --> :topleft
         (1:3, 1:3)
     end
-    pl = plot(LegendPlot(); legend = :right)
-    @test pl[1][:legend_position] === :right
-    pl = plot(LegendPlot())
-    @test pl[1][:legend_position] === :topleft
+    let pl = pl = plot(LegendPlot(); legend = :right)
+        @test pl[1][:legend_position] === :right
+    end
+    let pl = pl = plot(LegendPlot())
+        @test pl[1][:legend_position] === :topleft
+    end
+    let pl = plot(LegendPlot(); legend = :inline)
+        @test pl[1][:legend_position] === :inline
+    end
+    let pl = plot(LegendPlot(); legend = :inline, ymirror = true)
+        @test pl[1][:legend_position] === :inline
+    end
 end
 
 @testset "lens!" begin
@@ -69,15 +77,50 @@ end
     @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :no
 end
 
-@testset "error bars" begin
-    x = y = 1:10
-    yerror = fill(1, length(y))
-    xerror = fill(0.2, length(x))
-    p = Plots.xerror(x, y; xerror, linestyle = :solid)
-    plot!(p, x, y; linestyle = :dash)
-    yerror!(p, x, y; yerror, linestyle = :dot)
-    @test length(p.series_list) == 3
-    @test p[1][1][:linestyle] == :solid
-    @test p[1][2][:linestyle] == :dash
-    @test p[1][3][:linestyle] == :dot
+with(:gr) do
+    @testset "error bars" begin
+        x = y = 1:10
+        yerror = fill(1, length(y))
+        xerror = fill(0.2, length(x))
+        p = Plots.xerror(x, y; xerror, linestyle = :solid)
+        plot!(p, x, y; linestyle = :dash)
+        yerror!(p, x, y; yerror, linestyle = :dot)
+        @test length(p.series_list) == 3
+        @test p[1][1][:linestyle] == :solid
+        @test p[1][2][:linestyle] == :dash
+        @test p[1][3][:linestyle] == :dot
+    end
+
+    @testset "parametric" begin
+        @test plot(sin, sin, cos, 0, 2π) isa Plot
+        @test plot(sin, sin, cos, collect((-2π):(π / 4):(2π))) isa Plot
+    end
+
+    @testset "dict" begin
+        show(devnull, plot(Dict(1 => 2, 3 => -1)))
+    end
+
+    @testset "gray image" begin
+        show(devnull, plot(rand(Gray, 2, 2)))
+    end
+
+    @testset "plots_heatmap" begin
+        show(devnull, plots_heatmap(rand(RGBA, 2, 2)))
+    end
+
+    @testset "scatter3d" begin
+        show(devnull, scatter3d(1:2, 1:2, 1:2))
+    end
+
+    @testset "sticks" begin
+        show(devnull, sticks(1:2, marker = :circle))
+    end
+
+    @testset "stephist" begin
+        show(devnull, stephist([1, 2], marker = :circle))
+    end
+
+    @testset "bar with logscales" begin
+        show(devnull, bar([1 2 3], [0.02 125 10_000]; yscale = :log10))
+    end
 end

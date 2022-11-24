@@ -8,7 +8,7 @@ end
 
 @testset "Plotly standalone" begin
     @test_nowarn Plots._init_ijulia_plotting()
-    @test Plots.plotly_local_file_path[] === nothing
+    @test Plots.plotly_local_file_path[] ≡ nothing
     temp = Plots.use_local_dependencies[]
     withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
         Plots._plots_plotly_defaults()
@@ -28,7 +28,7 @@ end
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 
         @testset "plot" begin
-            for plt in [
+            for pl in [
                 histogram([1, 0, 0, 0, 0, 0]),
                 plot([missing]),
                 plot([missing, missing]),
@@ -38,7 +38,7 @@ end
                 plot([1 1; 1 missing]),
                 plot(["a" "b"; missing "d"], [1 2; 3 4]),
             ]
-                display(dsp, plt)
+                display(dsp, pl)
             end
             @test_nowarn plot(x -> x^2, 0, 2)
         end
@@ -56,6 +56,12 @@ end
                 end
             end
         end
+
+        @testset "axis scales" begin
+            pl = plot(1:5, xscale = :log2, yscale = :ln)
+            @test pl[1][:xaxis][:scale] ≡ :log2
+            @test pl[1][:yaxis][:scale] ≡ :ln
+        end
     end
 end
 
@@ -63,10 +69,21 @@ end
     @test showtheme(:dark) isa Plot
 end
 
+@testset "maths" begin
+    @test Plots.floor_base(15.0, 10.0) ≈ 10
+    @test Plots.ceil_base(15.0, 10.0) ≈ 10^2
+    @test Plots.floor_base(4.2, 2.0) ≈ 2^2
+    @test Plots.ceil_base(4.2, 2.0) ≈ 2^3
+    @test Plots.floor_base(1.5 * ℯ, ℯ) ≈ ℯ
+    @test Plots.ceil_base(1.5 * ℯ, ℯ) ≈ ℯ^2
+end
+
 @testset "plotattr" begin
     tmp = tempname()
     open(tmp, "w") do io
         redirect_stdout(io) do
+            @test_throws ErrorException plotattr(:WrongAttrType)
+            @test_throws ErrorException plotattr("WrongAttribute")
             plotattr("seriestype")
             plotattr(:Plot)
             # plotattr()  # interactive (JLFzf)
@@ -75,6 +92,7 @@ end
     str = join(readlines(tmp), "")
     @test occursin("seriestype", str)
     @test occursin("Plot attributes", str)
+    @test Plots.attrtypes() == "Series, Subplot, Plot, Axis"
 end
 
 @testset "legend" begin
@@ -89,14 +107,6 @@ end
     @test Plots.legend_angle(:foo_bar) == (45, :inner)
     @test Plots.legend_angle(20.0) == Plots.legend_angle((20.0, :inner)) == (20.0, :inner)
     @test Plots.legend_angle((20.0, 10.0)) == (20.0, 10.0)
-end
-
-@testset "Axis scales" begin
-    with(:unicodeplots) do
-        pl = plot(1:5, xscale = :log2, yscale = :ln)
-        @test pl[1][:xaxis][:scale] === :log2
-        @test pl[1][:yaxis][:scale] === :ln
-    end
 end
 
 @testset "axis letter" begin
@@ -115,8 +125,8 @@ end
 
     @testset "orientation" begin
         for f in (histogram, barhist, stephist, scatterhist), o in (:vertical, :horizontal)
-            @test f(data, orientation = o).subplots[1].attr[:title] ==
-                  (o === :vertical ? "x" : "y")
+            sp = f(data, orientation = o).subplots[1]
+            @test sp.attr[:title] == (o ≡ :vertical ? "x" : "y")
         end
     end
 
@@ -129,7 +139,7 @@ end
     end
 end
 
-@testset "plot" begin
+@testset "tex_output_standalone" begin
     pl = plot(1:5)
     pl2 = plot(pl, tex_output_standalone = true)
     @test !pl[:tex_output_standalone]
@@ -150,22 +160,21 @@ end
     @test plot(1:5, fillrange = 0)[1][1][:fillrange] == 0
     data4 = rand(4, 4)
     mat = reshape(1:8, 2, 4)
+    sp = plot(data4, ribbon = (mat, mat))[1]
     for i in axes(data4, 1)
         for attribute in (:fillrange, :ribbon)
-            @test plot(data4; NamedTuple{tuple(attribute)}(0)...)[1][i][attribute] == 0
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1, 2]))...)[1][i][attribute] ==
-                  [1.0, 2.0]
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref([1 2]))...)[1][i][attribute] ==
-                  (iseven(i) ? 2 : 1)
-            @test plot(data4; NamedTuple{tuple(attribute)}(Ref(mat))...)[1][i][attribute] ==
-                  [2(i - 1) + 1, 2i]
+            nt = NamedTuple{tuple(attribute)}
+            get_attr(pl) = pl[1][i][attribute]
+            @test plot(data4; nt(0)...) |> get_attr == 0
+            @test plot(data4; nt(Ref([1, 2]))...) |> get_attr == [1.0, 2.0]
+            @test plot(data4; nt(Ref([1 2]))...) |> get_attr == (iseven(i) ? 2 : 1)
+            @test plot(data4; nt(Ref(mat))...) |> get_attr == [2(i - 1) + 1, 2i]
         end
-        @test plot(data4, ribbon = (mat, mat))[1][i][:ribbon] ==
-              ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
+        @test sp[i][:ribbon] == ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
     end
 end
 
-@testset "Extract subplot" begin  # JuliaPlots/Plots.jl/issues/4045
+@testset "Extract subplot" begin  # github.com/JuliaPlots/Plots.jl/issues/4045
     x1, y1 = -1:5, 4:10
     x2, y2 = rand(10), rand(10)
     p1, p2 = plot(x1, y1), plot(x2, y2)
@@ -180,4 +189,149 @@ end
     series = first(first(pl2.subplots).series_list)
     @test series[:x] == x2
     @test series[:y] == y2
+end
+
+@testset "Empty Plot / Subplots" begin
+    pl = plot(map(_ -> plot(1:2, [1:2 2:3]), 1:2)...)
+    empty!(pl)
+    @test length(pl.subplots) == 2
+    @test length(first(pl).series_list) == 0
+    @test length(last(pl).series_list) == 0
+
+    pl = plot(map(_ -> plot(1:2, [1:2 2:3]), 1:2)...)
+    empty!(first(pl))  # clear out only the first subplot
+    @test length(pl.subplots) == 2
+    @test length(first(pl).series_list) == 0
+    @test length(last(pl).series_list) == 2
+end
+
+@testset "Measures" begin
+    @test 1Plots.mm * 0.1Plots.pct == 0.1Plots.mm
+    @test 0.1Plots.pct * 1Plots.mm == 0.1Plots.mm
+    @test 1Plots.mm / 0.1Plots.pct == 10Plots.mm
+    @test 0.1Plots.pct / 1Plots.mm == 10Plots.mm
+end
+
+@testset "docstring" begin
+    @test occursin("label", Plots._generate_doclist(Plots._all_series_args))
+end
+
+@testset "wrap" begin
+    # not sure what is intended here ...
+    wrapped = wrap([:red, :blue])
+    @test !isempty(wrapped)
+    @test scatter(1:2, color = wrapped) isa Plot
+end
+
+@testset "group" begin
+    # from github.com/JuliaPlots/Plots.jl/issues/3630#issuecomment-876001540
+    a = repeat(1:3, inner = 4)
+    b = repeat(["low", "high"], inner = 2, outer = 3)
+    c = repeat(1:2, outer = 6)
+    d = [1, 1, 1, 2, 2, 2, 2, 4, 3, 3, 3, 6]
+    @test plot(b, d, group = (c, a), layout = (1, 3)) isa Plot
+end
+
+@testset "skipissing" begin
+    @test plot(skipmissing(1:5)) isa Plot
+end
+
+with(:gr) do
+    @testset "text" begin
+        io = PipeBuffer()
+        x = y = range(-3, 3, length = 10)
+        extra_kwargs = Dict(
+            :series => Dict(:display_option => Plots.GR.OPTION_SHADED_MESH),
+            :subplot => Dict(:legend_hfactor => 2),
+            :plot => Dict(:foo => nothing),
+        )
+        show(io, surface(x, y, (x, y) -> exp(-x^2 - y^2); extra_kwargs))
+        str = read(io, String)
+        @test occursin("extra kwargs", str)
+        @test occursin("Series{1}", str)
+        @test occursin("SubplotPlot{1}", str)
+        @test occursin("Plot:", str)
+    end
+
+    @testset "recipes" begin
+        @test Plots.seriestype_supported(:path) ≡ :native
+
+        @test plot([1, 2, 5], seriestype = :linearfit) isa Plot
+        @test plot([1, 2, 5], seriestype = :scatterpath) isa Plot
+        @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa Plot
+
+        let pl = plot(1:2, -1:1, widen = false)
+            Plots.abline!([0, 3], [5, -5])
+            @test xlims(pl) == (+1, +2)
+            @test ylims(pl) == (-1, +1)
+        end
+
+        @test Plots.findnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
+    end
+
+    @testset "mesh3d" begin
+        x = [0, 1, 2, 0]
+        y = [0, 0, 1, 2]
+        z = [0, 2, 0, 1]
+        i = [0, 0, 0, 1]
+        j = [1, 2, 3, 2]
+        k = [2, 3, 1, 3]
+        # github.com/JuliaPlots/Plots.jl/pull/3868#issuecomment-939446686
+        mesh3d(
+            x,
+            y,
+            z;
+            connections = (i, j, k),
+            fillcolor = [:blue, :red, :green, :yellow],
+            fillalpha = 0.5,
+        )
+
+        # github.com/JuliaPlots/Plots.jl/pull/3835#issue-1002117649
+        p0 = [0.0, 0.0, 0.0]
+        p1 = [1.0, 0.0, 0.0]
+        p2 = [0.0, 1.0, 0.0]
+        p3 = [1.0, 1.0, 0.0]
+        p4 = [0.5, 0.5, 1.0]
+        pts = [p0, p1, p2, p3, p4]
+        x, y, z = broadcast(i -> getindex.(pts, i), (1, 2, 3))
+        # [x[i],y[i],z[i]] is the i-th vertix of the mesh
+        mesh3d(
+            x,
+            y,
+            z;
+            connections = [
+                [1, 2, 4, 3], # Quadrangle 
+                [1, 2, 5], # Triangle
+                [2, 4, 5], # Triangle
+                [4, 3, 5], # Triangle
+                [3, 1, 5],  # Triangle
+            ],
+            linecolor = :black,
+            fillcolor = :blue,
+            fillalpha = 0.2,
+        )
+        @test true
+    end
+
+    @testset "fillstyle" begin
+        @test histogram(rand(10); fillstyle = :/) isa Plot
+    end
+
+    @testset "showable" begin
+        @test showable(MIME("image/png"), plot(1:2))
+    end
+
+    @testset "inline" begin
+        show(devnull, plot(1:2, display_type = :inline))
+    end
+
+    @testset "legends" begin
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa Plot
+        @test_logs (:warn, r"n° of legend_column.*") png(
+            plot(1:2, legend_columns = 10),
+            tempname(),
+        )
+    end
 end
