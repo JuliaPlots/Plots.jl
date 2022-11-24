@@ -457,6 +457,8 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 has_fs = !isnothing(fs)
 
                 path = pypath.Path(hcat(x[rng], y[rng]))
+                # FIXME: path can be un-filled e.g. ex 56,
+                # where rectangles consist of 4 paths instead of a single one
 
                 # shape outline (and potentially solid fill)
                 pypatches.PathPatch(
@@ -474,7 +476,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
                 # shape hatched fill
                 # hatch color/alpha are controlled by edge (not face) color/alpha
-                has_fs &&
+                if has_fs
                     pypatches.PathPatch(
                         path;
                         label = "",
@@ -488,6 +490,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     ) |>
                     ax.add_patch |>
                     push_h
+                end
             end
         end
     elseif st === :image
@@ -540,27 +543,30 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             extrakw...,
         ) |> push_h
     elseif st === :mesh3d
-        polygons = if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
+        cns = series[:connections]
+        polygons = if cns isa AbstractVector{<:AbstractVector{Int}}
             # Combination of any polygon types
-            map(inds -> map(i -> [x[i], y[i], z[i]], inds), series[:connections])
-        elseif series[:connections] isa AbstractVector{NTuple{N,Int}} where {N}
+            map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
+        elseif cns isa AbstractVector{NTuple{N,Int}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
-            map(inds -> map(i -> [x[i], y[i], z[i]], inds), series[:connections])
-        elseif series[:connections] isa NTuple{3,<:AbstractVector{Int}}
+            map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
+        elseif cns isa NTuple{3,<:AbstractVector{Int}}
             # Only triangles - connections have to be 0-based (indexing)
-            ci, cj, ck = series[:connections]
-            if !(length(ci) == length(cj) == length(ck))
-                "Argument connections must consist of equally sized arrays." |>
-                ArgumentError |>
-                throw
+            X, Y, Z = mesh3d_triangles(x, y, z, cns)
+            ntris = length(cns[1])
+            polys = sizehint!(Matrix{eltype(x)}[], ntris)
+            for n in 1:ntris
+                m = 4(n - 1) + 1
+                push!(
+                    polys,
+                    [
+                        X[m + 0] Y[m + 0] Z[m + 0]
+                        X[m + 1] Y[m + 1] Z[m + 1]
+                        X[m + 2] Y[m + 2] Z[m + 2]
+                    ],
+                )
             end
-            map(
-                j -> reduce(
-                    hcat,
-                    map(i -> [x[i], y[i], z[i]], [ci[j] + 1, cj[j] + 1, ck[j] + 1]),
-                ),
-                eachindex(ci),
-            )
+            polys
         else
             "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st" |>
             ArgumentError |>
@@ -576,7 +582,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         ) |>
         ax.add_collection3d |>
         push_h
-        # Fix for handle: https://stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
+        # Fix for handle: stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
         # It seems there aren't two different alpha values for edge and face
         handles[end]._facecolors2d = py_color(series[:fillcolor])
         handles[end]._edgecolors2d = py_color(get_linecolor(series))
@@ -1149,7 +1155,10 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 locator = if (scale = axis[:scale]) === :identity
                     pyticker.AutoMinorLocator(n_minor_intervals)
                 else
-                    pyticker.LogLocator(base=_logScaleBases[scale], numticks=n_minor_intervals + 1)
+                    pyticker.LogLocator(
+                        base = _logScaleBases[scale],
+                        numticks = n_minor_intervals + 1,
+                    )
                 end
                 pyaxis.set_minor_locator(locator)
                 pyaxis.set_tick_params(
