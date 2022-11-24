@@ -403,9 +403,19 @@ function reset_extrema!(sp::Subplot)
     end
 end
 
+finitemin(x::Real, y::Real) = min(promote(x, y)...)
+finitemax(x::Real, y::Real) = max(promote(x, y)...)
+
+finitemin(x::T, y::T) where {T<:AbstractFloat} = ifelse((y < x) | (signbit(y) > signbit(x)),
+                                                 ifelse(isinf(y), x, y),
+                                                 ifelse(isinf(x), y, x))
+finitemax(x::T, y::T) where {T<:AbstractFloat} = ifelse((y > x) | (signbit(y) < signbit(x)),
+                                                 ifelse(isinf(y), x, y),
+                                                 ifelse(isinf(x), y, x))
+
 function expand_extrema!(ex::Extrema, v::Number)
-    ex.emin = isfinite(v) ? min(v, ex.emin) : ex.emin
-    ex.emax = isfinite(v) ? max(v, ex.emax) : ex.emax
+    ex.emin = finitemin(v, ex.emin)
+    ex.emax = finitemax(v, ex.emax)
     ex
 end
 
