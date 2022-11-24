@@ -42,7 +42,7 @@ py_handle_surface(v) = v
 py_handle_surface(z::Surface) = z.surf
 
 py_color(s) = py_color(parse(Colorant, string(s)))
-py_color(c::Colorant) = [red(c), green(c), blue(c), alpha(c)]  # NOTE: tuple unsupported by `PythonPlot`
+py_color(c::Colorant) = [red(c), green(c), blue(c), alpha(c)]  # NOTE: returning a tuple fails `PythonPlot`
 py_color(cs::AVec) = map(py_color, cs)
 py_color(grad::PlotUtils.AbstractColorList) = py_color(color_list(grad))
 py_color(c::Colorant, α) = py_color(plot_color(c, α))
@@ -179,7 +179,7 @@ function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
     if series[:x] !== nothing
         x, y = series[:x], series[:y]
         nx, ny = length(x), length(y)
-        if !isa(get(series.plotattributes, :z, nothing), Surface) && nx != ny
+        if !(get(series.plotattributes, :z, nothing) isa Surface || nx == ny)
             if nx < ny
                 series[:x] = map(i -> Float64(x[mod1(i, nx)]), 1:ny)
             else
@@ -474,7 +474,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
                 # shape hatched fill
                 # hatch color/alpha are controlled by edge (not face) color/alpha
-                if has_fs
+                has_fs &&
                     pypatches.PathPatch(
                         path;
                         label = "",
@@ -488,7 +488,6 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     ) |>
                     ax.add_patch |>
                     push_h
-                end
             end
         end
     elseif st === :image
@@ -751,8 +750,7 @@ end
 
 function py_set_lims(ax, sp::Subplot, axis::Axis)
     letter = axis[:letter]
-    lfrom, lto = axis_limits(sp, letter)
-    getproperty(ax, set_axis(letter, :lim))(lfrom, lto)
+    getproperty(ax, set_axis(letter, :lim))(axis_limits(sp, letter)...)
 end
 
 function py_set_ticks(sp, ax, ticks, letter)
@@ -795,24 +793,17 @@ end
 
 function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     scale ∈ supported_scales() || return @warn "Unhandled scale value in PythonPlot: $scale"
-    func = getproperty(ax, set_axis(letter, :scale))
-    kw = KW()
-    arg = if scale === :identity
-        "linear"
+    scl, kw = if scale === :identity
+        "linear", KW()
     else
-        kw[get_attr_symbol(:base, Symbol())] = if scale === :ln
-            ℯ
-        elseif scale === :log2
-            2
-        elseif scale === :log10
-            10
-        end
-        axis = sp[get_attr_symbol(letter, :axis)]
-        kw[get_attr_symbol(:linthresh, Symbol())] =
-            NaNMath.max(1e-16, py_compute_axis_minval(sp, axis))
-        "symlog"
+        "symlog",
+        KW(
+            get_attr_symbol(:base, Symbol()) => _logScaleBases[scale],
+            get_attr_symbol(:linthresh, Symbol()) =>
+                NaNMath.max(1e-16, py_compute_axis_minval(sp, axis)),
+        )
     end
-    func(arg; kw...)
+    getproperty(ax, set_axis(letter, :scale))(scl; kw...)
 end
 
 py_set_scale(ax, sp::Subplot, axis::Axis) =
@@ -821,9 +812,7 @@ py_set_scale(ax, sp::Subplot, axis::Axis) =
 py_set_spine_color(spines, color) = foreach(loc -> spines[loc].set_color(color), spines)
 
 py_set_spine_color(spines::Dict, color) =
-    for (_, spine) in spines
-        spine.set_color(color)
-    end
+    foreach(spine -> spine.set_color(color), values(spines))
 
 function py_set_axis_colors(sp, ax, a::Axis)
     py_set_spine_color(ax.spines, py_color(a[:foreground_color_border]))
@@ -1216,7 +1205,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                     ax.set_box_aspect(ratio)
                 end
             else
-                ax.set_aspect(isa(ratio, Symbol) ? string(ratio) : ratio, anchor = "C")
+                ax.set_aspect(ratio isa Symbol ? string(ratio) : ratio, anchor = "C")
             end
         end
 
@@ -1475,13 +1464,12 @@ end
 function _update_plot_object(plt::Plot{PythonPlotBackend})
     for sp in plt.subplots
         (ax = sp.o) === nothing && return
-        figw, figh = sp.plt[:size]
-        figw, figh = figw * px, figh * px
+        figw, figh = sp.plt[:size] .* px
 
         # ax.set_position signature: `[left, bottom, width, height]`
         bbox_to_pcts(sp.plotarea, figw, figh) |> ax.set_position
 
-        if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)   # 2D plots are completely handled by axis dividers
+        if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)  # 2D plots are completely handled by axis dividers
             bb = sp.attr[:cbar_bbox]
             # this is the bounding box of just the colors of the colorbar (not labels)
             pad = 2mm
