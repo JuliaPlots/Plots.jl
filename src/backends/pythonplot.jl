@@ -1076,19 +1076,18 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             (ispolar(sp) && letter === :y) && ax.set_rlabel_position(90)
             ticks = sp[:framestyle] === :none ? nothing : get_ticks(sp, axis)
 
-            has_major_ticks = ticks ∉ (:none, nothing, false)
+            has_major_ticks = ticks !== :none && ticks !== nothing && ticks !== false
             has_major_ticks &= if (ttype = ticksType(ticks)) === :ticks
                 length(ticks) > 0
             elseif ttype === :ticks_and_labels
-                length(first(ticks)) > 0
+                tcs, labs = ticks
+                if sp[:framestyle] === :origin
+                    # don't show the 0 tick label for the origin framestyle
+                    labs[tcs[1] .== 0] .= ""
+                end
+                length(tcs) > 0
             else
                 true
-            end
-
-            # don't show the 0 tick label for the origin framestyle
-            if sp[:framestyle] === :origin && ttype === :ticks_and_labels
-                tcs, labs = ticks
-                labs[tcs[1] .== 0] .= ""
             end
 
             # Set ticks
@@ -1103,13 +1102,13 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                     "rotation"        => axis[:tickfontrotation],
                     "family"          => axis[:tickfontfamily],
                 )
+                positions = getproperty(ax, get_axis(letter, :ticks))()
+                pyaxis.set_major_locator(pyticker.FixedLocator(positions))
                 kw = if RecipesPipeline.is3d(sp)
                     NamedTuple(Symbol(k) => v for (k, v) in fontProperties)
                 else
                     (; fontdict = PythonPlot.PyDict(fontProperties))
                 end
-                positions = getproperty(ax, get_axis(letter, :ticks))()
-                pyaxis.set_major_locator(pyticker.FixedLocator(positions))
                 getproperty(ax, set_axis(letter, :ticklabels))(positions; kw...)
                 py_set_ticks(sp, ax, ticks, letter)
 
@@ -1125,8 +1124,6 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             end
 
             getproperty(ax, set_axis(letter, :label))(axis[:guide])
-            axis[:flip] && getproperty(ax, Symbol(:invert_, letter, :axis))()
-
             pyaxis.label.set_fontsize(py_thickness_scale(plt, axis[:guidefontsize]))
             pyaxis.label.set_family(axis[:guidefontfamily])
             pyaxis.label.set_math_fontfamily(
@@ -1134,6 +1131,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             )
 
             RecipesPipeline.is3d(sp) && pyaxis.set_rotate_label(false)
+            axis[:flip] && getproperty(ax, Symbol(:invert_, letter, :axis))()
 
             if letter === :y && !RecipesPipeline.is3d(sp)
                 axis[:guidefontrotation] + 90
@@ -1157,17 +1155,15 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             # minorticks
             if !no_minor_intervals(axis) && has_major_ticks
                 ax.minorticks_on()
-                minor_ticks = get_minor_ticks(sp, axis, ticks)
-                n_minor_intervals = floor(Int, length(minor_ticks) / length(first(ticks)))
-                locator = if (scale = axis[:scale]) === :identity
+                n_minor_intervals = num_minor_intervals(axis)
+                if (scale = axis[:scale]) === :identity
                     pyticker.AutoMinorLocator(n_minor_intervals)
                 else
                     pyticker.LogLocator(
                         base = _logScaleBases[scale],
                         numticks = n_minor_intervals + 1,
                     )
-                end
-                pyaxis.set_minor_locator(locator)
+                end |> pyaxis.set_minor_locator
                 pyaxis.set_tick_params(
                     which = "minor",
                     direction = axis[:tick_direction] === :out ? "out" : "in",
