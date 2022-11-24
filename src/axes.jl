@@ -509,7 +509,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             data = plotattributes[letter]
             axis = sp[get_attr_symbol(letter, :axis)]
             scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
-            expand_extrema!(axis, heatmap_edges(data, scale))
+            expand_extrema!(axis, heatmap_extrema(data, scale))
         end
     end
 end

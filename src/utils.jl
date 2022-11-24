@@ -230,18 +230,32 @@ function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
     isedges && return v
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
+    vmin, vmax = __heatmap_extrema(v, isedges, ispolar)
+    vcat(vmin, 0.5(v[1:(n - 1)] + v[2:n]), vmax)
+end
+
+function __heatmap_extrema(v::AVec, isedges::Bool, ispolar::Bool)
+    isedges && return ignorenan_extrema(v)
     vmin, vmax = ignorenan_extrema(v)
     extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
-    extra_max = 0.5(v[n] - v[n - 1])
-    vcat(vmin - extra_min, 0.5(v[1:(n - 1)] + v[2:n]), vmax + extra_max)
+    extra_max = 0.5(v[end] - v[end - 1])
+    vmin - extra_min, vmax + extra_max
 end
 
 _heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
     __heatmap_edges(v, isedges, ispolar)
 
+_heatmap_extrema(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
+    __heatmap_extrema(v, isedges, ispolar)
+
 function _heatmap_edges(::Val{false}, v::AVec, scale::Symbol, isedges::Bool, ispolar::Bool)
     f, invf = scale_inverse_scale_func(scale)
     invf.(__heatmap_edges(f.(v), isedges, ispolar))
+end
+
+function _heatmap_extrema(::Val{false}, v::AVec, scale::Symbol, isedges::Bool, ispolar::Bool)
+    f, invf = scale_inverse_scale_func(scale)
+    invf.(__heatmap_extrema(f.(v), isedges, ispolar))
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
@@ -251,6 +265,13 @@ heatmap_edges(
     isedges::Bool = false,
     ispolar::Bool = false,
 ) = _heatmap_edges(Val(scale === :identity), v, scale, isedges, ispolar)
+
+heatmap_extrema(
+    v::AVec,
+    scale::Symbol = :identity,
+    isedges::Bool = false,
+    ispolar::Bool = false,
+) = _heatmap_extrema(Val(scale === :identity), v, scale, isedges, ispolar)
 
 function heatmap_edges(
     x::AVec,
