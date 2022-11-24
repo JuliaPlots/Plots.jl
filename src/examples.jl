@@ -1321,7 +1321,7 @@ _backend_skips[:plotly] = _backend_skips[:plotlyjs]
 
 # ---------------------------------------------------------------------------------
 # make and display one plot
-test_examples(i::Integer; kw...) = test_examples(:gr, i; kw...)
+test_examples(i::Integer; kw...) = test_examples(backend_name(), i; kw...)
 
 function test_examples(
     pkgname::Symbol,

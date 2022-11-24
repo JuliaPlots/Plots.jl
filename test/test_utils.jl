@@ -258,3 +258,13 @@ end
     # test that we didn't overlap other placements
     @test Plots._guess_best_legend_position(:bottomleft, plt) === :bottomleft
 end
+
+@testset "dispatch" begin
+    with(:gr) do
+        pl = heatmap(rand(10, 10); xscale = :log10, yscale = :log10)
+        @test show(devnull, pl) isa Nothing
+
+        pl = plot(Shape([(1, 1), (2, 1), (2, 2), (1, 2)]); xscale = :log10)
+        @test show(devnull, pl) isa Nothing
+    end
+end
