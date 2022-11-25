@@ -276,8 +276,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
 
     α = 0:45:315
     a = α .+ 90
-    sinf = sind.(a)
-    cosf = cosd.(a)
+    sinf, cosf = sincosd.(a)
     rtick_values, rtick_labels = get_ticks(sp, yaxis, update = false)
 
     # draw angular grid
@@ -429,7 +428,7 @@ function gr_set_font(
 )
     family = lowercase(f.family)
     GR.setcharheight(gr_point_mult(s) * f.pointsize)
-    GR.setcharup(sind(-rotation), cosd(-rotation))
+    GR.setcharup(sincosd(-rotation)...)
     haskey(gr_font_family, family) && GR.settextfontprec(
         gr_font_family[family],
         gr_font_family[family] ≥ 200 ? 3 : GR.TEXT_PRECISION_STRING,
@@ -1550,8 +1549,9 @@ function gr_label_ticks_3d(sp, letter, ticks)
 
     out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
     axis_offset = 0.012out_factor
-    x_offset = axis_offset * cosd(axisϕ)
-    y_offset = axis_offset * sind(axisϕ)
+    y_offset, x_offset = sincosd(axisϕ)
+    y_offset *= axis_offset
+    x_offset *= axis_offset
 
     sgn2a = sgn2b = sgn3 = 0
     if axisθ != 0 || rot % 90 != 0
