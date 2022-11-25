@@ -582,7 +582,7 @@ annotations(anns::AVec) = anns
 annotations(anns) = Any[anns]
 annotations(::Nothing) = []
 
-_annotationfont(sp::Subplot) = Plots.font(;
+_annotationfont(sp::Subplot) = font(;
     family = sp[:annotationfontfamily],
     pointsize = sp[:annotationfontsize],
     halign = sp[:annotationhalign],

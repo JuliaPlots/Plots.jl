@@ -374,11 +374,15 @@ function gaston_parse_axes_args(
     for letter in (:x, :y, :z)
         (letter === :z && dims == 2) && continue
         axis = sp.attr[get_attr_symbol(letter, :axis)]
-        # label names
-        push!(
-            axesconf,
-            "set $(letter)label '$(axis[:guide])' $(gaston_font(guidefont(axis)))",
-        )
+
+        # guide labels
+        guide_font = guidefont(axis)
+        if letter === :y && dims == 2
+            # vertical by default (consistency witht other backends)
+            guide_font = font(guide_font; rotation = guide_font.rotation + 90)
+        end
+        push!(axesconf, "set $(letter)label '$(axis[:guide])' $(gaston_font(guide_font))")
+
         mirror = axis[:mirror] ? "mirror" : "nomirror"
 
         logscale, base = if axis[:scale] === :identity
