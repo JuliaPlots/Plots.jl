@@ -679,10 +679,8 @@ function gr_display(plt::Plot, dpi_factor = 1)
     # fill in the viewport_canvas background
     gr_fill_viewport(vp_canvas, plt[:background_color_outside])
 
-    # subplots:
-    for sp in plt.subplots
-        gr_display(sp, w * px, h * px, vp_canvas)
-    end
+    # subplots
+    foreach(sp -> gr_display(sp, w * px, h * px, vp_canvas), plt.subplots)
 
     GR.updatews()
     nothing
