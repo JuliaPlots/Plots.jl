@@ -1318,6 +1318,19 @@ _backend_skips = Dict(
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
 
 # ---------------------------------------------------------------------------------
+# replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
+replace_rand(ex) = ex
+
+function replace_rand(ex::Expr)
+    expr = Expr(ex.head)
+    foreach(arg -> push!(expr.args, replace_rand(arg)), ex.args)
+    if Meta.isexpr(ex, :call) && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
+        pushfirst!(expr.args, ex.args[1])
+        expr.args[2] = :rng
+    end
+    expr
+end
+
 # make and display one plot
 test_examples(i::Integer; kw...) = test_examples(backend_name(), i; kw...)
 
@@ -1326,6 +1339,7 @@ function test_examples(
     i::Integer;
     debug = false,
     disp = true,
+    rng = nothing,
     callback = nothing,
 )
     @info "Testing plot: $pkgname:$i:$(_examples[i].header)"
@@ -1334,13 +1348,18 @@ function test_examples(
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
     Base.eval(m, quote
+        using Random
         using Plots
         Plots.debug!($debug)
         backend($(QuoteNode(pkgname)))
+        rng = $rng
+        rng === nothing || Random.seed!(rng, Plots.PLOTS_SEED)
         theme(:default)
     end)
     imports === nothing || Base.eval(m, _examples[i].imports)
-    Base.eval(m, _examples[i].exprs)
+    exprs = _examples[i].exprs
+    rng === nothing || (exprs = Plots.replace_rand(_examples[i].exprs))
+    Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))
     callback === nothing || callback(m, pkgname, i)

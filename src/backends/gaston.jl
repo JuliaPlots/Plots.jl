@@ -505,10 +505,7 @@ function gaston_set_legend!(axesconf, sp, any_label)
     if (lp = sp[:legend_position]) ∉ (:none, :inline) && any_label
         leg_str = string(_guess_best_legend_position(lp, sp))
 
-        push!(
-            axesconf,
-            "set key " * (occursin("outer", leg_str) ? "outside" : "inside"),
-        )
+        push!(axesconf, "set key " * (occursin("outer", leg_str) ? "outside" : "inside"))
         for position in ("top", "bottom", "left", "right")
             occursin(position, leg_str) && push!(axesconf, "set key $position")
         end

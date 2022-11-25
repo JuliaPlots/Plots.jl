@@ -49,19 +49,6 @@ function reference_file(backend, i, version)
     return reffn
 end
 
-# replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
-replace_rand(ex) = ex
-
-function replace_rand(ex::Expr)
-    expr = Expr(ex.head)
-    foreach(arg -> push!(expr.args, replace_rand(arg)), ex.args)
-    if Meta.isexpr(ex, :call) && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
-        pushfirst!(expr.args, ex.args[1])
-        expr.args[2] = :rng
-    end
-    expr
-end
-
 function image_comparison_tests(
     pkg::Symbol,
     idx::Int;
@@ -82,7 +69,7 @@ function image_comparison_tests(
         backend($(QuoteNode(pkg)))
         theme(:default)
         rng = StableRNG(Plots.PLOTS_SEED)
-        $(replace_rand(example.exprs))
+        $(Plots.replace_rand(example.exprs))
     end
     @debug imports exprs
 
