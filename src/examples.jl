@@ -1310,8 +1310,8 @@ _backend_skips = Dict(
         31,  # animations
         49,  # TODO: support polar
         50,  # TODO: 1D data not supported for pm3d
-        60,  # :perspective projection unsupported
-        62,  # fillstyle
+        # 60,  # :perspective projection unsupported
+        # 62,  # fillstyle
         63,  # un-identified bug
     ],
 )
