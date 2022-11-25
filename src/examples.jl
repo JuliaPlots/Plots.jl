@@ -1306,13 +1306,10 @@ _backend_skips = Dict(
         65,  # legend pos unsupported
     ],
     :gaston => [
-        2,   # animations
-        31,  # animations
+        31,  # animations - needs github.com/mbaz/Gaston.jl/pull/178
         49,  # TODO: support polar
-        50,  # TODO: 1D data not supported for pm3d
-        # 60,  # :perspective projection unsupported
-        # 62,  # fillstyle
-        63,  # un-identified bug
+        60,  # :perspective projection unsupported
+        62,  # fillstyle
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
@@ -1338,7 +1335,7 @@ function test_examples(
     pkgname::Symbol,
     i::Integer;
     debug = false,
-    disp = true,
+    disp = false,
     rng = nothing,
     callback = nothing,
 )
@@ -1368,14 +1365,14 @@ end
 
 # generate all plots and create a dict mapping idx --> plt
 """
-test_examples(pkgname[, idx]; debug=false, disp=true, sleep=nothing, skip=[], only=nothing, callback=nothing)
+test_examples(pkgname[, idx]; debug=false, disp=false, sleep=nothing, skip=[], only=nothing, callback=nothing)
 
 Run the `idx` test example for a given backend, or all examples if `idx` is not specified.
 """
 function test_examples(
     pkgname::Symbol;
     debug = false,
-    disp = true,
+    disp = false,
     sleep = nothing,
     skip = [],
     only = nothing,

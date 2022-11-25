@@ -12,7 +12,7 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
     # initialize all the subplots first
     plt.o.subplots = Gaston.SubPlot[]
 
-    foreach(sp -> gaston_init_subplot(plt, sp), unique!(plt.inset_subplots))
+    foreach(sp -> gaston_init_subplot(plt, sp), unique(plt.inset_subplots))
 
     if length(plt.subplots) > 0
         n, sps = gaston_get_subplots(0, plt.subplots, plt.layout)
@@ -62,17 +62,18 @@ for (mime, term) in (
         term = String($term)
         tmpfile = tempname() * ".$term"
 
-        Gaston.save(;
+        ret = Gaston.save(;
             saveopts = gaston_saveopts(plt),
             handle = plt.o.handle,
             output = tmpfile,
             term,
         )
-        # @show tmpfile term gaston_saveopts(plt)
-        while !isfile(tmpfile)
-        end  # avoid race condition with read in next line
-        write(io, read(tmpfile))
-        rm(tmpfile, force = true)
+        if ret === nothing || ret
+            while !isfile(tmpfile)
+            end  # avoid race condition with read in next line
+            write(io, read(tmpfile))
+            rm(tmpfile, force = true)
+        end
         nothing
     end
 end
@@ -84,7 +85,7 @@ _display(plt::Plot{GastonBackend}) = display(plt.o)
 # --------------------------------------------
 
 function gaston_saveopts(plt::Plot{GastonBackend})
-    saveopts = String["size $(join(plt[:size], ","))"]
+    saveopts = ["size " * join(plt[:size], ',')]
 
     # scale all plot elements to match Plots.jl DPI standard
     scaling = plt[:dpi] / Plots.DPI
@@ -110,8 +111,7 @@ function gaston_get_subplots(n, plt_subplots, layout)
     nr, nc = size(layout)
     sps = Array{Any}(nothing, nr, nc)
     for r in 1:nr, c in 1:nc  # NOTE: col major
-        l = layout[r, c]
-        sps[r, c] = if l isa GridLayout
+        sps[r, c] = if (l = layout[r, c]) isa GridLayout
             n, sub = gaston_get_subplots(n, plt_subplots, l)
             size(sub) == (1, 1) ? only(sub) : sub
         else
@@ -143,12 +143,11 @@ function gaston_init_subplot(
     plt::Plot{GastonBackend},
     sp::Union{Nothing,Subplot{GastonBackend}},
 )
-    if sp === nothing
-        push!(plt.o.subplots, sp)
+    obj = if sp === nothing
+        sp
     else
         dims =
-            RecipesPipeline.is3d(sp) || sp[:projection] == "3d" || needs_any_3d_axes(sp) ?
-            3 : 2
+            RecipesPipeline.is3d(sp) || sp[:projection] == "3d" || needs_any_3d_axes(sp) ? 3 : 2
         any_label = false
         for series in series_list(sp)
             if dims == 2 && series[:seriestype] ∈ (:heatmap, :contour)
@@ -158,8 +157,8 @@ function gaston_init_subplot(
         end
         axesconf = gaston_parse_axes_args(plt, sp, dims, any_label)
         sp.o = Gaston.Plot(; dims, curves = [], axesconf)
-        push!(plt.o.subplots, sp.o)
     end
+    push!(plt.o.subplots, obj)
     nothing
 end
 
@@ -215,16 +214,17 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     (gsp = sp.o) === nothing && return
     x, y, z = series[:x], series[:y], series[:z]
     st = series[:seriestype]
-    curves = []
+    curves = Gaston.Curve[]
     if gsp.dims == 2 && z === nothing
         for (n, seg) in enumerate(series_segments(series, st; check = true))
             i, rng = seg.attr_index, seg.range
             fr = _cycle(series[:fillrange], 1:length(x[rng]))
-            for sc in gaston_seriesconf!(sp, series, i, n == 1)
+            for sc in gaston_seriesconf!(sp, series, n == 1, i)
                 push!(curves, Gaston.Curve(x[rng], y[rng], nothing, fr, sc))
             end
         end
     else
+        supp = nothing  # supplementary column
         if z isa Surface
             z = z.surf
             if st === :image
@@ -242,28 +242,31 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
         end
         if st === :mesh3d
             x, y, z = mesh3d_triangles(x, y, z, series[:connections])
+        elseif st === :surface
+            if ndims(x) == ndims(y) == ndims(z) == 1
+                # must reinterpret 1D data for `pm3d` (points are ordered)
+                x, y = unique(x), unique(y)
+                z = reshape(z, length(y), length(x))
+            end
         end
-        for sc in gaston_seriesconf!(sp, series, 1, true)
-            push!(curves, Gaston.Curve(x, y, z, nothing, sc))
+        for sc in gaston_seriesconf!(sp, series, true, 1)
+            push!(curves, Gaston.Curve(x, y, z, supp, sc))
         end
     end
 
     for c in curves
         append = length(gsp.curves) > 0
         push!(gsp.curves, c)
-        Gaston.write_data(c, gsp.dims, gsp.datafile, append = append)
+        Gaston.write_data(c, gsp.dims, gsp.datafile; append)
     end
     nothing
 end
 
-gaston_palette_conf(series) =
-    "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
-
 function gaston_seriesconf!(
     sp::Subplot{GastonBackend},
     series::Series,
-    i::Int,
     add_to_legend::Bool,
+    i::Int,
 )
     #=
     gnuplot abbreviations (see gnuplot/src/set.c)
@@ -380,7 +383,7 @@ function gaston_parse_axes_args(
     dims::Int,
     any_label::Bool,
 )
-    # axesconf = String["set margins 2, 2, 2, 2"]  # left, right, bottom, top
+    # axesconf = ["set margins 2, 2, 2, 2"]  # left, right, bottom, top
     axesconf = String[]
 
     polar = ispolar(sp) && dims == 2  # cannot splot in polar coordinates
@@ -409,13 +412,13 @@ function gaston_parse_axes_args(
             "set $(letter)$(I)label '$(axis[:guide])' $(gaston_font(guide_font))",
         )
 
-        logscale, base = if axis[:scale] === :identity
+        logscale, base = if (scale = axis[:scale]) === :identity
             "nologscale", ""
-        elseif axis[:scale] === :log10
+        elseif scale === :log10
             "logscale", "10"
-        elseif axis[:scale] === :log2
+        elseif scale === :log2
             "logscale", "2"
-        elseif axis[:scale] === :ln
+        elseif scale === :ln
             "logscale", "e"
         end
         push!(axesconf, "set $logscale $letter $base")
@@ -471,8 +474,20 @@ function gaston_parse_axes_args(
         end
 
         if (ratio = get_aspect_ratio(sp)) !== :none
-            ratio === :equal && (ratio = -1)
-            push!(axesconf, "set size ratio $ratio")
+            if dims == 2
+                ratio === :equal && (ratio = -1)
+                push!(axesconf, "set size ratio $ratio")
+            else
+                # ratio and square have no effect on 3D plots,
+                # but do affect 3D projections created using set view map
+                if ratio === :equal
+                    push!(axesconf, "set view equal xyz")
+                end
+            end
+        elseif dims == 3
+            # by default unit x/y aspect ratio in 3d ?
+            # push!(axesconf, "set view equal xy")
+            # push!(axesconf, "set size square")
         end
     end
     gaston_set_legend!(axesconf, sp, any_label)
@@ -529,7 +544,7 @@ function gaston_parse_axes_args(
         gaston_ticks = if (ttype = ticksType(rticks)) === :ticks
             string.(rticks)
         elseif ttype === :ticks_and_labels
-            String["'$l' $t" for (t, l) in zip(rticks...)]
+            ["'$l' $t" for (t, l) in zip(rticks...)]
         end
         push!(
             axesconf,
@@ -631,26 +646,25 @@ gaston_lc_ls_lw(series::Series, clims, i::Int) = (
 
 gaston_mk_ms_mc(series::Series, clims, i::Int) = (
     gaston_marker(_cycle(series[:markershape], i), get_markeralpha(series, i)),
-    _cycle(series[:markersize], i) * 1.3 / 5,
+    0.2_cycle(series[:markersize], i),
     gaston_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
 )
 
 function gaston_font(f; rot = true, align = true, color = true, scale = 1)
-    font = String["font '$(f.family),$(round(Int, scale * f.pointsize))'"]
-    align && push!(font, "$(gaston_halign(f.halign))")
-    rot && push!(font, "rotate by $(f.rotation)")
-    color && push!(font, "textcolor $(gaston_color(f.color))")
-    join(font, " ")
+    font = "font '$(f.family),$(round(Int, scale * f.pointsize))'"
+    align && (font *= " $(gaston_halign(f.halign))")
+    rot && (font *= " rotate by $(f.rotation)")
+    color && (font *= " textcolor $(gaston_color(f.color))")
+    font
 end
 
-function gaston_palette(gradient)
-    palette = String[]
-    n = -1
-    for rgba in gradient  # FIXME: naive conversion, inefficient ?
-        push!(palette, "$(n += 1) $(rgba.r) $(rgba.g) $(rgba.b)")
+gaston_palette(gradient) =
+    let palette = ["$(n - 1) $(c.r) $(c.g) $(c.b)" for (n, c) in enumerate(gradient)]
+        '(' * join(palette, ", ") * ')'
     end
-    '(' * join(palette, ", ") * ')'
-end
+
+gaston_palette_conf(series) =
+    "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
 
 function gaston_marker(marker, alpha)
     # NOTE: :rtriangle, :ltriangle, :hexagon, :heptagon, :octagon seems unsupported by gnuplot
@@ -666,8 +680,7 @@ function gaston_marker(marker, alpha)
     marker === :dtriangle && return filled ? 11 : 10
     marker === :diamond && return filled ? 13 : 12
     marker === :pentagon && return filled ? 15 : 14
-
-    @debug "Plots(Gaston): unsupported marker $marker"
+    # @debug "Plots(Gaston): unsupported marker $marker"
     1
 end
 
@@ -678,15 +691,16 @@ function gaston_color(col, alpha = 0)
 end
 
 function gaston_linestyle(style)
-    style === :solid && return "1"
-    style === :dash && return "2"
-    style === :dot && return "3"
-    style === :dashdot && return "4"
-    style === :dashdotdot && return "5"
+    style === :solid && return 1
+    style === :dash && return 2
+    style === :dot && return 3
+    style === :dashdot && return 4
+    style === :dashdotdot && return 5
+    1
 end
 
 function gaston_enclose_tick_string(tick_string)
-    findfirst("^", tick_string) === nothing && return tick_string
-    base, power = split(tick_string, "^")
+    findfirst('^', tick_string) === nothing && return tick_string
+    base, power = split(tick_string, '^')
     "$base^{$power}"
 end
