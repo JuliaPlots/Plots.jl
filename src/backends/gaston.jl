@@ -397,31 +397,39 @@ function gaston_parse_axes_args(
         push!(axesconf, "set $logscale $letter $base")
 
         # handle ticks
-        if polar
-            push!(axesconf, "set size square; unset $(letter)tics")
-        else
-            push!(
-                axesconf,
-                "set $(letter)tics $(mirror) $(axis[:tick_direction]) $(gaston_font(tickfont(axis)))",
-            )
+        if axis[:showaxis] && sp[:framestyle] !== :none
+            if polar
+                push!(axesconf, "set size square; unset $(letter)tics")
+            else
+                push!(
+                    axesconf,
+                    "set $(letter)tics $(mirror) $(axis[:tick_direction]) $(gaston_font(tickfont(axis)))",
+                )
 
-            # major tick locations
-            if axis[:ticks] !== :native
-                if axis[:flip]
-                    hi, lo = axis_limits(sp, letter)
-                else
-                    lo, hi = axis_limits(sp, letter)
-                end
-                push!(axesconf, "set $(letter)range [$lo:$hi]")
+                # major tick locations
+                if axis[:ticks] !== :native
+                    if axis[:flip]
+                        hi, lo = axis_limits(sp, letter)
+                    else
+                        lo, hi = axis_limits(sp, letter)
+                    end
+                    push!(axesconf, "set $(letter)range [$lo:$hi]")
 
-                ticks = get_ticks(sp, axis)
-                gaston_set_ticks!(axesconf, ticks, letter, "", "")
+                    ticks = get_ticks(sp, axis)
+                    gaston_set_ticks!(axesconf, ticks, letter, "", "")
 
-                if axis[:minorticks] !== :native
-                    minor_ticks = get_minor_ticks(sp, axis, ticks)
-                    gaston_set_ticks!(axesconf, minor_ticks, letter, "m", "add")
+                    if axis[:minorticks] !== :native && !no_minor_intervals(axis)
+                        minor_ticks = get_minor_ticks(sp, axis, ticks)
+                        gaston_set_ticks!(axesconf, minor_ticks, letter, "m", "add")
+                    end
                 end
             end
+        end
+        if sp[:framestyle] in (:zerolines, :origin)
+            push!(axesconf, "set $(letter)zeroaxis")
+        end
+        if !axis[:showaxis] || sp[:framestyle] === :none
+            push!(axesconf, "set tics scale 0", "set format x \"\"", "set format y \"\"")
         end
 
         if axis[:grid]
@@ -448,10 +456,10 @@ function gaston_parse_axes_args(
         tmin, tmax = axis_limits(sp, :x, false, false)
         rmin, rmax = axis_limits(sp, :y, false, false)
         rticks = get_ticks(sp, :y)
-        if (ttype = ticksType(rticks)) === :ticks
-            gaston_ticks = string.(rticks)
+        gaston_ticks = if (ttype = ticksType(rticks)) === :ticks
+            string.(rticks)
         elseif ttype === :ticks_and_labels
-            gaston_ticks = String["'$l' $t" for (t, l) in zip(rticks...)]
+            String["'$l' $t" for (t, l) in zip(rticks...)]
         end
         push!(
             axesconf,
@@ -461,6 +469,8 @@ function gaston_parse_axes_args(
             "set ttics 0,30 format \"%g\".GPVAL_DEGREE_SIGN $(gaston_font(tickfont(sp.attr[:xaxis])))",
             "set mttics 3",
         )
+    else
+        push!(axesconf, (sp[:framestyle] in (:box, :semi) ? "set" : "unset") * " border")
     end
 
     join(axesconf, "; ")
@@ -527,7 +537,7 @@ function gaston_set_legend!(axesconf, sp, any_label)
             # NOTE: cannot use legendtitlefont(sp) as it will override legendfont
             push!(axesconf, "set key title '$(sp[:legend_title])'")
         end
-        push!(axesconf, "set key box lw 1 opaque", "set border back")
+        push!(axesconf, "set key box lw 1 opaque")
     else
         push!(axesconf, "set key off")
     end
