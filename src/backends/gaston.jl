@@ -502,16 +502,15 @@ function gaston_set_ticks!(axesconf, ticks, letter, maj_min, add)
 end
 
 function gaston_set_legend!(axesconf, sp, any_label)
-    leg = sp[:legend_position]
-    if sp[:legend_position] ∉ (:none, :inline) && any_label
-        leg === :best && (leg = :topright)
+    if (lp = sp[:legend_position]) ∉ (:none, :inline) && any_label
+        leg_str = string(_guess_best_legend_position(lp, sp))
 
         push!(
             axesconf,
-            "set key " * (occursin("outer", string(leg)) ? "outside" : "inside"),
+            "set key " * (occursin("outer", leg_str) ? "outside" : "inside"),
         )
         for position in ("top", "bottom", "left", "right")
-            occursin(position, string(leg)) && push!(axesconf, "set key $position")
+            occursin(position, leg_str) && push!(axesconf, "set key $position")
         end
         push!(axesconf, "set key $(gaston_font(legendfont(sp), rot=false, align=false))")
         if sp[:legend_title] !== nothing
