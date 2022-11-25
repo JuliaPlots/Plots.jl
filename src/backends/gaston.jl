@@ -505,10 +505,23 @@ function gaston_set_legend!(axesconf, sp, any_label)
     if (lp = sp[:legend_position]) ∉ (:none, :inline) && any_label
         leg_str = string(_guess_best_legend_position(lp, sp))
 
-        push!(axesconf, "set key " * (occursin("outer", leg_str) ? "outside" : "inside"))
-        for position in ("top", "bottom", "left", "right")
-            occursin(position, leg_str) && push!(axesconf, "set key $position")
+        pos = occursin("outer", leg_str) ? "outside " : "inside "
+        pos *= if occursin("top", leg_str)
+            "top "
+        elseif occursin("bottom", leg_str)
+            "bottom "
+        else
+            "center "
         end
+        pos *= if occursin("left", leg_str)
+            "left "
+        elseif occursin("right", leg_str)
+            "right "
+        else
+            "center "
+        end
+        pos *= sp[:legend_column] == 1 ? "vertical" : "horizontal"
+        push!(axesconf, "set key $pos")
         push!(axesconf, "set key $(gaston_font(legendfont(sp), rot=false, align=false))")
         if sp[:legend_title] !== nothing
             # NOTE: cannot use legendtitlefont(sp) as it will override legendfont
