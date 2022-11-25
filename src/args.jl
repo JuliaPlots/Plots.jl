@@ -1482,11 +1482,7 @@ function preprocess_attributes!(plotattributes::AKW)
         end
     end
 
-    # if get(plotattributes, :arrow, false) == true
-    #     plotattributes[:arrow] = arrow()
-    # end
-
-    # legends
+    # legends - defaults are set in `src/components.jl` (see `@add_attributes`)
     if haskey(plotattributes, :legend_position)
         plotattributes[:legend_position] =
             convertLegendValue(plotattributes[:legend_position])
