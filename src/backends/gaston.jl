@@ -32,7 +32,7 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
         if _debug[]
             sp.o.axesconf = replace(sp.o.axesconf, "; " => "\n")
             println(sp.o.axesconf)
-            # foreach(println, sp.o.curves)
+            foreach(x -> println("== n°$(x[1]) ==\n", x[2].conf), enumerate(sp.o.curves))
         end
     end
     nothing
@@ -301,10 +301,10 @@ function gaston_seriesconf!(
     elseif st ∈ (:path, :straightline, :path3d)
         fr = series[:fillrange]
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
-        fs = get_fillstyle(series, i)  # FIXME: add fillstyle support ?
+        fs = gaston_fillstyle(get_fillstyle(series, i))
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         curveconf *= if fr !== nothing  # filled curves, but not filled curves with markers
-            "w filledcurves fc $fc fs solid border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt"
+            "w filledcurves fc $fc fs $fs border lc $lc lw $lw dt $dt,'' w lines lc $lc lw $lw dt $dt"
         elseif series[:markershape] === :none  # simplepath
             "w lines lc $lc dt $dt lw $lw"
         else
@@ -313,8 +313,9 @@ function gaston_seriesconf!(
         end
     elseif st === :shape
         fc = gaston_color(get_fillcolor(series, i), get_fillalpha(series, i))
+        fs = gaston_fillstyle(get_fillstyle(series, i))
         lc, = gaston_lc_ls_lw(series, clims, i)
-        curveconf *= "w filledcurves fc $fc fs solid border lc $lc"
+        curveconf *= "w filledcurves fc $fc fs $fs border lc $lc"
     elseif st ∈ (:steppre, :stepmid, :steppost)
         step = if st === :steppre
             "fsteps"
@@ -376,6 +377,20 @@ const gp_borders = (
     top_right_front    = 1 << 11,
     polar              = 1 << 11,
 )
+
+const gp_fillstyle = Dict(
+    :x => 1,
+    :\ => 4,
+    :/ => 5,
+    # :|, :-, :+  # unimplemented
+)
+
+gaston_fillstyle(x) =
+    if haskey(gp_fillstyle, x)
+        "pattern $(gp_fillstyle[x])"
+    else
+        "solid"
+    end
 
 function gaston_parse_axes_args(
     plt::Plot{GastonBackend},

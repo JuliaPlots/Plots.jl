@@ -1309,7 +1309,6 @@ _backend_skips = Dict(
         31,  # animations - needs github.com/mbaz/Gaston.jl/pull/178
         49,  # TODO: support polar
         60,  # :perspective projection unsupported
-        62,  # fillstyle
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
