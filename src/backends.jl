@@ -129,14 +129,9 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
 
-_fallback_default_backend() = :gr
+_fallback_default_backend() = "gr"
 function _default_backend()
-    env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
-    if env_default != ""
-        Symbol(lowercase(env_default))
-    else
-        _fallback_default_backend()
-    end
+    Symbol(lowercase(@load_preference("default_backend", _fallback_default_backend())))
 end
 
 function _pick_default_backend()

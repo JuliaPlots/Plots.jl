@@ -35,6 +35,7 @@ using Base.Meta
 using Requires
 using Reexport
 using Unzip
+@reexport using Preferences
 @reexport using RecipesBase
 @reexport using PlotThemes
 @reexport using PlotUtils
@@ -206,8 +207,6 @@ include("backends/plotly.jl")
 include("backends/web.jl")
 
 include("shorthands.jl")
-@show _default_backend()
-@static @show(_pick_default_backend()) == nothing && true
 @static if backend(_pick_default_backend()) == GRBackend()
     include("backends/gr.jl")
     include("precompile.jl")
