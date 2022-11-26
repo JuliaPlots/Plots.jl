@@ -286,7 +286,7 @@ end
 # ------------------------------------------------------------------------------
 # gr
 
-_initialize_backend(pkg::GRBackend) = @eval Plots import GR  # COV_EXCL_LINE
+_initialize_backend(pkg::GRBackend) = nothing  # COV_EXCL_LINE
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
