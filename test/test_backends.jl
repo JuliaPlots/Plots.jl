@@ -38,7 +38,7 @@ if !isdir(reference_dir())
 end
 
 function reference_file(backend, i, version)
-    refdir, fn = reference_dir("Plots", string(backend)), "ref$i.png"
+    refdir, fn = reference_dir("Plots", string(backend)), "ref-$(lpad(i, 3, '0')).png"
     reffn = joinpath(refdir, string(version), fn)
     for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
         if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
