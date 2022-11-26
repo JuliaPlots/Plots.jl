@@ -206,6 +206,8 @@ include("backends/plotly.jl")
 include("backends/web.jl")
 
 include("shorthands.jl")
+@show _default_backend()
+@static @show(_pick_default_backend()) == nothing && true
 @static if backend(_pick_default_backend()) == GRBackend()
     include("backends/gr.jl")
     include("precompile.jl")
