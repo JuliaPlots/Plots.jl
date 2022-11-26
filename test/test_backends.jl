@@ -49,19 +49,6 @@ function reference_file(backend, i, version)
     return reffn
 end
 
-# replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
-replace_rand(ex) = ex
-
-function replace_rand(ex::Expr)
-    expr = Expr(ex.head)
-    foreach(arg -> push!(expr.args, replace_rand(arg)), ex.args)
-    if Meta.isexpr(ex, :call) && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
-        pushfirst!(expr.args, ex.args[1])
-        expr.args[2] = :rng
-    end
-    expr
-end
-
 function image_comparison_tests(
     pkg::Symbol,
     idx::Int;
@@ -78,11 +65,11 @@ function image_comparison_tests(
 
     imports = something(example.imports, :())
     exprs = quote
-        Plots.debugplots($debug)
+        Plots.debug!($debug)
         backend($(QuoteNode(pkg)))
         theme(:default)
         rng = StableRNG(Plots.PLOTS_SEED)
-        $(replace_rand(example.exprs))
+        $(Plots.replace_rand(example.exprs))
     end
     @debug imports exprs
 
@@ -106,9 +93,7 @@ function image_comparison_facts(
 )
     for i in setdiff(1:length(Plots._examples), skip)
         if only === nothing || i in only
-            @test success(
-                image_comparison_tests(pkg, i, debug = debug, sigma = sigma, tol = tol),
-            )
+            @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
         end
     end
 end
@@ -176,7 +161,7 @@ end
     end
 end
 
-const blacklist = if VERSION.major == 1 && VERSION.minor == 9
+const blacklist = if VERSION.major == 1 && VERSION.minor ∈ (9, 10)
     [41]  # FIXME: github.com/JuliaLang/julia/issues/47261
 else
     []
@@ -211,7 +196,7 @@ end
 end
 
 @testset "Examples" begin
-    if Sys.islinux()
+    if Sys.islinux() && get(ENV, "JULIA_PKGEVAL", "false") == "false"  # NOTE: for `PkgEval` timeout
         callback(m, pkgname, i) = begin
             pl = m.Plots.current()
             save_func = (; pgfplotsx = m.Plots.pdf, unicodeplots = m.Plots.txt)  # fastest `savefig` for each backend

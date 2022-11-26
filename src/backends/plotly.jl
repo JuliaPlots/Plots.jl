@@ -478,7 +478,10 @@ plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
 plotly_native_data(axis::Axis, data::AbstractArray) =
     if !isempty(axis[:discrete_values])
-        construct_categorical_data(data, axis)
+        map(
+            xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)],
+            data,
+        )
     elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
         plotly_convert_to_datetime(data, axis[:formatter])
     else

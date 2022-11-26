@@ -72,7 +72,7 @@
     Plots.makekw(foo = 1, bar = 2) isa Dict
 
     ######################
-    Plots.debugplots(true)
+    Plots.debug!(true)
 
     io = PipeBuffer()
     Plots.debugshow(io, nothing)
@@ -82,7 +82,12 @@
     Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
     show(devnull, pl[1][:xaxis])
 
-    Plots.debugplots(false)
+    # bounding boxes
+    with(:gr) do
+        show(devnull, plot(1:2))
+    end
+
+    Plots.debug!(false)
     ######################
 
     let pl = plot(1)
@@ -109,7 +114,7 @@
     @test Plots.get_attr_symbol(:x, "lims") === :xlims
     @test Plots.get_attr_symbol(:x, :lims) === :xlims
 
-    @test contains(Plots._document_argument("bar_position"), "bar_position")
+    @test contains(Plots._document_argument(:bar_position), "bar_position")
 
     @test Plots.limsType((1, 1)) === :limits
     @test Plots.limsType(:undefined) === :invalid
@@ -188,4 +193,82 @@ end
     # discourse.julialang.org/t/plots-borking-on-sentinelarrays-produced-by-csv-read/89505
     # `CSV` produces `SentinelArrays` data
     @test scatter(ChainedVector([[1, 2], [3, 4]]), 1:4) isa Plot
+end
+
+@testset "Best legend position" begin
+    x = 0:0.01:2
+    pl = plot(x, x, label = "linear")
+    pl = plot!(x, x .^ 2, label = "quadratic")
+    pl = plot!(x, x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
+
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
+    pl = plot(x, x, label = "linear")
+    pl = plot!(x, x .^ 2, label = "quadratic")
+    pl = plot!(x, x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
+
+    x = 0:0.01:2
+    pl = plot(x, -x, label = "linear")
+    pl = plot!(x, -x .^ 2, label = "quadratic")
+    pl = plot!(x, -x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
+    pl = plot(x, -x, label = "linear")
+    pl = plot!(x, -x .^ 2, label = "quadratic")
+    pl = plot!(x, -x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+
+    x = [0, 1, 0, 1]
+    y = [0, 0, 1, 1]
+    pl = scatter(x, y, xlims = [0.0, 1.3], ylims = [0.0, 1.3], label = "test")
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
+
+    pl = scatter(x, y, xlims = [-0.3, 1.0], ylims = [-0.3, 1.0], label = "test")
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+
+    pl = scatter(x, y, xlims = [0.0, 1.3], ylims = [-0.3, 1.0], label = "test")
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomright
+
+    pl = scatter(x, y, xlims = [-0.3, 1.0], ylims = [0.0, 1.3], label = "test")
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
+
+    y1 = [
+        0.6640202072697099,
+        0.04435946459047402,
+        0.4819421561655691,
+        0.7812872333045798,
+        0.9468591660437995,
+        0.5530071466041402,
+        0.22969207890925003,
+        0.48741164266779236,
+        0.0546763558355734,
+        0.1432072797975329,
+    ]
+    y2 = [0.40089741940615464, 0.6687326060649715, 0.6844117863127116]
+    pl = plot(1:10, y1)
+    pl = plot!(1:3, y2, xlims = (0, 10), ylims = (0, 1))
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
+
+    # test empty plot
+    pl = plot([])
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
+
+    # test that we didn't overlap other placements
+    @test Plots._guess_best_legend_position(:bottomleft, pl) === :bottomleft
+
+    # test singleton
+    pl = plot(1:1)
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
+end
+
+@testset "dispatch" begin
+    with(:gr) do
+        pl = heatmap(rand(10, 10); xscale = :log10, yscale = :log10)
+        @test show(devnull, pl) isa Nothing
+
+        pl = plot(Shape([(1, 1), (2, 1), (2, 2), (1, 2)]); xscale = :log10)
+        @test show(devnull, pl) isa Nothing
+    end
 end

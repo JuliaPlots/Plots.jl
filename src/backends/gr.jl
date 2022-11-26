@@ -6,6 +6,13 @@ export GR
 const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
 const gr_linetypes = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)
 const gr_fill_styles = ((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6)
+const gr_x_log_scales =
+    (ln = GR.OPTION_X_LN, log2 = GR.OPTION_X_LOG2, log10 = GR.OPTION_X_LOG)
+const gr_y_log_scales =
+    (ln = GR.OPTION_Y_LN, log2 = GR.OPTION_Y_LOG2, log10 = GR.OPTION_Y_LOG)
+const gr_z_log_scales =
+    (ln = GR.OPTION_Z_LN, log2 = GR.OPTION_Z_LOG2, log10 = GR.OPTION_Z_LOG)
+
 const gr_arrowstyles = (
     simple = 1,
     hollow = 3,
@@ -422,7 +429,7 @@ function gr_set_font(
 )
     family = lowercase(f.family)
     GR.setcharheight(gr_point_mult(s) * f.pointsize)
-    GR.setcharup(sind(-rotation), cosd(-rotation))
+    GR.setcharup(sincosd(-rotation)...)
     haskey(gr_font_family, family) && GR.settextfontprec(
         gr_font_family[family],
         gr_font_family[family] ≥ 200 ? 3 : GR.TEXT_PRECISION_STRING,
@@ -505,7 +512,7 @@ function gr_colorbar_colors(series::Series, clims)
         else
             clims  # GR.contour uses a color range according to data range
         end
-        1_000 .+ 255 .* (levels .- zrange[1]) ./ (zrange[2] - zrange[1])
+        @. 1_000 + 255 * (levels - zrange[1]) / (zrange[2] - zrange[1])
     else
         1_000:1_255
     end
@@ -597,8 +604,8 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
 
     z_tick = 0.5GR.tick(z_min, z_max)
     gr_set_line(1, :solid, plot_color(:black), sp)
-    sp[:colorbar_scale] === :log10 && GR.setscale(GR.OPTION_Y_LOG)
-    # gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
+    (yscale = sp[:colorbar_scale]) ∈ _logScales && GR.setscale(gr_y_log_scales[yscale])
+    # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
     GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
 
     title = gr_colorbar_title(sp)
@@ -672,10 +679,8 @@ function gr_display(plt::Plot, dpi_factor = 1)
     # fill in the viewport_canvas background
     gr_fill_viewport(vp_canvas, plt[:background_color_outside])
 
-    # subplots:
-    for sp in plt.subplots
-        gr_display(sp, w * px, h * px, vp_canvas)
-    end
+    # subplots
+    foreach(sp -> gr_display(sp, w * px, h * px, vp_canvas), plt.subplots)
 
     GR.updatews()
     nothing
@@ -905,6 +910,17 @@ function gr_clims(sp, args...)
     lo, hi
 end
 
+function gr_viewport_bbox(vp, sp, color)
+    GR.savestate()
+    GR.selntran(0)
+    GR.setscale(0)
+    gr_set_line(1, :solid, plot_color(color), sp)
+    GR.drawrect(vp.xmin, vp.xmax, vp.ymin, vp.ymax)
+    GR.selntran(1)
+    GR.restorestate()
+    nothing
+end
+
 function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     _update_min_padding!(sp)
 
@@ -929,6 +945,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     # draw the axes
     gr_draw_axes(sp, vp_plt)
     gr_add_title(sp, vp_plt, vp_sp)
+
+    _debug[] && gr_viewport_bbox(vp_sp, sp, :red)
+    _debug[] && gr_viewport_bbox(vp_plt, sp, :green)
 
     # this needs to be here to point the colormap to the right indices
     GR.setcolormap(1_000 + GR.COLORMAP_COOLWARM)
@@ -965,6 +984,8 @@ gr_legend_bbox(xpos, ypos, leg) = GR.drawrect(
     ypos + 0.5leg.dy,
 )
 
+const gr_lw_clamp_factor = Ref(5)
+
 function gr_add_legend(sp, leg, viewport_area)
     sp[:legend_position] ∈ (:none, :inline) && return
     GR.savestate()
@@ -980,15 +1001,15 @@ function gr_add_legend(sp, leg, viewport_area)
         # |
         # |
         # o ----- xmax
-        xs, ys = (xpos - leg.pad - leg.span, xpos + leg.w + leg.pad),
-        (ypos - leg.h, ypos + leg.dy)
+        xs = xpos - leg.pad - leg.span, xpos + leg.w + leg.pad
+        ys = ypos - leg.h, ypos + leg.dy
         # xmin, xmax, ymin, ymax
         GR.fillrect(xs..., ys...)  # allocating white space for actual legend width here
         gr_set_line(1, :solid, sp[:legend_foreground_color], sp)
         GR.drawrect(xs..., ys...)  # drawing actual legend width here
         if (ttl = sp[:legend_title]) !== nothing
             gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
-            _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
+            _debug[] && gr_legend_bbox(xpos, ypos, leg)
             gr_text(xpos - leg.pad - leg.space + 0.5leg.textw, ypos, string(ttl))
             if vertical
                 ypos -= leg.dy
@@ -1001,13 +1022,20 @@ function gr_add_legend(sp, leg, viewport_area)
         lft, rgt, bot, top = -leg.space - leg.span, -leg.space, -0.4leg.dy, 0.4leg.dy
         lfps = sp[:legend_font_pointsize]
 
+        min_lw = DEFAULT_LINEWIDTH[] / gr_lw_clamp_factor[]
+        max_lw = DEFAULT_LINEWIDTH[] * gr_lw_clamp_factor[]
+
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
             clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
-            gr_set_line(lfps / 8, get_linestyle(series), lc, sp)
-            _debugMode[] && gr_legend_bbox(xpos, ypos, leg)
+            lw = get_linewidth(series)
+            ls = get_linestyle(series)
+            la = get_linealpha(series)
+            clamped_lw = (lfps / 8) * clamp(lw, min_lw, max_lw)
+            gr_set_line(clamped_lw, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
+            _debug[] && gr_legend_bbox(xpos, ypos, leg)
 
             if (
                 (st === :shape || series[:fillrange] !== nothing) &&
@@ -1026,16 +1054,15 @@ function gr_add_legend(sp, leg, viewport_area)
                 x, y = [l, r, r, l, l], [b, b, t, t, b]
                 gr_set_transparency(fc, get_fillalpha(series))
                 gr_polyline(x, y, GR.fillarea)
-                lc = get_linecolor(series, clims)
-                gr_set_transparency(lc, get_linealpha(series))
-                gr_set_line(get_linewidth(series), get_linestyle(series), lc, sp)
+                gr_set_transparency(lc, la)
+                gr_set_line(clamped_lw, ls, lc, sp)
                 st === :shape && gr_polyline(x, y)
             end
 
             max_markersize = Inf
             if st in (:path, :straightline, :path3d)
                 max_markersize = leg.base_markersize
-                gr_set_transparency(lc, get_linealpha(series))
+                gr_set_transparency(lc, la)
                 filled = series[:fillrange] !== nothing && series[:ribbon] === nothing
                 GR.polyline(xpos .+ [lft, rgt], ypos .+ (filled ? [top, top] : [0, 0]))
             end
@@ -1094,9 +1121,9 @@ function gr_legend_pos(sp::Subplot, leg, vp)
     elseif !(lp isa Symbol)
         return gr_legend_pos(lp, vp)
     end
-    if (leg_str = string(lp)) == "best"
-        leg_str = "topright"  # NOTE: can we do better auto-positioning, as `PyPlot` does ?
-    end
+
+    leg_str = string(_guess_best_legend_position(lp, sp))
+
     xpos = if occursin("left", leg_str)
         vp.xmin + if occursin("outer", leg_str)
             -leg.pad - leg.w - leg.xoffset - !ymirror * gr_axis_width(sp, yaxis)
@@ -1305,9 +1332,15 @@ gr_set_window(sp, vp) =
         end
         if x_max > x_min && y_max > y_min && zok
             scaleop = 0
-            sp[:xaxis][:scale] === :log10 && (scaleop |= GR.OPTION_X_LOG)
-            sp[:yaxis][:scale] === :log10 && (scaleop |= GR.OPTION_Y_LOG)
-            (needs_3d && sp[:zaxis][:scale] === :log10) && (scaleop |= GR.OPTION_Z_LOG)
+            if (xscale = sp[:xaxis][:scale]) ∈ _logScales
+                scaleop |= gr_x_log_scales[xscale]
+            end
+            if (yscale = sp[:yaxis][:scale]) ∈ _logScales
+                scaleop |= gr_y_log_scales[yscale]
+            end
+            if needs_3d && (zscale = sp[:zaxis][:scale] ∈ _logScales)
+                scaleop |= gr_z_log_scales[zscale]
+            end
             sp[:xaxis][:flip] && (scaleop |= GR.OPTION_FLIP_X)
             sp[:yaxis][:flip] && (scaleop |= GR.OPTION_FLIP_Y)
             (needs_3d && sp[:zaxis][:flip]) && (scaleop |= GR.OPTION_FLIP_Z)
@@ -1452,6 +1485,7 @@ gr_draw_ticks(sp, axis, segments, func = gr_polyline) =
 function gr_label_ticks(sp, letter, ticks)
     letters = axes_letters(sp, letter)
     ax, oax = map(l -> sp[get_attr_symbol(l, :axis)], letters)
+    ax[:showaxis] || return
     _, (oamin, oamax) = map(l -> axis_limits(sp, l), letters)
 
     gr_set_tickfont(sp, letter)
@@ -1495,6 +1529,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     letters = axes_letters(sp, letter)
     _, (namin, namax), (famin, famax) = map(l -> axis_limits(sp, l), letters)
     ax = sp[get_attr_symbol(letter, :axis)]
+    ax[:showaxis] || return
 
     isy, isz = letter .=== (:y, :z)
     n0, n1 = isy ? (namax, namin) : (namin, namax)
@@ -1513,8 +1548,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
 
     out_factor = ifelse(ax[:tick_direction] === :out, 1.5, 1)
     axis_offset = 0.012out_factor
-    x_offset = axis_offset * cosd(axisϕ)
-    y_offset = axis_offset * sind(axisϕ)
+    y_offset, x_offset = axis_offset .* sincosd(axisϕ)
 
     sgn2a = sgn2b = sgn3 = 0
     if axisθ != 0 || rot % 90 != 0
@@ -1830,11 +1864,11 @@ function gr_draw_contour(series, x, y, z, clims)
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] !== nothing
-        GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
+        GR.contourf(x, y, h, z, Int(series[:contour_labels] == true))
     else
         black = plot_color(:black)
         coff = plot_color(series[:linecolor]) in (black, [black]) ? 0 : 1_000
-        GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
+        GR.contour(x, y, h, z, coff + Int(series[:contour_labels] == true))
     end
     nothing
 end
@@ -1901,6 +1935,12 @@ function gr_draw_surface(series, x, y, z, clims)
     nothing
 end
 
+function gr_z_normalized_log_scaled(scale, z, clims)
+    sf = RecipesPipeline.scale_func(scale)
+    z_log = replace(x -> isinf(x) ? NaN : x, sf.(z))
+    z_log, get_z_normalized.(z_log, sf.(clims)...)
+end
+
 function gr_draw_heatmap(series, x, y, z, clims)
     fillgrad = _as_gradient(series[:fillcolor])
     GR.setprojectiontype(0)
@@ -1913,12 +1953,11 @@ function gr_draw_heatmap(series, x, y, z, clims)
         # pdf output, and also supports alpha values.
         # Note that drawimage draws uniformly spaced data correctly
         # even on log scales, where it is visually non-uniform.
-        colors, _z = if sp[:colorbar_scale] === :identity
-            plot_color.(get(fillgrad, z, clims), series[:fillalpha]), z
-        elseif sp[:colorbar_scale] === :log10
-            z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
-            z_normalized = get_z_normalized.(z_log, log10.(clims)...)
-            plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha]), z_log
+        _z, colors = if (scale = sp[:colorbar_scale]) === :identity
+            z, plot_color.(get(fillgrad, z, clims), series[:fillalpha])
+        elseif scale ∈ _logScales
+            z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
+            z_log, plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha])
         end
         for i in eachindex(colors)
             isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i]))
@@ -1928,11 +1967,10 @@ function gr_draw_heatmap(series, x, y, z, clims)
         if something(series[:fillalpha], 1) < 1
             @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
         end
-        z_normalized, _z = if sp[:colorbar_scale] === :identity
-            get_z_normalized.(z, clims...), z
-        elseif sp[:colorbar_scale] === :log10
-            z_log = replace(x -> isinf(x) ? NaN : x, log10.(z))
-            get_z_normalized.(z_log, log10.(clims)...), z_log
+        _z, z_normalized = if (scale = sp[:colorbar_scale]) === :identity
+            z, get_z_normalized.(z, clims...)
+        elseif scale ∈ _logScales
+            z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
         end
         rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)
         bg_rgba = gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))

@@ -27,6 +27,11 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     end
 end
 
+macro attributes(expr::Expr)
+    RecipesBase.process_recipe_body!(expr)
+    expr
+end
+
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
@@ -509,7 +514,7 @@ const _axis_defaults = KW(
     :minorgridstyle              => :solid,
     :minorgridlinewidth          => 0.5,
     :tick_direction              => :in,
-    :minorticks                  => false,
+    :minorticks                  => :auto,
     :minorgrid                   => false,
     :showaxis                    => true,
     :widen                       => :auto,
@@ -529,7 +534,6 @@ const _suppress_warnings = Set{Symbol}([
     :primary,
     :smooth,
     :relative_bbox,
-    :layout_insets,
     :force_minpad,
     :x_extrema,
     :y_extrema,
@@ -564,7 +568,7 @@ end
 
 aliases(val) = aliases(_keyAliases, val)
 aliases(aliasMap::Dict{Symbol,Symbol}, val) =
-    filter((x) -> x.second == val, aliasMap) |> keys |> collect |> sort
+    filter(x -> x.second == val, aliasMap) |> keys |> collect |> sort
 
 # -----------------------------------------------------------------------------
 # legend
@@ -708,67 +712,6 @@ add_aliases(
     :fg_colour_minor_grid,
     :minorgridcolor,
 )
-add_aliases(
-    :foreground_color_title,
-    :fg_title,
-    :fgtitle,
-    :fgcolor_title,
-    :fg_color_title,
-    :foreground_title,
-    :foreground_colour_title,
-    :fgcolour_title,
-    :fg_colour_title,
-    :titlecolor,
-)
-add_aliases(
-    :foreground_color_axis,
-    :fg_axis,
-    :fgaxis,
-    :fgcolor_axis,
-    :fg_color_axis,
-    :foreground_axis,
-    :foreground_colour_axis,
-    :fgcolour_axis,
-    :fg_colour_axis,
-    :axiscolor,
-)
-add_aliases(
-    :foreground_color_border,
-    :fg_border,
-    :fgborder,
-    :fgcolor_border,
-    :fg_color_border,
-    :foreground_border,
-    :foreground_colour_border,
-    :fgcolour_border,
-    :fg_colour_border,
-    :bordercolor,
-)
-add_aliases(
-    :foreground_color_text,
-    :fg_text,
-    :fgtext,
-    :fgcolor_text,
-    :fg_color_text,
-    :foreground_text,
-    :foreground_colour_text,
-    :fgcolour_text,
-    :fg_colour_text,
-    :textcolor,
-)
-add_aliases(
-    :foreground_color_guide,
-    :fg_guide,
-    :fgguide,
-    :fgcolor_guide,
-    :fg_color_guide,
-    :foreground_guide,
-    :foreground_colour_guide,
-    :fgcolour_guide,
-    :fg_colour_guide,
-    :guidecolor,
-)
-
 add_aliases(
     :foreground_color_title,
     :fg_title,
@@ -1539,11 +1482,7 @@ function preprocess_attributes!(plotattributes::AKW)
         end
     end
 
-    # if get(plotattributes, :arrow, false) == true
-    #     plotattributes[:arrow] = arrow()
-    # end
-
-    # legends
+    # legends - defaults are set in `src/components.jl` (see `@add_attributes`)
     if haskey(plotattributes, :legend_position)
         plotattributes[:legend_position] =
             convertLegendValue(plotattributes[:legend_position])
@@ -1592,10 +1531,9 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     end
     extra_kwargs = Dict{Symbol,Any}()
     for k in explicitkeys(plotattributes)
-        is_attr_supported(pkg, k) && !(k in keys(_deprecated_attributes)) && continue
+        (is_attr_supported(pkg, k) && k ∉ keys(_deprecated_attributes)) && continue
         k in _suppress_warnings && continue
-        default_value = default(k)
-        if ismissing(default_value)
+        if ismissing(default(k))
             extra_kwargs[k] = pop_kw!(plotattributes, k)
         elseif plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)
@@ -1724,7 +1662,7 @@ slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
 slice_arg(v, idx) = v
 
-# given an argument key (k), extract the argument value for this index,
+# given an argument key `k`, extract the argument value for this index,
 # and set into plotattributes[k]. Matrices are sliced by column.
 # if nothing is set (or container is empty), return the existing value.
 function slice_arg!(
@@ -1899,6 +1837,14 @@ function _update_subplot_colors(sp::Subplot)
     nothing
 end
 
+_update_margins(sp::Subplot) =
+    for sym in (:margin, :left_margin, :top_margin, :right_margin, :bottom_margin)
+        if (margin = get(sp.attr, sym, nothing)) isa Tuple
+            # transform e.g. (1, :mm) => 1 * Plots.mm
+            sp.attr[sym] = margin[1] * getfield(@__MODULE__, margin[2])
+        end
+    end
+
 function _update_axis(
     plt::Plot,
     sp::Subplot,
@@ -1987,6 +1933,7 @@ function _update_subplot_args(
     end
 
     _update_subplot_colors(sp)
+    _update_margins(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
@@ -2040,12 +1987,14 @@ ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
             cgrad(alpha = plotattributes[asym])
     end
 
-_replace_linewidth(plotattributes::AKW) =
+const DEFAULT_LINEWIDTH = Ref(1)
+
 # get a good default linewidth... 0 for surface and heatmaps
+_replace_linewidth(plotattributes::AKW) =
     if plotattributes[:linewidth] === :auto
-        plotattributes[:linewidth] = (
-            get(plotattributes, :seriestype, :path) in (:surface, :heatmap, :image) ? 0 : 1
-        )
+        plotattributes[:linewidth] =
+            (get(plotattributes, :seriestype, :path) ∉ (:surface, :heatmap, :image)) *
+            DEFAULT_LINEWIDTH[]
     end
 
 function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)

@@ -290,7 +290,7 @@ py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
 
 # get the bounding box of the union of the objects
 function py_bbox(v::AVec)
-    bbox_union = defaultbox
+    bbox_union = DEFAULT_BBOX[]
     for obj in v
         bbox_union += py_bbox(obj)
     end
@@ -318,7 +318,7 @@ end
 
 # bounding box: axis title
 function py_bbox_title(ax)
-    bb = defaultbox
+    bb = DEFAULT_BBOX[]
     for s in (:title, :_left_title, :_right_title)
         bb += py_bbox(getproperty(ax, s))
     end
@@ -1263,9 +1263,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."grid"(false)
             end
 
-            if axis[:minorticks] > 1
-                pyaxis."set_minor_locator"(
-                    PyPlot.matplotlib.ticker.AutoMinorLocator(axis[:minorticks]),
+            n_minor_intervals = axis[:minorticks]
+            if !no_minor_intervals(axis) && n_minor_intervals isa Integer
+                n_minor_intervals isa Bool || pyaxis."set_minor_locator"(
+                    # NOTE: AutoMinorLocator expects a number of intervals
+                    PyPlot.matplotlib.ticker.AutoMinorLocator(n_minor_intervals),
                 )
                 pyaxis."set_tick_params"(
                     which = "minor",
@@ -1276,7 +1278,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
 
             if axis[:minorgrid]
-                axis[:minorticks] > 1 || ax."minorticks_on"()  # Check if ticks were already configured
+                no_minor_intervals(axis) || ax."minorticks_on"()  # Check if ticks were already configured
                 pyaxis."set_tick_params"(
                     which = "minor",
                     direction = axis[:tick_direction] === :out ? "out" : "in",

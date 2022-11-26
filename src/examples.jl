@@ -640,6 +640,8 @@ const _examples = PlotExample[
             plot(
                 [(0, 0), (0, 0.9), (1, 0.9), (2, 1), (3, 0.9), (80, 0)],
                 legend = :outertopright,
+                minorgrid = true,
+                minorticks = 2,
             )
             plot!([(0, 0), (0, 0.9), (2, 0.9), (3, 1), (4, 0.9), (80, 0)])
             plot!([(0, 0), (0, 0.9), (3, 0.9), (4, 1), (5, 0.9), (80, 0)])
@@ -1233,10 +1235,7 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [],
-    :pyplot => [
-        22,  # breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
-        56,
-    ],
+    :pyplot => [],
     :plotlyjs => [
         21,
         24,
@@ -1307,24 +1306,36 @@ _backend_skips = Dict(
         65,  # legend pos unsupported
     ],
     :gaston => [
-        2,   # animations
-        31,  # animations
+        31,  # animations - needs github.com/mbaz/Gaston.jl/pull/178
         49,  # TODO: support polar
-        50,  # TODO: 1D data not supported for pm3d
         60,  # :perspective projection unsupported
-        62,  # fillstyle
-        63,  # un-identified bug
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
 
 # ---------------------------------------------------------------------------------
+# replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
+replace_rand(ex) = ex
+
+function replace_rand(ex::Expr)
+    expr = Expr(ex.head)
+    foreach(arg -> push!(expr.args, replace_rand(arg)), ex.args)
+    if Meta.isexpr(ex, :call) && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
+        pushfirst!(expr.args, ex.args[1])
+        expr.args[2] = :rng
+    end
+    expr
+end
+
 # make and display one plot
+test_examples(i::Integer; kw...) = test_examples(backend_name(), i; kw...)
+
 function test_examples(
     pkgname::Symbol,
-    i::Int;
+    i::Integer;
     debug = false,
-    disp = true,
+    disp = false,
+    rng = nothing,
     callback = nothing,
 )
     @info "Testing plot: $pkgname:$i:$(_examples[i].header)"
@@ -1333,13 +1344,18 @@ function test_examples(
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
     Base.eval(m, quote
+        using Random
         using Plots
-        Plots.debugplots($debug)
+        Plots.debug!($debug)
         backend($(QuoteNode(pkgname)))
+        rng = $rng
+        rng === nothing || Random.seed!(rng, Plots.PLOTS_SEED)
         theme(:default)
     end)
     imports === nothing || Base.eval(m, _examples[i].imports)
-    Base.eval(m, _examples[i].exprs)
+    exprs = _examples[i].exprs
+    rng === nothing || (exprs = Plots.replace_rand(_examples[i].exprs))
+    Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))
     callback === nothing || callback(m, pkgname, i)
@@ -1348,14 +1364,14 @@ end
 
 # generate all plots and create a dict mapping idx --> plt
 """
-test_examples(pkgname[, idx]; debug=false, disp=true, sleep=nothing, skip=[], only=nothing, callback=nothing)
+test_examples(pkgname[, idx]; debug=false, disp=false, sleep=nothing, skip=[], only=nothing, callback=nothing)
 
 Run the `idx` test example for a given backend, or all examples if `idx` is not specified.
 """
 function test_examples(
     pkgname::Symbol;
     debug = false,
-    disp = true,
+    disp = false,
     sleep = nothing,
     skip = [],
     only = nothing,

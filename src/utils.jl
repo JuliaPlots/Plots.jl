@@ -6,8 +6,7 @@ treats_y_as_x(seriestype) =
 function replace_image_with_heatmap(z::AbstractMatrix{<:Colorant})
     n, m = size(z)
     colors = palette(vec(z))
-    newz = reshape(1:(n * m), n, m)
-    newz, colors
+    reshape(1:(n * m), n, m), colors
 end
 
 # ---------------------------------------------------------------
@@ -131,8 +130,7 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
         maximum(map(seg -> last(seg.range), segments)),
     )
     for attr in _segmenting_vector_attributes
-        v = get(series, attr, nothing)
-        if v isa AVec && eachindex(v) != seg_range
+        if (v = get(series, attr, nothing)) isa AVec && eachindex(v) != seg_range
             @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
             if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
@@ -221,34 +219,45 @@ replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
 replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
     foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
 
-function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
-    length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
+scale_inverse_scale_func(scale::Symbol) = (
+    RecipesPipeline.scale_func(scale),
+    RecipesPipeline.inverse_scale_func(scale),
+    scale === :identity,
+)
+
+function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
+    (n = length(v)) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
     isedges && return v
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
-    extra_min = ispolar ? min(v[1], (v[2] - v[1]) / 2) : (v[2] - v[1]) / 2
-    extra_max = (v[end] - v[end - 1]) / 2
-    vcat(vmin - extra_min, 0.5(v[1:(end - 1)] + v[2:end]), vmax + extra_max)
+    extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
+    extra_max = 0.5(v[n] - v[n - 1])
+    vcat(vmin - extra_min, 0.5(v[1:(n - 1)] + v[2:n]), vmax + extra_max)
+end
+
+_heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
+    __heatmap_edges(v, isedges, ispolar)
+
+function _heatmap_edges(::Val{false}, v::AVec, scale::Symbol, isedges::Bool, ispolar::Bool)
+    f, invf = scale_inverse_scale_func(scale)
+    invf.(__heatmap_edges(f.(v), isedges, ispolar))
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(
+heatmap_edges(
     v::AVec,
     scale::Symbol = :identity,
     isedges::Bool = false,
     ispolar::Bool = false,
-)
-    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
-    map(invf, _heatmap_edges(map(f, v), isedges, ispolar))
-end
+) = _heatmap_edges(Val(scale === :identity), v, scale, isedges, ispolar)
 
 function heatmap_edges(
     x::AVec,
     xscale::Symbol,
     y::AVec,
     yscale::Symbol,
-    z_size::Tuple{Int,Int},
+    z_size::NTuple{2,Int},
     ispolar::Bool = false,
 )
     nx, ny = length(x), length(y)
@@ -256,24 +265,30 @@ function heatmap_edges(
     # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
     ismidpoints = prod(z_size) == (ny * nx)
     isedges = z_size == (ny - 1, nx - 1)
-    if !ismidpoints && !isedges
-        error("""Length of x & y does not match the size of z.
-              Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
-              or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
-    end
-    heatmap_edges(x, xscale, isedges), heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots
+    (ismidpoints || isedges) ||
+        """
+        Length of x & y does not match the size of z.
+        Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+        or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).
+        """ |>
+        ArgumentError |>
+        throw
+    (
+        _heatmap_edges(Val(xscale === :identity), x, xscale, isedges, false),
+        _heatmap_edges(Val(yscale === :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
+    )
 end
 
-function is_uniformly_spaced(v; tol = 1e-6)
-    dv = diff(v)
-    maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
-end
+is_uniformly_spaced(v; tol = 1e-6) =
+    let dv = diff(v)
+        maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+    end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     rmin, rmax = r_extrema
-    r = (r .- rmin) ./ (rmax .- rmin)
-    x = r .* cos.(theta)
-    y = r .* sin.(theta)
+    r = @. (r - rmin) / (rmax - rmin)
+    x = @. r * cos(theta)
+    y = @. r * sin(theta)
     x, y
 end
 
@@ -667,14 +682,14 @@ end
 
 # ---------------------------------------------------------------
 
-const _debugMode = Ref(false)
+const _debug = Ref(false)
 
-debugplots(on = true) = _debugMode[] = on
+debug!(on = true) = _debug[] = on
 debugshow(io, x) = show(io, x)
 debugshow(io, x::AbstractArray) = print(io, summary(x))
 
 function dumpdict(io::IO, plotattributes::AKW, prefix = "")
-    _debugMode[] || return
+    _debug[] || return
     println(io)
     prefix == "" || println(io, prefix, ":")
     for k in sort(collect(keys(plotattributes)))
@@ -823,11 +838,6 @@ end
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
 
-const PX_PER_INCH = 100
-const DPI         = PX_PER_INCH
-const MM_PER_INCH = 25.4
-const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
-
 inch2px(inches::Real) = float(inches * PX_PER_INCH)
 px2inch(px::Real)     = float(px / PX_PER_INCH)
 inch2mm(inches::Real) = float(inches * MM_PER_INCH)
@@ -941,45 +951,7 @@ function convert_sci_unicode(label::AbstractString)
     label
 end
 
-function straightline_data(series, expansion_factor = 1)
-    sp = series[:subplot]
-    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
-
-    # handle axes scales
-    xscale = sp[:xaxis][:scale]
-    xf = RecipesPipeline.scale_func(xscale)
-    xinvf = RecipesPipeline.inverse_scale_func(xscale)
-    yscale = sp[:yaxis][:scale]
-    yf = RecipesPipeline.scale_func(yscale)
-    yinvf = RecipesPipeline.inverse_scale_func(yscale)
-
-    xl, yl = xf.(xl), yf.(yl)
-    x, y = xf.(series[:x]), yf.(series[:y])
-    n = length(x)
-
-    xdata, ydata = if n == 2
-        straightline_data(xl, yl, x, y, expansion_factor)
-    else
-        k, r = divrem(n, 3)
-        if r == 0
-            xdata, ydata = fill(NaN, n), fill(NaN, n)
-            for i in 1:k
-                inds = (3 * i - 2):(3 * i - 1)
-                xdata[inds], ydata[inds] =
-                    straightline_data(xl, yl, x[inds], y[inds], expansion_factor)
-            end
-            xdata, ydata
-        else
-            error(
-                "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n",
-            )
-        end
-    end
-
-    xinvf.(xdata), yinvf.(ydata)
-end
-
-function straightline_data(xl, yl, x, y, expansion_factor = 1)
+function ___straightline_data(xl, yl, x, y, exp_fact)
     x_vals, y_vals = if y[1] == y[2]
         if x[1] == x[2]
             error("Two identical points cannot be used to describe a straight line.")
@@ -1003,9 +975,88 @@ function straightline_data(xl, yl, x, y, expansion_factor = 1)
     end
     # expand the data outside the axis limits, by a certain factor too improve
     # plotly(js) and interactive behaviour
-    x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* expansion_factor .* [-1, 1]
-    y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* expansion_factor .* [-1, 1]
-    x_vals, y_vals
+    (
+        x_vals .+ (x_vals[2] - x_vals[1]) .* exp_fact,
+        y_vals .+ (y_vals[2] - y_vals[1]) .* exp_fact,
+    )
+end
+
+__straightline_data(xl, yl, x, y, exp_fact) =
+    if (n = length(x)) == 2
+        ___straightline_data(xl, yl, x, y, exp_fact)
+    else
+        k, r = divrem(n, 3)
+        @assert r == 0 "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
+        xdata, ydata = fill(NaN, n), fill(NaN, n)
+        for i in 1:k
+            inds = (3i - 2):(3i - 1)
+            xdata[inds], ydata[inds] =
+                ___straightline_data(xl, yl, x[inds], y[inds], exp_fact)
+        end
+        xdata, ydata
+    end
+
+_straightline_data(::Val{true}, ::Function, ::Function, ::Function, ::Function, args...) =
+    __straightline_data(args...)
+
+function _straightline_data(
+    ::Val{false},
+    xf::Function,
+    xinvf::Function,
+    yf::Function,
+    yinvf::Function,
+    xl,
+    yl,
+    x,
+    y,
+    exp_fact,
+)
+    xdata, ydata = __straightline_data(xf.(xl), yf.(yl), xf.(x), yf.(y), exp_fact)
+    xinvf.(xdata), yinvf.(ydata)
+end
+
+function straightline_data(series, expansion_factor = 1)
+    sp = series[:subplot]
+    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+
+    # handle axes scales
+    xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
+    yf, yinvf, ynoop = scale_inverse_scale_func(sp[:yaxis][:scale])
+
+    _straightline_data(
+        Val(xnoop && ynoop),
+        xf,
+        xinvf,
+        yf,
+        yinvf,
+        xl,
+        yl,
+        series[:x],
+        series[:y],
+        [-expansion_factor, +expansion_factor],
+    )
+end
+
+function _shape_data!(::Val{false}, xf::Function, xinvf::Function, x, xl, exp_fact)
+    @inbounds for i in eachindex(x)
+        if x[i] == -Inf
+            x[i] = xinvf(xf(xl[1]) - exp_fact * (xf(xl[2]) - xf(xl[1])))
+        elseif x[i] == +Inf
+            x[i] = xinvf(xf(xl[2]) + exp_fact * (xf(xl[2]) - xf(xl[1])))
+        end
+    end
+    x
+end
+
+function _shape_data!(::Val{true}, ::Function, ::Function, x, xl, exp_fact)
+    @inbounds for i in eachindex(x)
+        if x[i] == -Inf
+            x[i] = xl[1] - exp_fact * (xl[2] - xl[1])
+        elseif x[i] == +Inf
+            x[i] = xl[2] + exp_fact * (xl[2] - xl[1])
+        end
+    end
+    x
 end
 
 function shape_data(series, expansion_factor = 1)
@@ -1013,68 +1064,16 @@ function shape_data(series, expansion_factor = 1)
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
 
     # handle axes scales
-    xscale = sp[:xaxis][:scale]
-    xf = RecipesPipeline.scale_func(xscale)
-    xinvf = RecipesPipeline.inverse_scale_func(xscale)
-    yscale = sp[:yaxis][:scale]
-    yf = RecipesPipeline.scale_func(yscale)
-    yinvf = RecipesPipeline.inverse_scale_func(yscale)
+    xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
+    yf, yinvf, ynoop = scale_inverse_scale_func(sp[:yaxis][:scale])
 
-    x, y = copy(series[:x]), copy(series[:y])
-    for i in eachindex(x)
-        if x[i] == -Inf
-            x[i] = xinvf(xf(xl[1]) - expansion_factor * (xf(xl[2]) - xf(xl[1])))
-        elseif x[i] == Inf
-            x[i] = xinvf(xf(xl[2]) + expansion_factor * (xf(xl[2]) - xf(xl[1])))
-        end
-    end
-    for i in eachindex(y)
-        if y[i] == -Inf
-            y[i] = yinvf(yf(yl[1]) - expansion_factor * (yf(yl[2]) - yf(yl[1])))
-        elseif y[i] == Inf
-            y[i] = yinvf(yf(yl[2]) + expansion_factor * (yf(yl[2]) - yf(yl[1])))
-        end
-    end
-    x, y
+    (
+        _shape_data!(Val(xnoop), xf, xinvf, copy(series[:x]), xl, expansion_factor),
+        _shape_data!(Val(ynoop), yf, yinvf, copy(series[:y]), yl, expansion_factor),
+    )
 end
 
-construct_categorical_data(x::AbstractArray, axis::Axis) =
-    (map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x))
-
-_fmt_paragraph(paragraph::AbstractString; kw...) =
-    _fmt_paragraph(IOBuffer(), paragraph, 0; kw...)
-
-function _fmt_paragraph(
-    io::IOBuffer,
-    remaining_text::AbstractString,
-    column_count::Integer;
-    fillwidth = 60,
-    leadingspaces = 0,
-)
-    kw = (fillwidth = fillwidth, leadingspaces = leadingspaces)
-
-    if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
-        if column_count + length(remaining_text) ≤ fillwidth
-            print(io, remaining_text)
-        else
-            print(io, "\n" * " "^leadingspaces * remaining_text)
-        end
-        String(take!(io))
-    else
-        if column_count + length(m[1]) ≤ fillwidth
-            print(io, "$(m[1]) ")
-            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kw...)
-        else
-            print(io, "\n" * " "^leadingspaces * "$(m[1]) ")
-            _fmt_paragraph(io, m[2], leadingspaces; kw...)
-        end
-    end
-end
-
-_document_argument(S::AbstractString) =
-    _fmt_paragraph("`$S`: " * _arg_desc[Symbol(S)], leadingspaces = 6 + length(S))
-
-function add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
+function _add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
     m = 4(I - 1) + 1
     n = m + 1
     o = m + 2
@@ -1099,7 +1098,7 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     Y = zeros(eltype(y), 4length(cj))
     Z = zeros(eltype(z), 4length(ck))
     @inbounds for I in eachindex(ci)  # connections are 0-based
-        add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
+        _add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
     end
     X, Y, Z
 end
@@ -1109,7 +1108,7 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
     @inbounds for I in eachindex(cns)  # connections are 1-based
-        add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
+        _add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
     end
     X, Y, Z
 end
@@ -1123,7 +1122,97 @@ get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyw
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))
 
-macro attributes(expr::Expr)
-    RecipesBase.process_recipe_body!(expr)
-    expr
+_fmt_paragraph(paragraph::AbstractString; kw...) =
+    _fmt_paragraph(PipeBuffer(), paragraph, 0; kw...)
+
+function _fmt_paragraph(
+    io::IOBuffer,
+    remaining_text::AbstractString,
+    column_count::Integer;
+    fillwidth = 60,
+    leadingspaces = 0,
+)
+    kw = (; fillwidth, leadingspaces)
+
+    if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
+        if column_count + length(remaining_text) ≤ fillwidth
+            print(io, remaining_text)
+        else
+            print(io, '\n', ' '^leadingspaces, remaining_text)
+        end
+        read(io, String)
+    else
+        if column_count + length(m[1]) ≤ fillwidth
+            print(io, m[1], ' ')
+            _fmt_paragraph(io, m[2], column_count + length(m[1]) + 1; kw...)
+        else
+            print(io, '\n', ' '^leadingspaces, m[1], ' ')
+            _fmt_paragraph(io, m[2], leadingspaces; kw...)
+        end
+    end
+end
+
+_argument_description(s::Symbol) =
+    if s ∈ keys(_arg_desc)
+        aliases = if (al = Plots.aliases(s)) |> length > 0
+            " Aliases: " * string(Tuple(al)) * '.'
+        else
+            ""
+        end
+        "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." *
+        aliases
+    else
+        ""
+    end
+
+_document_argument(s::Symbol) =
+    _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
+
+# The following functions implement the guess of the optimal legend position,
+# from the data series.
+function d_point(x, y, lim, scale)
+    p_scaled = (x / scale[1], y / scale[2])
+    d = sum(abs2, lim .- p_scaled)
+    isnan(d) && return 0.0
+    d
+end
+function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
+    length(x) > 0 || return +Inf
+    lim = lim ./ scale
+    dinv = 0.0
+    # Run from the extremes of the dataset inwards
+    j = lastindex(x)
+    for i in firstindex(x):max(1, div(min(nsamples, length(x)), 2))
+        dinv += (
+            inv(1 + weight * d_point(x[i], y[i], lim, scale)) +
+            inv(1 + weight * d_point(x[j], y[j], lim, scale))
+        )
+        j -= 1
+    end
+    dinv
+end
+
+# Function barrier because lims are type-unstable
+function _guess_best_legend_position(xl, yl, plt, nsamples)
+    scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
+    dist_to_lims = zeros(4) # faster than tuple
+    for series in plt.series_list
+        x = series[:x]
+        y = series[:y]
+        for (i, lim) in enumerate(Iterators.product(xl, yl))
+            dist_to_lims[i] += _dinv_series(lim, scale, x, y, nsamples)
+        end
+    end
+    # this inversion favors :topright in case of draws, without cost
+    ibest = findmin(@view(dist_to_lims[4:-1:1]))[2]
+    (:topright, :topleft, :bottomright, :bottomleft)[ibest]
+end
+
+"""
+Computes the distances of the plot limits to a sample of points at the extremes of 
+the ranges, and places the legend at the corner where the maximum distance to the limits is found.
+"""
+function _guess_best_legend_position(lp::Symbol, plt, nsamples = 50)
+    lp === :best || return lp
+    _guess_best_legend_position(xlims(plt), ylims(plt), plt, nsamples)
 end
