@@ -140,8 +140,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             bgc_inside = plot_color(sp[:background_color_inside])
             update_clims(sp)
             axis_opt = Options(
-                "point meta max" => get_clims(sp)[2],
-                "point meta min" => get_clims(sp)[1],
+                "point meta max" => get_clims(sp).emax,
+                "point meta min" => get_clims(sp).emin,
                 "legend cell align" => "left",
                 "legend columns" => pgfx_legend_col(sp[:legend_column]),
                 "title" => sp[:title],

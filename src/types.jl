@@ -15,8 +15,18 @@ struct InputWrapper{T}
     obj::T
 end
 
+mutable struct Extrema
+    emin::Float64
+    emax::Float64
+end
+
+Extrema() = Extrema(Inf, -Inf)
+
 mutable struct Series
     plotattributes::DefaultsDict
+    color_extrema::Extrema  # calculated colorbar limits
+
+    Series(plotattributes) = new(plotattributes, Extrema())
 end
 
 # a single subplot
@@ -28,6 +38,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     bbox::BoundingBox  # the canvas area which is available to this subplot
     plotarea::BoundingBox  # the part where the data goes
     attr::DefaultsDict  # args specific to this subplot
+    color_extrema::Extrema  # calculated colorbar limits
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
 
@@ -39,6 +50,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
         DEFAULT_BBOX[],
         DEFAULT_BBOX[],
         DefaultsDict(KW(), _subplot_defaults),
+        Extrema(),
         nothing,
         nothing,
     )
@@ -49,13 +61,6 @@ mutable struct Axis
     sps::Vector{Subplot}
     plotattributes::DefaultsDict
 end
-
-mutable struct Extrema
-    emin::Float64
-    emax::Float64
-end
-
-Extrema() = Extrema(Inf, -Inf)
 
 const SubplotMap = Dict{Any,Subplot}
 

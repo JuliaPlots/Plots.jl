@@ -215,6 +215,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     (plot = sp.o) === nothing && return
 
     clims = get_clims(sp, series)
+    clims = clims.emin, clims.emax
 
     _vectorize(v) = isa(v, Vector) ? v : collect(v) #InspectDR only supports vectors
     x, y = if st === :straightline

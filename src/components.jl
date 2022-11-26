@@ -715,11 +715,7 @@ locate_annotation(sp::Subplot, rel::NTuple{3,<:Number}, label::PlotText) = (
 
 # -----------------------------------------------------------------------
 
-function expand_extrema!(a::Axis, surf::Surface)
-    ex = a[:extrema]
-    foreach(x -> expand_extrema!(ex, x), surf.surf)
-    ex
-end
+expand_extrema!(a::Axis, surf::Surface) = expand_extrema!(a, surf.surf)
 
 "For the case of representing a surface as a function of x/y... can possibly avoid allocations."
 struct SurfaceFunction <: AbstractSurface

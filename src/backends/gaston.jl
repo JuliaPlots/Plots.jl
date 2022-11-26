@@ -294,6 +294,7 @@ function gaston_seriesconf!(
     extra_curves = String[]
 
     clims = get_clims(sp, series)
+    clims = clims.emin, clims.emax
     if st ∈ (:scatter, :scatter3d)
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         pt, ps, mc = gaston_mk_ms_mc(series, clims, i)
