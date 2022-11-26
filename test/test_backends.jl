@@ -37,8 +37,12 @@ if !isdir(reference_dir())
     end
 end
 
-function reference_file(backend, i, version)
-    refdir, fn = reference_dir("Plots", string(backend)), "ref-$(lpad(i, 3, '0')).png"
+ref_name(i) = "ref" * lpad(i, 3, '0')
+
+function reference_file(backend, version, i)
+    # NOTE: keep ref-[...].png naming consistent with `PlotDocs`
+    refdir = reference_dir("Plots", string(backend))
+    fn = ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
     for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
         if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
@@ -60,8 +64,9 @@ function image_comparison_tests(
     example = Plots._examples[idx]
     @info "Testing plot: $pkg:$idx:$(example.header)"
 
-    reffn = reference_file(pkg, idx, Plots._current_plots_version)
-    newfn = joinpath(reference_path(pkg, Plots._current_plots_version), "ref$idx.png")
+    reffn = reference_file(pkg, Plots._current_plots_version, idx)
+    newfn =
+        joinpath(reference_path(pkg, Plots._current_plots_version), ref_name(idx) * ".png")
 
     imports = something(example.imports, :())
     exprs = quote
