@@ -10,6 +10,7 @@ const plots_path = escape_string(pkgdir(Plots))
                Pkg.activate(; temp = true)
                Pkg.develop(path = \"$(plots_path)\")
                Pkg.status(\"Plots\")
+               @show ENV[\"PLOTS_DEFAULT_BACKEND\"]
                using Test
                using Plots
                @test backend() == Plots.PlotlyBackend()
