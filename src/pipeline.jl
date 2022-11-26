@@ -460,5 +460,5 @@ function _add_the_series(plt, sp, plotattributes)
         @error "Wrong type $(typeof(z_order)) for attribute z_order"
     end
     _series_added(plt, series)
-    _update_subplot_colorbars(sp, series)
+    _update_subplot_colorbar_extrema(sp, series)
 end

@@ -1,80 +1,13 @@
-# These functions return an operator for use in `get_clims(::Seres, op)`
 process_clims(lims::Tuple{<:Number,<:Number}) =
-    (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
-process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
+    (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ finite_extrema
+process_clims(::Union{Symbol,Nothing,Missing}) = finite_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
 
-get_clims(sp::Subplot)::Tuple{Float64,Float64} =
-    haskey(sp.attr, :clims_calculated) ? sp[:clims_calculated] : update_clims(sp)
-get_clims(series::Series)::Tuple{Float64,Float64} =
-    haskey(series.plotattributes, :clims_calculated) ?
-    series[:clims_calculated]::Tuple{Float64,Float64} : update_clims(series)
-get_clims(sp::Subplot, series::Series)::Tuple{Float64,Float64} =
+get_clims(sp::Subplot) = sp.color_extrema
+get_clims(series::Series) = series.color_extrema
+get_clims(sp::Subplot, series::Series) =
     series[:colorbar_entry] ? get_clims(sp) : get_clims(series)
-
-function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float64,Float64}
-    zmin, zmax = Inf, -Inf
-    for series in series_list(sp)
-        if series[:colorbar_entry]::Bool
-            zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
-        else
-            update_clims(series, op)
-        end
-    end
-    return sp[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-function update_clims(
-    sp::Subplot,
-    series::Series,
-    op = process_clims(sp[:clims]),
-)::Tuple{Float64,Float64}
-    zmin, zmax = get_clims(sp)
-    old_zmin, old_zmax = zmin, zmax
-    if series[:colorbar_entry]::Bool
-        zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
-    else
-        update_clims(series, op)
-    end
-    isnan(zmin) && isnan(old_zmin) && isnan(zmax) && isnan(old_zmax) ||
-        zmin == old_zmin && zmax == old_zmax ||
-        update_clims(sp)
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-"""
-    update_clims(::Series, op=Plots.ignorenan_extrema)
-Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
-which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite
-values of the input. The value is stored as a series property, which is retrieved by `get_clims`.
-"""
-function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64,Float64}
-    zmin, zmax = Inf, -Inf
-
-    # keeping this unrolled has higher performance
-    if series[:seriestype] ∈ _z_colored_series && series[:z] !== nothing
-        zmin, zmax = update_clims(zmin, zmax, series[:z], op)
-    end
-    if series[:line_z] !== nothing
-        zmin, zmax = update_clims(zmin, zmax, series[:line_z], op)
-    end
-    if series[:marker_z] !== nothing
-        zmin, zmax = update_clims(zmin, zmax, series[:marker_z], op)
-    end
-    if series[:fill_z] !== nothing
-        zmin, zmax = update_clims(zmin, zmax, series[:fill_z], op)
-    end
-    return series[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-update_clims(zmin, zmax, vals::AbstractSurface, op)::Tuple{Float64,Float64} =
-    update_clims(zmin, zmax, vals.surf, op)
-update_clims(zmin, zmax, vals::Any, op)::Tuple{Float64,Float64} =
-    _update_clims(zmin, zmax, op(vals)...)
-update_clims(zmin, zmax, ::Nothing, ::Any)::Tuple{Float64,Float64} = zmin, zmax
-
-_update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
 
 @enum ColorbarStyle cbar_gradient cbar_fill cbar_lines
 
@@ -109,6 +42,7 @@ function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar
         cvals = sp[:colorbar_continuous_values]
         dvals = sp[:colorbar_discrete_values]
         clims = get_clims(sp)
+        clims = clims.emin, clims.emax
         scale = sp[:colorbar_scale]
         sp.attr[:colorbar_optimized_ticks] =
             get_ticks(ticks, cvals, dvals, clims, scale, formatter)
@@ -117,5 +51,62 @@ function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar
 end
 
 # Dynamic callback from the pipeline if needed
-_update_subplot_colorbars(sp::Subplot) = update_clims(sp)
-_update_subplot_colorbars(sp::Subplot, series::Series) = update_clims(sp, series)
+function _update_subplot_colorbar_extrema(sp::Subplot, series::Series, op = process_clims(sp[:clims]))
+    ex = sp.color_extrema
+    old_emin = ex.emin
+    old_emax = ex.emax
+    seriesex = expand_colorbar_extrema!(series, op)
+    if series[:colorbar_entry]::Bool
+        expand_colorbar_extrema!(sp, (seriesex.emin, seriesex.emax))
+    end
+    if ex.emin != old_emin || ex.emax != old_emax
+        # expanded, need to update other series
+        for s in series_list(sp)
+            s.color_extrema = ex
+        end
+    end
+    nothing
+end
+
+function expand_colorbar_extrema!(series::Series, op)
+    if haskey(_z_colored_series, series[:seriestype]) && series[:z] !== nothing
+        expand_colorbar_extrema!(series, series[:z], op)
+    end
+    expand_colorbar_extrema!(series, series[:line_z], op)
+    expand_colorbar_extrema!(series, series[:marker_z], op)
+    expand_colorbar_extrema!(series, series[:fill_z], op)
+end
+
+function expand_colorbar_extrema!(series::Series, v::AbstractArray{<:Number}, op)
+    vex = if length(v) > 1024
+        vex = op(@view v[1:1000])
+        stride = length(v) ÷ 1024 + 1
+        vex2 = op(@view v[1001:stride:end])
+        finitemin(vex[1], vex2[1]), finitemax(vex[2], vex2[2])
+    else
+        op(v)
+    end
+    expand_colorbar_extrema!(series, vex)
+end
+
+expand_colorbar_extrema!(series::Series, ::Nothing, ::Any) = series.color_extrema
+
+function expand_colorbar_extrema!(series::Series, v::Tuple{<:Number, <:Number})
+    ex = series.color_extrema
+    ex.emin = finitemin(v[1], ex.emin)
+    ex.emax = finitemax(v[2], ex.emax)
+    ex
+end
+
+function expand_colorbar_extrema!(sp::Subplot, v::Tuple{<:Number, <:Number})
+    ex = sp.color_extrema
+    ex.emin = finitemin(v[1], ex.emin)
+    ex.emax = finitemax(v[2], ex.emax)
+    ex
+end
+
+expand_colorbar_extrema!(series::Series, v::Number, ::Any) = expand_extrema!(series.color_extrema, v)
+
+expand_colorbar_extrema!(series::Series, surf::Surface, op) =
+    expand_colorbar_extrema!(series, surf.surf, op)
+

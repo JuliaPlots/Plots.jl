@@ -72,7 +72,7 @@ const _allTypes = vcat(
     _3dTypes,
 )
 
-const _z_colored_series = [:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin]
+const _z_colored_series = Dict([:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin] .=> true)
 
 const _typeAliases = Dict{Symbol,Symbol}(
     :n             => :none,

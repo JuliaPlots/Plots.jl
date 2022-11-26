@@ -235,8 +235,8 @@ function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
 end
 
 function __heatmap_extrema(v::AVec, isedges::Bool, ispolar::Bool)
-    isedges && return ignorenan_extrema(v)
-    vmin, vmax = ignorenan_extrema(v)
+    isedges && return finite_extrema(v)
+    vmin, vmax = finite_extrema(v)
     extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
     extra_max = 0.5(v[end] - v[end - 1])
     vmin - extra_min, vmax + extra_max
@@ -266,12 +266,32 @@ heatmap_edges(
     ispolar::Bool = false,
 ) = _heatmap_edges(Val(scale === :identity), v, scale, isedges, ispolar)
 
-heatmap_extrema(
+# heatmap_extrema(
+#     v::AVec,
+#     scale::Symbol = :identity,
+#     isedges::Bool = false,
+#     ispolar::Bool = false,
+# ) = _heatmap_extrema(Val(scale === :identity), v, scale, isedges, ispolar)
+
+# assumes v is ordered, which it should be for a heatmap
+function heatmap_extrema(
+    # vmin::Float64,
+    # vmax::Float64,
     v::AVec,
-    scale::Symbol = :identity,
-    isedges::Bool = false,
-    ispolar::Bool = false,
-) = _heatmap_extrema(Val(scale === :identity), v, scale, isedges, ispolar)
+)
+    extra_min = 0.5(v[2] - v[1])
+    extra_max = 0.5(v[end] - v[end - 1])
+    v[1] - extra_min, v[end] + extra_max
+end
+
+function heatmap_extrema(
+    v::AVec,
+    scale::Symbol,
+)
+    f, invf = scale_inverse_scale_func(scale)
+    ex = heatmap_extrema(f.(v))
+    invf(ex[1]), invf(ex[2])
+end
 
 function heatmap_edges(
     x::AVec,
@@ -501,7 +521,8 @@ for comp in (:line, :fill, :marker)
             if series[$Symbol($comp_z)] === nothing
                 $get_compcolor(series, 0, 1, i)
             else
-                $get_compcolor(series, get_clims(series[:subplot]), i)
+                lims = get_clims(series[:subplot])
+                $get_compcolor(series, (lims.emin, lims.emax), i)
             end
         end
 

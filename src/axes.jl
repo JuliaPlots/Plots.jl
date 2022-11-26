@@ -407,15 +407,35 @@ finitemin(x::Real, y::Real) = min(promote(x, y)...)
 finitemax(x::Real, y::Real) = max(promote(x, y)...)
 
 finitemin(x::T, y::T) where {T<:AbstractFloat} = ifelse((y < x) | (signbit(y) > signbit(x)),
-                                                 ifelse(isinf(y), x, y),
-                                                 ifelse(isinf(x), y, x))
+                                                 ifelse(isfinite(y), y, x),
+                                                 ifelse(isfinite(x), x, y))
 finitemax(x::T, y::T) where {T<:AbstractFloat} = ifelse((y > x) | (signbit(y) < signbit(x)),
-                                                 ifelse(isinf(y), x, y),
-                                                 ifelse(isinf(x), y, x))
+                                                 ifelse(isfinite(y), y, x),
+                                                 ifelse(isfinite(x), x, y))
+
+function finite_extrema(v::AbstractArray)
+    emin, emax = Inf, -Inf
+    for x in v
+        emin = finitemin(emin, x)
+        emax = finitemax(emax, x)
+    end
+    emin, emax
+end
+
+finite_extrema(v) = extrema(v)
+
+finite_minimum(v::AbstractArray) = reduce(finitemin, v)
+finite_maximum(v::AbstractArray) = reduce(finitemax, v)
 
 function expand_extrema!(ex::Extrema, v::Number)
     ex.emin = finitemin(v, ex.emin)
     ex.emax = finitemax(v, ex.emax)
+    ex
+end
+
+function expand_extrema!(ex::Extrema, v::Extrema)
+    ex.emin = finitemin(v.emin, ex.emin)
+    ex.emax = finitemax(v.emax, ex.emax)
     ex
 end
 
@@ -425,16 +445,22 @@ expand_extrema!(axis::Axis, v::Number) = expand_extrema!(axis[:extrema], v)
 expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
-function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
+function expand_extrema!(axis::Axis, v::Tuple{<:Number, <:Number})
     ex = axis[:extrema]::Extrema
-    ex.emin = isfinite(v[1]) ? min(v[1], ex.emin) : ex.emin
-    ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
+    ex.emin = finitemin(v[1], ex.emin)
+    ex.emax = finitemax(v[2], ex.emax)
     ex
 end
-function expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
-    ex = axis[:extrema]::Extrema
-    foreach(vi -> expand_extrema!(ex, vi), v)
-    ex
+function expand_extrema!(axis::Axis, v::AbstractArray{<:Number})
+    vex = if length(v) > 1024
+        vex = finite_extrema(@view v[1:1000])
+        stride = length(v) ÷ 1024 + 1
+        vex2 = finite_extrema(@view v[1001:stride:end])
+        finitemin(vex[1], vex2[1]), finitemax(vex[2], vex2[2])
+    else
+        finite_extrema(v)
+    end
+    expand_extrema!(axis, vex)
 end
 
 function expand_extrema!(sp::Subplot, plotattributes::AKW)
@@ -478,6 +504,31 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             expand_extrema!(axis, plotattributes[letter])
         end
     end
+    
+    # expand for bar_width
+    if plotattributes[:seriestype] === :bar
+        dsym = vert ? :x : :y
+        data = plotattributes[dsym]
+
+        if (bw = plotattributes[:bar_width]) === nothing
+            pos = filter(>(0), diff(sort(data)))
+            plotattributes[:bar_width] = bw = _bar_width * finite_minimum(pos)
+        end
+        axis = sp.attr[get_attr_symbol(dsym, :axis)]
+        ex = finite_extrema(data)
+        expand_extrema!(axis, ex[1] + 0.5maximum(bw))
+        expand_extrema!(axis, ex[2] - 0.5minimum(bw))
+    elseif plotattributes[:seriestype] === :heatmap
+        for letter in (:x, :y)
+            data = plotattributes[letter]
+            axis = sp[get_attr_symbol(letter, :axis)]
+            scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
+            ex = scale === :identity ?
+                heatmap_extrema(data) :
+                heatmap_extrema(data, scale)
+            expand_extrema!(axis, ex)
+        end
+    end
 
     # # expand for fillrange/bar_width
     # fillaxis, baraxis = sp.attr[:yaxis], sp.attr[:xaxis]
@@ -499,29 +550,6 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
         end
     end
 
-    # expand for bar_width
-    if plotattributes[:seriestype] === :bar
-        dsym = vert ? :x : :y
-        data = plotattributes[dsym]
-
-        if (bw = plotattributes[:bar_width]) === nothing
-            pos = filter(>(0), diff(sort(data)))
-            plotattributes[:bar_width] = bw = _bar_width * ignorenan_minimum(pos)
-        end
-        axis = sp.attr[get_attr_symbol(dsym, :axis)]
-        expand_extrema!(axis, ignorenan_maximum(data) + 0.5maximum(bw))
-        expand_extrema!(axis, ignorenan_minimum(data) - 0.5minimum(bw))
-    end
-
-    # expand for heatmaps
-    if plotattributes[:seriestype] === :heatmap
-        for letter in (:x, :y)
-            data = plotattributes[letter]
-            axis = sp[get_attr_symbol(letter, :axis)]
-            scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
-            expand_extrema!(axis, heatmap_extrema(data, scale))
-        end
-    end
 end
 
 function expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)

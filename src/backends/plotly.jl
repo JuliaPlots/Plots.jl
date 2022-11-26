@@ -509,6 +509,7 @@ as_gradient(grad, α) = cgrad(alpha = α)
 function plotly_series(plt::Plot, series::Series)
     sp = series[:subplot]
     clims = get_clims(sp, series)
+    clims = clims.emin, clims.emax
 
     (st = series[:seriestype]) === :shape && return plotly_series_shapes(plt, series, clims)
 
@@ -953,7 +954,8 @@ end
 
 function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symbol)
     plotattributes_out = deepcopy(plotattributes_base)
-    cmin, cmax = get_clims(series[:subplot])
+    clims = get_clims(series[:subplot])
+    cmin, cmax = clims.emin, clims.emax
     plotattributes_out[:showlegend] = false
     plotattributes_out[:type] = RecipesPipeline.is3d(series) ? :scatter3d : :scatter
     plotattributes_out[:hoverinfo] = :none

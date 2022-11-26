@@ -409,7 +409,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # handle zcolor and get c/cmap
     needs_colorbar = hascolorbar(sp)
-    vmin, vmax = clims = get_clims(sp, series)
+    clims = get_clims(sp, series)
+    vmin, vmax = clims = clims.emin, clims.emax
 
     # Dict to store extra kwargs
     extrakw = if st === :wireframe || st === :hexbin
@@ -1011,7 +1012,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             elseif any(
                 colorbar_series[attr] !== nothing for attr in (:line_z, :fill_z, :marker_z)
             )
-                cmin, cmax = get_clims(sp)
+                clims = get_clims(sp)
+                cmin, cmax = clims.emin, clims.emax
                 norm = pycolors."Normalize"(vmin = cmin, vmax = cmax)
                 f = if colorbar_series[:line_z] !== nothing
                     py_linecolormap
@@ -1467,6 +1469,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         should_add_to_legend(series) || continue
         nseries += 1
         clims = get_clims(sp, series)
+        clims = clims.emin, clims.emax
         # add a line/marker and a label
         if series[:seriestype] === :shape || series[:fillrange] !== nothing
             lc = get_linecolor(series, clims)

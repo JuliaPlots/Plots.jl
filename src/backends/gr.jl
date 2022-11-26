@@ -898,8 +898,12 @@ remap(x, lo, hi) = (x - lo) / (hi - lo)
 get_z_normalized(z, clims...) = isnan(z) ? 256 / 255 : remap(clamp(z, clims...), clims...)
 
 function gr_clims(sp, args...)
-    sp[:clims] === :auto || return get_clims(sp)
-    lo, hi = get_clims(sp, args...)
+    if sp[:clims] !== :auto
+        lims = get_clims(sp)
+        return lims.emin, lims.emax
+    end
+    lims = get_clims(sp, args...)
+    lo, hi = lims.emin, lims.emax
     if lo == hi
         if lo == 0
             hi = one(hi)
