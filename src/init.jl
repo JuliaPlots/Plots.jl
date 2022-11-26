@@ -64,7 +64,7 @@ function __init__()
             )
         end,
     )
-    if _default_backend() === :gr
+    if _default_backend() !== :gr
         @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
             include(BACKEND_PATH_GR)
         end

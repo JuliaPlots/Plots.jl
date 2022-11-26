@@ -9,6 +9,7 @@ const plots_path = escape_string(pkgdir(Plots))
                using Pkg
                Pkg.activate(; temp = true)
                Pkg.develop(path = \"$(plots_path)\")
+               Pkg.status(\"Plots\")
                using Test
                using Plots
                @test backend() == Plots.PlotlyBackend()
