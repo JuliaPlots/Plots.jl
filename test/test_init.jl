@@ -15,5 +15,5 @@ const plots_path = escape_string(pkgdir(Plots))
                """
            ```)
     @test out.exitcode == 0
-    set_preferences!(Plots, "default_backend" => Plots._fallback_default_backend())
+    set_preferences!(Plots, "default_backend" => Plots._fallback_default_backend(), force = true)
 end
