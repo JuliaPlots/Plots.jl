@@ -890,6 +890,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         end
 
         # add the colorbar legend
+        cbar_scale = sp[:colorbar_scale]
         if hascolorbar(sp)
             # add keyword args for a discrete colorbar
             slist = series_list(sp)
@@ -907,7 +908,11 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 colorbar_series[attr] !== nothing for attr in (:line_z, :fill_z, :marker_z)
             )
                 cmin, cmax = get_clims(sp)
-                norm = pycolors.Normalize(vmin = cmin, vmax = cmax)
+                norm = if cbar_scale === :identity
+                    pycolors.Normalize(vmin = cmin, vmax = cmax)
+                else
+                    pycolors.LogNorm(vmin=cmin, vmax=cmax)
+                end
                 cmap = if colorbar_series[:line_z] !== nothing
                     py_linecolormap(colorbar_series)
                 elseif colorbar_series[:fill_z] !== nothing
@@ -968,7 +973,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             )
 
             # cbar.formatter.set_useOffset(false)  # this for some reason does not work, must be a pyplot bug, instead this is a workaround:
-            cbar.formatter.set_powerlimits((-Inf, Inf))
+            cbar_scale === :identity && cbar.formatter.set_powerlimits((-Inf, Inf))
             cbar.update_ticks()
 
             ticks = get_colorbar_ticks(sp)
