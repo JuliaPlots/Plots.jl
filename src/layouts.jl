@@ -316,7 +316,6 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
 
     # create a matrix for each minimum padding direction
     minpad_left, minpad_top, minpad_right, minpad_bottom = paddings(layout.grid)
-    # @show minpad_left, minpad_top, minpad_right, minpad_bottom
 
     # get the max horizontal (left and right) padding over columns,
     # and max vertical (bottom and top) padding over rows
