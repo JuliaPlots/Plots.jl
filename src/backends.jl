@@ -795,11 +795,11 @@ _initialize_backend(::PythonPlotBackend) = @eval Main begin
     PythonPlot.ioff()
 end
 
-const _pythonplot_attr = _pyplot_attr
 const _pythonplot_seriestype = _pyplot_seriestype
-const _pythonplot_style = _pyplot_style
-const _pythonplot_marker = _pyplot_marker
-const _pythonplot_scale = _pyplot_scale
+const _pythonplot_marker     = _pyplot_marker
+const _pythonplot_style      = _pyplot_style
+const _pythonplot_scale      = _pyplot_scale
+const _pythonplot_attr       = _pyplot_attr
 
 # ------------------------------------------------------------------------------
 # Gaston

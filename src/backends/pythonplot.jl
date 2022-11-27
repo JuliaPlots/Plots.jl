@@ -173,6 +173,21 @@ labelfunc(scale::Symbol, backend::PythonPlotBackend) =
 
 py_mask_nans(z) = PythonPlot.pycall(pynp.ma.masked_invalid, z)
 
+py_cmap(sp) =
+    if hascolorbar(sp)
+        slist = series_list(sp)
+        colorbar_series = slist[findfirst(hascolorbar.(slist))]
+        cmap = if colorbar_series[:line_z] !== nothing
+            py_linecolormap(colorbar_series)
+        elseif colorbar_series[:fill_z] !== nothing
+            py_fillcolormap(colorbar_series)
+        else
+            py_markercolormap(colorbar_series)
+        end
+        colorbar_series, cmap
+    else
+        nothing, nothing
+    end
 # ---------------------------------------------------------------------------
 
 function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
@@ -275,7 +290,7 @@ py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_s
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{PythonPlotBackend})
-    w, h = map(px2inch, Tuple(s * plt[:dpi] / Plots.DPI for s in plt[:size]))
+    w, h = map(s -> px2inch(s * plt[:dpi] / Plots.DPI), plt[:size])
     # reuse the current figure?
     plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end
@@ -355,8 +370,6 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     handles = []
     push_h(x) = push!(handles, x)
 
-    discrete_colorbar_values = nothing
-
     # pass in an integer value as an arg, but a levels list as a keyword arg
     levels = series[:levels]
     levelargs = isscalar(levels) ? levels : ()
@@ -365,7 +378,16 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     # add custom frame shapes to markershape?
     series_annotations_shapes!(series, :xy)
 
-    # for each plotting command, optionally build and add a series handle to the list
+    # some defaults
+    cbar_scale = sp[:colorbar_scale]
+    linewidths = linewidth = py_thickness_scale(plt, get_linewidth(series))
+    linestyles = linestyle = py_linestyle(st, get_linestyle(series))
+    edgecolor  = edgecolors = py_color(get_linecolor(series, 1, cbar_scale))
+    facecolor  = facecolors = py_color(series[:fillcolor])
+    zorder     = series[:series_plotindex]
+    alpha      = get_fillalpha(series)
+    label      = series[:label]
+    _, cmap    = py_cmap(sp)
 
     # add lines ?
     if st ∈ py_line_series && maximum(series[:linewidth]) > 0
@@ -373,10 +395,9 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             i, rng = segment.attr_index, segment.range
             ax.plot(
                 map(arg -> arg[rng], xyargs)...;
-                label = k == 1 ? series[:label] : "",
-                zorder = series[:series_plotindex],
+                label = k == 1 ? label : "",
                 color = py_color(
-                    single_color(get_linecolor(series, clims, i)),
+                    single_color(get_linecolor(series, clims, i, cbar_scale)),
                     get_linealpha(series, i),
                 ),
                 linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
@@ -384,6 +405,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 solid_capstyle = "butt",
                 dash_capstyle = "butt",
                 drawstyle = py_stepstyle(st),
+                zorder,
             ) |> push_h
         end
 
@@ -393,10 +415,10 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             else
                 arrowprops = Dict(
                     "arrowstyle" => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
-                    "edgecolor"  => py_color(get_linecolor(series)),
-                    "facecolor"  => py_color(get_linecolor(series)),
-                    "linewidth"  => py_thickness_scale(plt, get_linewidth(series)),
-                    "linestyle"  => py_linestyle(st, get_linestyle(series)),
+                    "edgecolor"  => edgecolor,
+                    "facecolor"  => edgecolor,
+                    "linewidth"  => linewidth,
+                    "linestyle"  => linestyle,
                     "shrinkA"    => 0,
                     "shrinkB"    => 0,
                 )
@@ -423,15 +445,13 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 x[rng], y[rng]
             end
             RecipesPipeline.is3d(sp) && (args = (args..., z[rng]))
-
             ax.scatter(
                 args...;
-                label = series[:label],
-                zorder = series[:series_plotindex] + 0.5,
+                zorder = zorder + 0.5,
                 marker = py_marker(_cycle(series[:markershape], i)),
                 s = py_thickness_scale(plt, _cycle(series[:markersize], i)) .^ 2,
                 facecolors = py_color(
-                    get_markercolor(series, i),
+                    get_markercolor(series, i, cbar_scale),
                     get_markeralpha(series, i),
                 ),
                 edgecolors = py_color(
@@ -439,6 +459,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     get_markerstrokealpha(series, i),
                 ),
                 linewidths = py_thickness_scale(plt, get_markerstrokewidth(series, i)),
+                label,
                 extrakw...,
             ) |> push_h
         end
@@ -448,7 +469,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
             if length(rng) > 1
-                lc = get_linecolor(series, clims, i)
+                lc = get_linecolor(series, clims, i, cbar_scale)
                 fc = get_fillcolor(series, clims, i)
                 la = get_linealpha(series, i)
                 fa = get_fillalpha(series, i)
@@ -463,30 +484,28 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 # shape outline (and potentially solid fill)
                 pypatches.PathPatch(
                     path;
-                    label = series[:label],
-                    zorder = series[:series_plotindex],
                     edgecolor = py_color(lc, la),
                     facecolor = py_color(fc, has_fs ? 0 : fa),
                     linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
                     linestyle = py_linestyle(st, ls),
                     fill = !has_fs,
+                    zorder,
+                    label,
                 ) |>
                 ax.add_patch |>
                 push_h
-
-                # shape hatched fill
-                # hatch color/alpha are controlled by edge (not face) color/alpha
+                # shape hatched fill - hatch color/alpha are controlled by edge (not face) color/alpha
                 if has_fs
                     pypatches.PathPatch(
                         path;
                         label = "",
-                        zorder = series[:series_plotindex],
                         edgecolor = py_color(fc, fa),
                         facecolor = py_color(fc, 0), # don't fill with solid background
                         hatch = py_fillstyle(fs),
                         linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
                         linestyle = py_linestyle(st, ls),
                         fill = false,
+                        zorder,
                     ) |>
                     ax.add_patch |>
                     push_h
@@ -500,11 +519,11 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         z = if eltype(z) <: Colors.AbstractGray
             float(z)
         elseif eltype(z) <: Colorant
-            rgba = Array{Float64,3}(undef, (size(z)..., 4))
-            rgba[:, :, 1] = red.(z)
-            rgba[:, :, 2] = green.(z)
-            rgba[:, :, 3] = blue.(z)
-            rgba[:, :, 4] = alpha.(z)
+            rgba = Array{Float64,3}(undef, size(z)..., 4)
+            rgba[:, :, 1] = Colors.red.(z)
+            rgba[:, :, 2] = Colors.green.(z)
+            rgba[:, :, 3] = Colors.blue.(z)
+            rgba[:, :, 4] = Colors.alpha.(z)
             rgba
         else
             z  # hopefully it's in a data format that will "just work" with imshow
@@ -516,41 +535,37 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         end
         ax.imshow(
             z;
-            zorder = series[:series_plotindex],
             cmap = py_colormap(cgrad(plot_color([:black, :white]))),
+            extent = (xmin, xmax, ymax, ymin),
             vmin = 0.0,
             vmax = 1.0,
-            extent = (xmin, xmax, ymax, ymin),
+            zorder,
             aspect,
         ) |> push_h
     elseif st === :heatmap
         x, y = heatmap_edges(x, sp[:xaxis][:scale], y, sp[:yaxis][:scale], size(z))
-
         expand_extrema!(sp[:xaxis], x)
         expand_extrema!(sp[:yaxis], y)
-        dvals = sp[:zaxis][:discrete_values]
-        isempty(dvals) || (discrete_colorbar_values = dvals)
-
         ax.pcolormesh(
             x,
             y,
             py_mask_nans(z);
-            label = series[:label],
-            zorder = series[:series_plotindex],
-            cmap = py_fillcolormap(series),
-            alpha = series[:fillalpha],
             # edgecolors = (series[:linewidth] > 0 ? py_linecolor(series) : "face"),
+            zorder,
+            alpha,
+            label,
+            cmap,
             extrakw...,
         ) |> push_h
     elseif st === :mesh3d
         cns = series[:connections]
-        polygons = if cns isa AbstractVector{<:AbstractVector{Int}}
+        polygons = if cns isa AbstractVector{<:AbstractVector{Integer}}
             # Combination of any polygon types
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
-        elseif cns isa AbstractVector{NTuple{N,Int}} where {N}
+        elseif cns isa AbstractVector{NTuple{N,Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
-        elseif cns isa NTuple{3,<:AbstractVector{Int}}
+        elseif cns isa NTuple{3,<:AbstractVector{Integer}}
             # Only triangles - connections have to be 0-based (indexing)
             X, Y, Z = mesh3d_triangles(x, y, z, cns)
             ntris = length(cns[1])
@@ -573,33 +588,29 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             throw
         end
         mplot3d.art3d.Poly3DCollection(
-            polygons,
-            linewidths = py_thickness_scale(plt, series[:linewidth]),
-            edgecolor = py_color(get_linecolor(series)),
-            facecolor = py_color(series[:fillcolor]),
-            alpha = get_fillalpha(series),
-            zorder = series[:series_plotindex],
+            polygons;
+            linewidths,
+            edgecolors,
+            facecolors,
+            zorder,
+            alpha,
         ) |>
         ax.add_collection3d |>
         push_h
-        # Fix for handle: stackoverflow.com/questions/54994600/pyplot-legend-poly3dcollection-object-has-no-attribute-edgecolors2d
-        # It seems there aren't two different alpha values for edge and face
-        handles[end]._facecolors2d = py_color(series[:fillcolor])
-        handles[end]._edgecolors2d = py_color(get_linecolor(series))
     elseif st === :hexbin
         sekw = series[:extra_kwargs]
         extrakw[:mincnt] = get(sekw, :mincnt, nothing)
-        extrakw[:edgecolors] = get(sekw, :edgecolors, py_color(get_linecolor(series)))
+        extrakw[:edgecolors] = get(sekw, :edgecolors, edgecolor)
         ax.hexbin(
             x,
             y;
-            label = series[:label],
             C = series[:weights],
             gridsize = series[:bins] === :auto ? 100 : series[:bins],  # 100 is the default value
-            linewidths = py_thickness_scale(plt, series[:linewidth]),
-            alpha = series[:fillalpha],
-            cmap = py_fillcolormap(series),  # applies to the pcolorfast object
-            zorder = series[:series_plotindex],
+            linewidths,
+            zorder,
+            alpha,
+            label,
+            cmap,  # applies to the pcolorfast object
             extrakw...,
         ) |> push_h
     elseif st ∈ (:contour, :contour3d)
@@ -609,23 +620,20 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 x, y = repeat(x', length(y), 1), repeat(y, 1, length(x))
             end
         end
-
         if typeof(series[:linecolor]) <: AbstractArray
             extrakw[:colors] = py_color.(series[:linecolor])
         else
             extrakw[:cmap] = py_linecolormap(series)
         end
-
-        # contour lines
         ax.contour(
             x,
             y,
             z,
             levelargs...;
-            label = series[:label],
-            zorder = series[:series_plotindex],
-            linewidths = py_thickness_scale(plt, series[:linewidth]),
-            linestyles = py_linestyle(st, series[:linestyle]),
+            linestyles,
+            linewidths,
+            zorder,
+            label,
             extrakw...,
         ) |> push_h
         series[:contour_labels] === true && ax.clabel(handle, handle.levels)
@@ -637,9 +645,9 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 y,
                 z,
                 levelargs...;
-                label = series[:label],
-                zorder = series[:series_plotindex] + 0.5,
-                alpha = series[:fillalpha],
+                zorder = zorder + 0.5,
+                label,
+                alpha,
                 extrakw...,
             ) |> push_h
     elseif st ∈ (:surface, :wireframe)
@@ -654,7 +662,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                         py_shading(series[:fillcolor], py_handle_surface(series[:fill_z]))
                     extrakw[:shade] = false
                 else
-                    extrakw[:cmap] = py_fillcolormap(series)
+                    extrakw[:cmap] = cmap
                 end
             end
             rstride, cstride = series[:stride]
@@ -662,12 +670,12 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 x,
                 y,
                 z;
-                label = series[:label],
-                zorder = series[:series_plotindex],
-                linewidth = py_thickness_scale(plt, series[:linewidth]),
-                edgecolor = py_color(get_linecolor(series)),
+                edgecolor,
+                linewidth,
                 rstride,
                 cstride,
+                zorder,
+                label,
                 extrakw...,
             ) |> push_h
 
@@ -679,23 +687,22 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     y,
                     z,
                     levelargs...;
-                    cmap = py_fillcolormap(series),
                     offset,  # where to draw the contour plane
+                    cmap,
                     zdir,
                 ) |> push_h
             end
-
         elseif typeof(z) <: AbstractVector
             # tri-surface plot (matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
             ax.plot_trisurf(
                 x,
                 y,
                 z;
-                label = series[:label],
-                zorder = series[:series_plotindex],
-                cmap = py_fillcolormap(series),
-                linewidth = py_thickness_scale(plt, series[:linewidth]),
-                edgecolor = py_color(get_linecolor(series)),
+                edgecolor,
+                linewidth,
+                zorder,
+                label,
+                cmap,
                 extrakw...,
             ) |> push_h
         else
@@ -735,13 +742,13 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 trues(n),
                 false,
                 py_fillstepstyle(st);
-                zorder = series[:series_plotindex],
                 # hatch color/alpha are controlled by edge (not face) color/alpha
                 # if has_fs, set edge color/alpha <- fill color/alpha and face alpha <- 0
                 edgecolor = py_color(fc, has_fs ? fa : la),
                 facecolor = py_color(fc, has_fs ? 0 : fa),
                 hatch = py_fillstyle(fs),
                 linewidths = 0,
+                zorder,
             ) |> push_h
         end
     end
@@ -755,10 +762,10 @@ end
 
 # --------------------------------------------------------------------------
 
-function py_set_lims(ax, sp::Subplot, axis::Axis)
-    letter = axis[:letter]
-    getproperty(ax, set_axis(letter, :lim))(axis_limits(sp, letter)...)
-end
+py_set_lims(ax, sp::Subplot, axis::Axis) =
+    let letter = axis[:letter]
+        getproperty(ax, set_axis(letter, :lim))(axis_limits(sp, letter)...)
+    end
 
 function py_set_ticks(sp, ax, ticks, letter)
     ticks === :auto && return
@@ -787,8 +794,7 @@ end
 function py_compute_axis_minval(sp::Subplot, axis::Axis)
     # compute the smallest absolute value for the log scale's linear threshold
     minval = 1.0
-    sps = axis.sps
-    for sp in sps, series in series_list(sp)
+    for sp in axis.sps, series in series_list(sp)
         (v = series.plotattributes[axis[:letter]]) |> isempty && continue
         minval = NaNMath.min(minval, ignorenan_minimum(abs.(v)))
     end
@@ -890,20 +896,19 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         end
 
         # add the colorbar legend
-        cbar_scale = sp[:colorbar_scale]
         if hascolorbar(sp)
+            cbar_scale = sp[:colorbar_scale]
             # add keyword args for a discrete colorbar
-            slist = series_list(sp)
-            colorbar_series = slist[findfirst(hascolorbar.(slist))]
-            handle = colorbar_series[:serieshandle][end]
+            colorbar_series, cmap = py_cmap(sp)
             kw = KW()
-            if !isempty(sp[:zaxis][:discrete_values]) &&
+            handle = if !isempty(sp[:zaxis][:discrete_values]) &&
                colorbar_series[:seriestype] === :heatmap
                 kw[:ticks], kw[:format] =
                     get_locator_and_formatter(sp[:zaxis][:discrete_values])
                 # kw[:values] = eachindex(sp[:zaxis][:discrete_values])
                 kw[:values] = sp[:zaxis][:continuous_values]
                 kw[:boundaries] = vcat(0, kw[:values] + 0.5)
+                colorbar_series[:serieshandle][end]
             elseif any(
                 colorbar_series[attr] !== nothing for attr in (:line_z, :fill_z, :marker_z)
             )
@@ -911,54 +916,47 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 norm = if cbar_scale === :identity
                     pycolors.Normalize(vmin = cmin, vmax = cmax)
                 else
-                    pycolors.LogNorm(vmin=cmin, vmax=cmax)
-                end
-                cmap = if colorbar_series[:line_z] !== nothing
-                    py_linecolormap(colorbar_series)
-                elseif colorbar_series[:fill_z] !== nothing
-                    py_fillcolormap(colorbar_series)
-                else
-                    py_markercolormap(colorbar_series)
+                    pycolors.LogNorm(vmin = cmin, vmax = cmax)
                 end
                 c_map = pycmap.ScalarMappable(; cmap, norm)
                 c_map.set_array(PythonCall.pylist([]))
-                handle = c_map
+                c_map
+            else
+                colorbar_series[:serieshandle][end]
             end
             kw[:spacing] = "proportional"
 
             cb_sym = sp[:colorbar]
+            label = string("cbar", sp[:subplot_index])
             cbar = if RecipesPipeline.is3d(sp) || ispolar(sp)
-                cax = fig.add_axes(
-                    [0.9, 0.1, 0.03, 0.8],
-                    label = string("cbar", sp[:subplot_index]),
-                )
+                cax = fig.add_axes([0.9, 0.1, 0.03, 0.8]; label)
                 fig.colorbar(handle; cax, kw...)
             else
                 # divider approach works only with 2d plots
                 divider = axes_grid1.make_axes_locatable(ax)
-                pad, orientation = if cb_sym === :left
-                    "5%", "vertical"
+                pos, pad, orientation = if cb_sym === :left
+                    cb_sym, "5%", "vertical"
                 elseif cb_sym === :top
-                    "2.5%", "horizontal"
+                    cb_sym, "2.5%", "horizontal"
                 elseif cb_sym === :bottom
-                    "5%", "horizontal"
-                else
-                    "2.5%", "vertical"
+                    cb_sym, "5%", "horizontal"
+                else  # :right or :best
+                    :right, "2.5%", "vertical"
                 end
-
+                # Reasonable value works most of the usecases
                 cax = divider.append_axes(
-                    string(cb_sym);
+                    string(pos);
                     size = "5%",
-                    label = string("cbar", sp[:subplot_index]),
+                    label,
                     pad,
-                )  # Reasonable value works most of the usecases
+                )  
                 if cb_sym === :left
                     cax.yaxis.set_ticks_position("left")
                 elseif cb_sym === :right
                     cax.yaxis.set_ticks_position("right")
                 elseif cb_sym === :top
                     cax.xaxis.set_ticks_position("top")
-                elseif cb_sym === :bottom
+                else  # :bottom or :best
                     cax.xaxis.set_ticks_position("bottom")
                 end
                 fig.colorbar(handle; orientation, cax, kw...)
@@ -1400,7 +1398,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     get_markerstrokealpha(series),
                 ),
                 markerfacecolor = py_color(
-                    single_color(get_markercolor(series, clims)),
+                    single_color(get_markercolor(series, clims, 1, sp[:colorbar_scale])),
                     get_markeralpha(series),
                 ),
                 markeredgewidth = py_thickness_scale(
@@ -1514,7 +1512,6 @@ for (mime, fmt) in (
             io,
             format = $fmt,
             # bbox_inches = "tight",
-            # figsize = map(px2inch, plt[:size]),
             facecolor = fig.get_facecolor(),
             edgecolor = "none",
             dpi = plt[:dpi],
