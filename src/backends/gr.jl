@@ -1008,7 +1008,7 @@ function gr_add_legend(sp, leg, viewport_area)
         gr_set_line(1, :solid, sp[:legend_foreground_color], sp)
         GR.drawrect(xs..., ys...)  # drawing actual legend width here
         if (ttl = sp[:legend_title]) !== nothing
-            gr_set_font(legendtitlefont(sp), sp; halign = :center, valign = :center)
+            gr_set_font(legendtitlefont(sp), sp)
             _debug[] && gr_legend_bbox(xpos, ypos, leg)
             gr_text(xpos - leg.pad - leg.space + 0.5leg.textw, ypos, string(ttl))
             if vertical
