@@ -497,8 +497,6 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         x, y = series[:x], series[:y]
         xmin, xmax = ignorenan_extrema(x)
         ymin, ymax = ignorenan_extrema(y)
-        dx = (xmax - xmin) / (length(x) - 1) / 2
-        dy = (ymax - ymin) / (length(y) - 1) / 2
         z = if eltype(z) <: Colors.AbstractGray
             float(z)
         elseif eltype(z) <: Colorant
@@ -511,19 +509,20 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         else
             z  # hopefully it's in a data format that will "just work" with imshow
         end
+        aspect = if get_aspect_ratio(sp) === :equal
+            "equal"
+        else
+            "auto"
+        end
         ax.imshow(
             z;
             zorder = series[:series_plotindex],
             cmap = py_colormap(cgrad(plot_color([:black, :white]))),
             vmin = 0.0,
             vmax = 1.0,
-            extent = (xmin - dx, xmax + dx, ymax + dy, ymin - dy),
+            extent = (xmin, xmax, ymax, ymin),
+            aspect,
         ) |> push_h
-
-        # expand extrema... handle is AxesImage object
-        xmin, xmax, ymax, ymin = handles[end].get_extent() |> to_vec
-        expand_extrema!(sp, xmin, xmax, ymin, ymax)
-        # sp[:yaxis].series[:flip] = true
     elseif st === :heatmap
         x, y = heatmap_edges(x, sp[:xaxis][:scale], y, sp[:yaxis][:scale], size(z))
 
