@@ -463,34 +463,45 @@ for comp in (:line, :fill, :marker)
 
     @eval begin
         # defines `get_linecolor`, `get_fillcolor` and `get_markercolor` <- for grep
-        function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
+        function $get_compcolor(
+            series,
+            cmin::Real,
+            cmax::Real,
+            i::Integer = 1,
+            s::Symbol = :identity,
+        )
             c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
-                get(get_gradient(c), z[i], (cmin, cmax))
+                grad = get_gradient(c)
+                if s === :identity
+                    get(grad, z[i], (cmin, cmax))
+                else
+                    base = _logScaleBases[s]
+                    get(grad, log(base, z[i]), (log(base, cmin), log(base, cmax)))
+                end
             end
         end
 
-        $get_compcolor(series, clims::Tuple{<:Number,<:Number}, i::Int = 1) =
-            $get_compcolor(series, clims[1], clims[2], i)
-
-        function $get_compcolor(series, i::Int = 1)
+        function $get_compcolor(series, i::Integer = 1, s::Symbol = :identity)
             if series[$Symbol($comp_z)] === nothing
-                $get_compcolor(series, 0, 1, i)
+                $get_compcolor(series, 0, 1, i, s)
             else
-                $get_compcolor(series, get_clims(series[:subplot]), i)
+                $get_compcolor(series, get_clims(series[:subplot]), i, s)
             end
         end
 
-        $get_compalpha(series, i::Int = 1) = _cycle(series[$Symbol($compalpha)], i)
+        $get_compcolor(series, clims::NTuple{2,<:Number}, args...) =
+            $get_compcolor(series, clims[1], clims[2], args...)
+
+        $get_compalpha(series, i::Integer = 1) = _cycle(series[$Symbol($compalpha)], i)
     end
 end
 
 function get_colorgradient(series::Series)
-    st = series[:seriestype]
-    if st in (:surface, :heatmap) || isfilledcontour(series)
+    if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)
         series[:fillcolor]
     elseif st in (:contour, :wireframe)
         series[:linecolor]
@@ -510,17 +521,17 @@ get_gradient(c) = cgrad()
 get_gradient(cg::ColorGradient) = cg
 get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 
-get_linewidth(series, i::Int = 1) = _cycle(series[:linewidth], i)
-get_linestyle(series, i::Int = 1) = _cycle(series[:linestyle], i)
-get_fillstyle(series, i::Int = 1) = _cycle(series[:fillstyle], i)
+get_linewidth(series, i::Integer = 1) = _cycle(series[:linewidth], i)
+get_linestyle(series, i::Integer = 1) = _cycle(series[:linestyle], i)
+get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
 
-function get_markerstrokecolor(series, i::Int = 1)
-    msc = series[:markerstrokecolor]
-    isa(msc, ColorGradient) ? msc : _cycle(msc, i)
-end
+get_markerstrokecolor(series, i::Integer = 1) =
+    let msc = series[:markerstrokecolor]
+        msc isa ColorGradient ? msc : _cycle(msc, i)
+    end
 
-get_markerstrokealpha(series, i::Int = 1) = _cycle(series[:markerstrokealpha], i)
-get_markerstrokewidth(series, i::Int = 1) = _cycle(series[:markerstrokewidth], i)
+get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
+get_markerstrokewidth(series, i::Integer = 1) = _cycle(series[:markerstrokewidth], i)
 
 const _segmenting_vector_attributes = (
     :seriescolor,
