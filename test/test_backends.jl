@@ -138,6 +138,21 @@ with(:pgfplotsx) do
 end
 =#
 
+@testset "Preferences" begin
+    Plots.set_backend!(:gaston)
+    proc = ```
+    $(Base.julia_cmd()) -e "
+        ENV[\"PLOTS_PRECOMPILE\"] = false
+        using Pkg
+        Pkg.activate(; temp = true)
+        Pkg.develop(; path = \"$(pkgdir(Plots))\")
+        using Plots, Test
+        @test backend() == Plots.GastonBackend()
+    "``` |> run
+    @test success(proc)
+    Plots.set_backend!(; force = true)
+end
+
 @testset "UnicodePlots" begin
     with(:unicodeplots) do
         @test backend() == Plots.UnicodePlotsBackend()
