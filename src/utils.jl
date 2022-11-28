@@ -1199,14 +1199,15 @@ function _yindex(i, x, y)
 end
 function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
     length(x) > 0 || return +Inf
+    length(y) > 0 || return +Inf
     lim = lim ./ scale
     dinv = 0.0
     # Run from the extremes of the dataset inwards
     j = lastindex(x)
     for i in firstindex(x):max(1, div(min(nsamples, length(x)), 2))
         dinv += (
-            inv(1 + weight * d_point(x[i], _yindex(i, x, y), lim, scale)) +
-            inv(1 + weight * d_point(x[j], _yindex(i, x, y), lim, scale))
+            inv(1 + weight * d_point(x[i], y[_yindex(i, x, y)], lim, scale)) +
+            inv(1 + weight * d_point(x[j], y[_yindex(j, x, y)], lim, scale))
         )
         j -= 1
     end
