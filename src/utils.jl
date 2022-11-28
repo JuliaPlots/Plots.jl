@@ -1187,16 +1187,20 @@ function d_point(x, y, lim, scale)
     isnan(d) && return 0.0
     d
 end
+_checkbounds(x, i, j) = checkbounds(Bool, x, i) && checkbounds(Bool, x, j)
 function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
     length(x) > 0 || return +Inf
     lim = lim ./ scale
     dinv = 0.0
     # Run from the extremes of the dataset inwards
     j = lastindex(x)
+    yoffset = firstindex(y) - firstindex(x)
     for i in firstindex(x):max(1, div(min(nsamples, length(x)), 2))
+        # This bound checking is probably redundant
+        (_checkbounds(x, i, j) && _checkbounds(y, i + yoffset, j + yoffset)) || continue
         dinv += (
-            inv(1 + weight * d_point(x[i], y[i], lim, scale)) +
-            inv(1 + weight * d_point(x[j], y[j], lim, scale))
+            inv(1 + weight * d_point(x[i], y[i + yoffset], lim, scale)) +
+            inv(1 + weight * d_point(x[j], y[j + yoffset], lim, scale))
         )
         j -= 1
     end
