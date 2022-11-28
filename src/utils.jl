@@ -1207,8 +1207,8 @@ function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
     yoffset = firstindex(y) - firstindex(x)
     for i in firstindex(x):max(1, div(min(nsamples, length(x)), 2))
         dinv += (
-            inv(1 + weight * d_point(x[i], y[_yindex(i, x, y, yoffset)], lim, scale)) +
-            inv(1 + weight * d_point(x[j], y[_yindex(j, x, y, yoffset)], lim, scale))
+            inv(1 + weight * d_point(x[i], y[i + yoffset], lim, scale)) +
+            inv(1 + weight * d_point(x[j], y[j + yoffset], lim, scale))
         )
         j -= 1
     end
