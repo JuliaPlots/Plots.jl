@@ -275,17 +275,17 @@ end
     @test Plots._yindex(5, 1:7, 1:3) == 2
     @test Plots._yindex(6, 1:7, 1:3) == 3
     @test Plots._yindex(7, 1:7, 1:3) == 1
-    @test Plots._yindex(-2, OffsetArray(1:7, -3), 1:3) == 1
-    @test Plots._yindex(1, OffsetArray(1:7, -3), 1:3) == 1
-    @test Plots._yindex(4, OffsetArray(1:7, -3), 1:3) == 1
-    @test Plots._yindex(5, OffsetArray(1:7, -3), 1:3) == 2
-    @test Plots._yindex(6, OffsetArray(1:7, -3), 1:3) == 3
-    @test Plots._yindex(7, OffsetArray(1:7, -3), 1:3) == 1
-    @test Plots._yindex(1, 1:7, OffsetArray(1:3, -3)) == -2
-    @test Plots._yindex(4, 1:7, OffsetArray(1:3, -3)) == -2
-    @test Plots._yindex(5, 1:7, OffsetArray(1:3, -3)) == -1
-    @test Plots._yindex(6, 1:7, OffsetArray(1:3, -3)) == 0
-    @test Plots._yindex(7, 1:7, OffsetArray(1:3, -3)) == -2
+    @test Plots._yindex(-2, OffsetArrays.OffsetArray(1:7, -3), 1:3) == 1
+    @test Plots._yindex(1, OffsetArrays.OffsetArray(1:7, -3), 1:3) == 1
+    @test Plots._yindex(4, OffsetArrays.OffsetArray(1:7, -3), 1:3) == 1
+    @test Plots._yindex(5, OffsetArrays.OffsetArray(1:7, -3), 1:3) == 2
+    @test Plots._yindex(6, OffsetArrays.OffsetArray(1:7, -3), 1:3) == 3
+    @test Plots._yindex(7, OffsetArrays.OffsetArray(1:7, -3), 1:3) == 1
+    @test Plots._yindex(1, 1:7, OffsetArrays.OffsetArray(1:3, -3)) == -2
+    @test Plots._yindex(4, 1:7, OffsetArrays.OffsetArray(1:3, -3)) == -2
+    @test Plots._yindex(5, 1:7, OffsetArrays.OffsetArray(1:3, -3)) == -1
+    @test Plots._yindex(6, 1:7, OffsetArrays.OffsetArray(1:3, -3)) == 0
+    @test Plots._yindex(7, 1:7, OffsetArrays.OffsetArray(1:3, -3)) == -2
 
     x = 0.0:0.1:1
     y = [1, 2, 3]
