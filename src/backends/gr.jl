@@ -1981,7 +1981,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
             y[1] < 0 && @warn "'y[1] < 0' (rmin) is not yet supported."
             rad_max = gr_y_axislims(sp)[2]
             GR.setwindow(-rad_max, rad_max, -rad_max, rad_max)  # square ar
-            # nonuniformpolarcellarray(θ, rad, nx, ny, color)
+            # nonuniformpolarcellarray(θ, ρ, nx, ny, color)
             GR.nonuniformpolarcellarray(rad2deg.(x), y, w, h, rgba)
         else
             GR.nonuniformcellarray(x, y, w, h, rgba)

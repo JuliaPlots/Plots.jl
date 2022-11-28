@@ -821,10 +821,17 @@ const _examples = PlotExample[
     PlotExample( # 49
         "Polar heatmaps",
         quote
-            θ = range(0, 2π; length=120)
-            ρ = range(0, 24; length=100)
-            z = sin.(ρ) .* cos.(θ)'
-            heatmap(θ, ρ, z; projection = :polar, color = :cividis)
+            θ = range(0, 2π; length = 100)
+            ρ = range(0, 120; length = 50)
+            z = sin.(ρ ./ 10) .* cos.(θ)'
+            heatmap(
+                θ,
+                ρ,
+                z;
+                projection = :polar,
+                color = :cividis,
+                right_margin = 2Plots.mm,
+            )
         end,
     ),
     PlotExample( # 50
@@ -836,13 +843,12 @@ const _examples = PlotExample[
             X = [x for x in xs for _ in ys]
             Y = [y for _ in xs for y in ys]
 
-            surf = (x, y) -> 1 / x + y * x^2
+            Z = (x, y) -> 1 / x + y * x^2
 
-            plot(
+            surface(
                 X,
                 Y,
-                surf.(X, Y),
-                st = :surface,
+                Z.(X, Y),
                 xlabel = "longer xlabel",
                 ylabel = "longer ylabel",
                 zlabel = "longer zlabel",

@@ -6,7 +6,7 @@ const TicksType = Union{AVec{Real},Tuple{AVec{Real},AVec{AStr}},Symbol}
 const _arg_desc = KW(
     # series args
     :label              => (AStr, "The label for a series, which appears in a legend. If empty, no legend entry is added."),
-    :seriescolor        => (ColorType, "The base color for this series. `:auto` (the default) will select a color from the subplot's `color_palette`, based on the order it was added to the subplot."),
+    :seriescolor        => (ColorType, "The base color for this series. `:auto` (the default) will select a color from the subplot's `color_palette`, based on the order it was added to the subplot. Also describes the colormap for surfaces."),
     :seriesalpha        => (Real, "The alpha/opacity override for the series. `nothing` (the default) means it will take the alpha value of the color."),
     :seriestype         => (Symbol, "This is the identifier of the type of visualization for this series. Choose from $(_allTypes) or any series recipes which are defined."),
     :linestyle          => (Symbol, "Style of the line (for path and bar stroke). Choose from $(_allStyles)"),
