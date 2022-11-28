@@ -56,10 +56,10 @@ for name in (
 )
     @testset "$name" begin
         if is_auto() || is_pkgeval()
-            # skip the majority of tests if we only want to update reference images or under `PkgEval`
+            # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)
             name != "backends" && continue
         end
-        gr()  # reset to default backend
+        gr()  # reset to default backend (safer)
         include("test_$name.jl")
     end
 end
