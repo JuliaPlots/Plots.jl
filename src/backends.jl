@@ -137,7 +137,6 @@ function load_default_backend()
     CURRENT_BACKEND.sym =
         @load_preference("backend", default_backend) |> lowercase |> Symbol
     backend(CURRENT_BACKEND.sym)
-    nothing
 end
 
 set_backend!(backend::Union{AbstractString,Symbol} = "gr"; kw...) =

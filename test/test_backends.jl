@@ -249,16 +249,16 @@ end
         @test Plots.CurrentBackend(:gr).sym === :gr
         @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
 
-        @test_logs (:warn, r".*not a valid backend package") withenv(
+        @test_logs (:warn, r".*is not a supported backend") withenv(
             "PLOTS_DEFAULT_BACKEND" => "invalid",
         ) do
-            Plots._pick_default_backend()
+            Plots.load_default_backend()
         end
         @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
-            Plots._pick_default_backend()
+            Plots.load_default_backend()
         end == Plots.UnicodePlotsBackend()
         @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
 
-        @test Plots._pick_default_backend() == Plots.GRBackend()
+        @test Plots.load_default_backend() == Plots.GRBackend()
     end
 end
