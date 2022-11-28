@@ -268,6 +268,12 @@ end
     # test singleton
     pl = plot(1:1)
     @test Plots._guess_best_legend_position(:best, pl) === :topright
+
+    # cyclic indexing
+    x = 0.0:0.1:1
+    y = [1, 2, 3]
+    pl = scatter(x, y)
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
 end
 
 @testset "dispatch" begin
