@@ -1197,7 +1197,7 @@ function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
     yoffset = firstindex(y) - firstindex(x)
     for i in firstindex(x):max(1, div(min(nsamples, length(x)), 2))
         # This bound checking is probably redundant
-        (_checkbounds(x, i, j) && _checkbounds(y, i+yoffset, j+yoffset)) || continue
+        (_checkbounds(x, i, j) && _checkbounds(y, i + yoffset, j + yoffset)) || continue
         dinv += (
             inv(1 + weight * d_point(x[i], y[i + yoffset], lim, scale)) +
             inv(1 + weight * d_point(x[j], y[j + yoffset], lim, scale))
