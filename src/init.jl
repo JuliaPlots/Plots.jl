@@ -172,8 +172,11 @@ end
 ##################################################################
 backend()  # get from `Preferences` or env, and initialize backend
 
-# needs to be split from `init` for precompilation, because `__init__` is ran after parsing
-@eval const $(backend_package_name()) = Main.$(backend_package_name())
+# needs to be split from `__init__` (for precompilation phase)
+@eval begin
+    const $(backend_package_name()) = Main.$(backend_package_name())
+    export $(backend_package_name())
+end
 
 include(backend_path(backend_name()))
 
