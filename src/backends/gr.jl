@@ -514,7 +514,7 @@ function gr_colorbar_colors(series::Series, clims)
         end
         @. 1_000 + 255 * (levels - zrange[1]) / (zrange[2] - zrange[1])
     else
-        1_000:1_255
+        1_000:1_255  # 256 values
     end
     round.(Int, colors)
 end
@@ -1970,17 +1970,18 @@ function gr_draw_heatmap(series, x, y, z, clims)
         _z, z_normalized = if (scale = sp[:colorbar_scale]) === :identity
             z, get_z_normalized.(z, clims...)
         elseif scale ∈ _logScales
-            z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
+            z_log, gr_z_normalized_log_scaled(scale, z, clims)
         end
         rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)
-        bg_rgba = gr_getcolorind(plot_color(series[:subplot][:background_color_inside]))
+        bg_rgba = gr_getcolorind(plot_color(sp[:background_color_inside]))
         for i in eachindex(rgba)
             isnan(_z[i]) && (rgba[i] = bg_rgba)
         end
         if ispolar(series)
             y[1] < 0 && @warn "'y[1] < 0' (rmin) is not yet supported."
-            dist = min(gr_x_axislims(sp)[2], gr_y_axislims(sp)[2])
-            GR.setwindow(-dist, dist, -dist, dist)  # square ar
+            rad_max = gr_y_axislims(sp)[2]
+            GR.setwindow(-rad_max, rad_max, -rad_max, rad_max)  # square ar
+            # nonuniformpolarcellarray(θ, rad, nx, ny, color)
             GR.nonuniformpolarcellarray(rad2deg.(x), y, w, h, rgba)
         else
             GR.nonuniformcellarray(x, y, w, h, rgba)

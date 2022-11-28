@@ -821,10 +821,10 @@ const _examples = PlotExample[
     PlotExample( # 49
         "Polar heatmaps",
         quote
-            x = range(0, 2π, length = 9)
-            y = 0:4
-            z = (1:4) .+ (1:8)'
-            heatmap(x, y, z, projection = :polar)
+            θ = range(0, 2π; length=120)
+            ρ = range(0, 24; length=100)
+            z = sin.(ρ) .* cos.(θ)'
+            heatmap(θ, ρ, z; projection = :polar, color = :cividis)
         end,
     ),
     PlotExample( # 50
