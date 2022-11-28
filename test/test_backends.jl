@@ -139,7 +139,11 @@ end
 =#
 
 @testset "Preferences" begin
-    Plots.set_backend!(:gaston)
+    @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
+    @test Plots.CurrentBackend(:gr).sym === :gr
+
+    Plots.set_backend!(:gaston; force = true)
+    @test Plots.load_default_backend() == Plots.GastonBackend()
     proc = ```
     $(Base.julia_cmd()) -e "
         ENV[\"PLOTS_PRECOMPILE\"] = false
@@ -151,6 +155,21 @@ end
     "``` |> run
     @test success(proc)
     Plots.set_backend!(; force = true)
+
+    @test_logs (:warn, r".*is not a supported backend") withenv(
+        "PLOTS_DEFAULT_BACKEND" => "invalid",
+    ) do
+        Plots.load_default_backend()
+    end
+    @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
+
+    @test Plots.load_default_backend() == Plots.GRBackend()
+
+    @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
+        Plots.load_default_backend()
+    end == Plots.UnicodePlotsBackend()
+
+    @test Plots.load_default_backend() == Plots.GRBackend()
 end
 
 @testset "UnicodePlots" begin
@@ -256,24 +275,5 @@ end
             Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
             closeall()
         end
-    end
-end
-
-@testset "coverage" begin
-    with(:gr) do
-        @test Plots.CurrentBackend(:gr).sym === :gr
-        @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
-
-        @test_logs (:warn, r".*is not a supported backend") withenv(
-            "PLOTS_DEFAULT_BACKEND" => "invalid",
-        ) do
-            Plots.load_default_backend()
-        end
-        @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
-            Plots.load_default_backend()
-        end == Plots.UnicodePlotsBackend()
-        @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
-
-        @test Plots.load_default_backend() == Plots.GRBackend()
     end
 end

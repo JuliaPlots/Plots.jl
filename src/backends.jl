@@ -133,13 +133,15 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 # ---------------------------------------------------------
 
 function load_default_backend()
-    default_backend = get(ENV, "PLOTS_DEFAULT_BACKEND", "gr")
     CURRENT_BACKEND.sym =
-        @load_preference("backend", default_backend) |> lowercase |> Symbol
+        @load_preference("backend", get(ENV, "PLOTS_DEFAULT_BACKEND", "gr")) |>
+        lowercase |>
+        Symbol
     backend(CURRENT_BACKEND.sym)
 end
 
-set_backend!(backend::Union{AbstractString,Symbol} = "gr"; kw...) =
+set_backend!(; kw...) = set_preferences!(Plots, "backend" => nothing; kw...)
+set_backend!(backend::Union{AbstractString,Symbol}; kw...) =
     set_preferences!(Plots, "backend" => lowercase(string(backend)); kw...)
 
 function diagnostics()
