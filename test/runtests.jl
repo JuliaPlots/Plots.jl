@@ -29,6 +29,10 @@ plotly()
 hdf5()
 gr()
 
+is_auto() = get(ENV, "VISUAL_REGRESSION_TESTS_AUTO", "false") == "true"
+is_pkgeval() = get(ENV, "JULIA_PKGEVAL", "false") == "true"
+is_ci() = get(ENV, "CI", "false") == "true"
+
 for name in (
     "quality",
     "misc",
@@ -51,8 +55,9 @@ for name in (
     "backends",
 )
     @testset "$name" begin
-        if get(ENV, "VISUAL_REGRESSION_TESTS_AUTO", "false") == "true" && name != "backends"
-            continue  # skip the majority of tests if we only want to update reference images
+        if is_auto() || is_pkgeval()
+            # skip the majority of tests if we only want to update reference images or under `PkgEval`
+            name != "backends" && continue
         end
         gr()  # reset to default backend
         include("test_$name.jl")

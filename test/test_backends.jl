@@ -1,4 +1,3 @@
-is_ci() = get(ENV, "CI", "false") == "true"
 ci_tol() =
     if Sys.islinux()
         "5e-4"
@@ -201,14 +200,14 @@ end
 end
 
 @testset "Examples" begin
-    if Sys.islinux() && get(ENV, "JULIA_PKGEVAL", "false") == "false"  # NOTE: for `PkgEval` timeout
+    if Sys.islinux() && !is_pkgeval()
         callback(m, pkgname, i) = begin
             pl = m.Plots.current()
             save_func = (; pgfplotsx = m.Plots.pdf, unicodeplots = m.Plots.txt)  # fastest `savefig` for each backend
             fn = Base.invokelatest(
                 get(save_func, pkgname, m.Plots.png),
                 pl,
-                tempname() * "_ex$i",
+                tempname() * ref_name(i),
             )
             @test filesize(fn) > 1_000
         end
