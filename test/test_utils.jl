@@ -208,6 +208,13 @@ end
     pl = plot!(x, x .^ 3, label = "cubic")
     @test Plots._guess_best_legend_position(:best, pl) === :topleft
 
+    x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(+3))
+    pl = plot(x, x, label = "linear")
+    pl = plot!(x, x .^ 2, label = "quadratic")
+    pl = plot!(x, x .^ 3, label = "cubic")
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
+
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
     x = 0:0.01:2
     pl = plot(x, -x, label = "linear")
     pl = plot!(x, -x .^ 2, label = "quadratic")
