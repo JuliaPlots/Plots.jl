@@ -29,11 +29,8 @@ function _check_compat(sim::Module)
     end
 end
 
-using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
-using SparseArrays
-using Base.Meta
-using Requires
-using Reexport
+using Base.Meta, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
+using SnoopPrecompile, Preferences, Requires, Reexport
 using Unzip
 @reexport using RecipesBase
 @reexport using PlotThemes
@@ -167,6 +164,7 @@ using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 
+const PLOTS_SEED  = 1234
 const PX_PER_INCH = 100
 const DPI         = PX_PER_INCH
 const MM_PER_INCH = 25.4
@@ -193,20 +191,10 @@ include("backends.jl")
 include("output.jl")
 include("ijulia.jl")
 include("fileio.jl")
-
-# Use fixed version of Plotly instead of the latest one for stable dependency
-# Ref: https://github.com/JuliaPlots/Plots.jl/pull/2779
-const _plotly_min_js_filename = "plotly-2.6.3.min.js"
-const CURRENT_BACKEND = CurrentBackend(:none)
-const PLOTS_SEED = 1234
-
-include("init.jl")
-
-include("backends/plotly.jl")
-include("backends/web.jl")
-include("backends/gr.jl")
-
 include("shorthands.jl")
-include("precompile.jl")
+include("backends/web.jl")
+
+const CURRENT_BACKEND = CurrentBackend(:none)
+include("init.jl")
 
 end

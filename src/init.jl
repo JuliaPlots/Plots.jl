@@ -3,17 +3,11 @@ using Scratch
 using REPL
 
 const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
-const BACKEND_PATH_GASTON = @path joinpath(@__DIR__, "backends", "gaston.jl")
-const BACKEND_PATH_HDF5 = @path joinpath(@__DIR__, "backends", "hdf5.jl")
-const BACKEND_PATH_INSPECTDR = @path joinpath(@__DIR__, "backends", "inspectdr.jl")
-const BACKEND_PATH_PLOTLYBASE = @path joinpath(@__DIR__, "backends", "plotlybase.jl")
-const BACKEND_PATH_PGFPLOTS =
-    @path joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")
-const BACKEND_PATH_PGFPLOTSX = @path joinpath(@__DIR__, "backends", "pgfplotsx.jl")
-const BACKEND_PATH_PLOTLYJS = @path joinpath(@__DIR__, "backends", "plotlyjs.jl")
-const BACKEND_PATH_PYTHONPLOT = @path joinpath(@__DIR__, "backends", "pythonplot.jl")
-const BACKEND_PATH_PYPLOT = @path joinpath(@__DIR__, "backends", "pyplot.jl")
-const BACKEND_PATH_UNICODEPLOTS = @path joinpath(@__DIR__, "backends", "unicodeplots.jl")
+# use fixed version of Plotly instead of the latest one for stable dependency
+# see github.com/JuliaPlots/Plots.jl/pull/2779
+const _plotly_min_js_filename = "plotly-2.6.3.min.js"
+
+backend_path(sym) = @path joinpath(@__DIR__, "backends", "$sym.jl")
 
 _plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -65,48 +59,54 @@ function __init__()
         end,
     )
 
-    @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
-        include(BACKEND_PATH_HDF5)
+    _plots_plotly_defaults()
+
+    @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
+        initialized(:gr) || include(backend_path(:gr))
     end
 
-    @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
-        include(BACKEND_PATH_INSPECTDR)
+    @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
+        initialized(:pyplot) || include(backend_path(:pyplot))
     end
 
     @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
-        include(BACKEND_PATH_PGFPLOTS)
+        initialized(:pgfplots) || include(backend_path(:pgfplots))
+    end
+
+    @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
+        initialized(:pgfplotsx) || include(backend_path(:pgfplotsx))
     end
 
     @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
         @require PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c" begin
-            include(BACKEND_PATH_PLOTLYBASE)
+            initialized(:plotly) || include(backend_path(:plotly))
+            initialized(:plotlybase) || include(backend_path(:plotlybase))
         end
     end
 
-    @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
-        include(BACKEND_PATH_PGFPLOTSX)
-    end
-
     @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
-        include(BACKEND_PATH_PLOTLYJS)
-    end
-
-    _plots_plotly_defaults()
-
-    @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
-        include(BACKEND_PATH_PYPLOT)
+        initialized(:plotly) || include(backend_path(:plotly))
+        initialized(:plotlyjs) || include(backend_path(:plotlyjs))
     end
 
     @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
-        include(BACKEND_PATH_PYTHONPLOT)
+        initialized(:pythonplot) || include(backend_path(:pythonplot))
     end
 
     @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
-        include(BACKEND_PATH_UNICODEPLOTS)
+        initialized(:unicodeplots) || include(backend_path(:unicodeplots))
     end
 
     @require Gaston = "4b11ee91-296f-5714-9832-002c20994614" begin
-        include(BACKEND_PATH_GASTON)
+        initialized(:gaston) || include(backend_path(:gaston))
+    end
+
+    @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
+        initialized(:inspectdr) || include(backend_path(:inspectdr))
+    end
+
+    @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
+        initialized(:hdf5) || include(backend_path(:hdf5))
     end
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
@@ -168,3 +168,46 @@ function __init__()
         @reexport using .UnitfulRecipes
     end
 end
+
+##################################################################
+backend()  # get from `Preferences` or env, and initialize backend
+
+# needs to be split from `init` for precompilation, because `__init__` is ran after parsing
+@eval const $(backend_package_name()) = Main.$(backend_package_name())
+
+include(backend_path(backend_name()))
+
+# COV_EXCL_START
+if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
+    @precompile_setup begin
+        n = length(_examples)
+        imports = sizehint!(Expr[], n)
+        examples = sizehint!(Expr[], 10n)
+        for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
+            _examples[i].external && continue
+            (imp = _examples[i].imports) === nothing || push!(imports, imp)
+            func = gensym(string(i))
+            push!(examples, quote
+                $func() = begin  # evaluate each example in a local scope
+                    $(_examples[i].exprs)
+                    if $i == 1  # only for one example
+                        fn = tempname()
+                        pl = current()
+                        show(devnull, pl)
+                        Sys.iswindows() || savefig(pl, "$fn.png")
+                        Sys.iswindows() || savefig(pl, "$fn.pdf")
+                    end
+                    nothing
+                end
+                $func()
+            end)
+        end
+        withenv("GKSwstype" => "nul") do
+            @precompile_all_calls begin
+                eval.(imports)
+                eval.(examples)
+            end
+        end
+    end
+end
+# COV_EXCL_STOP

@@ -16,6 +16,7 @@ backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol)::AbstractBackend =
     haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
 
+backend_package_name() = _backend_packages[backend_name()]
 backend_package_name(sym::Symbol) = _backend_packages[sym]
 
 macro init_backend(s)
@@ -131,21 +132,21 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
 
-_fallback_default_backend() = backend(GRBackend())
+function load_default_backend()
+    default_backend = get(ENV, "PLOTS_DEFAULT_BACKEND", "gr")
+    CURRENT_BACKEND.sym =
+        @load_preference("backend", default_backend) |> lowercase |> Symbol
+    backend(CURRENT_BACKEND.sym)
+    nothing
+end
 
-function _pick_default_backend()
-    if (env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")) != ""
-        if (sym = Symbol(lowercase(env_default))) in _backends
-            backend(sym)
-        else
-            @warn """You have set PLOTS_DEFAULT_BACKEND=$env_default, but it is not a valid backend package.
-            Choose from: \n\t$(join(sort(_backends), "\n\t"))
-            """
-            _fallback_default_backend()
-        end
-    else
-        _fallback_default_backend()
-    end
+set_backend!(backend::Union{AbstractString,Symbol} = "gr"; kw...) =
+    set_preferences!(Plots, "backend" => lowercase(string(backend)); kw...)
+
+function diagnostics()
+    from = haskey(ENV, "PLOTS_DEFAULT_BACKEND") ? "environment variable" : "`Preferences`"
+    @info "selected `Plots` backend: $(backend()), from $from" _current_plots_version
+    nothing
 end
 
 # ---------------------------------------------------------
@@ -154,16 +155,18 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
-    CURRENT_BACKEND.sym === :none && _pick_default_backend()
+    CURRENT_BACKEND.sym === :none && load_default_backend()
     CURRENT_BACKEND.pkg
 end
+
+initialized(sym::Symbol) = sym ∈ _initialized_backends
 
 """
 Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
-    if sym ∉ _initialized_backends
+    if !initialized(sym)
         _initialize_backend(pkg)
         push!(_initialized_backends, sym)
     end
@@ -286,11 +289,6 @@ function _initialize_backend(pkg::AbstractBackend)
         $(_check_compat)($sym)
     end
 end
-
-# ------------------------------------------------------------------------------
-# gr
-
-_initialize_backend(pkg::GRBackend) = nothing  # COV_EXCL_LINE
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
