@@ -87,7 +87,7 @@ function get_function_def(func_signature::Expr, args::Vector)
     elseif func_signature.head ≡ :call
         func = Expr(
             :call,
-            $apply_recipe,
+            :($RecipesBase.apply_recipe),
             esc.([:(plotattributes::AbstractDict{Symbol,Any}); args])...,
         )
         if isa(front, Expr) && front.head ≡ :curly
