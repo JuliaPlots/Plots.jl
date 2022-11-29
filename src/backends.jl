@@ -161,7 +161,9 @@ function diagnostics(io::IO = stdout)
     else
         "fallback"
     end
-    if (be = backend_name()) !== :none
+    if (be = backend_name()) === :none
+        @info "no `Plots` backends currently initialized"
+    else
         be_name = string(backend_package_name(be))
         @info "selected `Plots` backend: $be_name, from $from"
         Pkg.status(
@@ -169,8 +171,6 @@ function diagnostics(io::IO = stdout)
             mode = Pkg.PKGMODE_MANIFEST,
             io,
         )
-    else
-        @info "no `Plots` backends currently initialized"
     end
     nothing
 end

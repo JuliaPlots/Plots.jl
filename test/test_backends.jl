@@ -143,18 +143,21 @@ end
     @test Plots.CurrentBackend(:gr).sym === :gr
 
     Plots.set_default_backend!(:gaston; force = true)
-    @test Plots.load_default_backend() == Plots.GastonBackend()
-    @test_logs (:info, r".*Preferences") Plots.diagnostics(devnull)
-    proc = ```
-    $(Base.julia_cmd()) -e "
-    ENV[\"PLOTS_PRECOMPILE\"] = false
-    using Pkg, Test; io = devnull
-    Pkg.activate(; temp = true, io)
-    Pkg.develop(; path = \"$(escape_string(pkgdir(Plots)))\", io)
-    using Plots; Plots.diagnostics(io)
-    @test backend() == Plots.GastonBackend()
-    "``` |> run
-    @test success(proc)
+    # the following test mimics a restart, which is needed after a preferences change
+    script = tempname()
+    write(
+        script,
+        """
+        ENV["PLOTS_PRECOMPILE"] = false
+        using Pkg, Test; io = devnull
+        Pkg.activate(; temp = true, io)
+        Pkg.develop(; path = "$(escape_string(pkgdir(Plots)))", io)
+        using Plots
+        @test_logs (:info, r".*Preferences") Plots.diagnostics(io)
+        @test backend() == Plots.GastonBackend()
+        """,
+    )
+    @test success(run(```$(Base.julia_cmd()) $script```))
     Plots.set_default_backend!(; force = true)  # clear `Preferences` key
 
     withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
@@ -170,7 +173,7 @@ end
     end
 
     @test Plots.load_default_backend() == Plots.GRBackend()
-    @test Plots.backend_package_name() == :GR
+    @test Plots.backend_package_name() === :GR
     @test Plots.backend_name() === :gr
 
     @test_logs (:info, r".*fallback") Plots.diagnostics(devnull)
