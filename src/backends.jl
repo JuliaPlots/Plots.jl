@@ -131,10 +131,14 @@ end
 CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
+# this must always be done during precompilation, otherwise
+# the cache will not invalidate when preferences change
+const DEFAULT_BACKEND_STRING = load_preference(Plots, "default_backend", "gr")
 
 function load_default_backend()
+    # environment variable preempts the `Preferences` based mechanism
     CURRENT_BACKEND.sym =
-        load_preferences(Plots, "default_backend", get(ENV, "PLOTS_DEFAULT_BACKEND", "gr")) |>
+        something(get(ENV, "PLOTS_DEFAULT_BACKEND", nothing), DEFAULT_BACKEND_STRING) |>
         lowercase |>
         Symbol
     backend(CURRENT_BACKEND.sym)
@@ -146,7 +150,6 @@ function set_default_backend!(
 )
     value = backend === nothing ? nothing : lowercase(string(backend))
     set_preferences!(Plots, "default_backend" => value; kw...)
-    rm.(Base.find_all_in_cache_path(Base.module_keys[Plots]))
     nothing
 end
 
@@ -315,11 +318,13 @@ function _initialize_backend(pkg::AbstractBackend)
 end
 
 # FIXME: remove hard `GR` dependency in `Plots@2.0`
+# COV_EXCL_START
 _initialize_backend(pkg::GRBackend) = @eval begin
     import GR
     export GR
     $(_check_compat)(GR)
 end
+# COV_EXCL_STOP
 
 const _gr_attr = merge_with_base_supported([
     :annotations,

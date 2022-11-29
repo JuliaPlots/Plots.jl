@@ -171,15 +171,17 @@ end
 
 ##################################################################
 # COV_EXCL_START
+
 if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")
     @precompile_setup begin
-        backend()  # get from `Preferences` or env, and initialize backend
-        include(backend_path(backend_name()))  # load glue code
-        @info backend_name()
+        backend()  # intialize backend, either from preferences or from env
+        default_backend = backend_name()
+        include(backend_path(default_backend))  # load glue code
+        @info default_backend
         n = length(_examples)
         imports = sizehint!(Expr[], n)
         examples = sizehint!(Expr[], 10n)
-        for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
+        for i in setdiff(1:n, _backend_skips[default_backend], _animation_examples)
             _examples[i].external && continue
             (imp = _examples[i].imports) === nothing || push!(imports, imp)
             func = gensym(string(i))

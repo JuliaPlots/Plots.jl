@@ -23,7 +23,7 @@ using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 # get `Preferences` set backend, if any
-const previous_default_backend = load_preferences(Plots, "default_backend")
+const previous_default_backend = load_preference(Plots, "default_backend")
 
 # initial load - required for `should_warn_on_unsupported`
 unicodeplots()
