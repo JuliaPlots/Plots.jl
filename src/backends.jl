@@ -284,11 +284,19 @@ end
 
 function _initialize_backend(pkg::AbstractBackend)
     sym = backend_package_name(pkg)
-    @eval Main begin
+    @eval Main begin  # NOTE: this is a hack (expecting the package to be in `Project.toml`, remove in `Plots` `2.0`)
         import $sym
         export $sym
         $(_check_compat)($sym)
     end
+    @eval const $sym = Main.$sym  # so that the module is available in `Plots`
+end
+
+# FIXME: remove hard `GR` dependency in Plots `2.0`
+_initialize_backend(pkg::GRBackend) = @eval begin
+    import GR
+    export GR
+    $(_check_compat)(GR)
 end
 
 const _gr_attr = merge_with_base_supported([
@@ -416,6 +424,10 @@ function _initialize_backend(pkg::PlotlyBackend)
         end
         _check_compat(PlotlyBase)
         _check_compat(PlotlyKaleido)
+        @eval begin
+            const PlotlyBase = Main.PlotlyBase
+            const PlotlyKaleido = Main.PlotlyKaleido
+        end
     catch err
         @warn "For saving to png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed." err
     end
@@ -654,13 +666,16 @@ const _plotlyjs_scale      = _plotly_scale
 # ------------------------------------------------------------------------------
 # pyplot
 
-_initialize_backend(::PyPlotBackend) = @eval Main begin
-    import PyPlot
-    export PyPlot
-    $(_check_compat)(PyPlot)
+function _initialize_backend(::PyPlotBackend)
+    @eval Main begin
+        import PyPlot
+        export PyPlot
+        $(_check_compat)(PyPlot)
 
-    # we don't want every command to update the figure
-    PyPlot.ioff()
+        # we don't want every command to update the figure
+        PyPlot.ioff()
+    end
+    @eval const PyPlot = Main.PyPlot
 end
 
 const _pyplot_attr = merge_with_base_supported([

@@ -149,7 +149,7 @@ end
         ENV[\"PLOTS_PRECOMPILE\"] = false
         using Pkg
         Pkg.activate(; temp = true)
-        Pkg.develop(; path = \"$(pkgdir(Plots))\")
+        Pkg.develop(; path = \"$(escape_string(pkgdir(Plots)))\")
         using Plots, Test
         @test backend() == Plots.GastonBackend()
     "``` |> run
