@@ -63,3 +63,5 @@ for name in (
         include("test_$name.jl")
     end
 end
+
+Plots.set_backend!(; force = true)  # clear out `Preferences` file

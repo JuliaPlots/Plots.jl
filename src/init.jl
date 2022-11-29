@@ -175,7 +175,7 @@ if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO",
     @precompile_setup begin
         backend()  # get from `Preferences` or env, and initialize backend
         include(backend_path(backend_name()))  # load glue code
-
+        @info backend_name()
         n = length(_examples)
         imports = sizehint!(Expr[], n)
         examples = sizehint!(Expr[], 10n)
