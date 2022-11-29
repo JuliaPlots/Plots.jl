@@ -144,32 +144,36 @@ end
 
     Plots.set_backend!(:gaston; force = true)
     @test Plots.load_default_backend() == Plots.GastonBackend()
+    @test_logs (:info, r".*Preferences") Plots.diagnostics(devnull)
     proc = ```
     $(Base.julia_cmd()) -e "
-        ENV[\"PLOTS_PRECOMPILE\"] = false
-        using Pkg
-        Pkg.activate(; temp = true)
-        Pkg.develop(; path = \"$(escape_string(pkgdir(Plots)))\")
-        using Plots, Test
-        @test backend() == Plots.GastonBackend()
+    ENV[\"PLOTS_PRECOMPILE\"] = false
+    using Pkg, Test; io = devnull
+    Pkg.activate(; temp = true, io)
+    Pkg.develop(; path = \"$(escape_string(pkgdir(Plots)))\", io)
+    using Plots; Plots.diagnostics(io)
+    @test backend() == Plots.GastonBackend()
     "``` |> run
     @test success(proc)
-    Plots.set_backend!(; force = true)
+    Plots.set_backend!(; force = true)  # clear `Preferences` key
 
-    @test_logs (:warn, r".*is not a supported backend") withenv(
-        "PLOTS_DEFAULT_BACKEND" => "invalid",
-    ) do
-        Plots.load_default_backend()
+    withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
+        @test_logs (:warn, r".*is not a supported backend") Plots.load_default_backend()
     end
     @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
 
     @test Plots.load_default_backend() == Plots.GRBackend()
 
-    @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
-        Plots.load_default_backend()
-    end == Plots.UnicodePlotsBackend()
+    withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
+        @test_logs (:info, r".*environment variable") Plots.diagnostics(devnull)
+        @test Plots.load_default_backend() == Plots.UnicodePlotsBackend()
+    end
 
     @test Plots.load_default_backend() == Plots.GRBackend()
+    @test Plots.backend_package_name() == :GR
+    @test Plots.backend_name() === :gr
+
+    @test_logs (:info, r".*fallback") Plots.diagnostics(devnull)
 end
 
 @testset "UnicodePlots" begin
@@ -226,17 +230,11 @@ end
         # NOTE: use `ENV["VISUAL_REGRESSION_TESTS_AUTO"] = true;` to automatically replace reference images
         @test backend() == Plots.GRBackend()
         @test backend_name() === :gr
-        withenv("PLOTS_TEST" => true, "GKSwstype" => "nul") do
-            @static if haskey(ENV, "APPVEYOR")
-                @info "Skipping GR image comparison tests on AppVeyor"
-            else
-                image_comparison_facts(
-                    :gr,
-                    tol = PLOTS_IMG_TOL,
-                    skip = vcat(Plots._backend_skips[:gr], blacklist),
-                )
-            end
-        end
+        image_comparison_facts(
+            :gr,
+            tol = PLOTS_IMG_TOL,
+            skip = vcat(Plots._backend_skips[:gr], blacklist),
+        )
     end
 end
 

@@ -144,9 +144,25 @@ set_backend!(; kw...) = set_preferences!(Plots, "backend" => nothing; kw...)
 set_backend!(backend::Union{AbstractString,Symbol}; kw...) =
     set_preferences!(Plots, "backend" => lowercase(string(backend)); kw...)
 
-function diagnostics()
-    from = haskey(ENV, "PLOTS_DEFAULT_BACKEND") ? "environment variable" : "`Preferences`"
-    @info "selected `Plots` backend: $(backend()), from $from" _current_plots_version
+function diagnostics(io::IO = stdout)
+    from = if has_preference(Plots, "backend")
+        "`Preferences`"
+    elseif haskey(ENV, "PLOTS_DEFAULT_BACKEND")
+        "environment variable"
+    else
+        "fallback"
+    end
+    if (be = backend_name()) !== :none
+        be_name = string(backend_package_name(be))
+        @info "selected `Plots` backend: $be_name, from $from"
+        Pkg.status(
+            ["Plots", "RecipesBase", "RecipesPipeline", be_name];
+            mode = Pkg.PKGMODE_MANIFEST,
+            io,
+        )
+    else
+        @info "no `Plots` backends currently initialized"
+    end
     nothing
 end
 
