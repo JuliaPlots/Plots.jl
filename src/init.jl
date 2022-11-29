@@ -22,7 +22,7 @@ function _plots_theme_defaults()
 end
 
 function _plots_plotly_defaults()
-    if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == "true"
+    if bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", "false")
         global plotly_local_file_path[] =
             joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
         isfile(plotly_local_file_path[]) || Downloads.download(
@@ -117,7 +117,7 @@ function __init__()
     end
 
     @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
-        if get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "false") == "true" &&
+        if bool_env("PLOTS_IMAGE_IN_TERMINAL", "false") &&
            ImageInTerminal.ENCODER_BACKEND[] == :Sixel
             get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
             for be in (
@@ -170,13 +170,12 @@ function __init__()
 end
 
 ##################################################################
-backend()  # get from `Preferences` or env, and initialize backend
-
-include(backend_path(backend_name()))
-
 # COV_EXCL_START
-if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
+if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")
     @precompile_setup begin
+        backend()  # get from `Preferences` or env, and initialize backend
+        include(backend_path(backend_name()))  # load glue code
+
         n = length(_examples)
         imports = sizehint!(Expr[], n)
         examples = sizehint!(Expr[], 10n)
@@ -192,7 +191,6 @@ if get(ENV, "PLOTS_PRECOMPILE", "true") == "true"
                         pl = current()
                         show(devnull, pl)
                         Sys.iswindows() || savefig(pl, "$fn.png")
-                        Sys.iswindows() || savefig(pl, "$fn.pdf")
                     end
                     nothing
                 end

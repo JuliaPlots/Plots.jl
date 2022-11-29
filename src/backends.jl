@@ -284,7 +284,7 @@ end
 
 function _initialize_backend(pkg::AbstractBackend)
     sym = backend_package_name(pkg)
-    @eval Main begin  # NOTE: this is a hack (expecting the package to be in `Project.toml`, remove in `Plots` `2.0`)
+    @eval Main begin  # NOTE: this is a hack (expecting the package to be in `Project.toml`, remove in `Plots@2.0`)
         import $sym
         export $sym
         $(_check_compat)($sym)
@@ -292,7 +292,7 @@ function _initialize_backend(pkg::AbstractBackend)
     @eval const $sym = Main.$sym  # so that the module is available in `Plots`
 end
 
-# FIXME: remove hard `GR` dependency in Plots `2.0`
+# FIXME: remove hard `GR` dependency in `Plots@2.0`
 _initialize_backend(pkg::GRBackend) = @eval begin
     import GR
     export GR

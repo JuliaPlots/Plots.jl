@@ -65,6 +65,13 @@ end
     end
 end
 
+@testset "bool_env" begin
+    @test Plots.bool_env("FOO", "true")
+    @test Plots.bool_env("FOO", "1")
+    @test !Plots.bool_env("FOO", "false")
+    @test !Plots.bool_env("FOO", "0")
+end
+
 @testset "Themes" begin
     @test showtheme(:dark) isa Plot
 end
