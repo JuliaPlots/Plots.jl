@@ -142,7 +142,7 @@ end
     @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
     @test Plots.CurrentBackend(:gr).sym === :gr
 
-    Plots.set_backend!(:gaston; force = true)
+    Plots.set_default_backend!(:gaston; force = true)
     @test Plots.load_default_backend() == Plots.GastonBackend()
     @test_logs (:info, r".*Preferences") Plots.diagnostics(devnull)
     proc = ```
@@ -155,7 +155,7 @@ end
     @test backend() == Plots.GastonBackend()
     "``` |> run
     @test success(proc)
-    Plots.set_backend!(; force = true)  # clear `Preferences` key
+    Plots.set_default_backend!(; force = true)  # clear `Preferences` key
 
     withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
         @test_logs (:warn, r".*is not a supported backend") Plots.load_default_backend()

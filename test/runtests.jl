@@ -29,9 +29,9 @@ plotly()
 hdf5()
 gr()
 
-is_auto() = get(ENV, "VISUAL_REGRESSION_TESTS_AUTO", "false") == "true"
-is_pkgeval() = get(ENV, "JULIA_PKGEVAL", "false") == "true"
-is_ci() = get(ENV, "CI", "false") == "true"
+is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
+is_pkgeval() = Plots.bool_env("JULIA_PKGEVAL", "false")
+is_ci() = Plots.bool_env("CI", "false")
 
 for name in (
     "quality",
@@ -64,4 +64,4 @@ for name in (
     end
 end
 
-Plots.set_backend!(; force = true)  # clear out `Preferences` file
+Plots.set_default_backend!(; force = true)  # clear out `Preferences` file
