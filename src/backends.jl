@@ -140,7 +140,7 @@ function load_default_backend()
     backend(CURRENT_BACKEND.sym)
 end
 
-function set_backend!(backend::Union{Nothing,AbstractString,Symbol} = nothing; kw...)
+function set_default_backend!(backend::Union{Nothing,AbstractString,Symbol} = nothing; kw...)
     value = backend === nothing ? nothing : lowercase(string(backend))
     set_preferences!(Plots, "default_backend" => value; kw...)
     rm.(Base.find_all_in_cache_path(Base.module_keys[Plots]))
