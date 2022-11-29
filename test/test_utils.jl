@@ -292,8 +292,8 @@ end
     pl = scatter(x, y)
     @test Plots._guess_best_legend_position(:best, pl) === :topleft
 
-    # Check if there is any significant delay caused by this function (<20μs)
-    x = rand(100)
+    # Check if there is any significant delay caused by this function (20μs)
+    x = rand(100) # with length > 100 all samples will be used (default: 50)
     y = rand(100)
     b1 = @benchmark plot($x, $y; legend = :best)
     b2 = @benchmark plot($x, $y; legend = :topright)
