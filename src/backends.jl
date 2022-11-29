@@ -148,7 +148,7 @@ function set_backend!(backend::Union{Nothing,AbstractString,Symbol} = nothing; k
 end
 
 function diagnostics(io::IO = stdout)
-    from = if has_preference(Plots, "backend")
+    from = if has_preference(Plots, "default_backend")
         "`Preferences`"
     elseif haskey(ENV, "PLOTS_DEFAULT_BACKEND")
         "environment variable"
