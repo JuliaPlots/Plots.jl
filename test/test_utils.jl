@@ -291,6 +291,13 @@ end
     y = [1, 2, 3]
     pl = scatter(x, y)
     @test Plots._guess_best_legend_position(:best, pl) === :topleft
+
+    # Check if there is any significant delay caused by this function (<20μs)
+    x = rand(100)
+    y = rand(100)
+    b1 = @benchmark plot($x, $y; legend = :best)
+    b2 = @benchmark plot($x, $y; legend = :topright)
+    @test abs(mean(b1.times) - mean(b2.times)) < 20_000 # ns
 end
 
 @testset "dispatch" begin
