@@ -1189,7 +1189,7 @@ function d_point(x, y, lim, scale)
 end
 function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
     (nx = length(x)) > 0 || return +Inf
-    (ny = length(y)) > 0 || return +Inf
+    length(y) > 0 || return +Inf
     lim = lim ./ scale
     dinv = 0.0
     # Run from the extremes of the dataset inwards
