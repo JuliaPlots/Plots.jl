@@ -140,9 +140,12 @@ function load_default_backend()
     backend(CURRENT_BACKEND.sym)
 end
 
-set_backend!(; kw...) = set_preferences!(Plots, "backend" => nothing; kw...)
-set_backend!(backend::Union{AbstractString,Symbol}; kw...) =
-    set_preferences!(Plots, "backend" => lowercase(string(backend)); kw...)
+function set_backend!(backend::Union{Nothing,AbstractString,Symbol} = nothing; kw...)
+    value = backend === nothing ? nothing : lowercase(string(backend))
+    set_preferences!(Plots, "backend" => value; kw...)
+    rm.(Base.find_all_in_cache_path(Base.module_keys[Plots]))
+    nothing
+end
 
 function diagnostics(io::IO = stdout)
     from = if has_preference(Plots, "backend")
