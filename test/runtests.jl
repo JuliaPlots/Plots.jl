@@ -12,6 +12,7 @@ using VisualRegressionTests
 using RecipesPipeline
 using FilePathsBase
 using LaTeXStrings
+using Preferences
 using RecipesBase
 using TestImages
 using Unitful
@@ -20,6 +21,9 @@ using Plots
 using Dates
 using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
+
+# get `Preferences` set backend, if any
+const previous_default_backend = load_preferences(Plots, "default_backend")
 
 # initial load - required for `should_warn_on_unsupported`
 unicodeplots()
@@ -64,4 +68,7 @@ for name in (
     end
 end
 
-Plots.set_default_backend!(; force = true)  # clear out `Preferences` file
+# reset to previous state
+if previous_default_backend !== nothing
+    Plots.set_default_backend!(previous_default_backend; force = true)
+end
