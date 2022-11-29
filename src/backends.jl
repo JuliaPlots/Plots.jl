@@ -134,7 +134,7 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 function load_default_backend()
     CURRENT_BACKEND.sym =
-        @load_preference("backend", get(ENV, "PLOTS_DEFAULT_BACKEND", "gr")) |>
+        @load_preference("default_backend", get(ENV, "PLOTS_DEFAULT_BACKEND", "gr")) |>
         lowercase |>
         Symbol
     backend(CURRENT_BACKEND.sym)
