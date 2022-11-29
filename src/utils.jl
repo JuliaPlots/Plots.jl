@@ -1187,12 +1187,6 @@ function d_point(x, y, lim, scale)
     isnan(d) && return 0.0
     d
 end
-# Cycle y indices while taking care of possible offsets
-function _yindex(i, x, y)
-    iy = i - firstindex(x) + 1
-    iy = mod1(iy, length(y))
-    iy + firstindex(y) - 1
-end
 function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
     (nx = length(x)) > 0 || return +Inf
     (ny = length(y)) > 0 || return +Inf
@@ -1200,10 +1194,11 @@ function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
     dinv = 0.0
     # Run from the extremes of the dataset inwards
     i, j = firstindex(x), lastindex(x)
+    yoffset = firstindex(y) - i
     for i in i:max(1, div(min(nsamples, nx), 2))
         dinv += (
-            inv(1 + weight * d_point(x[i], y[_yindex(i, x, y)], lim, scale)) +
-            inv(1 + weight * d_point(x[j], y[_yindex(j, x, y)], lim, scale))
+            inv(1 + weight * d_point(x[i], _cycle(y, i + yoffset), lim, scale)) +
+            inv(1 + weight * d_point(x[j], _cycle(y, j + yoffset), lim, scale))
         )
         j -= 1
     end
