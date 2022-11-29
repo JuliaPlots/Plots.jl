@@ -298,10 +298,8 @@ macro recipe(funcexpr::Expr)
             $cleanup_body
             series_list = $RecipeData[]
             func_return = $func_body
-            func_return === nothing || push!(
-                series_list,
-                $RecipeData(plotattributes, $wrap_tuple(func_return)),
-            )
+            func_return === nothing ||
+                push!(series_list, $RecipeData(plotattributes, $wrap_tuple(func_return)))
             series_list
         end |> esc,
     )
@@ -332,18 +330,13 @@ end
 ```
 """
 macro series(expr::Expr)
-    esc(
-        quote
-            let plotattributes = copy(plotattributes)
-                args = $expr
-                push!(
-                    series_list,
-                    $RecipeData(plotattributes, $wrap_tuple(args)),
-                )
-                nothing
-            end
-        end,
-    )
+    esc(quote
+        let plotattributes = copy(plotattributes)
+            args = $expr
+            push!(series_list, $RecipeData(plotattributes, $wrap_tuple(args)))
+            nothing
+        end
+    end)
 end
 
 # --------------------------------------------------------------------------
@@ -377,10 +370,8 @@ function _userplot(expr::Expr)
         quote
             $expr
             export $funcname, $funcname2
-            Core.@__doc__ $funcname(args...; kw...) =
-                $plot($typename(args); kw...)
-            Core.@__doc__ $funcname2(args...; kw...) =
-                $plot!($typename(args); kw...)
+            Core.@__doc__ $funcname(args...; kw...) = $plot($typename(args); kw...)
+            Core.@__doc__ $funcname2(args...; kw...) = $plot!($typename(args); kw...)
             Core.@__doc__ $funcname2(plt::$AbstractPlot, args...; kw...) =
                 $plot!(plt, $typename(args); kw...)
         end,

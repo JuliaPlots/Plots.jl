@@ -61,11 +61,7 @@ end
     @testset "simple parametric type" begin
         @test_throws MethodError RB.apply_recipe(KW(), T1())
 
-        RB.@recipe function plot(
-            t::T1,
-            n::N = 1;
-            customcolor = :green,
-        ) where {N<:Integer}
+        RB.@recipe function plot(t::T1, n::N = 1; customcolor = :green) where {N<:Integer}
             :markershape --> :auto, :require
             :markercolor --> customcolor, :force
             :xrotation --> 5
@@ -88,11 +84,7 @@ end
     @testset "parametric type with where" begin
         @test_throws MethodError RB.apply_recipe(KW(), T2())
 
-        RB.@recipe function plot(
-            t::T2,
-            n::N = 1;
-            customcolor = :green,
-        ) where {N<:Integer}
+        RB.@recipe function plot(t::T2, n::N = 1; customcolor = :green) where {N<:Integer}
             :markershape --> :auto, :require
             :markercolor --> customcolor, :force
             :xrotation --> 5
