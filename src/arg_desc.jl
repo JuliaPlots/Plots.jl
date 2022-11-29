@@ -6,7 +6,7 @@ const TicksType = Union{AVec{Real},Tuple{AVec{Real},AVec{AStr}},Symbol}
 const _arg_desc = KW(
     # series args
     :label              => (AStr, "The label for a series, which appears in a legend. If empty, no legend entry is added."),
-    :seriescolor        => (ColorType, "The base color for this series. `:auto` (the default) will select a color from the subplot's `color_palette`, based on the order it was added to the subplot."),
+    :seriescolor        => (ColorType, "The base color for this series. `:auto` (the default) will select a color from the subplot's `color_palette`, based on the order it was added to the subplot. Also describes the colormap for surfaces."),
     :seriesalpha        => (Real, "The alpha/opacity override for the series. `nothing` (the default) means it will take the alpha value of the color."),
     :seriestype         => (Symbol, "This is the identifier of the type of visualization for this series. Choose from $(_allTypes) or any series recipes which are defined."),
     :linestyle          => (Symbol, "Style of the line (for path and bar stroke). Choose from $(_allStyles)"),
@@ -119,7 +119,7 @@ const _arg_desc = KW(
     :legend_title_font_valign    => (Symbol, "Font vertical alignment of the legend title. Choose from (:vcenter, :top, :bottom, :center)."),
     :legend_title_font_rotation  => (Real, "Font rotation of the legend title."),
     :legend_title_font_color     => (ColorType, "Font color of the legend title."),
-    :colorbar                    => (Union{Bool,Symbol}, "Show the colorbar ? A symbol speciies a colorbar position. Choose from (`:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:legend`): `legend` matches legend value (note: only some may be supported in each backend)."),
+    :colorbar                    => (Union{Bool,Symbol}, "Show the colorbar ? A symbol specifies a colorbar position. Choose from (`:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:legend`): `legend` matches legend value (note: only some may be supported in each backend)."),
     :clims                       => (Union{NTuple{2,Real},Symbol,Function}, "Fixes the limits of the colorbar: values, `:auto`, or a function taking series data in and returning a NTuple{2,Real}."),
     :colorbar_fontfamily         => (Union{AStr,Symbol}, "Font family of colobar entries."),
     :colorbar_ticks              => (TicksType, "Tick values, (tickvalues, ticklabels), or `:auto`."),

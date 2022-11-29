@@ -334,4 +334,14 @@ with(:gr) do
             tempname(),
         )
     end
+
+    @testset "cycling" begin
+        # see github.com/JuliaPlots/Plots.jl/issues/4561
+        # and github.com/JuliaPlots/Plots.jl/issues/2980
+        # cycling arguments is a weird Plots feature - maybe remove in `2.0` ?
+        x = 0.0:0.1:1
+        y = rand(3)
+        show(devnull, scatter(x, y))
+        # show(devnull, plot(x, y))  # currently unsupported
+    end
 end
