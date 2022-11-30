@@ -143,10 +143,19 @@ end
 
 function set_default_backend!(
     backend::Union{Nothing,AbstractString,Symbol} = nothing;
+    force = true,
     kw...,
 )
-    value = backend === nothing ? nothing : lowercase(string(backend))
-    set_preferences!(Plots, "default_backend" => value; kw...)
+    value = if backend === nothing
+        delete_preferences!(Plots, "default_backend"; force, kw...)
+    else
+        value = lowercase(string(backend))
+        if _check_supported(value)
+            set_preferences!(Plots, "default_backend" => value; force, kw...)
+        else
+            @warn "$value is not a supported `Plots` backend, bailing out"
+        end
+    end
     nothing
 end
 

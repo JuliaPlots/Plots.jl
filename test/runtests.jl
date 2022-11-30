@@ -68,10 +68,8 @@ for name in (
     end
 end
 
-# reset to previous state
 if previous_default_backend === nothing
-    # Restore the absence of a preference
-    Preferences.delete_preferences!(Plots, "default_backend")
+    delete_preferences!(Plots, "default_backend")  # restore the absence of a preference
 else
-    Plots.set_default_backend!(previous_default_backend; force = true)
+    Plots.set_default_backend!(previous_default_backend)  # reset to previous state
 end

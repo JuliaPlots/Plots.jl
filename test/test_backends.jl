@@ -142,7 +142,7 @@ end
     @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
     @test Plots.CurrentBackend(:gr).sym === :gr
 
-    Plots.set_default_backend!(:gaston; force = true)
+    Plots.set_default_backend!(:gaston)
     # the following test mimics a restart, which is needed after a preferences change
     script = tempname()
     write(
@@ -158,7 +158,7 @@ end
         """,
     )
     @test success(run(```$(Base.julia_cmd()) $script```))
-    Plots.set_default_backend!(; force = true)  # clear `Preferences` key
+    Plots.set_default_backend!()  # clear `Preferences` key
 
     withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
         @test_logs (:warn, r".*is not a supported backend") Plots.load_default_backend()
