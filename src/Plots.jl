@@ -7,33 +7,9 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
     @eval Base.Experimental.@max_methods 1
 end
 
-using Pkg
-
-const _plots_project = Pkg.Types.read_project(normpath(@__DIR__, "..", "Project.toml"))
-const _current_plots_version = _plots_project.version
-const _plots_compats = _plots_project.compat
-
-_check_supported(backend::Union{Module,AbstractString,Symbol}) =
-    haskey(_plots_compats, string(backend))
-
-function _check_compat(m::Module)
-    _check_supported(m) || return
-    be_v = Pkg.Types.read_project(joinpath(pkgdir(m), "Project.toml")).version
-    be_c = _plots_compats[string(m)]
-    if be_c isa String  # julia 1.6
-        if !(be_v in Pkg.Types.semver_spec(be_c))
-            @warn "$m $be_v is not compatible with this version of Plots. The declared compatibility is $(be_c)."
-        end
-    else
-        if isempty(intersect(be_v, be_c.val))
-            @warn "$m $be_v is not compatible with this version of Plots. The declared compatibility is $(be_c.str)."
-        end
-    end
-    nothing
-end
-
-using Base.Meta, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
+using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
 using SnoopPrecompile, Preferences, Requires, Reexport
+using Base.Meta
 using Unzip
 @reexport using RecipesBase
 @reexport using PlotThemes

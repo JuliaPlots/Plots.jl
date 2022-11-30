@@ -142,19 +142,23 @@ end
     @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
     @test Plots.CurrentBackend(:gr).sym === :gr
 
-    Plots.set_default_backend!(:gaston)
+    Plots.set_default_backend!(:unicodeplots)
     # the following test mimics a restart, which is needed after a preferences change
     script = tempname()
     write(
         script,
         """
         ENV["PLOTS_PRECOMPILE"] = false
-        using Pkg, Test; io = devnull
+        using Pkg, Test; io = (devnull, stdout)[1]  # toggle for debugging
         Pkg.activate(; temp = true, io)
         Pkg.develop(; path = "$(escape_string(pkgdir(Plots)))", io)
+        Pkg.add("UnicodePlots"; io)  # checked by Plots
         using Plots
-        @test_logs (:info, r".*Preferences") Plots.diagnostics(io)
-        @test backend() == Plots.GastonBackend()
+        res = @testset "Prefs" begin
+            @test_logs (:info, r".*Preferences") Plots.diagnostics(io)
+            @test backend() == Plots.UnicodePlotsBackend()
+        end
+        exit(res.n_passed == 2 ? 0 : 1)
         """,
     )
     @test success(run(```$(Base.julia_cmd()) $script```))

@@ -1,11 +1,50 @@
 struct NoBackend <: AbstractBackend end
 
-const _backendType = Dict{Symbol,DataType}(:none => NoBackend)
-const _backendSymbol = Dict{DataType,Symbol}(NoBackend => :none)
-const _backends = Symbol[]
-const _initialized_backends = Set{Symbol}()
+const _plots_project         = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
+const _current_plots_version = _plots_project.version
+const _plots_compats         = _plots_project.compat
 
-const _backend_packages = Dict{Symbol,Symbol}()
+const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
+const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
+const _backend_packages     = Dict{Symbol,Symbol}()
+const _initialized_backends = Set{Symbol}()
+const _backends             = Symbol[]
+
+function _check_installed(backend::Union{Module,AbstractString,Symbol})
+    str = string(backend)
+    if all(islowercase, str)  # lowercase -> CamelCase
+        str = string(_backend_packages[Symbol(str)])
+    end
+    # check supported
+    if !haskey(_plots_compats, str)
+        @warn "backend `$str` is not compatible with `Plots`."
+        return
+    end
+    # check installed
+    deps = Pkg.dependencies()
+    valid = (pkg_id = Base.identify_package(str)) !== nothing
+    valid &= haskey(deps, pkg_id.uuid)
+    return if valid
+        deps[pkg_id.uuid].version
+    else
+        @warn "backend `$str` is not installed."
+        nothing
+    end
+end
+
+function _check_compat(m::Module)
+    (be_v = _check_installed(m)) === nothing && return
+    if (be_c = _plots_compats[string(m)]) isa String  # julia 1.6
+        if be_v ∉ Pkg.Types.semver_spec(be_c)
+            @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c)."
+        end
+    else
+        if intersect(be_v, be_c.val) |> isempty
+            @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c.str)."
+        end
+    end
+    nothing
+end
 
 "Returns a list of supported backends"
 backends() = _backends
@@ -35,8 +74,6 @@ macro init_backend(s)
         _backend_packages[Symbol($str)] = Symbol($package_str)
     end |> esc
 end
-
-# include("backends/web.jl")
 
 # ---------------------------------------------------------
 
@@ -130,7 +167,9 @@ end
 CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
-# this must always be done during precompilation, otherwise
+# from github.com/JuliaPackaging/Preferences.jl/blob/master/README.md:
+# "Preferences that are accessed during compilation are automatically marked as compile-time preferences"
+# ==> this must always be done during precompilation, otherwise
 # the cache will not invalidate when preferences change
 const DEFAULT_BACKEND_STRING = load_preference(Plots, "default_backend", "gr")
 
@@ -146,21 +185,19 @@ function set_default_backend!(
     force = true,
     kw...,
 )
-    value = if backend === nothing
+    if backend === nothing
         delete_preferences!(Plots, "default_backend"; force, kw...)
     else
-        value = lowercase(string(backend))
-        if _check_supported(value)
+        # NOTE: `_check_installed` already throws a warning
+        if (value = lowercase(string(backend))) |> _check_installed !== nothing
             set_preferences!(Plots, "default_backend" => value; force, kw...)
-        else
-            @warn "$value is not a supported `Plots` backend, bailing out"
         end
     end
     nothing
 end
 
 function diagnostics(io::IO = stdout)
-    from = if has_preference(Plots, "default_backend")
+    origin = if has_preference(Plots, "default_backend")
         "`Preferences`"
     elseif haskey(ENV, "PLOTS_DEFAULT_BACKEND")
         "environment variable"
@@ -171,7 +208,7 @@ function diagnostics(io::IO = stdout)
         @info "no `Plots` backends currently initialized"
     else
         be_name = string(backend_package_name(be))
-        @info "selected `Plots` backend: $be_name, from $from"
+        @info "selected `Plots` backend: $be_name, from $origin"
         Pkg.status(
             ["Plots", "RecipesBase", "RecipesPipeline", be_name];
             mode = Pkg.PKGMODE_MANIFEST,
