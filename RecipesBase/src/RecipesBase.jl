@@ -298,8 +298,13 @@ macro recipe(funcexpr::Expr)
             $cleanup_body
             series_list = $RecipesBase.RecipeData[]
             func_return = $func_body
-            func_return === nothing ||
-                push!(series_list, $RecipesBase.RecipeData(plotattributes, $RecipesBase.wrap_tuple(func_return)))
+            func_return === nothing || push!(
+                series_list,
+                $RecipesBase.RecipeData(
+                    plotattributes,
+                    $RecipesBase.wrap_tuple(func_return),
+                ),
+            )
             series_list
         end |> esc,
     )
@@ -330,13 +335,18 @@ end
 ```
 """
 macro series(expr::Expr)
-    esc(quote
-        let plotattributes = copy(plotattributes)
-            args = $expr
-            push!(series_list, $RecipesBase.RecipeData(plotattributes, $RecipesBase.wrap_tuple(args)))
-            nothing
-        end
-    end)
+    esc(
+        quote
+            let plotattributes = copy(plotattributes)
+                args = $expr
+                push!(
+                    series_list,
+                    $RecipesBase.RecipeData(plotattributes, $RecipesBase.wrap_tuple(args)),
+                )
+                nothing
+            end
+        end,
+    )
 end
 
 # --------------------------------------------------------------------------
@@ -370,8 +380,10 @@ function _userplot(expr::Expr)
         quote
             $expr
             export $funcname, $funcname2
-            Core.@__doc__ $funcname(args...; kw...) = $RecipesBase.plot($typename(args); kw...)
-            Core.@__doc__ $funcname2(args...; kw...) = $RecipesBase.plot!($typename(args); kw...)
+            Core.@__doc__ $funcname(args...; kw...) =
+                $RecipesBase.plot($typename(args); kw...)
+            Core.@__doc__ $funcname2(args...; kw...) =
+                $RecipesBase.plot!($typename(args); kw...)
             Core.@__doc__ $funcname2(plt::$RecipesBase.AbstractPlot, args...; kw...) =
                 $RecipesBase.plot!(plt, $typename(args); kw...)
         end,
