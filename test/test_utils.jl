@@ -269,10 +269,35 @@ end
     pl = plot(1:1)
     @test Plots._guess_best_legend_position(:best, pl) === :topright
 
+    # test cycling indexes
     x = 0.0:0.1:1
     y = [1, 2, 3]
     pl = scatter(x, y)
     @test Plots._guess_best_legend_position(:best, pl) === :topleft
+
+    # Test step plot with variable limits
+    x = 0:0.001:1 
+    y = vcat([0.0 for _ in 1:100],[1.0 for _ in 101:200],[0.5 for _ in 201:1001])
+    pl = scatter(x,y)
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
+    pl = scatter(x,y,xlims=[0, 0.25])
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomright
+    pl = scatter(x,y,xlims=[0.1, 0.25])
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+    pl = scatter(x,y,xlims=[0.18, 0.25])
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+    pl = scatter(x,y,ylims=[-1, 0.75])
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomright
+    pl = scatter(x,y,ylims=[0.25, 0.75])
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
+    pl = scatter(-x,y,ylims=[0.25, 0.75])
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
+    pl = scatter(-x,y)
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
+    pl = scatter(-x,-y)
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+    pl = scatter(x,-y)
+    @test Plots._guess_best_legend_position(:best, pl) === :bottomright
 end
 
 @testset "dispatch" begin
