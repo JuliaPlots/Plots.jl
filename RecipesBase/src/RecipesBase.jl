@@ -87,7 +87,7 @@ function get_function_def(func_signature::Expr, args::Vector)
     elseif func_signature.head ≡ :call
         func = Expr(
             :call,
-            :(RecipesBase.apply_recipe),
+            :($RecipesBase.apply_recipe),
             esc.([:(plotattributes::AbstractDict{Symbol,Any}); args])...,
         )
         if isa(front, Expr) && front.head ≡ :curly
@@ -123,7 +123,7 @@ function create_kw_body(func_signature::Expr)
             push!(
                 cleanup_body.args,
                 :(
-                    RecipesBase.is_key_supported($(QuoteNode(k))) ||
+                    $RecipesBase.is_key_supported($(QuoteNode(k))) ||
                     delete!(plotattributes, $(QuoteNode(k)))
                 ),
             )
@@ -181,16 +181,16 @@ function process_recipe_body!(expr::Expr)
                     :(plotattributes[$k] = $v)
                 else
                     # if the user has set this keyword, use theirs
-                    :(RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$k] = $v))
+                    :($RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$k] = $v))
                 end
 
                 expr.args[i] = if quiet
                     # quietly ignore keywords which are not supported
-                    :(RecipesBase.is_key_supported($k) ? $set_expr : nothing)
+                    :($RecipesBase.is_key_supported($k) ? $set_expr : nothing)
                 elseif require
                     # error when not supported by the backend
                     :(
-                        RecipesBase.is_key_supported($k) ? $set_expr :
+                        $RecipesBase.is_key_supported($k) ? $set_expr :
                         error(
                             "In recipe: required keyword ",
                             $k,
@@ -296,12 +296,10 @@ macro recipe(funcexpr::Expr)
             @nospecialize
             $kw_body
             $cleanup_body
-            series_list = RecipesBase.RecipeData[]
+            series_list = $RecipesBase.RecipeData[]
             func_return = $func_body
-            func_return === nothing || push!(
-                series_list,
-                RecipesBase.RecipeData(plotattributes, RecipesBase.wrap_tuple(func_return)),
-            )
+            func_return === nothing ||
+                push!(series_list, $RecipesBase.RecipeData(plotattributes, $RecipesBase.wrap_tuple(func_return)))
             series_list
         end |> esc,
     )
@@ -332,18 +330,13 @@ end
 ```
 """
 macro series(expr::Expr)
-    esc(
-        quote
-            let plotattributes = copy(plotattributes)
-                args = $expr
-                push!(
-                    series_list,
-                    RecipesBase.RecipeData(plotattributes, RecipesBase.wrap_tuple(args)),
-                )
-                nothing
-            end
-        end,
-    )
+    esc(quote
+        let plotattributes = copy(plotattributes)
+            args = $expr
+            push!(series_list, $RecipesBase.RecipeData(plotattributes, $RecipesBase.wrap_tuple(args)))
+            nothing
+        end
+    end)
 end
 
 # --------------------------------------------------------------------------
@@ -377,12 +370,10 @@ function _userplot(expr::Expr)
         quote
             $expr
             export $funcname, $funcname2
-            Core.@__doc__ $funcname(args...; kw...) =
-                RecipesBase.plot($typename(args); kw...)
-            Core.@__doc__ $funcname2(args...; kw...) =
-                RecipesBase.plot!($typename(args); kw...)
-            Core.@__doc__ $funcname2(plt::RecipesBase.AbstractPlot, args...; kw...) =
-                RecipesBase.plot!(plt, $typename(args); kw...)
+            Core.@__doc__ $funcname(args...; kw...) = $RecipesBase.plot($typename(args); kw...)
+            Core.@__doc__ $funcname2(args...; kw...) = $RecipesBase.plot!($typename(args); kw...)
+            Core.@__doc__ $funcname2(plt::$RecipesBase.AbstractPlot, args...; kw...) =
+                $RecipesBase.plot!(plt, $typename(args); kw...)
         end,
     )
 end
@@ -427,9 +418,9 @@ macro shorthands(funcname::Symbol)
         quote
             export $funcname, $funcname2
             Core.@__doc__ $funcname(args...; kw...) =
-                RecipesBase.plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
+                $RecipesBase.plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
             Core.@__doc__ $funcname2(args...; kw...) =
-                RecipesBase.plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
+                $RecipesBase.plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
         end,
     )
 end
