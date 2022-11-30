@@ -137,9 +137,7 @@ const DEFAULT_BACKEND_STRING = load_preference(Plots, "default_backend", "gr")
 function load_default_backend()
     # environment variable preempts the `Preferences` based mechanism
     CURRENT_BACKEND.sym =
-        something(get(ENV, "PLOTS_DEFAULT_BACKEND", nothing), DEFAULT_BACKEND_STRING) |>
-        lowercase |>
-        Symbol
+        get(ENV, "PLOTS_DEFAULT_BACKEND", DEFAULT_BACKEND_STRING) |> lowercase |> Symbol
     backend(CURRENT_BACKEND.sym)
 end
 
