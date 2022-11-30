@@ -299,7 +299,7 @@ macro recipe(funcexpr::Expr)
             series_list = $RecipesBase.RecipeData[]
             func_return = $func_body
             func_return === nothing ||
-                push!(series_list, $RecipeData(plotattributes, $RecipesBase.wrap_tuple(func_return)))
+                push!(series_list, $RecipesBase.RecipeData(plotattributes, $RecipesBase.wrap_tuple(func_return)))
             series_list
         end |> esc,
     )
