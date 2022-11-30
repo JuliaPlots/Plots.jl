@@ -574,6 +574,21 @@ function gaston_parse_axes_args(
     join(axesconf, "; ")
 end
 
+function gaston_fix_ticks_overflow(ticks)
+    if eltype(ticks) <: Integer
+        # TODO: toggle Int32 - Int64 for older gnuplot version
+        # needs github.com/mbaz/Gaston.jl/pull/179
+        # see gnuplot.info/ReleaseNotes_5_4.html
+        of = if false && Gaston.GNUPLOT_VERSION[] ≥ v"5.4.0"
+            typemax(Int64)
+        else
+            typemax(Int32)
+        end
+        any(t -> abs(t) > of, ticks) && return float.(ticks)
+    end
+    ticks
+end
+
 function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
     ticks === :auto && return
     if ticks ∈ (:none, nothing, false)
@@ -581,27 +596,20 @@ function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
         return
     end
 
-    gaston_ticks = String[]
-    if (ttype = ticksType(ticks)) === :ticks
-        tick_locs = @view ticks[:]
-        for i in eachindex(tick_locs)
-            tick = if maj_min == "m"
-                "'' $(tick_locs[i]) 1"  # see gnuplot manual 'Mxtics'
-            else
-                "$(tick_locs[i])"
-            end
-            push!(gaston_ticks, tick)
+    gaston_ticks = if (ttype = ticksType(ticks)) === :ticks
+        tics = gaston_fix_ticks_overflow(first(ticks))
+        if maj_min == "m"
+            map(t -> "'' $t 1", tics)  # see gnuplot manual 'Mxtics'
+        else
+            map(string, tics)
         end
     elseif ttype === :ticks_and_labels
-        tick_locs = @view ticks[1][:]
-        tick_labels = @view ticks[2][:]
-        for i in eachindex(tick_locs)
-            lab = gaston_enclose_tick_string(tick_labels[i])
-            push!(gaston_ticks, "'$lab' $(tick_locs[i])")
-        end
+        tics = gaston_fix_ticks_overflow(first(ticks))
+        labs = last(ticks)
+        map(i -> "'$(gaston_enclose_tick_string(labs[i]))' $(tics[i])", eachindex(tics))
     else
-        gaston_ticks = nothing
         @error "Gaston: invalid input for $(maj_min)$(letter)ticks: $ticks ($ttype)"
+        nothing
     end
     if gaston_ticks !== nothing
         push!(axesconf, "set $(letter)$(I)tics $add (" * join(gaston_ticks, ", ") * ")")
