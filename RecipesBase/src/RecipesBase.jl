@@ -123,7 +123,7 @@ function create_kw_body(func_signature::Expr)
             push!(
                 cleanup_body.args,
                 :(
-                    $is_key_supported($(QuoteNode(k))) ||
+                    $RecipesBase.is_key_supported($(QuoteNode(k))) ||
                     delete!(plotattributes, $(QuoteNode(k)))
                 ),
             )
