@@ -1195,13 +1195,14 @@ function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
     # Run from the extremes of the dataset inwards
     i, j = firstindex(x), lastindex(x)
     yoffset = firstindex(y) - i
-    for i in i:max(1, div(min(nsamples, nx), 2))
+    step = max(1,div(length(x),2*nsamples))
+    for i in i:step:step*div(nsamples,2)
         # NOTE: remove in `2.0`: `_cycle` for Plots.jl/issues/4561
         dinv += (
             inv(1 + weight * d_point(x[i], _cycle(y, i + yoffset), lim, scale)) +
             inv(1 + weight * d_point(x[j], _cycle(y, j + yoffset), lim, scale))
         )
-        j -= 1
+        j -= step
     end
     dinv
 end
