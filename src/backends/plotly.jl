@@ -711,17 +711,12 @@ function plotly_series(plt::Plot, series::Series)
     [merge(plotattributes_out, series[:extra_kwargs])]
 end
 
-
 function plotly_colorbar(sp::Subplot)
     _, y_domain = plotly_domain(sp)
-    plot_attribute = KW(
-        :title => sp[:colorbar_title],
-        :y => mean(y_domain),
-        :len => diff(y_domain)[1]
-    )
+    plot_attribute =
+        KW(:title => sp[:colorbar_title], :y => mean(y_domain), :len => diff(y_domain)[1])
     return plot_attribute
 end
-
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
     segments = series_segments(series; check = true)
