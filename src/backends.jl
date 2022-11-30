@@ -21,15 +21,13 @@ function _check_installed(backend::Union{Module,AbstractString,Symbol})
         return
     end
     # check installed
-    deps = Pkg.dependencies()
-    valid = (pkg_id = Base.identify_package(str)) !== nothing
-    valid &= haskey(deps, pkg_id.uuid)
-    return if valid
-        deps[pkg_id.uuid].version
-    else
-        @warn "backend `$str` is not installed."
+    version = if (pkg_id = Base.identify_package(str)) === nothing
         nothing
+    else
+        get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
     end
+    version === nothing && @warn "backend `$str` is not installed."
+    version
 end
 
 function _check_compat(m::Module)
