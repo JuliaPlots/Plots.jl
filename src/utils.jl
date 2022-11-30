@@ -1182,27 +1182,23 @@ _document_argument(s::Symbol) =
 # The following functions implement the guess of the optimal legend position,
 # from the data series.
 function d_point(x, y, lim, scale)
+    lim = lim ./ scale
     p_scaled = (x / scale[1], y / scale[2])
     d = sum(abs2, lim .- p_scaled)
     isnan(d) && return 0.0
     d
 end
-function _dinv_series(lim, scale, x, y, nsamples, weight = 100.0)
+function _dinv_series(xl, yl, lim, scale, x, y, nsamples, weight = 100.0)
     (nx = length(x)) > 0 || return +Inf
     length(y) > 0 || return +Inf
-    lim = lim ./ scale
+    yoffset = firstindex(y) - firstindex(x) 
     dinv = 0.0
-    # Run from the extremes of the dataset inwards
-    i, j = firstindex(x), lastindex(x)
-    yoffset = firstindex(y) - i
-    step = max(1,div(length(x),2*nsamples))
-    for i in i:step:step*div(nsamples,2)
+    step = max(1,div(length(x),nsamples))
+    for i in firstindex(x):step:lastindex(x)
+        # ignore points outside plot visible area
+        ((xl[1] <= x[i] <= xl[2]) && (yl[1] <= y[i + yoffset] <= yl[2])) || continue
         # NOTE: remove in `2.0`: `_cycle` for Plots.jl/issues/4561
-        dinv += (
-            inv(1 + weight * d_point(x[i], _cycle(y, i + yoffset), lim, scale)) +
-            inv(1 + weight * d_point(x[j], _cycle(y, j + yoffset), lim, scale))
-        )
-        j -= step
+        dinv += inv(1 + weight * d_point(x[i], _cycle(y, i + yoffset), lim, scale))
     end
     dinv
 end
@@ -1215,7 +1211,7 @@ function _guess_best_legend_position(xl, yl, plt, nsamples)
         x = series[:x]
         y = series[:y]
         for (i, lim) in enumerate(Iterators.product(xl, yl))
-            dist_to_lims[i] += _dinv_series(lim, scale, x, y, nsamples)
+            dist_to_lims[i] += _dinv_series(xl, yl, lim, scale, x, y, nsamples)
         end
     end
     # this inversion favors :topright in case of draws, without cost
@@ -1227,7 +1223,7 @@ end
 Computes the distances of the plot limits to a sample of points at the extremes of 
 the ranges, and places the legend at the corner where the maximum distance to the limits is found.
 """
-function _guess_best_legend_position(lp::Symbol, plt, nsamples = 50)
+function _guess_best_legend_position(lp::Symbol, plt, nsamples = 25)
     lp === :best || return lp
     _guess_best_legend_position(xlims(plt), ylims(plt), plt, nsamples)
 end
