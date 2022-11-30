@@ -1,6 +1,6 @@
 # Run tests with `import RecipesBase as RB` instead of `using RecipesBase`
 # or `import RecipesBase` to test that macros do not depend on the
-# namespace of the emeclosing scope.
+# namespace of the enclosing scope.
 import RecipesBase as RB
 using StableRNGs
 using Test
