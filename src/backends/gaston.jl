@@ -574,7 +574,7 @@ function gaston_parse_axes_args(
     join(axesconf, "; ")
 end
 
-function gaston_fix_ticks_overflow(ticks)
+function gaston_fix_ticks_overflow(ticks::AbstractVector)
     if eltype(ticks) <: Integer
         # TODO: toggle Int32 - Int64 for older gnuplot version
         # needs github.com/mbaz/Gaston.jl/pull/179
@@ -595,9 +595,8 @@ function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
         push!(axesconf, "unset $(maj_min)$(letter)tics")
         return
     end
-
     gaston_ticks = if (ttype = ticksType(ticks)) === :ticks
-        tics = gaston_fix_ticks_overflow(first(ticks))
+        tics = gaston_fix_ticks_overflow(ticks)
         if maj_min == "m"
             map(t -> "'' $t 1", tics)  # see gnuplot manual 'Mxtics'
         else
