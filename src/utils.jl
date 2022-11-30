@@ -1188,17 +1188,16 @@ function d_point(x, y, lim, scale)
     isnan(d) && return 0.0
     d
 end
-function _dinv_series(xl, yl, lim, scale, x, y, nsamples, weight = 100.0)
-    (nx = length(x)) > 0 || return +Inf
-    length(y) > 0 || return +Inf
-    yoffset = firstindex(y) - firstindex(x) 
+function _dinv_series(xrange, yl, lim, scale, x, y, weight = 100.0)
+    length(y) > 0 || return 0.0
+    yoffset = firstindex(y) - firstindex(x)
     dinv = 0.0
-    step = max(1,div(length(x),nsamples))
-    for i in firstindex(x):step:lastindex(x)
-        # ignore points outside plot visible area
-        ((xl[1] <= x[i] <= xl[2]) && (yl[1] <= y[i + yoffset] <= yl[2])) || continue
+    for i in xrange
+        xi, yi = x[i], _cycle(y, i + yoffset)
+        # ignore y points outside plot visible area
+        (yl[1] <= yi <= yl[2]) || continue
         # NOTE: remove in `2.0`: `_cycle` for Plots.jl/issues/4561
-        dinv += inv(1 + weight * d_point(x[i], _cycle(y, i + yoffset), lim, scale))
+        dinv += inv(1 + weight * d_point(xi, yi, lim, scale))
     end
     dinv
 end
@@ -1210,8 +1209,12 @@ function _guess_best_legend_position(xl, yl, plt, nsamples)
     for series in plt.series_list
         x = series[:x]
         y = series[:y]
+        # ignore x points outside plot visible area
+        ix_first, ix_last = findfirst(>=(xl[1]), x), findlast(<=(xl[2]), x)
+        (isnothing(ix_first) || isnothing(ix_last)) && continue
+        xrange = ix_first:max(1, div(ix_last - ix_first, nsamples)):ix_last
         for (i, lim) in enumerate(Iterators.product(xl, yl))
-            dist_to_lims[i] += _dinv_series(xl, yl, lim, scale, x, y, nsamples)
+            dist_to_lims[i] += _dinv_series(xrange, yl, lim, scale, x, y)
         end
     end
     # this inversion favors :topright in case of draws, without cost
