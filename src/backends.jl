@@ -16,8 +16,7 @@ backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol)::AbstractBackend =
     haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
 
-backend_package_name() = _backend_packages[backend_name()]
-backend_package_name(sym::Symbol) = _backend_packages[sym]
+backend_package_name(sym::Symbol = backend_name()) = _backend_packages[sym]
 
 macro init_backend(s)
     package_str = string(s)
