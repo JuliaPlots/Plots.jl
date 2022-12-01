@@ -1229,5 +1229,5 @@ the ranges, and places the legend at the corner where the maximum distance to th
 """
 function _guess_best_legend_position(lp::Symbol, plt)
     lp === :best || return lp
-    _guess_best_legend_position(xlims(plt), ylims(plt), plt, nsamples)
+    _guess_best_legend_position(xlims(plt), ylims(plt), plt)
 end
