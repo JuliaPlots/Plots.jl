@@ -214,7 +214,6 @@ end
     pl = plot!(x, x .^ 3, label = "cubic")
     @test Plots._guess_best_legend_position(:best, pl) === :topleft
 
-    @test Plots._guess_best_legend_position(:best, pl) === :topleft
     x = 0:0.01:2
     pl = plot(x, -x, label = "linear")
     pl = plot!(x, -x .^ 2, label = "quadratic")
@@ -273,7 +272,7 @@ end
     x = 0.0:0.1:1
     y = [1, 2, 3]
     pl = scatter(x, y)
-    @test Plots._guess_best_legend_position(:best, pl) === :topleft
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
 
     # Test step plot with variable limits
     x = 0:0.001:1
@@ -281,23 +280,23 @@ end
     pl = scatter(x, y)
     @test Plots._guess_best_legend_position(:best, pl) === :topright
     pl = scatter(x, y, xlims = [0, 0.25])
-    @test Plots._guess_best_legend_position(:best, pl) === :bottomright
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
     pl = scatter(x, y, xlims = [0.1, 0.25])
-    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
     pl = scatter(x, y, xlims = [0.18, 0.25])
-    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
     pl = scatter(x, y, ylims = [-1, 0.75])
     @test Plots._guess_best_legend_position(:best, pl) === :bottomright
     pl = scatter(x, y, ylims = [0.25, 0.75])
-    @test Plots._guess_best_legend_position(:best, pl) === :topleft
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
     pl = scatter(-x, y, ylims = [0.25, 0.75])
     @test Plots._guess_best_legend_position(:best, pl) === :topright
     pl = scatter(-x, y)
     @test Plots._guess_best_legend_position(:best, pl) === :topleft
     pl = scatter(-x, -y)
-    @test Plots._guess_best_legend_position(:best, pl) === :bottomleft
+    @test Plots._guess_best_legend_position(:best, pl) === :topleft
     pl = scatter(x, -y)
-    @test Plots._guess_best_legend_position(:best, pl) === :bottomright
+    @test Plots._guess_best_legend_position(:best, pl) === :topright
 end
 
 @testset "dispatch" begin

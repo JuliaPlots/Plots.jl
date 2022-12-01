@@ -1182,51 +1182,50 @@ _document_argument(s::Symbol) =
 # The following functions implement the guess of the optimal legend position,
 # from the data series.
 function d_point(x, y, lim, scale)
-    lim = lim ./ scale
     p_scaled = (x / scale[1], y / scale[2])
     d = sum(abs2, lim .- p_scaled)
     isnan(d) && return 0.0
     d
 end
-function _dinv_series(xrange, yl, lim, scale, x, y, weight = 100.0)
-    length(y) > 0 || return 0.0
-    yoffset = firstindex(y) - firstindex(x)
-    dinv = 0.0
-    for i in xrange
-        xi, yi = x[i], _cycle(y, i + yoffset)
-        # ignore y points outside plot visible area
-        (yl[1] <= yi <= yl[2]) || continue
-        # NOTE: remove in `2.0`: `_cycle` for Plots.jl/issues/4561
-        dinv += inv(1 + weight * d_point(xi, yi, lim, scale))
-    end
-    dinv
-end
-
 # Function barrier because lims are type-unstable
-function _guess_best_legend_position(xl, yl, plt, nsamples)
+function _guess_best_legend_position(xl, yl, plt, weight = 100)
     scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
-    dist_to_lims = zeros(4) # faster than tuple
+    u = zeros(4) # faster than tuple
+    # Reference points
+    quadrants = ( ((0.00, 0.25), (0.00, 0.25)),   # bottomleft
+                  ((0.75, 1.00), (0.00, 0.25)),   # bottomright
+                  ((0.00, 0.25), (0.75, 1.00)),   # topleft
+                  ((0.75, 1.00), (0.75, 1.00)), ) # topright
     for series in plt.series_list
         x = series[:x]
         y = series[:y]
-        # ignore x points outside plot visible area
-        ix_first, ix_last = findfirst(>=(xl[1]), x), findlast(<=(xl[2]), x)
-        (isnothing(ix_first) || isnothing(ix_last)) && continue
-        xrange = ix_first:max(1, div(ix_last - ix_first, nsamples)):ix_last
+        yoffset = firstindex(y) - firstindex(x)
         for (i, lim) in enumerate(Iterators.product(xl, yl))
-            dist_to_lims[i] += _dinv_series(xrange, yl, lim, scale, x, y)
+            lim = lim ./ scale
+            for ix in eachindex(x)
+                xi, yi = x[ix], _cycle(y, ix + yoffset)
+                # ignore y points outside quadrant visible quadrant
+                xi < xl[1] + quadrants[i][1][1]*(xl[2]-xl[1]) && continue
+                xi > xl[1] + quadrants[i][1][2]*(xl[2]-xl[1]) && continue
+                yi < yl[1] + quadrants[i][2][1]*(yl[2]-yl[1]) && continue
+                yi > yl[1] + quadrants[i][2][2]*(yl[2]-yl[1]) && continue
+                u[i] += inv(1 + weight*d_point(xi, yi, lim, scale))
+            end
         end
     end
-    # this inversion favors :topright in case of draws, without cost
-    ibest = findmin(@view(dist_to_lims[4:-1:1]))[2]
-    (:topright, :topleft, :bottomright, :bottomleft)[ibest]
+    # test in the preferred order in case of draws
+    ibest = findmin(u)[2]
+    u[ibest] ≈ u[4] && return :topright
+    u[ibest] ≈ u[3] && return :topleft
+    u[ibest] ≈ u[2] && return :bottomright   
+    return :bottomleft
 end
 
 """
 Computes the distances of the plot limits to a sample of points at the extremes of 
 the ranges, and places the legend at the corner where the maximum distance to the limits is found.
 """
-function _guess_best_legend_position(lp::Symbol, plt, nsamples = 25)
+function _guess_best_legend_position(lp::Symbol, plt)
     lp === :best || return lp
     _guess_best_legend_position(xlims(plt), ylims(plt), plt, nsamples)
 end
