@@ -148,11 +148,11 @@ function py_get_matching_math_font(parent_fontfamily)
     # matplotlib supported math fonts according to
     # matplotlib.org/stable/tutorials/text/mathtext.html
     py_math_supported_fonts = Dict{String,String}(
+        "serif"      => "dejavuserif",
         "sans-serif" => "dejavusans",
-        "serif" => "dejavuserif",
-        "cm" => "cm",
-        "stix" => "stix",
-        "stixsans" => "stixsans",
+        "stixsans"   => "stixsans",
+        "stix"       => "stix",
+        "cm"         => "cm",
     )
     # Fallback to "dejavusans" or "dejavuserif" in case the parentfont is different
     # from supported by matplotlib fonts
@@ -330,6 +330,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     # plotattributes = series.plotattributes
     st = series[:seriestype]
     sp = series[:subplot]
+    xaxis, yaxis = sp[:xaxis], sp[:yaxis]
     ax = sp.o
 
     # PythonPlot doesn't handle mismatched x/y
@@ -543,9 +544,9 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             aspect,
         ) |> push_h
     elseif st === :heatmap
-        x, y = heatmap_edges(x, sp[:xaxis][:scale], y, sp[:yaxis][:scale], size(z))
-        expand_extrema!(sp[:xaxis], x)
-        expand_extrema!(sp[:yaxis], y)
+        x, y = heatmap_edges(x, xaxis[:scale], y, yaxis[:scale], size(z))
+        expand_extrema!(xaxis, x)
+        expand_extrema!(yaxis, y)
         ax.pcolormesh(
             x,
             y,
@@ -754,8 +755,7 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     end
 
     # this is all we need to add the series_annotations text
-    anns = series[:series_annotations]
-    for (xi, yi, str, fnt) in EachAnn(anns, x, y)
+    for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
         py_add_annotations(sp, xi, yi, PlotText(str, fnt))
     end
 end
@@ -872,6 +872,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
     # update subplots
     for sp in plt.subplots
         (ax = sp.o) === nothing && continue
+        xaxis, yaxis = sp[:xaxis], sp[:yaxis]
 
         # add the annotations
         for ann in sp[:annotations]
@@ -879,7 +880,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         end
 
         # title
-        if sp[:title] != ""  # support symbols
+        if (title = sp[:title]) != ""  # support symbols
             loc = lowercase(string(sp[:titlelocation]))
             func = getproperty(ax, if loc == "left"
                 :_left_title
@@ -888,7 +889,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             else
                 :title
             end)
-            func.set_text(string(sp[:title]))
+            func.set_text(string(title))
             func.set_fontsize(py_thickness_scale(plt, sp[:titlefontsize]))
             func.set_family(sp[:titlefontfamily])
             func.set_math_fontfamily(py_get_matching_math_font(sp[:titlefontfamily]))
@@ -901,29 +902,31 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             # add keyword args for a discrete colorbar
             colorbar_series, cmap = py_cmap(sp)
             kw = KW()
-            handle = if !isempty(sp[:zaxis][:discrete_values]) &&
-               colorbar_series[:seriestype] === :heatmap
-                kw[:ticks], kw[:format] =
-                    get_locator_and_formatter(sp[:zaxis][:discrete_values])
-                # kw[:values] = eachindex(sp[:zaxis][:discrete_values])
-                kw[:values] = sp[:zaxis][:continuous_values]
-                kw[:boundaries] = vcat(0, kw[:values] + 0.5)
-                colorbar_series[:serieshandle][end]
-            elseif any(
-                colorbar_series[attr] !== nothing for attr in (:line_z, :fill_z, :marker_z)
-            )
-                cmin, cmax = get_clims(sp)
-                norm = if cbar_scale === :identity
-                    pycolors.Normalize(vmin = cmin, vmax = cmax)
+            handle =
+                if !isempty(sp[:zaxis][:discrete_values]) &&
+                   colorbar_series[:seriestype] === :heatmap
+                    kw[:ticks], kw[:format] =
+                        get_locator_and_formatter(sp[:zaxis][:discrete_values])
+                    # kw[:values] = eachindex(sp[:zaxis][:discrete_values])
+                    kw[:values] = sp[:zaxis][:continuous_values]
+                    kw[:boundaries] = vcat(0, kw[:values] + 0.5)
+                    colorbar_series[:serieshandle][end]
+                elseif any(
+                    colorbar_series[attr] !== nothing for
+                    attr in (:line_z, :fill_z, :marker_z)
+                )
+                    cmin, cmax = get_clims(sp)
+                    norm = if cbar_scale === :identity
+                        pycolors.Normalize(vmin = cmin, vmax = cmax)
+                    else
+                        pycolors.LogNorm(vmin = cmin, vmax = cmax)
+                    end
+                    c_map = pycmap.ScalarMappable(; cmap, norm)
+                    c_map.set_array(PythonCall.pylist([]))
+                    c_map
                 else
-                    pycolors.LogNorm(vmin = cmin, vmax = cmax)
+                    colorbar_series[:serieshandle][end]
                 end
-                c_map = pycmap.ScalarMappable(; cmap, norm)
-                c_map.set_array(PythonCall.pylist([]))
-                c_map
-            else
-                colorbar_series[:serieshandle][end]
-            end
             kw[:spacing] = "proportional"
 
             cb_sym = sp[:colorbar]
@@ -944,12 +947,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                     :right, "2.5%", "vertical"
                 end
                 # Reasonable value works most of the usecases
-                cax = divider.append_axes(
-                    string(pos);
-                    size = "5%",
-                    label,
-                    pad,
-                )  
+                cax = divider.append_axes(string(pos); size = "5%", label, pad)
                 if cb_sym === :left
                     cax.yaxis.set_ticks_position("left")
                 elseif cb_sym === :right
@@ -976,9 +974,9 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
 
             ticks = get_colorbar_ticks(sp)
             axis, cbar_axis, ticks_letter = if sp[:colorbar] ∈ (:top, :bottom)
-                sp[:xaxis], cbar.ax.xaxis, :x  # colorbar inherits from x axiss
+                xaxis, cbar.ax.xaxis, :x  # colorbar inherits from x axiss
             else
-                sp[:yaxis], cbar.ax.yaxis, :y  # colorbar inherits from y axis
+                yaxis, cbar.ax.yaxis, :y  # colorbar inherits from y axis
             end
             py_set_scale(cbar.ax, sp, sp[:colorbar_scale], ticks_letter)
             sp[:colorbar_ticks] === :native ||
@@ -1019,23 +1017,21 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             if framestyle === :semi
                 intensity = 0.5
 
-                pyspine = getproperty(ax.spines, sp[:yaxis][:mirror] ? "left" : "right")
+                pyspine = getproperty(ax.spines, yaxis[:mirror] ? "left" : "right")
                 pyspine.set_alpha(intensity)
                 pyspine.set_linewidth(py_thickness_scale(plt, intensity))
 
-                pyspine = getproperty(ax.spines, sp[:xaxis][:mirror] ? "bottom" : "top")
+                pyspine = getproperty(ax.spines, xaxis[:mirror] ? "bottom" : "top")
                 pyspine.set_linewidth(py_thickness_scale(plt, intensity))
                 pyspine.set_alpha(intensity)
             elseif framestyle === :box
                 ax.tick_params(top = true)   # Add ticks too
                 ax.tick_params(right = true) # Add ticks too
             elseif framestyle ∈ (:axes, :origin)
-                getproperty(ax.spines, sp[:xaxis][:mirror] ? "bottom" : "top").set_visible(
-                    false,
-                )
-                getproperty(ax.spines, sp[:yaxis][:mirror] ? "left" : "right").set_visible(
-                    false,
-                )
+                for loc in
+                    (xaxis[:mirror] ? "bottom" : "top", yaxis[:mirror] ? "left" : "right")
+                    getproperty(ax.spines, loc).set_visible(false)
+                end
                 if framestyle === :origin
                     ax.spines.bottom.set_position("zero")
                     ax.spines.left.set_position("zero")
@@ -1045,23 +1041,23 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 if framestyle === :zerolines
                     ax.axhline(
                         y = 0,
-                        color = py_color(sp[:xaxis][:foreground_color_axis]),
+                        color = py_color(xaxis[:foreground_color_axis]),
                         lw = py_thickness_scale(plt, 0.75),
                     )
                     ax.axvline(
                         x = 0,
-                        color = py_color(sp[:yaxis][:foreground_color_axis]),
+                        color = py_color(yaxis[:foreground_color_axis]),
                         lw = py_thickness_scale(plt, 0.75),
                     )
                 end
             end
 
-            if sp[:xaxis][:mirror]
+            if xaxis[:mirror]
                 ax.xaxis.set_label_position("top")  # the guides
                 framestyle === :box || ax.xaxis.tick_top()
             end
 
-            if sp[:yaxis][:mirror]
+            if yaxis[:mirror]
                 ax.yaxis.set_label_position("right")  # the guides
                 framestyle === :box || ax.yaxis.tick_right()
             end
@@ -1192,7 +1188,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         end
 
         # showaxis
-        if !sp[:xaxis][:showaxis]
+        if !xaxis[:showaxis]
             kw = KW()
             ispolar(sp) && ax.spines.polar.set_visible(false)
             for dir in (:top, :bottom)
@@ -1201,7 +1197,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             end
             ax.xaxis.set_tick_params(; which = "both", kw...)
         end
-        if !sp[:yaxis][:showaxis]
+        if !yaxis[:showaxis]
             kw = KW()
             for dir in (:left, :right)
                 ispolar(sp) || getproperty(ax.spines, string(dir)).set_visible(false)
@@ -1239,14 +1235,14 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         ax.set_facecolor(py_color(sp[:background_color_inside]))
 
         # link axes
-        x_ax_link, y_ax_link = sp[:xaxis].sps[1].o, sp[:yaxis].sps[1].o
+        x_ax_link, y_ax_link = xaxis.sps[1].o, yaxis.sps[1].o
         if Bool(ax != x_ax_link)  # twinx
             ax.get_shared_x_axes().join(ax, x_ax_link)
         end
         if Bool(ax != y_ax_link)  # twiny
             ax.get_shared_y_axes().join(ax, y_ax_link)
         end
-    end
+    end  # for sp in pl.subplots
     py_drawfig(fig)
 end
 
