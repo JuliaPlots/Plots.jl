@@ -9,6 +9,7 @@ ci_tol() =
 
 const TESTS_MODULE = Module(:PlotsTestsModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
+const ALL_BACKENDS = :gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :pythonplot, :inspectdr, :gaston
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
@@ -162,6 +163,12 @@ end
         """,
     )
     @test success(run(```$(Base.julia_cmd()) $script```))
+
+    for be in ALL_BACKENDS
+        @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
+    end
+    @test_logs (:warn, r".*is not compatible with") Plots.set_default_backend!(:invalid)
+
     Plots.set_default_backend!()  # clear `Preferences` key
 
     withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
@@ -266,16 +273,7 @@ end
             )
             @test filesize(fn) > 1_000
         end
-        for be in (
-            :gr,
-            :unicodeplots,
-            :pgfplotsx,
-            :plotlyjs,
-            :pyplot,
-            :pythonplot,
-            :inspectdr,
-            :gaston,
-        )
+        for be in ALL_BACKENDS
             skip = vcat(Plots._backend_skips[be], blacklist)
             Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
             closeall()

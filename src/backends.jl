@@ -10,13 +10,17 @@ const _backend_packages     = Dict{Symbol,Symbol}()
 const _initialized_backends = Set{Symbol}()
 const _backends             = Symbol[]
 
-function _check_installed(backend::Union{Module,AbstractString,Symbol})
-    str = string(backend)
-    if all(islowercase, str)  # lowercase -> CamelCase
-        str = string(_backend_packages[Symbol(str)])
+function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = true)
+    sym = Symbol(lowercase(string(backend)))
+    if warn && !haskey(_backend_packages, sym)
+        @warn "backend `$sym` is not compatible with `Plots`."
+        return
     end
+    # lowercase -> CamelCase, falling back to the given input for `PlotlyBase` ...
+    str = string(get(_backend_packages, sym, backend))
+    str == "Plotly" && (str *= "Base")  # FIXME: `Plots` inconsistency, `plotly` should be named `plotlybase`
     # check supported
-    if !haskey(_plots_compats, str)
+    if warn && !haskey(_plots_compats, str)
         @warn "backend `$str` is not compatible with `Plots`."
         return
     end
@@ -30,8 +34,8 @@ function _check_installed(backend::Union{Module,AbstractString,Symbol})
     version
 end
 
-function _check_compat(m::Module)
-    (be_v = _check_installed(m)) === nothing && return
+function _check_compat(m::Module; warn = true)
+    (be_v = _check_installed(m; warn)) === nothing && return
     if (be_c = _plots_compats[string(m)]) isa String  # julia 1.6
         if be_v ∉ Pkg.Types.semver_spec(be_c)
             @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c)."
@@ -490,8 +494,8 @@ function _initialize_backend(pkg::PlotlyBackend)
             import PlotlyBase
             import PlotlyKaleido
         end
-        _check_compat(PlotlyBase)
-        _check_compat(PlotlyKaleido)
+        _check_compat(PlotlyBase; warn = false)  # NOTE: don't warn, since those are not backends, but deps
+        _check_compat(PlotlyKaleido, warn = false)
         @eval begin
             const PlotlyBase = Main.PlotlyBase
             const PlotlyKaleido = Main.PlotlyKaleido
