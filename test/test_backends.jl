@@ -1,6 +1,6 @@
 ci_tol() =
     if Sys.islinux()
-        "5e-4"
+        is_pkgeval() ? "1e-2" : "5e-4"
     elseif Sys.isapple()
         "1e-3"
     else
@@ -191,7 +191,7 @@ end
 end
 
 @testset "PlotlyJS" begin
-    with(:plotlyjs) do
+    is_pkgeval() || with(:plotlyjs) do
         @test backend() == Plots.PlotlyJSBackend()
         pl = plot(rand(10))
         @test pl isa Plot
