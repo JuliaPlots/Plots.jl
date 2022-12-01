@@ -1191,7 +1191,7 @@ end
 function _guess_best_legend_position(xl, yl, plt, weight = 100)
     scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
     u = zeros(4) # faster than tuple
-    # Reference points
+    # Quadrants where the points will be tested
     quadrants = (
         ((0.00, 0.25), (0.00, 0.25)),   # bottomleft
         ((0.75, 1.00), (0.00, 0.25)),   # bottomright
