@@ -1192,10 +1192,12 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
     scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
     u = zeros(4) # faster than tuple
     # Reference points
-    quadrants = ( ((0.00, 0.25), (0.00, 0.25)),   # bottomleft
-                  ((0.75, 1.00), (0.00, 0.25)),   # bottomright
-                  ((0.00, 0.25), (0.75, 1.00)),   # topleft
-                  ((0.75, 1.00), (0.75, 1.00)), ) # topright
+    quadrants = (
+        ((0.00, 0.25), (0.00, 0.25)),   # bottomleft
+        ((0.75, 1.00), (0.00, 0.25)),   # bottomright
+        ((0.00, 0.25), (0.75, 1.00)),   # topleft
+        ((0.75, 1.00), (0.75, 1.00)),   # topright
+    )
     for series in plt.series_list
         x = series[:x]
         y = series[:y]
@@ -1205,11 +1207,11 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
             for ix in eachindex(x)
                 xi, yi = x[ix], _cycle(y, ix + yoffset)
                 # ignore y points outside quadrant visible quadrant
-                xi < xl[1] + quadrants[i][1][1]*(xl[2]-xl[1]) && continue
-                xi > xl[1] + quadrants[i][1][2]*(xl[2]-xl[1]) && continue
-                yi < yl[1] + quadrants[i][2][1]*(yl[2]-yl[1]) && continue
-                yi > yl[1] + quadrants[i][2][2]*(yl[2]-yl[1]) && continue
-                u[i] += inv(1 + weight*d_point(xi, yi, lim, scale))
+                xi < xl[1] + quadrants[i][1][1] * (xl[2] - xl[1]) && continue
+                xi > xl[1] + quadrants[i][1][2] * (xl[2] - xl[1]) && continue
+                yi < yl[1] + quadrants[i][2][1] * (yl[2] - yl[1]) && continue
+                yi > yl[1] + quadrants[i][2][2] * (yl[2] - yl[1]) && continue
+                u[i] += inv(1 + weight * d_point(xi, yi, lim, scale))
             end
         end
     end
@@ -1217,7 +1219,7 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
     ibest = findmin(u)[2]
     u[ibest] ≈ u[4] && return :topright
     u[ibest] ≈ u[3] && return :topleft
-    u[ibest] ≈ u[2] && return :bottomright   
+    u[ibest] ≈ u[2] && return :bottomright
     return :bottomleft
 end
 
