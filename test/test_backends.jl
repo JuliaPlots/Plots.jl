@@ -191,13 +191,11 @@ end
 end
 
 @testset "PlotlyJS" begin
-    if !is_pkgeval()
-        with(:plotlyjs) do
-            @test backend() == Plots.PlotlyJSBackend()
-            pl = plot(rand(10))
-            @test pl isa Plot
-            @test_broken display(pl) isa Nothing
-        end
+    is_pkgeval() || with(:plotlyjs) do
+        @test backend() == Plots.PlotlyJSBackend()
+        pl = plot(rand(10))
+        @test pl isa Plot
+        @test_broken display(pl) isa Nothing
     end
 end
 
