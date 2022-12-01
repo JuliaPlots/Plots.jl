@@ -1215,7 +1215,7 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
             end
         end
     end
-    # test in the preferred order in case of draws
+    # return in the preferred order in case of draws
     ibest = findmin(u)[2]
     u[ibest] ≈ u[4] && return :topright
     u[ibest] ≈ u[3] && return :topleft
