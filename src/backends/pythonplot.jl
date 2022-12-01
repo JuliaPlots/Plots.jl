@@ -560,13 +560,13 @@ function py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         ) |> push_h
     elseif st === :mesh3d
         cns = series[:connections]
-        polygons = if cns isa AbstractVector{<:AbstractVector{Integer}}
+        polygons = if cns isa AbstractVector{<:AbstractVector{<:Integer}}
             # Combination of any polygon types
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
-        elseif cns isa AbstractVector{NTuple{N,Integer}} where {N}
+        elseif cns isa AbstractVector{NTuple{N,<:Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
-        elseif cns isa NTuple{3,<:AbstractVector{Integer}}
+        elseif cns isa NTuple{3,<:AbstractVector{<:Integer}}
             # Only triangles - connections have to be 0-based (indexing)
             X, Y, Z = mesh3d_triangles(x, y, z, cns)
             ntris = length(cns[1])

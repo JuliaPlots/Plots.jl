@@ -94,6 +94,10 @@ jobs:
           end
           Conda.add([libgcc..., "matplotlib"])
           Conda.list()
+          open(ENV["GITHUB_ENV"], "a") do io
+            println(io, "JULIA_CONDAPKG_EXE=", Conda.CONDA_EXE)
+            println(io, "JULIA_CONDAPKG_BACKEND=Null")
+          end
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
 
       - uses: julia-actions/julia-runtest@latest
