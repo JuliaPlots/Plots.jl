@@ -20,14 +20,14 @@ reference_dir(args...) =
     end
 reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 
-if !isdir(reference_dir())
-    mkpath(reference_dir())
+function checkout_reference_dir(dn::AbstractString)
+    mkpath(dn)
     local repo
     for i in 1:6
         try
             repo = LibGit2.clone(
                 "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
-                reference_dir(),
+                dn,
             )
             break
         catch err
@@ -35,13 +35,19 @@ if !isdir(reference_dir())
             sleep(20i)
         end
     end
-    try
-        tag = LibGit2.GitObject(repo, "v$(Plots._current_plots_version)")
-        hash = string(LibGit2.target(tag))
-        LibGit2.checkout!(repo, hash)
-    catch err
-        @warn err
+    if (ver = Plots._current_plots_version).prerelease |> isempty
+        try
+            tag = LibGit2.GitObject(repo, "v$ver")
+            hash = string(LibGit2.target(tag))
+            LibGit2.checkout!(repo, hash)
+        catch err
+            @warn err
+        end
     end
+end
+
+let dn = reference_dir()
+    isdir(dn) || checkout_reference_dir(dn)
 end
 
 ref_name(i) = "ref" * lpad(i, 3, '0')
