@@ -167,13 +167,12 @@ include("animation.jl")
 include("examples.jl")
 include("plotattr.jl")
 include("backends.jl")
+const CURRENT_BACKEND = CurrentBackend(:none)
+include("backends/web.jl")
 include("output.jl")
 include("ijulia.jl")
 include("fileio.jl")
 include("shorthands.jl")
-include("backends/web.jl")
-
-const CURRENT_BACKEND = CurrentBackend(:none)
 include("init.jl")
 
 end
