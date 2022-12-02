@@ -23,7 +23,7 @@ end
 
 function _plots_plotly_defaults()
     if bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", "false")
-        global plotly_local_file_path[] =
+        plotly_local_file_path[] =
             joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
         isfile(plotly_local_file_path[]) || Downloads.download(
             "https://cdn.plot.ly/$(_plotly_min_js_filename)",
@@ -36,6 +36,7 @@ end
 
 function __init__()
     _plots_theme_defaults()
+    _plots_plotly_defaults()
 
     insert!(
         Base.Multimedia.displays,
@@ -58,8 +59,6 @@ function __init__()
             )
         end,
     )
-
-    _plots_plotly_defaults()
 
     @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
         initialized(:gr) || include(backend_path(:gr))
@@ -122,6 +121,7 @@ function __init__()
             get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
             for be in (
                 PyPlotBackend,
+                PythonPlotBackend,
                 # UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
                 PlotlyJSBackend,
                 GRBackend,
@@ -167,22 +167,22 @@ function __init__()
         include("unitful.jl")
         @reexport using .UnitfulRecipes
     end
+
+    _atinit(backend())  # runtime init
+    nothing
 end
 
 ##################################################################
 # COV_EXCL_START
-backend()  # intialize backend, either from preferences or from env
-
 if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")
     @precompile_setup begin
-        be_name = backend_name()
-        be_jl = if be_name ∈ (:pyplot, :pgfplots)
+        backend()  # compile time init, either from preferences or from env
+        @info backend_package_name()
+        if (be_name = backend_name()) ∈ (:pyplot, :pgfplots)
             backend_path(be_name, "deprecated")
         else
             backend_path(be_name)
-        end
-        include(be_jl)  # load glue code
-        @info be_name
+        end |> include  # load glue code
         n = length(_examples)
         imports = sizehint!(Expr[], n)
         examples = sizehint!(Expr[], 10n)
@@ -210,6 +210,7 @@ if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO",
                 eval.(examples)
             end
         end
+        CURRENT_PLOT.nullableplot = nothing
     end
 end
 # COV_EXCL_STOP

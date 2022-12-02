@@ -173,12 +173,12 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 # "Preferences that are accessed during compilation are automatically marked as compile-time preferences"
 # ==> this must always be done during precompilation, otherwise
 # the cache will not invalidate when preferences change
-const DEFAULT_BACKEND_STRING = load_preference(Plots, "default_backend", "gr")
+const PLOTS_DEFAULT_BACKEND = load_preference(Plots, "default_backend", "gr")
 
 function load_default_backend()
     # environment variable preempts the `Preferences` based mechanism
     CURRENT_BACKEND.sym =
-        get(ENV, "PLOTS_DEFAULT_BACKEND", DEFAULT_BACKEND_STRING) |> lowercase |> Symbol
+        get(ENV, "PLOTS_DEFAULT_BACKEND", PLOTS_DEFAULT_BACKEND) |> lowercase |> Symbol
     backend(CURRENT_BACKEND.sym)
 end
 
@@ -346,8 +346,7 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
     end
 end
 
-# is_subplot_supported(::AbstractBackend) = false
-# is_subplot_supported() = is_subplot_supported(backend())
+_atinit(::AbstractBackend) = nothing
 
 ################################################################################
 # initialize the backends
@@ -497,7 +496,7 @@ function _initialize_backend(pkg::PlotlyBackend)
         _check_compat(PlotlyBase; warn = false)  # NOTE: don't warn, since those are not backends, but deps
         _check_compat(PlotlyKaleido, warn = false)
         @eval begin
-            const PlotlyBase = Main.PlotlyBase
+            const PlotlyBase    = Main.PlotlyBase
             const PlotlyKaleido = Main.PlotlyKaleido
         end
     catch err
@@ -738,16 +737,31 @@ const _plotlyjs_scale      = _plotly_scale
 # ------------------------------------------------------------------------------
 # pyplot
 
-function _initialize_backend(::PyPlotBackend)
+_atinit(::PyPlotBackend) = @eval begin
+    pycolors   = PyPlot.pyimport("matplotlib.colors")
+    pypath     = PyPlot.pyimport("matplotlib.path")
+    mplot3d    = PyPlot.pyimport("mpl_toolkits.mplot3d")
+    axes_grid1 = PyPlot.pyimport("mpl_toolkits.axes_grid1")
+    pypatches  = PyPlot.pyimport("matplotlib.patches")
+    pyticker   = PyPlot.pyimport("matplotlib.ticker")
+    pycmap     = PyPlot.pyimport("matplotlib.cm")
+    pynp       = PyPlot.pyimport("numpy")
+
+    pynp."seterr"(invalid = "ignore")
+
+    PyPlot.ioff()  # we don't want every command to update the figure
+end
+
+function _initialize_backend(pkg::PyPlotBackend)
     @eval Main begin
         import PyPlot
         export PyPlot
         $(_check_compat)(PyPlot)
-
-        # we don't want every command to update the figure
-        PyPlot.ioff()
     end
-    @eval const PyPlot = Main.PyPlot
+    @eval begin
+        const PyPlot = Main.PyPlot
+        _atinit($pkg)
+    end
 end
 
 const _pyplot_attr = merge_with_base_supported([
@@ -873,16 +887,28 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # pythonplot
 
-function _initialize_backend(::PythonPlotBackend)
+_atinit(::PythonPlotBackend) = @eval begin
+    mpl_toolkits = PythonCall.pyimport("mpl_toolkits")
+    mpl          = PythonCall.pyimport("matplotlib")
+    numpy        = PythonCall.pyimport("numpy")
+
+    PythonPlot.pyimport("mpl_toolkits.axes_grid1")
+    numpy.seterr(invalid = "ignore")
+
+    PythonPlot.ioff()  # we don't want every command to update the figure
+end
+
+function _initialize_backend(pkg::PythonPlotBackend)
     @eval Main begin
         import PythonPlot
         export PythonPlot
         $(_check_compat)(PythonPlot)
-
-        # we don't want every command to update the figure
-        PythonPlot.ioff()
     end
-    @eval const PythonPlot = Main.PythonPlot
+    @eval begin
+        const PythonPlot = Main.PythonPlot
+        const PythonCall = Main.PythonPlot.PythonCall
+        _atinit($pkg)
+    end
 end
 
 const _pythonplot_seriestype = _pyplot_seriestype

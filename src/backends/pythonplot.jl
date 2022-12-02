@@ -8,14 +8,6 @@ let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.d
     append!(Base.Multimedia.displays, otherdisplays)
 end
 
-mpl_toolkits = PythonPlot.pyimport("mpl_toolkits")
-mpl          = PythonPlot.pyimport("matplotlib")
-numpy        = PythonPlot.pyimport("numpy")
-PythonCall   = PythonPlot.PythonCall
-
-PythonPlot.pyimport("mpl_toolkits.axes_grid1")
-numpy.seterr(invalid = "ignore")
-
 if PythonPlot.version < v"3.4"
     @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
     officialy supported by the Plots community. To ensure smooth Plots.jl
@@ -865,9 +857,10 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         xaxis, yaxis = sp[:xaxis], sp[:yaxis]
 
         # add the annotations
-        for ann in sp[:annotations]
-            _py_add_annotations(sp, locate_annotation(sp, ann...)...)
-        end
+        foreach(
+            ann -> _py_add_annotations(sp, locate_annotation(sp, ann...)...),
+            sp[:annotations],
+        )
 
         # title
         if (title = sp[:title]) != ""  # support symbols
