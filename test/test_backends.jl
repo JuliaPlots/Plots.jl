@@ -44,6 +44,8 @@ function checkout_reference_dir(dn::AbstractString)
             @warn err
         end
     end
+    LibGit2.peel(LibGit2.head(repo)) |> println  # print some information
+    nothing
 end
 
 let dn = reference_dir()
