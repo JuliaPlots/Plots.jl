@@ -616,8 +616,18 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         else
             extrakw[:cmap] = _py_linecolormap(series)
         end
-        ax.contour(x, y, z, levelargs...; linestyles, linewidths, zorder, extrakw...) |>
-        push_h
+        (
+            handle = ax.contour(
+                x,
+                y,
+                z,
+                levelargs...;
+                linestyles,
+                linewidths,
+                zorder,
+                extrakw...,
+            )
+        ) |> push_h
         series[:contour_labels] === true && ax.clabel(handle, handle.levels)
 
         # contour fills
