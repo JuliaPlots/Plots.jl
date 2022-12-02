@@ -211,7 +211,16 @@ end
             )
             @test filesize(fn) > 1_000
         end
-        for be in (:gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
+        for be in (
+            :gr,
+            :unicodeplots,
+            :pgfplotsx,
+            :plotlyjs,
+            :pyplot,
+            :pythonplot,
+            :inspectdr,
+            :gaston,
+        )
             skip = vcat(Plots._backend_skips[be], blacklist)
             Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
             closeall()
