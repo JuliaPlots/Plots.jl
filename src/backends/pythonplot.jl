@@ -2,17 +2,16 @@
 
 is_marker_supported(::PythonPlotBackend, shape::Shape) = true
 
-const PythonCall = PythonPlot.PythonCall
-
 # problem: github.com/tbreloff/Plots.jl/issues/308
 # solution: hack from @stevengj: github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
 let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
     append!(Base.Multimedia.displays, otherdisplays)
 end
 
-const mpl_toolkits = PythonPlot.pyimport("mpl_toolkits")
-const mpl          = PythonPlot.pyimport("matplotlib")
-const numpy        = PythonPlot.pyimport("numpy")
+mpl_toolkits = PythonPlot.pyimport("mpl_toolkits")
+mpl          = PythonPlot.pyimport("matplotlib")
+numpy        = PythonPlot.pyimport("numpy")
+PythonCall   = PythonPlot.PythonCall
 
 PythonPlot.pyimport("mpl_toolkits.axes_grid1")
 numpy.seterr(invalid = "ignore")

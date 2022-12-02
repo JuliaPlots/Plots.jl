@@ -10,14 +10,14 @@ let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.d
     append!(Base.Multimedia.displays, otherdisplays)
 end
 
-pycolors = PyPlot.pyimport("matplotlib.colors")
-pypath = PyPlot.pyimport("matplotlib.path")
-mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
+pycolors   = PyPlot.pyimport("matplotlib.colors")
+pypath     = PyPlot.pyimport("matplotlib.path")
+mplot3d    = PyPlot.pyimport("mpl_toolkits.mplot3d")
 axes_grid1 = PyPlot.pyimport("mpl_toolkits.axes_grid1")
-pypatches = PyPlot.pyimport("matplotlib.patches")
-pyticker = PyPlot.pyimport("matplotlib.ticker")
-pycmap = PyPlot.pyimport("matplotlib.cm")
-pynp = PyPlot.pyimport("numpy")
+pypatches  = PyPlot.pyimport("matplotlib.patches")
+pyticker   = PyPlot.pyimport("matplotlib.ticker")
+pycmap     = PyPlot.pyimport("matplotlib.cm")
+pynp       = PyPlot.pyimport("numpy")
 pynp."seterr"(invalid = "ignore")
 
 # "support" matplotlib v3.4
