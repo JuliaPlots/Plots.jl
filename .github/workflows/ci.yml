@@ -94,6 +94,7 @@ jobs:
           end
           Conda.add([libgcc..., "matplotlib"])
           Conda.list()
+          # configure `CondPkg` to use `Conda` setup
           open(ENV["GITHUB_ENV"], "a") do io
             println(io, "JULIA_CONDAPKG_EXE=", Conda.CONDA_EXE)
             println(io, "JULIA_CONDAPKG_BACKEND=Null")

@@ -1353,9 +1353,9 @@ function test_examples(
         rng === nothing || Random.seed!(rng, Plots.PLOTS_SEED)
         theme(:default)
     end)
-    imports === nothing || Base.eval(m, _examples[i].imports)
+    (imp = _examples[i].imports) === nothing || Base.eval(m, imp)
     exprs = _examples[i].exprs
-    rng === nothing || (exprs = Plots.replace_rand(_examples[i].exprs))
+    rng === nothing || (exprs = Plots.replace_rand(exprs))
     Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))
