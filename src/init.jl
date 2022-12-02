@@ -7,7 +7,7 @@ const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 
-backend_path(sym) = @path joinpath(@__DIR__, "backends", "$sym.jl")
+backend_path(sym, args...) = @path joinpath(@__DIR__, "backends", args..., "$sym.jl")
 
 _plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -66,11 +66,15 @@ function __init__()
     end
 
     @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
-        initialized(:pyplot) || include(backend_path(:pyplot))
+        initialized(:pyplot) || include(backend_path(:pyplot, "deprecated"))
+    end
+
+    @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
+        initialized(:pythonplot) || include(backend_path(:pythonplot))
     end
 
     @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
-        initialized(:pgfplots) || include(backend_path(:pgfplots))
+        initialized(:pgfplots) || include(backend_path(:pgfplots, "deprecated"))
     end
 
     @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
@@ -87,10 +91,6 @@ function __init__()
     @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
         initialized(:plotly) || include(backend_path(:plotly))
         initialized(:plotlyjs) || include(backend_path(:plotlyjs))
-    end
-
-    @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
-        initialized(:pythonplot) || include(backend_path(:pythonplot))
     end
 
     @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
