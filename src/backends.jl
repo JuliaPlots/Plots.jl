@@ -870,15 +870,19 @@ const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _pyplot_marker = vcat(_allMarkers, :pixel)
 const _pyplot_scale = [:identity, :ln, :log2, :log10]
 
-# pyplot
+# ------------------------------------------------------------------------------
+# pythonplot
 
-_initialize_backend(::PythonPlotBackend) = @eval Main begin
-    import PythonPlot
-    export PythonPlot
-    $(_check_compat)(PythonPlot)
+function _initialize_backend(::PythonPlotBackend)
+    @eval Main begin
+        import PythonPlot
+        export PythonPlot
+        $(_check_compat)(PythonPlot)
 
-    # we don't want every command to update the figure
-    PythonPlot.ioff()
+        # we don't want every command to update the figure
+        PythonPlot.ioff()
+    end
+    @eval const PythonPlot = Main.PythonPlot
 end
 
 const _pythonplot_seriestype = _pyplot_seriestype
@@ -888,7 +892,7 @@ const _pythonplot_scale      = _pyplot_scale
 const _pythonplot_attr       = _pyplot_attr
 
 # ------------------------------------------------------------------------------
-# Gaston
+# gaston
 
 const _gaston_attr = merge_with_base_supported([
     :annotations,

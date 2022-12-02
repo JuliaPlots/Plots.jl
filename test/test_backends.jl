@@ -9,7 +9,8 @@ ci_tol() =
 
 const TESTS_MODULE = Module(:PlotsTestsModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
-const ALL_BACKENDS = :gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :pythonplot, :inspectdr, :gaston
+const ALL_BACKENDS =
+    :gr, :unicodeplots, :pyplot, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
