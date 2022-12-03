@@ -167,6 +167,7 @@ end
 
     for be in ALL_BACKENDS
         @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
+        @test success(run(```$(Base.julia_cmd()) -e 'using Plots'```))  # test default precompilation
     end
     @test_logs (:warn, r".*is not compatible with") Plots.set_default_backend!(:invalid)
 

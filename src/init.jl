@@ -7,7 +7,12 @@ const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 
-backend_path(sym, args...) = @path joinpath(@__DIR__, "backends", args..., "$sym.jl")
+_backend_path(sym) =
+    if sym ∈ (:pgfplots, :pyplot)
+        @path joinpath(@__DIR__, "backends", "deprecated", "$sym.jl")
+    else
+        @path joinpath(@__DIR__, "backends", "$sym.jl")
+    end
 
 _plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -32,6 +37,13 @@ function _plots_plotly_defaults()
         use_local_plotlyjs[] = true
     end
     use_local_dependencies[] = use_local_plotlyjs[]
+end
+
+function _include(pkg::Symbol)
+    initialized(pkg) && return
+    _initialize_backend(_backend_instance(pkg))
+    include(_backend_path(pkg))
+    nothing
 end
 
 function __init__()
@@ -63,52 +75,51 @@ function __init__()
     be = backend_name()
 
     be === :gr || @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
-        initialized(:gr) || include(backend_path(:gr))
+        _include(:gr)
     end
 
     be === :pyplot || @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
-        initialized(:pyplot) || include(backend_path(:pyplot, "deprecated"))
+        _include(:pyplot)
     end
 
     be === :pythonplot || @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
-        initialized(:pythonplot) || include(backend_path(:pythonplot))
+        _include(:pythonplot)
     end
 
     be === :pgfplots || @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
-        initialized(:pgfplots) || include(backend_path(:pgfplots, "deprecated"))
+        _include(:pythonplot)
     end
 
     be === :pgfplotsx || @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
-        initialized(:pgfplotsx) || include(backend_path(:pgfplotsx))
+        _include(:pgfplotsx)
     end
 
     be === :plotly || @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
         @require PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c" begin
-            initialized(:plotly) || include(backend_path(:plotly))
-            initialized(:plotlybase) || include(backend_path(:plotlybase))
+            _include(:plotly)
+            include(_backend_path(:plotlybase))
         end
     end
 
     be === :plotlyjs || @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
-        initialized(:plotly) || include(backend_path(:plotly))
-        initialized(:plotlyjs) || include(backend_path(:plotlyjs))
+        include(_backend_path(:plotly))
+        _include(:plotlyjs)
     end
 
-    be === :unicodeplots ||
-        @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
-            initialized(:unicodeplots) || include(backend_path(:unicodeplots))
-        end
+    be === :unicodeplots || @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
+        _include(:unicodeplots)
+    end
 
     be === :gaston || @require Gaston = "4b11ee91-296f-5714-9832-002c20994614" begin
-        initialized(:gaston) || include(backend_path(:gaston))
+        _include(:gaston)
     end
 
     be === :inspectdr || @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
-        initialized(:inspectdr) || include(backend_path(:inspectdr))
+        _include(:inspectdr)
     end
 
     be === :hdf5 || @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
-        initialized(:hdf5) || include(backend_path(:hdf5))
+        _include(:hdf5)
     end
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
@@ -171,19 +182,13 @@ function __init__()
         @reexport using .UnitfulRecipes
     end
 
-    _atinit(backend())  # runtime init
+    _post_init(backend())  # runtime init
     nothing
 end
 
 ##################################################################
 backend()  # compile time init, either from preferences or from env
-let be_name = backend_name()
-    if be_name ∈ (:pyplot, :pgfplots)
-        backend_path(be_name, "deprecated")
-    else
-        backend_path(be_name)
-    end |> include  # load glue code
-end
+include(_backend_path(backend_name()))  # load glue code
 
 # COV_EXCL_START
 if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")
@@ -196,22 +201,30 @@ if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO",
             _examples[i].external && continue
             (imp = _examples[i].imports) === nothing || push!(imports, imp)
             func = gensym(string(i))
-            push!(examples, quote
-                $func() = begin  # evaluate each example in a local scope
-                    $(_examples[i].exprs)
-                    if $i == 1  # only for one example
+            push!(
+                examples,
+                quote
+                    $func() = begin  # evaluate each example in a local scope
+                        $(_examples[i].exprs)
+                        $i == 1 || return  # only for one example
                         fn = tempname()
                         pl = current()
                         show(devnull, pl)
-                        Sys.iswindows() || savefig(pl, "$fn.png")
+                        # FIXME: pgfplotsx requires bug
+                        backend_name() === :pgfplotsx && return
+                        # FIXME: windows bug github.com/JuliaLang/julia/issues/46989
+                        Sys.iswindows() && return
+                        showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
+                        showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
+                        nothing
                     end
-                    nothing
-                end
-                $func()
-            end)
+                    $func()
+                end,
+            )
         end
         withenv("GKSwstype" => "nul") do
             @precompile_all_calls begin
+                load_default_backend()
                 eval.(imports)
                 eval.(examples)
             end

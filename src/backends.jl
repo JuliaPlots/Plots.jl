@@ -69,7 +69,7 @@ macro init_backend(s)
         export $sym
         $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
         backend_name(::$T) = Symbol($str)
-        backend_package_name(pkg::$T) = backend_package_name(Symbol($str))
+        backend_package_name(::$T) = backend_package_name(Symbol($str))
         push!(_backends, Symbol($str))
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
@@ -349,7 +349,9 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
     end
 end
 
-_atinit(::AbstractBackend) = nothing
+# custom hooks
+_pre_init(::AbstractBackend) = nothing
+_post_init(::AbstractBackend) = nothing
 
 ################################################################################
 # initialize the backends
@@ -740,7 +742,7 @@ const _plotlyjs_scale      = _plotly_scale
 # ------------------------------------------------------------------------------
 # pyplot
 
-_atinit(::PyPlotBackend) = @eval begin
+_post_init(::PyPlotBackend) = @eval begin
     pycolors   = PyPlot.pyimport("matplotlib.colors")
     pypath     = PyPlot.pyimport("matplotlib.path")
     mplot3d    = PyPlot.pyimport("mpl_toolkits.mplot3d")
@@ -761,10 +763,8 @@ function _initialize_backend(pkg::PyPlotBackend)
         export PyPlot
         $(_check_compat)(PyPlot)
     end
-    @eval begin
-        const PyPlot = Main.PyPlot
-        _atinit($pkg)
-    end
+    @eval const PyPlot = Main.PyPlot
+    _post_init(pkg)
 end
 
 const _pyplot_attr = merge_with_base_supported([
@@ -890,7 +890,7 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # pythonplot
 
-_atinit(::PythonPlotBackend) = @eval begin
+_post_init(::PythonPlotBackend) = @eval begin
     mpl_toolkits = PythonCall.pyimport("mpl_toolkits")
     mpl          = PythonCall.pyimport("matplotlib")
     numpy        = PythonCall.pyimport("numpy")
@@ -910,8 +910,8 @@ function _initialize_backend(pkg::PythonPlotBackend)
     @eval begin
         const PythonPlot = Main.PythonPlot
         const PythonCall = Main.PythonPlot.PythonCall
-        _atinit($pkg)
     end
+    _post_init(pkg)
 end
 
 const _pythonplot_seriestype = _pyplot_seriestype
@@ -1307,6 +1307,23 @@ const _inspectdr_marker = Symbol[
 const _inspectdr_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # pgfplotsx
+
+_pre_init(::PGFPlotsXBackend) = @eval begin
+    import LaTeXStrings: LaTeXString
+    import UUIDs: uuid4
+    import Latexify
+    import Contour
+end
+
+function _initialize_backend(pkg::PGFPlotsXBackend)
+    _pre_init(pkg)
+    @eval Main begin
+        import PGFPlotsX
+        export PGFPlotsX
+        $(_check_compat)(PGFPlotsX)
+    end
+    @eval const PGFPlotsX = Main.PGFPlotsX
+end
 
 const _pgfplotsx_attr = merge_with_base_supported([
     :annotations,
