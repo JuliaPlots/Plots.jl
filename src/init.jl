@@ -7,7 +7,7 @@ const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 
-_backend_path(sym) =
+_path(sym) =
     if sym ∈ (:pgfplots, :pyplot)
         @path joinpath(@__DIR__, "backends", "deprecated", "$sym.jl")
     else
@@ -42,8 +42,18 @@ end
 function _include(pkg::Symbol)
     initialized(pkg) && return
     _initialize_backend(_backend_instance(pkg))
-    include(_backend_path(pkg))
+    include(_path(pkg))
     nothing
+end
+
+macro load(name, uuid, extra = :())
+    sym = Symbol(lowercase("$name"))
+    quote
+        backend_name() === $sym || @require $name = $uuid begin
+            $extra
+            _include($sym)
+        end
+    end |> esc
 end
 
 function __init__()
@@ -72,55 +82,17 @@ function __init__()
         end,
     )
 
-    be = backend_name()
-
-    be === :gr || @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
-        _include(:gr)
-    end
-
-    be === :pyplot || @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
-        _include(:pyplot)
-    end
-
-    be === :pythonplot || @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
-        _include(:pythonplot)
-    end
-
-    be === :pgfplots || @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
-        _include(:pythonplot)
-    end
-
-    be === :pgfplotsx || @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
-        _include(:pgfplotsx)
-    end
-
-    be === :plotly || @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
-        @require PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c" begin
-            _include(:plotly)
-            include(_backend_path(:plotlybase))
-        end
-    end
-
-    be === :plotlyjs || @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
-        include(_backend_path(:plotly))
-        _include(:plotlyjs)
-    end
-
-    be === :unicodeplots || @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
-        _include(:unicodeplots)
-    end
-
-    be === :gaston || @require Gaston = "4b11ee91-296f-5714-9832-002c20994614" begin
-        _include(:gaston)
-    end
-
-    be === :inspectdr || @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
-        _include(:inspectdr)
-    end
-
-    be === :hdf5 || @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
-        _include(:hdf5)
-    end
+    @load GR "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+    @load PyPlot "d330b81b-6aea-500a-939a-2ce795aea3ee"
+    @load PythonPlot "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
+    @load PGFPlots "3b7a836e-365b-5785-a47d-02c71176b4aa"
+    @load PGFPlotsX "8314cec4-20b6-5062-9cdb-752b83310925"
+    @load UnicodePlots "b8865327-cd53-5732-bb35-84acbb429228"
+    @load Gaston "4b11ee91-296f-5714-9832-002c20994614"
+    @load InspectDR "d0351b0e-4b05-5898-87b3-e2a8edfddd1d"
+    @load HDF5 "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+    @load PlotlyJS "f0f68f2c-4968-5e81-91da-67840de0976a" include(_path(:plotly))
+    @load PlotlyKaleido "f2990250-8cf9-495f-b13a-cce12b45703c" include(_path(:plotlybase))
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
@@ -188,7 +160,7 @@ end
 
 ##################################################################
 backend()  # compile time init, either from preferences or from env
-include(_backend_path(backend_name()))  # load glue code
+include(_path(backend_name()))  # load glue code
 
 # COV_EXCL_START
 if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")
