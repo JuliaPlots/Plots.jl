@@ -9,8 +9,10 @@ ci_tol() =
 
 const TESTS_MODULE = Module(:PlotsTestsModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
-const ALL_BACKENDS =
-    (:gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :plotly, :gaston, :inspectdr)
+
+# NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
+const CONCRETE_BACKENDS =
+    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
@@ -57,7 +59,7 @@ end
 ref_name(i) = "ref" * lpad(i, 3, '0')
 
 function reference_file(backend, version, i)
-    # NOTE: keep ref-[...].png naming consistent with `PlotDocs`
+    # NOTE: keep ref[...].png naming consistent with `PlotDocs`
     refdir = reference_dir("Plots", string(backend))
     fn = ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
@@ -189,7 +191,8 @@ end
         @test success(run(```$(Base.julia_cmd()) $script```))
     end
 
-    is_pkgeval() || for be in ALL_BACKENDS
+    is_pkgeval() || for be in CONCRETE_BACKENDS
+        (Sys.isapple() && be === :gaston) && continue  # FIXME: hangs
         @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
         @test Base.compilecache(Base.module_keys[Plots]) isa String  # test default precompilation
     end
@@ -280,7 +283,7 @@ is_pkgeval() || @testset "Examples" begin
             )
             @test filesize(fn) > 1_000
         end
-        for be in ALL_BACKENDS
+        for be in CONCRETE_BACKENDS
             skip = vcat(Plots._backend_skips[be], blacklist)
             Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
             closeall()
