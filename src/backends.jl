@@ -230,7 +230,10 @@ function backend()
     CURRENT_BACKEND.pkg
 end
 
-initialized(sym::Symbol) = sym ∈ _initialized_backends
+function initialized(sym::Symbol)
+    # @debug "$sym is initialized: $(sym ∈ _initialized_backends ? "T" : 'F')"
+    sym ∈ _initialized_backends
+end
 
 """
 Set the plot backend.

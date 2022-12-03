@@ -60,51 +60,54 @@ function __init__()
         end,
     )
 
-    @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
+    be = backend_name()
+
+    be === :gr || @require GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71" begin
         initialized(:gr) || include(backend_path(:gr))
     end
 
-    @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
+    be === :pyplot || @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
         initialized(:pyplot) || include(backend_path(:pyplot, "deprecated"))
     end
 
-    @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
+    be === :pythonplot || @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
         initialized(:pythonplot) || include(backend_path(:pythonplot))
     end
 
-    @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
+    be === :pgfplots || @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
         initialized(:pgfplots) || include(backend_path(:pgfplots, "deprecated"))
     end
 
-    @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
+    be === :pgfplotsx || @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
         initialized(:pgfplotsx) || include(backend_path(:pgfplotsx))
     end
 
-    @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
+    be === :plotly || @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
         @require PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c" begin
             initialized(:plotly) || include(backend_path(:plotly))
             initialized(:plotlybase) || include(backend_path(:plotlybase))
         end
     end
 
-    @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
+    be === :plotlyjs || @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
         initialized(:plotly) || include(backend_path(:plotly))
         initialized(:plotlyjs) || include(backend_path(:plotlyjs))
     end
 
-    @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
-        initialized(:unicodeplots) || include(backend_path(:unicodeplots))
-    end
+    be === :unicodeplots ||
+        @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
+            initialized(:unicodeplots) || include(backend_path(:unicodeplots))
+        end
 
-    @require Gaston = "4b11ee91-296f-5714-9832-002c20994614" begin
+    be === :gaston || @require Gaston = "4b11ee91-296f-5714-9832-002c20994614" begin
         initialized(:gaston) || include(backend_path(:gaston))
     end
 
-    @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
+    be === :inspectdr || @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
         initialized(:inspectdr) || include(backend_path(:inspectdr))
     end
 
-    @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
+    be === :hdf5 || @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
         initialized(:hdf5) || include(backend_path(:hdf5))
     end
 
@@ -173,20 +176,23 @@ function __init__()
 end
 
 ##################################################################
+backend()  # compile time init, either from preferences or from env
+let be_name = backend_name()
+    if be_name ∈ (:pyplot, :pgfplots)
+        backend_path(be_name, "deprecated")
+    else
+        backend_path(be_name)
+    end |> include  # load glue code
+end
+
 # COV_EXCL_START
 if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")
     @precompile_setup begin
-        backend()  # compile time init, either from preferences or from env
         @info backend_package_name()
-        if (be_name = backend_name()) ∈ (:pyplot, :pgfplots)
-            backend_path(be_name, "deprecated")
-        else
-            backend_path(be_name)
-        end |> include  # load glue code
         n = length(_examples)
         imports = sizehint!(Expr[], n)
         examples = sizehint!(Expr[], 10n)
-        for i in setdiff(1:n, _backend_skips[be_name], _animation_examples)
+        for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
             _examples[i].external && continue
             (imp = _examples[i].imports) === nothing || push!(imports, imp)
             func = gensym(string(i))
