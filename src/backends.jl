@@ -497,9 +497,9 @@ function _initialize_backend(pkg::PlotlyBackend)
         @eval Main begin
             import PlotlyBase
             import PlotlyKaleido
+            $(_check_compat)(PlotlyBase; warn = false)  # NOTE: don't warn, since those are not backends, but deps
+            $(_check_compat)(PlotlyKaleido, warn = false)
         end
-        _check_compat(PlotlyBase; warn = false)  # NOTE: don't warn, since those are not backends, but deps
-        _check_compat(PlotlyKaleido, warn = false)
         @eval begin
             const PlotlyBase    = Main.PlotlyBase
             const PlotlyKaleido = Main.PlotlyKaleido
@@ -557,6 +557,7 @@ const _plotly_attr = merge_with_base_supported([
     :guidefontsize,
     :guidefontcolor,
     :window_title,
+    :arrow,
     :guide,
     :widen,
     :lims,
@@ -628,6 +629,7 @@ const _plotly_marker = [
     :octagon,
     :vline,
     :hline,
+    :x,
 ]
 const _plotly_scale = [:identity, :log10]
 

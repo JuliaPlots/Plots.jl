@@ -39,19 +39,10 @@ function _plots_plotly_defaults()
     use_local_dependencies[] = use_local_plotlyjs[]
 end
 
-function _include(pkg::Symbol)
-    initialized(pkg) && return
-    _initialize_backend(_backend_instance(pkg))
-    include(_path(pkg))
-    nothing
-end
-
-macro load(name, uuid, extra = :())
-    sym = Symbol(lowercase("$name"))
+macro load(backend, pkg, uuid)
     quote
-        backend_name() === $sym || @require $name = $uuid begin
-            $extra
-            _include($sym)
+        backend_name() === $backend || @require $pkg = $uuid begin
+            include(_path($backend))
         end
     end |> esc
 end
@@ -69,8 +60,8 @@ function __init__()
         PlotsDisplay(),
     )
 
-    atreplinit(
-        i -> begin
+    i ->
+        begin
             while PlotsDisplay() in Base.Multimedia.displays
                 popdisplay(PlotsDisplay())
             end
@@ -79,20 +70,19 @@ function __init__()
                 findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
                 PlotsDisplay(),
             )
-        end,
-    )
+        end |> atreplinit
 
-    @load GR "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-    @load PyPlot "d330b81b-6aea-500a-939a-2ce795aea3ee"
-    @load PythonPlot "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
-    @load PGFPlots "3b7a836e-365b-5785-a47d-02c71176b4aa"
-    @load PGFPlotsX "8314cec4-20b6-5062-9cdb-752b83310925"
-    @load UnicodePlots "b8865327-cd53-5732-bb35-84acbb429228"
-    @load Gaston "4b11ee91-296f-5714-9832-002c20994614"
-    @load InspectDR "d0351b0e-4b05-5898-87b3-e2a8edfddd1d"
-    @load HDF5 "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-    @load PlotlyJS "f0f68f2c-4968-5e81-91da-67840de0976a" include(_path(:plotly))
-    @load PlotlyKaleido "f2990250-8cf9-495f-b13a-cce12b45703c" include(_path(:plotlybase))
+    @load :gr GR "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+    @load :pyplot PyPlot "d330b81b-6aea-500a-939a-2ce795aea3ee"
+    @load :pythonplot PythonPlot "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
+    @load :pgfplots PGFPlots "3b7a836e-365b-5785-a47d-02c71176b4aa"
+    @load :pgfplotsx PGFPlotsX "8314cec4-20b6-5062-9cdb-752b83310925"
+    @load :unicodeplots UnicodePlots "b8865327-cd53-5732-bb35-84acbb429228"
+    @load :gaston Gaston "4b11ee91-296f-5714-9832-002c20994614"
+    @load :inspectdr InspectDR "d0351b0e-4b05-5898-87b3-e2a8edfddd1d"
+    @load :hdf5 HDF5 "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+    @load :plotlyjs PlotlyJS "f0f68f2c-4968-5e81-91da-67840de0976a"
+    @load :plotly PlotlyKaleido "f2990250-8cf9-495f-b13a-cce12b45703c"
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
@@ -142,9 +132,9 @@ function __init__()
         ) where {N,T} =
             isbitstype(T) && sizeof(T) > 0 ? unzip(reinterpret(NTuple{N,T}, points)) :
             unzip(Tuple.(points))
-        # --------------------------------------------------------------------
+        # -----------------------------------------
         # Lists of tuples and GeometryBasics.Points
-        # --------------------------------------------------------------------
+        # -----------------------------------------
         @recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
         @recipe f(p::GeometryBasics.Point) = [p]  # Special case for 4-tuples in :ohlc series
     end
@@ -159,8 +149,8 @@ function __init__()
 end
 
 ##################################################################
-backend()  # compile time init, either from preferences or from env
-include(_path(backend_name()))  # load glue code
+backend()
+include(_path(backend_name()))
 
 # COV_EXCL_START
 if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")

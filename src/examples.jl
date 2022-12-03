@@ -1264,6 +1264,7 @@ _backend_skips = Dict(
         49,  # polar heatmap
         51,  # image with custom axes
         56,  # custom bar plot
+        62,  # fillstyle unsupported
     ],
     :inspectdr => [
         4,
@@ -1315,6 +1316,7 @@ _backend_skips = Dict(
         31,  # animations - needs github.com/mbaz/Gaston.jl/pull/178
         49,  # TODO: support polar
         60,  # :perspective projection unsupported
+        63,  # FXIME: twin axes misalignement
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]

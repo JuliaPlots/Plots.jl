@@ -1,6 +1,7 @@
 # https://github.com/sglyon/PlotlyJS.jl
 
 # ------------------------------------------------------------------------------
+include(_path(:plotly))
 
 function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     plt[:overwrite_figure] && closeall()

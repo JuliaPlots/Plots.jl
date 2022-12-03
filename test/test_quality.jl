@@ -4,7 +4,9 @@
     # :PyCall and :Conda stale deps show up when running CI
     Aqua.test_all(
         Plots;
-        stale_deps = (; ignore = [:PyCall, :Conda, :Contour, :Latexify, :LaTeXStrings]),
+        stale_deps = (;
+            ignore = [:PyCall, :Conda, :Contour, :Latexify, :LaTeXStrings, :GR]
+        ),
         ambiguities = false,
     )
     Aqua.test_ambiguities(Plots; exclude = [RecipesBase.apply_recipe])  # FIXME: remaining ambiguities

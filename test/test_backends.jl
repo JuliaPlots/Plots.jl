@@ -10,7 +10,7 @@ ci_tol() =
 const TESTS_MODULE = Module(:PlotsTestsModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
 const ALL_BACKENDS =
-    :gr, :unicodeplots, :pyplot, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
+    (:gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :plotly, :gaston, :inspectdr)
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
@@ -141,37 +141,7 @@ end
 =#
 
 @testset "Preferences" begin
-    @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
-    @test Plots.CurrentBackend(:gr).sym === :gr
-
-    Plots.set_default_backend!(:unicodeplots)
-    # the following test mimics a restart, which is needed after a preferences change
-    script = tempname()
-    write(
-        script,
-        """
-        ENV["PLOTS_PRECOMPILE"] = false
-        using Pkg, Test; io = (devnull, stdout)[1]  # toggle for debugging
-        Pkg.activate(; temp = true, io)
-        Pkg.develop(; path = "$(escape_string(pkgdir(Plots)))", io)
-        Pkg.add("UnicodePlots"; io)  # checked by Plots
-        using Plots
-        res = @testset "Prefs" begin
-            @test_logs (:info, r".*Preferences") Plots.diagnostics(io)
-            @test backend() == Plots.UnicodePlotsBackend()
-        end
-        exit(res.n_passed == 2 ? 0 : 1)
-        """,
-    )
-    @test success(run(```$(Base.julia_cmd()) $script```))
-
-    for be in ALL_BACKENDS
-        @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
-        @test success(run(```$(Base.julia_cmd()) -e 'using Plots'```))  # test default precompilation
-    end
-    @test_logs (:warn, r".*is not compatible with") Plots.set_default_backend!(:invalid)
-
-    Plots.set_default_backend!()  # clear `Preferences` key
+    Plots.set_default_backend!()  # start with empty preferences
 
     withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
         @test_logs (:warn, r".*is not a supported backend") Plots.load_default_backend()
@@ -190,6 +160,41 @@ end
     @test Plots.backend_name() === :gr
 
     @test_logs (:info, r".*fallback") Plots.diagnostics(devnull)
+
+    @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
+    @test Plots.CurrentBackend(:gr).sym === :gr
+
+    @test_logs (:warn, r".*is not compatible with") Plots.set_default_backend!(:invalid)
+
+    @testset "simple restart" begin
+        # this test mimics a restart, which is needed after a preferences change
+        Plots.set_default_backend!(:unicodeplots)
+        script = tempname()
+        write(
+            script,
+            """
+            ENV["PLOTS_PRECOMPILE"] = false
+            using Pkg, Test; io = (devnull, stdout)[1]  # toggle for debugging
+            Pkg.activate(; temp = true, io)
+            Pkg.develop(; path = "$(escape_string(pkgdir(Plots)))", io)
+            Pkg.add("UnicodePlots"; io)  # checked by Plots
+            using Plots
+            res = @testset "Prefs" begin
+                @test_logs (:info, r".*Preferences") Plots.diagnostics(io)
+                @test backend() == Plots.UnicodePlotsBackend()
+            end
+            exit(res.n_passed == 2 ? 0 : 1)
+            """,
+        )
+        @test success(run(```$(Base.julia_cmd()) $script```))
+    end
+
+    is_pkgeval() || for be in ALL_BACKENDS
+        @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
+        @test Base.compilecache(Base.module_keys[Plots]) isa String  # test default precompilation
+    end
+
+    Plots.set_default_backend!()  # clear `Preferences` key
 end
 
 @testset "UnicodePlots" begin
@@ -254,8 +259,8 @@ end
     end
 end
 
-@testset "PlotlyJS" begin
-    is_pkgeval() || with(:plotlyjs) do
+is_pkgeval() || @testset "PlotlyJS" begin
+    with(:plotlyjs) do
         @test backend() == Plots.PlotlyJSBackend()
         pl = plot(rand(10))
         @test pl isa Plot
@@ -263,8 +268,8 @@ end
     end
 end
 
-@testset "Examples" begin
-    if Sys.islinux() && !is_pkgeval()
+is_pkgeval() || @testset "Examples" begin
+    if Sys.islinux()
         callback(m, pkgname, i) = begin
             pl = m.Plots.current()
             save_func = (; pgfplotsx = m.Plots.pdf, unicodeplots = m.Plots.txt)  # fastest `savefig` for each backend
