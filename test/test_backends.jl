@@ -12,7 +12,7 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol(
 
 # NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
 const CONCRETE_BACKENDS =
-    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
+    :gr, :unicodeplots, :pyplot, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
