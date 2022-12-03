@@ -2,10 +2,14 @@ using RelocatableFolders
 using Scratch
 using REPL
 
-const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # use fixed version of Plotly instead of the latest one for stable dependency
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
+
+const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
+    merge(toml["deps"], toml["extras"])
+end
 
 _path(sym) =
     if sym ∈ (:pgfplots, :pyplot)
@@ -28,20 +32,20 @@ end
 
 function _plots_plotly_defaults()
     if bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", "false")
-        plotly_local_file_path[] =
+        _plotly_local_file_path[] =
             joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
-        isfile(plotly_local_file_path[]) || Downloads.download(
+        isfile(_plotly_local_file_path[]) || Downloads.download(
             "https://cdn.plot.ly/$(_plotly_min_js_filename)",
-            plotly_local_file_path[],
+            _plotly_local_file_path[],
         )
-        use_local_plotlyjs[] = true
+        _use_local_plotlyjs[] = true
     end
-    use_local_dependencies[] = use_local_plotlyjs[]
+    _use_local_dependencies[] = _use_local_plotlyjs[]
 end
 
-macro load(backend, pkg, uuid)
+macro load(backend, pkg)
     quote
-        backend_name() === $backend || @require $pkg = $uuid begin
+        backend_name() === $backend || @require $pkg = $(_plots_deps["$pkg"]) begin
             include(_path($backend))
         end
     end |> esc
@@ -72,17 +76,17 @@ function __init__()
             )
         end |> atreplinit
 
-    @load :gr GR "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-    @load :pyplot PyPlot "d330b81b-6aea-500a-939a-2ce795aea3ee"
-    @load :pythonplot PythonPlot "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
-    @load :pgfplots PGFPlots "3b7a836e-365b-5785-a47d-02c71176b4aa"
-    @load :pgfplotsx PGFPlotsX "8314cec4-20b6-5062-9cdb-752b83310925"
-    @load :unicodeplots UnicodePlots "b8865327-cd53-5732-bb35-84acbb429228"
-    @load :gaston Gaston "4b11ee91-296f-5714-9832-002c20994614"
-    @load :inspectdr InspectDR "d0351b0e-4b05-5898-87b3-e2a8edfddd1d"
-    @load :hdf5 HDF5 "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-    @load :plotlyjs PlotlyJS "f0f68f2c-4968-5e81-91da-67840de0976a"
-    @load :plotly PlotlyKaleido "f2990250-8cf9-495f-b13a-cce12b45703c"
+    @load :gr GR
+    @load :pyplot PyPlot
+    @load :pythonplot PythonPlot
+    @load :pgfplots PGFPlots
+    @load :pgfplotsx PGFPlotsX
+    @load :unicodeplots UnicodePlots
+    @load :gaston Gaston
+    @load :inspectdr InspectDR
+    @load :hdf5 HDF5
+    @load :plotlyjs PlotlyJS
+    @load :plotly PlotlyKaleido
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
@@ -96,14 +100,15 @@ function __init__()
            ImageInTerminal.ENCODER_BACKEND[] == :Sixel
             get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
             for be in (
+                GRBackend,
                 PyPlotBackend,
                 PythonPlotBackend,
                 # UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
-                PlotlyJSBackend,
-                GRBackend,
                 PGFPlotsXBackend,
-                InspectDRBackend,
+                PlotlyJSBackend,
+                PlotlyBackend,
                 GastonBackend,
+                InspectDRBackend,
             )
                 @eval function Base.display(::PlotsDisplay, plt::Plot{$be})
                     prepare_output(plt)
