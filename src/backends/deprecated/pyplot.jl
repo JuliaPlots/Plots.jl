@@ -1,4 +1,5 @@
 # https://github.com/JuliaPy/PyPlot.jl
+# COV_EXCL_START
 
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
@@ -1635,3 +1636,5 @@ for (mime, fmt) in (
 end
 
 closeall(::PyPlotBackend) = PyPlot.plt."close"("all")
+
+# COV_EXCL_STOP

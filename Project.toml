@@ -41,7 +41,6 @@ UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 
 [compat]
-Conda = "1"
 Contour = "0.5 - 0.6"
 FFMPEG = "0.2 - 0.4"
 FixedPointNumbers = "0.6 - 0.8"
@@ -63,7 +62,6 @@ PlotlyBase = "0.7 - 0.8"
 PlotlyJS = "0.18"
 PlotlyKaleido = "1"
 Preferences = "1"
-PyCall = "1"
 PyPlot = "2"
 PythonPlot = "1"
 RecipesBase = "1.3.1"
@@ -83,7 +81,6 @@ julia = "1.6"
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
-Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
@@ -101,7 +98,6 @@ PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925"
 PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
 PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
 PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c"
-PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
@@ -116,4 +112,4 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["Aqua", "Colors", "Conda", "Distributions", "FileIO", "FilePathsBase", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyCall", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]

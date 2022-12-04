@@ -12,7 +12,7 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol(
 
 # NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
 const CONCRETE_BACKENDS =
-    :gr, :unicodeplots, :pyplot, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
+    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
@@ -284,10 +284,8 @@ is_pkgeval() || @testset "Examples" begin
         @test filesize(fn) > 1_000
     end
     Sys.islinux() && for be in CONCRETE_BACKENDS
-        withenv("JULIA_PYTHONCALL_EXE" => "@PyCall", "JULIA_CONDAPKG_BACKEND" => "Null") do
-            skip = vcat(Plots._backend_skips[be], blacklist)
-            Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
-            closeall()
-        end
+        skip = vcat(Plots._backend_skips[be], blacklist)
+        Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
+        closeall()
     end
 end
