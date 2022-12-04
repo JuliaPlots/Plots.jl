@@ -745,14 +745,14 @@ const _plotlyjs_scale      = _plotly_scale
 # pyplot
 
 _post_init(::PyPlotBackend) = @eval begin
-    pycolors   = PyPlot.pyimport("matplotlib.colors")
-    pypath     = PyPlot.pyimport("matplotlib.path")
-    mplot3d    = PyPlot.pyimport("mpl_toolkits.mplot3d")
-    axes_grid1 = PyPlot.pyimport("mpl_toolkits.axes_grid1")
-    pypatches  = PyPlot.pyimport("matplotlib.patches")
-    pyticker   = PyPlot.pyimport("matplotlib.ticker")
-    pycmap     = PyPlot.pyimport("matplotlib.cm")
-    pynp       = PyPlot.pyimport("numpy")
+    pycolors   = PyCall.pyimport("matplotlib.colors")
+    pypath     = PyCall.pyimport("matplotlib.path")
+    mplot3d    = PyCall.pyimport("mpl_toolkits.mplot3d")
+    axes_grid1 = PyCall.pyimport("mpl_toolkits.axes_grid1")
+    pypatches  = PyCall.pyimport("matplotlib.patches")
+    pyticker   = PyCall.pyimport("matplotlib.ticker")
+    pycmap     = PyCall.pyimport("matplotlib.cm")
+    pynp       = PyCall.pyimport("numpy")
 
     pynp."seterr"(invalid = "ignore")
 
@@ -765,7 +765,10 @@ function _initialize_backend(pkg::PyPlotBackend)
         export PyPlot
         $(_check_compat)(PyPlot)
     end
-    @eval const PyPlot = Main.PyPlot
+    @eval begin
+        const PyPlot = Main.PyPlot
+        const PyCall = Main.PyPlot.PyCall
+    end
     _post_init(pkg)
 end
 
@@ -897,7 +900,7 @@ _post_init(::PythonPlotBackend) = @eval begin
     mpl          = PythonCall.pyimport("matplotlib")
     numpy        = PythonCall.pyimport("numpy")
 
-    PythonPlot.pyimport("mpl_toolkits.axes_grid1")
+    PythonCall.pyimport("mpl_toolkits.axes_grid1")
     numpy.seterr(invalid = "ignore")
 
     PythonPlot.ioff()  # we don't want every command to update the figure

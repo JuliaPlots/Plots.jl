@@ -1349,7 +1349,7 @@ function test_examples(
 )
     @info "Testing plot: $pkgname:$i:$(_examples[i].header)"
 
-    m = Module(:PlotsExamplesModule)
+    m = Module(Symbol(:PlotsExamples, pkgname))
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
     Base.eval(m, quote

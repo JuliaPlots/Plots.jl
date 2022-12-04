@@ -33,11 +33,9 @@ end
 function _plots_plotly_defaults()
     if bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", "false")
         _plotly_local_file_path[] =
-            joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
-        isfile(_plotly_local_file_path[]) || Downloads.download(
-            "https://cdn.plot.ly/$(_plotly_min_js_filename)",
-            _plotly_local_file_path[],
-        )
+            fn = joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
+        isfile(fn) ||
+            Downloads.download("https://cdn.plot.ly/$(_plotly_min_js_filename)", fn)
         _use_local_plotlyjs[] = true
     end
     _use_local_dependencies[] = _use_local_plotlyjs[]

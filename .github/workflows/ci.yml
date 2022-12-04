@@ -20,7 +20,6 @@ jobs:
       GKS_ENCODING: "utf8"
       GKSwstype: "nul"
       PYTHON: "Conda"  # for `PyPlot`
-      JULIA_PYTHONCALL_EXE: "@PyCall"  # for `PythonCall`
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
@@ -94,11 +93,6 @@ jobs:
           end
           Conda.add([libgcc..., "matplotlib"])
           Conda.list()
-          # configure `CondPkg` to use `Conda` setup
-          open(ENV["GITHUB_ENV"], "a") do io
-            println(io, "JULIA_CONDAPKG_EXE=", Conda.CONDA_EXE)
-            println(io, "JULIA_CONDAPKG_BACKEND=Null")
-          end
           Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
 
       - uses: julia-actions/julia-runtest@latest
