@@ -1,10 +1,10 @@
-const use_local_dependencies = Ref(false)
-const use_local_plotlyjs = Ref(false)
+const _use_local_dependencies = Ref(false)
+const _use_local_plotlyjs = Ref(false)
 
 function _init_ijulia_plotting()
     # IJulia is more stable with local file
-    use_local_plotlyjs[] =
-        plotly_local_file_path[] === nothing ? false : isfile(plotly_local_file_path[])
+    _use_local_plotlyjs[] =
+        _plotly_local_file_path[] === nothing ? false : isfile(_plotly_local_file_path[])
 
     ENV["MPLBACKEND"] = "Agg"
 end

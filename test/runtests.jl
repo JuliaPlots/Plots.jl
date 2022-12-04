@@ -12,6 +12,7 @@ using VisualRegressionTests
 using RecipesPipeline
 using FilePathsBase
 using LaTeXStrings
+using Preferences
 using RecipesBase
 using TestImages
 using Unitful
@@ -21,6 +22,9 @@ using Dates
 using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
+# get `Preferences` set backend, if any
+const previous_default_backend = load_preference(Plots, "default_backend")
+
 # initial load - required for `should_warn_on_unsupported`
 unicodeplots()
 pgfplotsx()
@@ -29,9 +33,9 @@ plotly()
 hdf5()
 gr()
 
-is_auto() = get(ENV, "VISUAL_REGRESSION_TESTS_AUTO", "false") == "true"
-is_pkgeval() = get(ENV, "JULIA_PKGEVAL", "false") == "true"
-is_ci() = get(ENV, "CI", "false") == "true"
+is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
+is_pkgeval() = Plots.bool_env("JULIA_PKGEVAL", "false")
+is_ci() = Plots.bool_env("CI", "false")
 
 for name in (
     "quality",
@@ -62,4 +66,10 @@ for name in (
         gr()  # reset to default backend (safer)
         include("test_$name.jl")
     end
+end
+
+if previous_default_backend === nothing
+    delete_preferences!(Plots, "default_backend")  # restore the absence of a preference
+else
+    Plots.set_default_backend!(previous_default_backend)  # reset to previous state
 end

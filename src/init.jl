@@ -2,18 +2,21 @@ using RelocatableFolders
 using Scratch
 using REPL
 
-const plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
-const BACKEND_PATH_GASTON = @path joinpath(@__DIR__, "backends", "gaston.jl")
-const BACKEND_PATH_HDF5 = @path joinpath(@__DIR__, "backends", "hdf5.jl")
-const BACKEND_PATH_INSPECTDR = @path joinpath(@__DIR__, "backends", "inspectdr.jl")
-const BACKEND_PATH_PLOTLYBASE = @path joinpath(@__DIR__, "backends", "plotlybase.jl")
-const BACKEND_PATH_PGFPLOTS =
-    @path joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")
-const BACKEND_PATH_PGFPLOTSX = @path joinpath(@__DIR__, "backends", "pgfplotsx.jl")
-const BACKEND_PATH_PLOTLYJS = @path joinpath(@__DIR__, "backends", "plotlyjs.jl")
-const BACKEND_PATH_PYTHONPLOT = @path joinpath(@__DIR__, "backends", "pythonplot.jl")
-const BACKEND_PATH_PYPLOT = @path joinpath(@__DIR__, "backends", "pyplot.jl")
-const BACKEND_PATH_UNICODEPLOTS = @path joinpath(@__DIR__, "backends", "unicodeplots.jl")
+const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+# use fixed version of Plotly instead of the latest one for stable dependency
+# see github.com/JuliaPlots/Plots.jl/pull/2779
+const _plotly_min_js_filename = "plotly-2.6.3.min.js"
+
+const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
+    merge(toml["deps"], toml["extras"])
+end
+
+_path(sym) =
+    if sym ∈ (:pgfplots, :pyplot)
+        @path joinpath(@__DIR__, "backends", "deprecated", "$sym.jl")
+    else
+        @path joinpath(@__DIR__, "backends", "$sym.jl")
+    end
 
 _plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -28,20 +31,27 @@ function _plots_theme_defaults()
 end
 
 function _plots_plotly_defaults()
-    if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == "true"
-        global plotly_local_file_path[] =
-            joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
-        isfile(plotly_local_file_path[]) || Downloads.download(
-            "https://cdn.plot.ly/$(_plotly_min_js_filename)",
-            plotly_local_file_path[],
-        )
-        use_local_plotlyjs[] = true
+    if bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", "false")
+        _plotly_local_file_path[] =
+            fn = joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
+        isfile(fn) ||
+            Downloads.download("https://cdn.plot.ly/$(_plotly_min_js_filename)", fn)
+        _use_local_plotlyjs[] = true
     end
-    use_local_dependencies[] = use_local_plotlyjs[]
+    _use_local_dependencies[] = _use_local_plotlyjs[]
+end
+
+macro load(backend, pkg)
+    quote
+        backend_name() === $backend || @require $pkg = $(_plots_deps["$pkg"]) begin
+            include(_path($backend))
+        end
+    end |> esc
 end
 
 function __init__()
     _plots_theme_defaults()
+    _plots_plotly_defaults()
 
     insert!(
         Base.Multimedia.displays,
@@ -52,8 +62,8 @@ function __init__()
         PlotsDisplay(),
     )
 
-    atreplinit(
-        i -> begin
+    i ->
+        begin
             while PlotsDisplay() in Base.Multimedia.displays
                 popdisplay(PlotsDisplay())
             end
@@ -62,52 +72,19 @@ function __init__()
                 findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
                 PlotsDisplay(),
             )
-        end,
-    )
+        end |> atreplinit
 
-    @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
-        include(BACKEND_PATH_HDF5)
-    end
-
-    @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
-        include(BACKEND_PATH_INSPECTDR)
-    end
-
-    @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
-        include(BACKEND_PATH_PGFPLOTS)
-    end
-
-    @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
-        @require PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c" begin
-            include(BACKEND_PATH_PLOTLYBASE)
-        end
-    end
-
-    @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
-        include(BACKEND_PATH_PGFPLOTSX)
-    end
-
-    @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
-        include(BACKEND_PATH_PLOTLYJS)
-    end
-
-    _plots_plotly_defaults()
-
-    @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
-        include(BACKEND_PATH_PYPLOT)
-    end
-
-    @require PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9" begin
-        include(BACKEND_PATH_PYTHONPLOT)
-    end
-
-    @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
-        include(BACKEND_PATH_UNICODEPLOTS)
-    end
-
-    @require Gaston = "4b11ee91-296f-5714-9832-002c20994614" begin
-        include(BACKEND_PATH_GASTON)
-    end
+    @load :gr GR
+    @load :pyplot PyPlot
+    @load :pythonplot PythonPlot
+    @load :pgfplots PGFPlots
+    @load :pgfplotsx PGFPlotsX
+    @load :unicodeplots UnicodePlots
+    @load :gaston Gaston
+    @load :inspectdr InspectDR
+    @load :hdf5 HDF5
+    @load :plotlyjs PlotlyJS
+    @load :plotly PlotlyKaleido
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
@@ -117,17 +94,19 @@ function __init__()
     end
 
     @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
-        if get(ENV, "PLOTS_IMAGE_IN_TERMINAL", "false") == "true" &&
+        if bool_env("PLOTS_IMAGE_IN_TERMINAL", "false") &&
            ImageInTerminal.ENCODER_BACKEND[] == :Sixel
             get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
             for be in (
-                PyPlotBackend,
-                # UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
-                PlotlyJSBackend,
                 GRBackend,
+                PyPlotBackend,
+                PythonPlotBackend,
+                # UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
                 PGFPlotsXBackend,
-                InspectDRBackend,
+                PlotlyJSBackend,
+                PlotlyBackend,
                 GastonBackend,
+                InspectDRBackend,
             )
                 @eval function Base.display(::PlotsDisplay, plt::Plot{$be})
                     prepare_output(plt)
@@ -156,9 +135,9 @@ function __init__()
         ) where {N,T} =
             isbitstype(T) && sizeof(T) > 0 ? unzip(reinterpret(NTuple{N,T}, points)) :
             unzip(Tuple.(points))
-        # --------------------------------------------------------------------
+        # -----------------------------------------
         # Lists of tuples and GeometryBasics.Points
-        # --------------------------------------------------------------------
+        # -----------------------------------------
         @recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
         @recipe f(p::GeometryBasics.Point) = [p]  # Special case for 4-tuples in :ohlc series
     end
@@ -167,4 +146,55 @@ function __init__()
         include("unitful.jl")
         @reexport using .UnitfulRecipes
     end
+
+    _post_init(backend())  # runtime init
+    nothing
 end
+
+##################################################################
+backend()
+include(_path(backend_name()))
+
+# COV_EXCL_START
+if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")
+    @precompile_setup begin
+        @info backend_package_name()
+        n = length(_examples)
+        imports = sizehint!(Expr[], n)
+        examples = sizehint!(Expr[], 10n)
+        for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
+            _examples[i].external && continue
+            (imp = _examples[i].imports) === nothing || push!(imports, imp)
+            func = gensym(string(i))
+            push!(
+                examples,
+                quote
+                    $func() = begin  # evaluate each example in a local scope
+                        $(_examples[i].exprs)
+                        $i == 1 || return  # only for one example
+                        fn = tempname()
+                        pl = current()
+                        show(devnull, pl)
+                        # FIXME: pgfplotsx requires bug
+                        backend_name() === :pgfplotsx && return
+                        # FIXME: windows bug github.com/JuliaLang/julia/issues/46989
+                        Sys.iswindows() && return
+                        showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
+                        showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
+                        nothing
+                    end
+                    $func()
+                end,
+            )
+        end
+        withenv("GKSwstype" => "nul") do
+            @precompile_all_calls begin
+                load_default_backend()
+                eval.(imports)
+                eval.(examples)
+            end
+        end
+        CURRENT_PLOT.nullableplot = nothing
+    end
+end
+# COV_EXCL_STOP

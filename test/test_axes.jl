@@ -244,7 +244,7 @@ end
             else
                 length(minor_ticks)
             end
-            display(pl)
+            show(devnull, pl)
             @test n_minor_ticks == n_expected_minor_ticks
         end
     end

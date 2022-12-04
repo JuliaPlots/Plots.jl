@@ -2,20 +2,11 @@
 
 is_marker_supported(::PythonPlotBackend, shape::Shape) = true
 
-const PythonCall = PythonPlot.PythonCall
-
 # problem: github.com/tbreloff/Plots.jl/issues/308
 # solution: hack from @stevengj: github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
 let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
     append!(Base.Multimedia.displays, otherdisplays)
 end
-
-const mpl_toolkits = PythonPlot.pyimport("mpl_toolkits")
-const mpl          = PythonPlot.pyimport("matplotlib")
-const numpy        = PythonPlot.pyimport("numpy")
-
-PythonPlot.pyimport("mpl_toolkits.axes_grid1")
-numpy.seterr(invalid = "ignore")
 
 if PythonPlot.version < v"3.4"
     @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
@@ -866,9 +857,10 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         xaxis, yaxis = sp[:xaxis], sp[:yaxis]
 
         # add the annotations
-        for ann in sp[:annotations]
-            _py_add_annotations(sp, locate_annotation(sp, ann...)...)
-        end
+        foreach(
+            ann -> _py_add_annotations(sp, locate_annotation(sp, ann...)...),
+            sp[:annotations],
+        )
 
         # title
         if (title = sp[:title]) != ""  # support symbols

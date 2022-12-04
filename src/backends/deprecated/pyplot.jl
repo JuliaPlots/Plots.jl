@@ -1,4 +1,5 @@
 # https://github.com/JuliaPy/PyPlot.jl
+# COV_EXCL_START
 
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
@@ -9,16 +10,6 @@ is_marker_supported(::PyPlotBackend, shape::Shape) = true
 let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
     append!(Base.Multimedia.displays, otherdisplays)
 end
-
-pycolors = PyPlot.pyimport("matplotlib.colors")
-pypath = PyPlot.pyimport("matplotlib.path")
-mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
-axes_grid1 = PyPlot.pyimport("mpl_toolkits.axes_grid1")
-pypatches = PyPlot.pyimport("matplotlib.patches")
-pyticker = PyPlot.pyimport("matplotlib.ticker")
-pycmap = PyPlot.pyimport("matplotlib.cm")
-pynp = PyPlot.pyimport("numpy")
-pynp."seterr"(invalid = "ignore")
 
 # "support" matplotlib v3.4
 if PyPlot.version < v"3.4"
@@ -1645,3 +1636,5 @@ for (mime, fmt) in (
 end
 
 closeall(::PyPlotBackend) = PyPlot.plt."close"("all")
+
+# COV_EXCL_STOP

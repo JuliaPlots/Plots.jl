@@ -1,4 +1,11 @@
 # ---------------------------------------------------------------
+bool_env(x, default)::Bool =
+    try
+        return parse(Bool, get(ENV, x, default))
+    catch e
+        @warn e
+        return false
+    end
 
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
