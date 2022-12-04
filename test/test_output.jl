@@ -69,7 +69,7 @@ if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
         @test_save :pdf
     end
 
-    with(:pyplot) do
+    with(:pythonplot) do
         @test_save :pdf
         @test_save :png
         @test_save :svg

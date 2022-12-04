@@ -1,8 +1,5 @@
 # https://github.com/jheinen/GR.jl - significant contributions by @jheinen
 
-import GR
-export GR
-
 const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
 const gr_linetypes = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)
 const gr_fill_styles = ((/) = 9, (\) = 10, (|) = 7, (-) = 8, (+) = 11, (x) = 6)

@@ -1,4 +1,5 @@
 # https://github.com/JuliaPy/PyPlot.jl
+# COV_EXCL_START
 
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
@@ -6,23 +7,9 @@ is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 # problem: https://github.com/tbreloff/Plots.jl/issues/308
 # solution: hack from @stevengj: https://github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
-otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
-append!(Base.Multimedia.displays, otherdisplays)
-
-pycolors = PyPlot.pyimport("matplotlib.colors")
-pypath = PyPlot.pyimport("matplotlib.path")
-mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
-axes_grid1 = PyPlot.pyimport("mpl_toolkits.axes_grid1")
-pypatches = PyPlot.pyimport("matplotlib.patches")
-pyfont = PyPlot.pyimport("matplotlib.font_manager")
-pyticker = PyPlot.pyimport("matplotlib.ticker")
-pycmap = PyPlot.pyimport("matplotlib.cm")
-pynp = PyPlot.pyimport("numpy")
-pynp."seterr"(invalid = "ignore")
-pytransforms = PyPlot.pyimport("matplotlib.transforms")
-pycollections = PyPlot.pyimport("matplotlib.collections")
-pyart3d = PyPlot.art3D
-pyrcparams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
+let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
+    append!(Base.Multimedia.displays, otherdisplays)
+end
 
 # "support" matplotlib v3.4
 if PyPlot.version < v"3.4"
@@ -199,14 +186,6 @@ function py_get_matching_math_font(parent_fontfamily)
     matching_font(font) = occursin("serif", lowercase(font)) ? "dejavuserif" : "dejavusans"
     get(py_math_supported_fonts, parent_fontfamily, matching_font(parent_fontfamily))
 end
-
-# # untested... return a FontProperties object from a Plots.Font
-# function py_font(font::Font)
-#     pyfont["FontProperties"](
-#         family = font.family,
-#         size = font.size
-#     )
-# end
 
 get_locator_and_formatter(vals::AVec) =
     pyticker."FixedLocator"(eachindex(vals)), pyticker."FixedFormatter"(vals)
@@ -1657,3 +1636,5 @@ for (mime, fmt) in (
 end
 
 closeall(::PyPlotBackend) = PyPlot.plt."close"("all")
+
+# COV_EXCL_STOP

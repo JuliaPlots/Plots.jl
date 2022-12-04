@@ -1,5 +1,7 @@
 # https://plot.ly/javascript/getting-started
 
+include(_path(:plotlybase))
+
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
 _plotly_framestyle(style::Symbol) =
@@ -1017,10 +1019,10 @@ html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
 plotly_url() =
-    if use_local_dependencies[]
-        "file:///" * plotly_local_file_path[]
+    if _use_local_dependencies[]
+        "file:///" * _plotly_local_file_path[]
     else
-        "https://cdn.plot.ly/$(_plotly_min_js_filename)"
+        "https://cdn.plot.ly/$_plotly_min_js_filename"
     end
 
 function plotly_html_head(plt::Plot)

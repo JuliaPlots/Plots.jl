@@ -1264,6 +1264,7 @@ _backend_skips = Dict(
         49,  # polar heatmap
         51,  # image with custom axes
         56,  # custom bar plot
+        62,  # fillstyle unsupported
     ],
     :inspectdr => [
         4,
@@ -1315,9 +1316,11 @@ _backend_skips = Dict(
         31,  # animations - needs github.com/mbaz/Gaston.jl/pull/178
         49,  # TODO: support polar
         60,  # :perspective projection unsupported
+        63,  # FXIME: twin axes misalignement
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
+_backend_skips[:pythonplot] = _backend_skips[:pyplot]
 
 # ---------------------------------------------------------------------------------
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
@@ -1346,7 +1349,7 @@ function test_examples(
 )
     @info "Testing plot: $pkgname:$i:$(_examples[i].header)"
 
-    m = Module(:PlotsExamplesModule)
+    m = Module(Symbol(:PlotsExamples, pkgname))
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
     Base.eval(m, quote
@@ -1358,9 +1361,9 @@ function test_examples(
         rng === nothing || Random.seed!(rng, Plots.PLOTS_SEED)
         theme(:default)
     end)
-    imports === nothing || Base.eval(m, _examples[i].imports)
+    (imp = _examples[i].imports) === nothing || Base.eval(m, imp)
     exprs = _examples[i].exprs
-    rng === nothing || (exprs = Plots.replace_rand(_examples[i].exprs))
+    rng === nothing || (exprs = Plots.replace_rand(exprs))
     Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))

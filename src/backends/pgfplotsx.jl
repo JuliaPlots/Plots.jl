@@ -1,8 +1,5 @@
-import .PGFPlotsX: Options, Table
-import LaTeXStrings: LaTeXString
-import UUIDs: uuid4
-import Latexify
-import Contour
+const Options = PGFPlotsX.Options
+const Table   = PGFPlotsX.Table
 
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
@@ -1309,19 +1306,11 @@ _series_added(plt::Plot{PGFPlotsXBackend}, series::Series) = plt.o.is_created = 
 
 _update_plot_object(plt::Plot{PGFPlotsXBackend}) = plt.o(plt)
 
-for mime in ("application/pdf", "image/svg+xml")
+for mime in ("application/pdf", "image/svg+xml", "image/png")
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{PGFPlotsXBackend})
         plt.o.was_shown = true
         show(io, mime, plt.o.the_plot)
     end
-end
-
-function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{PGFPlotsXBackend})
-    plt.o.was_shown = true
-    plt_file = tempname() * ".png"
-    PGFPlotsX.pgfsave(plt_file, plt.o.the_plot; dpi = plt[:dpi])
-    write(io, read(plt_file))
-    rm(plt_file; force = true)
 end
 
 function _show(io::IO, mime::MIME{Symbol("application/x-tex")}, plt::Plot{PGFPlotsXBackend})
