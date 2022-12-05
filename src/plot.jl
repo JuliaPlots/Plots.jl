@@ -231,7 +231,7 @@ end
 function prepare_output(plt::Plot)
     _before_layout_calcs(plt)
 
-    w, h = plt.attr[:size]
+    w::Int, h::Int = plt[:size]
     plt.layout.bbox = BoundingBox(0mm, 0mm, w * px, h * px)
 
     # One pass down and back up the tree to compute the minimum padding

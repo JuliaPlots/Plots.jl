@@ -401,13 +401,14 @@ function make_fillrange_side(y::AVec, rib)
 end
 
 # turn a ribbon into a fillrange
-function make_fillrange_from_ribbon(kw::AKW)
-    y, rib = kw[:y], kw[:ribbon]
+function make_fillrange_from_ribbon(kw::AKW, y, rib)
     rib = wraptuple(rib)
     rib1, rib2 = -first(rib), last(rib)
     # kw[:ribbon] = nothing
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
-    (get(kw, :fillalpha, nothing) === nothing) && (kw[:fillalpha] = 0.5)
+    get(kw, :fillalpha, nothing) === nothing || return
+    kw[:fillalpha] = 0.5
+    nothing
 end
 
 #turn tuple of fillranges to one path
@@ -609,24 +610,24 @@ makekw(; kw...) = KW(kw)
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 
-trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
-trueOrAllTrue(f::Function, x) = f(x)
+trueOrAllTrue(f::Function, x::AbstractArray)::Bool = all(f, x)
+trueOrAllTrue(f::Function, x)::Bool = f(x)
 
-allLineTypes(arg) = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
-allStyles(arg) = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
-allShapes(arg) = (
+allLineTypes(arg)::Bool = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+allStyles(arg)::Bool = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+allShapes(arg)::Bool = (
     trueOrAllTrue(a -> is_marker_supported(get(_markerAliases, a, a)), arg) ||
     trueOrAllTrue(a -> isa(a, Shape), arg)
 )
-allAlphas(arg) = trueOrAllTrue(
+allAlphas(arg)::Bool = trueOrAllTrue(
     a ->
         (typeof(a) <: Real && a > 0 && a < 1) || (
             typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))
         ),
     arg,
 )
-allReals(arg) = trueOrAllTrue(a -> typeof(a) <: Real, arg)
-allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
+allReals(arg)::Bool = trueOrAllTrue(a -> typeof(a) <: Real, arg)
+allFunctions(arg)::Bool = trueOrAllTrue(a -> isa(a, Function), arg)
 
 # ---------------------------------------------------------------
 
@@ -1134,8 +1135,9 @@ end
 # cache joined symbols so they can be looked up instead of constructed each time
 const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
 
-get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
-get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
+get_attr_symbol(letter::Symbol, keyword::String)::Symbol =
+    get_attr_symbol(letter, Symbol(keyword))
+get_attr_symbol(letter::Symbol, keyword::Symbol)::Symbol = _attrsymbolcache[letter][keyword]
 
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))

@@ -57,7 +57,7 @@ end
 
 Extrema() = Extrema(Inf, -Inf)
 
-const SubplotMap = Dict{Any,Subplot}
+const SubplotMap = Dict{Symbol,Subplot}
 
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
@@ -114,10 +114,9 @@ Base.isempty(wrapper::InputWrapper) = false
 attr(series::Series, k::Symbol) = series.plotattributes[k]
 attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 
-should_add_to_legend(series::Series) =
-    series.plotattributes[:primary] &&
-    series.plotattributes[:label] != "" &&
-    series.plotattributes[:seriestype] ∉ (
+should_add_to_legend(::Any) = false
+should_add_to_legend(st::Symbol) =
+    st ∉ (
         :hexbin,
         :bins2d,
         :histogram2d,
@@ -131,6 +130,10 @@ should_add_to_legend(series::Series) =
         :heatmap,
         :image,
     )
+should_add_to_legend(series::Series) =
+    series.plotattributes[:primary] &&
+    series.plotattributes[:label] != "" &&
+    should_add_to_legend(series.plotattributes[:seriestype])
 
 # -----------------------------------------------------------------------
 Base.iterate(plt::Plot) = iterate(plt.subplots)
@@ -178,7 +181,7 @@ bottompad(sp::Subplot) = sp.minpad[4]
 
 get_subplot(plt::Plot, sp::Subplot) = sp
 get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
-get_subplot(plt::Plot, k) = plt.spmap[k]
+get_subplot(plt::Plot, k::Symbol) = plt.spmap[k]
 get_subplot(series::Series) = series.plotattributes[:subplot]
 
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
