@@ -457,7 +457,7 @@ mutable struct SeriesAnnotations
     strs::AVec  # the labels/names
     font::Font
     baseshape::Union{Shape,AVec{Shape},Nothing}
-    scalefactor::Tuple
+    scalefactor::NTuple{2,Float64}
 end
 
 _text_label(lab::Tuple, font) = text(lab[1], font, lab[2:end]...)

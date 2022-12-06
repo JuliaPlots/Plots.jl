@@ -61,8 +61,9 @@ function _recipedata_vector(plt, plotattributes, args)
 
     # if we were passed a vector/matrix of seriestypes and there's more than one row,
     # we want to duplicate the inputs, once for each seriestype row.
+    sts = get(plotattributes, :seriestype, :path)
     isempty(args) ||
-        append!(still_to_process, _expand_seriestype_array(plotattributes, args))
+        append!(still_to_process, _expand_seriestype_array(plotattributes, args, sts))
 
     # remove subplot and axis args from plotattributes...
     # they will be passed through in the kw_list
@@ -75,22 +76,19 @@ function _recipedata_vector(plt, plotattributes, args)
     still_to_process
 end
 
-function _expand_seriestype_array(plotattributes, args)
-    @nospecialize
-    sts = get(plotattributes, :seriestype, :path)
-    if typeof(sts) <: AbstractArray
-        reset_kw!(plotattributes, :seriestype)
-        rd = Vector{RecipeData}(undef, size(sts, 1))
-        for r in axes(sts, 1)
-            dc = copy(plotattributes)
-            dc[:seriestype] = sts[r:r, :]
-            rd[r] = RecipeData(dc, args)
-        end
-        rd
-    else
-        RecipeData[RecipeData(copy(plotattributes), args)]
+function _expand_seriestype_array(plotattributes, args, sts::AbstractArray)
+    reset_kw!(plotattributes, :seriestype)
+    rd = Vector{RecipeData}(undef, size(sts, 1))
+    for r in axes(sts, 1)
+        dc = copy(plotattributes)
+        dc[:seriestype] = sts[r:r, :]
+        rd[r] = RecipeData(dc, args)
     end
+    rd
 end
+
+_expand_seriestype_array(plotattributes, args, ::Any) =
+    RecipeData[RecipeData(copy(plotattributes), args)]
 
 function _finish_userrecipe!(plt, kw_list, recipedata)
     # when the arg tuple is empty, that means there's nothing left to recursively

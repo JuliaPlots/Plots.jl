@@ -15,19 +15,18 @@ function _process_plotrecipes!(plt, kw_list)
     kw_list = KW[]
     while !isempty(still_to_process)
         next_kw = popfirst!(still_to_process)
-        _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
+        if get(next_kw, :seriestype, nothing) isa Symbol
+            _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
+        else
+            # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
+            push!(kw_list, next_kw)
+        end
     end
     kw_list
 end
 
 function _process_plotrecipe(plt, kw, kw_list, still_to_process)
-    if !isa(get(kw, :seriestype, nothing), Symbol)
-        # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
-        push!(kw_list, kw)
-        return
-    end
-    st = kw[:seriestype]
-    st = kw[:seriestype] = type_alias(plt, st)
+    st = kw[:seriestype] = type_alias(plt, kw[:seriestype])
     datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
     if !isnothing(datalist)
         warn_on_recipe_aliases!(plt, datalist, :plot, st)

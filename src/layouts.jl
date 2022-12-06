@@ -256,11 +256,9 @@ bottompad(layout::GridLayout) = bottompad(layout.minpad)
 # recursively pass those borders back down the tree, one side at a time, but ONLY
 # to those perimeter children.
 
-function paddings(args...)
-    funcs = (leftpad, toppad, rightpad, bottompad)
-    args = length(args) == 1 ? ntuple(i -> first(args), Val(4)) : args
-    map(i -> map(funcs[i], args[i]), Tuple(1:4))
-end
+paddings(x) = map(leftpad, x), map(toppad, x), map(rightpad, x), map(bottompad, x)
+paddings(x1, x2, x3, x4) =
+    map(leftpad, x1), map(toppad, x2), map(rightpad, x3), map(bottompad, x4)
 
 compute_minpad(args...) = map(maximum, paddings(args...))
 
@@ -290,15 +288,8 @@ update_position!(layout::GridLayout) = map(update_position!, layout.grid)
 # some lengths are fixed... we have to split up the free space among the list v
 function recompute_lengths(v)
     # dump(v)
-    tot = 0pct
-    cnt = 0
-    for vi in v
-        if vi == 0pct
-            cnt += 1
-        else
-            tot += vi
-        end
-    end
+    cnt = count(==(0pct), v)
+    tot = sum(v)::Length{:pct,Float64}
     leftover = 1.0pct - tot
     if cnt > 1 && leftover.value <= 0
         error(
@@ -311,12 +302,18 @@ function recompute_lengths(v)
 end
 
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
-function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm, 0mm, 0mm])
-    nr, nc = size(layout)
+# paddings: create a matrix for each minimum padding direction
+update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm, 0mm, 0mm]) =
+    update_child_bboxes!(layout, paddings(layout.grid)..., minimum_perimeter)
 
-    # create a matrix for each minimum padding direction
-    minpad_left, minpad_top, minpad_right, minpad_bottom = paddings(layout.grid)
-
+function update_child_bboxes!(
+    layout::GridLayout,
+    minpad_left,
+    minpad_top,
+    minpad_right,
+    minpad_bottom,
+    minimum_perimeter,
+)
     # get the max horizontal (left and right) padding over columns,
     # and max vertical (bottom and top) padding over rows
     # TODO: add extra padding here
@@ -343,10 +340,11 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
     @assert total_plotarea_vertical > 0mm
 
     # recompute widths/heights
-    layout.widths = recompute_lengths(layout.widths)
+    layout.widths  = recompute_lengths(layout.widths)
     layout.heights = recompute_lengths(layout.heights)
 
     # we have all the data we need... lets compute the plot areas and set the bounding boxes
+    nr, nc = size(layout)
     for r in 1:nr, c in 1:nc
         child = layout[r, c]
 
@@ -383,10 +381,10 @@ end
 
 # for each inset (floating) subplot, resolve the relative position
 # to absolute canvas coordinates, relative to the parent's plotarea
-update_inset_bboxes!(plt::Plot) =
-    for sp in plt.inset_subplots
-        plotarea!(sp, Measures.resolve(plotarea(parent(sp)), sp[:relative_bbox]))
-    end
+update_inset_bboxes!(plt::Plot) = foreach(
+    sp -> plotarea!(sp, Measures.resolve(plotarea(parent(sp)), sp[:relative_bbox])),
+    plt.inset_subplots,
+)
 # ----------------------------------------------------------------------
 
 calc_num_subplots(layout::AbstractLayout) = get(layout.attr, :blank, false) ? 0 : 1
@@ -495,7 +493,7 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
                 sp = Subplot(backend(), parent = layout)
                 layout[r, c] = sp
                 push!(subplots, sp)
-                spmap[attr(l, :label, gensym())] = sp
+                spmap[Symbol(attr(l, :label, gensym()))] = sp
                 inc = 1
             else
                 # build a layout from a list of existing Plot objects

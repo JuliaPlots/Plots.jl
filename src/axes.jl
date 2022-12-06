@@ -109,7 +109,7 @@ end
 # -------------------------------------------------------------------------
 
 Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
-ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
+ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]::Extrema; (ex.emin, ex.emax))
 
 const _label_func =
     Dict{Symbol,Function}(:log10 => x -> "10^$x", :log2 => x -> "2^$x", :ln => x -> "e^$x")
@@ -412,8 +412,8 @@ end
 expand_extrema!(axis::Axis, v::Number) = expand_extrema!(axis[:extrema], v)
 
 # these shouldn't impact the extrema
-expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
-expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
+expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]::Extrema
+expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]::Extrema
 
 function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
     ex = axis[:extrema]::Extrema
@@ -631,9 +631,9 @@ function axis_limits(
     letter,
     lims_factor = widen_factor(get_axis(sp, letter)),
     consider_aspect = true,
-)
+)::NTuple{2,Float64}
     axis = get_axis(sp, letter)
-    ex = axis[:extrema]
+    ex = axis[:extrema]::Extrema
     amin, amax = ex.emin, ex.emax
     lims = process_limits(axis[:lims], axis)
     lims === nothing && warn_invalid_limits(axis[:lims], letter)
@@ -683,16 +683,16 @@ function axis_limits(
     )
         aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
         area = plotarea(sp)
-        plot_ratio = height(area) / width(area)
-        dist = amax - amin
+        plot_ratio::Float64 = height(area) / width(area)
+        dist::Float64 = amax - amin
 
         factor = if letter === :x
             ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
-            axis_ratio = aspect_ratio * ydist / dist
+            axis_ratio = aspect_ratio * Float64(ydist) / dist
             axis_ratio / plot_ratio
         else
             xdist, = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false) |> collect |> diff
-            axis_ratio = aspect_ratio * dist / xdist
+            axis_ratio = aspect_ratio * Float64(dist) / xdist
             plot_ratio / axis_ratio
         end
 
@@ -722,7 +722,7 @@ discrete_value!(plotattributes, letter::Symbol, dv) =
 
 discrete_value!(axis::Axis, dv) =
     if (cv_idx = get(axis[:discrete_map], dv, -1)) == -1
-        ex = axis[:extrema]
+        ex = axis[:extrema]::Extrema
         cv = NaNMath.max(0.5, ex.emax + 1)
         expand_extrema!(axis, cv)
         push!(axis[:discrete_values], dv)

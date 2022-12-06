@@ -160,9 +160,8 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
     end
 
     # swap errors
-    err_inds =
+    for ind in
         findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
-    for ind in err_inds
         if ind > 1 && get(kw_list[ind - 1], :seriestype, :path) === :scatter
             tmp = copy(kw_list[ind])
             kw_list[ind] = copy(kw_list[ind - 1])
@@ -183,7 +182,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
         end
         # convert a ribbon into a fillrange
         if rib !== nothing
-            make_fillrange_from_ribbon(kw)
+            make_fillrange_from_ribbon(kw, kw[:y], kw[:ribbon])
             # map fillrange if it's a Function
         elseif fr !== nothing && fr isa Function
             kw[:fillrange] = map(fr, kw[:x])
@@ -299,7 +298,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     nothing
 end
 
-series_idx(kw_list::AVec{KW}, kw::AKW) =
+series_idx(kw_list::AVec{KW}, kw::AKW)::Int =
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
 
 function _add_plot_title!(plt)
@@ -311,7 +310,7 @@ function _add_plot_title!(plt)
         if plt[:plot_titleindex] == 0
             the_layout = plt.layout
             vspan = plt[:plot_titlevspan]
-            plt.layout = grid(2, 1, heights = (vspan, 1 - vspan))
+            plt.layout = grid(2, 1; heights = (vspan, 1 - vspan))
             plt.layout.grid[1, 1] =
                 subplot = Subplot(plt.backend, parent = plt.layout[1, 1])
             plt.layout.grid[2, 1] = the_layout

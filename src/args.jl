@@ -1355,10 +1355,8 @@ function preprocess_attributes!(plotattributes::AKW)
 
     # handle grid args common to all axes
     args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
-    for arg in wraptuple(args)
-        for letter in (:x, :y, :z)
-            processGridArg!(plotattributes, arg, letter)
-        end
+    for arg in wraptuple(args), letter in (:x, :y, :z)
+        processGridArg!(plotattributes, arg, letter)
     end
     # handle individual axes grid args
     for letter in (:x, :y, :z)
@@ -1370,10 +1368,8 @@ function preprocess_attributes!(plotattributes::AKW)
     end
     # handle minor grid args common to all axes
     args = RecipesPipeline.pop_kw!(plotattributes, :minorgrid, ())
-    for arg in wraptuple(args)
-        for letter in (:x, :y, :z)
-            processMinorGridArg!(plotattributes, arg, letter)
-        end
+    for arg in wraptuple(args), letter in (:x, :y, :z)
+        processMinorGridArg!(plotattributes, arg, letter)
     end
     # handle individual axes grid args
     for letter in (:x, :y, :z)
@@ -1393,16 +1389,11 @@ function preprocess_attributes!(plotattributes::AKW)
         end
     end
     # handle individual axes font args
-    for letter in (:x, :y, :z)
-        for fontname in (:tickfont, :guidefont)
-            args = RecipesPipeline.pop_kw!(
-                plotattributes,
-                get_attr_symbol(letter, fontname),
-                (),
-            )
-            for arg in wraptuple(args)
-                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
-            end
+    for letter in (:x, :y, :z), fontname in (:tickfont, :guidefont)
+        args =
+            RecipesPipeline.pop_kw!(plotattributes, get_attr_symbol(letter, fontname), ())
+        for arg in wraptuple(args)
+            processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
         end
     end
     # handle axes args
@@ -1692,7 +1683,7 @@ end
 # -----------------------------------------------------------------------------
 
 # when a value can be `:match`, this is the key that should be used instead for value retrieval
-const _match_map = KW(
+const _match_map = Dict{Symbol,Symbol}(
     :background_color_outside => :background_color,
     :legend_background_color  => :background_color_subplot,
     :background_color_inside  => :background_color_subplot,
@@ -1722,7 +1713,7 @@ const _match_map = KW(
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
-const _match_map2 = KW(
+const _match_map2 = Dict{Symbol,Symbol}(
     :background_color_subplot => :background_color,
     :foreground_color_subplot => :foreground_color,
     :foreground_color_axis => :foreground_color_subplot,
@@ -1964,17 +1955,17 @@ has_black_border_for_default(st::Symbol) =
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
-get_series_color(c, sp::Subplot, n::Int, seriestype) =
+get_series_color(c::AbstractArray, sp::Subplot, n::Integer, seriestype) =
+    map(x -> get_series_color(x, sp, n, seriestype), c)
+get_series_color(c::Integer, sp::Subplot, ::Integer, ::Any) =
+    plot_color(_cycle(sp[:color_palette], c))
+get_series_color(c::Symbol, sp::Subplot, n::Integer, seriestype) =
     if c === :auto
         like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
-    elseif isa(c, Int)
-        _cycle(sp[:color_palette], c)
     else
         c
     end |> plot_color
-
-get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
-    map(x -> get_series_color(x, sp, n, seriestype), c)
+get_series_color(c, sp::Subplot, ::Integer, ::Any) = plot_color(c)
 
 ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
     if plotattributes[csym] isa ColorPalette
@@ -2007,8 +1998,8 @@ end
 
 label_to_string(label::Bool, series_plotindex) =
     label ? label_to_string(:auto, series_plotindex) : ""
-label_to_string(label::Nothing, series_plotindex) = ""
-label_to_string(label::Missing, series_plotindex) = ""
+label_to_string(label::Nothing, ::Any) = ""
+label_to_string(label::Missing, ::Any) = ""
 label_to_string(label::Symbol, series_plotindex) =
     if label === :auto
         string("y", series_plotindex)
@@ -2017,7 +2008,7 @@ label_to_string(label::Symbol, series_plotindex) =
     else
         throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
     end
-label_to_string(label, series_plotindex) = string(label)  # Fallback to string promotion
+label_to_string(label, ::Any) = string(label)  # fallback to string promotion
 
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend

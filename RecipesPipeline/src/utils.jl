@@ -154,7 +154,7 @@ for st in (
     @eval is3d(::Type{Val{Symbol($(string(st)))}}) = true
 end
 is3d(st::Symbol) = is3d(Val{st})
-is3d(plotattributes::AbstractDict) = is3d(get(plotattributes, :seriestype, :path))
+is3d(plotattributes::AbstractDict)::Bool = is3d(get(plotattributes, :seriestype, :path))
 
 """
     is_surface(::Type{Val{:myseriestype}})
@@ -166,7 +166,7 @@ for st in (:contour, :contourf, :contour3d, :image, :heatmap, :surface, :wirefra
     @eval is_surface(::Type{Val{Symbol($(string(st)))}}) = true
 end
 is_surface(st::Symbol) = is_surface(Val{st})
-is_surface(plotattributes::AbstractDict) =
+is_surface(plotattributes::AbstractDict)::Bool =
     is_surface(get(plotattributes, :seriestype, :path))
 
 """
