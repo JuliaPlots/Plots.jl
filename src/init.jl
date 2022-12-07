@@ -115,7 +115,7 @@ function __init__()
         @reexport using .UnitfulRecipes
     end
 
-    _post_init(backend())  # runtime init (e.g. `pythonplot` imports)
+    _runtime_init(backend())
     nothing
 end
 
