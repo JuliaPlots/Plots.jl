@@ -230,10 +230,7 @@ function backend()
     CURRENT_BACKEND.pkg
 end
 
-function initialized(sym::Symbol)
-    # @debug "$sym is initialized: $(sym ∈ _initialized_backends ? "T" : 'F')"
-    sym ∈ _initialized_backends
-end
+initialized(sym::Symbol) = sym ∈ _initialized_backends
 
 """
 Set the plot backend.
@@ -506,6 +503,7 @@ function _initialize_backend(pkg::PlotlyBackend)
         end
     catch err
         @warn "For saving to png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed." err
+        @eval include("backends/plotly.jl")
     end
 end
 
