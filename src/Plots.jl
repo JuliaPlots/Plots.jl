@@ -8,7 +8,7 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
 end
 
 using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
-using SnoopPrecompile, Preferences, Requires, Reexport
+using SnoopPrecompile, Preferences, Requires, Reexport, RelocatableFolders
 using Base.Meta
 using Unzip
 @reexport using RecipesBase
@@ -168,11 +168,11 @@ include("examples.jl")
 include("plotattr.jl")
 include("backends.jl")
 const CURRENT_BACKEND = CurrentBackend(:none)
-include("backends/web.jl")
 include("output.jl")
 include("ijulia.jl")
 include("fileio.jl")
 include("shorthands.jl")
+include("backends/web.jl")
 include("init.jl")
 
 end

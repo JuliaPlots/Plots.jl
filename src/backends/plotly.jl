@@ -1,7 +1,5 @@
 # https://plot.ly/javascript/getting-started
 
-include(_path(:plotlybase))
-
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
 _plotly_framestyle(style::Symbol) =

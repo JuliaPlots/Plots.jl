@@ -1,4 +1,3 @@
-using RelocatableFolders
 using Scratch
 using REPL
 
@@ -6,17 +5,6 @@ const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # use fixed version of Plotly instead of the latest one for stable dependency
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
-
-const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
-    merge(toml["deps"], toml["extras"])
-end
-
-_path(sym) =
-    if sym ∈ (:pgfplots, :pyplot)
-        @path joinpath(@__DIR__, "backends", "deprecated", "$sym.jl")
-    else
-        @path joinpath(@__DIR__, "backends", "$sym.jl")
-    end
 
 _plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -39,14 +27,6 @@ function _plots_plotly_defaults()
         _use_local_plotlyjs[] = true
     end
     _use_local_dependencies[] = _use_local_plotlyjs[]
-end
-
-macro load(backend, pkg)
-    quote
-        backend_name() === $backend || @require $pkg = $(_plots_deps["$pkg"]) begin
-            include(_path($backend))
-        end
-    end |> esc
 end
 
 function __init__()
@@ -73,18 +53,6 @@ function __init__()
                 PlotsDisplay(),
             )
         end |> atreplinit
-
-    @load :gr GR
-    @load :pyplot PyPlot
-    @load :pythonplot PythonPlot
-    @load :pgfplots PGFPlots
-    @load :pgfplotsx PGFPlotsX
-    @load :unicodeplots UnicodePlots
-    @load :gaston Gaston
-    @load :inspectdr InspectDR
-    @load :hdf5 HDF5
-    @load :plotlyjs PlotlyJS
-    @load :plotly PlotlyKaleido
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
@@ -147,7 +115,7 @@ function __init__()
         @reexport using .UnitfulRecipes
     end
 
-    _post_init(backend())  # runtime init
+    _runtime_init(backend())
     nothing
 end
 

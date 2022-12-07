@@ -10,6 +10,10 @@ const _backend_packages     = Dict{Symbol,Symbol}()
 const _initialized_backends = Set{Symbol}()
 const _backends             = Symbol[]
 
+const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
+    merge(toml["deps"], toml["extras"])
+end
+
 function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = true)
     sym = Symbol(lowercase(string(backend)))
     if warn && !haskey(_backend_packages, sym)
@@ -48,6 +52,13 @@ function _check_compat(m::Module; warn = true)
     nothing
 end
 
+_path(sym) =
+    if sym ∈ (:pgfplots, :pyplot)
+        @path joinpath(@__DIR__, "backends", "deprecated", "$sym.jl")
+    else
+        @path joinpath(@__DIR__, "backends", "$sym.jl")
+    end
+
 "Returns a list of supported backends"
 backends() = _backends
 
@@ -74,6 +85,15 @@ macro init_backend(s)
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
         _backend_packages[Symbol($str)] = Symbol($package_str)
+    end |> esc
+end
+
+macro require_backend(pkg)
+    be = Symbol(lowercase("$pkg"))
+    quote
+        backend_name() === $be || @require $pkg = $(_plots_deps["$pkg"]) begin
+            include(_path($be))
+        end
     end |> esc
 end
 
@@ -130,7 +150,6 @@ function tick_padding(sp::Subplot, axis::Axis)
         #
         # # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
         # hgt = abs(sind(rot)) * labelwidth + abs(cosd(rot)) * ptsz + 1mm
-        # hgt
 
         # get the height of the rotated label
         text_size(longest_label, axis[:tickfontsize], rot)[2]
@@ -230,10 +249,7 @@ function backend()
     CURRENT_BACKEND.pkg
 end
 
-function initialized(sym::Symbol)
-    # @debug "$sym is initialized: $(sym ∈ _initialized_backends ? "T" : 'F')"
-    sym ∈ _initialized_backends
-end
+initialized(sym::Symbol) = sym ∈ _initialized_backends
 
 """
 Set the plot backend.
@@ -330,12 +346,12 @@ end
 # create the various `is_xxx_supported` and `supported_xxxs` methods
 # by default they pass through to checking membership in `_gr_xxx`
 for s in (:attr, :seriestype, :marker, :style, :scale)
-    f = Symbol("is_", s, "_supported")
+    f1 = Symbol("is_", s, "_supported")
     f2 = Symbol("supported_", s, "s")
     @eval begin
-        $f(::AbstractBackend, $s) = false
-        $f(be::AbstractBackend, $s::AbstractVector) = all(v -> $f(be, v), $s)
-        $f($s) = $f(backend(), $s)
+        $f1(::AbstractBackend, $s) = false
+        $f1(be::AbstractBackend, $s::AbstractVector) = all(v -> $f1(be, v), $s)
+        $f1($s) = $f1(backend(), $s)
         $f2() = $f2(backend())
     end
 
@@ -343,37 +359,51 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
         be_type = typeof(_backend_instance(be))
         v = Symbol("_", be, "_", s)
         @eval begin
-            $f(::$be_type, $s::Symbol) = $s in $v
+            $f1(::$be_type, $s::Symbol) = $s in $v
             $f2(::$be_type) = sort(collect($v))
         end
     end
 end
 
+################################################################################
 # custom hooks
-_pre_init(::AbstractBackend) = nothing
-_post_init(::AbstractBackend) = nothing
+
+# @require and imports
+function _pre_imports(pkg::AbstractBackend)
+    @eval @require_backend $(backend_package_name(pkg))
+    nothing
+end
+
+# global definitions `const` and `include`
+function _post_imports(pkg::AbstractBackend)
+    name = backend_package_name(pkg)
+    @eval const $name = Main.$name  # so that the module is available in `Plots`
+    nothing
+end
+
+# function calls, pointer initializations, ...
+_runtime_init(::AbstractBackend) = nothing
 
 ################################################################################
 # initialize the backends
-
 function _initialize_backend(pkg::AbstractBackend)
-    sym = backend_package_name(pkg)
-    @eval Main begin  # NOTE: this is a hack (expecting the package to be in `Project.toml`, remove in `Plots@2.0`)
-        import $sym
-        export $sym
-        $(_check_compat)($sym)
+    _pre_imports(pkg)
+    name = backend_package_name(pkg)
+    # NOTE: this is a hack importing in `Main` (expecting the package to be in `Project.toml`, remove in `Plots@2.0`)
+    # FIXME: remove hard `GR` dependency in `Plots@2.0`
+    @eval name === :GR ? Plots : Main begin
+        import $name
+        export $name
+        $(_check_compat)($name)
     end
-    @eval const $sym = Main.$sym  # so that the module is available in `Plots`
+    _post_imports(pkg)
+    _runtime_init(pkg)
+    nothing
 end
 
-# FIXME: remove hard `GR` dependency in `Plots@2.0`
-# COV_EXCL_START
-_initialize_backend(pkg::GRBackend) = @eval begin
-    import GR
-    export GR
-    $(_check_compat)(GR)
-end
-# COV_EXCL_STOP
+# ------------------------------------------------------------------------------
+# gr
+_post_imports(::GRBackend) = nothing
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
@@ -491,21 +521,32 @@ is_marker_supported(::GRBackend, shape::Shape) = true
 
 # ------------------------------------------------------------------------------
 # plotly
-
+_pre_imports(::PlotlyBackend) = nothing
+_post_imports(::PlotlyBackend) = @eval begin
+    const PlotlyBase    = Main.PlotlyBase
+    const PlotlyKaleido = Main.PlotlyKaleido
+    # FIXME: in Plots `2.0`, `plotly` backend should be re-named to `plotlybase`
+    # so that we can trigger include on `@require` instead of this
+    include(_path(:plotly))
+    include(_path(:plotlybase))
+end
 function _initialize_backend(pkg::PlotlyBackend)
     try
+        _pre_imports(pkg)
         @eval Main begin
             import PlotlyBase
             import PlotlyKaleido
             $(_check_compat)(PlotlyBase; warn = false)  # NOTE: don't warn, since those are not backends, but deps
             $(_check_compat)(PlotlyKaleido, warn = false)
         end
-        @eval begin
-            const PlotlyBase    = Main.PlotlyBase
-            const PlotlyKaleido = Main.PlotlyKaleido
-        end
+        _post_imports(pkg)
+        _runtime_init(pkg)
     catch err
         @warn "For saving to png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed." err
+        # NOTE: `plotly` is special in the way that it does not require dependencies for displaying a plot
+        # as a result, we cannot rely on the `@require` mechanism for loading glue code
+        # this is why it must be done here.
+        @eval include(_path(:plotly))
     end
 end
 
@@ -744,7 +785,11 @@ const _plotlyjs_scale      = _plotly_scale
 # ------------------------------------------------------------------------------
 # pyplot
 
-_post_init(::PyPlotBackend) = @eval begin
+_post_imports(::PyPlotBackend) = @eval begin
+    const PyPlot = Main.PyPlot
+    const PyCall = Main.PyPlot.PyCall
+end
+_runtime_init(::PyPlotBackend) = @eval begin
     pycolors   = PyCall.pyimport("matplotlib.colors")
     pypath     = PyCall.pyimport("matplotlib.path")
     mplot3d    = PyCall.pyimport("mpl_toolkits.mplot3d")
@@ -760,16 +805,14 @@ _post_init(::PyPlotBackend) = @eval begin
 end
 
 function _initialize_backend(pkg::PyPlotBackend)
+    _pre_imports(pkg)
     @eval Main begin
         import PyPlot
         export PyPlot
         $(_check_compat)(PyPlot)
     end
-    @eval begin
-        const PyPlot = Main.PyPlot
-        const PyCall = Main.PyPlot.PyCall
-    end
-    _post_init(pkg)
+    _post_imports(pkg)
+    _runtime_init(pkg)
 end
 
 const _pyplot_attr = merge_with_base_supported([
@@ -895,7 +938,11 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # pythonplot
 
-_post_init(::PythonPlotBackend) = @eval begin
+_post_imports(::PythonPlotBackend) = @eval begin
+    const PythonPlot = Main.PythonPlot
+    const PythonCall = Main.PythonPlot.PythonCall
+end
+_runtime_init(::PythonPlotBackend) = @eval begin
     mpl_toolkits = PythonCall.pyimport("mpl_toolkits")
     mpl          = PythonCall.pyimport("matplotlib")
     numpy        = PythonCall.pyimport("numpy")
@@ -907,16 +954,14 @@ _post_init(::PythonPlotBackend) = @eval begin
 end
 
 function _initialize_backend(pkg::PythonPlotBackend)
+    _pre_imports(pkg)
     @eval Main begin
         import PythonPlot
         export PythonPlot
         $(_check_compat)(PythonPlot)
     end
-    @eval begin
-        const PythonPlot = Main.PythonPlot
-        const PythonCall = Main.PythonPlot.PythonCall
-    end
-    _post_init(pkg)
+    _post_imports(pkg)
+    _runtime_init(pkg)
 end
 
 const _pythonplot_seriestype = _pyplot_seriestype
@@ -1313,7 +1358,8 @@ const _inspectdr_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # pgfplotsx
 
-_pre_init(::PGFPlotsXBackend) = @eval begin
+_pre_imports(::PGFPlotsXBackend) = @eval begin
+    @require_backend PGFPlotsX
     import LaTeXStrings: LaTeXString
     import UUIDs: uuid4
     import Latexify
@@ -1321,13 +1367,14 @@ _pre_init(::PGFPlotsXBackend) = @eval begin
 end
 
 function _initialize_backend(pkg::PGFPlotsXBackend)
-    _pre_init(pkg)
+    _pre_imports(pkg)
     @eval Main begin
         import PGFPlotsX
         export PGFPlotsX
         $(_check_compat)(PGFPlotsX)
     end
-    @eval const PGFPlotsX = Main.PGFPlotsX
+    _post_imports(pkg)
+    _runtime_init(pkg)
 end
 
 const _pgfplotsx_attr = merge_with_base_supported([
