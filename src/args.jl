@@ -1692,7 +1692,7 @@ end
 # -----------------------------------------------------------------------------
 
 # when a value can be `:match`, this is the key that should be used instead for value retrieval
-const _match_map = KW(
+const _match_map = Dict(
     :background_color_outside => :background_color,
     :legend_background_color  => :background_color_subplot,
     :background_color_inside  => :background_color_subplot,
@@ -1722,7 +1722,7 @@ const _match_map = KW(
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
-const _match_map2 = KW(
+const _match_map2 = Dict(
     :background_color_subplot => :background_color,
     :foreground_color_subplot => :foreground_color,
     :foreground_color_axis => :foreground_color_subplot,
