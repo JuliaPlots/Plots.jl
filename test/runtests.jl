@@ -17,11 +17,12 @@ using RecipesBase
 using TestImages
 using Unitful
 using FileIO
+using Test
 using Plots
 using Dates
-using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
+@test_nowarn Base.compilecache(Base.module_keys[Plots])
 # get `Preferences` set backend, if any
 const previous_default_backend = load_preference(Plots, "default_backend")
 
