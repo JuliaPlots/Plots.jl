@@ -17,9 +17,9 @@ using RecipesBase
 using TestImages
 using Unitful
 using FileIO
-using Test
 using Plots
 using Dates
+using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 # get `Preferences` set backend, if any
