@@ -503,6 +503,9 @@ function _initialize_backend(pkg::PlotlyBackend)
         end
     catch err
         @warn "For saving to png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed." err
+        # NOTE: `plotly` is special in the way that it does not require dependencies for displaying a plot
+        # as a result, we cannot rely on the `@require` mechanism for loading glue code
+        # this is why it must be done here.
         @eval include("backends/plotly.jl")
     end
 end
