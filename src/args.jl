@@ -1934,6 +1934,7 @@ function _update_subplot_args(
 
     _update_subplot_colors(sp)
     _update_margins(sp)
+    _update_subplot_colorbars(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
