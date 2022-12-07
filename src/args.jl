@@ -1935,7 +1935,7 @@ function _update_subplot_args(
     _update_subplot_colors(sp)
     _update_margins(sp)
     colorbar_update_keys = (:clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry)
-    if any(haskey.(plotattributes_in, colorbar_update_keys))
+    if any(haskey.(Ref(plotattributes_in), colorbar_update_keys))
         _update_subplot_colorbars(sp)
     end
 
