@@ -8,7 +8,7 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
 end
 
 using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
-using SnoopPrecompile, Preferences, Requires, Reexport
+using SnoopPrecompile, Preferences, Requires, Reexport, RelocatableFolders
 using Base.Meta
 using Unzip
 @reexport using RecipesBase
