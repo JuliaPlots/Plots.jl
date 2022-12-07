@@ -385,7 +385,18 @@ end
 # to absolute canvas coordinates, relative to the parent's plotarea
 update_inset_bboxes!(plt::Plot) =
     for sp in plt.inset_subplots
-        plotarea!(sp, Measures.resolve(plotarea(parent(sp)), sp[:relative_bbox]))
+        p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
+        plotarea!(sp, p_area)
+        # NOTE: `lens` example, `pgfplotsx` for non-regression
+        bbox!(
+            sp,
+            bbox(
+                left(p_area) - leftpad(sp),
+                top(p_area) - toppad(sp),
+                width(p_area) + leftpad(sp) + rightpad(sp),
+                height(p_area) + toppad(sp) + bottompad(sp),
+            ),
+        )
     end
 # ----------------------------------------------------------------------
 
