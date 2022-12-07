@@ -500,6 +500,10 @@ function _initialize_backend(pkg::PlotlyBackend)
         @eval begin
             const PlotlyBase    = Main.PlotlyBase
             const PlotlyKaleido = Main.PlotlyKaleido
+            # FIXME: in Plots `2.0`, `plotly` backend should be re-named to `plotlybase`
+            # so that we can trigger include on `@require` instead of this
+            include("backends/plotly.jl")
+            include("backends/plotlybase.jl")
         end
     catch err
         @warn "For saving to png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed." err

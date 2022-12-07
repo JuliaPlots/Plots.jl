@@ -84,7 +84,6 @@ function __init__()
     @load :inspectdr InspectDR
     @load :hdf5 HDF5
     @load :plotlyjs PlotlyJS
-    @load :plotly PlotlyKaleido
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
