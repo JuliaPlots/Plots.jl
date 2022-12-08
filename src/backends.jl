@@ -52,7 +52,7 @@ function _check_compat(m::Module; warn = true)
     nothing
 end
 
-_path(sym) =
+_path(sym::Symbol) =
     if sym ∈ (:pgfplots, :pyplot)
         @path joinpath(@__DIR__, "backends", "deprecated", "$sym.jl")
     else
@@ -89,7 +89,7 @@ macro init_backend(s)
 end
 
 macro require_backend(pkg)
-    be = Symbol(lowercase("$pkg"))
+    be = QuoteNode(Symbol(lowercase("$pkg")))
     quote
         backend_name() === $be || @require $pkg = $(_plots_deps["$pkg"]) begin
             include(_path($be))
