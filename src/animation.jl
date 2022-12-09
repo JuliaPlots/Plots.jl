@@ -199,28 +199,33 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     freqassert = :()
     block = forloop.args[2]
 
-    # create filter
+
+    parameters = Dict{Symbol,Any}()
+    filterexpr=true
+
     n = length(args)
-    filterexpr = if n == 0
-        # no filter... every iteration gets a frame
-        true
-
-    elseif args[1] === :every
-        # filter every `freq` frames (starting with the first frame)
-        @assert n == 2
-        freq = args[2]
-        freqassert = :(@assert isa($freq, Integer) && $freq > 0)
-        :(mod1($countersym, $freq) == 1)
-
-    elseif args[1] === :when
-        # filter on custom expression
-        @assert n == 2
-        args[2]
-
-    else
-        error("Unsupported animate filter: $args")
+    i=1
+    # create filter and read parameters
+    while i<=n
+        if args[i] == :when
+            @assert i<n
+            filterexpr == true || error("Can only specify one filterexpression (one of 'when' or 'every')")
+            filterexpr = args[i+1]
+            i+=1
+        elseif args[i] == :every
+            @assert i<n
+            filterexpr == true || error("Can only specify one filterexpression (one of 'when' or 'every')")
+            freq = args[i+1]
+            freqassert = :(@assert isa($freq, Integer) && $freq > 0)
+            filterexpr = :(mod1($countersym, $freq) == 1)
+            i+=1
+        elseif args[i] isa Expr && args[i].head==Symbol("=") && args[i].args[1] isa Symbol
+            parameters[args[i].args[1]]=args[i].args[2]
+        else 
+            error("Parameter specification not understood: $(args[i])")
+        end
+        i+=1
     end
-
     push!(block.args, :(
         if $filterexpr
             Plots.frame($animsym)
@@ -228,11 +233,15 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     ))
     push!(block.args, :($countersym += 1))
 
+
+    animationsArgs = Any[animsym,] 
+    animationsKwargs = Any[] 
+    haskey(parameters, :fps) &&  push!(animationsKwargs,  :(fps=$(parameters[:fps])))
     # add a final call to `gif(anim)`?
     retval = if type === :gif
-        :(Plots.gif($animsym))
+        :(Plots.gif($(animationsArgs...);$(animationsKwargs...)))
     elseif type === :apng
-        :(Plots.apng($animsym))
+        :(Plots.apng($(animationsArgs...);$(animationsKwargs...)))
     else
         animsym
     end
