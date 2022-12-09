@@ -268,6 +268,11 @@ Example:
     push!(p, 1, sin(x))
   end
 ```
+This macro supports additional parameters, that may be added after the main loop body.
+- Add `fps=n` with positive Integer n, to specify the desired frames per second.
+- Add `every n` with positive Integer n, to take only one frame every nth iteration.
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+    frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro gif(forloop::Expr, args...)
     _animate(forloop, args...; type = :gif)
@@ -284,6 +289,11 @@ Example:
     push!(p, 1, sin(x))
   end
 ```
+This macro supports additional parameters, that may be added after the main loop body.
+- Add `fps=n` with positive Integer n, to specify the desired frames per second.
+- Add `every n` with positive Integer n, to take only one frame every nth iteration.
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+    frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro apng(forloop::Expr, args...)
     _animate(forloop, args...; type = :apng)
@@ -301,6 +311,11 @@ anim = @animate for x=0:0.1:5
 end
 gif(anim)
 ```
+This macro supports additional parameters, that may be added after the main loop body.
+- Add `fps=n` with positive Integer n, to specify the desired frames per second.
+- Add `every n` with positive Integer n, to take only one frame every nth iteration.
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+    frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro animate(forloop::Expr, args...)
     _animate(forloop, args...)
