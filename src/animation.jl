@@ -199,33 +199,38 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     freqassert = :()
     block = forloop.args[2]
 
-
-    parameters = Dict{Symbol,Any}()
-    filterexpr=true
+    animationsKwargs = Any[]
+    filterexpr = true
 
     n = length(args)
-    i=1
+    i = 1
     # create filter and read parameters
-    while i<=n
-        if args[i] == :when
-            @assert i<n
-            filterexpr == true || error("Can only specify one filterexpression (one of 'when' or 'every')")
-            filterexpr = args[i+1]
-            i+=1
-        elseif args[i] == :every
-            @assert i<n
-            filterexpr == true || error("Can only specify one filterexpression (one of 'when' or 'every')")
-            freq = args[i+1]
-            freqassert = :(@assert isa($freq, Integer) && $freq > 0)
-            filterexpr = :(mod1($countersym, $freq) == 1)
-            i+=1
-        elseif args[i] isa Expr && args[i].head==Symbol("=") && args[i].args[1] isa Symbol
-            parameters[args[i].args[1]]=args[i].args[2]
-        else 
-            error("Parameter specification not understood: $(args[i])")
+    while i <= n
+        arg = args[i]
+        if arg in (:when, :every)
+            # specification of frame filter
+            @assert i < n
+            filterexpr == true ||
+                error("Can only specify one filterexpression (one of 'when' or 'every')")
+
+            filterexpr = #      when          every
+                arg == :when ? args[i + 1] : :(mod1($countersym, $(args[i + 1])) == 1)
+
+            i += 1
+        elseif arg isa Expr && arg.head == Symbol("=")
+            #specification of type <kwarg> = <spec>
+            lhs, rhs = arg.args
+            if lhs in (:fps,)
+                push!(animationsKwargs, :($lhs = $rhs))
+            else
+                error("Parameter $(lhs) not supported")
+            end
+        else
+            error("Parameter specification not understood: $(arg)")
         end
-        i+=1
+        i += 1
     end
+
     push!(block.args, :(
         if $filterexpr
             Plots.frame($animsym)
@@ -233,15 +238,11 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     ))
     push!(block.args, :($countersym += 1))
 
-
-    animationsArgs = Any[animsym,] 
-    animationsKwargs = Any[] 
-    haskey(parameters, :fps) &&  push!(animationsKwargs,  :(fps=$(parameters[:fps])))
     # add a final call to `gif(anim)`?
     retval = if type === :gif
-        :(Plots.gif($(animationsArgs...);$(animationsKwargs...)))
+        :(Plots.gif($animsym; $(animationsKwargs...)))
     elseif type === :apng
-        :(Plots.apng($(animationsArgs...);$(animationsKwargs...)))
+        :(Plots.apng($animsym; $(animationsKwargs...)))
     else
         animsym
     end
@@ -312,7 +313,6 @@ end
 gif(anim)
 ```
 This macro supports additional parameters, that may be added after the main loop body.
-- Add `fps=n` with positive Integer n, to specify the desired frames per second.
 - Add `every n` with positive Integer n, to take only one frame every nth iteration.
 - Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
     frame only when `<cond>` returns `true`. Is incompatible with `every`.
