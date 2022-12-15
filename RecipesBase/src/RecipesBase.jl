@@ -1,7 +1,5 @@
 module RecipesBase
 
-using SnoopPrecompile
-
 export @recipe,
     @series,
     @userplot,
@@ -596,26 +594,4 @@ macro layout(mat::Expr)
     create_grid(mat)
 end
 
-# COV_EXCL_START
-@precompile_setup begin
-    struct __RecipesBasePrecompileType end
-    @precompile_all_calls begin
-        @layout [a b; c]
-        @layout [a{0.3w}; b{0.2h}]
-        @layout [_ ° _; ° ° °; ° ° °]
-        # @userplot __RecipesBasePrecompileType  # fails (export statements)
-        @recipe f(::__RecipesBasePrecompileType) = begin
-            @series begin
-                markershape --> :auto, :require
-                markercolor --> customcolor, :force
-                xrotation --> 5
-                zrotation --> 6, :quiet
-                fillcolor := :green
-                ones(1)
-            end
-            zeros(1)
-        end
-    end
-end
-# COV_EXCL_STOP
 end
