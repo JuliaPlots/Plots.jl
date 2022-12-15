@@ -615,8 +615,7 @@ trueOrAllTrue(f::Function, x) = f(x)
 allLineTypes(arg) = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
 allStyles(arg) = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
 allShapes(arg) = (
-    trueOrAllTrue(a -> is_marker_supported(get(_markerAliases, a, a)), arg) ||
-    trueOrAllTrue(a -> isa(a, Shape), arg)
+    trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers || a isa Shape, arg)
 )
 allAlphas(arg) = trueOrAllTrue(
     a ->
@@ -1231,7 +1230,7 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
 end
 
 """
-Computes the distances of the plot limits to a sample of points at the extremes of 
+Computes the distances of the plot limits to a sample of points at the extremes of
 the ranges, and places the legend at the corner where the maximum distance to the limits is found.
 """
 function _guess_best_legend_position(lp::Symbol, plt)
