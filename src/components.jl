@@ -294,7 +294,7 @@ function font(args...; kw...)
         elseif sym === :rotation
             rotation = kw[sym]
         elseif sym === :color
-            color = parse(Colorant, kw[sym])
+            (color = kw[sym]) isa Colorant || (color = parse(Colorant, color))
         else
             @warn "Unused font kwarg: $sym"
         end
