@@ -334,8 +334,10 @@ with(:gr) do
 
     @testset "legends" begin
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa Plots.Plot
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa Plots.Plot
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa Plots.Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa
+              Plots.Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa
+              Plots.Plot
         @test_logs (:warn, r"n° of legend_column.*") png(
             plot(1:2, legend_columns = 10),
             tempname(),
