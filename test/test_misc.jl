@@ -336,7 +336,7 @@ with(:gr) do
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa Plot
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa Plot
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa Plot
-        @test_logs (:warn, r"n° of legend_column.*") match_mode=:any png(
+        @test_logs (:warn, r"n° of legend_column.*") match_mode = :any png(
             plot(1:2, legend_columns = 10),
             tempname(),
         )
