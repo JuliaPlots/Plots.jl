@@ -45,7 +45,7 @@ end
 
         @testset "bar" begin
             p = bar([3, 2, 1], [1, 2, 3])
-            @test p isa Plot
+            @test p isa Plots.Plot
             @test display(dsp, p) isa Nothing
         end
 
@@ -73,7 +73,7 @@ end
 end
 
 @testset "Themes" begin
-    @test showtheme(:dark) isa Plot
+    @test showtheme(:dark) isa Plots.Plot
 end
 
 @testset "maths" begin
@@ -227,7 +227,7 @@ end
     # not sure what is intended here ...
     wrapped = wrap([:red, :blue])
     @test !isempty(wrapped)
-    @test scatter(1:2, color = wrapped) isa Plot
+    @test scatter(1:2, color = wrapped) isa Plots.Plot
 end
 
 @testset "group" begin
@@ -236,11 +236,11 @@ end
     b = repeat(["low", "high"], inner = 2, outer = 3)
     c = repeat(1:2, outer = 6)
     d = [1, 1, 1, 2, 2, 2, 2, 4, 3, 3, 3, 6]
-    @test plot(b, d, group = (c, a), layout = (1, 3)) isa Plot
+    @test plot(b, d, group = (c, a), layout = (1, 3)) isa Plots.Plot
 end
 
 @testset "skipissing" begin
-    @test plot(skipmissing(1:5)) isa Plot
+    @test plot(skipmissing(1:5)) isa Plots.Plot
 end
 
 with(:gr) do
@@ -263,9 +263,9 @@ with(:gr) do
     @testset "recipes" begin
         @test Plots.seriestype_supported(:path) ≡ :native
 
-        @test plot([1, 2, 5], seriestype = :linearfit) isa Plot
-        @test plot([1, 2, 5], seriestype = :scatterpath) isa Plot
-        @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa Plot
+        @test plot([1, 2, 5], seriestype = :linearfit) isa Plots.Plot
+        @test plot([1, 2, 5], seriestype = :scatterpath) isa Plots.Plot
+        @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa Plots.Plot
 
         let pl = plot(1:2, -1:1, widen = false)
             Plots.abline!([0, 3], [5, -5])
@@ -307,7 +307,7 @@ with(:gr) do
             y,
             z;
             connections = [
-                [1, 2, 4, 3], # Quadrangle 
+                [1, 2, 4, 3], # Quadrangle
                 [1, 2, 5], # Triangle
                 [2, 4, 5], # Triangle
                 [4, 3, 5], # Triangle
@@ -321,7 +321,7 @@ with(:gr) do
     end
 
     @testset "fillstyle" begin
-        @test histogram(rand(10); fillstyle = :/) isa Plot
+        @test histogram(rand(10); fillstyle = :/) isa Plots.Plot
     end
 
     @testset "showable" begin
@@ -333,9 +333,11 @@ with(:gr) do
     end
 
     @testset "legends" begin
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa Plot
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa Plot
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa Plots.Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa
+              Plots.Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa
+              Plots.Plot
         @test_logs (:warn, r"n° of legend_column.*") png(
             plot(1:2, legend_columns = 10),
             tempname(),
