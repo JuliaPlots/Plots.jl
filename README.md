@@ -9,13 +9,17 @@
 [gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-[docs-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-url]: https://docs.juliaplots.org/stable/
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]: https://docs.juliaplots.org/stable
+
+[docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docs-dev-url]: https://docs.juliaplots.org/dev
 
 [![][gh-ci-img]][gh-ci-url]
 [![][pkgeval-img]][pkgeval-url]
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
-[![][docs-img]][docs-url]
+[![][docs-stable-img]][docs-stable-url]
+[![][docs-dev-img]][docs-dev-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl)
 [![Plots Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/Plots)](https://pkgs.genieframework.com?packages=Plots)
 
