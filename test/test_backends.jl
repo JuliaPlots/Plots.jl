@@ -4,7 +4,7 @@ ci_tol() =
     elseif Sys.isapple()
         "1e-3"
     else
-        "1e-2"
+        "1e-1"
     end
 
 const TESTS_MODULE = Module(:PlotsTestsModule)
