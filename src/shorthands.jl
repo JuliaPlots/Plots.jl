@@ -10,7 +10,6 @@ Make a scatter plot of `y` vs `x`.
 - $(_document_argument(:markersize))
 - $(_document_argument(:markercolor))
 - $(_document_argument(:markershape))
-- $(_document_argument(:markercolor))
 - $(_document_argument(:markeralpha))
 
 # Examples
