@@ -7,6 +7,7 @@
         stale_deps = (; ignore = [:GR, :CondaPkg, :Contour, :Latexify, :LaTeXStrings]),
         ambiguities = false,
         deps_compat = false,  # FIXME: fails `CondaPkg`
+        piracy = false,
     )
     Aqua.test_ambiguities(Plots; exclude = [RecipesBase.apply_recipe])  # FIXME: remaining ambiguities
 end
