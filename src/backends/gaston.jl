@@ -578,7 +578,7 @@ function gaston_fix_ticks_overflow(ticks::AbstractVector)
     if eltype(ticks) <: Integer
         of = if isdefined(Gaston, :GNUPLOT_VERSION)
             # toggle Int32 - Int64 for older gnuplot version
-            typemax(Gaston.GNUPLOT_VERSION[] ≥ v"5.4.0" ? Int64 : Int32)
+            typemax(Gaston.GNUPLOT_VERSION ≥ v"5.4.0" ? Int64 : Int32)
         else
             typemax(Int32)
         end
