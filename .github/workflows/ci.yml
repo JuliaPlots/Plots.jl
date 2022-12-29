@@ -39,6 +39,9 @@ jobs:
             version: '1.7'  # only test intermediate relase on `ubuntu`
           - os: ubuntu-latest
             prefix: xvfb-run
+            version: '~1.9.0-0'
+          - os: ubuntu-latest
+            prefix: xvfb-run
             version: 'nightly'
 
     steps:
