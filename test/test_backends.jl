@@ -257,7 +257,7 @@ end
     is_pkgeval() || for be in CONCRETE_BACKENDS
         (Sys.isapple() && be === :gaston) && continue  # FIXME: hangs
         @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
-        @test Base.compilecache(Base.module_keys[Plots]) isa String  # test default precompilation
+        Base.compilecache(Base.module_keys[Plots])  # test default precompilation
     end
 
     Plots.set_default_backend!()  # clear `Preferences` key
