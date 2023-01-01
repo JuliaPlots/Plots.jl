@@ -614,9 +614,8 @@ trueOrAllTrue(f::Function, x) = f(x)
 
 allLineTypes(arg) = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
 allStyles(arg) = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
-allShapes(arg) = (
-    trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers || a isa Shape, arg)
-)
+allShapes(arg) =
+    (trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers || a isa Shape, arg))
 allAlphas(arg) = trueOrAllTrue(
     a ->
         (typeof(a) <: Real && a > 0 && a < 1) || (
