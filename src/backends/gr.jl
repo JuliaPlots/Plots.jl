@@ -2005,6 +2005,8 @@ for (mime, fmt) in (
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         dpi_factor = $fmt == "png" ? plt[:dpi] / Plots.DPI : 1
         filepath = tempname() * "." * $fmt
+        # workaround  windows bug github.com/JuliaLang/julia/issues/46989
+        touch(filepath)
         GR.emergencyclosegks()
         withenv(
             "GKS_FILEPATH" => filepath,

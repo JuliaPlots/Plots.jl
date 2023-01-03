@@ -145,8 +145,6 @@ if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO",
                         show(devnull, pl)
                         # FIXME: pgfplotsx requires bug
                         backend_name() === :pgfplotsx && return
-                        # FIXME: windows bug github.com/JuliaLang/julia/issues/46989
-                        Sys.iswindows() && return
                         showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
                         showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
                         nothing
