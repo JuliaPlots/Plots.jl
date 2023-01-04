@@ -180,26 +180,31 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     unscaled_ticks = noop ? scaled_ticks : map(invsf, scaled_ticks)
 
     labels::Vector{String} = if any(isfinite, unscaled_ticks)
-        if formatter in (:auto, :plain, :scientific, :engineering)
-            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
-        elseif formatter === :latex
-            map(
-                x -> string("\$", replace(convert_sci_unicode(x), '×' => "\\times"), "\$"),
-                Showoff.showoff(unscaled_ticks, :auto),
-            )
-        elseif formatter === :none
-            String[]
-        else
-            # there was an override for the formatter... use that on the unscaled ticks
-            map(formatter, unscaled_ticks)
-            # if the formatter left us with numbers, still apply the default formatter
-            # However it leave us with the problem of unicode number decoding by the backend
-        end
+        get_labels(formatter, scaled_ticks, scale)
     else
         String[]  # no finite ticks to show...
     end
 
     unscaled_ticks, labels
+end
+
+function get_labels(formatter::Symbol, scaled_ticks, scale)
+    if formatter in (:auto, :plain, :scientific, :engineering)
+        return map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
+    elseif formatter === :latex
+        return map(
+            l -> string("\$", replace(convert_sci_unicode(l), '×' => "\\times"), "\$"),
+            get_labels(:auto, scaled_ticks, scale),
+        )
+    elseif formatter === :none
+        return String[]
+    end
+end
+function get_labels(formatter::Function, scaled_ticks, scale)
+    sf, invsf, _ = scale_inverse_scale_func(scale)
+    fticks = map(formatter ∘ invsf, scaled_ticks)
+    eltype(fticks) <: Number && return get_labels(:auto, map(sf, fticks), scale)
+    return fticks
 end
 
 # returns (continuous_values, discrete_values) for the ticks on this axis
