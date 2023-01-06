@@ -463,7 +463,6 @@ end
     # reset orientation
     orientation := default(:orientation)
 
-    @show RecipesPipeline.explicitkeys(plotattributes)
     # draw the bar shapes
     @series begin
         seriestype := :shape
@@ -493,7 +492,6 @@ end
     fillrange := nothing
     x := x
     y := y
-    @show plotattributes
     ()
 end
 @deps bar shape
