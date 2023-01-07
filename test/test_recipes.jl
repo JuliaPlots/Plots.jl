@@ -51,6 +51,21 @@ end
     @test length(sticks) == 1
 end
 
+@testset "offset images" begin
+    img = OffsetMatrix(rand(RGB{Colors.N0f8}, 11, 11), -5:5, -5:5)
+    plt = plot(img)
+    @test length(plt) == 1
+
+    plt = plot(Gray.(img))
+    @test length(plt) == 1
+
+    data = OffsetMatrix(rand(11, 11), -5:5, -5:5)
+    @test_broken begin
+        plt = plot(data)
+        length(plt) == 1
+    end
+end
+
 # NOTE: the following test seems to trigger these deprecated warnings:
 # WARNING: importing deprecated binding Colors.RGB1 into PlotUtils.
 # WARNING: importing deprecated binding Colors.RGB1 into Plots.
