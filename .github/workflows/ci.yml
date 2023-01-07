@@ -61,6 +61,7 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
+      - uses: julia-actions/cache@v1.1.7 # v1.2 doesn't work with this setup
       - uses: julia-actions/julia-buildpkg@latest
 
       - name: Run upstream RecipesBase & RecipesPipeline tests
