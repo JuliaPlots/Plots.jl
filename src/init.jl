@@ -124,43 +124,41 @@ backend()
 include(_path(backend_name()))
 
 # COV_EXCL_START
-if bool_env("PLOTS_PRECOMPILE", "true") && bool_env("JULIA_PKG_PRECOMPILE_AUTO", "true")
-    @precompile_setup begin
-        @info backend_package_name()
-        n = length(_examples)
-        imports = sizehint!(Expr[], n)
-        examples = sizehint!(Expr[], 10n)
-        for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
-            _examples[i].external && continue
-            (imp = _examples[i].imports) === nothing || push!(imports, imp)
-            func = gensym(string(i))
-            push!(
-                examples,
-                quote
-                    $func() = begin  # evaluate each example in a local scope
-                        $(_examples[i].exprs)
-                        $i == 1 || return  # only for one example
-                        fn = tempname()
-                        pl = current()
-                        show(devnull, pl)
-                        # FIXME: pgfplotsx requires bug
-                        backend_name() === :pgfplotsx && return
-                        showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
-                        showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
-                        nothing
-                    end
-                    $func()
-                end,
-            )
-        end
-        withenv("GKSwstype" => "nul") do
-            @precompile_all_calls begin
-                load_default_backend()
-                eval.(imports)
-                eval.(examples)
-            end
-        end
-        CURRENT_PLOT.nullableplot = nothing
+@precompile_setup begin
+    @info backend_package_name()
+    n = length(_examples)
+    imports = sizehint!(Expr[], n)
+    examples = sizehint!(Expr[], 10n)
+    for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
+        _examples[i].external && continue
+        (imp = _examples[i].imports) === nothing || push!(imports, imp)
+        func = gensym(string(i))
+        push!(
+            examples,
+            quote
+                $func() = begin  # evaluate each example in a local scope
+                    $(_examples[i].exprs)
+                    $i == 1 || return  # only for one example
+                    fn = tempname()
+                    pl = current()
+                    show(devnull, pl)
+                    # FIXME: pgfplotsx requires bug
+                    backend_name() === :pgfplotsx && return
+                    showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
+                    showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
+                    nothing
+                end
+                $func()
+            end,
+        )
     end
+    withenv("GKSwstype" => "nul") do
+        @precompile_all_calls begin
+            load_default_backend()
+            eval.(imports)
+            eval.(examples)
+        end
+    end
+    CURRENT_PLOT.nullableplot = nothing
 end
 # COV_EXCL_STOP
