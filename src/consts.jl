@@ -69,7 +69,7 @@ const _all_plot_args = _plot_args
 const _all_args =
     union(_lettered_all_axis_args, _all_subplot_args, _all_series_args, _all_plot_args)
 
-const _all_segmenting_attributes = Set(_segmenting_vector_attributes ∪ _segmenting_array_attributes ∪ reduce(vcat, aliases.(_segmenting_array_attributes)) ∪ reduce(vcat, aliases.(_segmenting_vector_attributes)))
+const _all_segmenting_attributes = Set(_segmenting_vector_attributes ∪ _segmenting_array_attributes)
 
 # add all pluralized forms to the _keyAliases dict
 for arg in _all_args

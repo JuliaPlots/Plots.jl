@@ -16,7 +16,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
 
-    attr = DefaultsDict(explicit, _axis_defaults_byletter[letter])
+    attr = DefaultsDict(Plots.Plot, explicit, _axis_defaults_byletter[letter])
 
     # update the defaults
     attr!(Axis([sp], attr), args...; kw...)
@@ -512,7 +512,7 @@ end
     scale_lims!([plt], [letter], factor)
 
 Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by the
-given `factor` around the limits' middle point. 
+given `factor` around the limits' middle point.
 If `letter` is omitted, all axes are affected.
 """
 function scale_lims!(sp::Subplot, letter, factor)

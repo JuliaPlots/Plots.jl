@@ -141,8 +141,9 @@ RecipesPipeline.get_axis_limits(plt::Plot, letter) = axis_limits(plt[1], letter,
 
 ## Plot recipes
 
-RecipesPipeline.type_alias(plt::Plot, st) = get(_typeAliases, st, st)
+RecipesPipeline.type_alias(pt::Type{<:Plots.Plot}, st) = get(_typeAliases, st, st)
 
+RecipesPipeline.key_alias(pt::Type{<:Plots.Plot}, key) = get(_keyAliases, key, key)
 ## Plot setup
 
 function RecipesPipeline.plot_setup!(plt::Plot, plotattributes, kw_list)

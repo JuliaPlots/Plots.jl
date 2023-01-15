@@ -124,3 +124,10 @@ with(:gr) do
         show(devnull, bar([1 2 3], [0.02 125 10_000]; yscale = :log10))
     end
 end
+
+@testset "Bar" begin
+    pl = bar(["a", "b", "c"], [1,2,3])
+    @test pl[1][2][:marker_size] == 0
+    @test pl[1][2][:marker_alpha] == 0
+    @test pl[1][1][:line_color] == RGBA{Float64}(0.0,0.0,0.0,1.0)
+end

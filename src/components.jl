@@ -11,27 +11,6 @@ nanappend!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); append!(a, b); nothing)
 
 compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angle)
 
-struct Attributes <: AbstractDict{Symbol, Any}
-    plotattributes::KW
-end
-
-function Base.get(attr::Attributes, key, default)
-    get(attr.plotattributes, get(_keyAliases, key, key), default)
-end
-
-function Base.setindex!(attr::Attributes, key, value)
-    if key === :seriestype
-        value = get(_typeAliases, value, value)
-    end
-    setindex!(attr.plotattributes, get(_keyAliases, key, key), value)
-end
-
-Base.iterate(attr::Attributes, args...; kwargs...) = iterate(attr.plotattributes, args...; kwargs...)
-Base.delete!(attr::Attributes, key) = delete!(attr.plotattributes, key)
-Base.length(attr::Attributes) = length(attr.plotattributes)
-Base.keys(attr::Attributes) = keys(attr.plotattributes)
-Base.values(attr::Attributes) = values(attr.plotattributes)
-
 # -------------------------------------------------------------
 
 struct Shape{X<:Number,Y<:Number}

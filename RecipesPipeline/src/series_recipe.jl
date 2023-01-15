@@ -15,7 +15,7 @@ function _process_seriesrecipes!(plt, kw_list)
     end
     process_sliced_series_attributes!(plt, kw_list)
     for kw in kw_list
-        series_attr = DefaultsDict(kw, series_defaults(plt))
+        series_attr = DefaultsDict(typeof(plt), kw, series_defaults(plt))
         # now we have a fully specified series, with colors chosen. we must recursively
         # handle series recipes, which dispatch on seriestype. If a backend does not
         # natively support a seriestype, we check for a recipe that will convert that
@@ -33,7 +33,6 @@ end
 function _process_seriesrecipe(plt, plotattributes)
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
-    st = plotattributes[:seriestype] = type_alias(plt, st)
 
     # shapes shouldn't have fillrange set
     if plotattributes[:seriestype] == :shape
