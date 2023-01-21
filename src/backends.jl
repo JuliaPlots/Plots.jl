@@ -315,6 +315,7 @@ const _base_supported_args = [
     :show_empty_bins,
     :z_order,
     :permute,
+    :unitformat,
 ]
 
 function merge_with_base_supported(v::AVec)
