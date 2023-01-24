@@ -1071,10 +1071,10 @@ function plotly_html_body(plt, style = nothing)
         requirejs_prefix = """
             requirejs.config({
                 paths: {
-                    Plotly: '$(plotly_no_ext)'
+                    plotly: '$(plotly_no_ext)'
                 }
             });
-            require(['Plotly'], function (Plotly) {
+            require(['plotly'], function (Plotly) {
         """
         requirejs_suffix = "});"
     end
