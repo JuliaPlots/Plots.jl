@@ -25,22 +25,19 @@ embeddable_html(plt::AbstractPlot) = html_head(plt) * html_body(plt)
 function open_browser_window(filename::AbstractString)
     @static if Sys.isapple()
         return run(`open $(filename)`)
-    end
-    @static if Sys.islinux() || Sys.isbsd()    # Sys.isbsd() addition is as yet untested, but based on suggestion in https://github.com/JuliaPlots/Plots.jl/issues/681
+    elseif Sys.islinux() || Sys.isbsd()    # Sys.isbsd() addition is as yet untested, but based on suggestion in https://github.com/JuliaPlots/Plots.jl/issues/681
         return run(`xdg-open $(filename)`)
-    end
-    @static if Sys.iswindows()
+    elseif Sys.iswindows()
         return run(`$(ENV["COMSPEC"]) /c start "" "$(filename)"`)
+    else
+        @warn "Unknown OS... cannot open browser window."
     end
-    @warn "Unknown OS... cannot open browser window."
 end
 
 function write_temp_html(plt::AbstractPlot)
     html = standalone_html(plt; title = plt.attr[:window_title])
     filename = string(tempname(), ".html")
-    output = open(filename, "w")
-    write(output, html)
-    close(output)
+    write(filename, html)
     filename
 end
 
