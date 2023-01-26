@@ -29,7 +29,7 @@ function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = t
         return
     end
     # check installed
-    version = if (pkg_id = Base.identify_package(str)) === nothing
+    version = if (pkg_id = Base.identify_package(Plots, str)) === nothing
         nothing
     else
         get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
