@@ -29,7 +29,13 @@ function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = t
         return
     end
     # check installed
-    version = if (pkg_id = Base.identify_package(Plots, str)) === nothing
+    pkg_id = if str == "GR"
+        # FIXME: remove in `Plots2.0` (`GR` won't be a hard Plots dependency anymore).
+        Base.identify_package(Plots, str)  # GR can be in the Manifest or in the Project
+    else
+        Base.identify_package(str)  # a Project dependency
+    end
+    version = if pkg_id === nothing
         nothing
     else
         get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
