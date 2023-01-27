@@ -1,3 +1,4 @@
+using Plots, Test
 with(:plotly) do
     @testset "Basic" begin
         @test backend() == Plots.PlotlyBackend()
@@ -5,6 +6,7 @@ with(:plotly) do
         pl = plot(rand(10))
         @test pl isa Plot
         @test_nowarn Plots.plotly_series(plot())
+        @test !isnan(Plots.plotly_series(pl)[1][:zmax])
     end
 
     @testset "Contours" begin

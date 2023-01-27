@@ -557,7 +557,7 @@ function plotly_series(plt::Plot, series::Series)
 
     plotattributes_out[:colorbar] = plotly_colorbar(sp)
 
-    if is_2tuple(clims)
+    if is_2tuple(clims) && all(!isnan, clims)
         plotattributes_out[:zmin], plotattributes_out[:zmax] = clims
     end
 
