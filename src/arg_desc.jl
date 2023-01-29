@@ -29,26 +29,26 @@ const _arg_desc = KW(
     :markerstrokecolor  => (ColorType, "Color of the marker stroke (border). `:match` will take the value from `:foreground_color_subplot`."),
     :markerstrokealpha  => (Real, "The alpha/opacity override for the marker stroke (border). `nothing` (the default) means it will take the alpha value of markerstrokecolor."),
     :bins               => (Union{Integer,NTuple{2,Integer},AVec,Symbol}, """
-                            Defines the number of bins. 
+Defines the number of bins.
 
-                            Can take in one of the following types:
-                            * `Integer` - defines the approximate number of bins to aim for. Not guaranteed to give the exact value.
-                                * `bins=10` gives a 1D histogram with about 10 bins.
-                                * `bins=10` gives a 2D histogram with about 10 bins for each dimension.
-                            * `Tuple{Integer, Integer}` - for two-dimensional histograms, defines the approximate number of bins per dimension. Not guaranteed to give the exact values.
-                                * `bins=(10, 20)` gives a 2D histogram with about 10 bins for the `x` dimension and about 20 bins for the `y` dimension.
-                            * `Symbol` - defines the auto-binning algorithm to use.
-                                * `:auto` (`:fd`, default) - [Freedman-Diaconis' rule](https://en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice)
-                                * `:sturges` - [Sturges' rule](https://en.wikipedia.org/wiki/Histogram#Sturges'_formula)
-                                * `:sqrt` - [Square root rule](https://en.wikipedia.org/wiki/Histogram#Square-root_choice)
-                                * `:rice` - [Rice rule](https://en.wikipedia.org/wiki/Histogram#Rice_rule) 
-                                * `:scott` - [Scott's normal reference rule](https://en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule)
-                            * `AbstractVector` - defines a vector of values for bin edges.
-                                * `bins=range(-10, 10, length=21)` gives a histogram with bins starting from -10, ending at 10, and containing 21 break values, giving 20 bins.
+Can take in one of the following types:
+* `Integer` - defines the approximate number of bins to aim for. Not guaranteed to give the exact value.
+    * `bins=10` gives a 1D histogram with about 10 bins.
+    * `bins=10` gives a 2D histogram with about 10 bins for each dimension.
+* `Tuple{Integer, Integer}` - for two-dimensional histograms, defines the approximate number of bins per dimension. Not guaranteed to give the exact values.
+    * `bins=(10, 20)` gives a 2D histogram with about 10 bins for the `x` dimension and about 20 bins for the `y` dimension.
+* `Symbol` - defines the auto-binning algorithm to use.
+    * `:auto` (`:fd`, default) - [Freedman-Diaconis' rule](https://en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice)
+    * `:sturges` - [Sturges' rule](https://en.wikipedia.org/wiki/Histogram#Sturges'_formula)
+    * `:sqrt` - [Square root rule](https://en.wikipedia.org/wiki/Histogram#Square-root_choice)
+    * `:rice` - [Rice rule](https://en.wikipedia.org/wiki/Histogram#Rice_rule)
+    * `:scott` - [Scott's normal reference rule](https://en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule)
+* `AbstractVector` - defines a vector of values for bin edges.
+    * `bins=range(-10, 10, length=21)` gives a histogram with bins starting from -10, ending at 10, and containing 21 break values, giving 20 bins.
 
-                            Relevant attribute for the following series types:
-                                * $(link_histogram)
-                                * $(link_histogram2d)
+Relevant attribute for the following series types:
+    * $(link_histogram)
+    * $(link_histogram2d)
                         """),
     :smooth             => (Bool, "Add a regression line ?"),
     :group              => (AVec, "Data is split into a separate series, one for each unique value in `group`."),
@@ -74,7 +74,7 @@ const _arg_desc = KW(
                             Weights entries in a histogram.
 
                             `weights` must be a vector of the same length as the data vector `x`.
-                            
+
                             Relevant attribute for the following series types:
                             * $(link_histogram)
                             * $(link_histogram2d)
@@ -232,7 +232,7 @@ const _arg_desc = KW(
     :showaxis                    => (Union{Bool,Symbol,AStr}, "Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`."),
     :widen                       => (Union{Bool,Real,Symbol}, """
                                     Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
-                                    If set to `true`, scale the axis limits by the default factor of $(default_widen_factor). 
+                                    If set to `true`, scale the axis limits by the default factor of $(default_widen_factor).
                                     A different factor may be specified by setting `widen` to a number.
                                     Defaults to `:auto`, which widens by the default factor unless limits were manually set.
                                     See also the `scale_limits!` function for scaling axis limits in an existing plot."""),
