@@ -1213,9 +1213,20 @@ function gr_get_legend_geometry(vp, sp)
         GR.selntran(1)
         GR.restorestate()
     end
-    # if !vertical && legend_column > 0 && legend_column != nseries
-    #     @warn "n° of legend_column=$legend_column is not compatible with n° of series=$nseries"
-    # end
+    # deal with layout
+    column_layout = if legend_column == -1
+        (1, has_title + nseries)
+    elseif legend_column > nseries && nseries != 0 # catch plot_title here
+        @warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
+        (1 + has_title, nseries)
+    elseif legend_column == 0
+        @warn "n° of legend_column=$legend_column. Assuming vertical layout."
+        vertical = true
+        (has_title + nseries, 1)
+    else
+        (ceil(Int64, nseries / legend_column) + has_title, legend_column)
+    end
+    println(column_layout)
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
@@ -1243,17 +1254,6 @@ function gr_get_legend_geometry(vp, sp)
     base_markersize = gr_legend_marker_to_line_factor[] * span / dy  # NOTE: arbitrarily based on horizontal measures !
 
     entries = has_title + nseries  # number of legend entries
-    column_layout = if legend_column == -1
-        (1, has_title + nseries)
-    else
-        if legend_column > nseries
-            legend_column = nseries
-            @warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
-        end
-        column_layout =
-            (ceil(Int64, nseries / legend_column) + has_title, legend_column)
-    end
-    println(column_layout)
 
     # NOTE: substract `span_hspace`, since it joins labels in horizontal mode
     w = dx * column_layout[2] - space - !vertical * span_hspace
