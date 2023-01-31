@@ -1226,7 +1226,7 @@ function gr_get_legend_geometry(vp, sp)
     else
         (ceil(Int64, nseries / legend_column) + has_title, legend_column)
     end
-    println(column_layout)
+    #println(column_layout)
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
