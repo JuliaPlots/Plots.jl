@@ -43,7 +43,7 @@ end
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end when i % 5 == 0 fps = 10
 
-    @test_throws ErrorException macroexpand(
+    @test_throws LoadError macroexpand(
         @__MODULE__,
         quote
             @gif for i in 1:n
@@ -52,12 +52,12 @@ end
         end,
     )
 
-    @test_throws ErrorException macroexpand(
+    @test_nowarn macroexpand(
         @__MODULE__,
         quote
             @gif for i in 1:n
                 circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
-            end asdf = bla #asdf is not allowed
+            end asdf = bla #asdf is allowed
         end,
     )
 
