@@ -220,11 +220,7 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
         elseif arg isa Expr && arg.head == Symbol("=")
             #specification of type <kwarg> = <spec>
             lhs, rhs = arg.args
-            if lhs in (:fps,)
-                push!(animationsKwargs, :($lhs = $rhs))
-            else
-                error("Parameter $(lhs) not supported")
-            end
+            push!(animationsKwargs, :($lhs = $rhs))
         else
             error("Parameter specification not understood: $(arg)")
         end
