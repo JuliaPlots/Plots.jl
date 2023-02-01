@@ -989,9 +989,10 @@ function gr_add_legend(sp, leg, viewport_area)
     GR.selntran(0)
     GR.setscale(0)
     vertical = leg.vertical
+    legend_rows, legend_cols = leg.column_layout
     if leg.w > 0 || leg.h > 0
         xpos, ypos = gr_legend_pos(sp, leg, viewport_area)  # position between the legend line and text (see ref(1))
-        # @show vertical leg.w leg.h leg.pad leg.span leg.entries (xpos, ypos) leg.dx leg.dy leg.textw leg.texth
+        #@show vertical leg.w leg.h leg.pad leg.span leg.entries (legend_rows, legend_cols) (xpos, ypos) leg.dx leg.dy leg.textw leg.texth
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
         gr_set_fillcolor(sp[:legend_background_color])
         # ymax
@@ -1005,10 +1006,12 @@ function gr_add_legend(sp, leg, viewport_area)
         gr_set_line(1, :solid, sp[:legend_foreground_color], sp)
         GR.drawrect(xs..., ys...)  # drawing actual legend width here
         if (ttl = sp[:legend_title]) !== nothing
+            shift = legend_rows > 1 ? 0.5(legend_cols - 1) * leg.dx : 0 # shifting title to center if multi-column
             gr_set_font(legendtitlefont(sp), sp)
             _debug[] && gr_legend_bbox(xpos, ypos, leg)
-            gr_text(xpos - leg.pad - leg.space + 0.5leg.textw, ypos, string(ttl))
-            if vertical
+            gr_text(xpos - leg.pad - leg.space + 0.5leg.textw + shift, ypos, string(ttl))
+            if vertical || legend_rows != 1
+                legend_rows -= 1
                 ypos -= leg.dy
             else
                 xpos += leg.dx
@@ -1021,6 +1024,8 @@ function gr_add_legend(sp, leg, viewport_area)
 
         min_lw = DEFAULT_LINEWIDTH[] / gr_lw_clamp_factor[]
         max_lw = DEFAULT_LINEWIDTH[] * gr_lw_clamp_factor[]
+
+        nentry = 1
 
         for series in series_list(sp)
             should_add_to_legend(series) || continue
@@ -1085,7 +1090,10 @@ function gr_add_legend(sp, leg, viewport_area)
             if vertical
                 ypos -= leg.dy
             else
-                xpos += leg.dx
+                # println(string(series[:label]), " ", nentry, " ", nentry % legend_cols)
+                xpos += nentry % legend_cols == 0 ? -(legend_cols - 1) * leg.dx : leg.dx
+                ypos -= nentry % legend_cols == 0 ? leg.dy : 0
+                nentry += 1
             end
         end
     end
@@ -1205,9 +1213,20 @@ function gr_get_legend_geometry(vp, sp)
         GR.selntran(1)
         GR.restorestate()
     end
-    if !vertical && legend_column > 0 && legend_column != nseries
-        @warn "n° of legend_column=$legend_column is not compatible with n° of series=$nseries"
+    # deal with layout
+    column_layout = if legend_column == -1
+        (1, has_title + nseries)
+    elseif legend_column > nseries && nseries != 0 # catch plot_title here
+        @warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
+        (1 + has_title, nseries)
+    elseif legend_column == 0
+        @warn "n° of legend_column=$legend_column. Assuming vertical layout."
+        vertical = true
+        (has_title + nseries, 1)
+    else
+        (ceil(Int64, nseries / legend_column) + has_title, legend_column)
     end
+    #println(column_layout)
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
@@ -1237,8 +1256,8 @@ function gr_get_legend_geometry(vp, sp)
     entries = has_title + nseries  # number of legend entries
 
     # NOTE: substract `span_hspace`, since it joins labels in horizontal mode
-    w = (vertical ? dx : dx * entries - span_hspace) - space
-    h = vertical ? dy * entries : dy
+    w = dx * column_layout[2] - space - !vertical * span_hspace
+    h = dy * column_layout[1]
 
     (
         yoffset = height(vp) / 30,
@@ -1248,6 +1267,7 @@ function gr_get_legend_geometry(vp, sp)
         has_title,
         vertical,
         entries,
+        column_layout,
         space,
         texth,
         textw,
