@@ -199,26 +199,32 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     freqassert = :()
     block = forloop.args[2]
 
-    # create filter
+    animationsKwargs = Any[]
+    filterexpr = true
+
     n = length(args)
-    filterexpr = if n == 0
-        # no filter... every iteration gets a frame
-        true
+    i = 1
+    # create filter and read parameters
+    while i <= n
+        arg = args[i]
+        if arg in (:when, :every)
+            # specification of frame filter
+            @assert i < n
+            filterexpr == true ||
+                error("Can only specify one filterexpression (one of 'when' or 'every')")
 
-    elseif args[1] === :every
-        # filter every `freq` frames (starting with the first frame)
-        @assert n == 2
-        freq = args[2]
-        freqassert = :(@assert isa($freq, Integer) && $freq > 0)
-        :(mod1($countersym, $freq) == 1)
+            filterexpr = #      when          every
+                arg == :when ? args[i + 1] : :(mod1($countersym, $(args[i + 1])) == 1)
 
-    elseif args[1] === :when
-        # filter on custom expression
-        @assert n == 2
-        args[2]
-
-    else
-        error("Unsupported animate filter: $args")
+            i += 1
+        elseif arg isa Expr && arg.head == Symbol("=")
+            #specification of type <kwarg> = <spec>
+            lhs, rhs = arg.args
+            push!(animationsKwargs, :($lhs = $rhs))
+        else
+            error("Parameter specification not understood: $(arg)")
+        end
+        i += 1
     end
 
     push!(block.args, :(
@@ -230,9 +236,9 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
 
     # add a final call to `gif(anim)`?
     retval = if type === :gif
-        :(Plots.gif($animsym))
+        :(Plots.gif($animsym; $(animationsKwargs...)))
     elseif type === :apng
-        :(Plots.apng($animsym))
+        :(Plots.apng($animsym; $(animationsKwargs...)))
     else
         animsym
     end
@@ -259,6 +265,11 @@ Example:
     push!(p, 1, sin(x))
   end
 ```
+This macro supports additional parameters, that may be added after the main loop body.
+- Add `fps=n` with positive Integer n, to specify the desired frames per second.
+- Add `every n` with positive Integer n, to take only one frame every nth iteration.
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+    frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro gif(forloop::Expr, args...)
     _animate(forloop, args...; type = :gif)
@@ -275,6 +286,11 @@ Example:
     push!(p, 1, sin(x))
   end
 ```
+This macro supports additional parameters, that may be added after the main loop body.
+- Add `fps=n` with positive Integer n, to specify the desired frames per second.
+- Add `every n` with positive Integer n, to take only one frame every nth iteration.
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+    frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro apng(forloop::Expr, args...)
     _animate(forloop, args...; type = :apng)
@@ -292,6 +308,10 @@ anim = @animate for x=0:0.1:5
 end
 gif(anim)
 ```
+This macro supports additional parameters, that may be added after the main loop body.
+- Add `every n` with positive Integer n, to take only one frame every nth iteration.
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+    frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro animate(forloop::Expr, args...)
     _animate(forloop, args...)
