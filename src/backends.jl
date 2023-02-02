@@ -1365,12 +1365,12 @@ const _inspectdr_scale = [:identity, :ln, :log2, :log10]
 # ------------------------------------------------------------------------------
 # pgfplotsx
 
-_pre_imports(::PGFPlotsXBackend) = @eval begin
-    @require_backend PGFPlotsX
+_pre_imports(::PGFPlotsXBackend) = @eval Plots begin
     import LaTeXStrings: LaTeXString
     import UUIDs: uuid4
     import Latexify
     import Contour
+    @require_backend PGFPlotsX
 end
 
 function _initialize_backend(pkg::PGFPlotsXBackend)
