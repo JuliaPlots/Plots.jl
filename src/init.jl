@@ -6,6 +6,9 @@ const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 
+const _use_local_dependencies = Ref(false)
+const _use_local_plotlyjs = Ref(false)
+
 _plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)
         copy(Dict{Symbol,Any}(Main.PLOTS_DEFAULTS))
@@ -28,6 +31,8 @@ function _plots_plotly_defaults()
     end
     _use_local_dependencies[] = _use_local_plotlyjs[]
 end
+
+isdefined(Base, :get_extension) || import Requires: @require
 
 function __init__()
     _plots_theme_defaults()
@@ -54,65 +59,22 @@ function __init__()
             )
         end |> atreplinit
 
-    @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
-        if IJulia.inited
-            _init_ijulia_plotting()
-            IJulia.display_dict(plt::Plot) = _ijulia_display_dict(plt)
-        end
-    end
-
-    @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" begin
-        if bool_env("PLOTS_IMAGE_IN_TERMINAL", "false") &&
-           ImageInTerminal.ENCODER_BACKEND[] == :Sixel
-            get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
-            for be in (
-                GRBackend,
-                PyPlotBackend,
-                PythonPlotBackend,
-                # UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
-                PGFPlotsXBackend,
-                PlotlyJSBackend,
-                PlotlyBackend,
-                GastonBackend,
-                InspectDRBackend,
-            )
-                @eval function Base.display(::PlotsDisplay, plt::Plot{$be})
-                    prepare_output(plt)
-                    buf = PipeBuffer()
-                    show(buf, MIME("image/png"), plt)
-                    display(
-                        ImageInTerminal.TerminalGraphicDisplay(stdout),
-                        MIME("image/png"),
-                        read(buf),
-                    )
-                end
-            end
-        end
-    end
-
-    @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
-        _show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) =
-            _show_pdfbackends(io, mime, plt)
-    end
-
-    @require GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326" begin
-        RecipesPipeline.unzip(points::AbstractVector{<:GeometryBasics.Point}) =
-            unzip(Tuple.(points))
-        RecipesPipeline.unzip(
-            points::AbstractVector{GeometryBasics.Point{N,T}},
-        ) where {N,T} =
-            isbitstype(T) && sizeof(T) > 0 ? unzip(reinterpret(NTuple{N,T}, points)) :
-            unzip(Tuple.(points))
-        # -----------------------------------------
-        # Lists of tuples and GeometryBasics.Points
-        # -----------------------------------------
-        @recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
-        @recipe f(p::GeometryBasics.Point) = [p]  # Special case for 4-tuples in :ohlc series
-    end
-
-    @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" begin
-        include("unitful.jl")
-        @reexport using .UnitfulRecipes
+    @static if !isdefined(Base, :get_extension)  # COV_EXCL_LINE
+        @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" include(
+            normpath(@__DIR__, "..", "ext", "FileIOExt.jl"),
+        )
+        @require GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326" include(
+            normpath(@__DIR__, "..", "ext", "GeometryBasicsExt.jl"),
+        )
+        @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" include(
+            normpath(@__DIR__, "..", "ext", "IJuliaExt.jl"),
+        )
+        @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" include(
+            normpath(@__DIR__, "..", "ext", "ImageInTerminalExt.jl"),
+        )
+        @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" include(
+            normpath(@__DIR__, "..", "ext", "UnitfulExt.jl"),
+        )
     end
 
     _runtime_init(backend())

@@ -1236,3 +1236,13 @@ function _guess_best_legend_position(lp::Symbol, plt)
     lp === :best || return lp
     _guess_best_legend_position(xlims(plt), ylims(plt), plt)
 end
+
+macro ext_imp_use(imp_use::QuoteNode, mod::Symbol, args...)
+    dots = ntuple(_ -> :., isdefined(Base, :get_extension) ? 1 : 3)
+    ex = if length(args) > 0
+        Expr(:(:), Expr(dots..., mod), Expr.(:., args)...)
+    else
+        Expr(dots..., mod)
+    end
+    Expr(imp_use.value, ex) |> esc
+end

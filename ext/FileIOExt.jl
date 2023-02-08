@@ -1,5 +1,15 @@
-# ---------------------------------------------------------
-# A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
+module FileIOExt
+import Plots
+Plots.@ext_imp_use :import FileIO
+
+const PDFBackends = Union{
+    Plots.PGFPlotsBackend,
+    Plots.PlotlyJSBackend,
+    Plots.PyPlotBackend,
+    Plots.PythonPlotBackend,
+    Plots.InspectDRBackend,
+    Plots.GRBackend,
+}
 
 _fileio_load(@nospecialize(filename::AbstractString)) =
     FileIO.load(filename::AbstractString)
@@ -10,7 +20,7 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     fn = tempname()
 
     # first save a pdf file
-    pdf(plt, fn)
+    Plots.pdf(plt, fn)
 
     # load that pdf into a FileIO Stream
     s = _fileio_load("$fn.pdf")
@@ -23,5 +33,6 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     write(io, read(open(pngfn), String))
 end
 
-const PDFBackends =
-    Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
+Plots._show(io::IO, mime::MIME"image/png", plt::Plots.Plot{<:PDFBackends}) =
+    _show_pdfbackends(io, mime, plt)
+end

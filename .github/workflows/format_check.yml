@@ -27,7 +27,7 @@ jobs:
       - name: Format Julia files
         run: |
           using JuliaFormatter
-          format(["RecipesBase", "RecipesPipeline", "src", "test"])
+          format(["RecipesBase", "RecipesPipeline", "src", "test", "ext"])
         shell: julia --color=yes --compile=min -O0 {0}
       - name: suggester / JuliaFormatter
         uses: reviewdog/action-suggester@v1
