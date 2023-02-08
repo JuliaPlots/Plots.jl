@@ -275,6 +275,8 @@ end
 # ------------------------------------------------------------------------------------------
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
+    applicable(UnicodePlots.save_image, io) ||
+        throw(ArgumentError("Plots(UnicodePlots): saving to `.png` requires `import FreeType, FileIO`"))
     prepare_output(plt)
     nr, nc = size(plt.layout)
     s1, s2 = map(_ -> zeros(Int, nr, nc), 1:2)
@@ -310,8 +312,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
             end
             n1 += m1[r]
         end
-        stream = UnicodePlots.FileIO.Stream{UnicodePlots.FileIO.format"PNG"}(io)
-        UnicodePlots.FileIO.save(stream, img)
+        UnicodePlots.save_image(io, img)
     end
     nothing
 end
