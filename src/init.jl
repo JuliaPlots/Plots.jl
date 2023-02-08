@@ -144,6 +144,10 @@ include(_path(backend_name()))
                     show(devnull, pl)
                     # FIXME: pgfplotsx requires bug
                     backend_name() === :pgfplotsx && return
+                    if backend_name() === :unicodeplots
+                        savefig(pl, "$fn.txt")
+                        return
+                    end
                     showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
                     showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
                     nothing
