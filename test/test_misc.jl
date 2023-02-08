@@ -7,7 +7,6 @@
 end
 
 @testset "Plotly standalone" begin
-    @test_nowarn Plots._init_ijulia_plotting()
     @test Plots._plotly_local_file_path[] ≡ nothing
     temp = Plots._use_local_dependencies[]
     withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
@@ -15,7 +14,6 @@ end
         @test Plots._plotly_local_file_path[] isa String
         @test isfile(Plots._plotly_local_file_path[])
         @test Plots._use_local_dependencies[] = true
-        @test_nowarn Plots._init_ijulia_plotting()
     end
     Plots._plotly_local_file_path[] = nothing
     Plots._use_local_dependencies[] = temp

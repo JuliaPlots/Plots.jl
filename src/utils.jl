@@ -216,7 +216,7 @@ makevec(v::T) where {T} = T[v]
 maketuple(x::Real) = (x, x)
 maketuple(x::Tuple) = x
 
-RecipesPipeline.unzip(v) = unzip(v)  # COV_EXCL_LINE
+RecipesPipeline.unzip(v) = Unzip.unzip(v)  # COV_EXCL_LINE
 
 replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
     if haskey(aliases, k)

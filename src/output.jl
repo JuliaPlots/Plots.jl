@@ -162,12 +162,7 @@ Display a plot using the backends' gui window
 """
 gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
-# IJulia only... inline display
-function inline(plt::Plot = current())
-    isijulia() || error("inline() is IJulia-only")
-    Main.IJulia.clear_output(true)
-    display(Main.IJulia.InlineDisplay(), plt)
-end
+function inline end  # for IJulia
 
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)

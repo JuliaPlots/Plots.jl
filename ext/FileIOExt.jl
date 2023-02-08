@@ -1,6 +1,7 @@
 module FileIOExt
-import Plots
-Plots.@ext_imp_use :import FileIO
+
+import Plots: Plots, Plot, @ext_imp_use
+@ext_imp_use :import FileIO
 
 const PDFBackends = Union{
     Plots.PGFPlotsBackend,
@@ -33,6 +34,7 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     write(io, read(open(pngfn), String))
 end
 
-Plots._show(io::IO, mime::MIME"image/png", plt::Plots.Plot{<:PDFBackends}) =
+Plots._show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) =
     _show_pdfbackends(io, mime, plt)
-end
+
+end  # module

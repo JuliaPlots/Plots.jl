@@ -1,8 +1,9 @@
 module IJuliaExt
-import Plots: Plots, Plot, plotly_series, plotly_layout
+
+import Plots: @ext_imp_use, Plots, Plot, plotly_series, plotly_layout
 using Base64
 
-Plots.@ext_imp_use :import IJulia
+@ext_imp_use :import IJulia
 
 function _init_ijulia_plotting()
     # IJulia is more stable with local file
@@ -67,4 +68,12 @@ if IJulia.inited
     _init_ijulia_plotting()
     IJulia.display_dict(plt::Plot) = _ijulia_display_dict(plt)
 end
+
+
+# IJulia only... inline display
+function Plots.inline(plt::Plot = Plots.current())
+    IJulia.clear_output(true)
+    display(IJulia.InlineDisplay(), plt)
 end
+
+end  # module

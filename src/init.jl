@@ -32,8 +32,6 @@ function _plots_plotly_defaults()
     _use_local_dependencies[] = _use_local_plotlyjs[]
 end
 
-isdefined(Base, :get_extension) || import Requires: @require
-
 function __init__()
     _plots_theme_defaults()
     _plots_plotly_defaults()

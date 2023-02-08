@@ -3,8 +3,8 @@
 
 module UnitfulExt
 
-import Plots: Plots, @recipe, PlotText, Subplot, AVec, AMat, Axis
-Plots.@ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits
+import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
+@ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits
 
 export @P_str
 
@@ -151,7 +151,7 @@ end
 function fixmarkercolor!(attr)
     u = ustripattribute!(attr, :marker_z)
     ustripattribute!(attr, :clims, u)
-    u == Unitful.NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
+    u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
 end
 fixmarkersize!(attr) = ustripattribute!(attr, :markersize)
 fixlinecolor!(attr) = ustripattribute!(attr, :line_z)
@@ -164,7 +164,7 @@ ustripattribute!(attr, key) =
         attr[key] = ustrip.(u, v)
         return u
     else
-        return Unitful.NoUnits
+        return NoUnits
     end
 # If supplied, use the unit (optional 3rd argument)
 function ustripattribute!(attr, key, u)
@@ -218,7 +218,7 @@ end
 Append unit to labels when appropriate
 =====================================#
 
-append_unit_if_needed!(attr, key, u::Unitful.Units) =
+append_unit_if_needed!(attr, key, u::Units) =
     append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
 # dispatch on the type of `label`
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
@@ -292,4 +292,4 @@ Plots.process_limits(lims::AbstractArray{T}, axis) where {T<:Quantity} =
 Plots.process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
     ustrip.(getaxisunit(axis), lims)
 
-end
+end  # module

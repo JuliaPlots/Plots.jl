@@ -8,15 +8,15 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
 end
 
 using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
-using SnoopPrecompile, Preferences, Requires, Reexport, RelocatableFolders
+using SnoopPrecompile, Preferences, Reexport, RelocatableFolders
 using Base.Meta
-using Unzip
 @reexport using RecipesBase
 @reexport using PlotThemes
 @reexport using PlotUtils
 
 import RecipesBase: plot, plot!, animate, is_explicit, grid
 import RecipesPipeline
+import Requires: @require
 import RecipesPipeline:
     inverse_scale_func,
     datetimeformatter,
@@ -40,6 +40,7 @@ import UnicodeFun
 import StatsBase
 import Downloads
 import Showoff
+import Unzip
 import JLFzf
 import JSON
 

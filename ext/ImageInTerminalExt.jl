@@ -1,4 +1,5 @@
 module ImageInTerminalExt
+
 import Plots
 Plots.@ext_imp_use :import ImageInTerminal
 
@@ -27,4 +28,5 @@ if ImageInTerminal.ENCODER_BACKEND[] == :Sixel
         end
     end
 end
-end
+
+end  # module
