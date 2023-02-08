@@ -4,6 +4,7 @@
 module UnitfulExt
 
 import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
+import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits
 
 export @P_str
@@ -93,7 +94,7 @@ end
 end
 @recipe function f(f::Function, u::Units)  # COV_EXCL_LINE
     uf = UnitFunction(f, [u])
-    recipedata = Plots.RecipesBase.apply_recipe(plotattributes, uf)
+    recipedata = RecipesBase.apply_recipe(plotattributes, uf)
     _, xmin, xmax = recipedata[1].args
     return f, xmin * u, xmax * u
 end
