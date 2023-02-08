@@ -4,6 +4,7 @@ import SentinelArrays: ChainedVector
 import GeometryBasics
 import OffsetArrays
 import ImageMagick
+import FreeType  # for `unicodeplots`
 import LibGit2
 import Aqua
 import JSON

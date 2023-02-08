@@ -74,7 +74,7 @@ Showoff = "0.3.1, 1"
 SnoopPrecompile = "1"
 StatsBase = "0.33"
 UnicodeFun = "0.4"
-UnicodePlots = "2.10, 3"
+UnicodePlots = "3.4"
 Unzip = "0.1 - 0.2"
 julia = "1.6"
 
@@ -84,6 +84,7 @@ Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
+FreeType = "b38be410-82b0-50bf-ab77-7b57e271db43"
 Gaston = "4b11ee91-296f-5714-9832-002c20994614"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
@@ -112,4 +113,4 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
