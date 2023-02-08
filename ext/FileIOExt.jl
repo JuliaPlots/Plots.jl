@@ -35,7 +35,19 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     write(io, read(open(pngfn), String))
 end
 
-Plots._show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) =
-    _show_pdfbackends(io, mime, plt)
+for be in (
+    Plots.PythonPlotBackend,
+    Plots.InspectDRBackend,
+    Plots.PGFPlotsXBackend,
+    Plots.PGFPlotsBackend,
+    Plots.PlotlyJSBackend,
+    Plots.PyPlotBackend,
+    Plots.GRBackend,
+)
+    if !showable(MIME"image/png"(), Plot{be})
+        @eval Plots._show(io::IO, mime::MIME"image/png", plt::Plot{$be}) =
+            _show_pdfbackends(io, mime, plt)
+    end
+end
 
 end  # module
