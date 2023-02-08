@@ -69,7 +69,6 @@ if IJulia.inited
     IJulia.display_dict(plt::Plot) = _ijulia_display_dict(plt)
 end
 
-
 # IJulia only... inline display
 function Plots.inline(plt::Plot = Plots.current())
     IJulia.clear_output(true)
