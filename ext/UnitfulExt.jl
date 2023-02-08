@@ -7,8 +7,6 @@ import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits
 
-export @P_str
-
 const MissingOrQuantity = Union{Missing,<:Quantity}
 
 #==========
@@ -199,21 +197,8 @@ Base.ncodeunits(n::S) = ncodeunits(n.content)
 Base.isvalid(n::S, i::Integer) = isvalid(n.content, i)
 Base.pointer(n::S) = pointer(n.content)
 Base.pointer(n::S, i::Integer) = pointer(n.content, i)
-"""
-    P_str(s)
 
-Creates a string that will be Protected from recipe passes.
-
-Example:
-```julia
-julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel=P"This label will NOT display units")
-
-julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel="This label will display units")
-```
-"""
-macro P_str(s)
-    return ProtectedString(s)
-end
+Plots.protectedstring(s) = ProtectedString(s)
 
 #=====================================
 Append unit to labels when appropriate

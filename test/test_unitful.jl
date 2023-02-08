@@ -1,11 +1,3 @@
-const UE = if isdefined(Base, :get_extension)
-    Base.get_extension(Plots, :UnitfulExt)
-else
-    Plots.UnitfulExt
-end
-
-import .UE: @P_str
-
 # Some helper functions to access the subplot labels and the series inside each test plot
 xguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:xaxis].plotattributes[:guide]
 yguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:yaxis].plotattributes[:guide]

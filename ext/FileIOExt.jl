@@ -4,11 +4,12 @@ import Plots: Plots, Plot, @ext_imp_use
 @ext_imp_use :import FileIO
 
 const PDFBackends = Union{
+    Plots.PythonPlotBackend,
+    Plots.InspectDRBackend,
+    Plots.PGFPlotsXBackend,
     Plots.PGFPlotsBackend,
     Plots.PlotlyJSBackend,
     Plots.PyPlotBackend,
-    Plots.PythonPlotBackend,
-    Plots.InspectDRBackend,
     Plots.GRBackend,
 }
 

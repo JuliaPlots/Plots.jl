@@ -1,6 +1,6 @@
 module IJuliaExt
 
-import Plots: @ext_imp_use, Plots, Plot, plotly_series, plotly_layout
+import Plots: @ext_imp_use, Plots, Plot
 using Base64
 
 @ext_imp_use :import IJulia
@@ -25,13 +25,13 @@ _ijulia__extra_mime_info!(plt::Plot, out::Dict) = out
 
 function _ijulia__extra_mime_info!(plt::Plot{Plots.PlotlyJSBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =
-        Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
+        Dict(:data => Plots.plotly_series(plt), :layout => Plots.plotly_layout(plt))
     out
 end
 
 function _ijulia__extra_mime_info!(plt::Plot{Plots.PlotlyBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =
-        Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
+        Dict(:data => Plots.plotly_series(plt), :layout => Plots.plotly_layout(plt))
     out
 end
 

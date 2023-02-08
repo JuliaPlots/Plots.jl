@@ -108,6 +108,7 @@ export
     animate,
     @animate,
     @gif,
+    @P_str,
 
     test_examples,
     iter_segments,
