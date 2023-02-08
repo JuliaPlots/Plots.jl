@@ -74,7 +74,7 @@ Showoff = "0.3.1, 1"
 SnoopPrecompile = "1"
 StatsBase = "0.33"
 UnicodeFun = "0.4"
-UnicodePlots = "3"
+UnicodePlots = "3.4"
 Unzip = "0.1 - 0.2"
 julia = "1.6"
 
