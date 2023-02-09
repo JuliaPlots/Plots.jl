@@ -3,16 +3,6 @@ module FileIOExt
 import Plots: Plots, Plot, @ext_imp_use
 @ext_imp_use :import FileIO
 
-const PDFBackends = Union{
-    Plots.PythonPlotBackend,
-    Plots.InspectDRBackend,
-    Plots.PGFPlotsXBackend,
-    Plots.PGFPlotsBackend,
-    Plots.PlotlyJSBackend,
-    Plots.PyPlotBackend,
-    Plots.GRBackend,
-}
-
 _fileio_load(@nospecialize(filename::AbstractString)) =
     FileIO.load(filename::AbstractString)
 _fileio_save(@nospecialize(filename::AbstractString), @nospecialize(x)) =
@@ -36,18 +26,11 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
 end
 
 for be in (
-    Plots.PythonPlotBackend,
-    Plots.InspectDRBackend,
-    Plots.PGFPlotsXBackend,
-    Plots.PGFPlotsBackend,
-    Plots.PlotlyJSBackend,
-    Plots.PyPlotBackend,
-    Plots.GRBackend,
+    Plots.PGFPlotsBackend,  # NOTE: I guess this can be removed in Plots@2.0
 )
-    if !showable(MIME"image/png"(), Plot{be})
-        @eval Plots._show(io::IO, mime::MIME"image/png", plt::Plot{$be}) =
-            _show_pdfbackends(io, mime, plt)
-    end
+    showable(MIME"image/png"(), Plot{be}) && continue
+    @eval Plots._show(io::IO, mime::MIME"image/png", plt::Plot{$be}) =
+        _show_pdfbackends(io, mime, plt)
 end
 
 end  # module
