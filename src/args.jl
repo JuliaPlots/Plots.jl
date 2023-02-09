@@ -1106,7 +1106,7 @@ end
 
 function processMarkerArg(plotattributes::AKW, arg)
     # markershape
-    if allShapes(arg)
+    if allShapes(arg) && !haskey(plotattributes, :markershape)
         plotattributes[:markershape] = arg
 
         # stroke style
