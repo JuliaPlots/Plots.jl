@@ -1077,6 +1077,9 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             end
 
             # Set ticks
+            intensity = 0.5  # this value corresponds to scaling of other grid elements
+            length_factor = 6  # arbitrary factor (closest to mpl examples)
+
             if axis[:ticks] === :native # it is easier to reset than to account for this
                 _py_set_lims(ax, sp, axis)
                 pyaxis.set_major_locator(mpl.ticker.AutoLocator())
@@ -1098,12 +1101,11 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 getproperty(ax, set_axis(letter, :ticklabels))(positions; kw...)
                 _py_set_ticks(sp, ax, ticks, letter)
 
-                intensity = 0.5  # this value corresponds to scaling of other grid elements
                 pyaxis.set_tick_params(
                     direction = axis[:tick_direction] === :out ? "out" : "in",
                     width = _py_thickness_scale(plt, intensity),
                     length = axis[:tick_direction] === :none ? 0 :
-                             5_py_thickness_scale(plt, intensity),
+                             length_factor * _py_thickness_scale(plt, intensity),
                 )
             else
                 pyaxis.set_major_locator(mpl.ticker.NullLocator())
@@ -1154,7 +1156,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                     which = "minor",
                     direction = axis[:tick_direction] === :out ? "out" : "in",
                     length = axis[:tick_direction] === :none ? 0 :
-                             _py_thickness_scale(plt, intensity),
+                             0.5length_factor * _py_thickness_scale(plt, intensity),
                 )
             end
 
