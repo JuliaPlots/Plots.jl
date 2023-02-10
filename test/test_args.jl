@@ -1,3 +1,30 @@
+struct Foo{T}
+    x::Vector{T}
+    y::Vector{T}
+end
+
+@recipe function f(foo::Foo)
+    xlabel --> "x"
+    ylabel --> "y"
+    seriestype --> :path
+    marker --> :auto
+    return foo.x, foo.y
+end
+
+x = collect(0.0:10.0)
+foo = Foo(x, sin.(x))
+
+@testset "Magic attributes" begin
+    @test plot(foo)[1][1][:markershape] === :+
+    @test plot(foo, markershape = :diamond)[1][1][:markershape] === :diamond
+    @test plot(foo, marker = :diamond)[1][1][:markershape] === :diamond
+    @test (@test_logs (:warn, "Skipped marker arg diamond.") plot(
+        foo,
+        marker = :diamond,
+        markershape = :diamond,
+    )[1][1][:markershape]) === :diamond
+end
+
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
         @test pl[1].primary_series_count == 2
