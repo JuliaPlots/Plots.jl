@@ -225,7 +225,7 @@ arguments (which are distinguished by type/value) or as keyword arguments.
 - `family`: AbstractString. "serif" or "sans-serif" or "monospace"
 - `pointsize`: Integer. Size of font in points
 - `halign`: Symbol. Horizontal alignment (:hcenter, :left, or :right)
-- `valign`: Symbol. Vertical aligment (:vcenter, :top, or :bottom)
+- `valign`: Symbol. Vertical alignment (:vcenter, :top, or :bottom)
 - `rotation`: Real. Angle of rotation for text in degrees (use a non-integer type)
 - `color`: Colorant or Symbol
 # Examples

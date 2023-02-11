@@ -992,7 +992,7 @@ const _examples = PlotExample[
         """
         Width of bars may be specified as `bar_width`.
         The bars' baseline may be specified as `fillto`.
-        Each may be scalar, or a vector spcifying one value per bar.
+        Each may be scalar, or a vector specifying one value per bar.
         """,
         quote
             plot(
@@ -1016,7 +1016,7 @@ const _examples = PlotExample[
         end,
     ),
     PlotExample( # 57
-        "Vertical and horizonal spans",
+        "Vertical and horizontal spans",
         "`vspan` and `hspan` can be used to shade horizontal and vertical ranges.",
         quote
             hspan([1, 2, 3, 4]; label = "hspan", legend = :topleft)

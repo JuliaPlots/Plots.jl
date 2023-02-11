@@ -5,7 +5,7 @@
     @test pl[:size] == (1_200, 400)
 end
 
-@testset "Subplot sclicing" begin
+@testset "Subplot slicing" begin
     pl = @test_nowarn plot(
         rand(4, 8),
         layout = 4,

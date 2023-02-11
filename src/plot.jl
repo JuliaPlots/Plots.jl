@@ -238,7 +238,7 @@ function prepare_output(plt::Plot)
     # of the children on the perimeter.  This is an backend callback.
     _update_min_padding!(plt.layout)
 
-    # spedific to :plot_title see _add_plot_title!
+    # specific to :plot_title see _add_plot_title!
     force_minpad = get(plt, :force_minpad, ())
     isempty(force_minpad) || for i in eachindex(plt.layout.grid)
         plt.layout.grid[i].minpad = Tuple(

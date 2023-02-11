@@ -44,7 +44,7 @@ function plotattr()
     elseif attr ∈ _all_magic_args
         "Magic"
     else
-        "Unkown"
+        "Unknown"
     end
 
     d = default(attr)

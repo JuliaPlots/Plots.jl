@@ -58,7 +58,7 @@ const _arg_desc = KW(
     :primary            => (Bool, "Does this count as a 'real series'? For example, you could have a path (primary), and a scatter (secondary) as two separate series, maybe with different data (see `sticks` recipe for an example). The secondary series will get the same color, etc as the primary."),
     :hover              => (AVec{AStr}, "Text to display when hovering over each data point."),
     :colorbar_entry     => (Bool, "Include this series in the color bar?  Set to `false` to exclude."),
-    :z_order            => (Union{Symbol,Integer}, ":front (default), :back or index of position where 1 is farest in the background."),
+    :z_order            => (Union{Symbol,Integer}, ":front (default), :back or index of position where 1 is furthest in the background."),
 
     # plot args
     :plot_title               => (AStr, "Whole plot title (not to be confused with the title for individual subplots)."),
@@ -121,7 +121,7 @@ const _arg_desc = KW(
     :legend_title_font_color     => (ColorType, "Font color of the legend title."),
     :colorbar                    => (Union{Bool,Symbol}, "Show the colorbar ? A symbol specifies a colorbar position. Choose from (`:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:legend`): `legend` matches legend value (note: only some may be supported in each backend)."),
     :clims                       => (Union{NTuple{2,Real},Symbol,Function}, "Fixes the limits of the colorbar: values, `:auto`, or a function taking series data in and returning a NTuple{2,Real}."),
-    :colorbar_fontfamily         => (Union{AStr,Symbol}, "Font family of colobar entries."),
+    :colorbar_fontfamily         => (Union{AStr,Symbol}, "Font family of colorbar entries."),
     :colorbar_ticks              => (TicksType, "Tick values, (tickvalues, ticklabels), `:auto`/`true`, or `:none`/`false`/`nothing` (ticks disabled)."),
     :colorbar_tickfontfamily     => (Union{AStr,Symbol}, "String or Symbol. Font family of colorbar tick labels."),
     :colorbar_tickfontsize       => (Integer, "Font pointsize of colorbar tick entries."),
@@ -155,7 +155,7 @@ const _arg_desc = KW(
     :guide_position              => (Symbol, "Position of axis guides. Choose from (:top, :bottom, :left, :right)."),
     :lims                        => (Union{NTuple{2,Real},Symbol}, """
                                     Force axis limits. Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example).
-                                    `:round` widens the limit to the nearest round number ie. [0.1,3.6]=>[0.0,4.0].
+                                    `:round` widens the limit to the nearest round number, i.e. [0.1,3.6]=>[0.0,4.0].
                                     `:symmetric` sets the limits to be symmetric around zero.
                                     Set `widen=true` to widen the specified limits (as occurs when lims are not specified)."""),
     :ticks                       => (TicksType, "Tick values, (tickvalues, ticklabels), `:auto`/`true`, `:none`/`false`/`nothing` (ticks disabled), or `:native` (tells backend to calculate ticks by itself; good idea for interactive backends with mouse zooming)."),

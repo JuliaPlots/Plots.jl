@@ -282,7 +282,7 @@ macro recipe(funcexpr::Expr)
 
     @debug "$(__source__.file):$(__source__.line)" func args kw_body cleanup_body
 
-    # this is where the receipe func_body is processed
+    # this is where the recipe func_body is processed
     # replace all the key => value lines with argument setting logic
     # and break up by series.
     process_recipe_body!(func_body)

@@ -430,7 +430,7 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
         end
     end
 
-    # Do not yet support absolute plot positionning.
+    # Do not yet support absolute plot positioning.
     # Just try to make things look more-or less ok:
     mplot.layout[:ncolumns] = if nsubplots <= 1
         1

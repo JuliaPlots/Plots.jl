@@ -14,7 +14,7 @@ end
 # "support" matplotlib v3.4
 if PyPlot.version < v"3.4"
     @warn """You are using Matplotlib $(PyPlot.version), which is no longer
-    officialy supported by the Plots community. To ensure smooth Plots.jl
+    officially supported by the Plots community. To ensure smooth Plots.jl
     integration update your Matplotlib library to a version >= 3.4.0
 
     If you have used Conda.jl to install PyPlot (default installation),
@@ -1064,7 +1064,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
             ticks = get_colorbar_ticks(sp)
             axis, cbar_axis, ticks_letter = if sp[:colorbar] in (:top, :bottom)
-                sp[:xaxis], cb."ax"."xaxis", :x  # colorbar inherits from x axiss
+                sp[:xaxis], cb."ax"."xaxis", :x  # colorbar inherits from x axis
             else
                 sp[:yaxis], cb."ax"."yaxis", :y  # colorbar inherits from y axis
             end

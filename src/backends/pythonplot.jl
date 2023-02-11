@@ -10,7 +10,7 @@ end
 
 if PythonPlot.version < v"3.4"
     @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
-    officialy supported by the Plots community. To ensure smooth Plots.jl
+    officially supported by the Plots community. To ensure smooth Plots.jl
     integration update your Matplotlib library to a version ≥ 3.4.0
     """
 end
@@ -957,7 +957,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
 
             ticks = get_colorbar_ticks(sp)
             axis, cbar_axis, ticks_letter = if sp[:colorbar] ∈ (:top, :bottom)
-                xaxis, cbar.ax.xaxis, :x  # colorbar inherits from x axiss
+                xaxis, cbar.ax.xaxis, :x  # colorbar inherits from x axis
             else
                 yaxis, cbar.ax.yaxis, :y  # colorbar inherits from y axis
             end
