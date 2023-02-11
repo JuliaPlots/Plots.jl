@@ -191,6 +191,7 @@ const blacklist = if VERSION.major == 1 && VERSION.minor ∈ (9, 10)
 else
     []
 end
+push!(blacklist, 50)  # NOTE:  remove when github.com/jheinen/GR.jl/issues/507 is resolved
 
 @testset "GR - reference images" begin
     with(:gr) do

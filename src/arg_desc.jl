@@ -1,6 +1,6 @@
 const AStr = AbstractString
 const ColorType = Union{Symbol,Colorant,PlotUtils.ColorSchemes.ColorScheme,Integer}
-const TicksType = Union{AVec{Real},Tuple{AVec{Real},AVec{AStr}},Symbol}
+const TicksType = Union{AVec{Real},Tuple{AVec{Real},AVec{AStr}},Symbol,Bool,Nothing}
 
 # NOTE: when updating `arg_desc`, don't forget to modify `PlotDocs.make_attr_df` accordingly.
 const _arg_desc = KW(
@@ -122,7 +122,7 @@ const _arg_desc = KW(
     :colorbar                    => (Union{Bool,Symbol}, "Show the colorbar ? A symbol specifies a colorbar position. Choose from (`:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:legend`): `legend` matches legend value (note: only some may be supported in each backend)."),
     :clims                       => (Union{NTuple{2,Real},Symbol,Function}, "Fixes the limits of the colorbar: values, `:auto`, or a function taking series data in and returning a NTuple{2,Real}."),
     :colorbar_fontfamily         => (Union{AStr,Symbol}, "Font family of colobar entries."),
-    :colorbar_ticks              => (TicksType, "Tick values, (tickvalues, ticklabels), or `:auto`."),
+    :colorbar_ticks              => (TicksType, "Tick values, (tickvalues, ticklabels), `:auto`/`true`, or `:none`/`false`/`nothing` (ticks disabled)."),
     :colorbar_tickfontfamily     => (Union{AStr,Symbol}, "String or Symbol. Font family of colorbar tick labels."),
     :colorbar_tickfontsize       => (Integer, "Font pointsize of colorbar tick entries."),
     :colorbar_tickfontcolor      => (ColorType, "Font color of colorbar tick entries."),
@@ -158,7 +158,7 @@ const _arg_desc = KW(
                                     `:round` widens the limit to the nearest round number ie. [0.1,3.6]=>[0.0,4.0].
                                     `:symmetric` sets the limits to be symmetric around zero.
                                     Set `widen=true` to widen the specified limits (as occurs when lims are not specified)."""),
-    :ticks                       => (TicksType, "Tick values, (tickvalues, ticklabels), or `:auto`."),
+    :ticks                       => (TicksType, "Tick values, (tickvalues, ticklabels), `:auto`/`true`, `:none`/`false`/`nothing` (ticks disabled), or `:native` (tells backend to calculate ticks by itself; good idea for interactive backends with mouse zooming)."),
     :scale                       => (Symbol, "Scale of the axis. Choose from $(_allScales)."),
     :rotation                    => (Real, "Degrees rotation of tick labels."),
     :flip                        => (Bool, "Should we flip (reverse) the axis ?"),
