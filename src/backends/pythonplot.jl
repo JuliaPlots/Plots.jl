@@ -153,7 +153,7 @@ labelfunc(scale::Symbol, backend::PythonPlotBackend) =
 
 _py_mask_nans(z) = PythonPlot.pycall(numpy.ma.masked_invalid, z)
 
-_py_cmap(sp) =
+_py_cmap(sp::Subplot) =
     if hascolorbar(sp)
         slist = series_list(sp)
         colorbar_series = slist[findfirst(hascolorbar.(slist))]
@@ -164,10 +164,11 @@ _py_cmap(sp) =
         else
             _py_markercolormap(colorbar_series)
         end
-        colorbar_series, cmap
+        cmap, colorbar_series
     else
         nothing, nothing
     end
+
 # ---------------------------------------------------------------------------
 
 function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
@@ -367,9 +368,9 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     edgecolor  = edgecolors = _py_color(get_linecolor(series, 1, cbar_scale))
     facecolor  = facecolors = _py_color(series[:fillcolor])
     zorder     = series[:series_plotindex]
+    cmap       = _py_fillcolormap(series)
     alpha      = get_fillalpha(series)
     label      = series[:label]
-    _, cmap    = _py_cmap(sp)
 
     # add lines ?
     if st ∈ _py_line_series && maximum(series[:linewidth]) > 0
@@ -883,7 +884,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         if hascolorbar(sp)
             cbar_scale = sp[:colorbar_scale]
             # add keyword args for a discrete colorbar
-            colorbar_series, cmap = _py_cmap(sp)
+            cmap, colorbar_series = _py_cmap(sp)
             kw = KW()
             handle =
                 if !isempty(sp[:zaxis][:discrete_values]) &&
