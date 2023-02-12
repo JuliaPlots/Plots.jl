@@ -43,15 +43,16 @@ jobs:
           git clean --force
         shell: bash
 
-      - name: Format Julia project files
-        if: success() || failure()
-        run: |
-          using JuliaProjectFormatter
-          format_projects()
-        shell: julia --color=yes --compile=min -O0 {0}
-      - name: suggester / JuliaProjectFormatter
-        if: success() || failure()
-        uses: reviewdog/action-suggester@v1
-        with:
-          tool_name: JuliaProjectFormatter
-          fail_on_error: true
+      # temporarily disable `JuliaProjectFormatter` until github.com/tkf/JuliaProjectFormatter.jl/pull/7 is merged
+      # - name: Format Julia project files
+      #   if: success() || failure()
+      #   run: |
+      #     using JuliaProjectFormatter
+      #     format_projects()
+      #   shell: julia --color=yes --compile=min -O0 {0}
+      # - name: suggester / JuliaProjectFormatter
+      #   if: success() || failure()
+      #   uses: reviewdog/action-suggester@v1
+      #   with:
+      #     tool_name: JuliaProjectFormatter
+      #     fail_on_error: true
