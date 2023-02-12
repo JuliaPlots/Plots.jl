@@ -153,21 +153,24 @@ labelfunc(scale::Symbol, backend::PythonPlotBackend) =
 
 _py_mask_nans(z) = PythonPlot.pycall(numpy.ma.masked_invalid, z)
 
-_py_cmap(sp) =
-    if hascolorbar(sp)
-        slist = series_list(sp)
-        colorbar_series = slist[findfirst(hascolorbar.(slist))]
-        cmap = if colorbar_series[:line_z] !== nothing
-            _py_linecolormap(colorbar_series)
-        elseif colorbar_series[:fill_z] !== nothing
-            _py_fillcolormap(colorbar_series)
-        else
-            _py_markercolormap(colorbar_series)
-        end
-        colorbar_series, cmap
+_py_cmap(series::Series) =
+    if series[:line_z] !== nothing
+        _py_linecolormap(series)
+    elseif series[:fill_z] !== nothing
+        _py_fillcolormap(series)
+    elseif series[:markercolor] !== nothing
+        _py_markercolormap(series)
     else
         nothing, nothing
     end
+
+function _py_cmap(sp::Subplot)
+    hascolorbar(sp) && for series in series_list(sp)
+        hascolorbar(series) || continue
+        return _py_cmap(series), series
+    end
+    nothing, nothing
+end
 # ---------------------------------------------------------------------------
 
 function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
@@ -184,12 +187,28 @@ function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
     end
 end
 
+is_valid_cgrad_color(::Union{AbstractVector,Symbol,PlotUtils.ColorSchemes.ColorScheme}) =
+    true
+is_valid_cgrad_color(::Any) = false
+
 _py_linecolormap(series::Series) =
-    _py_colormap(cgrad(series[:linecolor], alpha = get_linealpha(series)))
-_py_markercolormap(series::Series) =
-    _py_colormap(cgrad(series[:markercolor], alpha = get_markeralpha(series)))
+    if (color = series[:linecolor]) |> is_valid_cgrad_color
+        _py_colormap(cgrad(color, alpha = get_linealpha(series)))
+    else
+        nothing
+    end
 _py_fillcolormap(series::Series) =
-    _py_colormap(cgrad(series[:fillcolor], alpha = get_fillalpha(series)))
+    if (color = series[:fillcolor]) |> is_valid_cgrad_color
+        _py_colormap(cgrad(color, alpha = get_fillalpha(series)))
+    else
+        nothing
+    end
+_py_markercolormap(series::Series) =
+    if (color = series[:markercolor]) |> is_valid_cgrad_color
+        _py_colormap(cgrad(color, alpha = get_markeralpha(series)))
+    else
+        nothing
+    end
 
 # ---------------------------------------------------------------------------
 # Figure utils -- F*** matplotlib for making me work so hard to figure this crap out
@@ -367,9 +386,9 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     edgecolor  = edgecolors = _py_color(get_linecolor(series, 1, cbar_scale))
     facecolor  = facecolors = _py_color(series[:fillcolor])
     zorder     = series[:series_plotindex]
+    cmap       = _py_cmap(series)
     alpha      = get_fillalpha(series)
     label      = series[:label]
-    _, cmap    = _py_cmap(sp)
 
     # add lines ?
     if st ∈ _py_line_series && maximum(series[:linewidth]) > 0
@@ -883,7 +902,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         if hascolorbar(sp)
             cbar_scale = sp[:colorbar_scale]
             # add keyword args for a discrete colorbar
-            colorbar_series, cmap = _py_cmap(sp)
+            cmap, colorbar_series = _py_cmap(sp)
             kw = KW()
             handle =
                 if !isempty(sp[:zaxis][:discrete_values]) &&
