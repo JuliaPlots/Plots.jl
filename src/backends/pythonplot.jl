@@ -158,8 +158,10 @@ _py_cmap(series::Series) =
         _py_linecolormap(series)
     elseif series[:fill_z] !== nothing
         _py_fillcolormap(series)
-    else
+    elseif series[:markercolor] !== nothing
         _py_markercolormap(series)
+    else
+        nothing, nothing
     end
 
 function _py_cmap(sp::Subplot)
@@ -185,12 +187,28 @@ function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
     end
 end
 
+is_valid_cgrad_color(::Union{AbstractVector,Symbol,PlotUtils.ColorSchemes.ColorScheme}) =
+    true
+is_valid_cgrad_color(::Any) = false
+
 _py_linecolormap(series::Series) =
-    _py_colormap(cgrad(series[:linecolor], alpha = get_linealpha(series)))
-_py_markercolormap(series::Series) =
-    _py_colormap(cgrad(series[:markercolor], alpha = get_markeralpha(series)))
+    if (color = series[:linecolor]) |> is_valid_cgrad_color
+        _py_colormap(cgrad(color, alpha = get_linealpha(series)))
+    else
+        nothing
+    end
 _py_fillcolormap(series::Series) =
-    _py_colormap(cgrad(series[:fillcolor], alpha = get_fillalpha(series)))
+    if (color = series[:fillcolor]) |> is_valid_cgrad_color
+        _py_colormap(cgrad(color, alpha = get_fillalpha(series)))
+    else
+        nothing
+    end
+_py_markercolormap(series::Series) =
+    if (color = series[:markercolor]) |> is_valid_cgrad_color
+        _py_colormap(cgrad(color, alpha = get_markeralpha(series)))
+    else
+        nothing
+    end
 
 # ---------------------------------------------------------------------------
 # Figure utils -- F*** matplotlib for making me work so hard to figure this crap out
