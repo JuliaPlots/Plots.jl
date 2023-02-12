@@ -1255,7 +1255,7 @@ function gr_get_legend_geometry(vp, sp)
 
     entries = has_title + nseries  # number of legend entries
 
-    # NOTE: substract `span_hspace`, since it joins labels in horizontal mode
+    # NOTE: subtract `span_hspace`, since it joins labels in horizontal mode
     w = dx * column_layout[2] - space - !vertical * span_hspace
     h = dy * column_layout[1]
 

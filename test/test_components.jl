@@ -191,13 +191,13 @@ end
             :yguidefontsize,
             :zguidefontsize,
         ]
-        # get inital font sizes
+        # get initial font sizes
         initialSizes = [Plots.default(s) for s in sizesToCheck]
 
         #scale up font sizes
         scalefontsizes(2)
 
-        # get inital font sizes
+        # get initial font sizes
         doubledSizes = [Plots.default(s) for s in sizesToCheck]
 
         @test doubledSizes == initialSizes * 2

@@ -655,7 +655,7 @@ end
 """
     twinx(sp)
 
-Adds a new, empty subplot overlayed on top of `sp`, with a mirrored y-axis and linked x-axis.
+Adds a new, empty subplot overlaid on top of `sp`, with a mirrored y-axis and linked x-axis.
 """
 twinx(sp::Subplot) = twin(sp, :x)
 twinx(plt::Plot = current()) = twinx(first(plt))
@@ -663,7 +663,7 @@ twinx(plt::Plot = current()) = twinx(first(plt))
 """
     twiny(sp)
 
-Adds a new, empty subplot overlayed on top of `sp`, with a mirrored x-axis and linked y-axis.
+Adds a new, empty subplot overlaid on top of `sp`, with a mirrored x-axis and linked y-axis.
 """
 twiny(sp::Subplot) = twin(sp, :y)
 twiny(plt::Plot = current()) = twiny(first(plt))

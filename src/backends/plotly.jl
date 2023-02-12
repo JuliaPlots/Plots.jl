@@ -439,7 +439,7 @@ get_plotly_marker(k, def) = get(
     def,
 )
 
-# find indicies of axes to which the supblot links to
+# find indicies of axes to which the subplot links to
 function plotly_link_indicies(plt::Plot, sp::Subplot)
     if plt[:link] in (:x, :y, :both)
         x_idx = sp[:xaxis].sps[1][:subplot_index]
