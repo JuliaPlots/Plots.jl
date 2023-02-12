@@ -20,6 +20,7 @@ jobs:
       GKS_ENCODING: "utf8"
       GKSwstype: "nul"
       JULIA_CONDAPKG_BACKEND: "MicroMamba"
+      MPLBACKEND: "agg"
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
