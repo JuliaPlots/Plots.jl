@@ -24,7 +24,11 @@ using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 # get `Preferences` set backend, if any
-const previous_default_backend = load_preference(Plots, "default_backend")
+const PREVIOUS_DEFAULT_BACKEND = load_preference(Plots, "default_backend")
+
+# NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
+const TEST_BACKENDS =
+    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
 
 # initial load - required for `should_warn_on_unsupported`
 unicodeplots()
@@ -70,8 +74,8 @@ for name in (
     end
 end
 
-if previous_default_backend === nothing
+if PREVIOUS_DEFAULT_BACKEND === nothing
     delete_preferences!(Plots, "default_backend")  # restore the absence of a preference
 else
-    Plots.set_default_backend!(previous_default_backend)  # reset to previous state
+    Plots.set_default_backend!(PREVIOUS_DEFAULT_BACKEND)  # reset to previous state
 end

@@ -47,7 +47,7 @@
         @test success(run(```$(Base.julia_cmd()) $script```))
     end
 
-    is_pkgeval() || for be in CONCRETE_BACKENDS
+    is_pkgeval() || for be in TEST_BACKENDS
         (Sys.isapple() && be === :gaston) && continue  # FIXME: hangs
         (Sys.iswindows() && be === :plotlyjs && is_ci()) && continue # OutOfMemory
         @test_logs Plots.set_default_backend!(be)  # test the absence of warnings

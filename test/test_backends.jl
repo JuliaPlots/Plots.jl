@@ -10,10 +10,6 @@ ci_tol() =
 const TESTS_MODULE = Module(:PlotsTestsModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
 
-# NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
-const CONCRETE_BACKENDS =
-    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
-
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
 reference_dir(args...) =
@@ -226,7 +222,7 @@ is_pkgeval() || @testset "Examples" begin
         )
         @test filesize(fn) > 1_000
     end
-    Sys.islinux() && for be in CONCRETE_BACKENDS
+    Sys.islinux() && for be in TEST_BACKENDS
         skip = vcat(Plots._backend_skips[be], blacklist)
         Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
         closeall()
