@@ -153,22 +153,22 @@ labelfunc(scale::Symbol, backend::PythonPlotBackend) =
 
 _py_mask_nans(z) = PythonPlot.pycall(numpy.ma.masked_invalid, z)
 
-_py_cmap(sp::Subplot) =
-    if hascolorbar(sp)
-        slist = series_list(sp)
-        colorbar_series = slist[findfirst(hascolorbar.(slist))]
-        cmap = if colorbar_series[:line_z] !== nothing
-            _py_linecolormap(colorbar_series)
-        elseif colorbar_series[:fill_z] !== nothing
-            _py_fillcolormap(colorbar_series)
-        else
-            _py_markercolormap(colorbar_series)
-        end
-        cmap, colorbar_series
+_py_cmap(series::Series) =
+    if series[:line_z] !== nothing
+        _py_linecolormap(series)
+    elseif series[:fill_z] !== nothing
+        _py_fillcolormap(series)
     else
-        nothing, nothing
+        _py_markercolormap(series)
     end
 
+function _py_cmap(sp::Subplot)
+    hascolorbar(sp) && for series in series_list(sp)
+        hascolorbar(series) || continue
+        return _py_cmap(series), series
+    end
+    nothing, nothing
+end
 # ---------------------------------------------------------------------------
 
 function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
@@ -368,7 +368,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     edgecolor  = edgecolors = _py_color(get_linecolor(series, 1, cbar_scale))
     facecolor  = facecolors = _py_color(series[:fillcolor])
     zorder     = series[:series_plotindex]
-    cmap       = _py_fillcolormap(series)
+    cmap       = _py_cmap(series)
     alpha      = get_fillalpha(series)
     label      = series[:label]
 
