@@ -57,6 +57,7 @@ for name in (
     "plotly",
     "animations",
     "output",
+    "preferences",
     "backends",
 )
     @testset "$name" begin
