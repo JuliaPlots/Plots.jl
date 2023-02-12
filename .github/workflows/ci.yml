@@ -36,7 +36,7 @@ jobs:
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '1.7'  # only test intermediate relase on `ubuntu`
+            version: '1.7'  # only test intermediate release on `ubuntu`
           - os: ubuntu-latest
             prefix: xvfb-run
             version: '~1.9.0-0'
