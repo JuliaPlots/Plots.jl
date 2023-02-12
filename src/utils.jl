@@ -1247,7 +1247,6 @@ macro ext_imp_use(imp_use::QuoteNode, mod::Symbol, args...)
     Expr(imp_use.value, ex) |> esc
 end
 
-
 # for UnitfulExt - FIXME: this cannot reside in `UnitfulExt` (macro)
 function protectedstring end
 
