@@ -187,8 +187,10 @@ function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
     end
 end
 
-is_valid_cgrad_color(::Union{AbstractVector,Symbol,PlotUtils.ColorSchemes.ColorScheme}) =
-    true
+is_valid_cgrad_color(::PlotUtils.ColorSchemes.ColorScheme) = true
+is_valid_cgrad_color(::PlotUtils.ColorGradient) = true
+is_valid_cgrad_color(::AbstractVector) = true
+is_valid_cgrad_color(::Symbol) = true
 is_valid_cgrad_color(::Any) = false
 
 _py_linecolormap(series::Series) =
