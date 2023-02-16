@@ -219,7 +219,7 @@ maketuple(x::Tuple) = x
 RecipesPipeline.unzip(v) = Unzip.unzip(v)  # COV_EXCL_LINE
 
 "collect into columns (convenience for `unzip` from `Unzip.jl`)"
-Plots.unzip(v) = RecipesPipeline.unzip(v)  # COV_EXCL_LINE
+unzip(v) = RecipesPipeline.unzip(v)
 
 replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
     if haskey(aliases, k)
