@@ -1,4 +1,3 @@
-
 # Some helper functions to access the subplot labels and the series inside each test plot
 xguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:xaxis].plotattributes[:guide]
 yguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:yaxis].plotattributes[:guide]

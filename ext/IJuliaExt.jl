@@ -1,10 +1,15 @@
-const _use_local_dependencies = Ref(false)
-const _use_local_plotlyjs = Ref(false)
+module IJuliaExt
+
+import Plots: @ext_imp_use, Plots, Plot
+using Base64
+
+@ext_imp_use :import IJulia
 
 function _init_ijulia_plotting()
     # IJulia is more stable with local file
-    _use_local_plotlyjs[] =
-        _plotly_local_file_path[] === nothing ? false : isfile(_plotly_local_file_path[])
+    Plots._use_local_plotlyjs[] =
+        Plots._plotly_local_file_path[] === nothing ? false :
+        isfile(Plots._plotly_local_file_path[])
 
     ENV["MPLBACKEND"] = "Agg"
 end
@@ -18,22 +23,23 @@ frontends like jupyterlab and nteract.
 """
 _ijulia__extra_mime_info!(plt::Plot, out::Dict) = out
 
-function _ijulia__extra_mime_info!(plt::Plot{PlotlyJSBackend}, out::Dict)
+function _ijulia__extra_mime_info!(plt::Plot{Plots.PlotlyJSBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =
-        Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
+        Dict(:data => Plots.plotly_series(plt), :layout => Plots.plotly_layout(plt))
     out
 end
 
-function _ijulia__extra_mime_info!(plt::Plot{PlotlyBackend}, out::Dict)
+function _ijulia__extra_mime_info!(plt::Plot{Plots.PlotlyBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =
-        Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
+        Dict(:data => Plots.plotly_series(plt), :layout => Plots.plotly_layout(plt))
     out
 end
 
 function _ijulia_display_dict(plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
     if output_type === :auto
-        output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
+        output_type =
+            get(Plots._best_html_output_type, Plots.backend_name(plt.backend), :svg)
     end
     out = Dict()
     if output_type === :txt
@@ -57,3 +63,16 @@ function _ijulia_display_dict(plt::Plot)
     end
     out
 end
+
+if IJulia.inited
+    _init_ijulia_plotting()
+    IJulia.display_dict(plt::Plot) = _ijulia_display_dict(plt)
+end
+
+# IJulia only... inline display
+function Plots.inline(plt::Plot = Plots.current())
+    IJulia.clear_output(true)
+    display(IJulia.InlineDisplay(), plt)
+end
+
+end  # module

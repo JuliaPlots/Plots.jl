@@ -64,8 +64,8 @@
     @test ylims() isa Tuple
     @test zlims() isa Tuple
 
-    @test_throws ErrorException Plots.inline()
-    @test_throws ErrorException Plots._do_plot_show(plot(), :inline)
+    @test_throws MethodError Plots.inline()
+    @test_throws MethodError Plots._do_plot_show(plot(), :inline)
 
     @test plot(-1:10, xscale = :log10) isa Plots.Plot
 

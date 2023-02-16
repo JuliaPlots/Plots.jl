@@ -8,15 +8,15 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
 end
 
 using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
-using SnoopPrecompile, Preferences, Requires, Reexport, RelocatableFolders
+using SnoopPrecompile, Preferences, Reexport, RelocatableFolders
 using Base.Meta
-using Unzip
 @reexport using RecipesBase
 @reexport using PlotThemes
 @reexport using PlotUtils
 
 import RecipesBase: plot, plot!, animate, is_explicit, grid
 import RecipesPipeline
+import Requires: @require
 import RecipesPipeline:
     inverse_scale_func,
     datetimeformatter,
@@ -40,6 +40,7 @@ import UnicodeFun
 import StatsBase
 import Downloads
 import Showoff
+import Unzip
 import JLFzf
 import JSON
 
@@ -107,6 +108,7 @@ export
     animate,
     @animate,
     @gif,
+    @P_str,
 
     test_examples,
     iter_segments,
@@ -169,8 +171,6 @@ include("plotattr.jl")
 include("backends.jl")
 const CURRENT_BACKEND = CurrentBackend(:none)
 include("output.jl")
-include("ijulia.jl")
-include("fileio.jl")
 include("shorthands.jl")
 include("backends/web.jl")
 include("init.jl")

@@ -216,7 +216,7 @@ makevec(v::T) where {T} = T[v]
 maketuple(x::Real) = (x, x)
 maketuple(x::Tuple) = x
 
-RecipesPipeline.unzip(v) = unzip(v)  # COV_EXCL_LINE
+RecipesPipeline.unzip(v) = Unzip.unzip(v)  # COV_EXCL_LINE
 
 replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
     if haskey(aliases, k)
@@ -1235,4 +1235,34 @@ the ranges, and places the legend at the corner where the maximum distance to th
 function _guess_best_legend_position(lp::Symbol, plt)
     lp === :best || return lp
     _guess_best_legend_position(xlims(plt), ylims(plt), plt)
+end
+
+macro ext_imp_use(imp_use::QuoteNode, mod::Symbol, args...)
+    dots = ntuple(_ -> :., isdefined(Base, :get_extension) ? 1 : 3)
+    ex = if length(args) > 0
+        Expr(:(:), Expr(dots..., mod), Expr.(:., args)...)
+    else
+        Expr(dots..., mod)
+    end
+    Expr(imp_use.value, ex) |> esc
+end
+
+# for UnitfulExt - cannot reside in `UnitfulExt` (macro)
+function protectedstring end
+
+"""
+    P_str(s)
+
+(Unitful extension only).
+Creates a string that will be Protected from recipe passes.
+
+Example:
+```julia
+julia> using Unitful
+julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel=P"This label will NOT display units")
+julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel="This label will display units")
+```
+"""
+macro P_str(s)
+    return protectedstring(s)
 end
