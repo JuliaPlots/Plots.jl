@@ -427,6 +427,9 @@ function gr_set_font(
     family = lowercase(f.family)
     GR.setcharheight(gr_point_mult(s) * f.pointsize)
     GR.setcharup(sincosd(-rotation)...)
+    if !haskey(gr_font_family, family)
+        gr_font_family[family] = GR.loadfont(string(f.family, ".ttf"))
+    end
     haskey(gr_font_family, family) && GR.settextfontprec(
         gr_font_family[family],
         gr_font_family[family] ≥ 200 ? 3 : GR.TEXT_PRECISION_STRING,
