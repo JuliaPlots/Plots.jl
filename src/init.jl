@@ -85,7 +85,7 @@ include(_path(backend_name()))
 
 # COV_EXCL_START
 @precompile_setup begin
-    @info backend_package_name()
+    @debug backend_package_name()
     n = length(_examples)
     imports = sizehint!(Expr[], n)
     examples = sizehint!(Expr[], 10n)
