@@ -1,6 +1,5 @@
 using Scratch
 using REPL
-using Logging
 
 const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # use fixed version of Plotly instead of the latest one for stable dependency
@@ -86,9 +85,7 @@ include(_path(backend_name()))
 
 # COV_EXCL_START
 @precompile_setup begin
-    with_logger(NullLogger()) do
-        @info backend_package_name()
-    end
+    @debug backend_package_name()
     n = length(_examples)
     imports = sizehint!(Expr[], n)
     examples = sizehint!(Expr[], 10n)
