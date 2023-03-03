@@ -1093,9 +1093,12 @@ function gr_add_legend(sp, leg, viewport_area)
             if vertical
                 ypos -= leg.dy
             else
-                # println(string(series[:label]), " ", nentry, " ", nentry % legend_cols)
+                # row-major sorting
                 xpos += nentry % legend_cols == 0 ? -(legend_cols - 1) * leg.dx : leg.dx
                 ypos -= nentry % legend_cols == 0 ? leg.dy : 0
+                # column-major sorting
+                # xpos += nentry % legend_rows == 0 ? leg.dx : 0
+                # ypos -= nentry % legend_rows == 0 ? -(legend_rows - 1) * leg.dy : leg.dy
                 nentry += 1
             end
         end
