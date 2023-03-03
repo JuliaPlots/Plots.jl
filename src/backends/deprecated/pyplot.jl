@@ -1527,14 +1527,16 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
     # if anything was added, call ax.legend and set the colors
     if !isempty(handles)
         leg = legend_angle(leg)
-        ncol = if (lc = sp[:legend_column]) < 0
+        ncol = if (lc = sp[:legend_column]) == -1
             nseries
-        elseif lc > 1
-            lc == nseries ||
-                @warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
+        elseif lc > nseries
+            @warn "n° of legend_column=$lc is larger than n° of series=$nseries"
             nseries
-        else
+        elseif lc == 0 || lc < -1
+            @warn "n° of legend_column=$lc has undefined behaviour. Assuming vertical layout."
             1
+        else
+            lc
         end
         leg = ax."legend"(
             handles,
