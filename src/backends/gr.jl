@@ -1222,14 +1222,13 @@ function gr_get_legend_geometry(vp, sp)
     elseif legend_column > nseries && nseries != 0 # catch plot_title here
         @warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
         (1 + has_title, nseries)
-    elseif legend_column == 0
-        @warn "n° of legend_column=$legend_column. Assuming vertical layout."
+    elseif legend_column == 0 || legend_column < -1
+        @warn "n° of legend_column=$legend_column has undefined behaviour. Assuming vertical layout."
         vertical = true
         (has_title + nseries, 1)
     else
         (ceil(Int64, nseries / legend_column) + has_title, legend_column)
     end
-    #println(column_layout)
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
