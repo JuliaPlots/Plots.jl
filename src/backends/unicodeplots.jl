@@ -104,6 +104,8 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
             yscale = yaxis[:scale],
             xflip = xaxis[:flip],
             yflip = yaxis[:flip],
+            xticks = !isempty(get_ticks(sp, xaxis)[1]),
+            yticks = !isempty(get_ticks(sp, yaxis)[1]),
             border,
             height,
             width,
