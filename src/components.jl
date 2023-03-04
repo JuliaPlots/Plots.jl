@@ -26,6 +26,9 @@ Construct a polygon to be plotted
 """
 Shape(verts::AVec) = Shape(RecipesPipeline.unzip(verts)...)
 Shape(s::Shape) = deepcopy(s)
+function Shape(x::AVec{X}, y::AVec{Y}) where {X,Y}
+    return Shape(convert(Vector{X}, x), convert(Vector{Y}, y))
+end
 
 get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
