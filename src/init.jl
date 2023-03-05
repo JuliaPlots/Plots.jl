@@ -110,6 +110,9 @@ include(_path(backend_name()))
                     end
                     showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
                     showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
+                    if showable(MIME"image/svg+xml"(), pl)
+                        show(IOBuffer(), MIME"image/svg+xml"(), pl)
+                    end
                     nothing
                 end
                 $func()
