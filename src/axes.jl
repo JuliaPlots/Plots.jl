@@ -329,7 +329,7 @@ _has_ticks(b::Bool) = b
 _has_ticks(::Nothing) = false
 _has_ticks(::Any) = true
 
-has_ticks(axis::Plots.Axis) = get(axis, :ticks, nothing) |> _has_ticks
+has_ticks(axis::Axis) = get(axis, :ticks, nothing) |> _has_ticks
 
 _transform_ticks(ticks, axis) = ticks
 _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
