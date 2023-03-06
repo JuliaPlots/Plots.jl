@@ -321,6 +321,16 @@ get_ticks(ticks::Bool, args...) =
 get_ticks(::T, args...) where {T} =
     throw(ArgumentError("Unknown ticks type in get_ticks: $T"))
 
+# do not specify array item type to also catch e.g. "xlabel=[]" and "xlabel=([],[])"
+_has_ticks(v::AVec) = !isempty(v)
+_has_ticks(t::Tuple{AVec,AVec}) = !isempty(t[1])
+_has_ticks(s::Symbol) = s !== :none
+_has_ticks(b::Bool) = b
+_has_ticks(::Nothing) = false
+_has_ticks(::Any) = true
+
+has_ticks(axis::Axis) = get(axis, :ticks, nothing) |> _has_ticks
+
 _transform_ticks(ticks, axis) = ticks
 _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
     Dates.value.(ticks)
