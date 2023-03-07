@@ -103,7 +103,7 @@ end
 # _py_marker(markers::AVec) = map(_py_marker, markers)
 function _py_marker(markers::AVec)
     @warn "Vectors of markers are currently unsupported in PythonPlot: $markers"
-    _py_marker(markers[1])
+    markers |> first |> _py_marker
 end
 
 # pass through
@@ -176,20 +176,20 @@ is_valid_cgrad_color(::Nothing) = false
 is_valid_cgrad_color(::Symbol) = true
 is_valid_cgrad_color(::Any) = false
 
-_py_linecolormap(series::Series, sym::Symbol = :linecolor) =
-    if (color = get(series, sym, nothing)) |> is_valid_cgrad_color
+_py_linecolormap(series::Series) =
+    if (color = get(series, :linecolor, nothing)) |> is_valid_cgrad_color
         _py_colormap(cgrad(color, alpha = get_linealpha(series)))
     else
         nothing
     end
-_py_fillcolormap(series::Series, sym::Symbol = :fillcolor) =
-    if (color = get(series, sym, nothing)) |> is_valid_cgrad_color
+_py_fillcolormap(series::Series) =
+    if (color = get(series, :fillcolor, nothing)) |> is_valid_cgrad_color
         _py_colormap(cgrad(color, alpha = get_fillalpha(series)))
     else
         nothing
     end
-_py_markercolormap(series::Series, sym::Symbol = :markercolor) =
-    if (color = get(series, sym, nothing)) |> is_valid_cgrad_color
+_py_markercolormap(series::Series) =
+    if (color = get(series, :markercolor, nothing)) |> is_valid_cgrad_color
         _py_colormap(cgrad(color, alpha = get_markeralpha(series)))
     else
         nothing
@@ -887,20 +887,19 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             cbar_scale = sp[:colorbar_scale]
             # add keyword args for a discrete colorbar
             slist = series_list(sp)
-            colorbar_series = slist[findfirst(hascolorbar, slist)]
+            cbar_series = slist[findfirst(hascolorbar, slist)]
             kw = KW()
             handle =
                 if !isempty(sp[:zaxis][:discrete_values]) &&
-                   colorbar_series[:seriestype] === :heatmap
+                   cbar_series[:seriestype] === :heatmap
                     kw[:ticks], kw[:format] =
                         get_locator_and_formatter(sp[:zaxis][:discrete_values])
                     # kw[:values] = eachindex(sp[:zaxis][:discrete_values])
                     kw[:values] = sp[:zaxis][:continuous_values]
                     kw[:boundaries] = vcat(0, kw[:values] + 0.5)
-                    colorbar_series[:serieshandle][end]
+                    cbar_series[:serieshandle][end]
                 elseif any(
-                    colorbar_series[attr] !== nothing for
-                    attr in (:line_z, :fill_z, :marker_z)
+                    cbar_series[attr] !== nothing for attr in (:line_z, :fill_z, :marker_z)
                 )
                     cmin, cmax = get_clims(sp)
                     norm = if cbar_scale === :identity
@@ -908,17 +907,15 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                     else
                         mpl.colors.LogNorm(vmin = cmin, vmax = cmax)
                     end
-                    # TODO: short-circuit the following using @something on next LTS
-                    cmap = something(
-                        _py_linecolormap(series, :line_z),
-                        _py_fillcolormap(series, :fill_z),
-                        _py_markercolormap(series, :marker_z),
-                    )
+                    cmap = nothing
+                    for func in (_py_linecolormap, _py_fillcolormap, _py_markercolormap)
+                        (cmap = func(cbar_series)) === nothing || break
+                    end
                     c_map = mpl.cm.ScalarMappable(; cmap, norm)
                     c_map.set_array(PythonCall.pylist([]))
                     c_map
                 else
-                    colorbar_series[:serieshandle][end]
+                    cbar_series[:serieshandle][end]
                 end
             kw[:spacing] = "proportional"
 
