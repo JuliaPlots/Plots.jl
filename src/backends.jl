@@ -534,7 +534,7 @@ _post_imports(::PlotlyBackend) = @eval begin
     const PlotlyKaleido = Main.PlotlyKaleido
     # FIXME: in Plots `2.0`, `plotly` backend should be re-named to `plotlybase`
     # so that we can trigger include on `@require` instead of this
-    include(_path(:plotly))
+    CURRENT_BACKEND.sym === :plotly || include(_path(:plotly))
     include(_path(:plotlybase))
 end
 function _initialize_backend(pkg::PlotlyBackend)
@@ -553,7 +553,9 @@ function _initialize_backend(pkg::PlotlyBackend)
         # NOTE: `plotly` is special in the way that it does not require dependencies for displaying a plot
         # as a result, we cannot rely on the `@require` mechanism for loading glue code
         # this is why it must be done here.
-        @eval include(_path(:plotly))
+        if CURRENT_BACKEND.sym !== :plotly
+            @eval include(_path(:plotly))
+        end
     end
 end
 
