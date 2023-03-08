@@ -34,6 +34,7 @@ end
     @test yticks(pl2) == xticks(pl1)
     @test filter(isfinite, pl1[1][1][:x]) == filter(isfinite, pl2[1][1][:y])
     @test filter(isfinite, pl1[1][1][:y]) == filter(isfinite, pl2[1][1][:x])
+    @test pl1[1][1][:line_color] == RGBA{Float64}(0.0,0.0,0.0,1.0)
 end
 
 @testset "@add_attributes" begin
