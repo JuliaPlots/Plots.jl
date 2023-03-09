@@ -198,7 +198,7 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 # "Preferences that are accessed during compilation are automatically marked as compile-time preferences"
 # ==> this must always be done during precompilation, otherwise
 # the cache will not invalidate when preferences change
-const PLOTS_DEFAULT_BACKEND = load_preference(Plots, "default_backend", "gr")
+const PLOTS_DEFAULT_BACKEND = lowercase(load_preference(Plots, "default_backend", "gr"))
 
 function load_default_backend()
     # environment variable preempts the `Preferences` based mechanism
