@@ -1,7 +1,5 @@
 # https://plot.ly/javascript/getting-started
 
-is_subplot_supported(::PlotlyBackend) = true
-# is_string_supported(::PlotlyBackend) = true
 _plotly_framestyle(style::Symbol) =
     if style in (:box, :axes, :zerolines, :grid, :none)
         style
