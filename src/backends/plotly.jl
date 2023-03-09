@@ -700,8 +700,8 @@ function plotly_series(plt::Plot, series::Series)
                 :color =>
                     rgba_string.(
                         plot_color.(
-                            get_markerstrokecolor.(series, inds),
-                            get_markerstrokealpha.(series, inds),
+                            get_marker_stroke_color.(series, inds),
+                            get_marker_stroke_alpha.(series, inds),
                         ),
                     ),
                 :width => _cycle(series[:marker_stroke_width], inds),
@@ -865,14 +865,14 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             end
             lcolor = rgba_string(
                 plot_color(
-                    get_markerstrokecolor(series, i),
-                    get_markerstrokealpha(series, i),
+                    get_marker_stroke_color(series, i),
+                    get_marker_stroke_alpha(series, i),
                 ),
             )
             lcolor_next =
                 plot_color(
-                    get_markerstrokecolor(series, i + 1),
-                    get_markerstrokealpha(series, i + 1),
+                    get_marker_stroke_color(series, i + 1),
+                    get_marker_stroke_alpha(series, i + 1),
                 ) |> rgba_string
 
             plotattributes_out[:marker] = KW(

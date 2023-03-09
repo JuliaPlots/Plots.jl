@@ -125,8 +125,8 @@ function pgf_marker(plotattributes, i = 1)
     )
     cstr_stroke, a_stroke = pgf_color(
         plot_color(
-            get_markerstrokecolor(plotattributes, i),
-            get_markerstrokealpha(plotattributes, i),
+            get_marker_stroke_color(plotattributes, i),
+            get_marker_stroke_alpha(plotattributes, i),
         ),
     )
     return string(

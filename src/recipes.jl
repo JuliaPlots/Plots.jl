@@ -465,6 +465,7 @@ end
 
     # draw the bar shapes
     @series begin
+        # line_color --> :black
         seriestype := :shape
         series_annotations := nothing
         primary := true

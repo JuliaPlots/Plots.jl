@@ -207,7 +207,7 @@ function addUnicodeSeries!(
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
-            color = st ≡ :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
+            color = st ≡ :wireframe ? up_color(get_line_color(series, 1)) : nothing,
             colormap = colormap ≡ :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
             zscale,
@@ -291,7 +291,10 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
         if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
             unsupported_layout_error()
         else
-            img = UnicodePlots.png_image(plt.o[sps += 1]; pixelsize = 32)
+            img = UnicodePlots.png_image(plt.o[sps += 1];
+                pixelsize = 32,
+                font = plt[:fontfamily],
+            )
             img ≡ nothing && continue
             canvas_type = eltype(img)
             s1[r, c], s2[r, c] = size(img)

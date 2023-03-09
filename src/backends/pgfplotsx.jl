@@ -928,8 +928,8 @@ function pgfx_marker(plotattributes, i = 1)
     cstr =
         plot_color(get_marker_color(plotattributes, i), get_marker_alpha(plotattributes, i))
     cstr_stroke = plot_color(
-        get_markerstrokecolor(plotattributes, i),
-        get_markerstrokealpha(plotattributes, i),
+        get_marker_stroke_color(plotattributes, i),
+        get_marker_stroke_alpha(plotattributes, i),
     )
     mark_size =
         pgfx_thickness_scaling(plotattributes) *

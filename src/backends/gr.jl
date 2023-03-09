@@ -377,9 +377,9 @@ function gr_draw_marker(series, xi, yi, zi, clims, i, msize, strokewidth, shape:
     GR.fillarea(xs, ys)
 
     # draw the shapes
-    msc = get_markerstrokecolor(series, i)
+    msc = get_marker_stroke_color(series, i)
     gr_set_line(strokewidth, :solid, msc, series)
-    gr_set_transparency(msc, get_markerstrokealpha(series, i))
+    gr_set_transparency(msc, get_marker_stroke_alpha(series, i))
     GR.polyline(xs, ys)
     nothing
 end
@@ -387,7 +387,7 @@ end
 # draw ONE symbol marker
 function gr_draw_marker(series, xi, yi, zi, clims, i, msize, strokewidth, shape::Symbol)
     GR.setborderwidth(strokewidth)
-    gr_set_bordercolor(get_markerstrokecolor(series, i))
+    gr_set_bordercolor(get_marker_stroke_color(series, i))
     gr_set_markercolor(get_marker_color(series, clims, i))
     gr_set_transparency(get_marker_alpha(series, i))
     GR.setmarkertype(gr_markertypes[shape])

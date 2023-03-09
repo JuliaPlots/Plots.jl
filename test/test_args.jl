@@ -1,3 +1,4 @@
+using Plots, Test
 struct Foo{T}
     x::Vector{T}
     y::Vector{T}
@@ -15,14 +16,14 @@ x = collect(0.0:10.0)
 foo = Foo(x, sin.(x))
 
 @testset "Magic attributes" begin
-    @test plot(foo)[1][1][:markershape] === :+
-    @test plot(foo, markershape = :diamond)[1][1][:markershape] === :diamond
-    @test plot(foo, marker = :diamond)[1][1][:markershape] === :diamond
+    @test plot(foo)[1][1][:marker_shape] === :+
+    @test plot(foo, markershape = :diamond)[1][1][:marker_shape] === :diamond
+    @test plot(foo, marker = :diamond)[1][1][:marker_shape] === :diamond
     @test (@test_logs (:warn, "Skipped marker arg diamond.") plot(
         foo,
         marker = :diamond,
         markershape = :diamond,
-    )[1][1][:markershape]) === :diamond
+    )[1][1][:marker_shape]) === :diamond
 end
 
 using Plots, Test
@@ -62,6 +63,8 @@ end
     @test filter(isfinite, pl1[1][1][:x]) == filter(isfinite, pl2[1][1][:y])
     @test filter(isfinite, pl1[1][1][:y]) == filter(isfinite, pl2[1][1][:x])
     @test pl1[1][1][:line_color] == RGBA{Float64}(0.0,0.0,0.0,1.0)
+    @test pl1[1][2][:marker_size] == 0
+    @test pl1[1][2][:marker_alpha] == 0
 end
 
 @testset "@add_attributes" begin

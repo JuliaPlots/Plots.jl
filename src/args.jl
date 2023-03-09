@@ -1059,7 +1059,7 @@ end
 
 function processMarkerArg(plotattributes::AKW, arg)
     # markershape
-    if allShapes(arg) && !haskey(plotattributes, :markershape)
+    if allShapes(arg) && !haskey(plotattributes, :marker_shape)
         plotattributes[:marker_shape] = arg
 
         # stroke style
@@ -2016,7 +2016,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     for s in (:line_, :marker_, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] === :auto
-            plot_color(if has_black_border_for_default(stype) && s === :line
+            plot_color(if has_black_border_for_default(stype) && s === :line_
                 sp[:foreground_color_subplot]
             else
                 scolor
