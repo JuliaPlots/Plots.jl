@@ -1,6 +1,6 @@
 """
 ```julia
-legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax, inout)
+legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
 ```
 
 Return `(x,y)` at an angle `theta` degrees from

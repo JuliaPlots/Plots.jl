@@ -41,7 +41,9 @@ end
 
 with(:unicodeplots) do
     @test_save :txt
-    @test_save :png
+    if Plots.UnicodePlots.get_font_face() ≢ nothing
+        @test_save :png
+    end
 end
 
 with(:plotlyjs) do
@@ -57,7 +59,7 @@ with(:plotly) do
     @test_save :pdf
     @test_save :png
     @test_save :svg
-    # @test_save :eps
+    @test_save :html
 end
 
 if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
@@ -67,7 +69,7 @@ if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
         @test_save :pdf
     end
 
-    with(:pyplot) do
+    with(:pythonplot) do
         @test_save :pdf
         @test_save :png
         @test_save :svg

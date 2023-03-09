@@ -39,13 +39,13 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
 
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
-        canvas = if (up_c = get(sp_kw, :canvas, :auto)) === :auto
+        canvas = if (up_c = get(sp_kw, :canvas, :auto)) ≡ :auto
             isijulia() ? :ascii : :braille
         else
             up_c
         end
 
-        border = if (up_b = get(sp_kw, :border, :auto)) === :auto
+        border = if (up_b = get(sp_kw, :border, :auto)) ≡ :auto
             if plot_3d
                 :none  # no plots border in 3d (consistency with other backends)
             else
@@ -66,10 +66,10 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
             st = series[:seriestype]
             blend &= get(series[:extra_kwargs], :blend, true)
             quiver |= series[:arrow] isa Arrow  # post-pipeline detection (:quiver -> :path)
-            contour |= st === :contour
-            if st === :histogram2d
+            contour |= st ≡ :contour
+            if st ≡ :histogram2d
                 xlim = ylim = (0, 0)
-            elseif st === :spy || st === :heatmap
+            elseif st ≡ :spy || st ≡ :heatmap
                 width = height = nothing
                 grid = false
             end
@@ -104,6 +104,8 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
             yscale = yaxis[:scale],
             xflip = xaxis[:flip],
             yflip = yaxis[:flip],
+            xticks = has_ticks(xaxis),
+            yticks = has_ticks(yaxis),
             border,
             height,
             width,
@@ -121,14 +123,7 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
 
         o = UnicodePlots.Plot(x, y, plot_3d ? z : nothing, _canvas_map[canvas]; kw...)
         for series in series_list(sp)
-            o = addUnicodeSeries!(
-                sp,
-                o,
-                kw,
-                series,
-                sp[:legend_position] !== :none,
-                plot_3d,
-            )
+            o = addUnicodeSeries!(sp, o, kw, series, sp[:legend_position] ≢ :none, plot_3d)
         end
 
         for ann in sp[:annotations]
@@ -151,7 +146,7 @@ end
 up_color(col::UnicodePlots.UserColorType) = col
 up_color(col::RGBA) =
     (c = convert(ARGB32, col); map(Int, (red(c).i, green(c).i, blue(c).i)))
-up_color(col) = :auto
+up_color(::Any) = :auto
 
 up_cmap(series) = map(
     c -> (red(c), green(c), blue(c)),
@@ -171,58 +166,56 @@ function addUnicodeSeries!(
     se_kw = series[:extra_kwargs]
 
     # get the series data and label
-    x, y = if st === :straightline
+    x, y = if st ≡ :straightline
         straightline_data(series)
-    elseif st === :shape
+    elseif st ≡ :shape
         shape_data(series)
     else
         series[:x], series[:y]
     end
 
-    if ispolar(sp) || ispolar(series)
-        return UnicodePlots.polarplot(x, y)
-    end
+    (ispolar(sp) || ispolar(series)) && return UnicodePlots.polarplot(x, y)
 
     # special handling (src/interface)
     fix_ar = get(se_kw, :fix_ar, true)
-    if st === :histogram2d
+    if st ≡ :histogram2d
         return UnicodePlots.densityplot(x, y; kw...)
-    elseif st === :spy
+    elseif st ≡ :spy
         return UnicodePlots.spy(Array(series[:z]); fix_ar = fix_ar, kw...)
-    elseif st === :image
+    elseif st ≡ :image
         return UnicodePlots.imageplot(Array(series[:z]); kw...)
     elseif st in (:contour, :heatmap)  # 2D
         colormap = get(se_kw, :colormap, :none)
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
-            colormap = colormap === :none ? up_cmap(series) : colormap,
+            colormap = colormap ≡ :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
         )
         z = Array(series[:z])
-        if st === :contour
+        if st ≡ :contour
             isfilledcontour(series) &&
                 @warn "Plots(UnicodePlots): filled contour is not implemented"
             return UnicodePlots.contourplot(x, y, z; kw..., levels = series[:levels])
-        elseif st === :heatmap
+        elseif st ≡ :heatmap
             return UnicodePlots.heatmap(z; fix_ar = fix_ar, kw...)
         end
     elseif st in (:surface, :wireframe)  # 3D
         colormap = get(se_kw, :colormap, :none)
-        lines = get(se_kw, :lines, st === :wireframe)
+        lines = get(se_kw, :lines, st ≡ :wireframe)
         zscale = get(se_kw, :zscale, :aspect)
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
-            color = st === :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
-            colormap = colormap === :none ? up_cmap(series) : colormap,
+            color = st ≡ :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
+            colormap = colormap ≡ :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
             zscale,
             lines,
         )
         z = Array(series[:z])
         return UnicodePlots.surfaceplot(x, y, z isa AMat ? transpose(z) : z; kw...)
-    elseif st === :mesh3d
+    elseif st ≡ :mesh3d
         return UnicodePlots.lineplot!(
             up,
             mesh3d_triangles(x, y, series[:z], series[:connections])...,
@@ -233,7 +226,7 @@ function addUnicodeSeries!(
     if st in (:path, :path3d, :straightline, :shape, :mesh3d)
         func = UnicodePlots.lineplot!
         series_kw = (; head_tail = series[:arrow] isa Arrow ? series[:arrow].side : nothing)
-    elseif st in (:scatter, :scatter3d) || series[:marker_shape] !== :none
+    elseif st in (:scatter, :scatter3d) || series[:marker_shape] ≢ :none
         func = UnicodePlots.scatterplot!
         series_kw = (; marker = series[:marker_shape])
     else
@@ -271,48 +264,59 @@ function addUnicodeSeries!(
     up
 end
 
+function unsupported_layout_error()
+    """
+    Plots(UnicodePlots): complex nested layout is currently unsupported.
+    Consider using plain `UnicodePlots` commands and `grid` from Term.jl as an alternative.
+    """ |>
+    ArgumentError |>
+    throw
+    nothing
+end
+
 # ------------------------------------------------------------------------------------------
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
+    applicable(UnicodePlots.save_image, io) ||
+        "Plots(UnicodePlots): saving to `.png` requires `import FreeType, FileIO`" |>
+        ArgumentError |>
+        throw
     prepare_output(plt)
     nr, nc = size(plt.layout)
-    s1 = zeros(Int, nr, nc)
-    s2 = zeros(Int, nr, nc)
+    s1, s2 = map(_ -> zeros(Int, nr, nc), 1:2)
     canvas_type = nothing
     imgs = []
     sps = 0
     for r in 1:nr, c in 1:nc
         if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
-            "Plots(UnicodePlots): complex nested layout is currently unsupported" |>
-            ArgumentError |>
-            throw
+            unsupported_layout_error()
         else
             img = UnicodePlots.png_image(plt.o[sps += 1]; pixelsize = 32)
+            img ≡ nothing && continue
             canvas_type = eltype(img)
-            h, w = size(img)
-            s1[r, c] = h
-            s2[r, c] = w
+            s1[r, c], s2[r, c] = size(img)
             push!(imgs, img)
         end
     end
-    if canvas_type !== nothing
+    if canvas_type ≡ nothing
+        @warn "Plots(UnicodePlots) failed to render `png` from plot (font issue)."
+    else
         m1 = maximum(s1; dims = 2)
         m2 = maximum(s2; dims = 1)
         img = zeros(canvas_type, sum(m1), sum(m2))
+        length(img) == 0 && return  # early return on failing fonts
         sps = 0
         n1 = 1
         for r in 1:nr
             n2 = 1
             for c in 1:nc
-                sp = imgs[sps += 1]
-                h, w = size(sp)
+                h, w = (sp = imgs[sps += 1]) |> size
                 img[n1:(n1 + (h - 1)), n2:(n2 + (w - 1))] = sp
                 n2 += m2[c]
             end
             n1 += m1[r]
         end
-        stream = UnicodePlots.FileIO.Stream{UnicodePlots.FileIO.format"PNG"}(io)
-        UnicodePlots.FileIO.save(stream, img)
+        UnicodePlots.save_image(io, img)
     end
     nothing
 end
@@ -332,43 +336,41 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
         end
     else
         have_color = Base.get_have_color()
-        lines_colored = Array{Union{Nothing,Vector{String}}}(undef, nr, nc)
+        lines_colored = Array{Union{Nothing,Vector{String}}}(nothing, nr, nc)
         lines_uncolored = have_color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
+        nsp = length(plt.o)
         sps = 0
         for r in 1:nr
             lmax = 0
             for c in 1:nc
                 if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
-                    "Plots(UnicodePlots): complex nested layout is currently unsupported" |>
-                    ArgumentError |>
-                    throw
+                    unsupported_layout_error()
                 else
                     if get(l.attr, :blank, false)
-                        lines_colored[r, c] = lines_uncolored[r, c] = nothing
-                    else
-                        sp = plt.o[sps += 1]
-                        colored = string(sp; color = have_color)
-                        lines_colored[r, c] = lu = lc = split(colored, '\n')
-                        if have_color
-                            uncolored = UnicodePlots.no_ansi_escape(colored)
-                            lines_uncolored[r, c] = lu = split(uncolored, '\n')
-                        end
-                        lmax = max(length(lc), lmax)
-                        w_max[c] = max(maximum(length.(lu)), w_max[c])
+                        continue
+                    elseif (sps += 1) > nsp
+                        continue
                     end
+                    colored = string(plt.o[sps]; color = have_color)
+                    lines_colored[r, c] = lu = lc = split(colored, '\n')
+                    if have_color
+                        uncolored = UnicodePlots.no_ansi_escape(colored)
+                        lines_uncolored[r, c] = lu = split(uncolored, '\n')
+                    end
+                    lmax = max(length(lc), lmax)
+                    w_max[c] = max(maximum(length.(lu)), w_max[c])
                 end
             end
             l_max[r] = lmax
         end
-        empty = String[' '^w for w in w_max]
+        empty = map(w -> ' '^w, w_max)
         for r in 1:nr
             for n in 1:l_max[r]
                 for c in 1:nc
                     pre = c == 1 ? '\0' : ' '
-                    lc = lines_colored[r, c]
-                    if lc === nothing || length(lc) < n
+                    if (lc = lines_colored[r, c]) ≡ nothing || length(lc) < n
                         print(io, pre, empty[c])
                     else
                         lu = lines_uncolored[r, c]

@@ -25,35 +25,32 @@ embeddable_html(plt::AbstractPlot) = html_head(plt) * html_body(plt)
 function open_browser_window(filename::AbstractString)
     @static if Sys.isapple()
         return run(`open $(filename)`)
-    end
-    @static if Sys.islinux() || Sys.isbsd()    # Sys.isbsd() addition is as yet untested, but based on suggestion in https://github.com/JuliaPlots/Plots.jl/issues/681
+    elseif Sys.islinux() || Sys.isbsd()    # Sys.isbsd() addition is as yet untested, but based on suggestion in https://github.com/JuliaPlots/Plots.jl/issues/681
         return run(`xdg-open $(filename)`)
-    end
-    @static if Sys.iswindows()
+    elseif Sys.iswindows()
         return run(`$(ENV["COMSPEC"]) /c start "" "$(filename)"`)
+    else
+        @warn "Unknown OS... cannot open browser window."
     end
-    @warn "Unknown OS... cannot open browser window."
 end
 
 function write_temp_html(plt::AbstractPlot)
     html = standalone_html(plt; title = plt.attr[:window_title])
     filename = string(tempname(), ".html")
-    output = open(filename, "w")
-    write(output, html)
-    close(output)
+    write(filename, html)
     filename
 end
 
 function standalone_html_window(plt::AbstractPlot)
-    old = use_local_dependencies[] # save state to restore afterwards
+    old = _use_local_dependencies[] # save state to restore afterwards
     # if we open a browser ourself, we can host local files, so
     # when we have a local plotly downloaded this is the way to go!
-    use_local_dependencies[] =
-        plotly_local_file_path[] === nothing ? false : isfile(plotly_local_file_path[])
+    _use_local_dependencies[] =
+        _plotly_local_file_path[] === nothing ? false : isfile(_plotly_local_file_path[])
     filename = write_temp_html(plt)
     open_browser_window(filename)
     # restore for other backends
-    use_local_dependencies[] = old
+    _use_local_dependencies[] = old
 end
 
 # uses wkhtmltopdf/wkhtmltoimage: http://wkhtmltopdf.org/downloads.html

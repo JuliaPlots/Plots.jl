@@ -1,13 +1,13 @@
-# Run tests with `import RecipesBase` instead of `using RecipesBase` to test
-# that objects like `AbstractPlot` are properly prefixed with `RecipesBase.` in
-# the macros.
-import RecipesBase
+# Run tests with `import RecipesBase as RB` instead of `using RecipesBase`
+# or `import RecipesBase` to test that macros do not depend on the
+# namespace of the enclosing scope.
+import RecipesBase as RB
 using StableRNGs
 using Test
 
 const KW = Dict{Symbol,Any}
 
-RecipesBase.is_key_supported(k::Symbol) = true
+RB.is_key_supported(k::Symbol) = true
 
 for t in map(i -> Symbol(:T, i), 1:5)
     @eval struct $t end
@@ -15,33 +15,33 @@ end
 
 struct Dummy end
 
-RecipesBase.@recipe function plot(t::Dummy, args...) end
+RB.@recipe function plot(t::Dummy, args...) end
 
 @testset "coverage" begin
-    @test !RecipesBase.group_as_matrix(nothing)
-    @test RecipesBase.apply_recipe(KW(:foo => 1)) == ()
+    @test !RB.group_as_matrix(nothing)
+    @test RB.apply_recipe(KW(:foo => 1)) == ()
 
-    @test RecipesBase.to_symbol(:x) ≡ :x
-    @test RecipesBase.to_symbol(QuoteNode(:x)) ≡ :x
+    @test RB.to_symbol(:x) ≡ :x
+    @test RB.to_symbol(QuoteNode(:x)) ≡ :x
 
-    @test RecipesBase._equals_symbol(:x, :x)
-    @test RecipesBase._equals_symbol(QuoteNode(:x), :x)
-    @test !RecipesBase._equals_symbol(nothing, :x)
+    @test RB._equals_symbol(:x, :x)
+    @test RB._equals_symbol(QuoteNode(:x), :x)
+    @test !RB._equals_symbol(nothing, :x)
 
-    @test RecipesBase.gettypename(:x) ≡ :x
-    @test RecipesBase.gettypename(:(Foo{T})) ≡ :Foo
+    @test RB.gettypename(:x) ≡ :x
+    @test RB.gettypename(:(Foo{T})) ≡ :Foo
 
-    RecipesBase.recipetype(::Val{:Dummy}, args...) = nothing
-    @test RecipesBase.recipetype(:Dummy, 1:10) isa Nothing
-    @test_throws ErrorException RecipesBase.recipetype(:NotDefined)
+    RB.recipetype(::Val{:Dummy}, args...) = nothing
+    @test RB.recipetype(:Dummy, 1:10) isa Nothing
+    @test_throws ErrorException RB.recipetype(:NotDefined)
 end
 
 @testset "layout" begin
     grid(x, y) = (x, y)  # fake `grid` function for `Plots`
-    @test RecipesBase.@layout([a b; c]) isa Matrix
-    @test RecipesBase.@layout([a{0.3w}; b{0.2h}]) isa Matrix
-    @test RecipesBase.@layout([a{0.3w} [grid(3, 3); b{0.2h}]]) isa Matrix
-    @test RecipesBase.@layout([_ ° _; ° ° °; ° ° °]) isa Matrix
+    @test RB.@layout([a b; c]) isa Matrix
+    @test RB.@layout([a{0.3w}; b{0.2h}]) isa Matrix
+    @test RB.@layout([a{0.3w} [grid(3, 3); b{0.2h}]]) isa Matrix
+    @test RB.@layout([_ ° _; ° ° °; ° ° °]) isa Matrix
 end
 
 @testset "@recipe" begin
@@ -53,15 +53,15 @@ end
         # this is similar to how Plots would call the method
         plotattributes = KW(:customcolor => :red)
 
-        data_list = RecipesBase.apply_recipe(plotattributes, T(), 2)
+        data_list = RB.apply_recipe(plotattributes, T(), 2)
         @test data_list[1].args == (rand(StableRNG(1), 10, 2),)
         @test plotattributes == expect
     end
 
     @testset "simple parametric type" begin
-        @test_throws MethodError RecipesBase.apply_recipe(KW(), T1())
+        @test_throws MethodError RB.apply_recipe(KW(), T1())
 
-        RecipesBase.@recipe function plot(
+        RB.@recipe function plot(
             t::T1,
             n::N = 1;
             customcolor = :green,
@@ -86,13 +86,9 @@ end
     end
 
     @testset "parametric type with where" begin
-        @test_throws MethodError RecipesBase.apply_recipe(KW(), T2())
+        @test_throws MethodError RB.apply_recipe(KW(), T2())
 
-        RecipesBase.@recipe function plot(
-            t::T2,
-            n::N = 1;
-            customcolor = :green,
-        ) where {N<:Integer}
+        RB.@recipe function plot(t::T2, n::N = 1; customcolor = :green) where {N<:Integer}
             :marker_shape --> :auto, :require
             :marker_color --> customcolor, :force
             :xrotation --> 5
@@ -113,9 +109,9 @@ end
     end
 
     @testset "parametric type with double where" begin
-        @test_throws MethodError RecipesBase.apply_recipe(KW(), T3())
+        @test_throws MethodError RB.apply_recipe(KW(), T3())
 
-        RecipesBase.@recipe function plot(
+        RB.@recipe function plot(
             t::T3,
             n::N = 1,
             m::M = 0.0;
@@ -141,9 +137,9 @@ end
     end
 
     @testset "manual access of plotattributes" begin
-        @test_throws MethodError RecipesBase.apply_recipe(KW(), T4())
+        @test_throws MethodError RB.apply_recipe(KW(), T4())
 
-        RecipesBase.@recipe function plot(t::T4, n = 1; customcolor = :green)
+        RB.@recipe function plot(t::T4, n = 1; customcolor = :green)
             :marker_shape --> :auto, :require
             :marker_color --> customcolor, :force
             :xrotation --> 5
@@ -167,9 +163,9 @@ end
     end
 
     @testset "no force" begin
-        @test_throws MethodError RecipesBase.apply_recipe(KW(), T5())
+        @test_throws MethodError RB.apply_recipe(KW(), T5())
 
-        RecipesBase.@recipe function plot(t::T5, n::Integer = 1)
+        RB.@recipe function plot(t::T5, n::Integer = 1)
             customcolor --> :notred
             rand(StableRNG(1), 10, n)
         end
@@ -179,7 +175,7 @@ end
 end  # @testset "@recipe"
 
 # Can't do this inside a test-set, because it creates a struct.
-RecipesBase.@userplot MyPlot
+RB.@userplot MyPlot
 
 @testset "@userplot" begin
     @test typeof(myplot) <: Function

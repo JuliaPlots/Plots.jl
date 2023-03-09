@@ -126,7 +126,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     amin, amax = alims
 
     # scale the limits
-    sf = RecipesPipeline.scale_func(scale)
+    sf, invsf, noop = scale_inverse_scale_func(scale)
 
     # If the axis input was a Date or DateTime use a special logic to find
     # "round" Date(Time)s as ticks
@@ -135,7 +135,8 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     # or DateTime) is chosen based on the time span between amin and amax
     # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
-    if ticks === nothing && scale === :identity
+
+    if ticks === nothing && noop
         if formatter == RecipesPipeline.dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
@@ -159,7 +160,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             sf(amax);
             k_min = scale ∈ _logScales ? 2 : 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
-            scale = scale,
+            scale,
         ) |> first
     elseif typeof(ticks) <: Int
         optimize_ticks(
@@ -171,34 +172,39 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # `strict_span = false` rewards cases where the span of the
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
-            scale = scale,
+            scale,
         ) |> first
     else
         map(sf, filter(t -> amin ≤ t ≤ amax, ticks))
     end
-    unscaled_ticks = map(RecipesPipeline.inverse_scale_func(scale), scaled_ticks)
+    unscaled_ticks = noop ? scaled_ticks : map(invsf, scaled_ticks)
 
     labels::Vector{String} = if any(isfinite, unscaled_ticks)
-        if formatter in (:auto, :plain, :scientific, :engineering)
-            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
-        elseif formatter === :latex
-            map(
-                x -> string("\$", replace(convert_sci_unicode(x), '×' => "\\times"), "\$"),
-                Showoff.showoff(unscaled_ticks, :auto),
-            )
-        elseif formatter === :none
-            String[]
-        else
-            # there was an override for the formatter... use that on the unscaled ticks
-            map(formatter, unscaled_ticks)
-            # if the formatter left us with numbers, still apply the default formatter
-            # However it leave us with the problem of unicode number decoding by the backend
-        end
+        get_labels(formatter, scaled_ticks, scale)
     else
         String[]  # no finite ticks to show...
     end
 
     unscaled_ticks, labels
+end
+
+function get_labels(formatter::Symbol, scaled_ticks, scale)
+    if formatter in (:auto, :plain, :scientific, :engineering)
+        return map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
+    elseif formatter === :latex
+        return map(
+            l -> string("\$", replace(convert_sci_unicode(l), '×' => "\\times"), "\$"),
+            get_labels(:auto, scaled_ticks, scale),
+        )
+    elseif formatter === :none
+        return String[]
+    end
+end
+function get_labels(formatter::Function, scaled_ticks, scale)
+    sf, invsf, _ = scale_inverse_scale_func(scale)
+    fticks = map(formatter ∘ invsf, scaled_ticks)
+    eltype(fticks) <: Number && return get_labels(:auto, map(sf, fticks), scale)
+    return fticks
 end
 
 # returns (continuous_values, discrete_values) for the ticks on this axis
@@ -315,15 +321,53 @@ get_ticks(ticks::Bool, args...) =
 get_ticks(::T, args...) where {T} =
     throw(ArgumentError("Unknown ticks type in get_ticks: $T"))
 
+# do not specify array item type to also catch e.g. "xlabel=[]" and "xlabel=([],[])"
+_has_ticks(v::AVec) = !isempty(v)
+_has_ticks(t::Tuple{AVec,AVec}) = !isempty(t[1])
+_has_ticks(s::Symbol) = s !== :none
+_has_ticks(b::Bool) = b
+_has_ticks(::Nothing) = false
+_has_ticks(::Any) = true
+
+has_ticks(axis::Axis) = get(axis, :ticks, nothing) |> _has_ticks
+
 _transform_ticks(ticks, axis) = ticks
 _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
     Dates.value.(ticks)
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
+const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
+
+function num_minor_intervals(axis)
+    # FIXME: `minorticks` should be fixed in `2.0` to be the number of ticks, not intervals
+    # see github.com/JuliaPlots/Plots.jl/pull/4528
+    n_intervals = axis[:minorticks]
+    if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
+        max(1, n_intervals)  # 0 intervals makes no sense
+    else   # `:auto` or `true`
+        if (base = get(_logScaleBases, axis[:scale], nothing)) == 10
+            Int(base - 1)
+        else
+            DEFAULT_MINOR_INTERVALS[]
+        end
+    end::Int
+end
+
+no_minor_intervals(axis) =
+    if (n_intervals = axis[:minorticks]) === false
+        true  # must be tested with `===` since Bool <: Integer
+    elseif n_intervals ∈ (:none, nothing)
+        true
+    elseif (n_intervals === :auto && !axis[:minorgrid])
+        true
+    else
+        false
+    end
+
 function get_minor_ticks(sp, axis, ticks_and_labels)
-    axis[:minorticks] ∈ (:none, nothing, false) && !axis[:minorgrid] && return nothing
+    no_minor_intervals(axis) && return
     ticks = first(ticks_and_labels)
-    length(ticks) < 2 && return nothing
+    length(ticks) < 2 && return
 
     amin, amax = axis_limits(sp, axis[:letter])
     scale = axis[:scale]
@@ -341,14 +385,8 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
         ticks = [ticks[1] - first_step / ratio; ticks; ticks[end] + last_step * ratio]
     end
 
-    # default to 9 intervals between major ticks for log10 scale and 5 intervals otherwise
-    n = if typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1
-        axis[:minorticks]
-    else
-        scale === :log10 ? 9 : 5
-    end
-
-    minorticks = sizehint!(eltype(ticks)[], n * sub * length(ticks))
+    n_minor_intervals = num_minor_intervals(axis)
+    minorticks = sizehint!(eltype(ticks)[], n_minor_intervals * sub * length(ticks))
     for i in 2:length(ticks)
         lo = ticks[i - 1]
         hi = ticks[i]
@@ -357,12 +395,12 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
             for e in 1:sub
                 lo_ = lo * base^(e - 1)
                 hi_ = lo_ * base
-                step = (hi_ - lo_) / n
+                step = (hi_ - lo_) / n_minor_intervals
                 rng = (lo_ + (e > 1 ? 0 : step)):step:(hi_ - (e < sub ? 0 : step / 2))
                 append!(minorticks, collect(rng))
             end
         else
-            step = (hi - lo) / n
+            step = (hi - lo) / n_minor_intervals
             append!(minorticks, collect((lo + step):step:(hi - step / 2)))
         end
     end
@@ -503,9 +541,14 @@ function scale_lims(from, to, factor)
     mid .+ (-span, span) .* factor
 end
 
-function scale_lims(from, to, factor, scale)
-    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
+_scale_lims(::Val{true}, ::Function, ::Function, from, to, factor) =
+    scale_lims(from, to, factor)
+_scale_lims(::Val{false}, f::Function, invf::Function, from, to, factor) =
     invf.(scale_lims(f(from), f(to), factor))
+
+function scale_lims(from, to, factor, scale)
+    f, invf, noop = scale_inverse_scale_func(scale)
+    _scale_lims(Val(noop), f, invf, from, to, factor)
 end
 
 """
@@ -517,9 +560,8 @@ If `letter` is omitted, all axes are affected.
 """
 function scale_lims!(sp::Subplot, letter, factor)
     axis = Plots.get_axis(sp, letter)
-    scale = axis[:scale]
     from, to = Plots.get_sp_lims(sp, letter)
-    axis[:lims] = scale_lims(from, to, factor, scale)
+    axis[:lims] = scale_lims(from, to, factor, axis[:scale])
 end
 function scale_lims!(plt::Plot, letter, factor)
     foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
@@ -570,7 +612,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
 
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims === :round) && return nothing
+    (lims isa Tuple || lims === :round) && return
     for sp in axis.sps, series in series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end
@@ -753,8 +795,7 @@ function add_major_or_minor_segments_2d(
 )
     ticks === nothing && return
     if cond
-        f = RecipesPipeline.scale_func(oax[:scale])
-        invf = RecipesPipeline.inverse_scale_func(oax[:scale])
+        f, invf = scale_inverse_scale_func(oax[:scale])
         tick_start, tick_stop = if sp[:framestyle] === :origin
             oamin, oamax = oamM
             t = invf(f(0) + factor * (f(oamax) - f(oamin)))
@@ -887,8 +928,7 @@ function add_major_or_minor_segments_3d(
 )
     ticks === nothing && return
     if cond
-        f = RecipesPipeline.scale_func(nax[:scale])
-        invf = RecipesPipeline.inverse_scale_func(nax[:scale])
+        f, invf = scale_inverse_scale_func(nax[:scale])
         tick_start, tick_stop = if sp[:framestyle] === :origin
             namin, namax = namM
             t = invf(f(0) + factor * (f(namax) - f(namin)))

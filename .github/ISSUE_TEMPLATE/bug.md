@@ -19,7 +19,7 @@ This bug occurs on ( insert `x` below )
 Backend      | yes | no  | untested
 -------------|-----|-----|---------
 gr (default) |     |     |
-pyplot       |     |     |
+pythonplot   |     |     |
 plotlyjs     |     |     |
 pgfplotsx    |     |     |
 unicodeplots |     |     |

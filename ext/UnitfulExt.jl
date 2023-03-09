@@ -1,14 +1,11 @@
 # previously https://github.com/jw3126/UnitfulRecipes.jl
 # authors: Benoit Pasquier (@briochemc) - David Gustavsson (@gustaphe) - Jan Weidner (@jw3126)
 
-module UnitfulRecipes
+module UnitfulExt
 
-using ..Unitful: Quantity, unit, ustrip, Unitful, dimension, Units, NoUnits
-using ..RecipesBase
-export @P_str
-
-import ..locate_annotation,
-    ..PlotText, ..Subplot, ..AVec, ..AMat, ..Axis, .._transform_ticks, ..process_limits
+import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
+import RecipesBase
+@ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits
 
 const MissingOrQuantity = Union{Missing,<:Quantity}
 
@@ -153,7 +150,7 @@ end
 function fixmarkercolor!(attr)
     u = ustripattribute!(attr, :marker_z)
     ustripattribute!(attr, :clims, u)
-    u == Unitful.NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
+    u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
 end
 fixmarkersize!(attr) = ustripattribute!(attr, :marker_size)
 fixlinecolor!(attr) = ustripattribute!(attr, :line_z)
@@ -166,7 +163,7 @@ ustripattribute!(attr, key) =
         attr[key] = ustrip.(u, v)
         return u
     else
-        return Unitful.NoUnits
+        return NoUnits
     end
 # If supplied, use the unit (optional 3rd argument)
 function ustripattribute!(attr, key, u)
@@ -200,38 +197,25 @@ Base.ncodeunits(n::S) = ncodeunits(n.content)
 Base.isvalid(n::S, i::Integer) = isvalid(n.content, i)
 Base.pointer(n::S) = pointer(n.content)
 Base.pointer(n::S, i::Integer) = pointer(n.content, i)
-"""
-    P_str(s)
 
-Creates a string that will be Protected from recipe passes.
-
-Example:
-```julia
-julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel=P"This label will NOT display units")
-
-julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel="This label will display units")
-```
-"""
-macro P_str(s)
-    return ProtectedString(s)
-end
+Plots.protectedstring(s) = ProtectedString(s)
 
 #=====================================
 Append unit to labels when appropriate
 =====================================#
 
-append_unit_if_needed!(attr, key, u::Unitful.Units) =
+append_unit_if_needed!(attr, key, u::Units) =
     append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
 # dispatch on the type of `label`
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 append_unit_if_needed!(attr, key, label::Nothing, u) =
-    attr[key] = UnitfulString(string(u), u)
-append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString} =
-    if !isempty(label)
-        attr[key] =
-            UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
-    end
+    (attr[key] = UnitfulString(string(u), u))
+function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
+    isempty(label) && return attr[key] = UnitfulString(label, u)
+    return attr[key] =
+        UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
+end
 
 #=============================================
 Surround unit string with specified delimiters
@@ -268,30 +252,30 @@ getaxisunit(a::Axis) = getaxisunit(a[:guide])
 #==============
 Fix annotations
 ===============#
-locate_annotation(
+Plots.locate_annotation(
     sp::Subplot,
     x::MissingOrQuantity,
     y::MissingOrQuantity,
     label::PlotText,
 ) = (ustrip(x), ustrip(y), label)
-locate_annotation(
+Plots.locate_annotation(
     sp::Subplot,
     x::MissingOrQuantity,
     y::MissingOrQuantity,
     z::MissingOrQuantity,
     label::PlotText,
 ) = (ustrip(x), ustrip(y), ustrip(z), label)
-locate_annotation(sp::Subplot, rel::NTuple{N,<:MissingOrQuantity}, label) where {N} =
-    locate_annotation(sp, ustrip.(rel), label)
+Plots.locate_annotation(sp::Subplot, rel::NTuple{N,<:MissingOrQuantity}, label) where {N} =
+    Plots.locate_annotation(sp, ustrip.(rel), label)
 
 #==================#
 # ticks and limits #
 #==================#
-_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Quantity} =
+Plots._transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Quantity} =
     ustrip.(getaxisunit(axis), ticks)
-process_limits(lims::AbstractArray{T}, axis) where {T<:Quantity} =
+Plots.process_limits(lims::AbstractArray{T}, axis) where {T<:Quantity} =
     ustrip.(getaxisunit(axis), lims)
-process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
+Plots.process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
     ustrip.(getaxisunit(axis), lims)
 
-end
+end  # module

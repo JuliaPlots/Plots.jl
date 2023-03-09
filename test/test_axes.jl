@@ -21,6 +21,33 @@ using Plots, Test
     @test Plots.labelfunc_tex(:log10)(1) == "10^{1}"
     @test Plots.labelfunc_tex(:log2)(1) == "2^{1}"
     @test Plots.labelfunc_tex(:ln)(1) == "e^{1}"
+
+    @test Plots.get_labels(:auto, 1:3, :identity) == ["1", "2", "3"]
+    @test Plots.get_labels(:scientific, float.(500:500:1500), :identity) ==
+          ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
+    @test Plots.get_labels(:engineering, float.(500:500:1500), :identity) ==
+          ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
+    @test Plots.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
+    # GR is used during tests and it correctly overrides labelfunc(), but PGFPlotsX did not
+    with(:pgfplotsx) do
+        @test Plots.get_labels(:auto, 1:3, :log10) == ["10^{1}", "10^{2}", "10^{3}"]
+    end
+    @test Plots.get_labels(:auto, 1:3, :log10) == ["10^{1}", "10^{2}", "10^{3}"]
+    @test Plots.get_labels(:auto, 1:3, :log2) == ["2^{1}", "2^{2}", "2^{3}"]
+    @test Plots.get_labels(:auto, 1:3, :ln) == ["e^{1}", "e^{2}", "e^{3}"]
+    @test Plots.get_labels(:latex, 1:3, :log10) ==
+          ["\$10^{1}\$", "\$10^{2}\$", "\$10^{3}\$"]
+    @test Plots.get_labels(:latex, 1:3, :log2) == ["\$2^{1}\$", "\$2^{2}\$", "\$2^{3}\$"]
+    @test Plots.get_labels(:latex, 1:3, :ln) == ["\$e^{1}\$", "\$e^{2}\$", "\$e^{3}\$"]
+
+    @test Plots.get_labels(x -> 1e3x, 1:3, :identity) == ["1000", "2000", "3000"]
+    @test Plots.get_labels(x -> 1e3x, 1:3, :log10) == ["10^{4}", "10^{5}", "10^{6}"]
+    @test Plots.get_labels(x -> 8x, 1:3, :log2) == ["2^{4}", "2^{5}", "2^{6}"]
+    @test Plots.get_labels(x -> ℯ * x, 1:3, :ln) == ["e^{2}", "e^{3}", "e^{4}"]
+    @test Plots.get_labels(x -> string(x, " MB"), 1:3, :identity) ==
+          ["1.0 MB", "2.0 MB", "3.0 MB"]
+    @test Plots.get_labels(x -> string(x, " MB"), 1:3, :log10) ==
+          ["10.0 MB", "100.0 MB", "1000.0 MB"]
 end
 
 @testset "Showaxis" begin
@@ -210,4 +237,43 @@ end
     # github.com/JuliaPlots/Plots.jl/issues/4475
     pl = plot(100:100:300, hcat([1, 2, 4], [-1, -2, -4]); yformatter = :none)
     @test pl[1][:yaxis][:formatter] === :none
+end
+
+@testset "minor ticks" begin
+    # FIXME in 2.0: this is awful to read, because `minorticks` represent the number of `intervals`
+    for minor_intervals in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
+        n_minor_ticks_per_major = if minor_intervals isa Bool
+            minor_intervals ? Plots.DEFAULT_MINOR_INTERVALS[] - 1 : 0
+        elseif minor_intervals === :auto
+            Plots.DEFAULT_MINOR_INTERVALS[] - 1
+        elseif minor_intervals === :none || minor_intervals isa Nothing
+            0
+        else
+            max(0, minor_intervals - 1)
+        end
+        pl = plot(1:4; minorgrid = true, minorticks = minor_intervals)
+        sp = first(pl)
+        for axis in (:xaxis, :yaxis)
+            ticks = Plots.get_ticks(sp, sp[axis], update = false)
+            n_expected_minor_ticks = (length(first(ticks)) - 1) * n_minor_ticks_per_major
+            minor_ticks = Plots.get_minor_ticks(sp, sp[axis], ticks)
+            n_minor_ticks = if minor_intervals isa Bool
+                if minor_intervals
+                    length(minor_ticks)
+                else
+                    @test minor_ticks isa Nothing
+                    0
+                end
+            elseif minor_intervals === :auto
+                length(minor_ticks)
+            elseif minor_intervals === :none || minor_intervals isa Nothing
+                @test minor_ticks isa Nothing
+                0
+            else
+                length(minor_ticks)
+            end
+            show(devnull, pl)
+            @test n_minor_ticks == n_expected_minor_ticks
+        end
+    end
 end

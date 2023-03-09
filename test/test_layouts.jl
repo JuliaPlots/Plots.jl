@@ -5,7 +5,7 @@
     @test pl[:size] == (1_200, 400)
 end
 
-@testset "Subplot sclicing" begin
+@testset "Subplot slicing" begin
     pl = @test_nowarn plot(
         rand(4, 8),
         layout = 4,
@@ -96,8 +96,8 @@ end
 
     @test Plots.to_pixels(1Plots.mm) isa AbstractFloat
     @test Plots.ispositive(1Plots.mm)
-    @test size(Plots.defaultbox) == (0Plots.mm, 0Plots.mm)
-    show(io, Plots.defaultbox)
+    @test size(Plots.DEFAULT_BBOX[]) == (0Plots.mm, 0Plots.mm)
+    show(io, Plots.DEFAULT_BBOX[])
     show(io, pl.layout)
 
     @test Plots.make_measure_hor(1Plots.mm) == 1Plots.mm
@@ -109,13 +109,11 @@ end
     rl = Plots.RootLayout()
     show(io, rl)
     @test parent(rl) === nothing
-    @test Plots.parent_bbox(rl) == Plots.defaultbox
-    @test Plots.bbox(rl) == Plots.defaultbox
-    @test Plots.origin(Plots.defaultbox) == (0Plots.mm, 0Plots.mm)
-    for h_anchor in (:left, :right, :hcenter)
-        for v_anchor in (:top, :bottom, :vcenter)
-            @test Plots.bbox(0, 0, 1, 1, h_anchor, v_anchor) isa Plots.BoundingBox
-        end
+    @test Plots.parent_bbox(rl) == Plots.DEFAULT_BBOX[]
+    @test Plots.bbox(rl) == Plots.DEFAULT_BBOX[]
+    @test Plots.origin(Plots.DEFAULT_BBOX[]) == (0Plots.mm, 0Plots.mm)
+    for h_anchor in (:left, :right, :hcenter), v_anchor in (:top, :bottom, :vcenter)
+        @test Plots.bbox(0, 0, 1, 1, h_anchor, v_anchor) isa Plots.BoundingBox
     end
 
     el = Plots.EmptyLayout()

@@ -1,8 +1,5 @@
-import .PGFPlotsX: Options, Table
-import LaTeXStrings: LaTeXString
-import UUIDs: uuid4
-import Latexify
-import Contour
+const Options = PGFPlotsX.Options
+const Table   = PGFPlotsX.Table
 
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
@@ -83,6 +80,8 @@ curly(obj) = "{$(string(obj))}"
 # anything other than `Function`, `:plain` or `:latex` should map to `:latex` formatter instead
 latex_formatter(formatter::Symbol) = formatter in (:plain, :latex) ? formatter : :latex
 latex_formatter(formatter::Function) = formatter
+
+labelfunc(scale::Symbol, backend::PGFPlotsXBackend) = labelfunc_tex(scale)
 
 pgfx_halign(k) = (left = "left", hcenter = "center", center = "center", right = "right")[k]
 
@@ -1240,7 +1239,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
                         axis[:minorgridalpha],
                         axis[:minorgridstyle],
                     ),
-                    if (mt = axis[:minorticks]) > 1 && typeof(mt) <: Integer || mt
+                    if length(minor_ticks) > 0
                         "major tick length" => "0.1cm"
                     else
                         "major tick length" => "0"
@@ -1309,19 +1308,11 @@ _series_added(plt::Plot{PGFPlotsXBackend}, series::Series) = plt.o.is_created = 
 
 _update_plot_object(plt::Plot{PGFPlotsXBackend}) = plt.o(plt)
 
-for mime in ("application/pdf", "image/svg+xml")
+for mime in ("application/pdf", "image/svg+xml", "image/png")
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{PGFPlotsXBackend})
         plt.o.was_shown = true
         show(io, mime, plt.o.the_plot)
     end
-end
-
-function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{PGFPlotsXBackend})
-    plt.o.was_shown = true
-    plt_file = tempname() * ".png"
-    PGFPlotsX.pgfsave(plt_file, plt.o.the_plot; dpi = plt[:dpi])
-    write(io, read(plt_file))
-    rm(plt_file; force = true)
 end
 
 function _show(io::IO, mime::MIME{Symbol("application/x-tex")}, plt::Plot{PGFPlotsXBackend})

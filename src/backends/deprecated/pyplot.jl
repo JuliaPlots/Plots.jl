@@ -1,4 +1,5 @@
 # https://github.com/JuliaPy/PyPlot.jl
+# COV_EXCL_START
 
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
@@ -6,28 +7,14 @@ is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 # problem: https://github.com/tbreloff/Plots.jl/issues/308
 # solution: hack from @stevengj: https://github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
-otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
-append!(Base.Multimedia.displays, otherdisplays)
-
-pycolors = PyPlot.pyimport("matplotlib.colors")
-pypath = PyPlot.pyimport("matplotlib.path")
-mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
-axes_grid1 = PyPlot.pyimport("mpl_toolkits.axes_grid1")
-pypatches = PyPlot.pyimport("matplotlib.patches")
-pyfont = PyPlot.pyimport("matplotlib.font_manager")
-pyticker = PyPlot.pyimport("matplotlib.ticker")
-pycmap = PyPlot.pyimport("matplotlib.cm")
-pynp = PyPlot.pyimport("numpy")
-pynp."seterr"(invalid = "ignore")
-pytransforms = PyPlot.pyimport("matplotlib.transforms")
-pycollections = PyPlot.pyimport("matplotlib.collections")
-pyart3d = PyPlot.art3D
-pyrcparams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
+let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
+    append!(Base.Multimedia.displays, otherdisplays)
+end
 
 # "support" matplotlib v3.4
 if PyPlot.version < v"3.4"
     @warn """You are using Matplotlib $(PyPlot.version), which is no longer
-    officialy supported by the Plots community. To ensure smooth Plots.jl
+    officially supported by the Plots community. To ensure smooth Plots.jl
     integration update your Matplotlib library to a version >= 3.4.0
 
     If you have used Conda.jl to install PyPlot (default installation),
@@ -200,14 +187,6 @@ function py_get_matching_math_font(parent_fontfamily)
     get(py_math_supported_fonts, parent_fontfamily, matching_font(parent_fontfamily))
 end
 
-# # untested... return a FontProperties object from a Plots.Font
-# function py_font(font::Font)
-#     pyfont["FontProperties"](
-#         family = font.family,
-#         size = font.size
-#     )
-# end
-
 get_locator_and_formatter(vals::AVec) =
     pyticker."FixedLocator"(eachindex(vals)), pyticker."FixedFormatter"(vals)
 
@@ -290,7 +269,7 @@ py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
 
 # get the bounding box of the union of the objects
 function py_bbox(v::AVec)
-    bbox_union = defaultbox
+    bbox_union = DEFAULT_BBOX[]
     for obj in v
         bbox_union += py_bbox(obj)
     end
@@ -318,7 +297,7 @@ end
 
 # bounding box: axis title
 function py_bbox_title(ax)
-    bb = defaultbox
+    bb = DEFAULT_BBOX[]
     for s in (:title, :_left_title, :_right_title)
         bb += py_bbox(getproperty(ax, s))
     end
@@ -1085,7 +1064,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
             ticks = get_colorbar_ticks(sp)
             axis, cbar_axis, ticks_letter = if sp[:colorbar] in (:top, :bottom)
-                sp[:xaxis], cb."ax"."xaxis", :x  # colorbar inherits from x axiss
+                sp[:xaxis], cb."ax"."xaxis", :x  # colorbar inherits from x axis
             else
                 sp[:yaxis], cb."ax"."yaxis", :y  # colorbar inherits from y axis
             end
@@ -1263,9 +1242,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."grid"(false)
             end
 
-            if axis[:minorticks] > 1
-                pyaxis."set_minor_locator"(
-                    PyPlot.matplotlib.ticker.AutoMinorLocator(axis[:minorticks]),
+            n_minor_intervals = axis[:minorticks]
+            if !no_minor_intervals(axis) && n_minor_intervals isa Integer
+                n_minor_intervals isa Bool || pyaxis."set_minor_locator"(
+                    # NOTE: AutoMinorLocator expects a number of intervals
+                    PyPlot.matplotlib.ticker.AutoMinorLocator(n_minor_intervals),
                 )
                 pyaxis."set_tick_params"(
                     which = "minor",
@@ -1276,7 +1257,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
 
             if axis[:minorgrid]
-                axis[:minorticks] > 1 || ax."minorticks_on"()  # Check if ticks were already configured
+                no_minor_intervals(axis) || ax."minorticks_on"()  # Check if ticks were already configured
                 pyaxis."set_tick_params"(
                     which = "minor",
                     direction = axis[:tick_direction] === :out ? "out" : "in",
@@ -1655,3 +1636,5 @@ for (mime, fmt) in (
 end
 
 closeall(::PyPlotBackend) = PyPlot.plt."close"("all")
+
+# COV_EXCL_STOP

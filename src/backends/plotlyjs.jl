@@ -1,6 +1,7 @@
 # https://github.com/sglyon/PlotlyJS.jl
 
 # ------------------------------------------------------------------------------
+include(_path(:plotly))
 
 function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     plt[:overwrite_figure] && closeall()
@@ -15,7 +16,7 @@ function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     layout = plotly_layout(plt)
     w, h = plt[:size]
     PlotlyJS.relayout!(plt.o, layout, width = w, height = h)
-    return plt.o
+    plt.o
 end
 
 # ------------------------------------------------------------------------------
@@ -42,9 +43,8 @@ _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) =
 
 _display(plt::Plot{PlotlyJSBackend}) = display(plotlyjs_syncplot(plt))
 
-function PlotlyJS.WebIO.render(plt::Plot{PlotlyJSBackend})
-    return PlotlyJS.WebIO.render(plotlyjs_syncplot(plt))
-end
+PlotlyJS.WebIO.render(plt::Plot{PlotlyJSBackend}) =
+    PlotlyJS.WebIO.render(plotlyjs_syncplot(plt))
 
 closeall(::PlotlyJSBackend) =
     if !isplotnull() && isa(current().o, PlotlyJS.SyncPlot)

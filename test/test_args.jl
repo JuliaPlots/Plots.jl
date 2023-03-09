@@ -1,3 +1,30 @@
+struct Foo{T}
+    x::Vector{T}
+    y::Vector{T}
+end
+
+@recipe function f(foo::Foo)
+    xlabel --> "x"
+    ylabel --> "y"
+    seriestype --> :path
+    marker --> :auto
+    return foo.x, foo.y
+end
+
+x = collect(0.0:10.0)
+foo = Foo(x, sin.(x))
+
+@testset "Magic attributes" begin
+    @test plot(foo)[1][1][:markershape] === :+
+    @test plot(foo, markershape = :diamond)[1][1][:markershape] === :diamond
+    @test plot(foo, marker = :diamond)[1][1][:markershape] === :diamond
+    @test (@test_logs (:warn, "Skipped marker arg diamond.") plot(
+        foo,
+        marker = :diamond,
+        markershape = :diamond,
+    )[1][1][:markershape]) === :diamond
+end
+
 using Plots, Test
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
@@ -78,4 +105,21 @@ end
     @test :legend in aliases(:legend_position)
     Plots.add_non_underscore_aliases!(Plots._typeAliases)
     Plots.add_axes_aliases(:ticks, :tick)
+end
+
+@userplot MatrixHeatmap
+
+@recipe function f(A::MatrixHeatmap)
+    mat = A.args[1]
+    margin --> (0, :mm)
+    seriestype := :heatmap
+    x := axes(mat, 2)
+    y := axes(mat, 1)
+    z := Surface(mat)
+    ()
+end
+
+@testset "margin" begin
+    # github.com/JuliaPlots/Plots.jl/issues/4522
+    @test show(devnull, matrixheatmap(reshape(1:12, 3, 4))) isa Nothing
 end

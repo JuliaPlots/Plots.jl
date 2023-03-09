@@ -36,7 +36,7 @@ However, although it is lightweight, it enables a lot.  The entirety of the Plot
 to any package implementing a recipe.  This means that complex plots and subplots can be built with uber-flexibility
 using custom combinations of data types.  Some examples of applications:
 
-- Distributions: overlayed density plots for non-normal fitted distributions.
+- Distributions: overlaid density plots for non-normal fitted distributions.
 - DataFrames: "Grammar of Graphics"-style inputs using symbols.
 - Deep Learning: frameworks for visualization of neural network states and tracking of internal calculations.
 - Graphs: flexible, interactive graphs with easily customizable colors, etc.

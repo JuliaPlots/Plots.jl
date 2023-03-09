@@ -976,9 +976,8 @@ lens!(args...; kwargs...) = plot!(args...; seriestype = :lens, kwargs...)
 export lens!
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)  # COV_EXCL_LINE
     sp_index, inset_bbox = plotattributes[:inset_subplots]
-    if !(width(inset_bbox) isa Measures.Length{:w,<:Real})
+    width(inset_bbox) isa Measures.Length{:w,<:Real} ||
         throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
-    end
     sp = plt.subplots[sp_index]
     xscale = sp[:xaxis][:scale]
     yscale = sp[:yaxis][:scale]
@@ -1310,7 +1309,7 @@ function clamp_greys!(mat::AMat{<:Gray})
 end
 
 @recipe function f(mat::AMat{<:Gray})  # COV_EXCL_LINE
-    n, m = map(a -> range(0.5, stop = a.stop + 0.5), axes(mat))
+    n, m = map(a -> range(first(a) - 0.5, stop = last(a) + 0.5), axes(mat))
 
     if is_seriestype_supported(:image)
         seriestype := :image
@@ -1329,7 +1328,7 @@ end
 
 # images - colors
 @recipe function f(mat::AMat{T}) where {T<:Colorant}  # COV_EXCL_LINE
-    n, m = map(a -> range(0.5, stop = a.stop + 0.5), axes(mat))
+    n, m = map(a -> range(first(a) - 0.5, stop = last(a) + 0.5), axes(mat))
 
     if is_seriestype_supported(:image)
         seriestype := :image
@@ -1494,7 +1493,7 @@ end
     seriestype := :spy
     mat = g.args[1]
     n, m = axes(mat)
-    Plots.SliceIt, m, n, Surface(mat)
+    SliceIt, m, n, Surface(mat)
 end
 
 @recipe function f(::Type{Val{:spy}}, x, y, z)  # COV_EXCL_LINE

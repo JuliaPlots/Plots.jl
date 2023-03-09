@@ -93,9 +93,9 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         sp = deepcopy(osp)  # FIXME: fails `PlotlyJS` ?
         plt.layout.grid[1, 1] = sp
         # reset some attributes
-        sp.minpad = defaultminpad
-        sp.bbox = defaultbox
-        sp.plotarea = defaultbox
+        sp.minpad = DEFAULT_MINPAD[]
+        sp.bbox = DEFAULT_BBOX[]
+        sp.plotarea = DEFAULT_BBOX[]
         sp.plt = plt  # change the enclosing plot
         push!(plt.subplots, sp)
         plt
@@ -133,6 +133,7 @@ should_add_to_legend(series::Series) =
     )
 
 # -----------------------------------------------------------------------
+Base.iterate(plt::Plot) = iterate(plt.subplots)
 
 Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
 Base.length(plt::Plot) = length(plt.subplots)
@@ -143,11 +144,16 @@ Base.size(plt::Plot) = size(plt.layout)
 Base.size(plt::Plot, i::Integer) = size(plt.layout)[i]
 Base.ndims(plt::Plot) = 2
 
+# clear out series list, but retain subplots
+Base.empty!(plt::Plot) = foreach(sp -> empty!(sp.series_list), plt.subplots)
+
 # attr(plt::Plot, k::Symbol) = plt.attr[k]
 # attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 
 Base.getindex(sp::Subplot, i::Union{Vector{<:Integer},Integer}) = series_list(sp)[i]
 Base.lastindex(sp::Subplot) = length(series_list(sp))
+
+Base.empty!(sp::Subplot) = empty!(sp.series_list)
 
 # -----------------------------------------------------------------------
 

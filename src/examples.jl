@@ -640,6 +640,8 @@ const _examples = PlotExample[
             plot(
                 [(0, 0), (0, 0.9), (1, 0.9), (2, 1), (3, 0.9), (80, 0)],
                 legend = :outertopright,
+                minorgrid = true,
+                minorticks = 2,
             )
             plot!([(0, 0), (0, 0.9), (2, 0.9), (3, 1), (4, 0.9), (80, 0)])
             plot!([(0, 0), (0, 0.9), (3, 0.9), (4, 1), (5, 0.9), (80, 0)])
@@ -819,10 +821,17 @@ const _examples = PlotExample[
     PlotExample( # 49
         "Polar heatmaps",
         quote
-            x = range(0, 2π, length = 9)
-            y = 0:4
-            z = (1:4) .+ (1:8)'
-            heatmap(x, y, z, projection = :polar)
+            θ = range(0, 2π; length = 100)
+            ρ = range(0, 120; length = 50)
+            z = sin.(ρ ./ 10) .* cos.(θ)'
+            heatmap(
+                θ,
+                ρ,
+                z;
+                projection = :polar,
+                color = :cividis,
+                right_margin = 2Plots.mm,
+            )
         end,
     ),
     PlotExample( # 50
@@ -834,13 +843,12 @@ const _examples = PlotExample[
             X = [x for x in xs for _ in ys]
             Y = [y for _ in xs for y in ys]
 
-            surf = (x, y) -> 1 / x + y * x^2
+            Z = (x, y) -> 1 / x + y * x^2
 
-            plot(
+            surface(
                 X,
                 Y,
-                surf.(X, Y),
-                st = :surface,
+                Z.(X, Y),
                 xlabel = "longer xlabel",
                 ylabel = "longer ylabel",
                 zlabel = "longer zlabel",
@@ -984,7 +992,7 @@ const _examples = PlotExample[
         """
         Width of bars may be specified as `bar_width`.
         The bars' baseline may be specified as `fillto`.
-        Each may be scalar, or a vector spcifying one value per bar.
+        Each may be scalar, or a vector specifying one value per bar.
         """,
         quote
             plot(
@@ -1008,7 +1016,7 @@ const _examples = PlotExample[
         end,
     ),
     PlotExample( # 57
-        "Vertical and horizonal spans",
+        "Vertical and horizontal spans",
         "`vspan` and `hspan` can be used to shade horizontal and vertical ranges.",
         quote
             hspan([1, 2, 3, 4]; label = "hspan", legend = :topleft)
@@ -1233,10 +1241,7 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [],
-    :pyplot => [
-        22,  # breaks docs with libstdc++.so.X: version `GLIBCXX_X.X.X' not found ...
-        56,
-    ],
+    :pyplot => [],
     :plotlyjs => [
         21,
         24,
@@ -1259,6 +1264,7 @@ _backend_skips = Dict(
         49,  # polar heatmap
         51,  # image with custom axes
         56,  # custom bar plot
+        62,  # fillstyle unsupported
     ],
     :inspectdr => [
         4,
@@ -1307,39 +1313,58 @@ _backend_skips = Dict(
         65,  # legend pos unsupported
     ],
     :gaston => [
-        2,   # animations
-        31,  # animations
+        31,  # animations - needs github.com/mbaz/Gaston.jl/pull/178
         49,  # TODO: support polar
-        50,  # TODO: 1D data not supported for pm3d
         60,  # :perspective projection unsupported
-        62,  # fillstyle
-        63,  # un-identified bug
+        63,  # FXIME: twin axes misalignement
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
+_backend_skips[:pythonplot] = _backend_skips[:pyplot]
 
 # ---------------------------------------------------------------------------------
+# replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
+replace_rand(ex) = ex
+
+function replace_rand(ex::Expr)
+    expr = Expr(ex.head)
+    foreach(arg -> push!(expr.args, replace_rand(arg)), ex.args)
+    if Meta.isexpr(ex, :call) && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
+        pushfirst!(expr.args, ex.args[1])
+        expr.args[2] = :rng
+    end
+    expr
+end
+
 # make and display one plot
+test_examples(i::Integer; kw...) = test_examples(backend_name(), i; kw...)
+
 function test_examples(
     pkgname::Symbol,
-    i::Int;
+    i::Integer;
     debug = false,
-    disp = true,
+    disp = false,
+    rng = nothing,
     callback = nothing,
 )
     @info "Testing plot: $pkgname:$i:$(_examples[i].header)"
 
-    m = Module(:PlotsExamplesModule)
+    m = Module(Symbol(:PlotsExamples, pkgname))
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
     Base.eval(m, quote
+        using Random
         using Plots
-        Plots.debugplots($debug)
+        Plots.debug!($debug)
         backend($(QuoteNode(pkgname)))
+        rng = $rng
+        rng === nothing || Random.seed!(rng, Plots.PLOTS_SEED)
         theme(:default)
     end)
-    imports === nothing || Base.eval(m, _examples[i].imports)
-    Base.eval(m, _examples[i].exprs)
+    (imp = _examples[i].imports) === nothing || Base.eval(m, imp)
+    exprs = _examples[i].exprs
+    rng === nothing || (exprs = Plots.replace_rand(exprs))
+    Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))
     callback === nothing || callback(m, pkgname, i)
@@ -1348,14 +1373,14 @@ end
 
 # generate all plots and create a dict mapping idx --> plt
 """
-test_examples(pkgname[, idx]; debug=false, disp=true, sleep=nothing, skip=[], only=nothing, callback=nothing)
+test_examples(pkgname[, idx]; debug=false, disp=false, sleep=nothing, skip=[], only=nothing, callback=nothing)
 
 Run the `idx` test example for a given backend, or all examples if `idx` is not specified.
 """
 function test_examples(
     pkgname::Symbol;
     debug = false,
-    disp = true,
+    disp = false,
     sleep = nothing,
     skip = [],
     only = nothing,

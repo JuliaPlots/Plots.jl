@@ -7,18 +7,16 @@
 end
 
 @testset "Plotly standalone" begin
-    @test_nowarn Plots._init_ijulia_plotting()
-    @test Plots.plotly_local_file_path[] ≡ nothing
-    temp = Plots.use_local_dependencies[]
+    @test Plots._plotly_local_file_path[] ≡ nothing
+    temp = Plots._use_local_dependencies[]
     withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
         Plots._plots_plotly_defaults()
-        @test Plots.plotly_local_file_path[] isa String
-        @test isfile(Plots.plotly_local_file_path[])
-        @test Plots.use_local_dependencies[] = true
-        @test_nowarn Plots._init_ijulia_plotting()
+        @test Plots._plotly_local_file_path[] isa String
+        @test isfile(Plots._plotly_local_file_path[])
+        @test Plots._use_local_dependencies[] = true
     end
-    Plots.plotly_local_file_path[] = nothing
-    Plots.use_local_dependencies[] = temp
+    Plots._plotly_local_file_path[] = nothing
+    Plots._use_local_dependencies[] = temp
 end
 
 @testset "NoFail" begin
@@ -45,7 +43,7 @@ end
 
         @testset "bar" begin
             p = bar([3, 2, 1], [1, 2, 3])
-            @test p isa Plot
+            @test p isa Plots.Plot
             @test display(dsp, p) isa Nothing
         end
 
@@ -65,8 +63,15 @@ end
     end
 end
 
+@testset "bool_env" begin
+    @test Plots.bool_env("FOO", "true")
+    @test Plots.bool_env("FOO", "1")
+    @test !Plots.bool_env("FOO", "false")
+    @test !Plots.bool_env("FOO", "0")
+end
+
 @testset "Themes" begin
-    @test showtheme(:dark) isa Plot
+    @test showtheme(:dark) isa Plots.Plot
 end
 
 @testset "maths" begin
@@ -92,7 +97,6 @@ end
     str = join(readlines(tmp), "")
     @test occursin("seriestype", str)
     @test occursin("Plot attributes", str)
-    @test Plots.printnothing(nothing) == "nothing"
     @test Plots.attrtypes() == "Series, Subplot, Plot, Axis"
 end
 
@@ -126,8 +130,8 @@ end
 
     @testset "orientation" begin
         for f in (histogram, barhist, stephist, scatterhist), o in (:vertical, :horizontal)
-            @test f(data, orientation = o).subplots[1].attr[:title] ==
-                  (o ≡ :vertical ? "x" : "y")
+            sp = f(data, orientation = o).subplots[1]
+            @test sp.attr[:title] == (o ≡ :vertical ? "x" : "y")
         end
     end
 
@@ -140,7 +144,7 @@ end
     end
 end
 
-@testset "plot" begin
+@testset "tex_output_standalone" begin
     pl = plot(1:5)
     pl2 = plot(pl, tex_output_standalone = true)
     @test !pl[:tex_output_standalone]
@@ -192,6 +196,20 @@ end
     @test series[:y] == y2
 end
 
+@testset "Empty Plot / Subplots" begin
+    pl = plot(map(_ -> plot(1:2, [1:2 2:3]), 1:2)...)
+    empty!(pl)
+    @test length(pl.subplots) == 2
+    @test length(first(pl).series_list) == 0
+    @test length(last(pl).series_list) == 0
+
+    pl = plot(map(_ -> plot(1:2, [1:2 2:3]), 1:2)...)
+    empty!(first(pl))  # clear out only the first subplot
+    @test length(pl.subplots) == 2
+    @test length(first(pl).series_list) == 0
+    @test length(last(pl).series_list) == 2
+end
+
 @testset "Measures" begin
     @test 1Plots.mm * 0.1Plots.pct == 0.1Plots.mm
     @test 0.1Plots.pct * 1Plots.mm == 0.1Plots.mm
@@ -207,7 +225,7 @@ end
     # not sure what is intended here ...
     wrapped = wrap([:red, :blue])
     @test !isempty(wrapped)
-    @test scatter(1:2, color = wrapped) isa Plot
+    @test scatter(1:2, color = wrapped) isa Plots.Plot
 end
 
 @testset "group" begin
@@ -216,11 +234,11 @@ end
     b = repeat(["low", "high"], inner = 2, outer = 3)
     c = repeat(1:2, outer = 6)
     d = [1, 1, 1, 2, 2, 2, 2, 4, 3, 3, 3, 6]
-    @test plot(b, d, group = (c, a), layout = (1, 3)) isa Plot
+    @test plot(b, d, group = (c, a), layout = (1, 3)) isa Plots.Plot
 end
 
 @testset "skipissing" begin
-    @test plot(skipmissing(1:5)) isa Plot
+    @test plot(skipmissing(1:5)) isa Plots.Plot
 end
 
 with(:gr) do
@@ -243,9 +261,9 @@ with(:gr) do
     @testset "recipes" begin
         @test Plots.seriestype_supported(:path) ≡ :native
 
-        @test plot([1, 2, 5], seriestype = :linearfit) isa Plot
-        @test plot([1, 2, 5], seriestype = :scatterpath) isa Plot
-        @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa Plot
+        @test plot([1, 2, 5], seriestype = :linearfit) isa Plots.Plot
+        @test plot([1, 2, 5], seriestype = :scatterpath) isa Plots.Plot
+        @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa Plots.Plot
 
         let pl = plot(1:2, -1:1, widen = false)
             Plots.abline!([0, 3], [5, -5])
@@ -287,7 +305,7 @@ with(:gr) do
             y,
             z;
             connections = [
-                [1, 2, 4, 3], # Quadrangle 
+                [1, 2, 4, 3], # Quadrangle
                 [1, 2, 5], # Triangle
                 [2, 4, 5], # Triangle
                 [4, 3, 5], # Triangle
@@ -301,7 +319,7 @@ with(:gr) do
     end
 
     @testset "fillstyle" begin
-        @test histogram(rand(10); fillstyle = :/) isa Plot
+        @test histogram(rand(10); fillstyle = :/) isa Plots.Plot
     end
 
     @testset "showable" begin
@@ -313,12 +331,24 @@ with(:gr) do
     end
 
     @testset "legends" begin
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa Plot
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa Plot
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa Plots.Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa
+              Plots.Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa
+              Plots.Plot
         @test_logs (:warn, r"n° of legend_column.*") png(
             plot(1:2, legend_columns = 10),
             tempname(),
         )
+    end
+
+    @testset "cycling" begin
+        # see github.com/JuliaPlots/Plots.jl/issues/4561
+        # and github.com/JuliaPlots/Plots.jl/issues/2980
+        # cycling arguments is a weird Plots feature - maybe remove in `2.0` ?
+        x = 0.0:0.1:1
+        y = rand(3)
+        show(devnull, scatter(x, y))
+        # show(devnull, plot(x, y))  # currently unsupported
     end
 end

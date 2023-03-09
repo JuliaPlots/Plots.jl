@@ -228,7 +228,7 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
             else
                 plt.layout
             end
-            sp = Subplot(backend(), parent = parent)
+            sp = Subplot(backend(); parent)
             sp.plt = plt
             push!(plt.subplots, sp)
             push!(plt.inset_subplots, sp)
@@ -286,7 +286,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     end
 
     _add_plot_title!(plt)
-    # override subplot/axis args.  `sp_attrs` take precendence
+    # override subplot/axis args.  `sp_attrs` take precedence
     for (idx, sp) in enumerate(plt.subplots)
         attr = if !haskey(plotattributes, :subplot) || plotattributes[:subplot] == idx
             merge(plotattributes, get(sp_attrs, sp, KW()))

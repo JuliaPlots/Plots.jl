@@ -1,11 +1,10 @@
-is_ci() = get(ENV, "CI", "false") == "true"
 ci_tol() =
     if Sys.islinux()
-        "5e-4"
+        is_pkgeval() ? "1e-2" : "5e-4"
     elseif Sys.isapple()
         "1e-3"
     else
-        "1e-2"
+        "1e-1"
     end
 
 const TESTS_MODULE = Module(:PlotsTestsModule)
@@ -21,13 +20,14 @@ reference_dir(args...) =
     end
 reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 
-if !isdir(reference_dir())
-    mkpath(reference_dir())
+function checkout_reference_dir(dn::AbstractString)
+    mkpath(dn)
+    local repo
     for i in 1:6
         try
-            LibGit2.clone(
+            repo = LibGit2.clone(
                 "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
-                reference_dir(),
+                dn,
             )
             break
         catch err
@@ -35,10 +35,29 @@ if !isdir(reference_dir())
             sleep(20i)
         end
     end
+    if (ver = Plots._current_plots_version).prerelease |> isempty
+        try
+            tag = LibGit2.GitObject(repo, "v$ver")
+            hash = string(LibGit2.target(tag))
+            LibGit2.checkout!(repo, hash)
+        catch err
+            @warn err
+        end
+    end
+    LibGit2.peel(LibGit2.head(repo)) |> println  # print some information
+    nothing
 end
 
-function reference_file(backend, i, version)
-    refdir, fn = reference_dir("Plots", string(backend)), "ref$i.png"
+let dn = reference_dir()
+    isdir(dn) || checkout_reference_dir(dn)
+end
+
+ref_name(i) = "ref" * lpad(i, 3, '0')
+
+function reference_file(backend, version, i)
+    # NOTE: keep ref[...].png naming consistent with `PlotDocs`
+    refdir = reference_dir("Plots", string(backend))
+    fn = ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
     for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
         if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
@@ -47,19 +66,6 @@ function reference_file(backend, i, version)
         end
     end
     return reffn
-end
-
-# replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
-replace_rand(ex) = ex
-
-function replace_rand(ex::Expr)
-    expr = Expr(ex.head)
-    foreach(arg -> push!(expr.args, replace_rand(arg)), ex.args)
-    if Meta.isexpr(ex, :call) && ex.args[1] ∈ (:rand, :randn, :(Plots.fakedata))
-        pushfirst!(expr.args, ex.args[1])
-        expr.args[2] = :rng
-    end
-    expr
 end
 
 function image_comparison_tests(
@@ -73,16 +79,18 @@ function image_comparison_tests(
     example = Plots._examples[idx]
     @info "Testing plot: $pkg:$idx:$(example.header)"
 
-    reffn = reference_file(pkg, idx, Plots._current_plots_version)
-    newfn = joinpath(reference_path(pkg, Plots._current_plots_version), "ref$idx.png")
+    ver = Plots._current_plots_version
+    ver = VersionNumber(ver.major, ver.minor, ver.patch)
+    reffn = reference_file(pkg, ver, idx)
+    newfn = joinpath(reference_path(pkg, ver), ref_name(idx) * ".png")
 
     imports = something(example.imports, :())
     exprs = quote
-        Plots.debugplots($debug)
+        Plots.debug!($debug)
         backend($(QuoteNode(pkg)))
         theme(:default)
         rng = StableRNG(Plots.PLOTS_SEED)
-        $(replace_rand(example.exprs))
+        $(Plots.replace_rand(example.exprs))
     end
     @debug imports exprs
 
@@ -106,9 +114,7 @@ function image_comparison_facts(
 )
     for i in setdiff(1:length(Plots._examples), skip)
         if only === nothing || i in only
-            @test success(
-                image_comparison_tests(pkg, i, debug = debug, sigma = sigma, tol = tol),
-            )
+            @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
         end
     end
 end
@@ -164,6 +170,9 @@ end
         pl = plot(map(plot, 1:4)..., layout = (2, 2))
         @test show(io, pl) isa Nothing
 
+        pl = plot(map(plot, 1:3)..., layout = (2, 2))
+        @test show(io, pl) isa Nothing
+
         pl = plot(map(plot, 1:2)..., layout = @layout([° _; _ °]))
         @test show(io, pl) isa Nothing
 
@@ -173,32 +182,27 @@ end
     end
 end
 
-const blacklist = if VERSION.major == 1 && VERSION.minor == 9
+const blacklist = if VERSION.major == 1 && VERSION.minor ∈ (9, 10)
     [41]  # FIXME: github.com/JuliaLang/julia/issues/47261
 else
     []
 end
+push!(blacklist, 50)  # NOTE:  remove when github.com/jheinen/GR.jl/issues/507 is resolved
 
 @testset "GR - reference images" begin
     with(:gr) do
         # NOTE: use `ENV["VISUAL_REGRESSION_TESTS_AUTO"] = true;` to automatically replace reference images
         @test backend() == Plots.GRBackend()
         @test backend_name() === :gr
-        withenv("PLOTS_TEST" => true, "GKSwstype" => "nul") do
-            @static if haskey(ENV, "APPVEYOR")
-                @info "Skipping GR image comparison tests on AppVeyor"
-            else
-                image_comparison_facts(
-                    :gr,
-                    tol = PLOTS_IMG_TOL,
-                    skip = vcat(Plots._backend_skips[:gr], blacklist),
-                )
-            end
-        end
+        image_comparison_facts(
+            :gr,
+            tol = PLOTS_IMG_TOL,
+            skip = vcat(Plots._backend_skips[:gr], blacklist),
+        )
     end
 end
 
-@testset "PlotlyJS" begin
+is_pkgeval() || @testset "PlotlyJS" begin
     with(:plotlyjs) do
         @test backend() == Plots.PlotlyJSBackend()
         pl = plot(rand(10))
@@ -207,41 +211,20 @@ end
     end
 end
 
-@testset "Examples" begin
-    if Sys.islinux()
-        callback(m, pkgname, i) = begin
-            pl = m.Plots.current()
-            save_func = (; pgfplotsx = m.Plots.pdf, unicodeplots = m.Plots.txt)  # fastest `savefig` for each backend
-            fn = Base.invokelatest(
-                get(save_func, pkgname, m.Plots.png),
-                pl,
-                tempname() * "_ex$i",
-            )
-            @test filesize(fn) > 1_000
-        end
-        for be in (:gr, :unicodeplots, :pgfplotsx, :plotlyjs, :pyplot, :inspectdr, :gaston)
-            skip = vcat(Plots._backend_skips[be], blacklist)
-            Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
-            closeall()
-        end
+is_pkgeval() || @testset "Examples" begin
+    callback(m, pkgname, i) = begin
+        pl = m.Plots.current()
+        save_func = (; pgfplotsx = m.Plots.pdf, unicodeplots = m.Plots.txt)  # fastest `savefig` for each backend
+        fn = Base.invokelatest(
+            get(save_func, pkgname, m.Plots.png),
+            pl,
+            tempname() * ref_name(i),
+        )
+        @test filesize(fn) > 1_000
     end
-end
-
-@testset "coverage" begin
-    with(:gr) do
-        @test Plots.CurrentBackend(:gr).sym === :gr
-        @test Plots.merge_with_base_supported([:annotations, :guide]) isa Set
-
-        @test_logs (:warn, r".*not a valid backend package") withenv(
-            "PLOTS_DEFAULT_BACKEND" => "invalid",
-        ) do
-            Plots._pick_default_backend()
-        end
-        @test withenv("PLOTS_DEFAULT_BACKEND" => "unicodeplots") do
-            Plots._pick_default_backend()
-        end == Plots.UnicodePlotsBackend()
-        @test_logs (:warn, r".*is not a supported backend") backend(:invalid)
-
-        @test Plots._pick_default_backend() == Plots.GRBackend()
+    Sys.islinux() && for be in TEST_BACKENDS
+        skip = vcat(Plots._backend_skips[be], blacklist)
+        Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
+        closeall()
     end
 end

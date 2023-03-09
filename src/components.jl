@@ -26,6 +26,9 @@ Construct a polygon to be plotted
 """
 Shape(verts::AVec) = Shape(RecipesPipeline.unzip(verts)...)
 Shape(s::Shape) = deepcopy(s)
+function Shape(x::AVec{X}, y::AVec{Y}) where {X,Y}
+    return Shape(convert(Vector{X}, x), convert(Vector{Y}, y))
+end
 
 get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
@@ -37,7 +40,7 @@ vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 "return the vertex points from a Shape or Segments object"
 coords(shape::Shape) = shape.x, shape.y
 
-coords(shapes::AVec{<:Shape}) = unzip(map(coords, shapes))
+coords(shapes::AVec{<:Shape}) = RecipesPipeline.unzip(map(coords, shapes))
 
 "get an array of tuples of points on a circle with radius `r`"
 partialcircle(start_θ, end_θ, n = 20, r = 1) =
@@ -225,7 +228,7 @@ arguments (which are distinguished by type/value) or as keyword arguments.
 - `family`: AbstractString. "serif" or "sans-serif" or "monospace"
 - `pointsize`: Integer. Size of font in points
 - `halign`: Symbol. Horizontal alignment (:hcenter, :left, or :right)
-- `valign`: Symbol. Vertical aligment (:vcenter, :top, or :bottom)
+- `valign`: Symbol. Vertical alignment (:vcenter, :top, or :bottom)
 - `rotation`: Real. Angle of rotation for text in degrees (use a non-integer type)
 - `color`: Colorant or Symbol
 # Examples
@@ -294,7 +297,8 @@ function font(args...; kw...)
         elseif sym === :rotation
             rotation = kw[sym]
         elseif sym === :color
-            color = parse(Colorant, kw[sym])
+            col = kw[sym]
+            color = col isa Colorant ? col : parse(Colorant, col)
         else
             @warn "Unused font kwarg: $sym"
         end
@@ -582,7 +586,7 @@ annotations(anns::AVec) = anns
 annotations(anns) = Any[anns]
 annotations(::Nothing) = []
 
-_annotationfont(sp::Subplot) = Plots.font(;
+_annotationfont(sp::Subplot) = font(;
     family = sp[:annotationfontfamily],
     pointsize = sp[:annotationfontsize],
     halign = sp[:annotationhalign],

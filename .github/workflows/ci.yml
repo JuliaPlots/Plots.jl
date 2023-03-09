@@ -19,7 +19,8 @@ jobs:
     env:
       GKS_ENCODING: "utf8"
       GKSwstype: "nul"
-      PYTHON: "Conda"  # for `PyPlot`
+      JULIA_CONDAPKG_BACKEND: "MicroMamba"
+      MPLBACKEND: "agg"
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.version == 'nightly' }}
@@ -36,20 +37,35 @@ jobs:
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '1.7'  # only test intermediate relase on `ubuntu`
+            version: '1.7'  # only test intermediate release on `ubuntu`
+          - os: ubuntu-latest
+            prefix: xvfb-run
+            version: '~1.9.0-0'
           - os: ubuntu-latest
             prefix: xvfb-run
             version: 'nightly'
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Ubuntu LaTeX dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} g++
+          sudo fc-cache -vr
+
+      - name: Set LD_PRELOAD
+        if: startsWith(matrix.os, 'ubuntu')
+        run: echo "LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)" >> $GITHUB_ENV
+
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@latest
 
-      - name: Test upstream RecipesBase & RecipesPipeline
+      - name: Run upstream RecipesBase & RecipesPipeline tests
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
@@ -57,26 +73,30 @@ jobs:
             Pkg.develop(path=name); Pkg.test(name; coverage=true)
           end
 
-      - name: PyPlot dependencies
+      - name: Install conda based matplotlib
         shell: julia --project=@. --color=yes {0}
         run: |
-          @show ENV["PYTHON"]
-          using Pkg
-          Pkg.add("Conda"); Pkg.build("Conda"; verbose=true)
-          using Conda; env, rc = Conda.ROOTENV, Conda.conda_rc(Conda.ROOTENV)
-          Conda.runconda(`config --set auto_update_conda False --file $rc --force`, env)
-          Pkg.add("PyCall"); Pkg.build("PyCall"; verbose=true)
-          Conda.add("matplotlib")
-          Conda.list()
-
-      - name: Ubuntu LaTeX dependencies
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get -y update
-          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}
-          sudo fc-cache -vr
+          using Pkg; Pkg.add("CondaPkg")
+          using CondaPkg; CondaPkg.resolve()
+          libgcc = if Sys.islinux()
+            # see discourse.julialang.org/t/glibcxx-version-not-found/82209/8
+            # julia 1.8.3 is built with libstdc++.so.6.0.29, so we must restrict to this version (gcc 11.3.0, not gcc 12.2.0)
+            # see gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html
+            specs = Dict(
+              v"3.4.29" => ">=11.1,<12.1",
+              v"3.4.30" => ">=12.1,<13.1",
+              v"3.4.31" => ">=13.1,<14.1",
+              # ... keep this up-to-date with gcc 14
+            )[Base.BinaryPlatforms.detect_libstdcxx_version()]
+            ("libgcc-ng$specs", "libstdcxx-ng$specs")
+          else
+            ()
+          end
+          CondaPkg.PkgREPL.add([libgcc..., "matplotlib"])
+          CondaPkg.status()
 
       - uses: julia-actions/julia-runtest@latest
+        timeout-minutes: 60
         with:
           prefix: ${{ matrix.prefix }}  # for `xvfb-run`
 

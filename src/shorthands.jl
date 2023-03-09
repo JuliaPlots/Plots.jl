@@ -7,11 +7,10 @@
 Make a scatter plot of `y` vs `x`.
 
 # Keyword arguments
-- $(_document_argument("marker_size"))
-- $(_document_argument("marker_color"))
-- $(_document_argument("marker_shape"))
-- $(_document_argument("marker_color"))
-- $(_document_argument("marker_alpha"))
+- $(_document_argument(:marker_size))
+- $(_document_argument(:marker_color))
+- $(_document_argument(:marker_shape))
+- $(_document_argument(:marker_alpha))
 
 # Examples
 ```julia-repl
@@ -28,11 +27,11 @@ julia> scatter([(1,4),(2,5),(3,6)])
 Make a bar plot of `y` vs `x`.
 
 # Keyword arguments
-- $(_document_argument("bar_position"))
-- $(_document_argument("bar_width"))
-- $(_document_argument("bar_edges"))
-- $(_document_argument("fillrange"))
-- $(_document_argument("permute"))
+- $(_document_argument(:bar_position))
+- $(_document_argument(:bar_width))
+- $(_document_argument(:bar_edges))
+- $(_document_argument(:fillrange))
+- $(_document_argument(:permute))
 
 # Examples
 ```julia-repl
@@ -52,13 +51,13 @@ Plot a histogram.
 
 # Arguments
 - `x`: AbstractVector of values to be binned
-- $(_document_argument("bins"))
+- $(_document_argument(:bins))
 - `weights`: Vector of weights for the values in `x`, for weighted bin counts
-- $(_document_argument("normalize"))
-- $(_document_argument("bar_position"))
-- $(_document_argument("bar_width"))
-- $(_document_argument("bar_edges"))
-- $(_document_argument("permute"))
+- $(_document_argument(:normalize))
+- $(_document_argument(:bar_position))
+- $(_document_argument(:bar_width))
+- $(_document_argument(:bar_edges))
+- $(_document_argument(:permute))
 
 # Example
 ```julia-repl
@@ -149,7 +148,7 @@ julia> density(randn(100_000))
 Plot a heatmap of the rectangular array `z`.
 
 # Keyword arguments
-- $(_document_argument("aspect_ratio"))
+- $(_document_argument(:aspect_ratio))
 
 # Example
 ```julia-repl
@@ -180,8 +179,8 @@ julia> hexbin(randn(10_000), randn(10_000))
 Draw a stick plot of `y` vs `x`.
 
 # Arguments
-- $(_document_argument("fillrange"))
-- $(_document_argument("marker_shape"))
+- $(_document_argument(:fillrange))
+- $(_document_argument(:marker_shape))
 
 # Example
 ```julia-repl
@@ -408,7 +407,7 @@ Make a quiver (vector field) plot. The `i`th vector extends
 from `(x[i],y[i])` to `(x[i] + u[i], y[i] + v[i])`.
 
 # Keyword arguments
-- $(_document_argument("arrow"))
+- $(_document_argument(:arrow))
 
 # Example
 ```julia-repl
@@ -425,7 +424,7 @@ Draw a Bezier curve from `(x[1],y[1])` to `(x[end],y[end])`
 with control points `(x[2],y[2]), ..., (x[end-1],y[end]-1)`.
 
 # Keyword arguments
-- $(_document_argument("fillrange"))
+- $(_document_argument(:fillrange))
 
 # Example
 ```julia-repl

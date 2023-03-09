@@ -1,7 +1,5 @@
 # https://plot.ly/javascript/getting-started
 
-is_subplot_supported(::PlotlyBackend) = true
-# is_string_supported(::PlotlyBackend) = true
 _plotly_framestyle(style::Symbol) =
     if style in (:box, :axes, :zerolines, :grid, :none)
         style
@@ -81,6 +79,12 @@ function plotly_domain(sp::Subplot)
     pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
     x_domain = [pcts[1], pcts[1] + pcts[3]]
     y_domain = [pcts[2], pcts[2] + pcts[4]]
+    if hascolorbar(sp)
+        subplot_width = pcts[3]
+        colorbar_fractional_size = 0.25
+        colorbar_width = subplot_width * colorbar_fractional_size
+        x_domain[2] = x_domain[2] - colorbar_width
+    end
     x_domain, y_domain
 end
 
@@ -433,7 +437,7 @@ get_plotly_marker(k, def) = get(
     def,
 )
 
-# find indicies of axes to which the supblot links to
+# find indicies of axes to which the subplot links to
 function plotly_link_indicies(plt::Plot, sp::Subplot)
     if plt[:link] in (:x, :y, :both)
         x_idx = sp[:xaxis].sps[1][:subplot_index]
@@ -478,7 +482,10 @@ plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
 plotly_native_data(axis::Axis, data::AbstractArray) =
     if !isempty(axis[:discrete_values])
-        construct_categorical_data(data, axis)
+        map(
+            xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)],
+            data,
+        )
     elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
         plotly_convert_to_datetime(data, axis[:formatter])
     else
@@ -546,9 +553,9 @@ function plotly_series(plt::Plot, series::Series)
         st in (:path, :scatter, :scattergl, :straightline) &&
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
-    plotattributes_out[:colorbar] = KW(:title => sp[:colorbar_title])
+    plotattributes_out[:colorbar] = plotly_colorbar(sp)
 
-    if is_2tuple(clims)
+    if is_2tuple(clims) && all(!isnan, clims)
         plotattributes_out[:zmin], plotattributes_out[:zmax] = clims
     end
 
@@ -706,6 +713,17 @@ function plotly_series(plt::Plot, series::Series)
     plotly_adjust_hover_label!(plotattributes_out, series[:hover])
 
     [merge(plotattributes_out, series[:extra_kwargs])]
+end
+
+function plotly_colorbar(sp::Subplot)
+    x_domain, y_domain = plotly_domain(sp)
+    plot_attribute = KW(
+        :title => sp[:colorbar_title],
+        :y => mean(y_domain),
+        :len => diff(y_domain)[1],
+        :x => x_domain[2],
+    )
+    return plot_attribute
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
@@ -1007,10 +1025,10 @@ html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
 plotly_url() =
-    if use_local_dependencies[]
-        "file:///" * plotly_local_file_path[]
+    if _use_local_dependencies[]
+        "file:///" * _plotly_local_file_path[]
     else
-        "https://cdn.plot.ly/$(_plotly_min_js_filename)"
+        "https://cdn.plot.ly/$_plotly_min_js_filename"
     end
 
 function plotly_html_head(plt::Plot)
@@ -1051,10 +1069,10 @@ function plotly_html_body(plt, style = nothing)
         requirejs_prefix = """
             requirejs.config({
                 paths: {
-                    Plotly: '$(plotly_no_ext)'
+                    plotly: '$(plotly_no_ext)'
                 }
             });
-            require(['Plotly'], function (Plotly) {
+            require(['plotly'], function (Plotly) {
         """
         requirejs_suffix = "});"
     end

@@ -1,10 +1,12 @@
+using Plots, Test
 with(:plotly) do
     @testset "Basic" begin
         @test backend() == Plots.PlotlyBackend()
 
         pl = plot(rand(10))
-        @test pl isa Plot
+        @test pl isa Plots.Plot
         @test_nowarn Plots.plotly_series(plot())
+        @test !haskey(Plots.plotly_series(pl)[1], :zmax)
     end
 
     @testset "Contours" begin
