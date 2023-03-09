@@ -531,17 +531,17 @@ get_gradient(c) = cgrad()
 get_gradient(cg::ColorGradient) = cg
 get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 
-get_linewidth(series, i::Int = 1) = _cycle(series[:line_width], i)
-get_linestyle(series, i::Int = 1) = _cycle(series[:line_style], i)
+get_line_width(series, i::Int = 1) = _cycle(series[:line_width], i)
+get_line_style(series, i::Int = 1) = _cycle(series[:line_style], i)
 get_fillstyle(series, i::Int = 1) = _cycle(series[:fillstyle], i)
 
-function get_markerstrokecolor(series, i::Int = 1)
+function get_marker_stroke_color(series, i::Int = 1)
     msc = series[:marker_stroke_color]
     isa(msc, ColorGradient) ? msc : _cycle(msc, i)
 end
 
-get_markerstrokealpha(series, i::Int = 1) = _cycle(series[:marker_stroke_alpha], i)
-get_markerstrokewidth(series, i::Int = 1) = _cycle(series[:marker_stroke_width], i)
+get_marke_rstroke_alpha(series, i::Int = 1) = _cycle(series[:marker_stroke_alpha], i)
+get_marker_stroke_width(series, i::Int = 1) = _cycle(series[:marker_stroke_width], i)
 
 const _segmenting_vector_attributes = (
     :seriescolor,

@@ -588,8 +588,8 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         series = cbar.lines
         gr_set_gradient(_cbar_unique(get_colorgradient.(series), "color"))
         gr_set_line(
-            _cbar_unique(get_linewidth.(series), "line width"),
-            _cbar_unique(get_linestyle.(series), "line style"),
+            _cbar_unique(get_line_width.(series), "line width"),
+            _cbar_unique(get_line_style.(series), "line style"),
             _cbar_unique(get_line_color.(series, Ref(clims)), "line color"),
             sp,
         )
@@ -1061,7 +1061,7 @@ function gr_add_legend(sp, leg, viewport_area)
                 gr_polyline(x, y, GR.fillarea)
                 lc = get_line_color(series, clims)
                 gr_set_transparency(lc, get_line_alpha(series))
-                gr_set_line(get_linewidth(series), get_linestyle(series), lc, sp)
+                gr_set_line(get_line_width(series), get_line_style(series), lc, sp)
                 gr_set_transparency(lc, la)
                 gr_set_line(clamped_lw, ls, lc, sp)
                 st === :shape && gr_polyline(x, y)
@@ -1802,7 +1802,7 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
             GR.fillarea(fx, fy)
         end
         (lc = get_line_color(series, clims, i)) |> gr_set_fillcolor
-        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
+        gr_set_line(get_line_width(series, i), get_line_style(series, i), lc, series)
         gr_set_transparency(lc, get_line_alpha(series, i))
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
@@ -1873,7 +1873,7 @@ function gr_draw_shapes(series, clims)
 
             # draw the shapes
             lc = get_line_color(series, clims, i)
-            gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
+            gr_set_line(get_line_width(series, i), get_line_style(series, i), lc, series)
             gr_set_transparency(lc, get_line_alpha(series, i))
             GR.polyline(xseg, yseg)
         end
@@ -1883,7 +1883,7 @@ end
 function gr_draw_contour(series, x, y, z, clims)
     GR.setprojectiontype(0)
     GR.setspace(clims[1], clims[2], 0, 90)
-    gr_set_line(get_linewidth(series), get_linestyle(series), get_line_color(series), series)
+    gr_set_line(get_line_width(series), get_line_style(series), get_line_color(series), series)
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] !== nothing
@@ -1949,7 +1949,7 @@ function gr_draw_surface(series, x, y, z, clims)
         end
         fillalpha = get_fillalpha(series)
         facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
-        GR.setborderwidth(get_linewidth(series))
+        GR.setborderwidth(get_line_width(series))
         GR.setbordercolorind(gr_getcolorind(get_line_color(series)))
         GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))
     else

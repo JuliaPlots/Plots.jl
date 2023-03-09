@@ -646,8 +646,8 @@ pgfx_series_arguments(series, opt) =
         opt[:x], opt[:y]
     end
 
-pgfx_get_linestyle(k::AbstractString) = pgfx_get_linestyle(Symbol(k))
-pgfx_get_linestyle(k::Symbol) = get(
+pgfx_get_line_style(k::AbstractString) = pgfx_get_line_style(Symbol(k))
+pgfx_get_line_style(k::Symbol) = get(
     (
         solid = "solid",
         dash = "dashed",
@@ -883,7 +883,7 @@ function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = :solid)
         "color" => cstr,
         "draw opacity" => alpha(cstr),
         "line width" => linewidth,
-        pgfx_get_linestyle(linestyle) => nothing,
+        pgfx_get_line_style(linestyle) => nothing,
     )
 end
 
@@ -891,10 +891,10 @@ pgfx_legend_col(s::Symbol) = s === :horizontal ? -1 : 1
 pgfx_legend_col(n) = n
 
 function pgfx_linestyle(plotattributes, i = 1)
-    lw = pgfx_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)
+    lw = pgfx_thickness_scaling(plotattributes) * get_line_width(plotattributes, i)
     lc = single_color(get_line_color(plotattributes, i))
     la = get_line_alpha(plotattributes, i)
-    ls = get_linestyle(plotattributes, i)
+    ls = get_line_style(plotattributes, i)
     return pgfx_linestyle(lw, lc, la, ls)
 end
 
@@ -962,7 +962,7 @@ function pgfx_marker(plotattributes, i = 1)
             else
                 0
             end,
-            pgfx_get_linestyle(_cycle(plotattributes[:marker_stroke_style], i)) =>
+            pgfx_get_line_style(_cycle(plotattributes[:marker_stroke_style], i)) =>
                 nothing,
         ),
     )

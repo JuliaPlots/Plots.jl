@@ -366,8 +366,8 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
     # some defaults
     cbar_scale = sp[:colorbar_scale]
-    linewidths = linewidth = _py_thickness_scale(plt, get_linewidth(series))
-    linestyles = linestyle = _py_linestyle(st, get_linestyle(series))
+    linewidths = linewidth = _py_thickness_scale(plt, get_line_width(series))
+    linestyles = linestyle = _py_linestyle(st, get_line_style(series))
     edgecolor  = edgecolors = _py_color(get_linecolor(series, 1, cbar_scale))
     facecolor  = facecolors = _py_color(series[:fillcolor])
     zorder     = series[:series_plotindex]
@@ -385,8 +385,8 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     single_color(get_linecolor(series, clims, i, cbar_scale)),
                     get_linealpha(series, i),
                 ),
-                linewidth = _py_thickness_scale(plt, get_linewidth(series, i)),
-                linestyle = _py_linestyle(st, get_linestyle(series, i)),
+                linewidth = _py_thickness_scale(plt, get_line_width(series, i)),
+                linestyle = _py_linestyle(st, get_line_style(series, i)),
                 solid_capstyle = "butt",
                 dash_capstyle = "butt",
                 drawstyle = _py_stepstyle(st),
@@ -458,7 +458,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 fc = get_fillcolor(series, clims, i)
                 la = get_linealpha(series, i)
                 fa = get_fillalpha(series, i)
-                ls = get_linestyle(series, i)
+                ls = get_line_style(series, i)
                 fs = get_fillstyle(series, i)
                 has_fs = !isnothing(fs)
 
@@ -471,7 +471,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                     path;
                     edgecolor = _py_color(lc, la),
                     facecolor = _py_color(fc, has_fs ? 0 : fa),
-                    linewidth = _py_thickness_scale(plt, get_linewidth(series, i)),
+                    linewidth = _py_thickness_scale(plt, get_line_width(series, i)),
                     linestyle = _py_linestyle(st, ls),
                     fill = !has_fs,
                     zorder,
@@ -1341,7 +1341,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
             fc = get_fillcolor(series, clims)
             la = get_linealpha(series)
             fa = get_fillalpha(series)
-            ls = get_linestyle(series)
+            ls = get_line_style(series)
             fs = get_fillstyle(series)
             has_fs = !isnothing(fs)
 
@@ -1349,7 +1349,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
             mpl.patches.Patch(
                 edgecolor = _py_color(single_color(lc), la),
                 facecolor = _py_color(single_color(fc), has_fs ? 0 : fa),
-                linewidth = _py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
+                linewidth = _py_thickness_scale(plt, clamp(get_line_width(series), 0, 5)),
                 linestyle = _py_linestyle(series[:seriestype], ls),
                 capstyle = "butt",
             ) |> push_h
@@ -1369,7 +1369,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                     capstyle = "butt",
                 ) |> push_h
         elseif series[:seriestype] ∈ _py_legend_series
-            has_line = get_linewidth(series) > 0
+            has_line = get_line_width(series) > 0
             PythonPlot.pyplot.Line2D(
                 (0, 1),
                 (0, 0),
@@ -1381,7 +1381,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                     plt,
                     has_line * sp[:legend_font_pointsize] / 8,
                 ),
-                linestyle = _py_linestyle(:path, get_linestyle(series)),
+                linestyle = _py_linestyle(:path, get_line_style(series)),
                 solid_capstyle = "butt",
                 solid_joinstyle = "miter",
                 dash_capstyle = "butt",

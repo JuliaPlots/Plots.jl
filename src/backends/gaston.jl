@@ -660,8 +660,8 @@ gaston_alpha(alpha) = alpha === nothing ? 0 : alpha
 
 gaston_lc_ls_lw(series::Series, clims, i::Int) = (
     gaston_color(get_line_color(series, clims, i), get_line_alpha(series, i)),
-    gaston_linestyle(get_linestyle(series, i)),
-    get_linewidth(series, i),
+    gaston_linestyle(get_line_style(series, i)),
+    get_line_width(series, i),
 )
 
 gaston_mk_ms_mc(series::Series, clims, i::Int) = (

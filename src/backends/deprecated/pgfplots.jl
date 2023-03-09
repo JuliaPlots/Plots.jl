@@ -106,10 +106,10 @@ function pgf_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
 end
 
 function pgf_linestyle(plotattributes, i = 1)
-    lw = pgf_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)
+    lw = pgf_thickness_scaling(plotattributes) * get_line_width(plotattributes, i)
     lc = get_line_color(plotattributes, i)
     la = get_line_alpha(plotattributes, i)
-    ls = get_linestyle(plotattributes, i)
+    ls = get_line_style(plotattributes, i)
     return pgf_linestyle(lw, lc, la, ls)
 end
 

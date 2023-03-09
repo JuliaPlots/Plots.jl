@@ -770,8 +770,8 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
                 :color => rgba_string(
                     plot_color(get_line_color(series, clims, i), get_line_alpha(series, i)),
                 ),
-                :width => get_linewidth(series, i),
-                :dash => string(get_linestyle(series, i)),
+                :width => get_line_width(series, i),
+                :dash => string(get_line_style(series, i)),
             )
         end
         plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
@@ -896,7 +896,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 :color => rgba_string(
                     plot_color(get_line_color(series, clims, i), get_line_alpha(series, i)),
                 ),
-                :width => get_linewidth(series, i),
+                :width => get_line_width(series, i),
                 :shape => if st === :steppre
                     "vh"
                 elseif st === :stepmid
@@ -906,7 +906,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 else
                     "linear"
                 end,
-                :dash => string(get_linestyle(series, i)),
+                :dash => string(get_line_style(series, i)),
             )
         end
 

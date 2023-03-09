@@ -1483,7 +1483,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         Set{Symbol}()
     end
     extra_kwargs = Dict{Symbol,Any}()
-    for k in explicitkeys(plotattributes)
+    for k in RecipesPipeline.explicitkeys(plotattributes)
         (is_attr_supported(pkg, k) && k ∉ keys(_deprecated_attributes)) && continue
         k in _suppress_warnings && continue
         if ismissing(default(k))
@@ -1948,13 +1948,9 @@ ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
 const DEFAULT_LINEWIDTH = Ref(1)
 
 # get a good default linewidth... 0 for surface and heatmaps
-    if plotattributes[:line_width] === :auto
-        plotattributes[:line_width] = (
-            get(plotattributes, :seriestype, :path) in (:surface, :heatmap, :image) ? 0 : 1
-        )
 _replace_linewidth(plotattributes::AKW) =
-    if plotattributes[:linewidth] === :auto
-        plotattributes[:linewidth] =
+    if plotattributes[:line_width] === :auto
+        plotattributes[:line_width] =
             (get(plotattributes, :seriestype, :path) ∉ (:surface, :heatmap, :image)) *
             DEFAULT_LINEWIDTH[]
     end

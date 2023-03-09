@@ -430,8 +430,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         single_color(get_line_color(series, clims, i)),
                         get_line_alpha(series, i),
                     ),
-                    linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
-                    linestyle = py_linestyle(st, get_linestyle(series, i)),
+                    linewidth = py_thickness_scale(plt, get_line_width(series, i)),
+                    linestyle = py_linestyle(st, get_line_style(series, i)),
                     solid_capstyle = "butt",
                     dash_capstyle = "butt",
                     drawstyle = py_stepstyle(st),
@@ -450,8 +450,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         :shrinkB => 0,
                         :edgecolor => py_color(get_line_color(series)),
                         :facecolor => py_color(get_line_color(series)),
-                        :line_width => py_thickness_scale(plt, get_linewidth(series)),
-                        :line_style => py_linestyle(st, get_linestyle(series)),
+                        :line_width => py_thickness_scale(plt, get_line_width(series)),
+                        :line_style => py_linestyle(st, get_line_style(series)),
                     )
                     add_arrows(x, y) do xyprev, xy
                         ax."annotate"(
@@ -735,7 +735,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 fc = get_fillcolor(series, clims, i)
                 la = get_line_alpha(series, i)
                 fa = get_fillalpha(series, i)
-                ls = get_linestyle(series, i)
+                ls = get_line_style(series, i)
                 fs = get_fillstyle(series, i)
                 has_fs = !isnothing(fs)
 
@@ -748,7 +748,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     zorder = series[:series_plotindex],
                     edgecolor = py_color(lc, la),
                     facecolor = py_color(fc, has_fs ? 0 : fa),
-                    linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
+                    linewidth = py_thickness_scale(plt, get_line_width(series, i)),
                     linestyle = py_linestyle(st, ls),
                     fill = !has_fs,
                 )
@@ -1452,7 +1452,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             fc = get_fillcolor(series, clims)
             la = get_line_alpha(series)
             fa = get_fillalpha(series)
-            ls = get_linestyle(series)
+            ls = get_line_style(series)
             fs = get_fillstyle(series)
             has_fs = !isnothing(fs)
 
@@ -1460,7 +1460,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             line_handle = pypatches."Patch"(
                 edgecolor = py_color(single_color(lc), la),
                 facecolor = py_color(single_color(fc), has_fs ? 0 : fa),
-                linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
+                linewidth = py_thickness_scale(plt, clamp(get_line_width(series), 0, 5)),
                 linestyle = py_linestyle(series[:seriestype], ls),
                 capstyle = "butt",
             )
@@ -1484,7 +1484,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             end
         elseif series[:seriestype] in
                (:path, :straightline, :scatter, :steppre, :stepmid, :steppost)
-            has_line = get_linewidth(series) > 0
+            has_line = get_line_width(series) > 0
             handle = PyPlot.plt."Line2D"(
                 (0, 1),
                 (0, 0),
@@ -1496,7 +1496,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     plt,
                     has_line * sp[:legend_font_pointsize] / 8,
                 ),
-                linestyle = py_linestyle(:path, get_linestyle(series)),
+                linestyle = py_linestyle(:path, get_line_style(series)),
                 solid_capstyle = "butt",
                 solid_joinstyle = "miter",
                 dash_capstyle = "butt",
