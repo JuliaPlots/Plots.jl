@@ -81,6 +81,8 @@ curly(obj) = "{$(string(obj))}"
 latex_formatter(formatter::Symbol) = formatter in (:plain, :latex) ? formatter : :latex
 latex_formatter(formatter::Function) = formatter
 
+labelfunc(scale::Symbol, backend::PGFPlotsXBackend) = labelfunc_tex(scale)
+
 pgfx_halign(k) = (left = "left", hcenter = "center", center = "center", right = "right")[k]
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})

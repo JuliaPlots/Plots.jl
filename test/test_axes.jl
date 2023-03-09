@@ -27,6 +27,10 @@
     @test Plots.get_labels(:engineering, float.(500:500:1500), :identity) ==
           ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
     @test Plots.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
+    # GR is used during tests and it correctly overrides labelfunc(), but PGFPlotsX did not
+    with(:pgfplotsx) do
+        @test Plots.get_labels(:auto, 1:3, :log10) == ["10^{1}", "10^{2}", "10^{3}"]
+    end
     @test Plots.get_labels(:auto, 1:3, :log10) == ["10^{1}", "10^{2}", "10^{3}"]
     @test Plots.get_labels(:auto, 1:3, :log2) == ["2^{1}", "2^{2}", "2^{3}"]
     @test Plots.get_labels(:auto, 1:3, :ln) == ["e^{1}", "e^{2}", "e^{3}"]
