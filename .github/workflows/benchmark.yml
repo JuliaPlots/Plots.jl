@@ -21,7 +21,7 @@ jobs:
         shell: xvfb-run julia --project=@. --color=yes {0}
         run: |
           using Pkg
-          foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline", "."))
+          foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline"))
       - name: Install Benchmarking dependencies
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI"'
 
