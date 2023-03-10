@@ -201,7 +201,9 @@ with(:pgfplotsx) do
         Z = map(f, X, Y)
         p2 = contour(x, y, Z)
         p1 = contour(x, y, f, fill = true)
+        p3 = contour3d(x, y, Z)
         @test plot(p1, p2) isa Plot
+        @test_nowarn Plots._update_plot_object(p3)
         # TODO: colorbar for filled contours
     end
 
@@ -250,7 +252,6 @@ with(:pgfplotsx) do
         pl = plot(x, y, quiver = (u, v), arrow = true)
         @test pl isa Plot
         # TODO: could adjust limits to fit arrows if too long, but how ?
-        # TODO: get latex available on CI
         # mktempdir() do path
         #    @test_nowarn savefig(pl, path*"arrow.pdf")
         # end
