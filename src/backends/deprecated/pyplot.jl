@@ -498,7 +498,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     get_marker_stroke_color(series, i),
                     get_marker_stroke_alpha(series, i),
                 ),
-                linewidths = py_thickness_scale(plt, get_marker_strokewidth(series, i)),
+                linewidths = py_thickness_scale(plt, get_marker_stroke_width(series, i)),
                 extrakw...,
             )
             push!(handles, handle)
@@ -1513,7 +1513,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 ),
                 markeredgewidth = py_thickness_scale(
                     plt,
-                    0.8get_marker_strokewidth(series) * sp[:legend_font_pointsize] /
+                    0.8get_marker_stroke_width(series) * sp[:legend_font_pointsize] /
                     first(series[:marker_size]),
                 ),   # retain the markersize/markerstroke ratio from the markers on the plot
             )

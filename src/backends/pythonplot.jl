@@ -190,7 +190,7 @@ _py_fillcolormap(series::Series) =
     end
 _py_markercolormap(series::Series) =
     if (color = get(series, :markercolor, nothing)) |> is_valid_cgrad_color
-        _py_colormap(cgrad(color, alpha = get_markeralpha(series)))
+        _py_colormap(cgrad(color, alpha = get_marker_alpha(series)))
     else
         nothing
     end
@@ -436,14 +436,14 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 marker = _py_marker(_cycle(series[:markershape], i)),
                 s = _py_thickness_scale(plt, _cycle(series[:markersize], i)) .^ 2,
                 facecolors = _py_color(
-                    get_markercolor(series, i, cbar_scale),
-                    get_markeralpha(series, i),
+                    get_marker_color(series, i, cbar_scale),
+                    get_marker_alpha(series, i),
                 ),
                 edgecolors = _py_color(
                     get_marker_stroke_color(series, i),
                     get_marker_stroke_alpha(series, i),
                 ),
-                linewidths = _py_thickness_scale(plt, get_marker_strokewidth(series, i)),
+                linewidths = _py_thickness_scale(plt, get_marker_stroke_width(series, i)),
                 label,
                 extrakw...,
             ) |> push_h
@@ -1393,12 +1393,12 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                     get_marker_stroke_alpha(series),
                 ),
                 markerfacecolor = _py_color(
-                    single_color(get_markercolor(series, clims, 1, sp[:colorbar_scale])),
-                    get_markeralpha(series),
+                    single_color(get_marker_color(series, clims, 1, sp[:colorbar_scale])),
+                    get_marker_alpha(series),
                 ),
                 markeredgewidth = _py_thickness_scale(
                     plt,
-                    0.8get_marker_strokewidth(series) * sp[:legend_font_pointsize] /
+                    0.8get_marker_stroke_width(series) * sp[:legend_font_pointsize] /
                     first(series[:markersize]),
                 ),   # retain the markersize/markerstroke ratio from the markers on the plot
             ) |> push_h
