@@ -121,7 +121,10 @@ end
 function pgf_marker(plotattributes, i = 1)
     shape = _cycle(plotattributes[:marker_shape], i)
     cstr, a = pgf_color(
-        plot_color(get_marker_color(plotattributes, i), get_marker_alpha(plotattributes, i)),
+        plot_color(
+            get_marker_color(plotattributes, i),
+            get_marker_alpha(plotattributes, i),
+        ),
     )
     cstr_stroke, a_stroke = pgf_color(
         plot_color(

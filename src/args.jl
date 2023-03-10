@@ -6,7 +6,15 @@ function make_non_underscore(s::Symbol)
 end
 
 const _keyAliases = Dict{Symbol,Symbol}()
-const _generalAliases = ("background" => "bg", "foreground" => "fg", "pointsize" => "size", "yfill" => "fill", "alpha" => "a", "alpha" => "opacity", "alpha" => "α")
+const _generalAliases = (
+    "background" => "bg",
+    "foreground" => "fg",
+    "pointsize" => "size",
+    "yfill" => "fill",
+    "alpha" => "a",
+    "alpha" => "opacity",
+    "alpha" => "α",
+)
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
@@ -2029,13 +2037,14 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     end
 
     # update markerstrokecolor
-    plotattributes[:marker_stroke_color] = if plotattributes[:marker_stroke_color] === :match
-        plot_color(sp[:foreground_color_subplot])
-    elseif plotattributes[:marker_stroke_color] === :auto
-        get_series_color(plotattributes[:marker_color], sp, plotIndex, stype)
-    else
-        get_series_color(plotattributes[:marker_stroke_color], sp, plotIndex, stype)
-    end
+    plotattributes[:marker_stroke_color] =
+        if plotattributes[:marker_stroke_color] === :match
+            plot_color(sp[:foreground_color_subplot])
+        elseif plotattributes[:marker_stroke_color] === :auto
+            get_series_color(plotattributes[:marker_color], sp, plotIndex, stype)
+        else
+            get_series_color(plotattributes[:marker_stroke_color], sp, plotIndex, stype)
+        end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
     if plotattributes[:marker_z] !== nothing
@@ -2135,12 +2144,17 @@ macro add_attributes(level, expr, args...)
             )),
         )
         if aliases !== nothing
-                pl_aliases = Plots.makeplural.(aliases)
-                push!(
-                    insert_block.args,
-                    :(Plots.add_aliases($(QuoteNode(exp_key)), $(aliases)..., $(pl_aliases)..., $(Iterators.flatten(Plots.make_non_underscore.(aliases)))..., $(Iterators.flatten(Plots.make_non_underscore.(pl_aliases)))...,
-                    ))
-                )
+            pl_aliases = Plots.makeplural.(aliases)
+            push!(
+                insert_block.args,
+                :(Plots.add_aliases(
+                    $(QuoteNode(exp_key)),
+                    $(aliases)...,
+                    $(pl_aliases)...,
+                    $(Iterators.flatten(Plots.make_non_underscore.(aliases)))...,
+                    $(Iterators.flatten(Plots.make_non_underscore.(pl_aliases)))...,
+                )),
+            )
         end
     end
     quote
@@ -2177,7 +2191,11 @@ function _splitdef!(blk, key_dict)
                 end
                 defexpr = ei.args[2]  # defexpr
                 # filter e.g. marker::Marker = Marker(...)
-                if !(defexpr isa Expr && defexpr.head == :call && defexpr.args[1] == ei.args[1].args[2])
+                if !(
+                    defexpr isa Expr &&
+                    defexpr.head == :call &&
+                    defexpr.args[1] == ei.args[1].args[2]
+                )
                     key_dict[var] = defexpr
                 end
                 blk.args[i] = lhs

@@ -308,7 +308,10 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
             shape = _inspectdr_mapglyph(series[:marker_shape]),
             size = _inspectdr_mapglyphsize(series[:marker_size]),
             color = _inspectdr_mapcolor(
-                plot_color(get_marker_stroke_color(series), get_marker_stroke_alpha(series)),
+                plot_color(
+                    get_marker_stroke_color(series),
+                    get_marker_stroke_alpha(series),
+                ),
             ),
             fillcolor = _inspectdr_mapcolor(
                 plot_color(get_marker_color(series, clims), get_marker_alpha(series)),

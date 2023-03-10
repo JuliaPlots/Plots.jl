@@ -62,7 +62,7 @@ end
     @test yticks(pl2) == xticks(pl1)
     @test filter(isfinite, pl1[1][1][:x]) == filter(isfinite, pl2[1][1][:y])
     @test filter(isfinite, pl1[1][1][:y]) == filter(isfinite, pl2[1][1][:x])
-    @test pl1[1][1][:line_color] == RGBA{Float64}(0.0,0.0,0.0,1.0)
+    @test pl1[1][1][:line_color] == RGBA{Float64}(0.0, 0.0, 0.0, 1.0)
     @test pl1[1][2][:marker_size] == 0
     @test pl1[1][2][:marker_alpha] == 0
 end
@@ -84,7 +84,8 @@ end
         :legend_title_font_color,
     ) :aliases = Dict(
         :legend_position => (:legend, :leg, :key),
-        :legend_background_color => (:background_legend, :background_colour_legend, :background_color_legend),
+        :legend_background_color =>
+            (:background_legend, :background_colour_legend, :background_color_legend),
         :legend_title => (:key_title, :label_title, :leg_title),
     )
     @test Plots._subplot_defaults[:legend_font_family] == :match

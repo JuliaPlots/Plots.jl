@@ -291,7 +291,8 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
         if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
             unsupported_layout_error()
         else
-            img = UnicodePlots.png_image(plt.o[sps += 1];
+            img = UnicodePlots.png_image(
+                plt.o[sps += 1];
                 pixelsize = 32,
                 font = plt[:fontfamily],
             )

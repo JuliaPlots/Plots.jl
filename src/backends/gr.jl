@@ -1883,7 +1883,12 @@ end
 function gr_draw_contour(series, x, y, z, clims)
     GR.setprojectiontype(0)
     GR.setspace(clims[1], clims[2], 0, 90)
-    gr_set_line(get_line_width(series), get_line_style(series), get_line_color(series), series)
+    gr_set_line(
+        get_line_width(series),
+        get_line_style(series),
+        get_line_color(series),
+        series,
+    )
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] !== nothing
