@@ -6,8 +6,10 @@ using Test
 import RecipesPipeline: _prepare_series_data
 import RecipesBase
 
+struct MyPlot end
+
 @testset "DefaultsDict" begin
-    dd = DefaultsDict(Plots.Plot, Dict(:foo => 1, :bar => missing), Dict(:foo => nothing, :baz => 'x'))
+    dd = DefaultsDict(MyPlot, Dict(:foo => 1, :bar => missing), Dict(:foo => nothing, :baz => 'x'))
 
     @test all(explicitkeys(dd) .== [:bar, :foo])
     @test all(defaultkeys(dd) .== [:baz, :foo])

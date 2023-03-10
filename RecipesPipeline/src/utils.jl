@@ -13,8 +13,11 @@ struct DefaultsDict{P} <: AbstractDict{Symbol,Any}
     plot_type::Type{P}
     explicit::KW
     defaults::KW
-    function DefaultsDict{P}(plot_type::Type{P}, explicit::KW, defaults::KW) where P
-        e = KW( key_alias(plot_type, k) => v === :seriestype ? type_alias(plot_type, v) : v for (k, v) in explicit)
+    function DefaultsDict{P}(plot_type::Type{P}, explicit::AbstractDict, defaults::AbstractDict) where {P}
+        e = KW(
+            key_alias(plot_type, k) => v === :seriestype ? type_alias(plot_type, v) : v
+            for (k, v) in explicit
+        )
         new{P}(plot_type, e, defaults)
     end
 end
@@ -22,7 +25,11 @@ end
 DefaultsDict(pt, e, d) = DefaultsDict{pt}(pt, e, d)
 function Base.merge(d1::DefaultsDict, d2::DefaultsDict)
     @assert d1.plot_type === d2.plot_type
-    DefaultsDict(d1.plot_type, merge(d1.explicit, d2.explicit), merge(d1.defaults, d2.defaults))
+    DefaultsDict(
+        d1.plot_type,
+        merge(d1.explicit, d2.explicit),
+        merge(d1.defaults, d2.defaults),
+    )
 end
 function Base.getindex(dd::DefaultsDict, k)
     k = key_alias(dd.plot_type, k)
