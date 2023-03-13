@@ -104,6 +104,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "/tikz/background rectangle/.style" => Options(
                     # "draw" => "black",
                     "fill" => cstr,
+                    "fill opacity" => alpha(cstr),
                     "draw opacity" => alpha(cstr),
                 ),
                 "show background rectangle" => nothing,

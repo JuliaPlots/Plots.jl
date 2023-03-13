@@ -1786,7 +1786,7 @@ function fg_color(plotattributes::AKW)
     fg = get(plotattributes, :foreground_color, :auto)
     if fg === :auto
         bg = plot_color(get(plotattributes, :background_color, :white))
-        fg = isdark(bg) ? colorant"white" : colorant"black"
+        fg = alpha(bg) > 0 && isdark(bg) ? colorant"white" : colorant"black"
     else
         plot_color(fg)
     end
