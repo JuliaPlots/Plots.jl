@@ -1259,6 +1259,11 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
         )
     end
 
+    # allow axis mirroring with :box framestyle
+    if framestyle in (:box,)
+        push!(opt, "$(letter)ticklabel pos" => (axis[:mirror] ? "right" : "left"))
+    end
+
     if framestyle === :zerolines
         gs = pgfx_linestyle(pgfx_thickness_scaling(sp), axis[:foreground_color_border], 1)
         push!(
