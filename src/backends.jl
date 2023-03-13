@@ -1497,7 +1497,7 @@ const _pgfplotsx_attr = merge_with_base_supported([
     :legend_position,
     :legend_title,
     :colorbar,
-    :colorbar_title
+    :colorbar_title,
     :colorbar_titlefontsize,
     :colorbar_titlefontcolor,
     :colorbar_titlefontrotation,
