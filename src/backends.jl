@@ -414,6 +414,12 @@ _post_imports(::GRBackend) = nothing
 
 const _gr_attr = merge_with_base_supported([
     :annotations,
+    :annotationrotation,
+    :annotationhalign,
+    :annotationfontsize,
+    :annotationfontfamily,
+    :annotationcolor,
+    :annotationvalign,
     :legend_background_color,
     :background_color_inside,
     :background_color_outside,
@@ -505,6 +511,23 @@ const _gr_attr = merge_with_base_supported([
     :camera,
     :contour_labels,
     :connections,
+    :xaxis,
+    :thickness_scaling,
+    :xminorgrid,
+    :xminorgridalpha,
+    :xminorgridlinewidth,
+    :xminorgridstyle,
+    :xminorticks,
+    :xmirror,
+    :xrotation,
+    :xshowaxis,
+    :xtickfonthalign,
+    :yaxis,
+    :yminorgrid,
+    :yminorgridalpha,
+    :yminorgridlinewidth,
+    :yminorgridstyle,
+    :yminorticks,
 ])
 const _gr_seriestype = [
     :path,
@@ -520,6 +543,8 @@ const _gr_seriestype = [
     :mesh3d,
     :volume,
     :shape,
+    :permute,
+    :spy,
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _gr_marker = vcat(_allMarkers, :pixel)
@@ -824,6 +849,12 @@ end
 
 const _pyplot_attr = merge_with_base_supported([
     :annotations,
+    :annotationrotation,
+    :annotationhalign,
+    :annotationfontsize,
+    :annotationfontfamily,
+    :annotationcolor,
+    :annotationvalign,
     :legend_background_color,
     :background_color_inside,
     :background_color_outside,
@@ -918,6 +949,22 @@ const _pyplot_attr = merge_with_base_supported([
     :camera,
     :contour_labels,
     :connections,
+    :thickness_scaling,
+    :xaxis,
+    :xminorgrid,
+    :xminorgridalpha,
+    :xminorgridlinewidth,
+    :xminorgridstyle,
+    :xminorticks,
+    :xmirror,
+    :xshowaxis,
+    :xstickfontrotation,
+    :yaxis,
+    :yminorgrid,
+    :yminorgridalpha,
+    :yminorgridlinewidth,
+    :yminorgridstyle,
+    :yminorticks,
 ])
 const _pyplot_seriestype = [
     :path,
@@ -937,6 +984,8 @@ const _pyplot_seriestype = [
     :mesh3d,
     :surface,
     :wireframe,
+    :permute,
+    :spy,
 ]
 const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _pyplot_marker = vcat(_allMarkers, :pixel)
@@ -1386,6 +1435,11 @@ end
 
 const _pgfplotsx_attr = merge_with_base_supported([
     :annotations,
+    :annotationrotation,
+    :annotationhalign,
+    :annotationfontsize,
+    :annotationfontfamily,
+    :annotationcolor,
     :legend_background_color,
     :background_color_inside,
     :background_color_outside,
@@ -1474,6 +1528,25 @@ const _pgfplotsx_attr = merge_with_base_supported([
     :camera,
     :contour_labels,
     :connections,
+    :thickness_scaling,
+    :xaxis,
+    :xdraw_arrow,
+    :xminorgrid,
+    :xminorgridalpha,
+    :xminorgridlinewidth,
+    :xminorgridstyle,
+    :xminorticks,
+    :xmirror,
+    :xrotation,
+    :xshowaxis,
+    :xtickfontrotation,
+    :yaxis,
+    :ydraw_arrow,
+    :yminorgrid,
+    :yminorgridalpha,
+    :yminorgridlinewidth,
+    :yminorgridstyle,
+    :yminorticks,
 ])
 const _pgfplotsx_seriestype = [
     :path,
@@ -1494,6 +1567,9 @@ const _pgfplotsx_seriestype = [
     :steppost,
     :ysticks,
     :xsticks,
+    :permute,
+    :spy,
+
 ]
 const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplotsx_marker = [
