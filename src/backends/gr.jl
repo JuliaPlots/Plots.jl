@@ -337,6 +337,9 @@ gr_z_axislims(sp::Subplot) = axis_limits(sp, :z)
 gr_xy_axislims(sp::Subplot) = gr_x_axislims(sp)..., gr_y_axislims(sp)...
 
 function gr_fill_viewport(vp::GRViewport, c)
+    if alpha(c) == 0
+        return nothing
+    end
     GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
