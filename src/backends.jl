@@ -1666,7 +1666,7 @@ const _pgfplotsx_attr = merge_with_base_supported([
     :legend_column,
     :legend_title,
     :legend_title_font_color,
-    :legend_title_font_pointsize,    
+    :legend_title_font_pointsize,
     :ribbon,
     :quiver,
     :orientation,
