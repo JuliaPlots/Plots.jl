@@ -125,8 +125,8 @@ function RecipesBase.apply_recipe(d::Dict{Symbol,Any},::T,n=1)
     end
     series_list = RecipesBase.RecipeData[]
     func_return = begin
-            get!(d,:markershape,:auto)
-            d[:markercolor] = customcolor
+            get!(d,:marker_shape,:auto)
+            d[:marker_color] = customcolor
             get!(d,:xrotation,45)
             get!(d,:zrotation,90)
             rand(10,n)

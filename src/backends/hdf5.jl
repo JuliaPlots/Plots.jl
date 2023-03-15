@@ -426,7 +426,7 @@ end
 
 # 1st arg appears to be ref to subplots. Seems to work without it.
 _read(::Type{Axis}, grp::Group) =
-    Axis([], DefaultsDict(_read(KW, grp["plotattributes"]), _axis_defaults))
+    Axis([], DefaultsDict(Plot, _read(KW, grp["plotattributes"]), _axis_defaults))
 
 # Not for use in main "Plot.subplots[]" hierarchy.  Just establishes reference with subplot_index.
 _read(::Type{Subplot}, grp::Group) =

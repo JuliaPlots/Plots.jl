@@ -6,8 +6,10 @@ using Test
 import RecipesPipeline: _prepare_series_data
 import RecipesBase
 
+struct MyPlot end
+
 @testset "DefaultsDict" begin
-    dd = DefaultsDict(Dict(:foo => 1, :bar => missing), Dict(:foo => nothing, :baz => 'x'))
+    dd = DefaultsDict(MyPlot, Dict(:foo => 1, :bar => missing), Dict(:foo => nothing, :baz => 'x'))
 
     @test all(explicitkeys(dd) .== [:bar, :foo])
     @test all(defaultkeys(dd) .== [:baz, :foo])
@@ -44,7 +46,8 @@ end
     @test !is_axis_attribute(plt, :foo)
 
     @test process_userrecipe!(plt, [:foo], :bar) == [:foo, :bar]
-    @test type_alias(plt, :wireframe) ≡ :wireframe
+    @test type_alias(typeof(plt), :wireframe) ≡ :wireframe
+    @test key_alias(typeof(plt), :label) ≡ :label
 
     @test plot_setup!(plt, plotattributes, kw_list) isa Nothing
     @test slice_series_attributes!(plt, kw_list, kw) isa Nothing

@@ -463,16 +463,16 @@ function contour_levels(series::Series, clims)
     levels
 end
 
-for comp in (:line, :fill, :marker)
+for comp in (:line_, :fill, :marker_)
     compcolor = string(comp, :color)
     get_compcolor = Symbol(:get_, compcolor)
-    comp_z = string(comp, :_z)
+    comp_z = string(comp, comp === :fill ? :_z : :z)
 
     compalpha = string(comp, :alpha)
     get_compalpha = Symbol(:get_, compalpha)
 
     @eval begin
-        # defines `get_linecolor`, `get_fillcolor` and `get_markercolor` <- for grep
+        # defines `get_line_color`, `get_fillcolor` and `get_marker_color` <- for grep
         function $get_compcolor(
             series,
             cmin::Real,
@@ -480,7 +480,7 @@ for comp in (:line, :fill, :marker)
             i::Integer = 1,
             s::Symbol = :identity,
         )
-            c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
+            c = series[$Symbol($compcolor)]  # series[:line_color], series[:fillcolor], series[:marker_color]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
@@ -514,11 +514,11 @@ function get_colorgradient(series::Series)
     if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)
         series[:fillcolor]
     elseif st in (:contour, :wireframe, :contour3d)
-        series[:linecolor]
+        series[:line_color]
     elseif series[:marker_z] !== nothing
-        series[:markercolor]
+        series[:marker_color]
     elseif series[:line_z] !== nothing
-        series[:linecolor]
+        series[:line_color]
     elseif series[:fill_z] !== nothing
         series[:fillcolor]
     end
@@ -531,35 +531,35 @@ get_gradient(c) = cgrad()
 get_gradient(cg::ColorGradient) = cg
 get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 
-get_linewidth(series, i::Integer = 1) = _cycle(series[:linewidth], i)
-get_linestyle(series, i::Integer = 1) = _cycle(series[:linestyle], i)
-get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
+get_line_width(series, i::Int = 1) = _cycle(series[:line_width], i)
+get_line_style(series, i::Int = 1) = _cycle(series[:line_style], i)
+get_fillstyle(series, i::Int = 1) = _cycle(series[:fillstyle], i)
 
-get_markerstrokecolor(series, i::Integer = 1) =
-    let msc = series[:markerstrokecolor]
-        msc isa ColorGradient ? msc : _cycle(msc, i)
-    end
+function get_marker_stroke_color(series, i::Int = 1)
+    msc = series[:marker_stroke_color]
+    isa(msc, ColorGradient) ? msc : _cycle(msc, i)
+end
 
-get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
-get_markerstrokewidth(series, i::Integer = 1) = _cycle(series[:markerstrokewidth], i)
+get_marker_stroke_alpha(series, i::Int = 1) = _cycle(series[:marker_stroke_alpha], i)
+get_marker_stroke_width(series, i::Int = 1) = _cycle(series[:marker_stroke_width], i)
 
 const _segmenting_vector_attributes = (
     :seriescolor,
     :seriesalpha,
-    :linecolor,
-    :linealpha,
-    :linewidth,
-    :linestyle,
+    :line_color,
+    :line_alpha,
+    :line_width,
+    :line_style,
     :fillcolor,
     :fillalpha,
     :fillstyle,
-    :markercolor,
-    :markeralpha,
-    :markersize,
-    :markerstrokecolor,
-    :markerstrokealpha,
-    :markerstrokewidth,
-    :markershape,
+    :marker_color,
+    :marker_alpha,
+    :marker_size,
+    :marker_stroke_color,
+    :marker_stroke_alpha,
+    :marker_stroke_width,
+    :marker_shape,
 )
 
 const _segmenting_array_attributes = :line_z, :fill_z, :marker_z

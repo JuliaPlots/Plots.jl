@@ -106,10 +106,10 @@ function pgf_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
 end
 
 function pgf_linestyle(plotattributes, i = 1)
-    lw = pgf_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)
-    lc = get_linecolor(plotattributes, i)
-    la = get_linealpha(plotattributes, i)
-    ls = get_linestyle(plotattributes, i)
+    lw = pgf_thickness_scaling(plotattributes) * get_line_width(plotattributes, i)
+    lc = get_line_color(plotattributes, i)
+    la = get_line_alpha(plotattributes, i)
+    ls = get_line_style(plotattributes, i)
     return pgf_linestyle(lw, lc, la, ls)
 end
 
@@ -119,26 +119,29 @@ function pgf_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
 end
 
 function pgf_marker(plotattributes, i = 1)
-    shape = _cycle(plotattributes[:markershape], i)
+    shape = _cycle(plotattributes[:marker_shape], i)
     cstr, a = pgf_color(
-        plot_color(get_markercolor(plotattributes, i), get_markeralpha(plotattributes, i)),
+        plot_color(
+            get_marker_color(plotattributes, i),
+            get_marker_alpha(plotattributes, i),
+        ),
     )
     cstr_stroke, a_stroke = pgf_color(
         plot_color(
-            get_markerstrokecolor(plotattributes, i),
-            get_markerstrokealpha(plotattributes, i),
+            get_marker_stroke_color(plotattributes, i),
+            get_marker_stroke_alpha(plotattributes, i),
         ),
     )
     return string(
         "mark = $(get(_pgfplots_markers, shape, "*")),\n",
-        "mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)),\n",
+        "mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:marker_size], i)),\n",
         plotattributes[:seriestype] === :scatter ? "only marks,\n" : "",
         "mark options = {
             color = $cstr_stroke, draw opacity = $a_stroke,
             fill = $cstr, fill opacity = $a,
-            line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i)),
+            line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:marker_stroke_width], i)),
             rotate = $(shape === :dtriangle ? 180 : 0),
-            $(get(_pgfplots_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid"))
+            $(get(_pgfplots_linestyles, _cycle(plotattributes[:marker_stroke_style], i), "solid"))
         }",
     )
 end
@@ -641,7 +644,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         # As it is likely that all series within the same axis use the same
         # colormap this should not cause any problem.
         for series in series_list(sp)
-            for col in (:markercolor, :fillcolor, :linecolor)
+            for col in (:marker_color, :fillcolor, :line_color)
                 if typeof(series.plotattributes[col]) == ColorGradient
                     push!(
                         style,

@@ -10,7 +10,8 @@ function RecipesPipeline.warn_on_recipe_aliases!(
 )
     pkeys = keys(plotattributes)
     for k in pkeys
-        if (dk = get(_keyAliases, k, nothing)) !== nothing
+        dk = get(_keyAliases, k, nothing)
+        if dk !== nothing
             kv = RecipesPipeline.pop_kw!(plotattributes, k)
             dk ∈ pkeys || (plotattributes[dk] = kv)
         end
@@ -140,8 +141,9 @@ RecipesPipeline.get_axis_limits(plt::Plot, letter) = axis_limits(plt[1], letter,
 
 ## Plot recipes
 
-RecipesPipeline.type_alias(plt::Plot, st) = get(_typeAliases, st, st)
+RecipesPipeline.type_alias(pt::Type{<:Plots.Plot}, st) = get(_typeAliases, st, st)
 
+RecipesPipeline.key_alias(pt::Type{<:Plots.Plot}, key) = get(_keyAliases, key, key)
 ## Plot setup
 
 function RecipesPipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
@@ -356,11 +358,11 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
     if (perm = plotattributes[:permute]) !== :none
         letter1, letter2 = perm
-        ms = plotattributes[:markershape]
+        ms = plotattributes[:marker_shape]
         if ms === :hline && (perm == (:x, :y) || perm == (:y, :x))
-            plotattributes[:markershape] = :vline
+            plotattributes[:marker_shape] = :vline
         elseif ms === :vline && (perm == (:x, :y) || perm == (:y, :x))
-            plotattributes[:markershape] = :hline
+            plotattributes[:marker_shape] = :hline
         end
         plotattributes[letter1], plotattributes[letter2] =
             plotattributes[letter2], plotattributes[letter1]

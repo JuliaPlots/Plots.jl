@@ -150,12 +150,18 @@ get_axis_limits(plt, letter) = throw(ErrorException("Axis limits not defined."))
 # ## Plot recipes
 
 """
-    type_alias(plt, st)
+    type_alias(typeof(plt), st)
 
-Return the seriestype alias for `st`.
+Return the canonical seriestype for `st`.
 """
-type_alias(plt, st) = st
+type_alias(plt::Type{<:Any}, st) = st
 
+"""
+    key_alias(typeof(plt), key)
+
+Return the canonical key for `key`.
+"""
+key_alias(plt::Type{<:Any}, key) = key
 # ## Plot setup
 
 """

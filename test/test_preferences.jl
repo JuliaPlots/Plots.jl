@@ -35,6 +35,8 @@
             using Pkg, Test; io = (devnull, stdout)[1]  # toggle for debugging
             Pkg.activate(; temp = true, io)
             Pkg.develop(; path = "$(escape_string(pkgdir(Plots)))", io)
+            Pkg.develop(; path = "$(escape_string(joinpath(pkgdir(Plots), "RecipesPipeline")))", io)
+            Pkg.develop(; path = "$(escape_string(joinpath(pkgdir(Plots), "RecipesBase")))", io)
             Pkg.add("UnicodePlots"; io)  # checked by Plots
             using Plots
             res = @testset "Prefs" begin

@@ -38,7 +38,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
         DEFAULT_MINPAD[],
         DEFAULT_BBOX[],
         DEFAULT_BBOX[],
-        DefaultsDict(KW(), _subplot_defaults),
+        DefaultsDict(T, KW(), _subplot_defaults),
         nothing,
         nothing,
     )
@@ -76,7 +76,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         new{typeof(be)}(
             be,
             0,
-            DefaultsDict(KW(), _plot_defaults),
+            DefaultsDict(Plots.Plot{typeof(be)}, KW(), _plot_defaults),
             Series[],
             nothing,
             Subplot[],

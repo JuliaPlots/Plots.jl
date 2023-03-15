@@ -1,3 +1,4 @@
+using Plots, Test
 @testset "Axes" begin
     pl = plot()
     axis = pl.subplots[1][:xaxis]
@@ -151,7 +152,7 @@ end
 @testset "Axis-aliases" begin
     @test haskey(Plots._keyAliases, :xguideposition)
     @test haskey(Plots._keyAliases, :x_guide_position)
-    @test !haskey(Plots._keyAliases, :xguide_position)
+    @test haskey(Plots._keyAliases, :xguide_position)
     pl = plot(1:2, xl = "x label")
     @test pl[1][:xaxis][:guide] === "x label"
     pl = plot(1:2, xrange = (0, 3))
@@ -177,7 +178,7 @@ end
 end
 
 @testset "Aliases" begin
-    compare(pl::Plot, s::Symbol, val, op) =
+    compare(pl::Plots.Plot, s::Symbol, val, op) =
         op(pl[1][:xaxis][s], val) && op(pl[1][:yaxis][s], val) && op(pl[1][:zaxis][s], val)
     pl = plot(1:2, guide = "all labels")
     @test compare(pl, :guide, "all labels", ===)

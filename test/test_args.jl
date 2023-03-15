@@ -1,3 +1,4 @@
+using Plots, Test
 struct Foo{T}
     x::Vector{T}
     y::Vector{T}
@@ -15,16 +16,17 @@ x = collect(0.0:10.0)
 foo = Foo(x, sin.(x))
 
 @testset "Magic attributes" begin
-    @test plot(foo)[1][1][:markershape] === :+
-    @test plot(foo, markershape = :diamond)[1][1][:markershape] === :diamond
-    @test plot(foo, marker = :diamond)[1][1][:markershape] === :diamond
+    @test plot(foo)[1][1][:marker_shape] === :+
+    @test plot(foo, markershape = :diamond)[1][1][:marker_shape] === :diamond
+    @test plot(foo, marker = :diamond)[1][1][:marker_shape] === :diamond
     @test (@test_logs (:warn, "Skipped marker arg diamond.") plot(
         foo,
         marker = :diamond,
         markershape = :diamond,
-    )[1][1][:markershape]) === :diamond
+    )[1][1][:marker_shape]) === :diamond
 end
 
+using Plots, Test
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
         @test pl[1].primary_series_count == 2
@@ -60,6 +62,9 @@ end
     @test yticks(pl2) == xticks(pl1)
     @test filter(isfinite, pl1[1][1][:x]) == filter(isfinite, pl2[1][1][:y])
     @test filter(isfinite, pl1[1][1][:y]) == filter(isfinite, pl2[1][1][:x])
+    @test pl1[1][1][:line_color] == RGBA{Float64}(0.0, 0.0, 0.0, 1.0)
+    @test pl1[1][2][:marker_size] == 0
+    @test pl1[1][2][:marker_alpha] == 0
 end
 
 @testset "@add_attributes" begin
@@ -77,8 +82,19 @@ end
         :legend_font_color,
         :legend_title_font_family,
         :legend_title_font_color,
+    ) :aliases = Dict(
+        :legend_position => (:legend, :leg, :key),
+        :legend_background_color =>
+            (:background_legend, :background_colour_legend, :background_color_legend),
+        :legend_title => (:key_title, :label_title, :leg_title),
     )
-    @test true
+    @test Plots._subplot_defaults[:legend_font_family] == :match
+    @test Plots._subplot_defaults[:legend_column] == 1
+    @test Plots._keyAliases[:legend] == :legend_position
+    @test Plots._keyAliases[:legends] == :legend_position
+    @test Plots._keyAliases[:bgcolourlegend] == :legend_background_color
+    @test Plots._keyAliases[:bgcolour_legend] == :legend_background_color
+    @test Plots._keyAliases[:legendfontsize] == :legend_font_pointsize
 end
 
 @testset "aspect_ratio" begin

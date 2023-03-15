@@ -46,20 +46,20 @@ RecipesBase.apply_recipe(plotattributes::AKW, ::Type{T}, plt::AbstractPlot) wher
 const POTENTIAL_VECTOR_ARGUMENTS = [
     :seriescolor,
     :seriesalpha,
-    :linecolor,
-    :linealpha,
-    :linewidth,
-    :linestyle,
+    :line_color,
+    :line_alpha,
+    :line_width,
+    :line_style,
     :line_z,
     :fillcolor,
     :fillalpha,
     :fill_z,
-    :markercolor,
-    :markeralpha,
-    :markershape,
+    :marker_color,
+    :marker_alpha,
+    :marker_shape,
     :marker_z,
-    :markerstrokecolor,
-    :markerstrokealpha,
+    :marker_stroke_color,
+    :marker_stroke_alpha,
     :xerror,
     :yerror,
     :zerror,
@@ -221,7 +221,7 @@ make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -246,7 +246,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, true)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -271,7 +271,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := x
@@ -319,7 +319,7 @@ end
     fillrange := nothing
     seriestype := :path
     if (
-        plotattributes[:linecolor] === :auto &&
+        plotattributes[:line_color] === :auto &&
         plotattributes[:marker_z] !== nothing &&
         plotattributes[:line_z] === nothing
     )
@@ -327,7 +327,7 @@ end
     end
 
     # create a primary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         primary := false
         @series begin
             seriestype := :scatter
@@ -465,13 +465,14 @@ end
 
     # draw the bar shapes
     @series begin
+        # line_color --> :black
         seriestype := :shape
         series_annotations := nothing
         primary := true
         x := xseg.pts
         y := yseg.pts
         # expand attributes to match indices in new series data
-        for k in _segmenting_vector_attributes ∪ _segmenting_array_attributes
+        for k in _all_segmenting_attributes
             if (v = get(plotattributes, k, nothing)) isa AVec
                 if eachindex(v) != eachindex(y)
                     @warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
@@ -677,7 +678,7 @@ end
     end
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:marker_shape] !== :none
         @series begin
             seriestype := :scatter
             x := _bin_centers(edge)
@@ -960,7 +961,7 @@ end
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)  # COV_EXCL_LINE
     seriestype := :path3d
-    if plotattributes[:markershape] === :none
+    if plotattributes[:marker_shape] === :none
         markershape := :circle
     end
     linewidth := 0
@@ -998,12 +999,12 @@ export lens!
     series_plotindex := backup[:series_plotindex]
     seriestype := :path
     primary := false
-    linecolor := get(backup, :linecolor, :lightgray)
-    if haskey(backup, :linestyle)
-        linestyle := backup[:linestyle]
+    linecolor := get(backup, :line_color, :lightgray)
+    if haskey(backup, :line_style)
+        linestyle := backup[:line_style]
     end
-    if haskey(backup, :linewidth)
-        linewidth := backup[:linewidth]
+    if haskey(backup, :line_width)
+        linewidth := backup[:line_width]
     end
     bbx_mag = (x1 + x2) / 2
     bby_mag = (y1 + y2) / 2
@@ -1082,11 +1083,11 @@ end
     haskey(plotattributes, :marker_z) && reset_kw!(plotattributes, :marker_z)
     haskey(plotattributes, :line_z) && reset_kw!(plotattributes, :line_z)
 
-    msc = if (msc = plotattributes[:markerstrokecolor]) === :match
+    msc = if (msc = plotattributes[:marker_stroke_color]) === :match
         plotattributes[:subplot][:foreground_color_subplot]
     elseif msc === :auto
         get_series_color(
-            plotattributes[:linecolor],
+            plotattributes[:line_color],
             plotattributes[:subplot],
             plotattributes[:series_plotindex],
             plotattributes[:seriestype],
@@ -1099,7 +1100,7 @@ end
     markerstrokecolor --> msc
     markercolor --> msc
     linecolor --> msc
-    linewidth --> plotattributes[:markerstrokewidth]
+    linewidth --> plotattributes[:marker_stroke_width]
     label --> ""
 end
 
@@ -1355,7 +1356,7 @@ end
     seriestype --> :shape
     # For backwards compatibility, column vectors of segmenting attributes are
     # interpreted as having one element per shape
-    for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
+    for attr in _all_segmenting_attributes
         v = get(plotattributes, attr, nothing)
         if v isa AVec || v isa AMat && size(v, 2) == 1
             @warn """

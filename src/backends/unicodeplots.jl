@@ -207,7 +207,7 @@ function addUnicodeSeries!(
         kw = (
             kw...,
             zlabel = sp[:colorbar_title],
-            color = st ≡ :wireframe ? up_color(get_linecolor(series, 1)) : nothing,
+            color = st ≡ :wireframe ? up_color(get_line_color(series, 1)) : nothing,
             colormap = colormap ≡ :none ? up_cmap(series) : colormap,
             colorbar = hascolorbar(sp),
             zscale,
@@ -226,9 +226,9 @@ function addUnicodeSeries!(
     if st in (:path, :path3d, :straightline, :shape, :mesh3d)
         func = UnicodePlots.lineplot!
         series_kw = (; head_tail = series[:arrow] isa Arrow ? series[:arrow].side : nothing)
-    elseif st in (:scatter, :scatter3d) || series[:markershape] ≢ :none
+    elseif st in (:scatter, :scatter3d) || series[:marker_shape] ≢ :none
         func = UnicodePlots.scatterplot!
-        series_kw = (; marker = series[:markershape])
+        series_kw = (; marker = series[:marker_shape])
     else
         throw(ArgumentError("Plots(UnicodePlots): series type $st not supported"))
     end
@@ -237,7 +237,7 @@ function addUnicodeSeries!(
 
     for (n, segment) in enumerate(series_segments(series, st; check = true))
         i, rng = segment.attr_index, segment.range
-        lc = get_linecolor(series, i)
+        lc = get_line_color(series, i)
         up = func(
             up,
             x[rng],
@@ -291,7 +291,11 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
         if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
             unsupported_layout_error()
         else
-            img = UnicodePlots.png_image(plt.o[sps += 1]; pixelsize = 32)
+            img = UnicodePlots.png_image(
+                plt.o[sps += 1];
+                pixelsize = 32,
+                font = plt[:fontfamily],
+            )
             img ≡ nothing && continue
             canvas_type = eltype(img)
             s1[r, c], s2[r, c] = size(img)

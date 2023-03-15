@@ -7,10 +7,10 @@
 Make a scatter plot of `y` vs `x`.
 
 # Keyword arguments
-- $(_document_argument(:markersize))
-- $(_document_argument(:markercolor))
-- $(_document_argument(:markershape))
-- $(_document_argument(:markeralpha))
+- $(_document_argument(:marker_size))
+- $(_document_argument(:marker_color))
+- $(_document_argument(:marker_shape))
+- $(_document_argument(:marker_alpha))
 
 # Examples
 ```julia-repl
@@ -180,7 +180,7 @@ Draw a stick plot of `y` vs `x`.
 
 # Arguments
 - $(_document_argument(:fillrange))
-- $(_document_argument(:markershape))
+- $(_document_argument(:marker_shape))
 
 # Example
 ```julia-repl

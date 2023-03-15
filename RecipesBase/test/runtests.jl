@@ -61,9 +61,13 @@ end
     @testset "simple parametric type" begin
         @test_throws MethodError RB.apply_recipe(KW(), T1())
 
-        RB.@recipe function plot(t::T1, n::N = 1; customcolor = :green) where {N<:Integer}
-            :markershape --> :auto, :require
-            :markercolor --> customcolor, :force
+        RB.@recipe function plot(
+            t::T1,
+            n::N = 1;
+            customcolor = :green,
+        ) where {N<:Integer}
+            :marker_shape --> :auto, :require
+            :marker_color --> customcolor, :force
             :xrotation --> 5
             :zrotation --> 6, :quiet
             rand(StableRNG(1), 10, n)
@@ -73,8 +77,8 @@ end
             T1,
             KW(
                 :customcolor => :red,
-                :markershape => :auto,
-                :markercolor => :red,
+                :marker_shape => :auto,
+                :marker_color => :red,
                 :xrotation => 5,
                 :zrotation => 6,
             ),
@@ -85,8 +89,8 @@ end
         @test_throws MethodError RB.apply_recipe(KW(), T2())
 
         RB.@recipe function plot(t::T2, n::N = 1; customcolor = :green) where {N<:Integer}
-            :markershape --> :auto, :require
-            :markercolor --> customcolor, :force
+            :marker_shape --> :auto, :require
+            :marker_color --> customcolor, :force
             :xrotation --> 5
             :zrotation --> 6, :quiet
             rand(StableRNG(1), 10, n)
@@ -96,8 +100,8 @@ end
             T2,
             KW(
                 :customcolor => :red,
-                :markershape => :auto,
-                :markercolor => :red,
+                :marker_shape => :auto,
+                :marker_color => :red,
                 :xrotation => 5,
                 :zrotation => 6,
             ),
@@ -113,8 +117,8 @@ end
             m::M = 0.0;
             customcolor = :green,
         ) where {N<:Integer} where {M<:Float64}
-            :markershape --> :auto, :require
-            :markercolor --> customcolor, :force
+            :marker_shape --> :auto, :require
+            :marker_color --> customcolor, :force
             :xrotation --> 5
             :zrotation --> 6, :quiet
             rand(StableRNG(1), 10, n)
@@ -124,8 +128,8 @@ end
             T3,
             KW(
                 :customcolor => :red,
-                :markershape => :auto,
-                :markercolor => :red,
+                :marker_shape => :auto,
+                :marker_color => :red,
                 :xrotation => 5,
                 :zrotation => 6,
             ),
@@ -136,8 +140,8 @@ end
         @test_throws MethodError RB.apply_recipe(KW(), T4())
 
         RB.@recipe function plot(t::T4, n = 1; customcolor = :green)
-            :markershape --> :auto, :require
-            :markercolor --> customcolor, :force
+            :marker_shape --> :auto, :require
+            :marker_color --> customcolor, :force
             :xrotation --> 5
             :zrotation --> 6, :quiet
             plotattributes[:hello] = "hi"
@@ -148,8 +152,8 @@ end
             T4,
             KW(
                 :customcolor => :red,
-                :markershape => :auto,
-                :markercolor => :red,
+                :marker_shape => :auto,
+                :marker_color => :red,
                 :xrotation => 5,
                 :zrotation => 6,
                 :hello => "hi",

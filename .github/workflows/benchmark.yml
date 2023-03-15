@@ -3,7 +3,7 @@ name: benchmarks
 on:
   pull_request:
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -14,11 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
-  
+
       - name: Ubuntu TESTCMD
         run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
       - name: Install Plots dependencies
-        uses: julia-actions/julia-buildpkg@latest
+        shell: xvfb-run julia --project=@. --color=yes {0}
+        run: |
+          using Pkg
+          foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline"))
       - name: Install Benchmarking dependencies
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI"'
 

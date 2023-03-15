@@ -27,7 +27,6 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
         return
     end
     st = kw[:seriestype]
-    st = kw[:seriestype] = type_alias(plt, st)
     datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
     if !isnothing(datalist)
         warn_on_recipe_aliases!(plt, datalist, :plot, st)

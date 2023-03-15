@@ -9,28 +9,54 @@ const AKW = AbstractDict{Symbol,Any}
 # ## DefaultsDict
 # --------------------------------
 
-struct DefaultsDict <: AbstractDict{Symbol,Any}
+struct DefaultsDict{P} <: AbstractDict{Symbol,Any}
+    plot_type::Type{P}
     explicit::KW
     defaults::KW
+    function DefaultsDict{P}(plot_type::Type{P}, explicit::AbstractDict, defaults::AbstractDict) where {P}
+        e = KW(
+            key_alias(plot_type, k) => v === :seriestype ? type_alias(plot_type, v) : v
+            for (k, v) in explicit
+        )
+        new{P}(plot_type, e, defaults)
+    end
 end
 
-Base.merge(d1::DefaultsDict, d2::DefaultsDict) =
-    DefaultsDict(merge(d1.explicit, d2.explicit), merge(d1.defaults, d2.defaults))
-Base.getindex(dd::DefaultsDict, k) =
+DefaultsDict(pt, e, d) = DefaultsDict{pt}(pt, e, d)
+function Base.merge(d1::DefaultsDict, d2::DefaultsDict)
+    @assert d1.plot_type === d2.plot_type
+    DefaultsDict(
+        d1.plot_type,
+        merge(d1.explicit, d2.explicit),
+        merge(d1.defaults, d2.defaults),
+    )
+end
+function Base.getindex(dd::DefaultsDict, k)
+    k = key_alias(dd.plot_type, k)
     if haskey(dd.explicit, k)
         dd.explicit[k]
     else
         dd.defaults[k]
     end
-Base.haskey(dd::DefaultsDict, k) = haskey(dd.explicit, k) || haskey(dd.defaults, k)
-Base.get(dd::DefaultsDict, k, default) = haskey(dd, k) ? dd[k] : default
-Base.get!(dd::DefaultsDict, k, default) =
+end
+function Base.haskey(dd::DefaultsDict, k)
+    k = key_alias(dd.plot_type, k)
+    haskey(dd.explicit, k) || haskey(dd.defaults, k)
+end
+function Base.get(dd::DefaultsDict, k, default)
+    k = key_alias(dd.plot_type, k)
+    haskey(dd, k) ? dd[k] : default
+end
+function Base.get!(dd::DefaultsDict, k, default)
+    k = key_alias(dd.plot_type, k)
     if haskey(dd, k)
         dd[k]
     else
         dd.defaults[k] = default
     end
+end
 function Base.delete!(dd::DefaultsDict, k)
+    k = key_alias(dd.plot_type, k)
     haskey(dd.explicit, k) && delete!(dd.explicit, k)
     haskey(dd.defaults, k) && delete!(dd.defaults, k)
     dd
@@ -46,12 +72,24 @@ function Base.iterate(dd::DefaultsDict, (key_list, i))
     (k => dd[k], (key_list, i + 1))
 end
 
-Base.copy(dd::DefaultsDict) = DefaultsDict(copy(dd.explicit), dd.defaults)
+Base.copy(dd::DefaultsDict) = DefaultsDict(dd.plot_type, copy(dd.explicit), dd.defaults)
 
-RecipesBase.is_explicit(dd::DefaultsDict, k) = haskey(dd.explicit, k)
-RecipesBase.is_default(dd::DefaultsDict, k) = !is_explicit(dd, k) && haskey(dd.defaults, k)
+function RecipesBase.is_explicit(dd::DefaultsDict, k)
+    k = key_alias(dd.plot_type, k)
+    haskey(dd.explicit, k)
+end
+function RecipesBase.is_default(dd::DefaultsDict, k)
+    k = key_alias(dd.plot_type, k)
+    !is_explicit(dd, k) && haskey(dd.defaults, k)
+end
 
-Base.setindex!(dd::DefaultsDict, v, k) = dd.explicit[k] = v
+function Base.setindex!(dd::DefaultsDict, v, k)
+    k = key_alias(dd.plot_type, k)
+    if k === :seriestype
+        v = type_alias(dd.plot_type, v)
+    end
+    dd.explicit[k] = v
+end
 
 # Reset to default value and return dict
 function reset_kw!(dd::DefaultsDict, k)

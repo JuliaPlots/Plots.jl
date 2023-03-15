@@ -38,6 +38,7 @@ export warn_on_recipe_aliases,
     get_axis_limits,
     is_axis_attribute,
     type_alias,
+    key_alias,
     plot_setup!,
     slice_series_attributes!,
     process_sliced_series_attributes!

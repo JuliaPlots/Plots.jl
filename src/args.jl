@@ -1,11 +1,30 @@
 makeplural(s::Symbol) = last(string(s)) == 's' ? s : Symbol(string(s, "s"))
-make_non_underscore(s::Symbol) = Symbol(replace(string(s), "_" => ""))
+function make_non_underscore(s::Symbol)
+    str = string(s)
+    n = count("_", str)
+    Tuple(Symbol(replace(str, "_" => "", count = c)) for c in 1:n)
+end
 
 const _keyAliases = Dict{Symbol,Symbol}()
+const _generalAliases = (
+    "background" => "bg",
+    "foreground" => "fg",
+    "pointsize" => "size",
+    "yfill" => "fill",
+    "alpha" => "a",
+    "alpha" => "opacity",
+    "alpha" => "α",
+)
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
-        (haskey(_keyAliases, alias) || alias === sym) && return
+        str = string(alias)
+        for ga in _generalAliases
+            contains(str, ga.first) || continue
+            str2 = replace(str, ga)
+            _keyAliases[Symbol(str2)] = sym
+        end
+        (haskey(_keyAliases, alias) || alias === sym) && continue
         _keyAliases[alias] = sym
     end
     nothing
@@ -22,7 +41,9 @@ end
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k, v) in aliases
         if '_' in string(k)
-            aliases[make_non_underscore(k)] = v
+            for nu in make_non_underscore(k)
+                aliases[nu] = v
+            end
         end
     end
 end
@@ -330,22 +351,10 @@ const _series_defaults = KW(
     :seriescolor        => :auto,
     :seriesalpha        => nothing,
     :seriestype         => :path,
-    :linestyle          => :solid,
-    :linewidth          => :auto,
-    :linecolor          => :auto,
-    :linealpha          => nothing,
     :fillrange          => nothing,   # ribbons, areas, etc
     :fillcolor          => :match,
     :fillalpha          => nothing,
     :fillstyle          => nothing,
-    :markershape        => :none,
-    :markercolor        => :match,
-    :markeralpha        => nothing,
-    :markersize         => 4,
-    :markerstrokestyle  => :solid,
-    :markerstrokewidth  => 1,
-    :markerstrokecolor  => :match,
-    :markerstrokealpha  => nothing,
     :bins               => :auto,        # number of bins for hists
     :smooth             => false,     # regression line?
     :group              => nothing,   # groupby vector
@@ -571,43 +580,6 @@ aliases(aliasMap::Dict{Symbol,Symbol}, val) =
     filter(x -> x.second == val, aliasMap) |> keys |> collect |> sort
 
 # -----------------------------------------------------------------------------
-# legend
-add_aliases(:legend_position, :legend, :leg, :key, :legends)
-add_aliases(
-    :legend_background_color,
-    :bg_legend,
-    :bglegend,
-    :bgcolor_legend,
-    :bg_color_legend,
-    :background_legend,
-    :background_colour_legend,
-    :bgcolour_legend,
-    :bg_colour_legend,
-    :background_color_legend,
-)
-add_aliases(
-    :legend_foreground_color,
-    :fg_legend,
-    :fglegend,
-    :fgcolor_legend,
-    :fg_color_legend,
-    :foreground_legend,
-    :foreground_colour_legend,
-    :fgcolour_legend,
-    :fg_colour_legend,
-    :foreground_color_legend,
-)
-add_aliases(:legend_font_pointsize, :legendfontsize)
-add_aliases(
-    :legend_title,
-    :key_title,
-    :keytitle,
-    :label_title,
-    :labeltitle,
-    :leg_title,
-    :legtitle,
-)
-add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
 # margin
 add_aliases(:left_margin, :leftmargin)
 
@@ -617,10 +589,6 @@ add_aliases(:right_margin, :rightmargin)
 
 # colors
 add_aliases(:seriescolor, :c, :color, :colour, :colormap, :cmap)
-add_aliases(:linecolor, :lc, :lcolor, :lcolour, :linecolour)
-add_aliases(:markercolor, :mc, :mcolor, :mcolour, :markercolour)
-add_aliases(:markerstrokecolor, :msc, :mscolor, :mscolour, :markerstrokecolour)
-add_aliases(:markerstrokewidth, :msw, :mswidth)
 add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
 
 add_aliases(
@@ -775,9 +743,6 @@ add_aliases(
 
 # alphas
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
-add_aliases(:linealpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
-add_aliases(:markeralpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
-add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 
 # axes attributes
@@ -858,11 +823,7 @@ add_axes_aliases(
 add_aliases(:seriestype, :st, :t, :typ, :linetype, :lt)
 add_aliases(:label, :lab)
 add_aliases(:line, :l)
-add_aliases(:linewidth, :w, :width, :lw)
-add_aliases(:linestyle, :style, :s, :ls)
 add_aliases(:marker, :m, :mark)
-add_aliases(:markershape, :shape)
-add_aliases(:markersize, :ms, :msize)
 add_aliases(:marker_z, :markerz, :zcolor, :mz)
 add_aliases(:line_z, :linez, :zline, :lz)
 add_aliases(:fill, :f, :area)
@@ -1067,16 +1028,16 @@ function processLineArg(plotattributes::AKW, arg)
 
         # linestyle
     elseif allStyles(arg)
-        plotattributes[:linestyle] = arg
+        plotattributes[:line_style] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width === nothing || (plotattributes[:linewidth] = arg.width)
+        arg.width === nothing || (plotattributes[:line_width] = arg.width)
         arg.color === nothing || (
-            plotattributes[:linecolor] =
+            plotattributes[:line_color] =
                 arg.color === :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:linealpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:linestyle] = arg.style)
+        arg.alpha === nothing || (plotattributes[:line_alpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:line_style] = arg.style)
 
     elseif typeof(arg) <: Brush
         arg.size === nothing || (plotattributes[:fillrange] = arg.size)
@@ -1092,58 +1053,58 @@ function processLineArg(plotattributes::AKW, arg)
 
         # linealpha
     elseif allAlphas(arg)
-        plotattributes[:linealpha] = arg
+        plotattributes[:line_alpha] = arg
 
         # linewidth
     elseif allReals(arg)
-        plotattributes[:linewidth] = arg
+        plotattributes[:line_width] = arg
 
         # color
-    elseif !handleColors!(plotattributes, arg, :linecolor)
+    elseif !handleColors!(plotattributes, arg, :line_color)
         @warn "Skipped line arg $arg."
     end
 end
 
 function processMarkerArg(plotattributes::AKW, arg)
     # markershape
-    if allShapes(arg) && !haskey(plotattributes, :markershape)
-        plotattributes[:markershape] = arg
+    if allShapes(arg) && !haskey(plotattributes, :marker_shape)
+        plotattributes[:marker_shape] = arg
 
         # stroke style
     elseif allStyles(arg)
-        plotattributes[:markerstrokestyle] = arg
+        plotattributes[:marker_stroke_style] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width === nothing || (plotattributes[:markerstrokewidth] = arg.width)
+        arg.width === nothing || (plotattributes[:marker_stroke_width] = arg.width)
         arg.color === nothing || (
-            plotattributes[:markerstrokecolor] =
+            plotattributes[:marker_stroke_color] =
                 arg.color === :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:markerstrokestyle] = arg.style)
+        arg.alpha === nothing || (plotattributes[:marker_stroke_alpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:marker_stroke_style] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size === nothing || (plotattributes[:markersize] = arg.size)
+        arg.size === nothing || (plotattributes[:marker_size] = arg.size)
         arg.color === nothing || (
-            plotattributes[:markercolor] =
+            plotattributes[:marker_color] =
                 arg.color === :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:markeralpha] = arg.alpha)
+        arg.alpha === nothing || (plotattributes[:marker_alpha] = arg.alpha)
 
         # linealpha
     elseif allAlphas(arg)
-        plotattributes[:markeralpha] = arg
+        plotattributes[:marker_alpha] = arg
 
         # bool
     elseif typeof(arg) <: Bool
-        plotattributes[:markershape] = arg ? :circle : :none
+        plotattributes[:marker_shape] = arg ? :circle : :none
 
         # markersize
     elseif allReals(arg)
-        plotattributes[:markersize] = arg
+        plotattributes[:marker_size] = arg
 
         # markercolor
-    elseif !handleColors!(plotattributes, arg, :markercolor)
+    elseif !handleColors!(plotattributes, arg, :marker_color)
         @warn "Skipped marker arg $arg."
     end
 end
@@ -1315,9 +1276,9 @@ _replace_markershape(shape) = shape
 function _add_markershape(plotattributes::AKW)
     # add the markershape if it needs to be added... hack to allow "m=10" to add a shape,
     # and still allow overriding in _apply_recipe
-    ms = pop!(plotattributes, :markershape_to_add, :none)
-    if !haskey(plotattributes, :markershape) && ms !== :none
-        plotattributes[:markershape] = ms
+    ms = pop!(plotattributes, :marker_shape_to_add, :none)
+    if !haskey(plotattributes, :marker_shape) && ms !== :none
+        plotattributes[:marker_shape] = ms
     end
 end
 
@@ -1444,15 +1405,15 @@ function preprocess_attributes!(plotattributes::AKW)
         anymarker = true
     end
     RecipesPipeline.reset_kw!(plotattributes, :marker)
-    if haskey(plotattributes, :markershape)
-        plotattributes[:markershape] = _replace_markershape(plotattributes[:markershape])
-        if plotattributes[:markershape] === :none &&
+    if haskey(plotattributes, :marker_shape)
+        plotattributes[:marker_shape] = _replace_markershape(plotattributes[:marker_shape])
+        if plotattributes[:marker_shape] === :none &&
            get(plotattributes, :seriestype, :path) in
            (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
-            plotattributes[:markershape] = :circle
+            plotattributes[:marker_shape] = :circle
         end
     elseif anymarker
-        plotattributes[:markershape_to_add] = :circle  # add it after _apply_recipe
+        plotattributes[:marker_shape_to_add] = :circle  # add it after _apply_recipe
     end
 
     # handle fill
@@ -1530,7 +1491,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         Set{Symbol}()
     end
     extra_kwargs = Dict{Symbol,Any}()
-    for k in explicitkeys(plotattributes)
+    for k in RecipesPipeline.explicitkeys(plotattributes)
         (is_attr_supported(pkg, k) && k ∉ keys(_deprecated_attributes)) && continue
         k in _suppress_warnings && continue
         if ismissing(default(k))
@@ -1565,10 +1526,10 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
     get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
     is_seriestype_supported(pkg, plotattributes[:seriestype]) ||
         @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
-    is_style_supported(pkg, plotattributes[:linestyle]) ||
-        @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
-    is_marker_supported(pkg, plotattributes[:markershape]) ||
-        @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
+    is_style_supported(pkg, plotattributes[:line_style]) ||
+        @warn "linestyle $(plotattributes[:line_style]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
+    is_marker_supported(pkg, plotattributes[:marker_shape]) ||
+        @warn "markershape $(plotattributes[:marker_shape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
@@ -1996,8 +1957,8 @@ const DEFAULT_LINEWIDTH = Ref(1)
 
 # get a good default linewidth... 0 for surface and heatmaps
 _replace_linewidth(plotattributes::AKW) =
-    if plotattributes[:linewidth] === :auto
-        plotattributes[:linewidth] =
+    if plotattributes[:line_width] === :auto
+        plotattributes[:line_width] =
             (get(plotattributes, :seriestype, :path) ∉ (:surface, :heatmap, :image)) *
             DEFAULT_LINEWIDTH[]
     end
@@ -2031,27 +1992,27 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 
     aliasesAndAutopick(
         plotattributes,
-        :linestyle,
+        :line_style,
         _styleAliases,
         supported_styles(pkg),
         plotIndex,
     )
     aliasesAndAutopick(
         plotattributes,
-        :markershape,
+        :marker_shape,
         _markerAliases,
         supported_markers(pkg),
         plotIndex,
     )
 
     # update alphas
-    for asym in (:linealpha, :markeralpha, :fillalpha)
+    for asym in (:line_alpha, :marker_alpha, :fillalpha)
         if plotattributes[asym] === nothing
             plotattributes[asym] = plotattributes[:seriesalpha]
         end
     end
-    if plotattributes[:markerstrokealpha] === nothing
-        plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
+    if plotattributes[:marker_stroke_alpha] === nothing
+        plotattributes[:marker_stroke_alpha] = plotattributes[:marker_alpha]
     end
 
     # update series color
@@ -2059,11 +2020,11 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     stype = plotattributes[:seriestype]
     plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
-    # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
-    for s in (:line, :marker, :fill)
+    # update other colors
+    for s in (:line_, :marker_, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] === :auto
-            plot_color(if has_black_border_for_default(stype) && s === :line
+            plot_color(if has_black_border_for_default(stype) && s === :line_
                 sp[:foreground_color_subplot]
             else
                 scolor
@@ -2076,20 +2037,21 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     end
 
     # update markerstrokecolor
-    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] === :match
-        plot_color(sp[:foreground_color_subplot])
-    elseif plotattributes[:markerstrokecolor] === :auto
-        get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
-    else
-        get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
-    end
+    plotattributes[:marker_stroke_color] =
+        if plotattributes[:marker_stroke_color] === :match
+            plot_color(sp[:foreground_color_subplot])
+        elseif plotattributes[:marker_stroke_color] === :auto
+            get_series_color(plotattributes[:marker_color], sp, plotIndex, stype)
+        else
+            get_series_color(plotattributes[:marker_stroke_color], sp, plotIndex, stype)
+        end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
     if plotattributes[:marker_z] !== nothing
-        ensure_gradient!(plotattributes, :markercolor, :markeralpha)
+        ensure_gradient!(plotattributes, :marker_color, :marker_alpha)
     end
     if plotattributes[:line_z] !== nothing
-        ensure_gradient!(plotattributes, :linecolor, :linealpha)
+        ensure_gradient!(plotattributes, :line_color, :line_alpha)
     end
     if plotattributes[:fill_z] !== nothing
         ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
@@ -2097,9 +2059,9 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 
     # scatter plots don't have a line, but must have a shape
     if plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
-        plotattributes[:linewidth] = 0
-        if plotattributes[:markershape] === :none
-            plotattributes[:markershape] = :circle
+        plotattributes[:line_width] = 0
+        if plotattributes[:marker_shape] === :none
+            plotattributes[:marker_shape] = :circle
         end
     end
 
@@ -2122,15 +2084,28 @@ _series_index(plotattributes, sp) =
 #--------------------------------------------------
 ## inspired by Base.@kwdef
 """
-    add_attributes(level, expr, match_table)
+    add_attributes(level, expr, args...)
 
 Takes a `struct` definition and recurses into its fields to create keywords by chaining the field names with the structs' name with underscore.
 Also creates pluralized and non-underscore aliases for these keywords.
 - `level` indicates which group of `plot`, `subplot`, `series`, etc. the keywords belong to.
 - `expr` is the struct definition with default values like `Base.@kwdef`
-- `match_table` is an expression of the form `:match = (symbols)`, with symbols whose default value should be `:match`
+- `args` can be any of the following
+  - `match_table`: an expression of the form `:match = (symbols)`, with symbols whose default value should be `:match`
+  - `alias_dict`: an expression of the form `:aliases = Dict(symbol1 => symbol2)`, which will create aliases such that `symbol1` is an alias for `symbol2`
 """
-macro add_attributes(level, expr, match_table)
+macro add_attributes(level, expr, args...)
+    match_table = :(:match = ())
+    alias_dict = KW()
+    for arg in args
+        if arg.head == :(=) && arg.args[1] == QuoteNode(:match)
+            match_table = arg
+        elseif arg.head == :(=) && arg.args[1] == QuoteNode(:aliases)
+            alias_dict = eval(arg.args[2])
+        else
+            @warn "Unsupported extra argument $arg will be ignored"
+        end
+    end
     expr = macroexpand(__module__, expr) # to expand @static
     expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
     if (T = expr.args[2]) isa Expr && T.head === :<:
@@ -2138,17 +2113,19 @@ macro add_attributes(level, expr, match_table)
     end
 
     key_dict = KW()
+    original = copy(expr)
     _splitdef!(expr.args[3], key_dict)
 
     insert_block = Expr(:block)
     for (key, value) in key_dict
-        # e.g. _series_defualts[key] = value
+        # e.g. _series_defaults[key] = value
         exp_key = Symbol(lowercase(string(T)), "_", key)
         pl_key = makeplural(exp_key)
         if QuoteNode(exp_key) in match_table.args[2].args
             value = QuoteNode(:match)
         end
         field = QuoteNode(Symbol("_", level, "_defaults"))
+        aliases = get(alias_dict, exp_key, nothing)
         push!(
             insert_block.args,
             Expr(
@@ -2159,16 +2136,29 @@ macro add_attributes(level, expr, match_table)
             :(Plots.add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
             :(Plots.add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(Plots.make_non_underscore(exp_key))),
+                $(QuoteNode(Plots.make_non_underscore(exp_key)))...,
             )),
             :(Plots.add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(Plots.make_non_underscore(pl_key))),
+                $(QuoteNode(Plots.make_non_underscore(pl_key)))...,
             )),
         )
+        if aliases !== nothing
+            pl_aliases = Plots.makeplural.(aliases)
+            push!(
+                insert_block.args,
+                :(Plots.add_aliases(
+                    $(QuoteNode(exp_key)),
+                    $(aliases)...,
+                    $(pl_aliases)...,
+                    $(Iterators.flatten(Plots.make_non_underscore.(aliases)))...,
+                    $(Iterators.flatten(Plots.make_non_underscore.(pl_aliases)))...,
+                )),
+            )
+        end
     end
     quote
-        $expr
+        Base.@kwdef $original
         $insert_block
     end |> esc
 end
@@ -2200,7 +2190,14 @@ function _splitdef!(blk, key_dict)
                     continue
                 end
                 defexpr = ei.args[2]  # defexpr
-                key_dict[var] = defexpr
+                # filter e.g. marker::Marker = Marker(...)
+                if !(
+                    defexpr isa Expr &&
+                    defexpr.head == :call &&
+                    defexpr.args[1] == ei.args[1].args[2]
+                )
+                    key_dict[var] = defexpr
+                end
                 blk.args[i] = lhs
             elseif ei.head === :(::) && ei.args[1] isa Symbol
                 # var::Typ
