@@ -18,9 +18,17 @@ end
 end
 
 @testset "Plot title" begin
-    pl = plot(rand(4, 8), layout = 4, plot_title = "My title")
+    pl = plot(
+        rand(4, 8),
+        layout = 4,
+        plot_title = "My title",
+        background_color = :darkgray,
+        background_color_inside = :lightgray,
+    )
     @test pl[:plot_title] == "My title"
     @test pl[:plot_titleindex] == 5
+
+    @test pl[5][:background_color_inside] == RGBA(colorant"darkgray")
 
     plot!(pl)
     @test pl[:plot_title] == "My title"
