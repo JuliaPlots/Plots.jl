@@ -1203,7 +1203,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
             opt,
             "$(letter)ticklabels" => curly(tick_labels),
             "$(letter)tick" => curly(join(tick_values, ',')),
-            if (tick_dir = axis[:tick_direction]) === :none
+            if (tick_dir = axis[:tick_direction]) === :none || axis[:showaxis] === false
                 "$(letter)tick style" => "draw=none"
             else
                 "$(letter)tick align" => "$(tick_dir)side"
