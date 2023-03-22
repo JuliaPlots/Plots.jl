@@ -104,6 +104,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "/tikz/background rectangle/.style" => Options(
                     # "draw" => "black",
                     "fill" => cstr,
+                    "fill opacity" => alpha(cstr),
                     "draw opacity" => alpha(cstr),
                 ),
                 "show background rectangle" => nothing,
@@ -1256,6 +1257,11 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
             "axis $letter line$(axis[:draw_arrow] ? "" : "*")" =>
                 (axis[:mirror] ? "right" : framestyle === :axes ? "left" : "middle"),
         )
+    end
+
+    # allow axis mirroring with :box framestyle
+    if framestyle in (:box,)
+        push!(opt, "$(letter)ticklabel pos" => (axis[:mirror] ? "right" : "left"))
     end
 
     if framestyle === :zerolines

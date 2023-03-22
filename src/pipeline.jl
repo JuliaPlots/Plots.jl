@@ -324,6 +324,7 @@ function _add_plot_title!(plt)
             plt[:plot_titleindex] = subplot[:subplot_index]
             subplot[:framestyle] = :none
             subplot[:margin] = 0px
+            subplot[:background_color_inside] = plt[:background_color]
             push!(plt.subplots, subplot)
         end
 
