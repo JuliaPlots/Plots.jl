@@ -487,13 +487,14 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
         "point meta" => "\\thisrow{meta}",
+        "opacity" => something(get_fillalpha(series), 1.0),
     )
     args = pgfx_series_arguments(series, opt)
     meta = map(r -> any(!isfinite, r) ? NaN : r[3], zip(args...))
     for arg in args
         arg[(!isfinite).(arg)] .= 0
     end
-    table = Table(["x" => args[1], "y" => args[2], "z" => args[3], "meta" => meta])
+    table = Table(["x" => ispolar(series) ? rad2deg.(args[1]) : args[1], "y" => args[2], "z" => args[3], "meta" => meta])
     push!(axis, series_func(series_opt, table))
     pgfx_add_legend!(axis, series, opt)
 end
