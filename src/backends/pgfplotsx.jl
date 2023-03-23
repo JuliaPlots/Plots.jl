@@ -494,7 +494,12 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
     for arg in args
         arg[(!isfinite).(arg)] .= 0
     end
-    table = Table(["x" => ispolar(series) ? rad2deg.(args[1]) : args[1], "y" => args[2], "z" => args[3], "meta" => meta])
+    table = Table([
+        "x" => ispolar(series) ? rad2deg.(args[1]) : args[1],
+        "y" => args[2],
+        "z" => args[3],
+        "meta" => meta,
+    ])
     push!(axis, series_func(series_opt, table))
     pgfx_add_legend!(axis, series, opt)
 end
