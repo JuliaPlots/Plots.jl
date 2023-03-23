@@ -801,12 +801,32 @@ pgfx_get_title_pos(s::Symbol) = get(
 
 function pgfx_get_ticklabel_style(sp, axis)
     cstr = plot_color(axis[:tickfontcolor])
-    return Options(
+    opt = Options(
         "font" => pgfx_font(axis[:tickfontsize], pgfx_thickness_scaling(sp)),
         "color" => cstr,
         "draw opacity" => alpha(cstr),
         "rotate" => axis[:tickfontrotation],
     )
+    # aligning rotated tick labels to ticks
+    if RecipesPipeline.is3d(sp)
+        if axis === sp[:xaxis]
+            push!(opt, "anchor" => axis[:rotation] < 60 ? "north east" : "east")
+        elseif axis === sp[:yaxis]
+            push!(opt, "anchor" => axis[:rotation] < 45 ? "north west" : "north east")
+        else
+            push!(
+                opt,
+                "anchor" =>
+                    axis[:rotation] == 0 ? "east" :
+                    axis[:rotation] < 90 ? "south east" : "south",
+            )
+        end
+    else
+        if mod(axis[:rotation], 90) > 0 # 0 and ±90 already look good with the default anchor
+            push!(opt, "anchor" => axis === sp[:xaxis] ? "north east" : "south east")
+        end
+    end
+    return opt
 end
 
 function pgfx_get_colorbar_ticklabel_style(sp)
