@@ -1005,6 +1005,8 @@ function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
     opt = series.plotattributes
     args = if RecipesPipeline.is3d(series)
         opt[:x][rng], opt[:y][rng], opt[:z][rng]
+    elseif ispolar(series)
+        rad2deg.(opt[:x][rng]), opt[:y][rng]
     else
         opt[:x][rng], opt[:y][rng]
     end
