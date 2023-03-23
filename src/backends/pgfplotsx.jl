@@ -806,7 +806,12 @@ function pgfx_get_ticklabel_style(sp, axis)
         elseif axis === sp[:yaxis]
             push!(opt, "anchor" => axis[:rotation] < 45 ? "north west" : "north east")
         else
-            push!(opt, "anchor" => axis[:rotation] == 0 ? "east" : axis[:rotation] < 90 ? "south east" : "south")
+            push!(
+                opt,
+                "anchor" =>
+                    axis[:rotation] == 0 ? "east" :
+                    axis[:rotation] < 90 ? "south east" : "south",
+            )
         end
     else
         if mod(axis[:rotation], 90) > 0 # 0 and ±90 already look good with the default anchor
