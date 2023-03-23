@@ -197,8 +197,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             if hascolorbar(sp)
                 formatter = latex_formatter(sp[:colorbar_formatter])
                 cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
-
                 letter = sp[:colorbar] === :top ? :x : :y
+
                 colorbar_style = push!(
                     Options("$(letter)label" => sp[:colorbar_title]),
                     "$(letter)label style" => pgfx_get_colorbar_title_style(sp),
