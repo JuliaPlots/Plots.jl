@@ -800,8 +800,18 @@ function pgfx_get_ticklabel_style(sp, axis)
         "rotate" => axis[:tickfontrotation],
     )
     # aligning rotated tick labels to ticks
-    if mod(axis[:rotation], 90) > 0 # 0 and ±90 already look good with the default anchor
-        push!(opt, "anchor" => axis === sp[:xaxis] ? "north east" : "south east")
+    if RecipesPipeline.is3d(sp)
+        if axis === sp[:xaxis]
+            push!(opt, "anchor" => axis[:rotation] < 60 ? "north east" : "east")
+        elseif axis === sp[:yaxis]
+            push!(opt, "anchor" => axis[:rotation] < 45 ? "north west" : "north east")
+        else
+            push!(opt, "anchor" => axis[:rotation] == 0 ? "east" : axis[:rotation] < 90 ? "south east" : "south")
+        end
+    else
+        if mod(axis[:rotation], 90) > 0 # 0 and ±90 already look good with the default anchor
+            push!(opt, "anchor" => axis === sp[:xaxis] ? "north east" : "south east")
+        end
     end
     return opt
 end
