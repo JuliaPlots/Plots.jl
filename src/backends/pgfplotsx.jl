@@ -197,24 +197,32 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             if hascolorbar(sp)
                 formatter = latex_formatter(sp[:colorbar_formatter])
                 cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
-                colorbar_style = if sp[:colorbar] === :top
+                letter = sp[:colorbar] === :top ? :x : :y
+
+                colorbar_style = push!(
+                    Options("$(letter)label" => sp[:colorbar_title]),
+                    "$(letter)label style" => pgfx_get_colorbar_title_style(sp),
+                    "$(letter)tick" => cticks,
+                    "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
+                )
+
+                if sp[:colorbar] === :top
                     push!(
-                        Options("xlabel" => sp[:colorbar_title]),
-                        "xlabel style" => pgfx_get_colorbar_title_style(sp),
+                        colorbar_style,
                         "at" => "(0.5, 1.05)",
                         "anchor" => "south",
-                        "xtick" => cticks,
                         "xticklabel pos" => "upper",
-                        "xticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
-                    )
-                else
-                    push!(
-                        Options("ylabel" => sp[:colorbar_title]),
-                        "ylabel style" => pgfx_get_colorbar_title_style(sp),
-                        "ytick" => cticks,
-                        "yticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     )
                 end
+
+                if !_has_ticks(sp[:colorbar_ticks])
+                    push!(
+                        colorbar_style,
+                        "$(letter)tick style" => "{draw=none}",
+                        "$(letter)ticklabels" => "{,,}",
+                    )
+                end
+
                 push!(
                     axis_opt,
                     "colorbar $(pgfx_get_colorbar_pos(sp[:colorbar]))" => nothing,
