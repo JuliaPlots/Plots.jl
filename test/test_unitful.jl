@@ -377,3 +377,18 @@ end
     @test ncodeunits(str) == 4
     @test codeunit(str) == UInt8
 end
+
+@testset "Logunits plots" begin
+    u = (1:3)u"B"
+    v = (1:3)u"dB"
+    x = (1:3)u"dBV"
+    y = (1:3)u"V"
+    pl = plot(u, x)
+    @test pl isa Plot
+    @test xguide(pl) == "B"
+    @test yguide(pl) == "dBV"
+    @test plot!(pl, v, y) isa Plot
+    pl = plot(v, y)
+    @test pl isa Plot
+    @test plot!(pl, u, x) isa Plot
+end
