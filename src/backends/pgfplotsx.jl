@@ -197,24 +197,32 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             if hascolorbar(sp)
                 formatter = latex_formatter(sp[:colorbar_formatter])
                 cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
-                colorbar_style = if sp[:colorbar] === :top
+                letter = sp[:colorbar] === :top ? :x : :y
+
+                colorbar_style = push!(
+                    Options("$(letter)label" => sp[:colorbar_title]),
+                    "$(letter)label style" => pgfx_get_colorbar_title_style(sp),
+                    "$(letter)tick" => cticks,
+                    "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
+                )
+
+                if sp[:colorbar] === :top
                     push!(
-                        Options("xlabel" => sp[:colorbar_title]),
-                        "xlabel style" => pgfx_get_colorbar_title_style(sp),
+                        colorbar_style,
                         "at" => "(0.5, 1.05)",
                         "anchor" => "south",
-                        "xtick" => cticks,
                         "xticklabel pos" => "upper",
-                        "xticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
-                    )
-                else
-                    push!(
-                        Options("ylabel" => sp[:colorbar_title]),
-                        "ylabel style" => pgfx_get_colorbar_title_style(sp),
-                        "ytick" => cticks,
-                        "yticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     )
                 end
+
+                if !_has_ticks(sp[:colorbar_ticks])
+                    push!(
+                        colorbar_style,
+                        "$(letter)tick style" => "{draw=none}",
+                        "$(letter)ticklabels" => "{,,}",
+                    )
+                end
+
                 push!(
                     axis_opt,
                     "colorbar $(pgfx_get_colorbar_pos(sp[:colorbar]))" => nothing,
@@ -487,13 +495,19 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
         "point meta" => "\\thisrow{meta}",
+        "opacity" => something(get_fillalpha(series), 1.0),
     )
     args = pgfx_series_arguments(series, opt)
     meta = map(r -> any(!isfinite, r) ? NaN : r[3], zip(args...))
     for arg in args
         arg[(!isfinite).(arg)] .= 0
     end
-    table = Table(["x" => args[1], "y" => args[2], "z" => args[3], "meta" => meta])
+    table = Table([
+        "x" => ispolar(series) ? rad2deg.(args[1]) : args[1],
+        "y" => args[2],
+        "z" => args[3],
+        "meta" => meta,
+    ])
     push!(axis, series_func(series_opt, table))
     pgfx_add_legend!(axis, series, opt)
 end
@@ -1025,6 +1039,8 @@ function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
     opt = series.plotattributes
     args = if RecipesPipeline.is3d(series)
         opt[:x][rng], opt[:y][rng], opt[:z][rng]
+    elseif ispolar(series)
+        rad2deg.(opt[:x][rng]), opt[:y][rng]
     else
         opt[:x][rng], opt[:y][rng]
     end
@@ -1224,7 +1240,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
             opt,
             "$(letter)ticklabels" => curly(tick_labels),
             "$(letter)tick" => curly(join(tick_values, ',')),
-            if (tick_dir = axis[:tick_direction]) === :none
+            if (tick_dir = axis[:tick_direction]) === :none || axis[:showaxis] === false
                 "$(letter)tick style" => "draw=none"
             else
                 "$(letter)tick align" => "$(tick_dir)side"
