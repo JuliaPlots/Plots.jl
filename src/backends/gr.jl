@@ -1078,8 +1078,9 @@ function gr_add_legend(sp, leg, viewport_area)
             end
 
             if (msh = series[:markershape]) !== :none
-                msz = first(series[:markersize])
-                msw = first(series[:markerstrokewidth])
+                msz = max(first(series[:markersize]), 0)
+                msw = max(first(series[:markerstrokewidth]), 0)
+                mfac = 0.8 * lfps / (msz + 0.5 * msw + 1e-20)
                 gr_draw_marker(
                     series,
                     xpos - 2leg.base_factor,
@@ -1087,8 +1088,8 @@ function gr_add_legend(sp, leg, viewport_area)
                     nothing,
                     clims,
                     1,
-                    min(max_markersize, msz > 0 ? 0.8lfps : 0),
-                    min(max_markersize, 0.8lfps * msw / (msz > 0 ? msz : 8)),
+                    min(max_markersize, mfac * msz),
+                    min(max_markersize, mfac * msw),
                     Plots._cycle(msh, 1),
                 )
             end
@@ -1255,8 +1256,8 @@ function gr_get_legend_geometry(vp, sp)
     span_hspace = span + pad  # part of the horizontal increment
     dx = (textw + (vertical ? 0 : span_hspace)) * get(ekw, :legend_wfactor, 1)
 
-    # This is to prevent that linestyle is obscured by large markers. 
-    # We are trying to get markers to not be larger than half the line length. 
+    # This is to prevent that linestyle is obscured by large markers.
+    # We are trying to get markers to not be larger than half the line length.
     # 1 / leg.dy translates base_factor to line length units (important in the context of size kwarg)
     # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
     base_markersize = gr_legend_marker_to_line_factor[] * span / dy  # NOTE: arbitrarily based on horizontal measures !
