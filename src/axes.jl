@@ -456,6 +456,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             letter !== :z &&
             plotattributes[:seriestype] === :straightline &&
             any(series[:seriestype] !== :straightline for series in series_list(sp)) &&
+            length(data) > 2 &&
             data[1] != data[2]
         )
             data = [NaN]
