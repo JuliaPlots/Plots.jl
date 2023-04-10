@@ -1810,7 +1810,7 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # extend annotations, and ensure we always have a (x,y,PlotText) tuple
     newanns = []
     for ann in vcat(anns, sp[:annotations])
-        append!(newanns, process_annotation(sp, ann...))
+        append!(newanns, process_annotation(sp, ann))
     end
     sp.attr[:annotations] = newanns
 
