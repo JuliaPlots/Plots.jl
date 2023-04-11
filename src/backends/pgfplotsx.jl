@@ -1027,7 +1027,7 @@ function pgfx_add_annotation!(
     )
     push!(
         o,
-        "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$(join(pos, ','))) {$(val.str)};"
+        "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$(join(pos, ','))) {$(val.str)};",
     )
 end
 

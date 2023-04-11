@@ -42,7 +42,7 @@ plotly_annotation_dict(x, y, z, val; xref = "paper", yref = "paper", zref = "pap
     :y => y,
     :zref => zref,
     :z => z,
-    :showarrow => false
+    :showarrow => false,
 )
 
 plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper") = merge(
@@ -62,7 +62,7 @@ plotly_annotation_dict(
     ptxt::PlotText;
     xref = "paper",
     yref = "paper",
-    zref = "paper"
+    zref = "paper",
 ) = merge(
     plotly_annotation_dict(x, y, z, ptxt.str; xref = xref, yref = yref, zref = zref),
     KW(
