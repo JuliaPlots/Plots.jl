@@ -317,7 +317,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 loc_val = locate_annotation(sp, ann...)
                 pgfx_add_annotation!(
                     axis,
-                    loc_val[1:end-1],
+                    loc_val[1:(end - 1)],
                     loc_val[end],
                     pgfx_thickness_scaling(sp),
                 )
@@ -1025,7 +1025,10 @@ function pgfx_add_annotation!(
         ),
         options,
     )
-    push!(o, "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$(join(pos, ','))) {$(val.str)};")
+    push!(
+        o,
+        "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$(join(pos, ','))) {$(val.str)};"
+    )
 end
 
 function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
@@ -1094,7 +1097,7 @@ function pgfx_sanitize_plot!(plt)
                 for i in eachindex(old_ann)
                     # [1:end-1] is a tuple of coordinates, [end] - text
                     subplot.attr[key][i] =
-                        (old_ann[i][1:end-1]..., pgfx_sanitize_string(old_ann[i][end]))
+                        (old_ann[i][1:(end - 1)]..., pgfx_sanitize_string(old_ann[i][end]))
                 end
             elseif value isa Union{AbstractString,AVec{<:AbstractString}}
                 subplot.attr[key] = pgfx_sanitize_string.(value)

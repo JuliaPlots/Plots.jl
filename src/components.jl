@@ -611,13 +611,9 @@ _annotation_coords(pos) = pos
 
 # Expand arrays of coordinates, positions and labels into individual annotations
 # and make sure labels are of type PlotText
-function process_annotation(
-    sp::Subplot,
-    ann,
-    font = _annotationfont(sp),
-)
+function process_annotation(sp::Subplot, ann, font = _annotationfont(sp))
     map(zip(makevec.(ann)...)) do pos_lab
-        pos, lab = pos_lab[1:end-1], pos_lab[end]
+        pos, lab = pos_lab[1:(end - 1)], pos_lab[end]
         pos = map([:x, :y, :z], pos) do letter, val
             assign_annotation_coord!(sp[get_attr_symbol(letter, :axis)], val)
         end

@@ -34,8 +34,16 @@ plotly_font(font::Font, color = font.color) = KW(
 plotly_annotation_dict(x, y, val; xref = "paper", yref = "paper") =
     KW(:text => val, :xref => xref, :x => x, :yref => yref, :y => y, :showarrow => false)
 
-plotly_annotation_dict(x, y, z, val; xref = "paper", yref = "paper", zref = "paper") =
-    KW(:text => val, :xref => xref, :x => x, :yref => yref, :y => y, :zref => zref, :z => z, :showarrow => false)
+plotly_annotation_dict(x, y, z, val; xref = "paper", yref = "paper", zref = "paper") = KW(
+    :text => val,
+    :xref => xref,
+    :x => x,
+    :yref => yref,
+    :y => y,
+    :zref => zref,
+    :z => z,
+    :showarrow => false
+)
 
 plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper") = merge(
     plotly_annotation_dict(x, y, ptxt.str; xref = xref, yref = yref),
@@ -47,7 +55,15 @@ plotly_annotation_dict(x, y, ptxt::PlotText; xref = "paper", yref = "paper") = m
     ),
 )
 
-plotly_annotation_dict(x, y, z, ptxt::PlotText; xref = "paper", yref = "paper", zref = "paper") = merge(
+plotly_annotation_dict(
+    x,
+    y,
+    z,
+    ptxt::PlotText;
+    xref = "paper",
+    yref = "paper",
+    zref = "paper"
+) = merge(
     plotly_annotation_dict(x, y, z, ptxt.str; xref = xref, yref = yref, zref = zref),
     KW(
         :font => plotly_font(ptxt.font),
