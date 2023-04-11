@@ -83,8 +83,8 @@ end
 function _inspectdr_add_annotations(
     plot,
     sp::Subplot,
-    pos::Union{Tuple, Symbol},
-    val::PlotText
+    pos::Union{Tuple,Symbol},
+    val::PlotText,
 )
     x, y, val = locate_annotation(sp, pos, val)
     _inspectdr_add_annotations(plot, sp, x, y, val)
