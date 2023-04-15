@@ -636,7 +636,7 @@ _process_annotation_3d(
 
 function _process_annotation(sp::Subplot, ann, annotation_processor::Function)
     ann = makevec.(ann)
-    [annotation_processor(sp, _cycle.(ann, i)...) for i = 1:maximum(length.(ann))]
+    [annotation_processor(sp, _cycle.(ann, i)...) for i in 1:maximum(length.(ann))]
 end
 
 # Expand arrays of coordinates, positions and labels into individual annotations
