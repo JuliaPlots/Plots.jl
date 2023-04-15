@@ -603,23 +603,46 @@ _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwx
 
 assign_annotation_coord!(axis, x) = discrete_value!(axis, x)[1]
 assign_annotation_coord!(axis, x::TimeType) = assign_annotation_coord!(axis, Dates.value(x))
-assign_annotation_coord!(axis, x::Symbol) = x
-assign_annotation_coord!(axis, x::Tuple) = x
 
 _annotation_coords(pos::Symbol) = get(_positionAliases, pos, pos)
 _annotation_coords(pos) = pos
 
+function _process_annotation_2d(sp::Subplot, x, y, lab, font = _annotationfont(sp))
+    x = assign_annotation_coord!(sp[:xaxis], x)
+    y = assign_annotation_coord!(sp[:yaxis], y)
+    _annotation(sp, font, lab, x, y)
+end
+
+_process_annotation_2d(
+    sp::Subplot,
+    pos::Union{Tuple,Symbol},
+    lab,
+    font = _annotationfont(sp),
+) = _annotation(sp, font, lab, _annotation_coords(pos))
+
+function _process_annotation_3d(sp::Subplot, x, y, z, lab, font = _annotationfont(sp))
+    x = assign_annotation_coord!(sp[:xaxis], x)
+    y = assign_annotation_coord!(sp[:yaxis], y)
+    z = assign_annotation_coord!(sp[:zaxis], z)
+    _annotation(sp, font, lab, x, y, z)
+end
+
+_process_annotation_3d(
+    sp::Subplot,
+    pos::Union{Tuple,Symbol},
+    lab,
+    font = _annotationfont(sp),
+) = _annotation(sp, font, lab, _annotation_coords(pos))
+
+function _process_annotation(sp::Subplot, ann, annotation_processor::Function)
+    ann = makevec.(ann)
+    [annotation_processor(sp, _cycle.(ann, i)...) for i = 1:maximum(length.(ann))]
+end
+
 # Expand arrays of coordinates, positions and labels into individual annotations
 # and make sure labels are of type PlotText
-function process_annotation(sp::Subplot, ann, font = _annotationfont(sp))
-    map(zip(makevec.(ann)...)) do pos_lab
-        pos, lab = pos_lab[1:(end - 1)], pos_lab[end]
-        pos = map([:x, :y, :z], pos) do letter, val
-            assign_annotation_coord!(sp[get_attr_symbol(letter, :axis)], val)
-        end
-        _annotation(sp, font, lab, _annotation_coords(pos)...)
-    end
-end
+process_annotation(sp::Subplot, ann) =
+    _process_annotation(sp, ann, is3d(sp) ? _process_annotation_3d : _process_annotation_2d)
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     # !TODO Add more scales in the future (asinh, sqrt) ?
@@ -653,12 +676,11 @@ const position_multiplier = Dict(
 )
 
 # Give each annotation coordinates based on specified position
-# don't specialize on NTuple to allow mixed types
 locate_annotation(sp::Subplot, rel::Tuple, label::PlotText) = (
     map(1:length(rel), [:x, :y, :z]) do i, letter
         _relative_position(
             axis_limits(sp, letter)...,
-            rel[i] * Plots.pct,
+            rel[i] * pct,
             sp[get_attr_symbol(letter, :axis)][:scale],
         )
     end...,

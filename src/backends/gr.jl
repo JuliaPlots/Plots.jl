@@ -973,13 +973,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
 
     # add annotations
     for ann in sp[:annotations]
-        x, y, val = if is3d(sp)
+        x, y = if is3d(sp)
             x, y, z, val = locate_annotation(sp, ann...)
             GR.setwindow(-1, 1, -1, 1)
-            gr_w3tondc(x, y, z)..., val
+            gr_w3tondc(x, y, z)
         else
             x, y, val = locate_annotation(sp, ann...)
-            GR.wctondc(x, y)..., val
+            GR.wctondc(x, y)
         end
         gr_set_font(val.font, sp)
         gr_text(x, y, val.str)
