@@ -1122,17 +1122,18 @@ pgfx_is_inline_math(lab) = (
 )
 
 # surround the power part of label with curly braces
-function wrap_power_labels(label::AbstractString)
+function wrap_power_label(label::AbstractString)
     pgfx_is_inline_math(label) && return label  # already in `mathmode` form
     occursin('^', label) || return label
     base, power = split(label, '^')
     "$base^$(curly(power))"
 end
+
 wrap_power_labels(labels::AVec{LaTeXString}) = labels
 function wrap_power_labels(labels::AVec{<:AbstractString})
-    new_labels = copy(labels)
+    new_labels = similar(labels)
     for (i, label) in enumerate(labels)
-        new_labels[i] = wrap_power_labels(label)
+        new_labels[i] = wrap_power_label(label)
     end
     new_labels
 end

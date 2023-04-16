@@ -394,9 +394,13 @@ end
 end
 
 if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
-    @testset "pgfplotsx exponent" begin  # github.com/JuliaPlots/Plots.jl/issues/4722
+    @testset "pgfplotsx exponents" begin  # github.com/JuliaPlots/Plots.jl/issues/4722
         with(:pgfplotsx) do
             pl = plot([1u"s", 2u"s"], [1u"m/s^2", 2u"m/s^2"])
+            savefig(pl, tempname() * ".pdf")
+
+            x, y = rand(10) * u"km", rand(10) * u"hr"
+            pl = plot(x, y, x ./ y)
             savefig(pl, tempname() * ".pdf")
         end
     end

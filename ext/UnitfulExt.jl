@@ -91,7 +91,7 @@ end
     uf = UnitFunction(f, [u])
     recipedata = RecipesBase.apply_recipe(plotattributes, uf)
     _, xmin, xmax = recipedata[1].args
-    return f, xmin * u, xmax * u
+    f, xmin * u, xmax * u
 end
 
 """
@@ -140,7 +140,7 @@ function fixaspectratio!(attr, u, axisletter)
     elseif axisletter === :x
         attr[:aspect_ratio] = aspect_ratio / u
     end
-    return
+    nothing
 end
 
 # Markers / lines
@@ -158,11 +158,12 @@ ustripattribute!(attr, key) =
         v = attr[key]
         u = _unit(eltype(v))
         attr[key] = _ustrip.(u, v)
-        return u
+        u
     else
-        return NoUnits
+        NoUnits
     end
-# If supplied, use the unit (optional 3rd argument)
+
+# if supplied, use the unit (optional 3rd argument)
 function ustripattribute!(attr, key, u)
     if haskey(attr, key)
         v = attr[key]
@@ -210,7 +211,7 @@ append_unit_if_needed!(attr, key, label::Nothing, u) =
     (attr[key] = UnitfulString(string(u), u))
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    return attr[key] =
+    attr[key] =
         UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
 end
 
@@ -277,13 +278,12 @@ Plots.process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
 
 function _ustrip(u, x)
     u isa MixedUnits && return ustrip(uconvert(u, x))
-    return ustrip(u, x)
+    ustrip(u, x)
 end
 
 function _unit(x)
-    t = eltype(x)
-    t <: LogScaled && return logunit(t)
-    return unit(x)
+    (t = eltype(x)) <: LogScaled && return logunit(t)
+    unit(x)
 end
 
 Plots.pgfx_sanitize_string(s::UnitfulString) = begin
@@ -292,7 +292,7 @@ Plots.pgfx_sanitize_string(s::UnitfulString) = begin
     else
         Plots.pgfx_sanitize_string(s.content)
     end
-    tex_unit = replace(Plots.wrap_power_labels(str_unit), ' ' => '~')
+    tex_unit = replace(Plots.wrap_power_label(str_unit), ' ' => '~')
     if !Plots.pgfx_is_inline_math(tex_unit)
         tex_unit = "\\($tex_unit\\)"  # force inline math mode
     end
