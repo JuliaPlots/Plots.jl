@@ -1075,11 +1075,6 @@ function pgfx_sanitize_string(s::AbstractString)
         end
     end |> join |> LaTeXString
 end
-@require UnitfulRecipes = "42071c24-d89e-48dd-8a24-8a12d9b8861f" begin
-    import .UnitfulRecipes
-    pgfx_sanitize_string(s::UnitfulRecipes.UnitfulString) =
-        UnitfulRecipes.UnitfulString(pgfx_sanitize_string(s.content), s.unit)
-end
 
 function pgfx_sanitize_plot!(plt)
     for (key, value) in plt.attr
@@ -1122,14 +1117,17 @@ function pgfx_sanitize_plot!(plt)
 end
 
 # surround the power part of label with curly braces
+function wrap_power_labels(label::AbstractString)
+    startswith(label, '$') && return label  # already in `mathmode` form
+    occursin('^', label) || return label
+    base, power = split(label, '^')
+    "$base^$(curly(power))"
+end
 wrap_power_labels(labels::AVec{LaTeXString}) = labels
 function wrap_power_labels(labels::AVec{<:AbstractString})
     new_labels = copy(labels)
     for (i, label) in enumerate(labels)
-        startswith(label, '$') && continue  # already in `mathmode` form
-        occursin('^', label) || continue
-        base, power = split(label, '^')
-        new_labels[i] = "$base^$(curly(power))"
+        new_labels[i] = wrap_power_labels(label)
     end
     new_labels
 end

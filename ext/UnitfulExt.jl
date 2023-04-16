@@ -32,17 +32,15 @@ function fixaxis!(attr, x, axisletter)
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
-    # Get the unit
-    u = pop!(attr, axisunit, _unit(eltype(x)))
-    # If the subplot already exists with data, get its unit
+    u = pop!(attr, axisunit, _unit(eltype(x)))  # get the unit
+    # if the subplot already exists with data, get its unit
     sp = get(attr, :subplot, 1)
     if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
         label = attr[:plot_object][sp][axis][:guide]
         u = getaxisunit(label)
-        # If label was not given as an argument, reuse
-        get!(attr, axislabel, label)
+        get!(attr, axislabel, label)  # if label was not given as an argument, reuse
     end
-    # Fix the attributes: labels, lims, ticks, marker/line stuff, etc.
+    # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
     append_unit_if_needed!(attr, axislabel, u)
     ustripattribute!(attr, err, u)
     if axisletter === :y
@@ -53,8 +51,7 @@ function fixaxis!(attr, x, axisletter)
     fixmarkercolor!(attr)
     fixmarkersize!(attr)
     fixlinecolor!(attr)
-    # Strip the unit
-    _ustrip.(u, x)
+    _ustrip.(u, x)  # strip the unit
 end
 
 # Recipe for (x::AVec, y::AVec, z::Surface) types
@@ -220,15 +217,6 @@ end
 #=============================================
 Surround unit string with specified delimiters
 =============================================#
-format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
-format_unit_label(l, u, f::Function)                   = f(l, u)
-format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
-format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
-format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
-format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
-format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
 
 const UNIT_FORMATS = Dict(
     :round => ('(', ')'),
@@ -243,7 +231,16 @@ const UNIT_FORMATS = Dict(
     :verbose => " in units of ",
 )
 
-format_unit_label(l, u, f::Symbol) = format_unit_label(l, u, UNIT_FORMATS[f])
+format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
+format_unit_label(l, u, f::Function)                   = f(l, u)
+format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
+format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
+format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
+format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
+format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
+format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
 
 getaxisunit(::AbstractString) = NoUnits
 getaxisunit(s::UnitfulString) = s.unit
@@ -287,6 +284,21 @@ function _unit(x)
     t = eltype(x)
     t <: LogScaled && return logunit(t)
     return unit(x)
+end
+
+Plots.pgfx_sanitize_string(s::UnitfulString) = begin
+    tex_str = if (str_unit = string(s.unit)) == s.content
+        ""
+    else
+        Plots.pgfx_sanitize_string(s.content)
+    end
+    tex_unit = replace(Plots.wrap_power_labels(str_unit), ' ' => '~')
+    if (startswith(tex_unit, '$') && endswith(tex_unit, '$')) ||
+       (startswith(tex_unit, "\\(") && endswith(tex_unit, "\\)"))
+    else  # force inline math mode
+        tex_unit = "\\($tex_unit\\)"
+    end
+    isempty(tex_str) ? tex_unit : tex_str * ' ' * tex_unit
 end
 
 end  # module
