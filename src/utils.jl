@@ -1272,3 +1272,4 @@ end
 
 # for `PGFPlotsx` together with `UnitfulExt`
 function pgfx_sanitize_string end  # COV_EXCL_LINE
+function pgfx_is_inline_math end  # COV_EXCL_LINE

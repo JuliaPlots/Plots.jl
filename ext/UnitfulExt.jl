@@ -293,10 +293,8 @@ Plots.pgfx_sanitize_string(s::UnitfulString) = begin
         Plots.pgfx_sanitize_string(s.content)
     end
     tex_unit = replace(Plots.wrap_power_labels(str_unit), ' ' => '~')
-    if (startswith(tex_unit, '$') && endswith(tex_unit, '$')) ||
-       (startswith(tex_unit, "\\(") && endswith(tex_unit, "\\)"))
-    else  # force inline math mode
-        tex_unit = "\\($tex_unit\\)"
+    if !Plots.pgfx_is_inline_math(tex_unit)
+        tex_unit = "\\($tex_unit\\)"  # force inline math mode
     end
     isempty(tex_str) ? tex_unit : tex_str * ' ' * tex_unit
 end

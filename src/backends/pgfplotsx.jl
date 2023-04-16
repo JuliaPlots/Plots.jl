@@ -1116,9 +1116,14 @@ function pgfx_sanitize_plot!(plt)
     end
 end
 
+pgfx_is_inline_math(lab) = (
+    (startswith(lab, '$') && endswith(lab, '$')) ||
+    (startswith(lab, "\\(") && endswith(lab, "\\)"))
+)
+
 # surround the power part of label with curly braces
 function wrap_power_labels(label::AbstractString)
-    startswith(label, '$') && return label  # already in `mathmode` form
+    pgfx_is_inline_math(label) && return label  # already in `mathmode` form
     occursin('^', label) || return label
     base, power = split(label, '^')
     "$base^$(curly(power))"
@@ -1218,10 +1223,10 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
         tick_labels = if axis[:showaxis]
             if is_log_scale && axis[:ticks] === :auto
                 labels = wrap_power_labels(labs)
-                if (lab = first(labels)) isa LaTeXString || startswith(lab, '$')
+                if (lab = first(labels)) isa LaTeXString || pgfx_is_inline_math(lab)
                     join(labels, ',')
                 else
-                    '$' * join(labels, "\$,\$") * '$'
+                    "\\(" * join(labels, "\\),\\(") * "\\)"
                 end
             else
                 labels = if ispolar(sp) && letter === :x
