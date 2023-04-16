@@ -677,7 +677,7 @@ const position_multiplier = Dict(
 
 # Give each annotation coordinates based on specified position
 locate_annotation(sp::Subplot, rel::Tuple, label::PlotText) = (
-    map(1:length(rel), [:x, :y, :z]) do i, letter
+    map(1:length(rel), (:x, :y, :z)) do i, letter
         _relative_position(
             axis_limits(sp, letter)...,
             rel[i] * pct,
