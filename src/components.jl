@@ -604,36 +604,45 @@ _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwx
 assign_annotation_coord!(axis, x) = discrete_value!(axis, x)[1]
 assign_annotation_coord!(axis, x::TimeType) = assign_annotation_coord!(axis, Dates.value(x))
 
-# Expand arrays of coordinates, positions and labels into individual annotations
-# and make sure labels are of type PlotText
-function process_annotation(sp::Subplot, xs, ys, labs, font = _annotationfont(sp))
-    anns = []
-    labs = makevec(labs)
-    xlength = length(methods(length, (typeof(xs),))) == 0 ? 1 : length(xs)
-    ylength = length(methods(length, (typeof(ys),))) == 0 ? 1 : length(ys)
-    for i in 1:max(xlength, ylength, length(labs))
-        x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
-        x = assign_annotation_coord!(sp[:xaxis], x)
-        y = assign_annotation_coord!(sp[:yaxis], y)
-        push!(anns, _annotation(sp, font, lab, x, y))
-    end
-    anns
+_annotation_coords(pos::Symbol) = get(_positionAliases, pos, pos)
+_annotation_coords(pos) = pos
+
+function _process_annotation_2d(sp::Subplot, x, y, lab, font = _annotationfont(sp))
+    x = assign_annotation_coord!(sp[:xaxis], x)
+    y = assign_annotation_coord!(sp[:yaxis], y)
+    _annotation(sp, font, lab, x, y)
 end
 
-function process_annotation(
+_process_annotation_2d(
     sp::Subplot,
-    positions::Union{AVec{Symbol},Symbol,Tuple},
-    labs,
+    pos::Union{Tuple,Symbol},
+    lab,
     font = _annotationfont(sp),
-)
-    anns = []
-    positions, labs = makevec(positions), makevec(labs)
-    for i in 1:max(length(positions), length(labs))
-        pos, lab = _cycle(positions, i), _cycle(labs, i)
-        push!(anns, _annotation(sp, font, lab, get(_positionAliases, pos, pos)))
-    end
-    anns
+) = _annotation(sp, font, lab, _annotation_coords(pos))
+
+function _process_annotation_3d(sp::Subplot, x, y, z, lab, font = _annotationfont(sp))
+    x = assign_annotation_coord!(sp[:xaxis], x)
+    y = assign_annotation_coord!(sp[:yaxis], y)
+    z = assign_annotation_coord!(sp[:zaxis], z)
+    _annotation(sp, font, lab, x, y, z)
 end
+
+_process_annotation_3d(
+    sp::Subplot,
+    pos::Union{Tuple,Symbol},
+    lab,
+    font = _annotationfont(sp),
+) = _annotation(sp, font, lab, _annotation_coords(pos))
+
+function _process_annotation(sp::Subplot, ann, annotation_processor::Function)
+    ann = makevec.(ann)
+    [annotation_processor(sp, _cycle.(ann, i)...) for i in 1:maximum(length.(ann))]
+end
+
+# Expand arrays of coordinates, positions and labels into individual annotations
+# and make sure labels are of type PlotText
+process_annotation(sp::Subplot, ann) =
+    _process_annotation(sp, ann, is3d(sp) ? _process_annotation_3d : _process_annotation_2d)
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     # !TODO Add more scales in the future (asinh, sqrt) ?
@@ -648,74 +657,40 @@ function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     end
 end
 
+# annotation coordinates in pct
 const position_multiplier = Dict(
-    :N            => (0.5pct, 0.9pct),
-    :NE           => (0.9pct, 0.9pct),
-    :E            => (0.9pct, 0.5pct),
-    :SE           => (0.9pct, 0.1pct),
-    :S            => (0.5pct, 0.1pct),
-    :SW           => (0.1pct, 0.1pct),
-    :W            => (0.1pct, 0.5pct),
-    :NW           => (0.1pct, 0.9pct),
-    :topleft      => (0.1pct, 0.9pct),
-    :topcenter    => (0.5pct, 0.9pct),
-    :topright     => (0.9pct, 0.9pct),
-    :bottomleft   => (0.1pct, 0.1pct),
-    :bottomcenter => (0.5pct, 0.1pct),
-    :bottomright  => (0.9pct, 0.1pct),
+    :N            => (0.5, 0.9),
+    :NE           => (0.9, 0.9),
+    :E            => (0.9, 0.5),
+    :SE           => (0.9, 0.1),
+    :S            => (0.5, 0.1),
+    :SW           => (0.1, 0.1),
+    :W            => (0.1, 0.5),
+    :NW           => (0.1, 0.9),
+    :topleft      => (0.1, 0.9),
+    :topcenter    => (0.5, 0.9),
+    :topright     => (0.9, 0.9),
+    :bottomleft   => (0.1, 0.1),
+    :bottomcenter => (0.5, 0.1),
+    :bottomright  => (0.9, 0.1),
 )
 
 # Give each annotation coordinates based on specified position
-function locate_annotation(sp::Subplot, pos::Symbol, label::PlotText)
-    x, y = position_multiplier[pos]
-    (
+locate_annotation(sp::Subplot, rel::Tuple, label::PlotText) = (
+    map(1:length(rel), (:x, :y, :z)) do i, letter
         _relative_position(
-            axis_limits(sp, :x)...,
-            x,
-            sp[get_attr_symbol(:x, :axis)][:scale],
-        ),
-        _relative_position(
-            axis_limits(sp, :y)...,
-            y,
-            sp[get_attr_symbol(:y, :axis)][:scale],
-        ),
-        label,
-    )
-end
+            axis_limits(sp, letter)...,
+            rel[i] * pct,
+            sp[get_attr_symbol(letter, :axis)][:scale],
+        )
+    end...,
+    label,
+)
+
 locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
 locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
-
-locate_annotation(sp::Subplot, rel::NTuple{2,<:Number}, label::PlotText) = (
-    _relative_position(
-        axis_limits(sp, :x)...,
-        rel[1] * Plots.pct,
-        sp[get_attr_symbol(:x, :axis)][:scale],
-    ),
-    _relative_position(
-        axis_limits(sp, :y)...,
-        rel[2] * Plots.pct,
-        sp[get_attr_symbol(:y, :axis)][:scale],
-    ),
-    label,
-)
-locate_annotation(sp::Subplot, rel::NTuple{3,<:Number}, label::PlotText) = (
-    _relative_position(
-        axis_limits(sp, :x)...,
-        rel[1] * Plots.pct,
-        sp[get_attr_symbol(:x, :axis)][:scale],
-    ),
-    _relative_position(
-        axis_limits(sp, :y)...,
-        rel[2] * Plots.pct,
-        sp[get_attr_symbol(:y, :axis)][:scale],
-    ),
-    _relative_position(
-        axis_limits(sp, :z)...,
-        rel[3] * Plots.pct,
-        sp[get_attr_symbol(:z, :axis)][:scale],
-    ),
-    label,
-)
+locate_annotation(sp::Subplot, pos::Symbol, label::PlotText) =
+    locate_annotation(sp, position_multiplier[pos], label)
 
 # -----------------------------------------------------------------------
 

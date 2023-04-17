@@ -120,8 +120,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 y = dy + sp_h / 2
                 pgfx_add_annotation!(
                     the_plot,
-                    x,
-                    y,
+                    (x, y),
                     PlotText(plt[:plot_title], plottitlefont(plt)),
                     pgfx_thickness_scaling(plt);
                     options = Options("anchor" => "center"),
@@ -306,8 +305,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
                     pgfx_add_annotation!(
                         axis,
-                        xi,
-                        yi,
+                        (xi, yi),
                         PlotText(str, fnt),
                         pgfx_thickness_scaling(series),
                     )
@@ -315,9 +313,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end  # for series
             # add subplot annotations
             for ann in sp[:annotations]
+                # [1:end-1] -> coordinates, [end] is string
+                loc_val = locate_annotation(sp, ann...)
                 pgfx_add_annotation!(
                     axis,
-                    locate_annotation(sp, ann...)...,
+                    loc_val[1:(end - 1)],
+                    loc_val[end],
                     pgfx_thickness_scaling(sp),
                 )
             end
@@ -1005,8 +1006,7 @@ end
 
 function pgfx_add_annotation!(
     o,
-    x,
-    y,
+    pos,
     val,
     thickness_scaling = 1;
     cs = "axis cs:",
@@ -1025,7 +1025,10 @@ function pgfx_add_annotation!(
         ),
         options,
     )
-    push!(o, "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$x,$y) {$(val.str)};")
+    push!(
+        o,
+        "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$(join(pos, ','))) {$(val.str)};",
+    )
 end
 
 function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
@@ -1092,8 +1095,9 @@ function pgfx_sanitize_plot!(plt)
             if key === :annotations && subplot.attr[:annotations] !== nothing
                 old_ann = subplot.attr[key]
                 for i in eachindex(old_ann)
+                    # [1:end-1] is a tuple of coordinates, [end] - text
                     subplot.attr[key][i] =
-                        (old_ann[i][1], old_ann[i][2], pgfx_sanitize_string(old_ann[i][3]))
+                        (old_ann[i][1:(end - 1)]..., pgfx_sanitize_string(old_ann[i][end]))
                 end
             elseif value isa Union{AbstractString,AVec{<:AbstractString}}
                 subplot.attr[key] = pgfx_sanitize_string.(value)
