@@ -1416,6 +1416,7 @@ function gr_draw_axes(sp, vp)
     elseif sp[:framestyle] !== :none
         foreach(letter -> gr_draw_axis(sp, letter, vp), (:x, :y))
     end
+    GR.settransparency(1.0)
     nothing
 end
 
