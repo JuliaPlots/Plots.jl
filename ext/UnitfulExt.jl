@@ -32,17 +32,15 @@ function fixaxis!(attr, x, axisletter)
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
-    # Get the unit
-    u = pop!(attr, axisunit, _unit(eltype(x)))
-    # If the subplot already exists with data, get its unit
+    u = pop!(attr, axisunit, _unit(eltype(x)))  # get the unit
+    # if the subplot already exists with data, get its unit
     sp = get(attr, :subplot, 1)
     if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
         label = attr[:plot_object][sp][axis][:guide]
         u = getaxisunit(label)
-        # If label was not given as an argument, reuse
-        get!(attr, axislabel, label)
+        get!(attr, axislabel, label)  # if label was not given as an argument, reuse
     end
-    # Fix the attributes: labels, lims, ticks, marker/line stuff, etc.
+    # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
     append_unit_if_needed!(attr, axislabel, u)
     ustripattribute!(attr, err, u)
     if axisletter === :y
@@ -53,8 +51,7 @@ function fixaxis!(attr, x, axisletter)
     fixmarkercolor!(attr)
     fixmarkersize!(attr)
     fixlinecolor!(attr)
-    # Strip the unit
-    _ustrip.(u, x)
+    _ustrip.(u, x)  # strip the unit
 end
 
 # Recipe for (x::AVec, y::AVec, z::Surface) types
@@ -94,7 +91,7 @@ end
     uf = UnitFunction(f, [u])
     recipedata = RecipesBase.apply_recipe(plotattributes, uf)
     _, xmin, xmax = recipedata[1].args
-    return f, xmin * u, xmax * u
+    f, xmin * u, xmax * u
 end
 
 """
@@ -143,7 +140,7 @@ function fixaspectratio!(attr, u, axisletter)
     elseif axisletter === :x
         attr[:aspect_ratio] = aspect_ratio / u
     end
-    return
+    nothing
 end
 
 # Markers / lines
@@ -161,11 +158,12 @@ ustripattribute!(attr, key) =
         v = attr[key]
         u = _unit(eltype(v))
         attr[key] = _ustrip.(u, v)
-        return u
+        u
     else
-        return NoUnits
+        NoUnits
     end
-# If supplied, use the unit (optional 3rd argument)
+
+# if supplied, use the unit (optional 3rd argument)
 function ustripattribute!(attr, key, u)
     if haskey(attr, key)
         v = attr[key]
@@ -213,22 +211,13 @@ append_unit_if_needed!(attr, key, label::Nothing, u) =
     (attr[key] = UnitfulString(string(u), u))
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    return attr[key] =
+    attr[key] =
         UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
 end
 
 #=============================================
 Surround unit string with specified delimiters
 =============================================#
-format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
-format_unit_label(l, u, f::Function)                   = f(l, u)
-format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
-format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
-format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
-format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
-format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
 
 const UNIT_FORMATS = Dict(
     :round => ('(', ')'),
@@ -243,7 +232,16 @@ const UNIT_FORMATS = Dict(
     :verbose => " in units of ",
 )
 
-format_unit_label(l, u, f::Symbol) = format_unit_label(l, u, UNIT_FORMATS[f])
+format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
+format_unit_label(l, u, f::Function)                   = f(l, u)
+format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
+format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
+format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
+format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
+format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
+format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
 
 getaxisunit(::AbstractString) = NoUnits
 getaxisunit(s::UnitfulString) = s.unit
@@ -280,13 +278,25 @@ Plots.process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
 
 function _ustrip(u, x)
     u isa MixedUnits && return ustrip(uconvert(u, x))
-    return ustrip(u, x)
+    ustrip(u, x)
 end
 
 function _unit(x)
-    t = eltype(x)
-    t <: LogScaled && return logunit(t)
-    return unit(x)
+    (t = eltype(x)) <: LogScaled && return logunit(t)
+    unit(x)
+end
+
+Plots.pgfx_sanitize_string(s::UnitfulString) = begin
+    tex_str = if (str_unit = string(s.unit)) == s.content
+        ""
+    else
+        Plots.pgfx_sanitize_string(s.content)
+    end
+    tex_unit = replace(Plots.wrap_power_label(str_unit), ' ' => '~')
+    if !Plots.pgfx_is_inline_math(tex_unit)
+        tex_unit = "\\($tex_unit\\)"  # force inline math mode
+    end
+    isempty(tex_str) ? tex_unit : tex_str * ' ' * tex_unit
 end
 
 end  # module

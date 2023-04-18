@@ -1251,7 +1251,7 @@ macro ext_imp_use(imp_use::QuoteNode, mod::Symbol, args...)
 end
 
 # for UnitfulExt - cannot reside in `UnitfulExt` (macro)
-function protectedstring end
+function protectedstring end  # COV_EXCL_LINE
 
 """
     P_str(s)
@@ -1269,3 +1269,6 @@ julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel="This label will display units")
 macro P_str(s)
     return protectedstring(s)
 end
+
+# for `PGFPlotsx` together with `UnitfulExt`
+function pgfx_sanitize_string end  # COV_EXCL_LINE

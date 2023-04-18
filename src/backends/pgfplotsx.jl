@@ -1078,11 +1078,6 @@ function pgfx_sanitize_string(s::AbstractString)
         end
     end |> join |> LaTeXString
 end
-@require UnitfulRecipes = "42071c24-d89e-48dd-8a24-8a12d9b8861f" begin
-    import .UnitfulRecipes
-    pgfx_sanitize_string(s::UnitfulRecipes.UnitfulString) =
-        UnitfulRecipes.UnitfulString(pgfx_sanitize_string(s.content), s.unit)
-end
 
 function pgfx_sanitize_plot!(plt)
     for (key, value) in plt.attr
@@ -1125,15 +1120,24 @@ function pgfx_sanitize_plot!(plt)
     end
 end
 
+pgfx_is_inline_math(lab) = (
+    (startswith(lab, '$') && endswith(lab, '$')) ||
+    (startswith(lab, "\\(") && endswith(lab, "\\)"))
+)
+
 # surround the power part of label with curly braces
+function wrap_power_label(label::AbstractString)
+    pgfx_is_inline_math(label) && return label  # already in `mathmode` form
+    occursin('^', label) || return label
+    base, power = split(label, '^')
+    "$base^$(curly(power))"
+end
+
 wrap_power_labels(labels::AVec{LaTeXString}) = labels
 function wrap_power_labels(labels::AVec{<:AbstractString})
-    new_labels = copy(labels)
+    new_labels = similar(labels)
     for (i, label) in enumerate(labels)
-        startswith(label, '$') && continue  # already in `mathmode` form
-        occursin('^', label) || continue
-        base, power = split(label, '^')
-        new_labels[i] = "$base^$(curly(power))"
+        new_labels[i] = wrap_power_label(label)
     end
     new_labels
 end
@@ -1224,10 +1228,10 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
         tick_labels = if axis[:showaxis]
             if is_log_scale && axis[:ticks] === :auto
                 labels = wrap_power_labels(labs)
-                if (lab = first(labels)) isa LaTeXString || startswith(lab, '$')
+                if (lab = first(labels)) isa LaTeXString || pgfx_is_inline_math(lab)
                     join(labels, ',')
                 else
-                    '$' * join(labels, "\$,\$") * '$'
+                    "\\(" * join(labels, "\\),\\(") * "\\)"
                 end
             else
                 labels = if ispolar(sp) && letter === :x
