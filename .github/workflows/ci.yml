@@ -37,13 +37,14 @@ jobs:
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '1.7'  # only test intermediate release on `ubuntu`
+            version: '1.7'  # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '~1.9.0-0'
+            version: '~1.9.0-0'  # upcoming julia version, next `rc`
           - os: ubuntu-latest
             prefix: xvfb-run
             version: 'nightly'
+            allow_failure: true  # `nightly` often breaks
 
     steps:
       - uses: actions/checkout@v3
