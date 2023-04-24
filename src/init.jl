@@ -84,7 +84,7 @@ backend()
 include(_path(backend_name()))
 
 # COV_EXCL_START
-@precompile_setup begin
+@setup_workload begin
     @debug backend_package_name()
     n = length(_examples)
     imports = sizehint!(Expr[], n)
@@ -120,7 +120,7 @@ include(_path(backend_name()))
         )
     end
     withenv("GKSwstype" => "nul") do
-        @precompile_all_calls begin
+        @compile_workload begin
             load_default_backend()
             eval.(imports)
             eval.(examples)
