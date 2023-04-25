@@ -51,7 +51,7 @@ InspectDR = "0.4"
 JLFzf = "0.1"
 JSON = "0.21, 1"
 LaTeXStrings = "1"
-Latexify = "0.14 - 0.15"
+Latexify = "0.14 - 0.15, 0.16"
 Measures = "0.3"
 NaNMath = "0.3, 1"
 PGFPlots = "3"
@@ -77,13 +77,6 @@ UnicodeFun = "0.4"
 UnicodePlots = "3.4"
 Unzip = "0.1 - 0.2"
 julia = "1.6"
-
-[weakdeps]
-FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [extensions]
 FileIOExt = "FileIO"
@@ -128,3 +121,10 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
 test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+
+[weakdeps]
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
