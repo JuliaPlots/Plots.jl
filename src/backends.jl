@@ -583,7 +583,9 @@ function _initialize_backend(pkg::PlotlyBackend)
         _post_imports(pkg)
         _runtime_init(pkg)
     catch err
-        err isa ArgumentError || @warn "Failed to load integration with PlotlyBase & PlotlyKaleide." exception=(err,catch_backtrace())
+        err isa ArgumentError ||
+            @warn "Failed to load integration with PlotlyBase & PlotlyKaleide." exception =
+                (err, catch_backtrace())
         # NOTE: `plotly` is special in the way that it does not require dependencies for displaying a plot
         # as a result, we cannot rely on the `@require` mechanism for loading glue code
         # this is why it must be done here.
@@ -591,8 +593,14 @@ function _initialize_backend(pkg::PlotlyBackend)
     end
     @static if isdefined(Base.Experimental, :register_error_hint)
         Base.Experimental.register_error_hint(MethodError) do io, exc, argtypes, kwargs
-            if exc.f === _show && length(argtypes) == 3 && argtypes[2] <: MIME"image/png" && argtypes[3] <: Plot{PlotlyBackend}
-                println(io, "\n\nTip: For saving/rendering as png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed.")
+            if exc.f === _show &&
+               length(argtypes) == 3 &&
+               argtypes[2] <: MIME"image/png" &&
+               argtypes[3] <: Plot{PlotlyBackend}
+                println(
+                    io,
+                    "\n\nTip: For saving/rendering as png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed.",
+                )
             end
         end
     end
