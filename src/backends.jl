@@ -589,6 +589,13 @@ function _initialize_backend(pkg::PlotlyBackend)
         # this is why it must be done here.
         PLOTS_DEFAULT_BACKEND == "plotly" || @eval include(_path(:plotly))
     end
+    @static if isdefined(Base.Experimental, :register_error_hint)
+        Base.Experimental.register_error_hint(MethodError) do io, exc, argtypes, kwargs
+            if exc.f === _show && length(argtypes) == 3 && argtypes[2] <: MIME"image/png" && argtypes[3] <: Plot{PlotlyBackend}
+                println(io, "\n\nTip: For saving/rendering as png with the `Plotly` backend `PlotlyBase` and `PlotlyKaleido` need to be installed.")
+            end
+        end
+    end
 end
 
 const _plotly_attr = merge_with_base_supported([
