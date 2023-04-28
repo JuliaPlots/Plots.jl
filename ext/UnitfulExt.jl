@@ -66,7 +66,14 @@ end
 # Recipe for vectors of vectors
 @recipe function f(::Type{T}, x::T) where {T<:AVec{<:AVec{<:MissingOrQuantity}}}  # COV_EXCL_LINE
     axisletter = plotattributes[:letter]   # x, y, or z
-    map(x -> fixaxis!(plotattributes, x, axisletter), x)
+    unitsymbol = Symbol(axisletter, :unit)
+    axisunit = pop!(plotattributes, unitsymbol, _unit(eltype(first(x))))
+    map(
+        x -> (
+            plotattributes[unitsymbol] = axisunit; fixaxis!(plotattributes, x, axisletter)
+        ),
+        x,
+    )
 end
 
 # Recipe for bare units

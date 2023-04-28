@@ -42,6 +42,7 @@ end
     @testset "yunit" begin
         @test yguide(plot(y, yunit = cm)) == "cm"
         @test yseries(plot(y, yunit = cm)) ≈ ustrip.(cm, y)
+        @test plot([copy(y), copy(y)], yunit = cm) |> pl -> yseries(pl, 1) ≈ yseries(pl, 2)
     end
 
     @testset "ylims" begin # Using all(lims .≈ lims) because of uncontrolled type conversions?
