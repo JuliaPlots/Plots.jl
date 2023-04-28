@@ -198,8 +198,12 @@ const _examples = PlotExample[
     ),
     PlotExample( # 14
         "Bar",
-        "`x` is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
-        :(bar(randn(99))),
+        "`bar(x, y)` plots bars with heights `y` and centers at `x`.
+        `x` defaults to `eachindex(y)`.",
+        :(plot(bar(randn(10)),
+               bar([0,3,5], [1,2,6]),
+               legend=false
+        ))
     ),
     PlotExample( # 15
         "Histogram",
@@ -1235,6 +1239,15 @@ const _examples = PlotExample[
             end
         end,
     ),
+    PlotExample( # 66
+        "Bars: specifying edges and missing values",
+        "In `bar(x, y)`, `x` may be the same length as `y` to specify bar centers,
+        or one longer to specify bar edges.",
+        :(plot(bar(-5:5, randn(10)),                  # bar edges at -5:5
+               bar(-2:2, [2,-2,NaN,-1,1], color=1:5), # bar centers at -2:2, one missing value
+               legend=false
+        ))
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -1256,6 +1269,7 @@ _backend_skips = Dict(
         63,  # twin axes unsupported
         64,  # legend pos unsupported
         65,  # legend pos unsupported
+        66,  # bar: vector-valued `color` unsupported
     ],
     :pgfplotsx => [
         6,  # images
