@@ -418,7 +418,7 @@ end
     end
 
     # compute half-width of bars
-    bw = plotattributes[:bar_width]
+    bw = pop_kw!(plotattributes, :bar_width)
     hw = if bw === nothing
         0.5_bar_width * if nx > 1
             ignorenan_minimum(filter(x -> x > 0, diff(sort(procx))))
@@ -426,7 +426,12 @@ end
             1
         end
     else
-        map(i -> 0.5_cycle(bw, i), eachindex(procx))
+        bw isa AVec && eachindex(bw) != eachindex(procx) && @warn("""
+            Indices of `bar_width` attribute ($(eachindex(bw))) do not match data indices ($(eachindex(procx))).
+            Bar widths will be repeated cyclically.
+            """
+        )
+        bw ./ 2
     end
 
     # make fillto a vector... default fills to 0
@@ -490,8 +495,8 @@ end
     markersize := 0
     markeralpha := 0
     fillrange := nothing
-    x := x
-    y := y
+    x := procx
+    y := procy
     ()
 end
 @deps bar shape
