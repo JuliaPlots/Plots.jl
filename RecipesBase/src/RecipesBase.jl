@@ -1,6 +1,6 @@
 module RecipesBase
 
-using SnoopPrecompile
+using PrecompileTools
 
 export @recipe,
     @series,
@@ -597,9 +597,9 @@ macro layout(mat::Expr)
 end
 
 # COV_EXCL_START
-@precompile_setup begin
+@setup_workload begin
     struct __RecipesBasePrecompileType end
-    @precompile_all_calls begin
+    @compile_workload begin
         @layout [a b; c]
         @layout [a{0.3w}; b{0.2h}]
         @layout [_ ° _; ° ° °; ° ° °]
