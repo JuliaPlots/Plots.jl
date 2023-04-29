@@ -426,11 +426,12 @@ end
             1
         end
     else
-        bw isa AVec && eachindex(bw) != eachindex(procx) && @warn("""
+        bw isa AVec &&
+            eachindex(bw) != eachindex(procx) &&
+            @warn """
             Indices of `bar_width` attribute ($(eachindex(bw))) do not match data indices ($(eachindex(procx))).
             Bar widths will be repeated cyclically.
             """
-        )
         bw ./ 2
     end
 
@@ -705,10 +706,10 @@ end
 @deps stepbins path
 
 function wand_edges(x...)
-    @warn """"
+    @warn """
     Load the StatsPlots package in order to use :wand bins.
     Defaulting to :auto
-    """ once = true
+    """ maxlog = 1
     :auto
 end
 

@@ -70,7 +70,8 @@ end
 
 function iter_segments(args...)
     i = eachindex(first(args))
-    all(eachindex(a) == i for a in args) || @warn "Inconsistent indices of plot args: $(eachindex.(args))"
+    all(eachindex(a) == i for a in args) ||
+        @warn "Inconsistent indices of plot args: $(eachindex.(args))"
     NaNSegmentsIterator(args, first(i), last(i))
 end
 
@@ -135,7 +136,10 @@ function warn_on_attr_dim_mismatch(series, indices)
     for attr in _segmenting_vector_attributes
         if (v = get(series, attr, nothing)) isa AVec && eachindex(v) != indices
             @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $indices."
-            if any(v -> !isnothing(v) && any(isnan, v), (series[:x], series[:y], series[:z]))
+            if any(
+                v -> !isnothing(v) && any(isnan, v),
+                (series[:x], series[:y], series[:z]),
+            )
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
                     If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
                     pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
