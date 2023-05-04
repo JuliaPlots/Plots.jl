@@ -200,10 +200,7 @@ const _examples = PlotExample[
         "Bar",
         "`bar(x, y)` plots bars with heights `y` and centers at `x`.
         `x` defaults to `eachindex(y)`.",
-        :(plot(bar(randn(10)),
-               bar([0,3,5], [1,2,6]),
-               legend=false
-        ))
+        :(plot(bar(randn(10)), bar([0, 3, 5], [1, 2, 6]), legend = false)),
     ),
     PlotExample( # 15
         "Histogram",
@@ -1243,10 +1240,11 @@ const _examples = PlotExample[
         "Bars: specifying edges and missing values",
         "In `bar(x, y)`, `x` may be the same length as `y` to specify bar centers,
         or one longer to specify bar edges.",
-        :(plot(bar(-5:5, randn(10)),                  # bar edges at -5:5
-               bar(-2:2, [2,-2,NaN,-1,1], color=1:5), # bar centers at -2:2, one missing value
-               legend=false
-        ))
+        :(plot(
+            bar(-5:5, randn(10)),                  # bar edges at -5:5
+            bar(-2:2, [2, -2, NaN, -1, 1], color = 1:5), # bar centers at -2:2, one missing value
+            legend = false,
+        )),
     ),
 ]
 
