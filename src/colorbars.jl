@@ -19,9 +19,9 @@ function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float6
         if series[:colorbar_entry]::Bool
             # Avoid calling the inner `update_clims` if at all possible; dynamic dispatch hell
             if (series[:seriestype] ∈ _z_colored_series && series[:z] !== nothing) ||
-                series[:line_z] !== nothing || 
-                series[:marker_z] !== nothing || 
-                series[:fill_z] !== nothing
+               series[:line_z] !== nothing || 
+               series[:marker_z] !== nothing || 
+               series[:fill_z] !== nothing
                 zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
             else
                 zmin, zmax = _update_clims(zmin, zmax, NaN, NaN)
