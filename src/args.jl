@@ -519,6 +519,7 @@ const _axis_defaults = KW(
     :showaxis                    => true,
     :widen                       => :auto,
     :draw_arrow                  => false,
+    :unitformat                  => :round,
 )
 
 const _suppress_warnings = Set{Symbol}([

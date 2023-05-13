@@ -6,6 +6,7 @@ module UnitfulExt
 import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits LogScaled logunit MixedUnits Level Gain uconvert
+@ext_imp_use :import Latexify latexify
 
 const MissingOrQuantity = Union{Missing,<:Quantity,<:LogScaled}
 
@@ -217,9 +218,10 @@ append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 append_unit_if_needed!(attr, key, label::Nothing, u) =
     (attr[key] = UnitfulString(string(u), u))
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
+    @show attr
     isempty(label) && return attr[key] = UnitfulString(label, u)
     attr[key] =
-        UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
+        UnitfulString(S(format_unit_label(label, u, attr[Symbol(attr[:letter],:unitformat)])), u)
 end
 
 #=============================================
@@ -294,16 +296,7 @@ function _unit(x)
 end
 
 Plots.pgfx_sanitize_string(s::UnitfulString) = begin
-    tex_str = if (str_unit = string(s.unit)) == s.content
-        ""
-    else
-        Plots.pgfx_sanitize_string(s.content)
-    end
-    tex_unit = replace(Plots.wrap_power_label(str_unit), ' ' => '~')
-    if !Plots.pgfx_is_inline_math(tex_unit)
-        tex_unit = "\\($tex_unit\\)"  # force inline math mode
-    end
-    isempty(tex_str) ? tex_unit : tex_str * ' ' * tex_unit
+    UnitfulString(Plots.pgfx_sanitize_string(s.content), latexify(s.unit))
 end
 
 end  # module

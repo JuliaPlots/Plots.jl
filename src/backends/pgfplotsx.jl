@@ -87,6 +87,7 @@ pgfx_halign(k) = (left = "left", hcenter = "center", center = "center", right = 
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
+
         pgfx_sanitize_plot!(plt)
         # extract extra kwargs
         extra_plot, extra_plot_opt = pgfx_split_extra_kw(plt[:extra_plot_kwargs])
@@ -766,13 +767,14 @@ end
 
 function pgfx_get_legend_style(sp)
     cstr = plot_color(sp[:legend_background_color])
-    Options(
+    return merge(
         pgfx_linestyle(
             pgfx_thickness_scaling(sp),
             sp[:legend_foreground_color],
             alpha(plot_color(sp[:legend_foreground_color])),
             "solid",
-        ) => nothing,
+        ),
+        Options(
         "fill" => cstr,
         "fill opacity" => alpha(cstr),
         "text opacity" => alpha(plot_color(sp[:legend_font_color])),
@@ -786,6 +788,7 @@ function pgfx_get_legend_style(sp)
             ),
         ),
         pgfx_get_legend_pos(sp[:legend_position])...,
+        )
     )
 end
 

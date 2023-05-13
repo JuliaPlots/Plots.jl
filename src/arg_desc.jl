@@ -195,9 +195,10 @@ const _arg_desc = KW(
     :showaxis                    => (Union{Bool,Symbol,AStr}, "Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`."),
     :widen                       => (Union{Bool,Real,Symbol}, """
                                     Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
-                                    If set to `true`, scale the axis limits by the default factor of $(default_widen_factor). 
+                                    If set to `true`, scale the axis limits by the default factor of $(default_widen_factor).
                                     A different factor may be specified by setting `widen` to a number.
                                     Defaults to `:auto`, which widens by the default factor unless limits were manually set.
                                     See also the `scale_limits!` function for scaling axis limits in an existing plot."""),
     :draw_arrow                  => (Bool, "Draw arrow at the end of the axis."),
+    :unitformat                  => (Union{Bool, Nothing, Symbol, Char, String, NTuple{<:Union{Char,String}}, Function}, """Check examples in https://docs.juliaplots.org/stable/generated/unitfulext_examples/#Unit-formatting""")
 )
