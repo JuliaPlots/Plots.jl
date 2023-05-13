@@ -766,26 +766,28 @@ end
 
 function pgfx_get_legend_style(sp)
     cstr = plot_color(sp[:legend_background_color])
-    Options(
+    return merge(
         pgfx_linestyle(
             pgfx_thickness_scaling(sp),
             sp[:legend_foreground_color],
             alpha(plot_color(sp[:legend_foreground_color])),
             "solid",
-        ) => nothing,
-        "fill" => cstr,
-        "fill opacity" => alpha(cstr),
-        "text opacity" => alpha(plot_color(sp[:legend_font_color])),
-        "font" => pgfx_font(sp[:legend_font_pointsize], pgfx_thickness_scaling(sp)),
-        "text" => plot_color(sp[:legend_font_color]),
-        "cells" => Options(
-            "anchor" => get(
-                (left = "west", right = "east", hcenter = "center"),
-                legendfont(sp).halign,
-                "west",
-            ),
         ),
-        pgfx_get_legend_pos(sp[:legend_position])...,
+        Options(
+            "fill" => cstr,
+            "fill opacity" => alpha(cstr),
+            "text opacity" => alpha(plot_color(sp[:legend_font_color])),
+            "font" => pgfx_font(sp[:legend_font_pointsize], pgfx_thickness_scaling(sp)),
+            "text" => plot_color(sp[:legend_font_color]),
+            "cells" => Options(
+                "anchor" => get(
+                    (left = "west", right = "east", hcenter = "center"),
+                    legendfont(sp).halign,
+                    "west",
+                ),
+            ),
+            pgfx_get_legend_pos(sp[:legend_position])...,
+        ),
     )
 end
 
@@ -1044,6 +1046,8 @@ function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
         opt[:x][rng], opt[:y][rng], opt[:z][rng]
     elseif ispolar(series)
         rad2deg.(opt[:x][rng]), opt[:y][rng]
+    elseif series[:seriestype] === :straightline
+        straightline_data(series)
     else
         opt[:x][rng], opt[:y][rng]
     end
