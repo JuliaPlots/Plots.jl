@@ -787,7 +787,7 @@ function pgfx_get_legend_style(sp)
                 ),
             ),
             pgfx_get_legend_pos(sp[:legend_position])...,
-        )
+        ),
     )
 end
 
