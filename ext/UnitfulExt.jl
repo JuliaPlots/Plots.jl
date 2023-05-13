@@ -220,8 +220,16 @@ append_unit_if_needed!(attr, key, label::Nothing, u) =
     (attr[key] = UnitfulString(string(u), u))
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    attr[key] =
-        UnitfulString(S(format_unit_label(label, u, get(attr, Symbol(attr[:letter],:unitformat), :round))), u)
+    attr[key] = UnitfulString(
+        S(
+            format_unit_label(
+                label,
+                u,
+                get(attr, Symbol(attr[:letter], :unitformat), :round),
+            ),
+        ),
+        u,
+    )
 end
 
 #=============================================
@@ -298,7 +306,7 @@ end
 
 function Plots.pgfx_sanitize_string(s::UnitfulString)
     ProtectedString(
-        replace(Plots.pgfx_sanitize_string(s.content), string(s.unit) => latexify(s.unit))
+        replace(Plots.pgfx_sanitize_string(s.content), string(s.unit) => latexify(s.unit)),
     )
 end
 

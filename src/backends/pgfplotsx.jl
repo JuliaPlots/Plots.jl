@@ -87,7 +87,6 @@ pgfx_halign(k) = (left = "left", hcenter = "center", center = "center", right = 
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
-
         pgfx_sanitize_plot!(plt)
         # extract extra kwargs
         extra_plot, extra_plot_opt = pgfx_split_extra_kw(plt[:extra_plot_kwargs])
@@ -775,20 +774,20 @@ function pgfx_get_legend_style(sp)
             "solid",
         ),
         Options(
-        "fill" => cstr,
-        "fill opacity" => alpha(cstr),
-        "text opacity" => alpha(plot_color(sp[:legend_font_color])),
-        "font" => pgfx_font(sp[:legend_font_pointsize], pgfx_thickness_scaling(sp)),
-        "text" => plot_color(sp[:legend_font_color]),
-        "cells" => Options(
-            "anchor" => get(
-                (left = "west", right = "east", hcenter = "center"),
-                legendfont(sp).halign,
-                "west",
+            "fill" => cstr,
+            "fill opacity" => alpha(cstr),
+            "text opacity" => alpha(plot_color(sp[:legend_font_color])),
+            "font" => pgfx_font(sp[:legend_font_pointsize], pgfx_thickness_scaling(sp)),
+            "text" => plot_color(sp[:legend_font_color]),
+            "cells" => Options(
+                "anchor" => get(
+                    (left = "west", right = "east", hcenter = "center"),
+                    legendfont(sp).halign,
+                    "west",
+                ),
             ),
+            pgfx_get_legend_pos(sp[:legend_position])...,
         ),
-        pgfx_get_legend_pos(sp[:legend_position])...,
-        )
     )
 end
 

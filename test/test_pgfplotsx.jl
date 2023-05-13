@@ -191,7 +191,7 @@ with(:pgfplotsx) do
         end
 
         @test wireframe(xs, ys, z, aspect_ratio = 1) isa Plots.Plot
-            # TODO: clims are wrong
+        # TODO: clims are wrong
     end
 
     @testset "Contours" begin
@@ -205,7 +205,7 @@ with(:pgfplotsx) do
         p1 = contour(x, y, f, fill = true)
         p3 = contour3d(x, y, Z)
         @test plot(p1, p2) isa Plots.Plot
-            @test_nowarn Plots._update_plot_object(p3)
+        @test_nowarn Plots._update_plot_object(p3)
         # TODO: colorbar for filled contours
     end
 
@@ -253,7 +253,7 @@ with(:pgfplotsx) do
         v = cos.(x)
         pl = plot(x, y, quiver = (u, v), arrow = true)
         @test pl isa Plots.Plot
-            # TODO: could adjust limits to fit arrows if too long, but how ?
+        # TODO: could adjust limits to fit arrows if too long, but how ?
         # mktempdir() do path
         #    @test_nowarn savefig(pl, path*"arrow.pdf")
         # end
@@ -466,11 +466,12 @@ with(:pgfplotsx) do
 
     @testset "Unitful interaction" begin
         yreg = r"ylabel=\{((?:[^{}]*\{[^{}]*\})*[^{}]*?)\}"
-        pl1 = plot([1u"s",2u"s"],[1u"m",2u"m"],xlabel="t",ylabel="r")
+        pl1 = plot([1u"s", 2u"s"], [1u"m", 2u"m"], xlabel = "t", ylabel = "r")
         pl2 = plot([1u"s", 2u"s"], [1u"m/s^2", 2u"m/s^2"])
         pl1_tex = String(repr("application/x-tex", pl1))
         pl2_tex = String(repr("application/x-tex", pl2))
         @test pl1_tex[findfirst(yreg, pl1_tex)] == "ylabel={r (\$\\mathrm{m}\$)}"
-        @test pl2_tex[findfirst(yreg, pl2_tex)] == "ylabel={\$\\mathrm{m}\\,\\mathrm{s}^{-2}\$}"
+        @test pl2_tex[findfirst(yreg, pl2_tex)] ==
+              "ylabel={\$\\mathrm{m}\\,\\mathrm{s}^{-2}\$}"
     end
 end

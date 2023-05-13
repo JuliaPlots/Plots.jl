@@ -200,5 +200,5 @@ const _arg_desc = KW(
                                     Defaults to `:auto`, which widens by the default factor unless limits were manually set.
                                     See also the `scale_limits!` function for scaling axis limits in an existing plot."""),
     :draw_arrow                  => (Bool, "Draw arrow at the end of the axis."),
-    :unitformat                  => (Union{Bool, Nothing, Symbol, Char, String, NTuple{<:Union{Char,String}}, Function}, """Check examples in https://docs.juliaplots.org/stable/generated/unitfulext_examples/#Unit-formatting""")
+    :unitformat                  => (Union{Bool,Nothing,Symbol,Char,String,NTuple{<:Union{Char,String}},Function}, """Check examples in https://docs.juliaplots.org/stable/generated/unitfulext_examples/#Unit-formatting"""),
 )
