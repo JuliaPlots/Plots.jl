@@ -7,6 +7,7 @@ import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits LogScaled logunit MixedUnits Level Gain uconvert
 @ext_imp_use :import Latexify latexify
+@ext_imp_use :using UnitfulLatexify
 
 const MissingOrQuantity = Union{Missing,<:Quantity,<:LogScaled}
 
@@ -218,10 +219,9 @@ append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 append_unit_if_needed!(attr, key, label::Nothing, u) =
     (attr[key] = UnitfulString(string(u), u))
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
-    @show attr
     isempty(label) && return attr[key] = UnitfulString(label, u)
     attr[key] =
-        UnitfulString(S(format_unit_label(label, u, attr[Symbol(attr[:letter],:unitformat)])), u)
+        UnitfulString(S(format_unit_label(label, u, get(attr, Symbol(attr[:letter],:unitformat), :round))), u)
 end
 
 #=============================================
@@ -239,6 +239,7 @@ const UNIT_FORMATS = Dict(
     :slashcurly => (" / {", "}"),
     :slashangle => (" / <", ">"),
     :verbose => " in units of ",
+    :none => nothing,
 )
 
 format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
@@ -295,8 +296,10 @@ function _unit(x)
     unit(x)
 end
 
-Plots.pgfx_sanitize_string(s::UnitfulString) = begin
-    UnitfulString(Plots.pgfx_sanitize_string(s.content), latexify(s.unit))
+function Plots.pgfx_sanitize_string(s::UnitfulString)
+    ProtectedString(
+        replace(Plots.pgfx_sanitize_string(s.content), string(s.unit) => latexify(s.unit))
+    )
 end
 
 end  # module
