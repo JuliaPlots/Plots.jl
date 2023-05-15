@@ -198,8 +198,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 14
         "Bar",
-        "`bar(x, y)` plots bars with heights `y` and centers at `x`.
-        `x` defaults to `eachindex(y)`.",
+        "`bar(x, y)` plots bars with heights `y` and centers at `x`. `x` defaults to `eachindex(y)`.",
         :(plot(bar(randn(10)), bar([0, 3, 5], [1, 2, 6]), legend = false)),
     ),
     PlotExample( # 15
