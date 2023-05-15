@@ -1236,7 +1236,7 @@ const _examples = PlotExample[
         end,
     ),
     PlotExample( # 66
-        "Bars: specifying edges and missing values",
+        "Specifying edges and missing values for barplots",
         "In `bar(x, y)`, `x` may be the same length as `y` to specify bar centers, or one longer to specify bar edges.",
         :(plot(
             bar(-5:5, randn(10)),                  # bar edges at -5:5
