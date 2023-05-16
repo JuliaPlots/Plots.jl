@@ -1,3 +1,6 @@
+using Plots, Test
+using Unitful
+using Unitful: m, cm, s, DimensionError
 # Some helper functions to access the subplot labels and the series inside each test plot
 xguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:xaxis].plotattributes[:guide]
 yguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:yaxis].plotattributes[:guide]
@@ -9,7 +12,7 @@ zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:
 testfile = tempname() * ".png"
 
 macro isplot(ex) # @isplot macro to streamline tests
-    :(@test $(esc(ex)) isa Plot)
+    :(@test $(esc(ex)) isa Plots.Plots.Plot)
 end
 
 @testset "heatmap" begin
@@ -148,30 +151,30 @@ end
     x, y = randn(3), randn(3)
     @testset "plot(f, x) / plot(x, f)" begin
         f(x) = x^2
-        @test plot(f, x * m) isa Plot
-        @test plot(x * m, f) isa Plot
+        @test plot(f, x * m) isa Plots.Plot
+        @test plot(x * m, f) isa Plots.Plot
         g(x) = x * m # If the unit comes from the function only then it throws
         @test_throws DimensionError plot(x, g)
         @test_throws DimensionError plot(g, x)
     end
     @testset "plot(x, y, f)" begin
         f(x, y) = x * y
-        @test plot(x * m, y * s, f) isa Plot
-        @test plot(x * m, y, f) isa Plot
-        @test plot(x, y * s, f) isa Plot
+        @test plot(x * m, y * s, f) isa Plots.Plot
+        @test plot(x * m, y, f) isa Plots.Plot
+        @test plot(x, y * s, f) isa Plots.Plot
         g(x, y) = x * y * m # If the unit comes from the function only then it throws
         @test_throws DimensionError plot(x, y, g)
     end
     @testset "plot(f, u)" begin
         f(x) = x^2
         pl = plot(x * m, f.(x * m))
-        @test plot!(pl, f, m) isa Plot
+        @test plot!(pl, f, m) isa Plots.Plot
         @test_throws DimensionError plot!(pl, f, s)
         pl = plot(f, m)
         @test xguide(pl) == string(m)
         @test yguide(pl) == string(m^2)
         g(x) = exp(x / (3m))
-        @test plot(g, u"m") isa Plot
+        @test plot(g, u"m") isa Plots.Plot
     end
 end
 
@@ -187,47 +190,47 @@ end
         end
 
         @testset "One array" begin
-            @test plot(x * m) isa Plot
-            @test plot(x * m, ylabel = "x") isa Plot
-            @test plot(x * m, ylims = (-1, 1)) isa Plot
-            @test plot(x * m, ylims = (-1, 1) .* m) isa Plot
-            @test plot(x * m, yunit = u"km") isa Plot
-            @test plot(x * m, xticks = (1:3) * m) isa Plot
+            @test plot(x * m) isa Plots.Plot
+            @test plot(x * m, ylabel = "x") isa Plots.Plot
+            @test plot(x * m, ylims = (-1, 1)) isa Plots.Plot
+            @test plot(x * m, ylims = (-1, 1) .* m) isa Plots.Plot
+            @test plot(x * m, yunit = u"km") isa Plots.Plot
+            @test plot(x * m, xticks = (1:3) * m) isa Plots.Plot
         end
 
         @testset "Two arrays" begin
-            @test plot(x * m, y * s) isa Plot
-            @test plot(x * m, y * s, xlabel = "x") isa Plot
-            @test plot(x * m, y * s, xlims = (-1, 1)) isa Plot
-            @test plot(x * m, y * s, xlims = (-1, 1) .* m) isa Plot
-            @test plot(x * m, y * s, xunit = u"km") isa Plot
-            @test plot(x * m, y * s, ylabel = "y") isa Plot
-            @test plot(x * m, y * s, ylims = (-1, 1)) isa Plot
-            @test plot(x * m, y * s, ylims = (-1, 1) .* s) isa Plot
-            @test plot(x * m, y * s, yunit = u"ks") isa Plot
-            @test plot(x * m, y * s, yticks = (1:3) * s) isa Plot
-            @test scatter(x * m, y * s) isa Plot
+            @test plot(x * m, y * s) isa Plots.Plot
+            @test plot(x * m, y * s, xlabel = "x") isa Plots.Plot
+            @test plot(x * m, y * s, xlims = (-1, 1)) isa Plots.Plot
+            @test plot(x * m, y * s, xlims = (-1, 1) .* m) isa Plots.Plot
+            @test plot(x * m, y * s, xunit = u"km") isa Plots.Plot
+            @test plot(x * m, y * s, ylabel = "y") isa Plots.Plot
+            @test plot(x * m, y * s, ylims = (-1, 1)) isa Plots.Plot
+            @test plot(x * m, y * s, ylims = (-1, 1) .* s) isa Plots.Plot
+            @test plot(x * m, y * s, yunit = u"ks") isa Plots.Plot
+            @test plot(x * m, y * s, yticks = (1:3) * s) isa Plots.Plot
+            @test scatter(x * m, y * s) isa Plots.Plot
             if dtype ≠ Symbol("Vectors of vectors")
-                @test scatter(x * m, y * s, zcolor = z * (m / s)) isa Plot
+                @test scatter(x * m, y * s, zcolor = z * (m / s)) isa Plots.Plot
             end
         end
 
         @testset "Three arrays" begin
-            @test plot(x * m, y * s, z * (m / s)) isa Plot
-            @test plot(x * m, y * s, z * (m / s), xlabel = "x") isa Plot
-            @test plot(x * m, y * s, z * (m / s), xlims = (-1, 1)) isa Plot
-            @test plot(x * m, y * s, z * (m / s), xlims = (-1, 1) .* m) isa Plot
-            @test plot(x * m, y * s, z * (m / s), xunit = u"km") isa Plot
-            @test plot(x * m, y * s, z * (m / s), ylabel = "y") isa Plot
-            @test plot(x * m, y * s, z * (m / s), ylims = (-1, 1)) isa Plot
-            @test plot(x * m, y * s, z * (m / s), ylims = (-1, 1) .* s) isa Plot
-            @test plot(x * m, y * s, z * (m / s), yunit = u"ks") isa Plot
-            @test plot(x * m, y * s, z * (m / s), zlabel = "z") isa Plot
-            @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1)) isa Plot
-            @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1) .* (m / s)) isa Plot
-            @test plot(x * m, y * s, z * (m / s), zunit = u"km/hr") isa Plot
-            @test plot(x * m, y * s, z * (m / s), zticks = (1:2) * m / s) isa Plot
-            @test scatter(x * m, y * s, z * (m / s)) isa Plot
+            @test plot(x * m, y * s, z * (m / s)) isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), xlabel = "x") isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), xlims = (-1, 1)) isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), xlims = (-1, 1) .* m) isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), xunit = u"km") isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), ylabel = "y") isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), ylims = (-1, 1)) isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), ylims = (-1, 1) .* s) isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), yunit = u"ks") isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), zlabel = "z") isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1)) isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1) .* (m / s)) isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), zunit = u"km/hr") isa Plots.Plot
+            @test plot(x * m, y * s, z * (m / s), zticks = (1:2) * m / s) isa Plots.Plot
+            @test scatter(x * m, y * s, z * (m / s)) isa Plots.Plot
         end
 
         @testset "Unitful/unitless combinations" begin
@@ -236,13 +239,13 @@ end
             @testset "plot($(mystr(xs)), $(mystr(ys)))" for xs in [x, x * m],
                 ys in [y, y * s]
 
-                @test plot(xs, ys) isa Plot
+                @test plot(xs, ys) isa Plots.Plot
             end
             @testset "plot($(mystr(xs)), $(mystr(ys)), $(mystr(zs)))" for xs in [x, x * m],
                 ys in [y, y * s],
                 zs in [z, z * (m / s)]
 
-                @test plot(xs, ys, zs) isa Plot
+                @test plot(xs, ys, zs) isa Plots.Plot
             end
         end
     end
@@ -251,9 +254,9 @@ end
         Iterators.product(fill([1, u"m", u"s"], 2)...),
     )
         x, y = rand(10) * us[1], rand(10) * us[2]
-        @test scatter(x, y) isa Plot
-        @test scatter(x, y, markersize = x) isa Plot
-        @test scatter(x, y, line_z = x) isa Plot
+        @test scatter(x, y) isa Plots.Plot
+        @test scatter(x, y, markersize = x) isa Plots.Plot
+        @test scatter(x, y, line_z = x) isa Plots.Plot
     end
 
     @testset "contour(x::$(us[1]), y::$(us[2]))" for us in collect(
@@ -261,13 +264,13 @@ end
     )
         x, y = (1:0.01:2) * us[1], (1:0.02:2) * us[2]
         z = x' ./ y
-        @test contour(x, y, z) isa Plot
-        @test contourf(x, y, z) isa Plot
+        @test contour(x, y, z) isa Plots.Plot
+        @test contourf(x, y, z) isa Plots.Plot
     end
 
     @testset "ProtectedString" begin
         y = rand(10) * u"m"
-        @test plot(y, label = P"meters") isa Plot
+        @test plot(y, label = P"meters") isa Plots.Plot
     end
 end
 
@@ -313,7 +316,7 @@ end
     y = rand(10) * u"s"
     ey = rand(10) * u"ms"
     pl = plot(x, y, xerr = ex, yerr = ey)
-    @test pl isa Plot
+    @test pl isa Plots.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
 end
@@ -323,7 +326,7 @@ end
     y = rand(10) * u"s"
     ribbon = rand(10) * u"ms"
     pl = plot(x, y, ribbon = ribbon)
-    @test pl isa Plot
+    @test pl isa Plots.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
 end
@@ -333,7 +336,7 @@ end
     y = rand(10) * u"s"
     fillrange = rand(10) * u"ms"
     pl = plot(x, y, fillrange = fillrange)
-    @test pl isa Plot
+    @test pl isa Plots.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
 end
@@ -385,13 +388,13 @@ end
     x = (1:3)u"dBV"
     y = (1:3)u"V"
     pl = plot(u, x)
-    @test pl isa Plot
+    @test pl isa Plots.Plot
     @test xguide(pl) == "B"
     @test yguide(pl) == "dBV"
-    @test plot!(pl, v, y) isa Plot
+    @test plot!(pl, v, y) isa Plots.Plot
     pl = plot(v, y)
-    @test pl isa Plot
-    @test plot!(pl, u, x) isa Plot
+    @test pl isa Plots.Plot
+    @test plot!(pl, u, x) isa Plots.Plot
 end
 
 if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
