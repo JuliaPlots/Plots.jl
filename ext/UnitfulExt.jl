@@ -6,6 +6,7 @@ module UnitfulExt
 import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits LogScaled logunit MixedUnits Level Gain uconvert
+@ext_imp_use :import LaTeXStrings LaTeXString
 @ext_imp_use :import Latexify latexify
 @ext_imp_use :using UnitfulLatexify
 
@@ -216,20 +217,38 @@ append_unit_if_needed!(attr, key, u) =
 # dispatch on the type of `label`
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
-append_unit_if_needed!(attr, key, label::Nothing, u) =
-    (attr[key] = UnitfulString(string(u), u))
+function append_unit_if_needed!(attr, key, label::Nothing, u)
+    attr[key] = if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
+        UnitfulString(LaTeXString(latexify(u)), u)
+    else
+        UnitfulString(string(u), u)
+    end
+end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
-    isempty(label) && return attr[key] = UnitfulString(label, u)
-    attr[key] = UnitfulString(
-        S(
-            format_unit_label(
-                label,
-                u,
-                get(attr, Symbol(attr[:letter], :unitformat), :round),
+    if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
+        attr[key] = UnitfulString(
+            LaTeXString(
+                format_unit_label(
+                    label,
+                    latexify(u),
+                    get(attr, Symbol(attr[:letter], :unitformat), :round),
+                ),
             ),
-        ),
-        u,
-    )
+            u,
+        )
+    else
+        isempty(label) && return attr[key] = UnitfulString(label, u)
+        attr[key] = UnitfulString(
+            S(
+                format_unit_label(
+                    label,
+                    u,
+                    get(attr, Symbol(attr[:letter], :unitformat), :round),
+                ),
+            ),
+            u,
+        )
+    end
 end
 
 #=============================================
@@ -305,9 +324,7 @@ function _unit(x)
 end
 
 function Plots.pgfx_sanitize_string(s::UnitfulString)
-    ProtectedString(
-        replace(Plots.pgfx_sanitize_string(s.content), string(s.unit) => latexify(s.unit)),
-    )
+    UnitfulString(Plots.pgfx_sanitize_string(s.content), s.unit)
 end
 
 end  # module

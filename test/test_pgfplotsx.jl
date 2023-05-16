@@ -466,11 +466,11 @@ with(:pgfplotsx) do
 
     @testset "Unitful interaction" begin
         yreg = r"ylabel=\{((?:[^{}]*\{[^{}]*\})*[^{}]*?)\}"
-        pl1 = plot([1u"s", 2u"s"], [1u"m", 2u"m"], xlabel = "t", ylabel = "r")
+        pl1 = plot([1u"s", 2u"s"], [1u"m", 2u"m"], xlabel = "t", ylabel = "diameter")
         pl2 = plot([1u"s", 2u"s"], [1u"m/s^2", 2u"m/s^2"])
         pl1_tex = String(repr("application/x-tex", pl1))
         pl2_tex = String(repr("application/x-tex", pl2))
-        @test pl1_tex[findfirst(yreg, pl1_tex)] == "ylabel={r (\$\\mathrm{m}\$)}"
+        @test pl1_tex[findfirst(yreg, pl1_tex)] == "ylabel={diameter (\$\\mathrm{m}\$)}"
         @test pl2_tex[findfirst(yreg, pl2_tex)] ==
               "ylabel={\$\\mathrm{m}\\,\\mathrm{s}^{-2}\$}"
     end

@@ -5,7 +5,15 @@
     Aqua.test_all(
         Plots;
         stale_deps = (;
-            ignore = [:GR, :CondaPkg, :Contour, :Latexify, :LaTeXStrings, :Requires]
+            ignore = [
+                :GR,
+                :CondaPkg,
+                :Contour,
+                :Latexify,
+                :LaTeXStrings,
+                :Requires,
+                :UnitfulLatexify,
+            ]
         ),
         project_toml_formatting = false,  # issues since weak deps
         ambiguities = false,
