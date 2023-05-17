@@ -6,6 +6,9 @@ module UnitfulExt
 import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits LogScaled logunit MixedUnits Level Gain uconvert
+import LaTeXStrings: LaTeXString
+import Latexify: latexify
+using UnitfulLatexify
 
 const MissingOrQuantity = Union{Missing,<:Quantity,<:LogScaled}
 
@@ -214,12 +217,38 @@ append_unit_if_needed!(attr, key, u) =
 # dispatch on the type of `label`
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
-append_unit_if_needed!(attr, key, label::Nothing, u) =
-    (attr[key] = UnitfulString(string(u), u))
+function append_unit_if_needed!(attr, key, label::Nothing, u)
+    attr[key] = if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
+        UnitfulString(LaTeXString(latexify(u)), u)
+    else
+        UnitfulString(string(u), u)
+    end
+end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    attr[key] =
-        UnitfulString(S(format_unit_label(label, u, get(attr, :unitformat, :round))), u)
+    if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
+        attr[key] = UnitfulString(
+            LaTeXString(
+                format_unit_label(
+                    label,
+                    latexify(u),
+                    get(attr, Symbol(attr[:letter], :unitformat), :round),
+                ),
+            ),
+            u,
+        )
+    else
+        attr[key] = UnitfulString(
+            S(
+                format_unit_label(
+                    label,
+                    u,
+                    get(attr, Symbol(attr[:letter], :unitformat), :round),
+                ),
+            ),
+            u,
+        )
+    end
 end
 
 #=============================================
@@ -237,6 +266,7 @@ const UNIT_FORMATS = Dict(
     :slashcurly => (" / {", "}"),
     :slashangle => (" / <", ">"),
     :verbose => " in units of ",
+    :none => nothing,
 )
 
 format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
@@ -293,17 +323,8 @@ function _unit(x)
     unit(x)
 end
 
-Plots.pgfx_sanitize_string(s::UnitfulString) = begin
-    tex_str = if (str_unit = string(s.unit)) == s.content
-        ""
-    else
-        Plots.pgfx_sanitize_string(s.content)
-    end
-    tex_unit = replace(Plots.wrap_power_label(str_unit), ' ' => '~')
-    if !Plots.pgfx_is_inline_math(tex_unit)
-        tex_unit = "\\($tex_unit\\)"  # force inline math mode
-    end
-    isempty(tex_str) ? tex_unit : tex_str * ' ' * tex_unit
+function Plots.pgfx_sanitize_string(s::UnitfulString)
+    UnitfulString(Plots.pgfx_sanitize_string(s.content), s.unit)
 end
 
 end  # module

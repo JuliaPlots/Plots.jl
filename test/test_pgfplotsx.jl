@@ -1,3 +1,5 @@
+using Test, Plots, Unitful, LaTeXStrings
+
 function create_plot(args...; kwargs...)
     pl = plot(args...; kwargs...)
     return pl, repr("application/x-tex", pl)
@@ -119,7 +121,7 @@ with(:pgfplotsx) do
             bg = :linen,
             xlim = (0, 10),
             ylim = (0, 10),
-        ) isa Plot
+        ) isa Plots.Plot
     end
 
     @testset "Layout" begin
@@ -128,13 +130,13 @@ with(:pgfplotsx) do
             layout = 4,
             palette = [:grays :blues :hot :rainbow],
             bg_inside = [:orange :pink :darkblue :black],
-        ) isa Plot
+        ) isa Plots.Plot
     end
 
     @testset "Polar plots" begin
         Θ = range(0, stop = 1.5π, length = 100)
         r = abs.(0.1 * randn(100) + sin.(3Θ))
-        @test plot(Θ, r, proj = :polar, m = 2) isa Plot
+        @test plot(Θ, r, proj = :polar, m = 2) isa Plots.Plot
     end
 
     @testset "Drawing shapes" begin
@@ -170,11 +172,11 @@ with(:pgfplotsx) do
             xlim = (0, 1),
             ylim = (0, 1),
             leg = false,
-        ) isa Plot
+        ) isa Plots.Plot
     end
 
     @testset "Histogram 2D" begin
-        @test histogram2d(randn(10_000), randn(10_000), nbins = 20) isa Plot
+        @test histogram2d(randn(10_000), randn(10_000), nbins = 20) isa Plots.Plot
     end
 
     @testset "Heatmap-like" begin
@@ -188,7 +190,7 @@ with(:pgfplotsx) do
             @test axis["colormap name"] == "plots1"
         end
 
-        @test wireframe(xs, ys, z, aspect_ratio = 1) isa Plot
+        @test wireframe(xs, ys, z, aspect_ratio = 1) isa Plots.Plot
         # TODO: clims are wrong
     end
 
@@ -202,7 +204,7 @@ with(:pgfplotsx) do
         p2 = contour(x, y, Z)
         p1 = contour(x, y, f, fill = true)
         p3 = contour3d(x, y, Z)
-        @test plot(p1, p2) isa Plot
+        @test plot(p1, p2) isa Plots.Plot
         @test_nowarn Plots._update_plot_object(p3)
         # TODO: colorbar for filled contours
     end
@@ -214,7 +216,7 @@ with(:pgfplotsx) do
         y = t .* sin.(θ)
         p1 = plot(x, y, line_z = t, linewidth = 3, legend = false)
         p2 = scatter(x, y, marker_z = (x, y) -> x + y, color = :bwr, legend = false)
-        @test plot(p1, p2) isa Plot
+        @test plot(p1, p2) isa Plots.Plot
     end
 
     @testset "Framestyles" begin
@@ -250,7 +252,7 @@ with(:pgfplotsx) do
         u = ones(length(x))
         v = cos.(x)
         pl = plot(x, y, quiver = (u, v), arrow = true)
-        @test pl isa Plot
+        @test pl isa Plots.Plot
         # TODO: could adjust limits to fit arrows if too long, but how ?
         # mktempdir() do path
         #    @test_nowarn savefig(pl, path*"arrow.pdf")
@@ -460,5 +462,16 @@ with(:pgfplotsx) do
             Plots.pdf(pl, fn)
             @test isfile(fn)
         end
+    end
+
+    @testset "Unitful interaction" begin
+        yreg = r"ylabel=\{((?:[^{}]*\{[^{}]*\})*[^{}]*?)\}"
+        pl1 = plot([1u"s", 2u"s"], [1u"m", 2u"m"], xlabel = "t", ylabel = "diameter")
+        pl2 = plot([1u"s", 2u"s"], [1u"m/s^2", 2u"m/s^2"])
+        pl1_tex = String(repr("application/x-tex", pl1))
+        pl2_tex = String(repr("application/x-tex", pl2))
+        @test pl1_tex[findfirst(yreg, pl1_tex)] == "ylabel={diameter (\$\\mathrm{m}\$)}"
+        @test pl2_tex[findfirst(yreg, pl2_tex)] ==
+              "ylabel={\$\\mathrm{m}\\,\\mathrm{s}^{-2}\$}"
     end
 end
