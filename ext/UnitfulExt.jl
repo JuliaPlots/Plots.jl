@@ -6,9 +6,9 @@ module UnitfulExt
 import Plots: Plots, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits LogScaled logunit MixedUnits Level Gain uconvert
-@ext_imp_use :import LaTeXStrings LaTeXString
-@ext_imp_use :import Latexify latexify
-@ext_imp_use :using UnitfulLatexify
+import LaTeXStrings: LaTeXString
+import Latexify: latexify
+using UnitfulLatexify
 
 const MissingOrQuantity = Union{Missing,<:Quantity,<:LogScaled}
 

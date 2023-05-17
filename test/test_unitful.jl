@@ -12,7 +12,7 @@ zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:
 testfile = tempname() * ".png"
 
 macro isplot(ex) # @isplot macro to streamline tests
-    :(@test $(esc(ex)) isa Plots.Plots.Plot)
+    :(@test $(esc(ex)) isa Plots.Plot)
 end
 
 @testset "heatmap" begin
