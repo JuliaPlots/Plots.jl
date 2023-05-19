@@ -64,9 +64,6 @@ function __init__()
         @require GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326" include(
             normpath(@__DIR__, "..", "ext", "GeometryBasicsExt.jl"),
         )
-        @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" include(
-            normpath(@__DIR__, "..", "ext", "IJuliaExt.jl"),
-        )
         @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" include(
             normpath(@__DIR__, "..", "ext", "ImageInTerminalExt.jl"),
         )
@@ -74,6 +71,13 @@ function __init__()
             normpath(@__DIR__, "..", "ext", "UnitfulExt.jl"),
         )
     end
+
+    # Always use @require for IJuliaExt until the Julia >=v1.9 can cleanly
+    # load extensions that depend on packages in a non-top-level environment.
+    # See Plots issue #4719.
+    @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" include(
+        normpath(@__DIR__, "..", "ext", "IJuliaExt.jl"),
+    )
 
     _runtime_init(backend())
     nothing

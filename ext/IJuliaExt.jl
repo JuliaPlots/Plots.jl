@@ -3,7 +3,9 @@ module IJuliaExt
 import Plots: @ext_imp_use, Plots, Plot
 using Base64
 
-@ext_imp_use :import IJulia
+# Change back when loading as extension again:
+#@ext_imp_use :import IJulia
+import ..IJulia
 
 function _init_ijulia_plotting()
     # IJulia is more stable with local file
