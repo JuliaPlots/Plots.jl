@@ -32,6 +32,12 @@ function _plots_plotly_defaults()
     _use_local_dependencies[] = _use_local_plotlyjs[]
 end
 
+include(
+    # Contains code moved out of IJuliaExt.jl to @require less code,
+    # see below.
+    normpath(@__DIR__, "..", "ext", "IJuliaNoExt.jl"),
+)
+
 function __init__()
     _plots_theme_defaults()
     _plots_plotly_defaults()
