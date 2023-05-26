@@ -287,21 +287,36 @@ getaxisunit(a::Axis) = getaxisunit(a[:guide])
 #==============
 Fix annotations
 ===============#
-Plots.locate_annotation(
+function Plots.locate_annotation(
     sp::Subplot,
     x::MissingOrQuantity,
     y::MissingOrQuantity,
     label::PlotText,
-) = (_ustrip(x), _ustrip(y), label)
-Plots.locate_annotation(
+)
+    xunit = getaxisunit(sp.attr[:xaxis])
+    yunit = getaxisunit(sp.attr[:yaxis])
+    (_ustrip(xunit, x), _ustrip(yunit, y), label)
+end
+function Plots.locate_annotation(
     sp::Subplot,
     x::MissingOrQuantity,
     y::MissingOrQuantity,
     z::MissingOrQuantity,
     label::PlotText,
-) = (_ustrip(x), _ustrip(y), _ustrip(z), label)
-Plots.locate_annotation(sp::Subplot, rel::NTuple{N,<:MissingOrQuantity}, label) where {N} =
-    Plots.locate_annotation(sp, _ustrip.(rel), label)
+)
+    xunit = getaxisunit(sp.attr[:xaxis])
+    yunit = getaxisunit(sp.attr[:yaxis])
+    zunit = getaxisunit(sp.attr[:zaxis])
+    (_ustrip(xunit, x), _ustrip(yunit, y), _ustrip(zunit, z), label)
+end
+function Plots.locate_annotation(
+    sp::Subplot,
+    rel::NTuple{N,<:MissingOrQuantity},
+    label,
+) where {N}
+    units = getaxisunit(sp.attr[:xaxis], sp.attr[:yaxis], sp.attr[:zaxis])
+    Plots.locate_annotation(sp, _ustrip.(zip(units, rel)), label)
+end
 
 #==================#
 # ticks and limits #

@@ -370,7 +370,8 @@ end
 @testset "Annotate" begin
     pl = plot([0, 1]u"s", [0, 1]u"m")
     annotate!(pl, [0.25]u"s", [0.5]u"m", text("annotation"))
-    @test show(devnull, pl) isa Nothing
+    savefig(pl, testfile)
+    @test length(pl.subplots[1].attr[:annotations]) == 1
 end
 
 @testset "AbstractProtectedString" begin
