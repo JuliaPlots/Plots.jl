@@ -44,12 +44,14 @@ Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 [weakdeps]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
 ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [extensions]
 FileIOExt = "FileIO"
 GeometryBasicsExt = "GeometryBasics"
+IJuliaExt = "IJulia"
 ImageInTerminalExt = "ImageInTerminal"
 UnitfulExt = "Unitful"
 
