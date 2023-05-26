@@ -1,7 +1,7 @@
 name = "Plots"
 author = ["Tom Breloff (@tbreloff)"]
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.38.14"
+version = "1.38.15-DEV"
 
 [deps]
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
@@ -76,7 +76,7 @@ SentinelArrays = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
 Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
 
 [compat]
-Requires = "1"
+NaNMath = "0.3, 1"
 Showoff = "0.3.1, 1"
 GR = "0.69.5 - 0.72"
 PlotlyKaleido = "1"
@@ -109,10 +109,10 @@ UnicodeFun = "0.4"
 UnicodePlots = "3.4"
 PlotThemes = "2, 3"
 Contour = "0.5 - 0.6"
+Requires = "1"
 PlotlyJS = "0.18"
 InspectDR = "0.4"
 Reexport = "0.2, 1"
-NaNMath = "0.3, 1"
 
 [weakdeps]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
