@@ -1351,7 +1351,8 @@ function preprocess_attributes!(plotattributes::AKW)
         xformatter = get(plotattributes, :xformatter, :auto)
         yformatter = get(plotattributes, :yformatter, :auto)
         if !(xformatter === :auto && yformatter === :auto)
-            plotattributes[:yformatter], plotattributes[:xformatter] = xformatter, yformatter
+            plotattributes[:yformatter], plotattributes[:xformatter] =
+                xformatter, yformatter
         end
     end
 

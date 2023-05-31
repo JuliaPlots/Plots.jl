@@ -114,12 +114,12 @@ end
 end
 
 @testset "Formatters" begin
-    ts = range(DateTime(today()), step=Hour(1), length=24)
-    p1 =plot(ts, 100randn(24))
+    ts = range(DateTime(today()), step = Hour(1), length = 24)
+    p1 = plot(ts, 100randn(24))
     vline!(p1, [now()])
     @test p1[1][:yaxis][:formatter] == :auto
     @test p1[1][:xaxis][:formatter] == Plots.datetimeformatter
-    p2 = plot(rand(4) .* 10^6, rand(4) .* 10^6, xformatter=:plain, yformatter=:plain)
+    p2 = plot(rand(4) .* 10^6, rand(4) .* 10^6, xformatter = :plain, yformatter = :plain)
     vline!(p2, [10^6])
     @test p2[1][:yaxis][:formatter] == :plain
     @test p2[1][:xaxis][:formatter] == :plain
