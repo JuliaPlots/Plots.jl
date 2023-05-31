@@ -232,7 +232,7 @@ function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString
                 format_unit_label(
                     label,
                     latexify(u),
-                    get(attr, Symbol(attr[:letter], :unitformat), :round),
+                    get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
                 ),
             ),
             u,
@@ -243,7 +243,7 @@ function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString
                 format_unit_label(
                     label,
                     u,
-                    get(attr, Symbol(attr[:letter], :unitformat), :round),
+                    get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
                 ),
             ),
             u,
