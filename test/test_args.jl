@@ -123,4 +123,8 @@ end
     vline!(p2, [10^6])
     @test p2[1][:yaxis][:formatter] == :plain
     @test p2[1][:xaxis][:formatter] == :plain
+    p3 = plot(rand(4) .* 10^6, rand(4) .* 10^6, yformatter = :plain)
+    vline!(p3, [10^6], xformatter = :plain)
+    @test p3[1][:yaxis][:formatter] == :plain
+    @test p3[1][:xaxis][:formatter] == :plain
 end

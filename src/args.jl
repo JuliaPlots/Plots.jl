@@ -1346,14 +1346,12 @@ function preprocess_attributes!(plotattributes::AKW)
     end
 
     # vline and others accesses the y argument but actually maps it to the x axis.
-    # Hence, we have to swap formatters
+    # Hence, we have to take care of formatters
     if treats_y_as_x(get(plotattributes, :seriestype, :path))
         xformatter = get(plotattributes, :xformatter, :auto)
         yformatter = get(plotattributes, :yformatter, :auto)
-        if !(xformatter === :auto && yformatter === :auto)
-            plotattributes[:yformatter], plotattributes[:xformatter] =
-                xformatter, yformatter
-        end
+        yformatter !== :auto && (plotattributes[:xformatter] = yformatter)
+        xformatter === :auto && haskey(plotattributes, :yformatter) && pop!(plotattributes, :yformatter)
     end
 
     # handle grid args common to all axes
