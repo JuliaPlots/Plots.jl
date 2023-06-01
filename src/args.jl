@@ -1351,7 +1351,9 @@ function preprocess_attributes!(plotattributes::AKW)
         xformatter = get(plotattributes, :xformatter, :auto)
         yformatter = get(plotattributes, :yformatter, :auto)
         yformatter !== :auto && (plotattributes[:xformatter] = yformatter)
-        xformatter === :auto && haskey(plotattributes, :yformatter) && pop!(plotattributes, :yformatter)
+        xformatter === :auto &&
+            haskey(plotattributes, :yformatter) &&
+            pop!(plotattributes, :yformatter)
     end
 
     # handle grid args common to all axes
