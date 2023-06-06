@@ -272,13 +272,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 opt = series.plotattributes
                 st = series[:seriestype]
                 extra_series, extra_series_opt = pgfx_split_extra_kw(series[:extra_kwargs])
-                series_opt = merge(
-                    Options(
+                series_opt = Options(
                         "color" => single_color(opt[:linecolor]),
                         "name path" => string(series_id),
-                    ),
-                    Options(extra_series_opt...),
-                )
+                    )
                 series_func =
                     if (
                         RecipesPipeline.is3d(series) ||
@@ -297,6 +294,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     push!(series_opt, "area legend" => nothing)
                 end
                 pgfx_add_series!(Val(st), axis, series_opt, series, series_func, opt)
+                last_plot = axis.contents[end] isa PGFPlotsX.LegendEntry ? axis.contents[end-1] : axis.contents[end]
+                merge!(last_plot.options, Options(extra_series_opt...))
                 if extra_series !== nothing
                     push!(axis.contents[end], wraptuple(extra_series)...)
                 end
@@ -346,7 +345,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     segments = collect(series_segments(series, series[:seriestype]; check = true))
     for (k, segment) in enumerate(segments)
         i, rng = segment.attr_index, segment.range
-        segment_opt = merge(Options(), pgfx_linestyle(opt, i))
+        segment_opt = pgfx_linestyle(opt, i)
         if opt[:markershape] !== :none
             if (marker = _cycle(opt[:markershape], i)) isa Shape
                 scale_factor = 0.00125
