@@ -273,9 +273,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 st = series[:seriestype]
                 extra_series, extra_series_opt = pgfx_split_extra_kw(series[:extra_kwargs])
                 series_opt = Options(
-                        "color" => single_color(opt[:linecolor]),
-                        "name path" => string(series_id),
-                    )
+                    "color" => single_color(opt[:linecolor]),
+                    "name path" => string(series_id),
+                )
                 series_func =
                     if (
                         RecipesPipeline.is3d(series) ||
@@ -294,7 +294,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     push!(series_opt, "area legend" => nothing)
                 end
                 pgfx_add_series!(Val(st), axis, series_opt, series, series_func, opt)
-                last_plot = axis.contents[end] isa PGFPlotsX.LegendEntry ? axis.contents[end-1] : axis.contents[end]
+                last_plot =
+                    axis.contents[end] isa PGFPlotsX.LegendEntry ? axis.contents[end - 1] :
+                    axis.contents[end]
                 merge!(last_plot.options, Options(extra_series_opt...))
                 if extra_series !== nothing
                     push!(axis.contents[end], wraptuple(extra_series)...)
