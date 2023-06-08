@@ -5,7 +5,7 @@ on:
     branches: [master]
   pull_request:
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -29,7 +29,7 @@ jobs:
       matrix:
         version:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
-          - '1.8' # latest stable
+          - '1.9' # latest stable
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
         include:
@@ -37,13 +37,17 @@ jobs:
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '1.7'  # only test intermediate release on `ubuntu`
+            version:  '1.7' # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '~1.9.0-0'
+            version:  '1.8' # only test intermediate release on `ubuntu` to spare resources
+          # - os: ubuntu-latest
+          #   prefix: xvfb-run
+          #   version: '~1.9.0-0'  # upcoming julia version, next `rc`
           - os: ubuntu-latest
             prefix: xvfb-run
             version: 'nightly'
+            allow_failure: true  # `nightly` often breaks
 
     steps:
       - uses: actions/checkout@v3

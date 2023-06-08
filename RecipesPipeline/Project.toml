@@ -1,20 +1,20 @@
 name = "RecipesPipeline"
 uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 authors = ["Michael Krabbe Borregaard <mkborregaard@snm.ku.dk>"]
-version = "0.6.11"
+version = "0.6.12"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-SnoopPrecompile = "66db9d55-30c0-4569-8b51-7e840670fc0c"
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 
 [compat]
 NaNMath = "0.3, 1"
 PlotUtils = "0.6.5, 1"
 RecipesBase = "1.3.1"
-SnoopPrecompile = "1"
+PrecompileTools = "1"
 julia = "1.6"
 
 [extras]

@@ -337,6 +337,9 @@ gr_z_axislims(sp::Subplot) = axis_limits(sp, :z)
 gr_xy_axislims(sp::Subplot) = gr_x_axislims(sp)..., gr_y_axislims(sp)...
 
 function gr_fill_viewport(vp::GRViewport, c)
+    if alpha(c) == 0
+        return nothing
+    end
     GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
@@ -602,11 +605,13 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         end
     end
 
-    z_tick = 0.5GR.tick(z_min, z_max)
-    gr_set_line(1, :solid, plot_color(:black), sp)
-    (yscale = sp[:colorbar_scale]) ∈ _logScales && GR.setscale(gr_y_log_scales[yscale])
-    # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
-    GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+    if _has_ticks(sp[:colorbar_ticks])
+        z_tick = 0.5GR.tick(z_min, z_max)
+        gr_set_line(1, :solid, plot_color(:black), sp)
+        (yscale = sp[:colorbar_scale]) ∈ _logScales && GR.setscale(gr_y_log_scales[yscale])
+        # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
+        GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+    end
 
     title = gr_colorbar_title(sp)
     gr_set_font(title.font, sp; halign = :center, valign = :top)
@@ -968,8 +973,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
 
     # add annotations
     for ann in sp[:annotations]
-        x, y, val = locate_annotation(sp, ann...)
-        x, y = gr_is3d(sp) ? gr_w3tondc(x, y, z) : GR.wctondc(x, y)
+        x, y = if is3d(sp)
+            x, y, z, val = locate_annotation(sp, ann...)
+            GR.setwindow(-1, 1, -1, 1)
+            gr_w3tondc(x, y, z)
+        else
+            x, y, val = locate_annotation(sp, ann...)
+            GR.wctondc(x, y)
+        end
         gr_set_font(val.font, sp)
         gr_text(x, y, val.str)
     end
@@ -1073,8 +1084,9 @@ function gr_add_legend(sp, leg, viewport_area)
             end
 
             if (msh = series[:markershape]) !== :none
-                msz = first(series[:markersize])
-                msw = first(series[:markerstrokewidth])
+                msz = max(first(series[:markersize]), 0)
+                msw = max(first(series[:markerstrokewidth]), 0)
+                mfac = 0.8 * lfps / (msz + 0.5 * msw + 1e-20)
                 gr_draw_marker(
                     series,
                     xpos - 2leg.base_factor,
@@ -1082,8 +1094,8 @@ function gr_add_legend(sp, leg, viewport_area)
                     nothing,
                     clims,
                     1,
-                    min(max_markersize, msz > 0 ? 0.8lfps : 0),
-                    min(max_markersize, 0.8lfps * msw / (msz > 0 ? msz : 8)),
+                    min(max_markersize, mfac * msz),
+                    min(max_markersize, mfac * msw),
                     Plots._cycle(msh, 1),
                 )
             end
@@ -1250,8 +1262,8 @@ function gr_get_legend_geometry(vp, sp)
     span_hspace = span + pad  # part of the horizontal increment
     dx = (textw + (vertical ? 0 : span_hspace)) * get(ekw, :legend_wfactor, 1)
 
-    # This is to prevent that linestyle is obscured by large markers. 
-    # We are trying to get markers to not be larger than half the line length. 
+    # This is to prevent that linestyle is obscured by large markers.
+    # We are trying to get markers to not be larger than half the line length.
     # 1 / leg.dy translates base_factor to line length units (important in the context of size kwarg)
     # gr_legend_marker_to_line_factor is an empirical constant to translate between line length unit and marker size unit
     base_markersize = gr_legend_marker_to_line_factor[] * span / dy  # NOTE: arbitrarily based on horizontal measures !
@@ -1404,6 +1416,7 @@ function gr_draw_axes(sp, vp)
     elseif sp[:framestyle] !== :none
         foreach(letter -> gr_draw_axis(sp, letter, vp), (:x, :y))
     end
+    GR.settransparency(1.0)
     nothing
 end
 

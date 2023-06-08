@@ -104,6 +104,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "/tikz/background rectangle/.style" => Options(
                     # "draw" => "black",
                     "fill" => cstr,
+                    "fill opacity" => alpha(cstr),
                     "draw opacity" => alpha(cstr),
                 ),
                 "show background rectangle" => nothing,
@@ -119,8 +120,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 y = dy + sp_h / 2
                 pgfx_add_annotation!(
                     the_plot,
-                    x,
-                    y,
+                    (x, y),
                     PlotText(plt[:plot_title], plottitlefont(plt)),
                     pgfx_thickness_scaling(plt);
                     options = Options("anchor" => "center"),
@@ -196,24 +196,32 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             if hascolorbar(sp)
                 formatter = latex_formatter(sp[:colorbar_formatter])
                 cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
-                colorbar_style = if sp[:colorbar] === :top
+                letter = sp[:colorbar] === :top ? :x : :y
+
+                colorbar_style = push!(
+                    Options("$(letter)label" => sp[:colorbar_title]),
+                    "$(letter)label style" => pgfx_get_colorbar_title_style(sp),
+                    "$(letter)tick" => cticks,
+                    "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
+                )
+
+                if sp[:colorbar] === :top
                     push!(
-                        Options("xlabel" => sp[:colorbar_title]),
-                        "xlabel style" => pgfx_get_colorbar_title_style(sp),
+                        colorbar_style,
                         "at" => "(0.5, 1.05)",
                         "anchor" => "south",
-                        "xtick" => cticks,
                         "xticklabel pos" => "upper",
-                        "xticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
-                    )
-                else
-                    push!(
-                        Options("ylabel" => sp[:colorbar_title]),
-                        "ylabel style" => pgfx_get_colorbar_title_style(sp),
-                        "ytick" => cticks,
-                        "yticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     )
                 end
+
+                if !_has_ticks(sp[:colorbar_ticks])
+                    push!(
+                        colorbar_style,
+                        "$(letter)tick style" => "{draw=none}",
+                        "$(letter)ticklabels" => "{,,}",
+                    )
+                end
+
                 push!(
                     axis_opt,
                     "colorbar $(pgfx_get_colorbar_pos(sp[:colorbar]))" => nothing,
@@ -264,12 +272,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 opt = series.plotattributes
                 st = series[:seriestype]
                 extra_series, extra_series_opt = pgfx_split_extra_kw(series[:extra_kwargs])
-                series_opt = merge(
-                    Options(
-                        "color" => single_color(opt[:linecolor]),
-                        "name path" => string(series_id),
-                    ),
-                    Options(extra_series_opt...),
+                series_opt = Options(
+                    "color" => single_color(opt[:linecolor]),
+                    "name path" => string(series_id),
                 )
                 series_func =
                     if (
@@ -289,6 +294,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     push!(series_opt, "area legend" => nothing)
                 end
                 pgfx_add_series!(Val(st), axis, series_opt, series, series_func, opt)
+                last_plot =
+                    axis.contents[end] isa PGFPlotsX.LegendEntry ? axis.contents[end - 1] :
+                    axis.contents[end]
+                merge!(last_plot.options, Options(extra_series_opt...))
                 if extra_series !== nothing
                     push!(axis.contents[end], wraptuple(extra_series)...)
                 end
@@ -297,8 +306,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
                     pgfx_add_annotation!(
                         axis,
-                        xi,
-                        yi,
+                        (xi, yi),
                         PlotText(str, fnt),
                         pgfx_thickness_scaling(series),
                     )
@@ -306,9 +314,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end  # for series
             # add subplot annotations
             for ann in sp[:annotations]
+                # [1:end-1] -> coordinates, [end] is string
+                loc_val = locate_annotation(sp, ann...)
                 pgfx_add_annotation!(
                     axis,
-                    locate_annotation(sp, ann...)...,
+                    loc_val[1:(end - 1)],
+                    loc_val[end],
                     pgfx_thickness_scaling(sp),
                 )
             end
@@ -336,7 +347,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     segments = collect(series_segments(series, series[:seriestype]; check = true))
     for (k, segment) in enumerate(segments)
         i, rng = segment.attr_index, segment.range
-        segment_opt = merge(Options(), pgfx_linestyle(opt, i))
+        segment_opt = pgfx_linestyle(opt, i)
         if opt[:markershape] !== :none
             if (marker = _cycle(opt[:markershape], i)) isa Shape
                 scale_factor = 0.00125
@@ -486,13 +497,19 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
         "point meta" => "\\thisrow{meta}",
+        "opacity" => something(get_fillalpha(series), 1.0),
     )
     args = pgfx_series_arguments(series, opt)
     meta = map(r -> any(!isfinite, r) ? NaN : r[3], zip(args...))
     for arg in args
         arg[(!isfinite).(arg)] .= 0
     end
-    table = Table(["x" => args[1], "y" => args[2], "z" => args[3], "meta" => meta])
+    table = Table([
+        "x" => ispolar(series) ? rad2deg.(args[1]) : args[1],
+        "y" => args[2],
+        "z" => args[3],
+        "meta" => meta,
+    ])
     push!(axis, series_func(series_opt, table))
     pgfx_add_legend!(axis, series, opt)
 end
@@ -750,26 +767,28 @@ end
 
 function pgfx_get_legend_style(sp)
     cstr = plot_color(sp[:legend_background_color])
-    Options(
+    return merge(
         pgfx_linestyle(
             pgfx_thickness_scaling(sp),
             sp[:legend_foreground_color],
             alpha(plot_color(sp[:legend_foreground_color])),
             "solid",
-        ) => nothing,
-        "fill" => cstr,
-        "fill opacity" => alpha(cstr),
-        "text opacity" => alpha(plot_color(sp[:legend_font_color])),
-        "font" => pgfx_font(sp[:legend_font_pointsize], pgfx_thickness_scaling(sp)),
-        "text" => plot_color(sp[:legend_font_color]),
-        "cells" => Options(
-            "anchor" => get(
-                (left = "west", right = "east", hcenter = "center"),
-                legendfont(sp).halign,
-                "west",
-            ),
         ),
-        pgfx_get_legend_pos(sp[:legend_position])...,
+        Options(
+            "fill" => cstr,
+            "fill opacity" => alpha(cstr),
+            "text opacity" => alpha(plot_color(sp[:legend_font_color])),
+            "font" => pgfx_font(sp[:legend_font_pointsize], pgfx_thickness_scaling(sp)),
+            "text" => plot_color(sp[:legend_font_color]),
+            "cells" => Options(
+                "anchor" => get(
+                    (left = "west", right = "east", hcenter = "center"),
+                    legendfont(sp).halign,
+                    "west",
+                ),
+            ),
+            pgfx_get_legend_pos(sp[:legend_position])...,
+        ),
     )
 end
 
@@ -792,12 +811,32 @@ pgfx_get_title_pos(s::Symbol) = get(
 
 function pgfx_get_ticklabel_style(sp, axis)
     cstr = plot_color(axis[:tickfontcolor])
-    return Options(
+    opt = Options(
         "font" => pgfx_font(axis[:tickfontsize], pgfx_thickness_scaling(sp)),
         "color" => cstr,
         "draw opacity" => alpha(cstr),
         "rotate" => axis[:tickfontrotation],
     )
+    # aligning rotated tick labels to ticks
+    if RecipesPipeline.is3d(sp)
+        if axis === sp[:xaxis]
+            push!(opt, "anchor" => axis[:rotation] < 60 ? "north east" : "east")
+        elseif axis === sp[:yaxis]
+            push!(opt, "anchor" => axis[:rotation] < 45 ? "north west" : "north east")
+        else
+            push!(
+                opt,
+                "anchor" =>
+                    axis[:rotation] == 0 ? "east" :
+                    axis[:rotation] < 90 ? "south east" : "south",
+            )
+        end
+    else
+        if mod(axis[:rotation], 90) > 0 # 0 and ±90 already look good with the default anchor
+            push!(opt, "anchor" => axis === sp[:xaxis] ? "north east" : "south east")
+        end
+    end
+    return opt
 end
 
 function pgfx_get_colorbar_ticklabel_style(sp)
@@ -970,8 +1009,7 @@ end
 
 function pgfx_add_annotation!(
     o,
-    x,
-    y,
+    pos,
     val,
     thickness_scaling = 1;
     cs = "axis cs:",
@@ -990,7 +1028,10 @@ function pgfx_add_annotation!(
         ),
         options,
     )
-    push!(o, "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$x,$y) {$(val.str)};")
+    push!(
+        o,
+        "\\node$(sprint(PGFPlotsX.print_tex, ann_opt)) at ($(cs)$(join(pos, ','))) {$(val.str)};",
+    )
 end
 
 function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
@@ -1004,6 +1045,10 @@ function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
     opt = series.plotattributes
     args = if RecipesPipeline.is3d(series)
         opt[:x][rng], opt[:y][rng], opt[:z][rng]
+    elseif ispolar(series)
+        rad2deg.(opt[:x][rng]), opt[:y][rng]
+    elseif series[:seriestype] === :straightline
+        straightline_data(series)
     else
         opt[:x][rng], opt[:y][rng]
     end
@@ -1038,11 +1083,6 @@ function pgfx_sanitize_string(s::AbstractString)
         end
     end |> join |> LaTeXString
 end
-@require UnitfulRecipes = "42071c24-d89e-48dd-8a24-8a12d9b8861f" begin
-    import .UnitfulRecipes
-    pgfx_sanitize_string(s::UnitfulRecipes.UnitfulString) =
-        UnitfulRecipes.UnitfulString(pgfx_sanitize_string(s.content), s.unit)
-end
 
 function pgfx_sanitize_plot!(plt)
     for (key, value) in plt.attr
@@ -1055,8 +1095,9 @@ function pgfx_sanitize_plot!(plt)
             if key === :annotations && subplot.attr[:annotations] !== nothing
                 old_ann = subplot.attr[key]
                 for i in eachindex(old_ann)
+                    # [1:end-1] is a tuple of coordinates, [end] - text
                     subplot.attr[key][i] =
-                        (old_ann[i][1], old_ann[i][2], pgfx_sanitize_string(old_ann[i][3]))
+                        (old_ann[i][1:(end - 1)]..., pgfx_sanitize_string(old_ann[i][end]))
                 end
             elseif value isa Union{AbstractString,AVec{<:AbstractString}}
                 subplot.attr[key] = pgfx_sanitize_string.(value)
@@ -1084,15 +1125,24 @@ function pgfx_sanitize_plot!(plt)
     end
 end
 
+pgfx_is_inline_math(lab) = (
+    (startswith(lab, '$') && endswith(lab, '$')) ||
+    (startswith(lab, "\\(") && endswith(lab, "\\)"))
+)
+
 # surround the power part of label with curly braces
+function wrap_power_label(label::AbstractString)
+    pgfx_is_inline_math(label) && return label  # already in `mathmode` form
+    occursin('^', label) || return label
+    base, power = split(label, '^')
+    "$base^$(curly(power))"
+end
+
 wrap_power_labels(labels::AVec{LaTeXString}) = labels
 function wrap_power_labels(labels::AVec{<:AbstractString})
-    new_labels = copy(labels)
+    new_labels = similar(labels)
     for (i, label) in enumerate(labels)
-        startswith(label, '$') && continue  # already in `mathmode` form
-        occursin('^', label) || continue
-        base, power = split(label, '^')
-        new_labels[i] = "$base^$(curly(power))"
+        new_labels[i] = wrap_power_label(label)
     end
     new_labels
 end
@@ -1183,10 +1233,10 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
         tick_labels = if axis[:showaxis]
             if is_log_scale && axis[:ticks] === :auto
                 labels = wrap_power_labels(labs)
-                if (lab = first(labels)) isa LaTeXString || startswith(lab, '$')
+                if (lab = first(labels)) isa LaTeXString || pgfx_is_inline_math(lab)
                     join(labels, ',')
                 else
-                    '$' * join(labels, "\$,\$") * '$'
+                    "\\(" * join(labels, "\\),\\(") * "\\)"
                 end
             else
                 labels = if ispolar(sp) && letter === :x
@@ -1203,7 +1253,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
             opt,
             "$(letter)ticklabels" => curly(tick_labels),
             "$(letter)tick" => curly(join(tick_values, ',')),
-            if (tick_dir = axis[:tick_direction]) === :none
+            if (tick_dir = axis[:tick_direction]) === :none || axis[:showaxis] === false
                 "$(letter)tick style" => "draw=none"
             else
                 "$(letter)tick align" => "$(tick_dir)side"
@@ -1256,6 +1306,11 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
             "axis $letter line$(axis[:draw_arrow] ? "" : "*")" =>
                 (axis[:mirror] ? "right" : framestyle === :axes ? "left" : "middle"),
         )
+    end
+
+    # allow axis mirroring with :box framestyle
+    if framestyle in (:box,)
+        push!(opt, "$(letter)ticklabel pos" => (axis[:mirror] ? "right" : "left"))
     end
 
     if framestyle === :zerolines

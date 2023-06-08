@@ -106,16 +106,16 @@ function recipe_pipeline!(plt, plotattributes, args)
 end
 
 # COV_EXCL_START
-using SnoopPrecompile
+using PrecompileTools
 
-@precompile_setup begin
+@setup_workload begin
     plotattributes = Dict{Symbol,Any}[
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path),
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :surface),
     ]
     __func1(x) = x
     __func2(x, y) = x + y
-    @precompile_all_calls begin
+    @compile_workload begin
         _compute_xyz(__func1, 1:2, 1:2)
         _compute_xyz(1:2, __func1, 1:2)
         _compute_xyz(1:2, 1:2, __func2)

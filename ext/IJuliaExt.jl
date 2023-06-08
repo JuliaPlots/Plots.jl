@@ -3,7 +3,8 @@ module IJuliaExt
 import Plots: @ext_imp_use, Plots, Plot
 using Base64
 
-@ext_imp_use :import IJulia
+const IJulia =
+    Base.require(Base.PkgId(Base.UUID("7073ff75-c697-5162-941a-fcdaad2a7d2a"), "IJulia"))
 
 function _init_ijulia_plotting()
     # IJulia is more stable with local file

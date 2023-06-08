@@ -1307,6 +1307,20 @@ _py_add_annotations(sp::Subplot{PythonPlotBackend}, x, y, val::PlotText) = sp.o.
     zorder = 999,
 )
 
+_py_add_annotations(sp::Subplot{PythonPlotBackend}, x, y, z, val::PlotText) = sp.o.text3D(
+    x,
+    y,
+    z,
+    val.str;
+    size = _py_thickness_scale(sp.plt, val.font.pointsize),
+    horizontalalignment = val.font.halign === :hcenter ? "center" : string(val.font.halign),
+    verticalalignment = val.font.valign === :vcenter ? "center" : string(val.font.valign),
+    color = _py_color(val.font.color),
+    rotation = val.font.rotation,
+    family = val.font.family,
+    zorder = 999,
+)
+
 # -----------------------------------------------------------------
 
 _py_legend_pos(pos::Tuple{S,T}) where {S<:Real,T<:Real} = "lower left"

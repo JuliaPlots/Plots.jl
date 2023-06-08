@@ -55,10 +55,10 @@ end
 # Hack: suggested point size does not seem adequate relative to plot size, for some reason.
 _inspectdr_mapptsize(v) = 1.5 * v
 
-_inspectdr_add_annotations(plot, x, y, val) = nothing  # What kind of annotation is this?
+_inspectdr_add_annotations(plot, sp::Subplot, x, y, val) = nothing  # What kind of annotation is this?
 
 #plot::InspectDR.Plot2D
-function _inspectdr_add_annotations(plot, x, y, val::PlotText)
+function _inspectdr_add_annotations(plot, sp::Subplot, x, y, val::PlotText)
     vmap = Dict{Symbol,Symbol}(:top => :t, :bottom => :b)  # :vcenter
     hmap = Dict{Symbol,Symbol}(:left => :l, :right => :r)  # :hcenter
     align = Symbol(get(vmap, val.font.valign, :c), get(hmap, val.font.halign, :c))
@@ -72,11 +72,22 @@ function _inspectdr_add_annotations(plot, x, y, val::PlotText)
         x = x,
         y = y,
         font = fnt,
-        angle = val.font.rotation,
+        angle = -val.font.rotation, # minus for consistency with other backends
         align = align,
     )
     InspectDR.add(plot, ann)
     nothing
+end
+
+# placement relative to figure
+function _inspectdr_add_annotations(
+    plot,
+    sp::Subplot,
+    pos::Union{Tuple,Symbol},
+    val::PlotText,
+)
+    x, y, val = locate_annotation(sp, pos, val)
+    _inspectdr_add_annotations(plot, sp, x, y, val)
 end
 
 # ---------------------------------------------------------------------------
@@ -319,7 +330,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     # this is all we need to add the series_annotations text
     anns = series[:series_annotations]
     for (xi, yi, str, fnt) in EachAnn(anns, x, y)
-        _inspectdr_add_annotations(plot, xi, yi, PlotText(str, fnt))
+        _inspectdr_add_annotations(plot, sp, xi, yi, PlotText(str, fnt))
     end
 end
 
@@ -426,7 +437,7 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
 
         # add the annotations
         for ann in sp[:annotations]
-            _inspectdr_add_annotations(plot, ann...)
+            _inspectdr_add_annotations(plot, sp, ann...)
         end
     end
 

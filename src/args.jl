@@ -519,6 +519,7 @@ const _axis_defaults = KW(
     :showaxis                    => true,
     :widen                       => :auto,
     :draw_arrow                  => false,
+    :unitformat                  => :round,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -1345,12 +1346,14 @@ function preprocess_attributes!(plotattributes::AKW)
     end
 
     # vline and others accesses the y argument but actually maps it to the x axis.
-    # Hence, we have to swap formatters
+    # Hence, we have to take care of formatters
     if treats_y_as_x(get(plotattributes, :seriestype, :path))
         xformatter = get(plotattributes, :xformatter, :auto)
         yformatter = get(plotattributes, :yformatter, :auto)
-        yformatter === :auto || (plotattributes[:xformatter] = yformatter)
-        xformatter === :auto || (plotattributes[:yformatter] = xformatter)
+        yformatter !== :auto && (plotattributes[:xformatter] = yformatter)
+        xformatter === :auto &&
+            haskey(plotattributes, :yformatter) &&
+            pop!(plotattributes, :yformatter)
     end
 
     # handle grid args common to all axes
@@ -1786,7 +1789,7 @@ function fg_color(plotattributes::AKW)
     fg = get(plotattributes, :foreground_color, :auto)
     if fg === :auto
         bg = plot_color(get(plotattributes, :background_color, :white))
-        fg = isdark(bg) ? colorant"white" : colorant"black"
+        fg = alpha(bg) > 0 && isdark(bg) ? colorant"white" : colorant"black"
     else
         plot_color(fg)
     end
@@ -1810,7 +1813,7 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # extend annotations, and ensure we always have a (x,y,PlotText) tuple
     newanns = []
     for ann in vcat(anns, sp[:annotations])
-        append!(newanns, process_annotation(sp, ann...))
+        append!(newanns, process_annotation(sp, ann))
     end
     sp.attr[:annotations] = newanns
 

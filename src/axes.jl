@@ -203,6 +203,9 @@ end
 function get_labels(formatter::Function, scaled_ticks, scale)
     sf, invsf, _ = scale_inverse_scale_func(scale)
     fticks = map(formatter ∘ invsf, scaled_ticks)
+    # extrema can extend outside the region where Categorical tick values are defined
+    #   CategoricalArrays's recipe gives "missing" label to those
+    filter!(!ismissing, fticks)
     eltype(fticks) <: Number && return get_labels(:auto, map(sf, fticks), scale)
     return fticks
 end
@@ -456,6 +459,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             letter !== :z &&
             plotattributes[:seriestype] === :straightline &&
             any(series[:seriestype] !== :straightline for series in series_list(sp)) &&
+            length(data) > 1 &&
             data[1] != data[2]
         )
             data = [NaN]

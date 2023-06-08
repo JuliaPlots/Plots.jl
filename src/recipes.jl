@@ -442,8 +442,10 @@ end
     end
 
     xseg, yseg = map(_ -> Segments(), 1:2)
+    valid_i = isfinite.(procx) .& isfinite.(procy)
     for i in 1:ny
-        (yi = procy[i]) |> isnan && continue
+        valid_i[i] || continue
+        yi = procy[i]
         center = procx[i]
         hwi = _cycle(hw, i)
         fi = _cycle(fillto, i)
@@ -477,8 +479,9 @@ end
                     @warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
                 end
                 # Each segment is 6 elements long, including the NaN separator.
+                # One segment is created for each non-NaN element of `procy`.
                 # There is no trailing NaN, so the last repetition is dropped.
-                plotattributes[k] = @view repeat(v; inner = 6)[1:(end - 1)]
+                plotattributes[k] = @views repeat(v[valid_i]; inner = 6)[1:(end - 1)]
             end
         end
         ()
@@ -490,8 +493,8 @@ end
     markersize := 0
     markeralpha := 0
     fillrange := nothing
-    x := x
-    y := y
+    x := procx
+    y := procy
     ()
 end
 @deps bar shape
