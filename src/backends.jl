@@ -543,8 +543,6 @@ const _gr_seriestype = [
     :mesh3d,
     :volume,
     :shape,
-    :permute,
-    :spy,
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _gr_marker = vcat(_allMarkers, :pixel)
@@ -984,8 +982,6 @@ const _pyplot_seriestype = [
     :mesh3d,
     :surface,
     :wireframe,
-    :permute,
-    :spy,
 ]
 const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _pyplot_marker = vcat(_allMarkers, :pixel)
@@ -1567,9 +1563,6 @@ const _pgfplotsx_seriestype = [
     :steppost,
     :ysticks,
     :xsticks,
-    :permute,
-    :spy,
-
 ]
 const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplotsx_marker = [
