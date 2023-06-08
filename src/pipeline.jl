@@ -370,8 +370,6 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
                 sp[get_attr_symbol(letter2, :axis)][:lims],
                 sp[get_attr_symbol(letter1, :axis)][:lims]
         end
-        plotattributes[:x_extrema], plotattributes[:y_extrema] =
-            plotattributes[:y_extrema], plotattributes[:x_extrema]
         plotattributes[letter1], plotattributes[letter2] =
             plotattributes[letter2], plotattributes[letter1]
     end
