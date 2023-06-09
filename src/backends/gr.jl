@@ -1971,7 +1971,12 @@ end
 function gr_z_normalized_log_scaled(scale, z, clims)
     sf = RecipesPipeline.scale_func(scale)
     z_log = replace(x -> isinf(x) ? NaN : x, sf.(z))
-    z_log, get_z_normalized.(z_log, sf.(clims)...)
+    loglims = (
+        !isfinite(sf(clims[1])) ? minimum(z_log) : sf(clims[1]),
+        !isfinite(sf(clims[2])) ? maximum(z_log) : sf(clims[2]),
+    )
+    any(x->!isfinite(x), loglims) && throw(DomainError(loglims, "Non-finite value in colorbar limits. Please provide explicits limits via `clims`."))
+    z_log, get_z_normalized.(z_log, loglims...)
 end
 
 function gr_draw_heatmap(series, x, y, z, clims)
@@ -2003,7 +2008,8 @@ function gr_draw_heatmap(series, x, y, z, clims)
         _z, z_normalized = if (scale = sp[:colorbar_scale]) === :identity
             z, get_z_normalized.(z, clims...)
         elseif scale ∈ _logScales
-            z_log, gr_z_normalized_log_scaled(scale, z, clims)
+            @show scale, z, clims
+            gr_z_normalized_log_scaled(scale, z, clims)
         end
         rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)
         bg_rgba = gr_getcolorind(plot_color(sp[:background_color_inside]))
