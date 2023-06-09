@@ -2008,7 +2008,6 @@ function gr_draw_heatmap(series, x, y, z, clims)
         _z, z_normalized = if (scale = sp[:colorbar_scale]) === :identity
             z, get_z_normalized.(z, clims...)
         elseif scale ∈ _logScales
-            @show scale, z, clims
             gr_z_normalized_log_scaled(scale, z, clims)
         end
         rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)
