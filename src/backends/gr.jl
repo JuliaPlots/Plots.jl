@@ -1975,7 +1975,12 @@ function gr_z_normalized_log_scaled(scale, z, clims)
         !isfinite(sf(clims[1])) ? minimum(z_log) : sf(clims[1]),
         !isfinite(sf(clims[2])) ? maximum(z_log) : sf(clims[2]),
     )
-    any(x->!isfinite(x), loglims) && throw(DomainError(loglims, "Non-finite value in colorbar limits. Please provide explicits limits via `clims`."))
+    any(x -> !isfinite(x), loglims) && throw(
+        DomainError(
+            loglims,
+            "Non-finite value in colorbar limits. Please provide explicits limits via `clims`.",
+        ),
+    )
     z_log, get_z_normalized.(z_log, loglims...)
 end
 
