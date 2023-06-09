@@ -87,6 +87,7 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
 
     # Looks up the different elements and plots them
     println(
+        ":$attribute\n\n",
         "$desc\n\n",
         aliases,
         "Type: $type.\n\n",
