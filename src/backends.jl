@@ -1348,7 +1348,6 @@ const _unicodeplots_seriestype = [
     :heatmap,
     :contour,
     # :contour3d,
-    :permute,
     :image,
     :spy,
     :surface,
