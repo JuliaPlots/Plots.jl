@@ -1,7 +1,7 @@
 name = "Plots"
 author = ["Tom Breloff (@tbreloff)"]
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.38.16"
+version = "1.38.16-dev"
 
 [deps]
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
