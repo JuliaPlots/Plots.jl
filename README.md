@@ -1,3 +1,7 @@
+<a href="https://opencollective.com/plotsjl/donate" target="_blank">
+  <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
+</a>
+
 # Plots
 
 [gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/workflows/ci/badge.svg?branch=master
