@@ -100,40 +100,48 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
     )
 end
 
-function getattr(plot::Plot, s::Symbol)
+function getattr(plt::Plot, s::Symbol)
     attribute = get(_keyAliases, s, s)
     if attribute ∈ _all_plot_args
-        return plot[attribute]
+        return plt[attribute]
     elseif attribute ∈ _all_subplot_args
-        return getindex.(plot.layout.grid, attribute)
+        return reduce(hcat, getindex.(plt.subplots, attribute))
     elseif attribute ∈ _all_axis_args || attribute ∈ _lettered_all_axis_args
         if attribute ∈ _lettered_all_axis_args
             letters = collect(String(attribute))
             letter = Symbol(first(letters))
             attribute = Symbol(letters[2:end]...)
             axis = get_attr_symbol(letter, :axis)
-            getindex.(getindex.(plot.layout.grid, axis), attribute)
+            reduce(hcat, getindex.(getindex.(plt.subplots, axis), attribute))
         else
             axes = (:xaxis, :yaxis, :zaxis)
-            return map(plot.subplots) do sp
+            return map(plt.subplots) do sp
                 return NamedTuple(axis => sp[axis][attribute] for axis in axes)
             end
         end
     elseif attribute ∈ _all_series_args
-        return reduce(hcat, map(plot.series_list) do series
+        return reduce(hcat, map(plt.series_list) do series
             series[attribute]
         end)
     else
         # TODO: handle magic and extra kwargs
+        extra_kwargs = Dict(
+            :plot =>
+                haskey(plt[:extra_plot_kwargs], attribute) ?
+                plt[:extra_plot_kwargs][attribute] : [],
+            :subplots => [
+                i => sp[:extra_kwargs][attribute] for
+                (i, sp) in enumerate(plt.subplots) if haskey(sp[:extra_kwargs], attribute)
+            ],
+            :series => [
+                i => series[:extra_kwargs][attribute] for (i, series) in enumerate(plt.series_list) if
+                haskey(series[:extra_kwargs], attribute)
+            ],
+        )
+        !all(isempty, values(extra_kwargs)) && return extra_kwargs
         throw(ArgumentError("Attribute not found."))
     end
 end
-function getattr(sp::Sublot, s::Symbol)
-    attribute = get(_keyAliases, s, s)
-end
-function getattr(plot::Axis, s::Symbol)
-    attribute = get(_keyAliases, s, s)
-end
-function getattr(plot::Series, s::Symbol)
-    attribute = get(_keyAliases, s, s)
-end
+getattr(sp::Subplot, s::Symbol) = attribute = get(_keyAliases, s, s)
+getattr(axis::Axis, s::Symbol) = attribute = get(_keyAliases, s, s)
+getattr(series::Series, s::Symbol) = attribute = get(_keyAliases, s, s)
