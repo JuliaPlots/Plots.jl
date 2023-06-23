@@ -104,9 +104,9 @@ function getattr(plt::Plot, s::Symbol)
     attribute = get(_keyAliases, s, s)
     if attribute ∈ _all_plot_args
         return plt[attribute]
-    elseif attribute ∈ _all_subplot_args
+    elseif attribute ∈ _all_subplot_args && attribute ∉ _magic_subplot_args
         return reduce(hcat, getindex.(plt.subplots, attribute))
-    elseif attribute ∈ _all_axis_args || attribute ∈ _lettered_all_axis_args
+    elseif (attribute ∈ _all_axis_args || attribute ∈ _lettered_all_axis_args) && attribute ∉ _magic_axis_args
         if attribute ∈ _lettered_all_axis_args
             letters = collect(String(attribute))
             letter = Symbol(first(letters))
@@ -119,12 +119,16 @@ function getattr(plt::Plot, s::Symbol)
                 return NamedTuple(axis => sp[axis][attribute] for axis in axes)
             end
         end
-    elseif attribute ∈ _all_series_args
+    elseif attribute ∈ _all_series_args && attribute ∉ _magic_series_args
         return reduce(hcat, map(plt.series_list) do series
             series[attribute]
         end)
     else
         # TODO: handle magic and extra kwargs
+        if attribute in _all_magic_args
+            @info "$attribute is a magic argument. These are not present in the Plot object. Please use the more specific attribute, such as `linestyle` instead of `line`."
+            return missing
+        end
         extra_kwargs = Dict(
             :plot =>
                 haskey(plt[:extra_plot_kwargs], attribute) ?

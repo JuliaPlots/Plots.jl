@@ -25,6 +25,10 @@ tplot = plot(
             :subplots => Any[],
             :plot => Any[],
         )
+        @test (@test_logs (
+            :info,
+            r"line is a magic argument",
+        ) getattr(tplot, :line)) === missing
         @test_throws ArgumentError getattr(tplot, :nothere)
     end
     # @testset "From Sublot" begin
