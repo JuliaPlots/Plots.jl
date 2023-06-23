@@ -26,6 +26,10 @@ Call `plotattr()` to search for an attribute via fuzzy finding.
 The information is the same as that given on https://docs.juliaplots.org/latest/attributes/.
 """
 function plotattr()
+    if isijulia()
+        @warn "Fuzzy finding of attributes is disabled in notebooks."
+        return
+    end
     attr = Symbol(JLFzf.inter_fzf(collect(Plots._all_args), "--read0", "--height=80%"))
     letter = ""
     attrtype = if attr ∈ _all_series_args
