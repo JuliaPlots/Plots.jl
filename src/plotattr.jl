@@ -110,6 +110,9 @@ function getattr(sp::Subplot, s::Symbol)
 end
 function getattr(axis::Axis, s::Symbol)
     attribute = get(_keyAliases, s, s)
+    if attribute in _axis_args
+        attribute = get_attr_symbol(axis[:letter], attribute)
+    end
     _getattr(only(axis.sps).plt, axis.sps, only(axis.sps).series_list, attribute)
 end
 # TODO: to implement this we need a series to know its subplot
@@ -118,7 +121,7 @@ end
 #     _getattr(plt, plt.subplots, [series], attribute)
 # end
 
-function _getattr(plt::Plot, subplots::Vector{Subplot}, serieses::Vector{Series}, attribute::Symbol)
+function _getattr(plt::Plot, subplots::Vector{<:Subplot}, serieses::Vector{Series}, attribute::Symbol)
     if attribute ∈ _all_plot_args
         return plt[attribute]
     elseif attribute ∈ _all_subplot_args && attribute ∉ _magic_subplot_args
