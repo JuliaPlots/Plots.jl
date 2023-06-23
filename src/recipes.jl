@@ -403,6 +403,7 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)  # COV_EXCL_LINE
+    ywiden --> false
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
     axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
@@ -435,9 +436,14 @@ end
     end
     if yscale in _logScales && !all(_is_positive, fillto)
         # github.com/JuliaPlots/Plots.jl/issues/4502
+        # https://github.com/JuliaPlots/Plots.jl/issues/4774
         T = float(eltype(y))
-        min_y, _ = plotattributes[:y_extrema]
-        baseline = floor_base(min_y, _logScaleBases[yscale])
+        min_y = NaNMath.minimum(y)
+        base = _logScaleBases[yscale]
+        baseline = floor_base(min_y, base)
+        if min_y == baseline
+            baseline /= base
+        end
         fillto = map(x -> _is_positive(x) ? T(x) : T(baseline), fillto)
     end
 
