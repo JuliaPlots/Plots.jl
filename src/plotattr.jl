@@ -99,3 +99,41 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
         def == "" ? "" : ", defaults to `$def`.",
     )
 end
+
+function getattr(plot::Plot, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+    if attribute ∈ _all_plot_args
+        return plot[attribute]
+    elseif attribute ∈ _all_subplot_args
+        return getindex.(plot.layout.grid, attribute)
+    elseif attribute ∈ _all_axis_args || attribute ∈ _lettered_all_axis_args
+        if attribute ∈ _lettered_all_axis_args
+            letters = collect(String(attribute))
+            letter = Symbol(first(letters))
+            attribute = Symbol(letters[2:end]...)
+            axis = get_attr_symbol(letter, :axis)
+            getindex.(getindex.(plot.layout.grid, axis), attribute)
+        else
+            axes = (:xaxis, :yaxis, :zaxis)
+            return map(plot.subplots) do sp
+                return NamedTuple(axis => sp[axis][attribute] for axis in axes)
+            end
+        end
+    elseif attribute ∈ _all_series_args
+        return reduce(hcat, map(plot.series_list) do series
+            series[attribute]
+        end)
+    else
+        # TODO: handle magic and extra kwargs
+        throw(ArgumentError("Attribute not found."))
+    end
+end
+function getattr(sp::Sublot, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+end
+function getattr(plot::Axis, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+end
+function getattr(plot::Series, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+end
