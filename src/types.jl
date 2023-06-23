@@ -15,7 +15,9 @@ struct InputWrapper{T}
     obj::T
 end
 
-mutable struct Series
+mutable struct Series{S}
+    id::Int
+    subplot::S
     plotattributes::DefaultsDict
 end
 
@@ -43,6 +45,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
         nothing,
     )
 end
+
 
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
 mutable struct Axis

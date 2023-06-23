@@ -40,9 +40,9 @@ tplot = plot(
         @test getattr(sp, :lims) == [
             (xaxis = (0, Inf), yaxis = :auto, zaxis = :auto),
         ]
-        @test_broken getattr(sp, :this) == Dict(
+        @test getattr(sp, :this) == Dict(
             :series =>
-                [2 => :that, 5 => :that], # TODO: would be good if Series knew their ID
+                [2 => :that, 5 => :that],
             :subplots => Any[],
             :plot => Any[],
         )
@@ -59,9 +59,9 @@ tplot = plot(
         @test getattr(axis, :title) == "A"
         @test getattr(axis, :xlims) === :auto # TODO: is this expected?
         @test getattr(axis, :lims) == :auto
-        @test_broken getattr(axis, :this) == Dict(
+        @test getattr(axis, :this) == Dict(
             :series =>
-                [3 => :that, 6 => :that], # TODO: would be good if Series knew their ID
+                [3 => :that, 6 => :that],
             :subplots => Any[],
             :plot => Any[],
         )
@@ -80,9 +80,9 @@ tplot = plot(
         @test getattr(series, :lims) == [
             (xaxis = :auto, yaxis = :auto, zaxis = :auto),
         ]
-        @test_broken getattr(series, :this) == Dict(
+        @test getattr(series, :this) == Dict(
             :series =>
-                [1 => :that, 4 => :that], # TODO: would be good if Series knew their ID
+                [1 => :that],
             :subplots => Any[],
             :plot => Any[],
         )

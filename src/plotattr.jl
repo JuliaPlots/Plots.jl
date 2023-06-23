@@ -115,13 +115,13 @@ function getattr(axis::Axis, s::Symbol)
     end
     _getattr(only(axis.sps).plt, axis.sps, only(axis.sps).series_list, attribute)
 end
-# TODO: to implement this we need a series to know its subplot
-# function getattr(series::Series, s::Symbol)
-#     attribute = get(_keyAliases, s, s)
-#     _getattr(plt, plt.subplots, [series], attribute)
-# end
 
-function _getattr(plt::Plot, subplots::Vector{<:Subplot}, serieses::Vector{Series}, attribute::Symbol)
+function getattr(series::Series, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+    _getattr(series.subplot.plt, [series.subplot], [series], attribute)
+end
+
+function _getattr(plt::Plot, subplots::Vector{<:Subplot}, serieses::Vector{<:Series}, attribute::Symbol)
     if attribute ∈ _all_plot_args
         return plt[attribute]
     elseif attribute ∈ _all_subplot_args && attribute ∉ _magic_subplot_args
@@ -157,7 +157,7 @@ function _getattr(plt::Plot, subplots::Vector{<:Subplot}, serieses::Vector{Serie
                 (i, sp) in enumerate(subplots) if haskey(sp[:extra_kwargs], attribute)
             ],
             :series => [
-                i => series[:extra_kwargs][attribute] for (i, series) in enumerate(serieses) if
+                series.id => series[:extra_kwargs][attribute] for series in serieses if
                 haskey(series[:extra_kwargs], attribute)
             ],
         )
