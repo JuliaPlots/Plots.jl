@@ -25,10 +25,8 @@ tplot = plot(
             :subplots => Any[],
             :plot => Any[],
         )
-        @test (@test_logs (
-            :info,
-            r"line is a magic argument",
-        ) getattr(tplot, :line)) === missing
+        @test (@test_logs (:info, r"line is a magic argument") getattr(tplot, :line)) ===
+              missing
         @test_throws ArgumentError getattr(tplot, :nothere)
     end
     @testset "From Sublot" begin
@@ -37,19 +35,11 @@ tplot = plot(
         @test getattr(sp, :linestyle) == permutedims(fill(:dash, 2))
         @test getattr(sp, :title) == "B"
         @test getattr(sp, :xlims) == (0, Inf)
-        @test getattr(sp, :lims) == [
-            (xaxis = (0, Inf), yaxis = :auto, zaxis = :auto),
-        ]
-        @test getattr(sp, :this) == Dict(
-            :series =>
-                [2 => :that, 5 => :that],
-            :subplots => Any[],
-            :plot => Any[],
-        )
-        @test (@test_logs (
-            :info,
-            r"line is a magic argument",
-        ) getattr(sp, :line)) === missing
+        @test getattr(sp, :lims) == [(xaxis = (0, Inf), yaxis = :auto, zaxis = :auto)]
+        @test getattr(sp, :this) ==
+              Dict(:series => [2 => :that, 5 => :that], :subplots => Any[], :plot => Any[])
+        @test (@test_logs (:info, r"line is a magic argument") getattr(sp, :line)) ===
+              missing
         @test_throws ArgumentError getattr(sp, :nothere)
     end
     @testset "From Axis" begin
@@ -59,16 +49,10 @@ tplot = plot(
         @test getattr(axis, :title) == "A"
         @test getattr(axis, :xlims) === :auto # TODO: is this expected?
         @test getattr(axis, :lims) == :auto
-        @test getattr(axis, :this) == Dict(
-            :series =>
-                [3 => :that, 6 => :that],
-            :subplots => Any[],
-            :plot => Any[],
-        )
-        @test (@test_logs (
-            :info,
-            r"line is a magic argument",
-        ) getattr(axis, :line)) === missing
+        @test getattr(axis, :this) ==
+              Dict(:series => [3 => :that, 6 => :that], :subplots => Any[], :plot => Any[])
+        @test (@test_logs (:info, r"line is a magic argument") getattr(axis, :line)) ===
+              missing
         @test_throws ArgumentError getattr(axis, :nothere)
     end
     @testset "From Series" begin
@@ -77,19 +61,11 @@ tplot = plot(
         @test getattr(series, :linestyle) == :dash
         @test getattr(series, :title) == "A"
         @test getattr(series, :xlims) == :auto
-        @test getattr(series, :lims) == [
-            (xaxis = :auto, yaxis = :auto, zaxis = :auto),
-        ]
-        @test getattr(series, :this) == Dict(
-            :series =>
-                [1 => :that],
-            :subplots => Any[],
-            :plot => Any[],
-        )
-        @test (@test_logs (
-            :info,
-            r"line is a magic argument",
-        ) getattr(series, :line)) === missing
+        @test getattr(series, :lims) == [(xaxis = :auto, yaxis = :auto, zaxis = :auto)]
+        @test getattr(series, :this) ==
+              Dict(:series => [1 => :that], :subplots => Any[], :plot => Any[])
+        @test (@test_logs (:info, r"line is a magic argument") getattr(series, :line)) ===
+              missing
         @test_throws ArgumentError getattr(series, :nothere)
     end
 end

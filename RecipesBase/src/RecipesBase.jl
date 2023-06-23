@@ -35,6 +35,8 @@ function animate end
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.is_key_supported(k::Symbol)
 function is_key_supported end
+# funciton to determine canonical form of key in presence of aliases
+canonical_key(key) = key
 
 function grid end
 
@@ -159,6 +161,12 @@ function process_recipe_body!(expr::Expr)
                     end
                 end
                 e = e.args[1]
+            end
+
+            # `<--` will be the recommended way to retrieve values
+            if e.head === :call && e.args[1] === :(<--)
+                target, attribute = e.args[2], e.args[3]
+                expr[i] = Expr(:(=), target, plotattributes[canonical_key(attribute)])
             end
 
             # the unused operator `:=` will mean force: `x := 5` is equivalent to `x --> 5, force`

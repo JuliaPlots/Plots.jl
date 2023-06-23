@@ -46,7 +46,6 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     )
 end
 
-
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
 mutable struct Axis
     sps::Vector{Subplot}

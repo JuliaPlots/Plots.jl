@@ -121,12 +121,18 @@ function getattr(series::Series, s::Symbol)
     _getattr(series.subplot.plt, [series.subplot], [series], attribute)
 end
 
-function _getattr(plt::Plot, subplots::Vector{<:Subplot}, serieses::Vector{<:Series}, attribute::Symbol)
+function _getattr(
+    plt::Plot,
+    subplots::Vector{<:Subplot},
+    serieses::Vector{<:Series},
+    attribute::Symbol,
+)
     if attribute ∈ _all_plot_args
         return plt[attribute]
     elseif attribute ∈ _all_subplot_args && attribute ∉ _magic_subplot_args
         return reduce(hcat, getindex.(subplots, attribute))
-    elseif (attribute ∈ _all_axis_args || attribute ∈ _lettered_all_axis_args) && attribute ∉ _magic_axis_args
+    elseif (attribute ∈ _all_axis_args || attribute ∈ _lettered_all_axis_args) &&
+           attribute ∉ _magic_axis_args
         if attribute ∈ _lettered_all_axis_args
             letters = collect(String(attribute))
             letter = Symbol(first(letters))
@@ -157,8 +163,8 @@ function _getattr(plt::Plot, subplots::Vector{<:Subplot}, serieses::Vector{<:Ser
                 (i, sp) in enumerate(subplots) if haskey(sp[:extra_kwargs], attribute)
             ],
             :series => [
-                series.id => series[:extra_kwargs][attribute] for series in serieses if
-                haskey(series[:extra_kwargs], attribute)
+                series.id => series[:extra_kwargs][attribute] for
+                series in serieses if haskey(series[:extra_kwargs], attribute)
             ],
         )
         !all(isempty, values(extra_kwargs)) && return extra_kwargs
