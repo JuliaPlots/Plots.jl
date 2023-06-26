@@ -163,17 +163,20 @@ function process_recipe_body!(expr::Expr)
                 e = e.args[1]
             end
 
-            # `<--` will be the recommended way to retrieve values
-            if e.head === :call && e.args[1] === :(<--)
-                target, attribute = e.args[2], e.args[3]
-                expr[i] = Expr(:(=), target, plotattributes[canonical_key(attribute)])
-            end
 
             # the unused operator `:=` will mean force: `x := 5` is equivalent to `x --> 5, force`
             # note: this means "x is defined as 5"
             if e.head === :(:=)
                 force = true
                 e.head = :(-->)
+            end
+
+            # `$` will be the recommended way to retrieve values
+            if e.head === :call && e.args[1] === :(<--) # binary use
+                target, attribute = e.args[2], e.args[3]
+                expr.args[i] = Expr(:(=), target, :(plotattributes[$RecipesBase.canonical_key($(attribute))]))
+            elseif e.head === :$ # unary use
+                expr.args[i] = :(plotattributes[$RecipesBase.canonical_key($(QuoteNode(only(e.args))))])
             end
 
             # we are going to recursively swap out `a --> b, flags...` commands
@@ -212,12 +215,9 @@ function process_recipe_body!(expr::Expr)
             elseif e.head ≡ :return
                 # To allow `return` in recipes just extract the returned arguments.
                 expr.args[i] = first(e.args)
-
-            elseif e.head ≢ :call
-                # we want to recursively replace the arrows, but not inside function calls
-                # as this might include things like Dict(1=>2)
-                process_recipe_body!(e)
             end
+
+            process_recipe_body!(expr.args[i])
         end
     end
 end
