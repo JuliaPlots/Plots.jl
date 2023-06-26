@@ -754,6 +754,12 @@
             "affiliation": "Thales Research & Technology",
             "orcid": "0000-0002-1901-0159",
             "type": "Other"
+        },
+        {
+            "affiliation": "Brandeis University",
+            "name": "Ryan Young",
+            "orcid": "0000-0002-9454-2876",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
