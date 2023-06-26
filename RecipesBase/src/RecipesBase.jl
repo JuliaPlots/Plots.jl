@@ -189,10 +189,10 @@ function process_recipe_body!(expr::Expr)
 
                 set_expr = if force
                     # forced override user settings
-                    :(plotattributes[$k] = $v)
+                    :(plotattributes[$RecipesBase.canonical_key($k)] = $v)
                 else
                     # if the user has set this keyword, use theirs
-                    :($RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$k] = $v))
+                    :($RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$RecipesBase.canonical_key($k)] = $v))
                 end
 
                 expr.args[i] = if quiet
