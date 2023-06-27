@@ -4,8 +4,8 @@ on:
   pull_request:
   push:
     branches: [master]
-      
-concurrency: 
+
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -22,6 +22,9 @@ jobs:
               PackageSpec("JuliaFormatter"),
               PackageSpec(url = "https://github.com/tkf/JuliaProjectFormatter.jl.git"),
           ])
+          foreach(("RecipesBase", "RecipesPipeline")) do name
+            Pkg.develop(path=name)
+          end
         shell: julia --color=yes {0}
 
       - name: Format Julia files

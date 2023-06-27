@@ -4,7 +4,7 @@ on:
   push:
     branches: [master]
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -16,14 +16,12 @@ jobs:
       with:
         version: '1'
     - uses: actions/checkout@v3
-    - uses: julia-actions/julia-buildpkg@latest
     - uses: julia-actions/julia-invalidations@v1
       id: invs_pr
 
     - uses: actions/checkout@v3
       with:
         ref: 'master'
-    - uses: julia-actions/julia-buildpkg@latest
     - uses: julia-actions/julia-invalidations@v1
       id: invs_master
 
