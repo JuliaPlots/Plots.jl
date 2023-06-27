@@ -122,7 +122,7 @@ ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 
 [targets]
-test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
 
 [extensions]
 FileIOExt = "FileIO"
