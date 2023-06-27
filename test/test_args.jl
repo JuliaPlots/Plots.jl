@@ -113,7 +113,8 @@ end
     @test :legend in aliases(:legend_position)
     Plots.add_non_underscore_aliases!(Plots._typeAliases)
     Plots.add_axes_aliases(:ticks, :tick)
-    @test getattr(matrixheatmap(reshape(1:12, 3, 4))[1][1], :foreground_color) == RGBA(colorant"red")
+    @test getattr(matrixheatmap(reshape(1:12, 3, 4))[1][1], :foreground_color) ==
+          RGBA(colorant"red")
 end
 
 @testset "Formatters" begin
