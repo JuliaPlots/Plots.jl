@@ -183,16 +183,17 @@ function process_recipe_body!(expr::Expr)
             # note: this means "x may become 5"
             if e.head === :(-->)
                 k, v = e.args
+                k = canonical_key(k)
                 if isa(k, Symbol)
                     k = QuoteNode(k)
                 end
 
                 set_expr = if force
                     # forced override user settings
-                    :(plotattributes[$RecipesBase.canonical_key($k)] = $v)
+                    :(plotattributes[$k] = $v)
                 else
                     # if the user has set this keyword, use theirs
-                    :($RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$RecipesBase.canonical_key($k)] = $v))
+                    :($RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$k] = $v))
                 end
 
                 expr.args[i] = if quiet

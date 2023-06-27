@@ -114,7 +114,7 @@ jobs:
 
       - name: Run downstream tests
         if: startsWith(matrix.os, 'ubuntu')
-        shell: xvfb-run julia --project=@. --color=yes {0}
+        shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
           foreach(("StatsPlots", "GraphRecipes")) do name
