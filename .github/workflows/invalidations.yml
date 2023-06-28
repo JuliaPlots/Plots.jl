@@ -20,11 +20,13 @@ jobs:
       id: invs_pr
       with:
         test_script: |
+          """
           using Pkg
           foreach(("RecipesBase", "RecipesPipeline")) do name
             Pkg.develop(path=name)
           end
           using Plots
+          """
 
     - uses: actions/checkout@v3
       with:
@@ -33,11 +35,13 @@ jobs:
       id: invs_master
       with:
         test_script: |
+          """
           using Pkg
           foreach(("RecipesBase", "RecipesPipeline")) do name
             Pkg.develop(path=name)
           end
           using Plots
+          """
 
     - name: Report invalidation counts
       run: |
