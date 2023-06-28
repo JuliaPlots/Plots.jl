@@ -104,7 +104,17 @@ jobs:
         # with:
         #   prefix: ${{ matrix.prefix }}  # for `xvfb-run`
       - name: Run Plots.jl tests
-        shell: ${{ matrix.prefix }} julia --project=@. --color=yes {0}
+        if: startsWith(matrix.os, 'ubuntu')
+        shell: xvfb-run julia --project=@. --color=yes {0}
+        run: |
+          using Pkg
+          foreach(("RecipesBase", "RecipesPipeline")) do name
+            Pkg.develop(path=name)
+          end
+          Pkg.test(; coverage=true)
+      - name: Run Plots.jl tests
+        if: !startsWith(matrix.os, 'ubuntu')
+        shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
           foreach(("RecipesBase", "RecipesPipeline")) do name
