@@ -27,6 +27,7 @@ jobs:
           end
           using Plots
           """
+        shell: julia --project=@. --color=yes {0}
 
     - uses: actions/checkout@v3
       with:
@@ -42,6 +43,7 @@ jobs:
           end
           using Plots
           """
+        shell: julia --project=@. --color=yes {0}
 
     - name: Report invalidation counts
       run: |
