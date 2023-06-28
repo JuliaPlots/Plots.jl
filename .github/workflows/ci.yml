@@ -113,7 +113,7 @@ jobs:
           end
           Pkg.test(; coverage=true)
       - name: Run Plots.jl tests
-        if: !startsWith(matrix.os, 'ubuntu')
+        if: "!startsWith(matrix.os, 'ubuntu')"
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
