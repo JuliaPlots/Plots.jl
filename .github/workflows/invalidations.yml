@@ -16,21 +16,29 @@ jobs:
       with:
         version: '1'
     - uses: actions/checkout@v3
-    - name: Install dependencies
-      run: |
-        using Pkg
-        foreach(("RecipesBase", "RecipesPipeline")) do name
-          Pkg.develop(path=name)
-        end
       shell: julia --color=yes {0}
     - uses: julia-actions/julia-invalidations@v1
       id: invs_pr
+      with:
+        test_script: |
+          using Pkg
+          foreach(("RecipesBase", "RecipesPipeline")) do name
+            Pkg.develop(path=name)
+          end
+          using Plots
 
     - uses: actions/checkout@v3
       with:
         ref: 'master'
     - uses: julia-actions/julia-invalidations@v1
       id: invs_master
+      with:
+        test_script: |
+          using Pkg
+          foreach(("RecipesBase", "RecipesPipeline")) do name
+            Pkg.develop(path=name)
+          end
+          using Plots
 
     - name: Report invalidation counts
       run: |
