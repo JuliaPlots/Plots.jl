@@ -609,8 +609,7 @@ add_aliases(
     :legtitle,
 )
 add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
-add_aliases(:plot_title, :suptitle, :subplot_grid_title, :sgtitle,
-            :plot_grid_title)
+add_aliases(:plot_title, :suptitle, :subplot_grid_title, :sgtitle, :plot_grid_title)
 # margin
 add_aliases(:left_margin, :leftmargin)
 
