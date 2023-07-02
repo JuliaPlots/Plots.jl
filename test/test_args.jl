@@ -90,18 +90,14 @@ end
     @test_throws ArgumentError png(plot(1:2; aspect_ratio = :invalid_ar), fn)
 end
 
-@testset "aliases" begin
-    @test :legend in aliases(:legend_position)
-    Plots.add_non_underscore_aliases!(Plots._typeAliases)
-    Plots.add_axes_aliases(:ticks, :tick)
-end
-
 @userplot MatrixHeatmap
 
 @recipe function f(A::MatrixHeatmap)
     mat = A.args[1]
     margin --> (0, :mm)
     seriestype := :heatmap
+    c --> :red
+    foreground_color := $color
     x := axes(mat, 2)
     y := axes(mat, 1)
     z := Surface(mat)
@@ -111,6 +107,14 @@ end
 @testset "margin" begin
     # github.com/JuliaPlots/Plots.jl/issues/4522
     @test show(devnull, matrixheatmap(reshape(1:12, 3, 4))) isa Nothing
+end
+
+@testset "aliases" begin
+    @test :legend in aliases(:legend_position)
+    Plots.add_non_underscore_aliases!(Plots._typeAliases)
+    Plots.add_axes_aliases(:ticks, :tick)
+    @test getattr(matrixheatmap(reshape(1:12, 3, 4))[1][1], :foreground_color) ==
+          RGBA(colorant"red")
 end
 
 @testset "Formatters" begin

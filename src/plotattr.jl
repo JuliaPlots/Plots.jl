@@ -99,3 +99,75 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
         def == "" ? "" : ", defaults to `$def`.",
     )
 end
+
+function getattr(plt::Plot, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+    _getattr(plt, plt.subplots, plt.series_list, attribute)
+end
+function getattr(sp::Subplot, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+    _getattr(sp.plt, [sp], sp.series_list, attribute)
+end
+function getattr(axis::Axis, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+    if attribute in _axis_args
+        attribute = get_attr_symbol(axis[:letter], attribute)
+    end
+    _getattr(only(axis.sps).plt, axis.sps, only(axis.sps).series_list, attribute)
+end
+
+function getattr(series::Series, s::Symbol)
+    attribute = get(_keyAliases, s, s)
+    _getattr(series.subplot.plt, [series.subplot], [series], attribute)
+end
+
+function _getattr(
+    plt::Plot,
+    subplots::Vector{<:Subplot},
+    serieses::Vector{<:Series},
+    attribute::Symbol,
+)
+    if attribute ∈ _all_plot_args
+        return plt[attribute]
+    elseif attribute ∈ _all_subplot_args && attribute ∉ _magic_subplot_args
+        return reduce(hcat, getindex.(subplots, attribute))
+    elseif (attribute ∈ _all_axis_args || attribute ∈ _lettered_all_axis_args) &&
+           attribute ∉ _magic_axis_args
+        if attribute ∈ _lettered_all_axis_args
+            letters = collect(String(attribute))
+            letter = Symbol(first(letters))
+            attribute = Symbol(letters[2:end]...)
+            axis = get_attr_symbol(letter, :axis)
+            reduce(hcat, getindex.(getindex.(subplots, axis), attribute))
+        else
+            axes = (:xaxis, :yaxis, :zaxis)
+            return map(subplots) do sp
+                return NamedTuple(axis => sp[axis][attribute] for axis in axes)
+            end
+        end
+    elseif attribute ∈ _all_series_args && attribute ∉ _magic_series_args
+        return reduce(hcat, map(serieses) do series
+            series[attribute]
+        end)
+    else
+        if attribute in _all_magic_args
+            @info "$attribute is a magic argument. These are not present in the Plot object. Please use the more specific attribute, such as `linestyle` instead of `line`."
+            return missing
+        end
+        extra_kwargs = Dict(
+            :plot =>
+                haskey(plt[:extra_plot_kwargs], attribute) ?
+                plt[:extra_plot_kwargs][attribute] : [],
+            :subplots => [
+                i => sp[:extra_kwargs][attribute] for
+                (i, sp) in enumerate(subplots) if haskey(sp[:extra_kwargs], attribute)
+            ],
+            :series => [
+                series.id => series[:extra_kwargs][attribute] for
+                series in serieses if haskey(series[:extra_kwargs], attribute)
+            ],
+        )
+        !all(isempty, values(extra_kwargs)) && return extra_kwargs
+        throw(ArgumentError("Attribute not found."))
+    end
+end

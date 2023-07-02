@@ -15,7 +15,9 @@ struct InputWrapper{T}
     obj::T
 end
 
-mutable struct Series
+mutable struct Series{S}
+    id::Int
+    subplot::S
     plotattributes::DefaultsDict
 end
 

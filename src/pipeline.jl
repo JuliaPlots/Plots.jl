@@ -456,7 +456,7 @@ function _add_the_series(plt, sp, plotattributes)
         throw(ArgumentError("Unsupported type for extra keyword arguments"))
     end
     warn_on_unsupported(plt.backend, plotattributes)
-    series = Series(plotattributes)
+    series = Series(length(plt.series_list) + 1, sp, plotattributes)
     push!(plt.series_list, series)
     if (z_order = plotattributes[:z_order]) === :front
         push!(sp.series_list, series)

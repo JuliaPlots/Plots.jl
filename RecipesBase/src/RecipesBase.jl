@@ -35,6 +35,8 @@ function animate end
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.is_key_supported(k::Symbol)
 function is_key_supported end
+# funciton to determine canonical form of key in presence of aliases
+canonical_key(key) = key
 
 function grid end
 
@@ -161,6 +163,7 @@ function process_recipe_body!(expr::Expr)
                 e = e.args[1]
             end
 
+
             # the unused operator `:=` will mean force: `x := 5` is equivalent to `x --> 5, force`
             # note: this means "x is defined as 5"
             if e.head === :(:=)
@@ -168,10 +171,19 @@ function process_recipe_body!(expr::Expr)
                 e.head = :(-->)
             end
 
+            # `$` will be the recommended way to retrieve values
+            if e.head === :call && e.args[1] === :(<--) # binary use
+                target, attribute = e.args[2], e.args[3]
+                expr.args[i] = Expr(:(=), target, :(plotattributes[$RecipesBase.canonical_key($(attribute))]))
+            elseif e.head === :$ # unary use
+                expr.args[i] = :(plotattributes[$RecipesBase.canonical_key($(QuoteNode(only(e.args))))])
+            end
+
             # we are going to recursively swap out `a --> b, flags...` commands
             # note: this means "x may become 5"
             if e.head === :(-->)
                 k, v = e.args
+                k = canonical_key(k)
                 if isa(k, Symbol)
                     k = QuoteNode(k)
                 end
@@ -204,12 +216,9 @@ function process_recipe_body!(expr::Expr)
             elseif e.head ≡ :return
                 # To allow `return` in recipes just extract the returned arguments.
                 expr.args[i] = first(e.args)
-
-            elseif e.head ≢ :call
-                # we want to recursively replace the arrows, but not inside function calls
-                # as this might include things like Dict(1=>2)
-                process_recipe_body!(e)
             end
+
+            process_recipe_body!(expr.args[i])
         end
     end
 end

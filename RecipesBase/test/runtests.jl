@@ -5,9 +5,13 @@ import RecipesBase as RB
 using StableRNGs
 using Test
 
+
 const KW = Dict{Symbol,Any}
 
 RB.is_key_supported(k::Symbol) = true
+# Reset method table so tests can be rerun (could be more robust)
+recipe_methods = methods(RB.apply_recipe)
+length(recipe_methods) > 2 && Base.delete_method.(methods(RB.apply_recipe)[setdiff(1:end, [1,8])])
 
 for t in map(i -> Symbol(:T, i), 1:5)
     @eval struct $t end
@@ -139,9 +143,11 @@ end
             :markershape --> :auto, :require
             :markercolor --> customcolor, :force
             :xrotation --> 5
-            :zrotation --> 6, :quiet
-            plotattributes[:hello] = "hi"
-            plotattributes[:world] = "world"
+            :zrotation --> $xrotation, :quiet
+            var = $markercolor
+            war <-- :markershape
+            plotattributes[:hello] = "$var"
+            plotattributes[:world] = "$war"
             rand(StableRNG(1), 10, n)
         end
         check_apply_recipe(
@@ -151,9 +157,9 @@ end
                 :markershape => :auto,
                 :markercolor => :red,
                 :xrotation => 5,
-                :zrotation => 6,
-                :hello => "hi",
-                :world => "world",
+                :zrotation => 5,
+                :hello => "red",
+                :world => "auto",
             ),
         )
     end

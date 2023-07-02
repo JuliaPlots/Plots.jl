@@ -1519,6 +1519,7 @@ function preprocess_attributes!(plotattributes::AKW)
 end
 RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Plots.preprocess_attributes!(plotattributes)
+RecipesBase.canonical_key(key::Symbol) = get(_keyAliases, key, key)
 
 # -----------------------------------------------------------------------------
 

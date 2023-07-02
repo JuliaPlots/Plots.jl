@@ -122,6 +122,7 @@ export
     BezierCurve,
 
     plotattr,
+    getattr,
     scalefontsize,
     scalefontsizes,
     resetfontsizes
