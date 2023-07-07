@@ -44,20 +44,6 @@ function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = t
     version
 end
 
-function _check_compat(m::Module; warn = true)
-    (be_v = _check_installed(m; warn)) === nothing && return
-    if (be_c = _plots_compats[string(m)]) isa String  # julia 1.6
-        if be_v ∉ Pkg.Types.semver_spec(be_c)
-            @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c)."
-        end
-    else
-        if intersect(be_v, be_c.val) |> isempty
-            @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c.str)."
-        end
-    end
-    nothing
-end
-
 _path(sym::Symbol) =
     if sym ∈ (:pgfplots, :pyplot)
         @path joinpath(@__DIR__, "backends", "deprecated", "$sym.jl")
@@ -394,16 +380,6 @@ _runtime_init(::AbstractBackend) = nothing
 ################################################################################
 # initialize the backends
 function _initialize_backend(pkg::AbstractBackend)
-    _pre_imports(pkg)
-    name = backend_package_name(pkg)
-    # NOTE: this is a hack importing in `Main` (expecting the package to be in `Project.toml`, remove in `Plots@2.0`)
-    # FIXME: remove hard `GR` dependency in `Plots@2.0`
-    @eval name === :GR ? Plots : Main begin
-        import $name
-        export $name
-        $(_check_compat)($name)
-    end
-    _post_imports(pkg)
     _runtime_init(pkg)
     nothing
 end

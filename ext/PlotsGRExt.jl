@@ -1,3 +1,13 @@
+module PlotsGRExt
+
+import GR
+import Plots: DEFAULT_LINEWIDTH
+import Plots: Plots, Plot, Subplot, Axis, Series, Shape, Font, BoundingBox, GRBackend, PlotText, Arrow, EachAnn
+import Plots: _display, _show, closeall, get_size, pt, px, mm, _cycle, get_ticks, is_horizontal, tickfont, get_thickness_scaling, plot_color, colorbartitlefont, text, bbox, left, right, bottom, top, hascolorbar, plotarea, legendfont, series_list, should_add_to_legend, get_aspect_ratio, ispolar, is3d, axis_limits, needs_any_3d_axes, _logScales, axis_drawing_info, get_attr_symbol, coords, ok, axes_letters, reverse_if, _debug, get_colorgradient, handle_surface, series_annotations_shapes!, get_clims, series_segments, get_linecolor, get_linewidth, get_linestyle, get_linealpha, colorbar_style, _guess_best_legend_position
+import RecipesPipeline
+import NaNMath
+using Plots.Colors
+
 # https://github.com/jheinen/GR.jl - significant contributions by @jheinen
 
 const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
@@ -2067,7 +2077,7 @@ for (mime, fmt) in (
     end
 end
 
-function _display(plt::Plot{GRBackend})
+function Plots._display(plt::Plot{GRBackend})
     if plt[:display_type] === :inline
         filepath = tempname() * ".pdf"
         GR.emergencyclosegks()
@@ -2093,3 +2103,5 @@ function _display(plt::Plot{GRBackend})
 end
 
 closeall(::GRBackend) = GR.emergencyclosegks()
+
+end # module

@@ -57,75 +57,56 @@ function __init__()
             )
         end |> atreplinit
 
-    @static if !isdefined(Base, :get_extension)  # COV_EXCL_LINE
-        @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" include(
-            normpath(@__DIR__, "..", "ext", "FileIOExt.jl"),
-        )
-        @require GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326" include(
-            normpath(@__DIR__, "..", "ext", "GeometryBasicsExt.jl"),
-        )
-        @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" include(
-            normpath(@__DIR__, "..", "ext", "IJuliaExt.jl"),
-        )
-        @require ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254" include(
-            normpath(@__DIR__, "..", "ext", "ImageInTerminalExt.jl"),
-        )
-        @require Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d" include(
-            normpath(@__DIR__, "..", "ext", "UnitfulExt.jl"),
-        )
-    end
-
     _runtime_init(backend())
     nothing
 end
 
 ##################################################################
-backend()
-include(_path(backend_name()))
 
 # COV_EXCL_START
-@setup_workload begin
-    @debug backend_package_name()
-    n = length(_examples)
-    imports = sizehint!(Expr[], n)
-    examples = sizehint!(Expr[], 10n)
-    for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
-        _examples[i].external && continue
-        (imp = _examples[i].imports) === nothing || push!(imports, imp)
-        func = gensym(string(i))
-        push!(
-            examples,
-            quote
-                $func() = begin  # evaluate each example in a local scope
-                    $(_examples[i].exprs)
-                    $i == 1 || return  # only for one example
-                    fn = tempname()
-                    pl = current()
-                    show(devnull, pl)
-                    # FIXME: pgfplotsx requires bug
-                    backend_name() === :pgfplotsx && return
-                    if backend_name() === :unicodeplots
-                        savefig(pl, "$fn.txt")
-                        return
-                    end
-                    showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
-                    showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
-                    if showable(MIME"image/svg+xml"(), pl)
-                        show(IOBuffer(), MIME"image/svg+xml"(), pl)
-                    end
-                    nothing
-                end
-                $func()
-            end,
-        )
-    end
-    withenv("GKSwstype" => "nul") do
-        @compile_workload begin
-            load_default_backend()
-            eval.(imports)
-            eval.(examples)
-        end
-    end
-    CURRENT_PLOT.nullableplot = nothing
-end
-# COV_EXCL_STOP
+# TODO: revise and re-enable before release
+# @setup_workload begin
+#     @debug backend_package_name()
+#     n = length(_examples)
+#     imports = sizehint!(Expr[], n)
+#     examples = sizehint!(Expr[], 10n)
+#     for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
+#         _examples[i].external && continue
+#         (imp = _examples[i].imports) === nothing || push!(imports, imp)
+#         func = gensym(string(i))
+#         push!(
+#             examples,
+#             quote
+#                 $func() = begin  # evaluate each example in a local scope
+#                     $(_examples[i].exprs)
+#                     $i == 1 || return  # only for one example
+#                     fn = tempname()
+#                     pl = current()
+#                     show(devnull, pl)
+#                     # FIXME: pgfplotsx requires bug
+#                     backend_name() === :pgfplotsx && return
+#                     if backend_name() === :unicodeplots
+#                         savefig(pl, "$fn.txt")
+#                         return
+#                     end
+#                     showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
+#                     showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
+#                     if showable(MIME"image/svg+xml"(), pl)
+#                         show(IOBuffer(), MIME"image/svg+xml"(), pl)
+#                     end
+#                     nothing
+#                 end
+#                 $func()
+#             end,
+#         )
+#     end
+#     withenv("GKSwstype" => "nul") do
+#         @compile_workload begin
+#             load_default_backend()
+#             eval.(imports)
+#             eval.(examples)
+#         end
+#     end
+#     CURRENT_PLOT.nullableplot = nothing
+# end
+# # COV_EXCL_STOP
