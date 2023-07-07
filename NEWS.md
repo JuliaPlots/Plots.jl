@@ -1,6 +1,14 @@
 
 # Plots.jl NEWS
 
+## Breaking changes
+---
+
+## v2
+
+- deprecated backends `pgfplots` and `pyplot` removed
+
+---
 #### notes on release changes, ongoing development, and future planned work
 
 ## NOTE: this file is deprecated, see the [TagBot](https://github.com/marketplace/actions/julia-tagbot) auto-generated changelogs instead
