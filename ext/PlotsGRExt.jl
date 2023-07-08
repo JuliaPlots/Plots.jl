@@ -3,7 +3,7 @@ module PlotsGRExt
 import GR
 import Plots: DEFAULT_LINEWIDTH
 import Plots: Plots, Plot, Subplot, Axis, Series, Shape, Font, BoundingBox, GRBackend, PlotText, Arrow, EachAnn
-import Plots: _display, _show, closeall, get_size, pt, px, mm, _cycle, get_ticks, is_horizontal, tickfont, get_thickness_scaling, plot_color, colorbartitlefont, text, bbox, left, right, bottom, top, hascolorbar, plotarea, legendfont, series_list, should_add_to_legend, get_aspect_ratio, ispolar, is3d, axis_limits, needs_any_3d_axes, _logScales, axis_drawing_info, get_attr_symbol, coords, ok, axes_letters, reverse_if, _debug, get_colorgradient, handle_surface, series_annotations_shapes!, get_clims, series_segments, get_linecolor, get_linewidth, get_linestyle, get_linealpha, colorbar_style, _guess_best_legend_position
+import Plots: _display, _show, closeall, get_size, pt, px, mm, _cycle, get_ticks, is_horizontal, tickfont, get_thickness_scaling, plot_color, colorbartitlefont, text, bbox, left, right, bottom, top, hascolorbar, plotarea, legendfont, series_list, should_add_to_legend, get_aspect_ratio, ispolar, is3d, axis_limits, needs_any_3d_axes, _logScales, axis_drawing_info, get_attr_symbol, coords, ok, axes_letters, reverse_if, _debug, get_colorgradient, handle_surface, series_annotations_shapes!, get_clims, series_segments, get_linecolor, get_linewidth, get_linestyle, get_linealpha, colorbar_style, _guess_best_legend_position, isortho, isautop, axis_drawing_info_3d, sort_3d_axes
 import RecipesPipeline
 import NaNMath
 using Plots.Colors
