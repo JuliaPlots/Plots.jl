@@ -1,4 +1,3 @@
-
 const _deprecated_attributes = Dict{Symbol,Symbol}(:orientation => :permute)
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 

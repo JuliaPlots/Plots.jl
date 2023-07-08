@@ -140,25 +140,39 @@ ignorenan_extrema(x) = Base.extrema(x)
 
 # ---------------------------------------------------------
 import Measures
-include("plotmeasures.jl")
+include("PlotMeasures.jl")
 using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 
-const PLOTS_SEED  = 1234
-const PX_PER_INCH = 100
-const DPI         = PX_PER_INCH
-const MM_PER_INCH = 25.4
-const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
-
+include("Commons.jl")
+using .Commons
+function coords end
 include("types.jl")
 include("utils.jl")
 include("colorbars.jl")
 include("axes.jl")
 include("args.jl")
-include("components.jl")
+include("Fonts.jl")
+@reexport using .Fonts
+import .Fonts: Font, PlotText
 include("legend.jl")
 include("consts.jl")
+include("Shapes.jl")
+@reexport using .Shapes
+import .Shapes: Shape, _shapes
+include("Annotations.jl")
+using .Annotations
+import .Annotations: SeriesAnnotations
+include("Arrows.jl")
+using .Arrows
+import .Arrows: Arrow
+# include("Surfaces.jl")
+# using .Surfaces
+include("Strokes.jl")
+using .Strokes
+include("BezierCurves.jl")
+using .BezierCurves
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")

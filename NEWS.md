@@ -7,6 +7,13 @@
 ## v2
 
 - deprecated backends `pgfplots` and `pyplot` removed
+- backends are extensions now so the backend code must be explicitly loaded using `import` with the backend package, e.g. ```julia
+using Plots
+import GR # loads backend code
+
+```
+- Types are no longer part of the Plots API this affects
+  - `Shape`, which is now `shape`
 
 ---
 #### notes on release changes, ongoing development, and future planned work

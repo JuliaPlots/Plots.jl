@@ -2,12 +2,6 @@
 # TODO: I declare lots of types here because of the lacking ability to do forward declarations in current Julia
 # I should move these to the relevant files when something like "extern" is implemented
 
-const AVec = AbstractVector
-const AMat = AbstractMatrix
-const KW = Dict{Symbol,Any}
-const AKW = AbstractDict{Symbol,Any}
-const TicksArgs =
-    Union{AVec{T},Tuple{AVec{T},AVec{S}},Symbol} where {T<:Real,S<:AbstractString}
 
 struct PlotsDisplay <: AbstractDisplay end
 
