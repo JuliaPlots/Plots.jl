@@ -107,35 +107,36 @@ with(:gr) do
     end
 
     @testset "parametric" begin
-        @test plot(sin, sin, cos, 0, 2π) isa Plot
-        @test plot(sin, sin, cos, collect((-2π):(π / 4):(2π))) isa Plot
+        @test plot(sin, sin, cos, 0, 2π) isa Plots.Plot
+        @test plot(sin, sin, cos, collect((-2π):(π / 4):(2π))) isa Plots.Plot
     end
 
     @testset "dict" begin
-        show(devnull, plot(Dict(1 => 2, 3 => -1)))
+        @test_nowarn show(devnull, plot(Dict(1 => 2, 3 => -1)))
     end
 
     @testset "gray image" begin
-        show(devnull, plot(rand(Gray, 2, 2)))
+        @test_nowarn show(devnull, plot(rand(Gray, 2, 2)))
     end
 
     @testset "plots_heatmap" begin
-        show(devnull, plots_heatmap(rand(RGBA, 2, 2)))
+        @test_nowarn show(devnull, plots_heatmap(rand(RGBA, 2, 2)))
     end
 
     @testset "scatter3d" begin
-        show(devnull, scatter3d(1:2, 1:2, 1:2))
+        @test_nowarn show(devnull, scatter3d(1:2, 1:2, 1:2))
     end
 
     @testset "sticks" begin
-        show(devnull, sticks(1:2, marker = :circle))
+        @test_nowarn show(devnull, sticks(1:2, marker = :circle))
     end
 
     @testset "stephist" begin
-        show(devnull, stephist([1, 2], marker = :circle))
+        @test_nowarn show(devnull, stephist([1, 2], marker = :circle))
     end
 
     @testset "bar with logscales" begin
-        show(devnull, bar([1 2 3], [0.02 125 10_000]; yscale = :log10))
+        @test_nowarn show(devnull, bar([1 2 3], [0.02 125 10_000]; yscale = :log10))
+        @test_nowarn histogram(randn(100), yscale = :log10)
     end
 end
