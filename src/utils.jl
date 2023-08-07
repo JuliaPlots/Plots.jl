@@ -1,3 +1,13 @@
+import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
+ignorenan_minimum(x::AbstractArray{<:AbstractFloat}) = NaNMath.minimum(x)
+ignorenan_minimum(x) = Base.minimum(x)
+ignorenan_maximum(x::AbstractArray{<:AbstractFloat}) = NaNMath.maximum(x)
+ignorenan_maximum(x) = Base.maximum(x)
+ignorenan_mean(x::AbstractArray{<:AbstractFloat}) = NaNMath.mean(x)
+ignorenan_mean(x) = Statistics.mean(x)
+ignorenan_extrema(x::AbstractArray{<:AbstractFloat}) = NaNMath.extrema(x)
+ignorenan_extrema(x) = Base.extrema(x)
+
 # ---------------------------------------------------------------
 bool_env(x, default)::Bool =
     try
@@ -190,9 +200,6 @@ float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
 float_extended_type(x::AbstractArray{Real}) = Float64
 
 # ------------------------------------------------------------------------------------
-_cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
-_cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
-
 _cycle(v::AVec, idx::Int) = v[mod(idx, axes(v, 1))]
 _cycle(v::AMat, idx::Int) = size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]
 _cycle(v, idx::Int)       = v

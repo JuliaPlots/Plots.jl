@@ -1,4 +1,5 @@
 
+struct PlaceHolder end
 mutable struct CurrentPlot
     nullableplot::Union{AbstractPlot,Nothing}
 end

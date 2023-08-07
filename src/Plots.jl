@@ -126,19 +126,6 @@ export
     scalefontsizes,
     resetfontsizes
 #! format: on
-# ---------------------------------------------------------
-
-import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
-ignorenan_minimum(x::AbstractArray{<:AbstractFloat}) = NaNMath.minimum(x)
-ignorenan_minimum(x) = Base.minimum(x)
-ignorenan_maximum(x::AbstractArray{<:AbstractFloat}) = NaNMath.maximum(x)
-ignorenan_maximum(x) = Base.maximum(x)
-ignorenan_mean(x::AbstractArray{<:AbstractFloat}) = NaNMath.mean(x)
-ignorenan_mean(x) = Statistics.mean(x)
-ignorenan_extrema(x::AbstractArray{<:AbstractFloat}) = NaNMath.extrema(x)
-ignorenan_extrema(x) = Base.extrema(x)
-
-# ---------------------------------------------------------
 import Measures
 include("PlotMeasures.jl")
 using .PlotMeasures
@@ -147,12 +134,21 @@ import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 
 include("Commons.jl")
 using .Commons
-function coords end
-include("types.jl")
-include("utils.jl")
-include("colorbars.jl")
-include("axes.jl")
 include("args.jl")
+# ---------------------------------------------------------
+include("Series.jl")
+using .PlotsSeries
+include("Subplots.jl")
+using .Subplots
+include("Axes.jl")
+using .Axes
+include("PlotsPlots.jl")
+using .PlotsPlots
+
+# ---------------------------------------------------------
+include("utils.jl")
+include("axes_utils.jl")
+include("colorbars.jl")
 include("Fonts.jl")
 @reexport using .Fonts
 import .Fonts: Font, PlotText

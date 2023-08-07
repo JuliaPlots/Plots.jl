@@ -1,3 +1,4 @@
+struct PlotsDisplay <: AbstractDisplay end
 
 defaultOutputFormat(plt::Plot) = "png"
 
