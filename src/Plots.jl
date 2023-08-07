@@ -167,8 +167,8 @@ import .Annotations: SeriesAnnotations
 include("Arrows.jl")
 using .Arrows
 import .Arrows: Arrow
-# include("Surfaces.jl")
-# using .Surfaces
+include("Surfaces.jl")
+using .Surfaces
 include("Strokes.jl")
 using .Strokes
 include("BezierCurves.jl")

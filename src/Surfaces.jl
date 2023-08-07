@@ -1,7 +1,11 @@
 module Surfaces
 
+export SurfaceFunction
 
-function expand_extrema!(a::Axis, surf::Surface)
+import Plots: Plots, Axis, Surface, AbstractSurface
+import Plots: expand_extrema!
+
+function Plots.expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]
     foreach(x -> expand_extrema!(ex, x), surf.surf)
     ex
