@@ -1021,6 +1021,8 @@ function pgfx_add_annotation!(
         Options(
             get((hcenter = "", left = "right", right = "left"), val.font.halign, "") =>
                 nothing,
+            get((vcenter = "", top = "below", bottom = "above"), val.font.valign, "") =>
+                nothing,
             "color" => cstr,
             "draw opacity" => float(alpha(cstr)),  # float(...): convert N0f8
             "rotate" => val.font.rotation,
