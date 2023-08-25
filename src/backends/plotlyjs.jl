@@ -1,4 +1,4 @@
-# https://github.com/sglyon/PlotlyJS.jl
+# https://github.com/JuliaPlots/PlotlyJS.jl
 
 # ------------------------------------------------------------------------------
 include(_path(:plotly))
