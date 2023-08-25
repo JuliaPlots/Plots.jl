@@ -1,11 +1,15 @@
-function plotlybase_syncplot(plt::Plot)
-    plt.o = PlotlyBase.Plot()
+function plotly_traces(plt::Plot)
     traces = PlotlyBase.GenericTrace[]
-    for series_dict in plotly_series(plt)
+    for series_dict in Plots.plotly_series(plt)
         plotly_type = pop!(series_dict, :type)
         push!(traces, PlotlyBase.GenericTrace(plotly_type; series_dict...))
     end
-    PlotlyBase.addtraces!(plt.o, traces...)
+    return traces
+end
+
+function plotlybase_syncplot(plt::Plot)
+    plt.o = PlotlyBase.Plot()
+    PlotlyBase.addtraces!(plt.o, plotly_traces(plt)...)
     layout = plotly_layout(plt)
     w, h = plt[:size]
     PlotlyBase.relayout!(plt.o, layout, width = w, height = h)
