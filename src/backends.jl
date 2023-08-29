@@ -1068,8 +1068,8 @@ _post_imports(::PythonPlotBackend) = @eval begin
     const PythonPlot = Main.PythonPlot
     const PythonCall = Main.PythonPlot.PythonCall
     mpl_toolkits = PythonCall.pyimport("mpl_toolkits")
-    mpl          = PythonCall.pyimport("matplotlib")
-    numpy        = PythonCall.pyimport("numpy")
+    mpl = PythonCall.pyimport("matplotlib")
+    numpy = PythonCall.pyimport("numpy")
 
     PythonCall.pyimport("mpl_toolkits.axes_grid1")
     numpy.seterr(invalid = "ignore")
