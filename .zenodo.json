@@ -760,6 +760,11 @@
             "name": "Ryan Young",
             "orcid": "0000-0002-9454-2876",
             "type": "Other"
+        },
+        {
+            "name": "Alexander Von Moll",
+            "orcid": "0000-0002-7661-5752",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
