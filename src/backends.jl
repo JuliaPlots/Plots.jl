@@ -1073,6 +1073,8 @@ _post_imports(::PythonPlotBackend) = @eval begin
 
     PythonCall.pyimport("mpl_toolkits.axes_grid1")
     numpy.seterr(invalid = "ignore")
+
+    PythonPlot.ioff() # we don't want every command to update the figure
 end
 _runtime_init(::PythonPlotBackend) = nothing
 
