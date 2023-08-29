@@ -1,6 +1,6 @@
 function plotly_traces(plt::Plot)
     traces = PlotlyBase.GenericTrace[]
-    for series_dict in Plots.plotly_series(plt)
+    for series_dict in plotly_series(plt)
         plotly_type = pop!(series_dict, :type)
         push!(traces, PlotlyBase.GenericTrace(plotly_type; series_dict...))
     end
