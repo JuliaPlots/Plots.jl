@@ -1067,23 +1067,19 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 _post_imports(::PythonPlotBackend) = @eval begin
     const PythonPlot = Main.PythonPlot
     const PythonCall = Main.PythonPlot.PythonCall
-end
-_runtime_init(::PythonPlotBackend) = @eval begin
     mpl_toolkits = PythonCall.pyimport("mpl_toolkits")
     mpl          = PythonCall.pyimport("matplotlib")
     numpy        = PythonCall.pyimport("numpy")
 
     PythonCall.pyimport("mpl_toolkits.axes_grid1")
     numpy.seterr(invalid = "ignore")
-
-    PythonPlot.ioff()  # we don't want every command to update the figure
 end
+_runtime_init(::PythonPlotBackend) = nothing
 
 function _initialize_backend(pkg::PythonPlotBackend)
     _pre_imports(pkg)
     @eval Main begin
         import PythonPlot
-        export PythonPlot
         $(_check_compat)(PythonPlot)
     end
     _post_imports(pkg)
