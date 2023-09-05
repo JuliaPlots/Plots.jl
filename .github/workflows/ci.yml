@@ -50,7 +50,7 @@ jobs:
             allow_failure: true  # `nightly` often breaks
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Ubuntu LaTeX dependencies
         if: startsWith(matrix.os, 'ubuntu')
