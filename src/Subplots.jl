@@ -1,6 +1,6 @@
 module Subplots
 
-export Subplot
+export Subplot, colorbartitlefont, legendfont, legendtitlefont, titlefont
 import Plots: Plots, Series, AbstractBackend, AbstractLayout, BoundingBox, DefaultsDict,_subplot_defaults
 using Plots.Commons
 
@@ -68,6 +68,19 @@ toppad(sp::Subplot)    = sp.minpad[2]
 rightpad(sp::Subplot)  = sp.minpad[3]
 bottompad(sp::Subplot) = sp.minpad[4]
 
+function attr!(sp::Subplot; kw...)
+    plotattributes = KW(kw)
+    Plots.preprocess_attributes!(plotattributes)
+    for (k, v) in plotattributes
+        if haskey(_subplot_defaults, k)
+            sp[k] = v
+        else
+            @warn "unused key $k in subplot attr"
+        end
+    end
+    sp
+end
+
 Plots.series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)
 Plots.RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 Plots.ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
@@ -85,6 +98,42 @@ get_series_color(c, sp::Subplot, n::Int, seriestype) =
 
 get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
     map(x -> get_series_color(x, sp, n, seriestype), c)
+
+colorbartitlefont(sp::Subplot) = font(;
+    family = sp[:colorbar_titlefontfamily],
+    pointsize = sp[:colorbar_titlefontsize],
+    valign = sp[:colorbar_titlefontvalign],
+    halign = sp[:colorbar_titlefonthalign],
+    rotation = sp[:colorbar_titlefontrotation],
+    color = sp[:colorbar_titlefontcolor],
+)
+
+titlefont(sp::Subplot) = font(;
+    family = sp[:titlefontfamily],
+    pointsize = sp[:titlefontsize],
+    valign = sp[:titlefontvalign],
+    halign = sp[:titlefonthalign],
+    rotation = sp[:titlefontrotation],
+    color = sp[:titlefontcolor],
+)
+
+legendfont(sp::Subplot) = font(;
+    family = sp[:legend_font_family],
+    pointsize = sp[:legend_font_pointsize],
+    valign = sp[:legend_font_valign],
+    halign = sp[:legend_font_halign],
+    rotation = sp[:legend_font_rotation],
+    color = sp[:legend_font_color],
+)
+
+legendtitlefont(sp::Subplot) = font(;
+    family = sp[:legend_title_font_family],
+    pointsize = sp[:legend_title_font_pointsize],
+    valign = sp[:legend_title_font_valign],
+    halign = sp[:legend_title_font_halign],
+    rotation = sp[:legend_title_font_rotation],
+    color = sp[:legend_title_font_color],
+)
 
 function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # extend annotations, and ensure we always have a (x,y,PlotText) tuple

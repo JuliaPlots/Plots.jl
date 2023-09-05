@@ -3,10 +3,6 @@
 
 to_pixels(m::AbsoluteLength) = m.value / 0.254
 
-const _cbar_width = 5mm
-const DEFAULT_BBOX = Ref(BoundingBox(0mm, 0mm, 0mm, 0mm))
-const DEFAULT_MINPAD = Ref((20mm, 5mm, 2mm, 10mm))
-
 origin(bbox::BoundingBox) = left(bbox) + width(bbox) / 2, top(bbox) + height(bbox) / 2
 left(bbox::BoundingBox) = bbox.x0[1]
 top(bbox::BoundingBox) = bbox.x0[2]
@@ -495,7 +491,7 @@ end
 function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
     nr, nc = size(layout)
     subplots = Subplot[]
-    spmap = SubplotMap()
+    spmap = PlotsPlots.SubplotMap()
     empty = isempty(plts)
     i = 0
     for r in 1:nr, c in 1:nc

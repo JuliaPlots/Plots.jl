@@ -1,11 +1,11 @@
 module PlotsPlots
 
-export Plot, PlotOrSubplot, _update_plot_args
-import Plots: Plots, AbstractPlot, AbstractBackend, DefaultsDict, Series, Axis, Subplot, AbstractLayout
+export Plot, PlotOrSubplot, _update_plot_args, plottitlefont, ignorenan_extrema
+import Plots: Plots, AbstractPlot, AbstractBackend, DefaultsDict, Series, Axis, Subplot, AbstractLayout, RecipesPipeline, _subplot_defaults
+import Plots.Subplots: _update_subplot_args, _update_subplot_colors
 using Plots.Commons
 
 const SubplotMap = Dict{Any,Subplot}
-
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
     n::Int                       # number of series
@@ -52,6 +52,73 @@ end # Plot
 const PlotOrSubplot = Union{Plot,Subplot}
 
 Base.iterate(plt::Plot) = iterate(plt.subplots)
+# -------------------------------------------------------
+# push/append for one series
+
+Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
+Base.push!(plt::Plot, i::Integer, args::Real...) = push!(plt.series_list[i], args...)
+Base.append!(plt::Plot, args::AbstractVector) = append!(plt, 1, args...)
+Base.append!(plt::Plot, i::Integer, args::Real...) = append!(plt.series_list[i], args...)
+
+# tuples
+Base.push!(plt::Plot, t::Tuple) = push!(plt, 1, t...)
+Base.push!(plt::Plot, i::Integer, t::Tuple) = push!(plt, i, t...)
+Base.append!(plt::Plot, t::Tuple) = append!(plt, 1, t...)
+Base.append!(plt::Plot, i::Integer, t::Tuple) = append!(plt, i, t...)
+
+# -------------------------------------------------------
+# push/append for all series
+
+# push y[i] to the ith series
+function Base.push!(plt::Plot, y::AVec)
+    ny = length(y)
+    for i in 1:(plt.n)
+        push!(plt, i, y[mod1(i, ny)])
+    end
+    plt
+end
+
+# push y[i] to the ith series
+# same x for each series
+Base.push!(plt::Plot, x::Real, y::AVec) = push!(plt, [x], y)
+
+# push (x[i], y[i]) to the ith series
+function Base.push!(plt::Plot, x::AVec, y::AVec)
+    nx = length(x)
+    ny = length(y)
+    for i in 1:(plt.n)
+        push!(plt, i, x[mod1(i, nx)], y[mod1(i, ny)])
+    end
+    plt
+end
+
+# push (x[i], y[i], z[i]) to the ith series
+function Base.push!(plt::Plot, x::AVec, y::AVec, z::AVec)
+    nx = length(x)
+    ny = length(y)
+    nz = length(z)
+    for i in 1:(plt.n)
+        push!(plt, i, x[mod1(i, nx)], y[mod1(i, ny)], z[mod1(i, nz)])
+    end
+    plt
+end
+
+# ---------------------------------------------------------------
+
+
+"Smallest x in plot"
+xmin(plt::Plot) = ignorenan_minimum([
+    ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
+])
+"Largest x in plot"
+xmax(plt::Plot) = ignorenan_maximum([
+    ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list
+])
+
+"Extrema of x-values in plot"
+ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
+
+# ---------------------------------------------------------------
 
 # properly retrieve from plt.attr, passing `:match` to the correct key
 Base.getindex(plt::Plot, k::Symbol) =
@@ -80,6 +147,15 @@ Plots.series_list(plt::Plot) = plt.series_list
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
 Plots.RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Plots.preprocess_attributes!(plotattributes)
+
+plottitlefont(p::Plot) = font(;
+    family = p[:plot_titlefontfamily],
+    pointsize = p[:plot_titlefontsize],
+    valign = p[:plot_titlefontvalign],
+    halign = p[:plot_titlefonthalign],
+    rotation = p[:plot_titlefontrotation],
+    color = p[:plot_titlefontcolor],
+)
 
 # update attr from an input dictionary
 function _update_plot_args(plt::Plot, plotattributes_in::AKW)
@@ -138,7 +214,7 @@ function _update_subplot_args(
 
     # grab those args which apply to this subplot
     for k in keys(_subplot_defaults)
-        slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
+        Plots.slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
     end
 
     _update_subplot_colors(sp)
@@ -255,7 +331,7 @@ end
 function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
     for k in keys(_series_defaults)
         haskey(plotattributes, k) &&
-            slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
+            Plots.slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
     end
     plotattributes
 end

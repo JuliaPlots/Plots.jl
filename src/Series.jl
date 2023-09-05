@@ -14,6 +14,19 @@ Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 # TODO: consider removing
 attr(series::Series, k::Symbol) = series.plotattributes[k]
 attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
+function attr!(series::Series; kw...)
+    plotattributes = KW(kw)
+    Plots.preprocess_attributes!(plotattributes)
+    for (k, v) in plotattributes
+        if haskey(_series_defaults, k)
+            series[k] = v
+        else
+            @warn "unused key $k in series attr"
+        end
+    end
+    _series_updated(series[:subplot].plt, series)
+    series
+end
 
 should_add_to_legend(series::Series) =
     series.plotattributes[:primary] &&

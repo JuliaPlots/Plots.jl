@@ -1,7 +1,7 @@
 
 module Axes
 
-export Axis
+export Axis, tickfont, guidefont
 import Plots: Plots, Subplot, DefaultsDict
 using Plots.Commons
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
@@ -136,6 +136,25 @@ end
 
 Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
+
+tickfont(ax::Axis) = font(;
+    family = ax[:tickfontfamily],
+    pointsize = ax[:tickfontsize],
+    valign = ax[:tickfontvalign],
+    halign = ax[:tickfonthalign],
+    rotation = ax[:tickfontrotation],
+    color = ax[:tickfontcolor],
+)
+
+guidefont(ax::Axis) = font(;
+    family = ax[:guidefontfamily],
+    pointsize = ax[:guidefontsize],
+    valign = ax[:guidefontvalign],
+    halign = ax[:guidefonthalign],
+    rotation = ax[:guidefontrotation],
+    color = ax[:guidefontcolor],
+)
+
 
 function _update_axis(
     axis::Axis,
