@@ -862,7 +862,7 @@ end
 pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
 function pgfx_arrow(arr::Arrow, side = arr.side)
     components = ""
-    arrow_head = "{stealth[length = $(arr.headlength)pt, width = $(arr.headwidth)pt"
+    arrow_head = "{Stealth[length = $(arr.headlength)pt, width = $(arr.headwidth)pt"
     arr.style === :open && (arrow_head *= ", open")
     arrow_head *= "]}"
     (side === :both || side === :tail) && (components *= arrow_head)
