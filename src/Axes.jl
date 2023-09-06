@@ -2,7 +2,7 @@
 module Axes
 
 export Axis, tickfont, guidefont
-import Plots: Plots, Subplot, DefaultsDict
+using Plots: Plots, Subplot, DefaultsDict, _axis_defaults_byletter, _all_axis_args
 using Plots.Commons
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
 mutable struct Axis

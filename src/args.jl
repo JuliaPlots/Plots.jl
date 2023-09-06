@@ -226,10 +226,6 @@ const _positionAliases = Dict{Symbol,Symbol}(
     :br            => :bottomright,
 )
 
-const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
-const _logScales = [:ln, :log2, :log10]
-const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
-const _scaleAliases = Dict{Symbol,Symbol}(:none => :identity, :log => :log10)
 
 const _allGridSyms = [
     :x,
@@ -518,6 +514,19 @@ const _axis_defaults = KW(
     :unitformat                  => :round,
 )
 
+# add defaults for the letter versions
+const _axis_defaults_byletter = KW()
+
+reset_axis_defaults_byletter!() =
+    for letter in (:x, :y, :z)
+        _axis_defaults_byletter[letter] = KW()
+        for (k, v) in _axis_defaults
+            _axis_defaults_byletter[letter][k] = v
+        end
+    end
+reset_axis_defaults_byletter!()
+
+
 const _suppress_warnings = Set{Symbol}([
     :x_discrete_indices,
     :y_discrete_indices,
@@ -536,6 +545,38 @@ const _suppress_warnings = Set{Symbol}([
     :y_extrema,
     :z_extrema,
 ])
+
+const _internal_args = [
+    :plot_object,
+    :series_plotindex,
+    :series_index,
+    :markershape_to_add,
+    :letter,
+    :idxfilter,
+]
+
+const _axis_args = Set(keys(_axis_defaults))
+const _series_args = Set(keys(_series_defaults))
+const _subplot_args = Set(keys(_subplot_defaults))
+const _plot_args = Set(keys(_plot_defaults))
+
+const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
+const _magic_subplot_args =
+    [:title_font, :legend_font, :legend_title_font, :plot_title_font, :colorbar_titlefont]
+const _magic_series_args = [:line, :marker, :fill]
+const _all_magic_args =
+    Set(union(_magic_axis_args, _magic_series_args, _magic_subplot_args))
+
+const _all_axis_args = union(_axis_args, _magic_axis_args)
+const _lettered_all_axis_args =
+    Set([Symbol(letter, kw) for letter in (:x, :y, :z) for kw in _all_axis_args])
+const _all_subplot_args = union(_subplot_args, _magic_subplot_args)
+const _all_series_args = union(_series_args, _magic_series_args)
+const _all_plot_args = _plot_args
+
+const _all_args =
+    union(_lettered_all_axis_args, _all_subplot_args, _all_series_args, _all_plot_args)
+
 
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
@@ -1485,10 +1526,10 @@ function preprocess_attributes!(plotattributes::AKW)
     # legends - defaults are set in `src/components.jl` (see `@add_attributes`)
     if haskey(plotattributes, :legend_position)
         plotattributes[:legend_position] =
-            convertLegendValue(plotattributes[:legend_position])
+            convert_legend_value(plotattributes[:legend_position])
     end
     if haskey(plotattributes, :colorbar)
-        plotattributes[:colorbar] = convertLegendValue(plotattributes[:colorbar])
+        plotattributes[:colorbar] = convert_legend_value(plotattributes[:colorbar])
     end
 
     # framestyle
@@ -1586,7 +1627,7 @@ end
 
 # -----------------------------------------------------------------------------
 
-function convertLegendValue(val::Symbol)
+function convert_legend_value(val::Symbol)
     if val in (:both, :all, :yes)
         :best
     elseif val in (:no, :none)
@@ -1620,13 +1661,13 @@ function convertLegendValue(val::Symbol)
         error("Invalid symbol for legend: $val")
     end
 end
-convertLegendValue(val::Real) = val
-convertLegendValue(val::Bool) = val ? :best : :none
-convertLegendValue(val::Nothing) = :none
-convertLegendValue(v::Union{Tuple,NamedTuple}) = convertLegendValue.(v)
-convertLegendValue(v::Tuple{<:Real,<:Real}) = v
-convertLegendValue(v::Tuple{<:Real,Symbol}) = v
-convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
+convert_legend_value(val::Real) = val
+convert_legend_value(val::Bool) = val ? :best : :none
+convert_legend_value(val::Nothing) = :none
+convert_legend_value(v::Union{Tuple,NamedTuple}) = convert_legend_value.(v)
+convert_legend_value(v::Tuple{<:Real,<:Real}) = v
+convert_legend_value(v::Tuple{<:Real,Symbol}) = v
+convert_legend_value(v::AbstractArray) = map(convert_legend_value, v)
 
 # -----------------------------------------------------------------------------
 
@@ -1644,41 +1685,6 @@ function check_contour_levels(levels)
     end
 end
 
-# -----------------------------------------------------------------------------
-
-# 1-row matrices will give an element
-# multi-row matrices will give a column
-# anything else is returned as-is
-function slice_arg(v::AMat, idx::Int)
-    isempty(v) && return v
-    c = mod1(idx, size(v, 2))
-    m, n = axes(v)
-    size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
-end
-slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
-slice_arg(v, idx) = v
-
-# given an argument key `k`, extract the argument value for this index,
-# and set into plotattributes[k]. Matrices are sliced by column.
-# if nothing is set (or container is empty), return the existing value.
-function slice_arg!(
-    plotattributes_in,
-    plotattributes_out,
-    k::Symbol,
-    idx::Int,
-    remove_pair::Bool,
-)
-    v = get(plotattributes_in, k, plotattributes_out[k])
-    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ _plot_args
-        slice_arg(v, idx)
-    else
-        v
-    end
-    remove_pair && RecipesPipeline.reset_kw!(plotattributes_in, k)
-    nothing
-end
-
-# -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------

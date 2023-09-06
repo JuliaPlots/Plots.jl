@@ -17,9 +17,9 @@ end
 
 for k in (:linthresh, :base, :label)
     # add PythonPlot specific symbols to cache
-    _attrsymbolcache[k] = Dict{Symbol,Symbol}()
+    Commons._attrsymbolcache[k] = Dict{Symbol,Symbol}()
     for letter in (:x, :y, :z, Symbol(), :top, :bottom, :left, :right)
-        _attrsymbolcache[k][letter] = Symbol(k, letter)
+        Commons._attrsymbolcache[k][letter] = Symbol(k, letter)
     end
 end
 

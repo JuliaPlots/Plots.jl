@@ -1,7 +1,8 @@
 module Subplots
 
 export Subplot, colorbartitlefont, legendfont, legendtitlefont, titlefont
-import Plots: Plots, Series, AbstractBackend, AbstractLayout, BoundingBox, DefaultsDict,_subplot_defaults
+using Plots: Plots, Series, AbstractBackend, AbstractLayout, BoundingBox, DefaultsDict, _subplot_defaults, convert_legend_value
+using Plots.PlotUtils: get_color_palette
 using Plots.Commons
 
 # a single subplot
@@ -144,8 +145,8 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     sp.attr[:annotations] = newanns
 
     # handle legend/colorbar
-    sp.attr[:legend_position] = convertLegendValue(sp.attr[:legend_position])
-    sp.attr[:colorbar] = convertLegendValue(sp.attr[:colorbar])
+    sp.attr[:legend_position] = convert_legend_value(sp.attr[:legend_position])
+    sp.attr[:colorbar] = convert_legend_value(sp.attr[:colorbar])
     if sp.attr[:colorbar] === :legend
         sp.attr[:colorbar] = sp.attr[:legend_position]
     end

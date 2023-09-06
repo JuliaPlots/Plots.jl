@@ -228,6 +228,52 @@ RecipesPipeline.unzip(v) = Unzip.unzip(v)  # COV_EXCL_LINE
 "collect into columns (convenience for `unzip` from `Unzip.jl`)"
 unzip(v) = RecipesPipeline.unzip(v)
 
+# -----------------------------------------------------------------------------
+"""
+1-row matrices will give an element
+multi-row matrices will give a column
+anything else is returned as-is
+"""
+function slice_arg(v::AMat, idx::Int)
+    isempty(v) && return v
+    c = mod1(idx, size(v, 2))
+    m, n = axes(v)
+    size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
+end
+slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
+slice_arg(v, idx) = v
+
+"""
+given an argument key `k`, extract the argument value for this index,
+and set into plotattributes[k]. Matrices are sliced by column.
+if nothing is set (or container is empty), return the existing value.
+"""
+function slice_arg!(
+    plotattributes_in,
+    plotattributes_out,
+    k::Symbol,
+    idx::Int,
+    remove_pair::Bool,
+)
+    v = get(plotattributes_in, k, plotattributes_out[k])
+    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ _plot_args
+        slice_arg(v, idx)
+    else
+        v
+    end
+    remove_pair && RecipesPipeline.reset_kw!(plotattributes_in, k)
+    nothing
+end
+
+function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
+    for k in keys(_series_defaults)
+        haskey(plotattributes, k) &&
+            slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
+    end
+    plotattributes
+end
+# -----------------------------------------------------------------------------
+
 replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
     if haskey(aliases, k)
         plotattributes[aliases[k]] = RecipesPipeline.pop_kw!(plotattributes, k)
@@ -726,60 +772,7 @@ function dumpdict(io::IO, plotattributes::AKW, prefix = "")
     println(io)
 end
 
-# -------------------------------------------------------
-# indexing notation
 
-Base.setindex!(plt::Plot, xy::NTuple{2}, i::Integer) = (setxy!(plt, xy, i); plt)
-Base.setindex!(plt::Plot, xyz::Tuple{3}, i::Integer) = (setxyz!(plt, xyz, i); plt)
-
-# -------------------------------------------------------
-# operate on individual series
-
-Base.push!(series::Series, args...) = extend_series!(series, args...)
-Base.append!(series::Series, args...) = extend_series!(series, args...)
-
-function extend_series!(series::Series, yi)
-    y = extend_series_data!(series, yi, :y)
-    x = extend_to_length!(series[:x], length(y))
-    expand_extrema!(series[:subplot][:xaxis], x)
-    x, y
-end
-
-extend_series!(series::Series, xi, yi) =
-    (extend_series_data!(series, xi, :x), extend_series_data!(series, yi, :y))
-
-extend_series!(series::Series, xi, yi, zi) = (
-    extend_series_data!(series, xi, :x),
-    extend_series_data!(series, yi, :y),
-    extend_series_data!(series, zi, :z),
-)
-
-function extend_series_data!(series::Series, v, letter)
-    copy_series!(series, letter)
-    d = extend_by_data!(series[letter], v)
-    expand_extrema!(series[:subplot][get_attr_symbol(letter, :axis)], d)
-    d
-end
-
-function copy_series!(series, letter)
-    plt = series[:plot_object]
-    for s in plt.series_list, l in (:x, :y, :z)
-        if (s !== series || l !== letter) && s[l] === series[letter]
-            series[letter] = copy(series[letter])
-        end
-    end
-end
-
-extend_to_length!(v::AbstractRange, n) = range(first(v), step = step(v), length = n)
-function extend_to_length!(v::AbstractVector, n)
-    vmax = isempty(v) ? 0 : ignorenan_maximum(v)
-    extend_by_data!(v, vmax .+ (1:(n - length(v))))
-end
-extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x)
-extend_by_data!(v::AbstractVector, x::AbstractVector) =
-    isimmutable(v) ? vcat(v, x) : append!(v, x)
-
-# -------------------------------------------------------
 
 # converts unicode scientific notation, as returned by Showoff,
 # to a tex-like format (supported by gr, pyplot, and pgfplots).
@@ -970,11 +963,6 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X, Y, Z
 end
 
-# cache joined symbols so they can be looked up instead of constructed each time
-const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
-
-get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
-get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
 
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))

@@ -144,7 +144,7 @@ include("Axes.jl")
 using .Axes
 include("PlotsPlots.jl")
 using .PlotsPlots
-
+include("layouts.jl")
 # ---------------------------------------------------------
 include("utils.jl")
 include("axes_utils.jl")
@@ -172,7 +172,6 @@ using .BezierCurves
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
-include("layouts.jl")
 include("arg_desc.jl")
 include("recipes.jl")
 include("animation.jl")

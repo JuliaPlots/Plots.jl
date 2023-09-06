@@ -67,8 +67,8 @@ function _preprocess_userrecipe(kw::AKW)
     if get(kw, :permute, default(:permute)) !== :none
         l1, l2 = kw[:permute]
         for k in _axis_args
-            k1 = _attrsymbolcache[l1][k]
-            k2 = _attrsymbolcache[l2][k]
+            k1 = Commons._attrsymbolcache[l1][k]
+            k2 = Commons._attrsymbolcache[l2][k]
             kwk = keys(kw)
             if k1 in kwk || k2 in kwk
                 kw[k1], kw[k2] = get(kw, k2, default(k2)), get(kw, k1, default(k1))
@@ -383,7 +383,7 @@ end
 function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st::Symbol = plotattributes[:seriestype]
     sp::Subplot{T} = plotattributes[:subplot]
-    sp_idx = get_subplot_index(plt, sp)
+    sp_idx = PlotsPlots.get_subplot_index(plt, sp)
     PlotsPlots._update_subplot_args(plt, sp, plotattributes, sp_idx, true)
 
     st = _override_seriestype_check(plotattributes, st)

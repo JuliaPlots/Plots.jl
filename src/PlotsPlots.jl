@@ -1,8 +1,11 @@
 module PlotsPlots
 
 export Plot, PlotOrSubplot, _update_plot_args, plottitlefont, ignorenan_extrema
-import Plots: Plots, AbstractPlot, AbstractBackend, DefaultsDict, Series, Axis, Subplot, AbstractLayout, RecipesPipeline, _subplot_defaults
-import Plots.Subplots: _update_subplot_args, _update_subplot_colors
+import Plots.Axes: _update_axis
+using Plots: Plots, AbstractPlot, AbstractBackend, DefaultsDict, Series, Axis, Subplot, AbstractLayout, RecipesPipeline, _subplot_defaults
+using Plots.Subplots: _update_subplot_colors, _update_margins
+using Plots.Axes: get_axis
+using Plots.PlotUtils: get_color_palette
 using Plots.Commons
 
 const SubplotMap = Dict{Any,Subplot}
@@ -119,8 +122,9 @@ xmax(plt::Plot) = ignorenan_maximum([
 ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 
 # ---------------------------------------------------------------
-
+# indexing notation
 # properly retrieve from plt.attr, passing `:match` to the correct key
+
 Base.getindex(plt::Plot, k::Symbol) =
     if (v = plt.attr[k]) === :match
         plt[_match_map[k]]
@@ -129,6 +133,8 @@ Base.getindex(plt::Plot, k::Symbol) =
     end
 Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
 Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r, c]
+Base.setindex!(plt::Plot, xy::NTuple{2}, i::Integer) = (setxy!(plt, xy, i); plt)
+Base.setindex!(plt::Plot, xyz::Tuple{3}, i::Integer) = (setxyz!(plt, xyz, i); plt)
 Base.setindex!(plt::Plot, v, k::Symbol)      = (plt.attr[k] = v)
 Base.length(plt::Plot) = length(plt.subplots)
 Base.lastindex(plt::Plot) = length(plt)
@@ -180,7 +186,7 @@ function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
     nothing
 end
 
-function Plots._update_axis(
+function Plots.Axes._update_axis(
     plt::Plot,
     sp::Subplot,
     plotattributes_in::AKW,
@@ -197,7 +203,7 @@ function Plots._update_axis(
         axis[:ticks] = axis[:ticks] ? :auto : nothing
     end
 
-    _update_axis_colors(axis)
+    Plots.Axes._update_axis_colors(axis)
     _update_axis_links(plt, axis, letter)
     nothing
 end
@@ -222,7 +228,7 @@ function _update_subplot_args(
     colorbar_update_keys =
         (:clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry)
     if any(haskey.(Ref(plotattributes_in), colorbar_update_keys))
-        _update_subplot_colorbars(sp)
+        Plots._update_subplot_colorbars(sp)
     end
 
     lims_warned = false
@@ -239,7 +245,7 @@ function _update_subplot_args(
         end
     end
 
-    _update_subplot_periphery(sp, anns)
+    Plots.Subplots._update_subplot_periphery(sp, anns)
 end
 
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
@@ -328,11 +334,4 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes
 end
 
-function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
-    for k in keys(_series_defaults)
-        haskey(plotattributes, k) &&
-            Plots.slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
-    end
-    plotattributes
-end
 end # PlotsPlots
