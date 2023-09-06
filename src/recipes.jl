@@ -408,7 +408,7 @@ end
     ywiden --> false
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
-    axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
+    axis = plotattributes[:subplot][:xaxis]
     cv = map(xi -> discrete_value!(plotattributes, :x, xi)[1], procx)
     procx = if nx == ny
         cv
@@ -463,15 +463,6 @@ end
 
     # widen limits out a bit
     expand_extrema!(axis, scale_lims(ignorenan_extrema(xseg.pts)..., default_widen_factor))
-
-    # switch back
-    if !isvertical(plotattributes)
-        xseg, yseg = yseg, xseg
-        x, y = y, x
-    end
-
-    # reset orientation
-    orientation := default(:orientation)
 
     # draw the bar shapes
     @series begin
@@ -678,14 +669,10 @@ end
 
 @recipe function f(::Type{Val{:stepbins}}, x, y, z)  # COV_EXCL_LINE
     @nospecialize
-    axis = plotattributes[:subplot][Plots.isvertical(plotattributes) ? :xaxis : :yaxis]
 
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
 
     xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
-    if !isvertical(plotattributes)
-        xpts, ypts = ypts, xpts
-    end
 
     # create a secondary series for the markers
     if plotattributes[:markershape] !== :none
@@ -1589,7 +1576,7 @@ end
     for c in axes(weights, 2)
         sx = vcat(weights[:, c], c == 1 ? zeros(n) : reverse(weights[:, c - 1]))
         sy = vcat(returns, reverse(returns))
-        @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
+        @series (sx, sy)
     end
 end
 

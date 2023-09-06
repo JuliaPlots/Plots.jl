@@ -379,10 +379,6 @@ isscalar(::Any)  = false
 
 is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
-isvertical(plotattributes::AKW) =
-    get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
-isvertical(series::Series) = isvertical(series.plotattributes)
-
 ticksType(ticks::AVec{<:Real}) = :ticks
 ticksType(ticks::AVec{<:AbstractString}) = :labels
 ticksType(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
@@ -867,7 +863,7 @@ end
 
 function straightline_data(series, expansion_factor = 1)
     sp = series[:subplot]
-    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+    xl, yl = (xlims(sp), ylims(sp))
 
     # handle axes scales
     xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
@@ -911,7 +907,7 @@ end
 
 function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
-    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+    xl, yl = (xlims(sp), ylims(sp))
 
     # handle axes scales
     xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])

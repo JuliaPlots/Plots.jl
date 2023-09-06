@@ -33,8 +33,7 @@ RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
 ## Preprocessing attributes
 function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
     # Fix letter for seriestypes that are x only but data gets passed as y
-    if treats_y_as_x(get(plotattributes, :seriestype, :path)) &&
-       get(plotattributes, :orientation, :vertical) === :vertical
+    if treats_y_as_x(get(plotattributes, :seriestype, :path))
         letter = :x
     end
 

@@ -424,9 +424,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     if series[:markershape] !== :none && st ∈ _py_marker_series
         for segment in series_segments(series, :scatter)
             i, rng = segment.attr_index, segment.range
-            args = if st === :bar && !isvertical(series)
-                y[rng], x[rng]
-            else
+            args = if st === :bar
                 x[rng], y[rng]
             end
             RecipesPipeline.is3d(sp) && (args = (args..., z[rng]))
@@ -705,11 +703,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     if (fillrange = series[:fillrange]) !== nothing && st !== :contour
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
-            f, dim1, dim2 = if isvertical(series)
-                :fill_between, x[rng], y[rng]
-            else
-                :fill_betweenx, y[rng], x[rng]
-            end
+            f, dim1, dim2 = :fill_between, x[rng], y[rng]
             n = length(dim1)
             args = if typeof(fillrange) <: Union{Real,AVec}
                 dim1, _cycle(fillrange, rng), dim2

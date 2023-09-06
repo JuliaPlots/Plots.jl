@@ -128,13 +128,6 @@ end
         value.(m)
     end
 
-    @testset "orientation" begin
-        for f in (histogram, barhist, stephist, scatterhist), o in (:vertical, :horizontal)
-            sp = f(data, orientation = o).subplots[1]
-            @test sp.attr[:title] == (o ≡ :vertical ? "x" : "y")
-        end
-    end
-
     @testset "$f" for f in (hline, hspan)
         @test f(data).subplots[1].attr[:title] == "y"
     end

@@ -348,7 +348,6 @@ const _series_defaults = KW(
     :line_z             => nothing,
     :fill_z             => nothing,
     :levels             => 15,
-    :orientation        => :vertical,
     :bar_position       => :overlay,  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
     :bar_width          => nothing,
     :bar_edges          => false,

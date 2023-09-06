@@ -176,15 +176,12 @@ _update_margins(sp::Subplot) =
     end
 
 function Plots.expand_extrema!(sp::Subplot, plotattributes::AKW)
-    vert = isvertical(plotattributes)
 
     # first expand for the data
     for letter in (:x, :y, :z)
-        data = plotattributes[if vert
+        data = plotattributes[
             letter
-        else
-            letter === :x ? :y : letter === :y ? :x : :z
-        end]
+        ]
         if (
             letter !== :z &&
             plotattributes[:seriestype] === :straightline &&
@@ -218,19 +215,13 @@ function Plots.expand_extrema!(sp::Subplot, plotattributes::AKW)
         end
     end
 
-    # # expand for fillrange/bar_width
-    # fillaxis, baraxis = sp.attr[:yaxis], sp.attr[:xaxis]
-    # if isvertical(plotattributes)
-    #     fillaxis, baraxis = baraxis, fillaxis
-    # end
-
     # expand for fillrange
     fr = plotattributes[:fillrange]
     if fr === nothing && plotattributes[:seriestype] === :bar
         fr = 0.0
     end
     if fr !== nothing && !RecipesPipeline.is3d(plotattributes)
-        axis = sp.attr[vert ? :yaxis : :xaxis]
+        axis = sp.attr[:yaxis]
         if typeof(fr) <: Tuple
             foreach(x -> expand_extrema!(axis, x), fr)
         else
@@ -240,7 +231,7 @@ function Plots.expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # expand for bar_width
     if plotattributes[:seriestype] === :bar
-        dsym = vert ? :x : :y
+        dsym = :x
         data = plotattributes[dsym]
 
         if (bw = plotattributes[:bar_width]) === nothing

@@ -7,6 +7,7 @@
 ## v2
 
 - deprecated backends `pgfplots` and `pyplot` removed
+- deprecated keyword `orientation` removed
 - backends are extensions now so the backend code must be explicitly loaded using `import` with the backend package, e.g. ```julia
 using Plots
 import GR # loads backend code
