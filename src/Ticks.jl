@@ -4,11 +4,9 @@ export get_ticks, _has_ticks, _transform_ticks, get_minor_ticks
 using Plots.Commons
 using Plots.Dates
 
-
 const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
 
 # get_ticks from axis symbol :x, :y, or :z
-
 
 get_ticks(ticks::NTuple{2,Any}, args...) = ticks
 get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
@@ -29,7 +27,6 @@ _transform_ticks(ticks, axis) = ticks
 _transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
     Dates.value.(ticks)
 _transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
-
 
 function num_minor_intervals(axis)
     # FIXME: `minorticks` should be fixed in `2.0` to be the number of ticks, not intervals

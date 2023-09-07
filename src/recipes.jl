@@ -462,7 +462,10 @@ end
     end
 
     # widen limits out a bit
-    expand_extrema!(axis, scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor))
+    expand_extrema!(
+        axis,
+        scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor),
+    )
 
     # draw the bar shapes
     @series begin

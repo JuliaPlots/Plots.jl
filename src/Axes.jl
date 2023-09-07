@@ -3,7 +3,15 @@ module Axes
 
 export Axis, tickfont, guidefont, widen_factor, scale_inverse_scale_func
 import Plots: get_ticks
-using Plots: Plots, RecipesPipeline, Subplot, DefaultsDict, _axis_defaults_byletter, _all_axis_args, _match_map, _match_map2
+using Plots:
+    Plots,
+    RecipesPipeline,
+    Subplot,
+    DefaultsDict,
+    _axis_defaults_byletter,
+    _all_axis_args,
+    _match_map,
+    _match_map2
 using Plots.Commons
 using Plots.Ticks
 using Plots.Fonts
@@ -54,7 +62,6 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     attr!(Axis([sp], attr), args...; kw...)
 end
 
-
 # properly retrieve from axis.attr, passing `:match` to the correct key
 Base.getindex(axis::Axis, k::Symbol) =
     if (v = axis.plotattributes[k]) === :match
@@ -66,8 +73,8 @@ Base.getindex(axis::Axis, k::Symbol) =
     else
         v
     end
-Base.setindex!(axis::Axis, v, k::Symbol)     = (axis.plotattributes[k] = v)
-Base.get(axis::Axis, k::Symbol, v)     = get(axis.plotattributes, k, v)
+Base.setindex!(axis::Axis, v, k::Symbol) = (axis.plotattributes[k] = v)
+Base.get(axis::Axis, k::Symbol, v) = get(axis.plotattributes, k, v)
 
 mutable struct Extrema
     emin::Float64
@@ -190,7 +197,6 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     end
     nothing
 end
-
 
 function round_limits(amin, amax, scale)
     base = get(_logScaleBases, scale, 10.0)
@@ -342,7 +348,6 @@ guidefont(ax::Axis) = font(;
     color = ax[:guidefontcolor],
 )
 
-
 function _update_axis(
     axis::Axis,
     plotattributes_in::AKW,
@@ -382,7 +387,6 @@ function _update_axis_colors(axis::Axis)
     nothing
 end
 
-
 """
 returns (continuous_values, discrete_values) for the ticks on this axis
 """
@@ -408,7 +412,6 @@ function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:for
     axis.plotattributes[:optimized_ticks]
 end
 
-
 function reset_extrema!(sp::Subplot)
     for asym in (:x, :y, :z)
         sp[get_attr_symbol(asym, :axis)][:extrema] = Extrema()
@@ -430,7 +433,10 @@ Plots.expand_extrema!(axis::Axis, v::Number) = expand_extrema!(axis[:extrema], v
 Plots.expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
 Plots.expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
-function Plots.expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
+function Plots.expand_extrema!(
+    axis::Axis,
+    v::Tuple{MIN,MAX},
+) where {MIN<:Number,MAX<:Number}
     ex = axis[:extrema]::Extrema
     ex.emin = isfinite(v[1]) ? min(v[1], ex.emin) : ex.emin
     ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
@@ -442,8 +448,6 @@ function Plots.expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
     ex
 end
 
-
 # -------------------------------------------------------------------------
-
 
 end # Axes

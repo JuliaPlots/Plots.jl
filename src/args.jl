@@ -122,7 +122,6 @@ like_histogram(seriestype::Symbol) = seriestype in _histogram_like
 like_line(seriestype::Symbol)      = seriestype in _line_like
 like_surface(seriestype::Symbol)   = RecipesPipeline.is_surface(seriestype)
 
-
 # ------------------------------------------------------------
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -225,7 +224,6 @@ const _positionAliases = Dict{Symbol,Symbol}(
     :bottom_right  => :bottomright,
     :br            => :bottomright,
 )
-
 
 const _allGridSyms = [
     :x,
@@ -525,7 +523,6 @@ reset_axis_defaults_byletter!() =
     end
 reset_axis_defaults_byletter!()
 
-
 const _suppress_warnings = Set{Symbol}([
     :x_discrete_indices,
     :y_discrete_indices,
@@ -575,7 +572,6 @@ const _all_plot_args = _plot_args
 
 const _all_args =
     union(_lettered_all_axis_args, _all_subplot_args, _all_series_args, _all_plot_args)
-
 
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
@@ -1684,8 +1680,6 @@ function check_contour_levels(levels)
     end
 end
 
-
-
 # -----------------------------------------------------------------------------
 
 # when a value can be `:match`, this is the key that should be used instead for value retrieval
@@ -1733,13 +1727,9 @@ const _match_map2 = Dict(
     :guidefontfamily => :fontfamily_subplot,
 )
 
-
 # -----------------------------------------------------------------------------
 
-
 # -----------------------------------------------------------------------------
-
-
 
 # -----------------------------------------------------------------------------
 
@@ -1750,7 +1740,6 @@ has_black_border_for_default(st::Function) =
     error("The seriestype attribute only accepts Symbols, you passed the function $st.")
 has_black_border_for_default(st::Symbol) =
     like_histogram(st) || st in (:hexbin, :bar, :shape)
-
 
 ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
     if plotattributes[csym] isa ColorPalette
@@ -1786,7 +1775,6 @@ label_to_string(label::Symbol, series_plotindex) =
         throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
     end
 label_to_string(label, series_plotindex) = string(label)  # Fallback to string promotion
-
 
 _series_index(plotattributes, sp) =
     if haskey(plotattributes, :series_index)

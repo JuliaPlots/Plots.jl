@@ -22,11 +22,11 @@ const KW = Dict{Symbol,Any}
 const AKW = AbstractDict{Symbol,Any}
 const TicksArgs =
     Union{AVec{T},Tuple{AVec{T},AVec{S}},Symbol} where {T<:Real,S<:AbstractString}
-const PLOTS_SEED  = 1234
+const PLOTS_SEED = 1234
 const PX_PER_INCH = 100
-const DPI         = PX_PER_INCH
+const DPI = PX_PER_INCH
 const MM_PER_INCH = 25.4
-const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
+const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
 const _cbar_width = 5mm
@@ -36,7 +36,6 @@ const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _logScales = [:ln, :log2, :log10]
 const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 const _scaleAliases = Dict{Symbol,Symbol}(:none => :identity, :log => :log10)
-
 
 function get_subplot end
 function series_list end

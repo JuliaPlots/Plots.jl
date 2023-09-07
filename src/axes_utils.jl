@@ -91,7 +91,8 @@ Ticks.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
         optimal_ticks_and_labels(nothing, args...)
     end
 
-Ticks.get_ticks(ticks::AVec, cvals, dvals, args...) = optimal_ticks_and_labels(ticks, args...)
+Ticks.get_ticks(ticks::AVec, cvals, dvals, args...) =
+    optimal_ticks_and_labels(ticks, args...)
 Ticks.get_ticks(ticks::Int, dvals, cvals, args...) =
     if isempty(dvals)
         optimal_ticks_and_labels(ticks, args...)
@@ -180,8 +181,6 @@ for l in (:x, :y, :z)
 end
 
 # -------------------------------------------------------------------------
-
-
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
 

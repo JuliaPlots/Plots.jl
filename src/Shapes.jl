@@ -5,7 +5,22 @@ import ..Plots
 using ..Plots.Commons
 import ..RecipesPipeline
 
-export shape, partialcircle, weave, makestar, makeshape, makecross, from_polar, makearrowhead, center, scale!, scale, translate, translate!, rotate, roatate!, shape_data
+export shape,
+    partialcircle,
+    weave,
+    makestar,
+    makeshape,
+    makecross,
+    from_polar,
+    makearrowhead,
+    center,
+    scale!,
+    scale,
+    translate,
+    translate!,
+    rotate,
+    roatate!,
+    shape_data
 
 const P2 = NTuple{2,Float64}
 const P3 = NTuple{3,Float64}

@@ -3,7 +3,18 @@ module PlotsPlots
 export Plot, PlotOrSubplot, _update_plot_args, plottitlefont, ignorenan_extrema
 import Plots.Axes: _update_axis, scale_lims!
 import Plots.Ticks: get_ticks
-using Plots: Plots, AbstractPlot, AbstractBackend, DefaultsDict, Series, Axis, Subplot, AbstractLayout, RecipesPipeline, _subplot_defaults, _match_map
+using Plots:
+    Plots,
+    AbstractPlot,
+    AbstractBackend,
+    DefaultsDict,
+    Series,
+    Axis,
+    Subplot,
+    AbstractLayout,
+    RecipesPipeline,
+    _subplot_defaults,
+    _match_map
 using Plots.Subplots: _update_subplot_colors, _update_margins
 using Plots.Axes: get_axis
 using Plots.PlotUtils: get_color_palette
@@ -109,7 +120,6 @@ end
 
 # ---------------------------------------------------------------
 
-
 "Smallest x in plot"
 xmin(plt::Plot) = ignorenan_minimum([
     ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
@@ -136,10 +146,10 @@ Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
 Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r, c]
 Base.setindex!(plt::Plot, xy::NTuple{2}, i::Integer) = (setxy!(plt, xy, i); plt)
 Base.setindex!(plt::Plot, xyz::Tuple{3}, i::Integer) = (setxyz!(plt, xyz, i); plt)
-Base.setindex!(plt::Plot, v, k::Symbol)      = (plt.attr[k] = v)
+Base.setindex!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 Base.length(plt::Plot) = length(plt.subplots)
 Base.lastindex(plt::Plot) = length(plt)
-Base.get(plt::Plot, k::Symbol, v)      = get(plt.attr, k, v)
+Base.get(plt::Plot, k::Symbol, v) = get(plt.attr, k, v)
 
 Base.size(plt::Plot) = size(plt.layout)
 Base.size(plt::Plot, i::Integer) = size(plt.layout)[i]

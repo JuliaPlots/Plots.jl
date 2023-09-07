@@ -2,7 +2,20 @@ module Subplots
 
 export Subplot, colorbartitlefont, legendfont, legendtitlefont, titlefont, get_series_color
 import Plots.Ticks: get_ticks
-using Plots: Plots, Series, Surface, Volume, AbstractBackend, AbstractLayout, BoundingBox, DefaultsDict, _subplot_defaults, convert_legend_value, like_surface, _match_map, _match_map2
+using Plots:
+    Plots,
+    Series,
+    Surface,
+    Volume,
+    AbstractBackend,
+    AbstractLayout,
+    BoundingBox,
+    DefaultsDict,
+    _subplot_defaults,
+    convert_legend_value,
+    like_surface,
+    _match_map,
+    _match_map2
 using Plots.PlotUtils: get_color_palette
 using Plots.Commons
 using Plots.Fonts
@@ -44,11 +57,11 @@ Base.getindex(sp::Subplot, k::Symbol) =
         v
     end
 Base.getindex(sp::Subplot, i::Union{Vector{<:Integer},Integer}) = series_list(sp)[i]
-Base.setindex!(sp::Subplot, v, k::Symbol)    = (sp.attr[k] = v)
+Base.setindex!(sp::Subplot, v, k::Symbol) = (sp.attr[k] = v)
 Base.lastindex(sp::Subplot) = length(series_list(sp))
 
 Base.empty!(sp::Subplot) = empty!(sp.series_list)
-Base.get(sp::Subplot, k::Symbol, v)    = get(sp.attr, k, v)
+Base.get(sp::Subplot, k::Symbol, v) = get(sp.attr, k, v)
 
 # -----------------------------------------------------------------------
 
@@ -183,9 +196,7 @@ function Plots.expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # first expand for the data
     for letter in (:x, :y, :z)
-        data = plotattributes[
-            letter
-        ]
+        data = plotattributes[letter]
         if (
             letter !== :z &&
             plotattributes[:seriestype] === :straightline &&

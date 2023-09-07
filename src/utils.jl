@@ -199,7 +199,6 @@ Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()  # COV_EXCL_LINE
 float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
 float_extended_type(x::AbstractArray{Real}) = Float64
 
-
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
@@ -337,7 +336,6 @@ replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
 
 replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
     foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
-
 
 function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
     (n = length(v)) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
@@ -673,7 +671,6 @@ has_attribute_segments(series::Series) =
         attr in _segmenting_vector_attributes
     ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
 
-
 get_size(series::Series) = get_size(series.plotattributes[:subplot])
 get_size(kw) = get(kw, :size, default(:size))
 get_size(plt::Plot) = get_size(plt.attr)
@@ -797,8 +794,6 @@ function dumpdict(io::IO, plotattributes::AKW, prefix = "")
     end
     println(io)
 end
-
-
 
 # converts unicode scientific notation, as returned by Showoff,
 # to a tex-like format (supported by gr, pyplot, and pgfplots).
@@ -988,7 +983,6 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     end
     X, Y, Z
 end
-
 
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))

@@ -6,7 +6,13 @@ using ..Plots.Fonts: Font, PlotText, text
 using ..Plots.Shapes: Shape
 using ..Plots: Series, Subplot, TimeType, Length
 
-export EachAnn, series_annotations, series_annotations_shapes!, process_annotation, locate_annotation, annotations, assign_annotation_coord!
+export EachAnn,
+    series_annotations,
+    series_annotations_shapes!,
+    process_annotation,
+    locate_annotation,
+    annotations,
+    assign_annotation_coord!
 
 mutable struct SeriesAnnotations
     strs::AVec  # the labels/names
