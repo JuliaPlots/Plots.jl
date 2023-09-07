@@ -683,8 +683,6 @@ get_thickness_scaling(series::Series) =
     get_thickness_scaling(series.plotattributes[:subplot])
 
 # ---------------------------------------------------------------
-makekw(; kw...) = KW(kw)
-
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 

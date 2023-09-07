@@ -66,8 +66,6 @@
 
     @test plot(-1:10, xscale = :log10) isa Plots.Plot
 
-    Plots.makekw(foo = 1, bar = 2) isa Dict
-
     ######################
     Plots.debug!(true)
 
