@@ -75,6 +75,31 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     unscaled_ticks, labels
 end
 
+Ticks.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
+    if ticks === :none
+        T[], String[]
+    elseif !isempty(dvals)
+        n = length(dvals)
+        if ticks === :all || n < 16
+            cvals, string.(dvals)
+        else
+            Δ = ceil(Int, n / 10)
+            rng = Δ:Δ:n
+            cvals[rng], string.(dvals[rng])
+        end
+    else
+        optimal_ticks_and_labels(nothing, args...)
+    end
+
+Ticks.get_ticks(ticks::AVec, cvals, dvals, args...) = optimal_ticks_and_labels(ticks, args...)
+Ticks.get_ticks(ticks::Int, dvals, cvals, args...) =
+    if isempty(dvals)
+        optimal_ticks_and_labels(ticks, args...)
+    else
+        rng = round.(Int, range(1, stop = length(dvals), length = ticks))
+        cvals[rng], string.(dvals[rng])
+    end
+
 function get_labels(formatter::Symbol, scaled_ticks, scale)
     if formatter in (:auto, :plain, :scientific, :engineering)
         return map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
@@ -153,313 +178,12 @@ for l in (:x, :y, :z)
         export $f
     end
 end
-# get_ticks from axis symbol :x, :y, or :z
-get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
-get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
-
-get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
-    if ticks === :none
-        T[], String[]
-    elseif !isempty(dvals)
-        n = length(dvals)
-        if ticks === :all || n < 16
-            cvals, string.(dvals)
-        else
-            Δ = ceil(Int, n / 10)
-            rng = Δ:Δ:n
-            cvals[rng], string.(dvals[rng])
-        end
-    else
-        optimal_ticks_and_labels(nothing, args...)
-    end
-
-get_ticks(ticks::AVec, cvals, dvals, args...) = optimal_ticks_and_labels(ticks, args...)
-get_ticks(ticks::Int, dvals, cvals, args...) =
-    if isempty(dvals)
-        optimal_ticks_and_labels(ticks, args...)
-    else
-        rng = round.(Int, range(1, stop = length(dvals), length = ticks))
-        cvals[rng], string.(dvals[rng])
-    end
-get_ticks(ticks::NTuple{2,Any}, args...) = ticks
-get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
-get_ticks(ticks::Bool, args...) =
-    ticks ? get_ticks(:auto, args...) : get_ticks(nothing, args...)
-get_ticks(::T, args...) where {T} =
-    throw(ArgumentError("Unknown ticks type in get_ticks: $T"))
-
-# do not specify array item type to also catch e.g. "xlabel=[]" and "xlabel=([],[])"
-_has_ticks(v::AVec) = !isempty(v)
-_has_ticks(t::Tuple{AVec,AVec}) = !isempty(t[1])
-_has_ticks(s::Symbol) = s !== :none
-_has_ticks(b::Bool) = b
-_has_ticks(::Nothing) = false
-_has_ticks(::Any) = true
-
-has_ticks(axis::Axis) = get(axis, :ticks, nothing) |> _has_ticks
-
-_transform_ticks(ticks, axis) = ticks
-_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
-    Dates.value.(ticks)
-_transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
-
-const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
-
-function num_minor_intervals(axis)
-    # FIXME: `minorticks` should be fixed in `2.0` to be the number of ticks, not intervals
-    # see github.com/JuliaPlots/Plots.jl/pull/4528
-    n_intervals = axis[:minorticks]
-    if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
-        max(1, n_intervals)  # 0 intervals makes no sense
-    else   # `:auto` or `true`
-        if (base = get(_logScaleBases, axis[:scale], nothing)) == 10
-            Int(base - 1)
-        else
-            DEFAULT_MINOR_INTERVALS[]
-        end
-    end::Int
-end
-
-no_minor_intervals(axis) =
-    if (n_intervals = axis[:minorticks]) === false
-        true  # must be tested with `===` since Bool <: Integer
-    elseif n_intervals ∈ (:none, nothing)
-        true
-    elseif (n_intervals === :auto && !axis[:minorgrid])
-        true
-    else
-        false
-    end
-
-function get_minor_ticks(sp, axis, ticks_and_labels)
-    no_minor_intervals(axis) && return
-    ticks = first(ticks_and_labels)
-    length(ticks) < 2 && return
-
-    amin, amax = axis_limits(sp, axis[:letter])
-    scale = axis[:scale]
-    base = get(_logScaleBases, scale, nothing)
-
-    # add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
-    if (log_scaled = scale ∈ _logScales)
-        sub = round(Int, log(base, ticks[2] / ticks[1]))
-        ticks = [ticks[1] / base; ticks; ticks[end] * base]
-    else
-        sub = 1  # unused
-        ratio = length(ticks) > 2 ? (ticks[3] - ticks[2]) / (ticks[2] - ticks[1]) : 1
-        first_step = ticks[2] - ticks[1]
-        last_step = ticks[end] - ticks[end - 1]
-        ticks = [ticks[1] - first_step / ratio; ticks; ticks[end] + last_step * ratio]
-    end
-
-    n_minor_intervals = num_minor_intervals(axis)
-    minorticks = sizehint!(eltype(ticks)[], n_minor_intervals * sub * length(ticks))
-    for i in 2:length(ticks)
-        lo = ticks[i - 1]
-        hi = ticks[i]
-        (isfinite(lo) && isfinite(hi) && hi > lo) || continue
-        if log_scaled
-            for e in 1:sub
-                lo_ = lo * base^(e - 1)
-                hi_ = lo_ * base
-                step = (hi_ - lo_) / n_minor_intervals
-                rng = (lo_ + (e > 1 ? 0 : step)):step:(hi_ - (e < sub ? 0 : step / 2))
-                append!(minorticks, collect(rng))
-            end
-        else
-            step = (hi - lo) / n_minor_intervals
-            append!(minorticks, collect((lo + step):step:(hi - step / 2)))
-        end
-    end
-    minorticks[amin .≤ minorticks .≤ amax]
-end
 
 # -------------------------------------------------------------------------
 
-function scale_lims(from, to, factor)
-    mid, span = (from + to) / 2, (to - from) / 2
-    mid .+ (-span, span) .* factor
-end
 
-_scale_lims(::Val{true}, ::Function, ::Function, from, to, factor) =
-    scale_lims(from, to, factor)
-_scale_lims(::Val{false}, f::Function, invf::Function, from, to, factor) =
-    invf.(scale_lims(f(from), f(to), factor))
-
-function scale_lims(from, to, factor, scale)
-    f, invf, noop = scale_inverse_scale_func(scale)
-    _scale_lims(Val(noop), f, invf, from, to, factor)
-end
-
-"""
-    scale_lims!([plt], [letter], factor)
-
-Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by the
-given `factor` around the limits' middle point.
-If `letter` is omitted, all axes are affected.
-"""
-function scale_lims!(sp::Subplot, letter, factor)
-    axis = Plots.get_axis(sp, letter)
-    from, to = Plots.get_sp_lims(sp, letter)
-    axis[:lims] = scale_lims(from, to, factor, axis[:scale])
-end
-function scale_lims!(plt::Plot, letter, factor)
-    foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
-    plt
-end
-scale_lims!(letter::Symbol, factor) = scale_lims!(current(), letter, factor)
-function scale_lims!(plt::Union{Plot,Subplot}, factor)
-    foreach(letter -> scale_lims!(plt, letter, factor), (:x, :y, :z))
-    plt
-end
-scale_lims!(factor::Number) = scale_lims!(current(), factor)
-
-# figure out if widening is a good idea.
-const _widen_seriestypes = (
-    :line,
-    :path,
-    :steppre,
-    :stepmid,
-    :steppost,
-    :sticks,
-    :scatter,
-    :barbins,
-    :barhist,
-    :histogram,
-    :scatterbins,
-    :scatterhist,
-    :stepbins,
-    :stephist,
-    :bins2d,
-    :histogram2d,
-    :bar,
-    :shape,
-    :path3d,
-    :scatter3d,
-)
-
-const default_widen_factor = Ref(1.06)
-
-# factor to widen axis limits by, or `nothing` if axis widening should be skipped
-function widen_factor(axis::Axis; factor = default_widen_factor[])
-    if (widen = axis[:widen]) isa Bool
-        return widen ? factor : nothing
-    elseif widen isa Number
-        return widen
-    else
-        widen === :auto || @warn "Invalid value specified for `widen`: $widen"
-    end
-
-    # automatic behavior: widen if limits aren't specified and series type is appropriate
-    lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims === :round) && return
-    for sp in axis.sps, series in series_list(sp)
-        series.plotattributes[:seriestype] in _widen_seriestypes && return factor
-    end
-    nothing
-end
-
-function round_limits(amin, amax, scale)
-    base = get(_logScaleBases, scale, 10.0)
-    factor = base^(1 - round(log(base, amax - amin)))
-    amin = floor(amin * factor) / factor
-    amax = ceil(amax * factor) / factor
-    amin, amax
-end
-
-# NOTE: cannot use `NTuple` here ↓
-process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
-process_limits(lims::Symbol, axis) = lims
-process_limits(lims::AVec, axis) =
-    length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) :
-    nothing
-process_limits(lims, axis) = nothing
-
-warn_invalid_limits(lims, letter) = @warn """
-        Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
-        $(letter)lims = $lims
-        """
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
-function axis_limits(
-    sp,
-    letter,
-    lims_factor = widen_factor(get_axis(sp, letter)),
-    consider_aspect = true,
-)
-    axis = get_axis(sp, letter)
-    ex = axis[:extrema]
-    amin, amax = ex.emin, ex.emax
-    lims = process_limits(axis[:lims], axis)
-    lims === nothing && warn_invalid_limits(axis[:lims], letter)
-
-    if (has_user_lims = lims isa Tuple)
-        lmin, lmax = lims
-        if lmin isa Number && isfinite(lmin)
-            amin = lmin
-        elseif lmin isa Symbol
-            lmin === :auto || @warn "Invalid min $(letter)limit" lmin
-        end
-        if lmax isa Number && isfinite(lmax)
-            amax = lmax
-        elseif lmax isa Symbol
-            lmax === :auto || @warn "Invalid max $(letter)limit" lmax
-        end
-    end
-    if lims === :symmetric
-        amax = max(abs(amin), abs(amax))
-        amin = -amax
-    end
-    if amax ≤ amin && isfinite(amin)
-        amax = amin + 1.0
-    end
-    if !isfinite(amin) && !isfinite(amax)
-        amin, amax = zero(amin), one(amax)
-    end
-    if ispolar(axis.sps[1])
-        if axis[:letter] === :x
-            amin, amax = 0, 2π
-        elseif lims === :auto
-            # widen max radius so ticks dont overlap with theta axis
-            amin, amax = 0, amax + 0.1abs(amax - amin)
-        end
-    elseif lims_factor !== nothing
-        amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
-    elseif lims === :round
-        amin, amax = round_limits(amin, amax, axis[:scale])
-    end
-
-    aspect_ratio = get_aspect_ratio(sp)
-    if (
-        !has_user_lims &&
-        consider_aspect &&
-        letter in (:x, :y) &&
-        !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
-    )
-        aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
-        area = plotarea(sp)
-        plot_ratio = height(area) / width(area)
-        dist = amax - amin
-
-        factor = if letter === :x
-            ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
-            axis_ratio = aspect_ratio * ydist / dist
-            axis_ratio / plot_ratio
-        else
-            xdist, = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false) |> collect |> diff
-            axis_ratio = aspect_ratio * dist / xdist
-            plot_ratio / axis_ratio
-        end
-
-        if factor > 1
-            center = (amin + amax) / 2
-            amin = center + factor * (amin - center)
-            amax = center + factor * (amax - center)
-        end
-    end
-
-    amin, amax
-end
 
 # -------------------------------------------------------------------------
 

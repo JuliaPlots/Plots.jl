@@ -1,9 +1,37 @@
 
 module Axes
 
-export Axis, tickfont, guidefont
-using Plots: Plots, Subplot, DefaultsDict, _axis_defaults_byletter, _all_axis_args
+export Axis, tickfont, guidefont, widen_factor, scale_inverse_scale_func
+import Plots: get_ticks
+using Plots: Plots, RecipesPipeline, Subplot, DefaultsDict, _axis_defaults_byletter, _all_axis_args, _match_map, _match_map2
 using Plots.Commons
+using Plots.Ticks
+using Plots.Fonts
+
+const default_widen_factor = Ref(1.06)
+const _widen_seriestypes = (
+    :line,
+    :path,
+    :steppre,
+    :stepmid,
+    :steppost,
+    :sticks,
+    :scatter,
+    :barbins,
+    :barhist,
+    :histogram,
+    :scatterbins,
+    :scatterhist,
+    :stepbins,
+    :stephist,
+    :bins2d,
+    :histogram2d,
+    :bar,
+    :shape,
+    :path3d,
+    :scatter3d,
+)
+
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
 mutable struct Axis
     sps::Vector{Subplot}
@@ -48,6 +76,11 @@ end
 
 Extrema() = Extrema(Inf, -Inf)
 # -------------------------------------------------------------------------
+scale_inverse_scale_func(scale::Symbol) = (
+    RecipesPipeline.scale_func(scale),
+    RecipesPipeline.inverse_scale_func(scale),
+    scale === :identity,
+)
 function get_axis(sp::Subplot, letter::Symbol)
     axissym = get_attr_symbol(letter, :axis)
     if haskey(sp.attr, axissym)
@@ -57,6 +90,158 @@ function get_axis(sp::Subplot, letter::Symbol)
     end::Axis
 end
 
+function Commons.axis_limits(
+    sp,
+    letter,
+    lims_factor = widen_factor(get_axis(sp, letter)),
+    consider_aspect = true,
+)
+    axis = get_axis(sp, letter)
+    ex = axis[:extrema]
+    amin, amax = ex.emin, ex.emax
+    lims = process_limits(axis[:lims], axis)
+    lims === nothing && warn_invalid_limits(axis[:lims], letter)
+
+    if (has_user_lims = lims isa Tuple)
+        lmin, lmax = lims
+        if lmin isa Number && isfinite(lmin)
+            amin = lmin
+        elseif lmin isa Symbol
+            lmin === :auto || @warn "Invalid min $(letter)limit" lmin
+        end
+        if lmax isa Number && isfinite(lmax)
+            amax = lmax
+        elseif lmax isa Symbol
+            lmax === :auto || @warn "Invalid max $(letter)limit" lmax
+        end
+    end
+    if lims === :symmetric
+        amax = max(abs(amin), abs(amax))
+        amin = -amax
+    end
+    if amax ≤ amin && isfinite(amin)
+        amax = amin + 1.0
+    end
+    if !isfinite(amin) && !isfinite(amax)
+        amin, amax = zero(amin), one(amax)
+    end
+    if ispolar(axis.sps[1])
+        if axis[:letter] === :x
+            amin, amax = 0, 2π
+        elseif lims === :auto
+            # widen max radius so ticks dont overlap with theta axis
+            amin, amax = 0, amax + 0.1abs(amax - amin)
+        end
+    elseif lims_factor !== nothing
+        amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
+    elseif lims === :round
+        amin, amax = round_limits(amin, amax, axis[:scale])
+    end
+
+    aspect_ratio = get_aspect_ratio(sp)
+    if (
+        !has_user_lims &&
+        consider_aspect &&
+        letter in (:x, :y) &&
+        !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
+    )
+        aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
+        area = plotarea(sp)
+        plot_ratio = height(area) / width(area)
+        dist = amax - amin
+
+        factor = if letter === :x
+            ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
+            axis_ratio = aspect_ratio * ydist / dist
+            axis_ratio / plot_ratio
+        else
+            xdist, = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false) |> collect |> diff
+            axis_ratio = aspect_ratio * dist / xdist
+            plot_ratio / axis_ratio
+        end
+
+        if factor > 1
+            center = (amin + amax) / 2
+            amin = center + factor * (amin - center)
+            amax = center + factor * (amax - center)
+        end
+    end
+
+    amin, amax
+end
+
+"""
+factor to widen axis limits by, or `nothing` if axis widening should be skipped
+"""
+function widen_factor(axis::Axis; factor = default_widen_factor[])
+    if (widen = axis[:widen]) isa Bool
+        return widen ? factor : nothing
+    elseif widen isa Number
+        return widen
+    else
+        widen === :auto || @warn "Invalid value specified for `widen`: $widen"
+    end
+
+    # automatic behavior: widen if limits aren't specified and series type is appropriate
+    lims = process_limits(axis[:lims], axis)
+    (lims isa Tuple || lims === :round) && return
+    for sp in axis.sps, series in series_list(sp)
+        series.plotattributes[:seriestype] in _widen_seriestypes && return factor
+    end
+    nothing
+end
+
+
+function round_limits(amin, amax, scale)
+    base = get(_logScaleBases, scale, 10.0)
+    factor = base^(1 - round(log(base, amax - amin)))
+    amin = floor(amin * factor) / factor
+    amax = ceil(amax * factor) / factor
+    amin, amax
+end
+
+# NOTE: cannot use `NTuple` here ↓
+process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
+process_limits(lims::Symbol, axis) = lims
+process_limits(lims::AVec, axis) =
+    length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) :
+    nothing
+process_limits(lims, axis) = nothing
+
+warn_invalid_limits(lims, letter) = @warn """
+        Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
+        $(letter)lims = $lims
+        """
+function scale_lims(from, to, factor)
+    mid, span = (from + to) / 2, (to - from) / 2
+    mid .+ (-span, span) .* factor
+end
+
+_scale_lims(::Val{true}, ::Function, ::Function, from, to, factor) =
+    scale_lims(from, to, factor)
+_scale_lims(::Val{false}, f::Function, invf::Function, from, to, factor) =
+    invf.(scale_lims(f(from), f(to), factor))
+
+function scale_lims(from, to, factor, scale)
+    f, invf, noop = scale_inverse_scale_func(scale)
+    _scale_lims(Val(noop), f, invf, from, to, factor)
+end
+
+"""
+    scale_lims!([plt], [letter], factor)
+
+Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by the
+given `factor` around the limits' middle point.
+If `letter` is omitted, all axes are affected.
+"""
+function scale_lims!(sp::Subplot, letter, factor)
+    axis = Plots.get_axis(sp, letter)
+    from, to = Plots.get_sp_lims(sp, letter)
+    axis[:lims] = scale_lims(from, to, factor, axis[:scale])
+end
+scale_lims!(factor::Number) = scale_lims!(current(), factor)
+scale_lims!(letter::Symbol, factor) = scale_lims!(current(), letter, factor)
+#----------------------------------------------------------------------
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scaleAliases, arg, arg)
@@ -102,6 +287,8 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
         @warn "Skipped $(letter)axis arg $arg"
     end
 end
+
+has_ticks(axis::Axis) = get(axis, :ticks, nothing) |> Plots.Ticks._has_ticks
 
 # update an Axis object with magic args and keywords
 function attr!(axis::Axis, args...; kw...)
@@ -196,7 +383,9 @@ function _update_axis_colors(axis::Axis)
 end
 
 
-# returns (continuous_values, discrete_values) for the ticks on this axis
+"""
+returns (continuous_values, discrete_values) for the ticks on this axis
+"""
 function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:formatter])
     if update || !haskey(axis.plotattributes, :optimized_ticks)
         dvals = axis[:discrete_values]

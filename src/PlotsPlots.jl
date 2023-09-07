@@ -1,8 +1,9 @@
 module PlotsPlots
 
 export Plot, PlotOrSubplot, _update_plot_args, plottitlefont, ignorenan_extrema
-import Plots.Axes: _update_axis
-using Plots: Plots, AbstractPlot, AbstractBackend, DefaultsDict, Series, Axis, Subplot, AbstractLayout, RecipesPipeline, _subplot_defaults
+import Plots.Axes: _update_axis, scale_lims!
+import Plots.Ticks: get_ticks
+using Plots: Plots, AbstractPlot, AbstractBackend, DefaultsDict, Series, Axis, Subplot, AbstractLayout, RecipesPipeline, _subplot_defaults, _match_map
 using Plots.Subplots: _update_subplot_colors, _update_margins
 using Plots.Axes: get_axis
 using Plots.PlotUtils: get_color_palette
@@ -150,6 +151,9 @@ Plots.get_subplot(plt::Plot, sp::Subplot) = sp
 Plots.get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
 Plots.get_subplot(plt::Plot, k) = plt.spmap[k]
 Plots.series_list(plt::Plot) = plt.series_list
+
+get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
+
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
 Plots.RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Plots.preprocess_attributes!(plotattributes)
@@ -248,90 +252,13 @@ function _update_subplot_args(
     Plots.Subplots._update_subplot_periphery(sp, anns)
 end
 
-function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
-    pkg = plt.backend
-    globalIndex = plotattributes[:series_plotindex]
-    plotIndex = _series_index(plotattributes, sp)
-
-    aliasesAndAutopick(
-        plotattributes,
-        :linestyle,
-        _styleAliases,
-        supported_styles(pkg),
-        plotIndex,
-    )
-    aliasesAndAutopick(
-        plotattributes,
-        :markershape,
-        _markerAliases,
-        supported_markers(pkg),
-        plotIndex,
-    )
-
-    # update alphas
-    for asym in (:linealpha, :markeralpha, :fillalpha)
-        if plotattributes[asym] === nothing
-            plotattributes[asym] = plotattributes[:seriesalpha]
-        end
-    end
-    if plotattributes[:markerstrokealpha] === nothing
-        plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
-    end
-
-    # update series color
-    scolor = plotattributes[:seriescolor]
-    stype = plotattributes[:seriestype]
-    plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
-
-    # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
-    for s in (:line, :marker, :fill)
-        csym, asym = Symbol(s, :color), Symbol(s, :alpha)
-        plotattributes[csym] = if plotattributes[csym] === :auto
-            plot_color(if has_black_border_for_default(stype) && s === :line
-                sp[:foreground_color_subplot]
-            else
-                scolor
-            end)
-        elseif plotattributes[csym] === :match
-            plot_color(scolor)
-        else
-            get_series_color(plotattributes[csym], sp, plotIndex, stype)
-        end
-    end
-
-    # update markerstrokecolor
-    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] === :match
-        plot_color(sp[:foreground_color_subplot])
-    elseif plotattributes[:markerstrokecolor] === :auto
-        get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
-    else
-        get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
-    end
-
-    # if marker_z, fill_z or line_z are set, ensure we have a gradient
-    if plotattributes[:marker_z] !== nothing
-        ensure_gradient!(plotattributes, :markercolor, :markeralpha)
-    end
-    if plotattributes[:line_z] !== nothing
-        ensure_gradient!(plotattributes, :linecolor, :linealpha)
-    end
-    if plotattributes[:fill_z] !== nothing
-        ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
-    end
-
-    # scatter plots don't have a line, but must have a shape
-    if plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
-        plotattributes[:linewidth] = 0
-        if plotattributes[:markershape] === :none
-            plotattributes[:markershape] = :circle
-        end
-    end
-
-    # set label
-    plotattributes[:label] = label_to_string.(plotattributes[:label], globalIndex)
-
-    _replace_linewidth(plotattributes)
-    plotattributes
+function scale_lims!(plt::Plot, letter, factor)
+    foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
+    plt
+end
+function scale_lims!(plt::Union{Plot,Subplot}, factor)
+    foreach(letter -> scale_lims!(plt, letter, factor), (:x, :y, :z))
+    plt
 end
 
 end # PlotsPlots

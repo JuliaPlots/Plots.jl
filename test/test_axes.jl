@@ -82,7 +82,7 @@ end
 end
 
 @testset "Axis limits" begin
-    default_widen(from, to) = Plots.scale_lims(from, to, Plots.default_widen_factor)
+    default_widen(from, to) = Plots.scale_lims(from, to, Plots.Axes.default_widen_factor)
 
     pl = plot(1:5, xlims = :symmetric, widen = false)
     @test Plots.xlims(pl) == (-5, 5)

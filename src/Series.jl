@@ -1,7 +1,7 @@
 module PlotsSeries
 
 export Series, should_add_to_legend
-using Plots: Plots, DefaultsDict
+using Plots: Plots, DefaultsDict, RecipesPipeline
 
 mutable struct Series
     plotattributes::DefaultsDict

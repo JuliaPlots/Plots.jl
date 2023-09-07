@@ -1,9 +1,11 @@
 module Subplots
 
-export Subplot, colorbartitlefont, legendfont, legendtitlefont, titlefont
-using Plots: Plots, Series, AbstractBackend, AbstractLayout, BoundingBox, DefaultsDict, _subplot_defaults, convert_legend_value
+export Subplot, colorbartitlefont, legendfont, legendtitlefont, titlefont, get_series_color
+import Plots.Ticks: get_ticks
+using Plots: Plots, Series, Surface, Volume, AbstractBackend, AbstractLayout, BoundingBox, DefaultsDict, _subplot_defaults, convert_legend_value, like_surface, _match_map, _match_map2
 using Plots.PlotUtils: get_color_palette
 using Plots.Commons
+using Plots.Fonts
 
 # a single subplot
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
@@ -85,6 +87,8 @@ end
 Plots.series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)
 Plots.RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 Plots.ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
+
+get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
@@ -193,7 +197,7 @@ function Plots.expand_extrema!(sp::Subplot, plotattributes::AKW)
         end
         axis = sp[get_attr_symbol(letter, :axis)]
 
-        if isa(data, Volume)
+        if isa(data, Plots.Volume)
             expand_extrema!(sp[:xaxis], data.x_extents)
             expand_extrema!(sp[:yaxis], data.y_extents)
             expand_extrema!(sp[:zaxis], data.z_extents)

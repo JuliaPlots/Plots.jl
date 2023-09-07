@@ -45,10 +45,10 @@ to_nan(::Type{Float64}) = NaN
 to_nan(::Type{NTuple{2,Float64}}) = (NaN, NaN)
 to_nan(::Type{NTuple{3,Float64}}) = (NaN, NaN, NaN)
 
-coords(segs::Segments{Float64}) = segs.pts
-coords(segs::Segments{NTuple{2,Float64}}) =
+Commons.coords(segs::Segments{Float64}) = segs.pts
+Commons.coords(segs::Segments{NTuple{2,Float64}}) =
     (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
-coords(segs::Segments{NTuple{3,Float64}}) =
+Commons.coords(segs::Segments{NTuple{3,Float64}}) =
     (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
@@ -199,36 +199,92 @@ Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()  # COV_EXCL_LINE
 float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
 float_extended_type(x::AbstractArray{Real}) = Float64
 
-# ------------------------------------------------------------------------------------
-_cycle(v::AVec, idx::Int) = v[mod(idx, axes(v, 1))]
-_cycle(v::AMat, idx::Int) = size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]
-_cycle(v, idx::Int)       = v
 
-_cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v, i), indices)
-_cycle(v::AMat, indices::AVec{Int}) = map(i -> _cycle(v, i), indices)
-_cycle(v, indices::AVec{Int})       = fill(v, length(indices))
+function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
+    pkg = plt.backend
+    globalIndex = plotattributes[:series_plotindex]
+    plotIndex = _series_index(plotattributes, sp)
 
-_cycle(cl::PlotUtils.AbstractColorList, idx::Int) = cl[mod1(idx, end)]
-_cycle(cl::PlotUtils.AbstractColorList, idx::AVec{Int}) = cl[mod1.(idx, end)]
+    aliasesAndAutopick(
+        plotattributes,
+        :linestyle,
+        _styleAliases,
+        supported_styles(pkg),
+        plotIndex,
+    )
+    aliasesAndAutopick(
+        plotattributes,
+        :markershape,
+        _markerAliases,
+        supported_markers(pkg),
+        plotIndex,
+    )
 
-_as_gradient(grad) = grad
-_as_gradient(v::AbstractVector{<:Colorant}) = cgrad(v)
-_as_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
-_as_gradient(c::Colorant) = cgrad([c, c])
+    # update alphas
+    for asym in (:linealpha, :markeralpha, :fillalpha)
+        if plotattributes[asym] === nothing
+            plotattributes[asym] = plotattributes[:seriesalpha]
+        end
+    end
+    if plotattributes[:markerstrokealpha] === nothing
+        plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
+    end
 
-makevec(v::AVec) = v
-makevec(v::T) where {T} = T[v]
+    # update series color
+    scolor = plotattributes[:seriescolor]
+    stype = plotattributes[:seriestype]
+    plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
-"duplicate a single value, or pass the 2-tuple through"
-maketuple(x::Real) = (x, x)
-maketuple(x::Tuple) = x
+    # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
+    for s in (:line, :marker, :fill)
+        csym, asym = Symbol(s, :color), Symbol(s, :alpha)
+        plotattributes[csym] = if plotattributes[csym] === :auto
+            plot_color(if has_black_border_for_default(stype) && s === :line
+                sp[:foreground_color_subplot]
+            else
+                scolor
+            end)
+        elseif plotattributes[csym] === :match
+            plot_color(scolor)
+        else
+            get_series_color(plotattributes[csym], sp, plotIndex, stype)
+        end
+    end
 
-RecipesPipeline.unzip(v) = Unzip.unzip(v)  # COV_EXCL_LINE
+    # update markerstrokecolor
+    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] === :match
+        plot_color(sp[:foreground_color_subplot])
+    elseif plotattributes[:markerstrokecolor] === :auto
+        get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
+    else
+        get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
+    end
 
-"collect into columns (convenience for `unzip` from `Unzip.jl`)"
-unzip(v) = RecipesPipeline.unzip(v)
+    # if marker_z, fill_z or line_z are set, ensure we have a gradient
+    if plotattributes[:marker_z] !== nothing
+        ensure_gradient!(plotattributes, :markercolor, :markeralpha)
+    end
+    if plotattributes[:line_z] !== nothing
+        ensure_gradient!(plotattributes, :linecolor, :linealpha)
+    end
+    if plotattributes[:fill_z] !== nothing
+        ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
+    end
 
-# -----------------------------------------------------------------------------
+    # scatter plots don't have a line, but must have a shape
+    if plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
+        plotattributes[:linewidth] = 0
+        if plotattributes[:markershape] === :none
+            plotattributes[:markershape] = :circle
+        end
+    end
+
+    # set label
+    plotattributes[:label] = label_to_string.(plotattributes[:label], globalIndex)
+
+    _replace_linewidth(plotattributes)
+    plotattributes
+end
 """
 1-row matrices will give an element
 multi-row matrices will give a column
@@ -282,11 +338,6 @@ replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
 replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
     foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
 
-scale_inverse_scale_func(scale::Symbol) = (
-    RecipesPipeline.scale_func(scale),
-    RecipesPipeline.inverse_scale_func(scale),
-    scale === :identity,
-)
 
 function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
     (n = length(v)) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
@@ -622,27 +673,6 @@ has_attribute_segments(series::Series) =
         attr in _segmenting_vector_attributes
     ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
 
-check_aspect_ratio(ar::AbstractVector) = nothing  # for PyPlot
-check_aspect_ratio(ar::Number) = nothing
-check_aspect_ratio(ar::Symbol) =
-    ar in (:none, :equal, :auto) || throw(ArgumentError("Invalid `aspect_ratio` = $ar"))
-check_aspect_ratio(ar::T) where {T} =
-    throw(ArgumentError("Invalid `aspect_ratio`::$T = $ar "))
-
-function get_aspect_ratio(sp)
-    ar = sp[:aspect_ratio]
-    check_aspect_ratio(ar)
-    if ar === :auto
-        ar = :none
-        for series in series_list(sp)
-            if series[:seriestype] === :image
-                ar = :equal
-            end
-        end
-    end
-    ar isa Bool && (ar = Int(ar))  # NOTE: Bool <: ... <: Number
-    ar
-end
 
 get_size(series::Series) = get_size(series.plotattributes[:subplot])
 get_size(kw) = get(kw, :size, default(:size))

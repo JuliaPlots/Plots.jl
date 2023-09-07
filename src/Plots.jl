@@ -126,16 +126,22 @@ export
     scalefontsizes,
     resetfontsizes
 #! format: on
-import Measures
+using Measures: Measures
 include("PlotMeasures.jl")
 using .PlotMeasures
-import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
+using .PlotMeasures: Length, AbsoluteLength, Measure
+import .PlotMeasures: width, height
 # ---------------------------------------------------------
 
 include("Commons.jl")
 using .Commons
 include("args.jl")
 # ---------------------------------------------------------
+include("Fonts.jl")
+@reexport using .Fonts
+using .Fonts: Font, PlotText
+include("Ticks.jl")
+using .Ticks
 include("Series.jl")
 using .PlotsSeries
 include("Subplots.jl")
@@ -149,9 +155,6 @@ include("layouts.jl")
 include("utils.jl")
 include("axes_utils.jl")
 include("colorbars.jl")
-include("Fonts.jl")
-@reexport using .Fonts
-import .Fonts: Font, PlotText
 include("legend.jl")
 include("consts.jl")
 include("Shapes.jl")
