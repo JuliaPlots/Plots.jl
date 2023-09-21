@@ -38,7 +38,7 @@ const _arg_desc = KW(
     :fill_z             => (AMat, "Matrix of the same size as z matrix, which specifies the color of the 3D surface."),
     :levels             => (Union{AVec,Integer}, "Singleton for number of contours or iterable for contour values. Determines contour levels for a contour type."),
     :permute            => (NTuple{2,Symbol}, "Permutes data and axis properties of the axes given in the tuple, e.g. (:x, :y)."),
-    :orientation        => (Symbol, "(deprecated) Horizontal or vertical orientation for bar types. Values `:h`, `:hor`, `:horizontal` correspond to horizontal (sideways, anchored to y-axis), and `:v`, `:vert`, and `:vertical` correspond to vertical (the default)."),
+    :orientation        => (Symbol, "(deprecated in favor of `:permute`) Horizontal or vertical orientation for bar types. Values `:h`, `:hor`, `:horizontal` correspond to horizontal (sideways, anchored to y-axis), and `:v`, `:vert`, and `:vertical` correspond to vertical (the default)."),
     :bar_position       => (Symbol, "Choose from `:overlay` (default), `:stack`. (warning: may only be partially implemented)."),
     :bar_width          => (Real, " Width of bars in data coordinates. When `nothing`, chooses based on `x` (or `y` when `orientation = :h`)."),
     :bar_edges          => (Bool, "Align bars to edges (true), or centers (the default) ?"),
