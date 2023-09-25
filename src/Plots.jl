@@ -32,7 +32,6 @@ import RecipesPipeline:
     Formatted,
     reset_kw!,
     SliceIt,
-    Surface,
     pop_kw!,
     Volume,
     is3d
@@ -88,18 +87,13 @@ export
     backend_object,
     aliases,
 
-    Shape,
     text,
     font,
     stroke,
     brush,
-    Surface,
     OHLC,
     arrow,
-    Segments,
-    Formatted,
 
-    Animation,
     frame,
     gif,
     mov,
@@ -132,10 +126,22 @@ using .PlotMeasures
 using .PlotMeasures: Length, AbsoluteLength, Measure
 import .PlotMeasures: width, height
 # ---------------------------------------------------------
-
-include("Commons.jl")
+macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
+    Expr(:module, true, mod,
+      Expr(:block,
+        Expr(:import,
+          Expr(:(:),
+            Expr(:., :., :., parent),
+            (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...
+          )
+        ),
+        Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
+      )
+    ) |> esc
+end
+include("Commons/Commons.jl")
 using .Commons
-include("args.jl")
+using .Commons.Frontend
 # ---------------------------------------------------------
 include("Fonts.jl")
 @reexport using .Fonts
@@ -153,21 +159,20 @@ using .PlotsPlots
 include("layouts.jl")
 # ---------------------------------------------------------
 include("utils.jl")
+include("Surfaces.jl")
+using .Surfaces
 include("axes_utils.jl")
 include("colorbars.jl")
 include("legend.jl")
-include("consts.jl")
 include("Shapes.jl")
 @reexport using .Shapes
-import .Shapes: Shape, _shapes
+using .Shapes: Shape, _shapes
 include("Annotations.jl")
 using .Annotations
-import .Annotations: SeriesAnnotations
+using .Annotations: SeriesAnnotations
 include("Arrows.jl")
 using .Arrows
-import .Arrows: Arrow
-include("Surfaces.jl")
-using .Surfaces
+using .Arrows: Arrow
 include("Strokes.jl")
 using .Strokes
 include("BezierCurves.jl")

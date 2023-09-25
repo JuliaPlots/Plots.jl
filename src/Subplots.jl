@@ -1,23 +1,20 @@
 module Subplots
 
-export Subplot, colorbartitlefont, legendfont, legendtitlefont, titlefont, get_series_color
+export Subplot, colorbartitlefont, legendfont, legendtitlefont, titlefont, get_series_color, needs_any_3d_axes
 import Plots.Ticks: get_ticks
 using Plots:
     Plots,
+    RecipesPipeline,
     Series,
-    Surface,
-    Volume,
     AbstractBackend,
     AbstractLayout,
     BoundingBox,
-    DefaultsDict,
-    _subplot_defaults,
-    convert_legend_value,
-    like_surface,
-    _match_map,
-    _match_map2
+    DefaultsDict
+using Plots.RecipesPipeline: RecipesPipeline, Surface, Volume
 using Plots.PlotUtils: get_color_palette
 using Plots.Commons
+using Plots.Commons.Frontend
+using Plots.Commons: convert_legend_value, like_surface
 using Plots.Fonts
 
 # a single subplot
@@ -48,10 +45,10 @@ end
 # properly retrieve from sp.attr, passing `:match` to the correct key
 Base.getindex(sp::Subplot, k::Symbol) =
     if (v = sp.attr[k]) === :match
-        if haskey(_match_map2, k)
-            sp.plt[_match_map2[k]]
+        if haskey(Commons.Commons._match_map2, k)
+            sp.plt[Commons.Commons._match_map2[k]]
         else
-            sp[_match_map[k]]
+            sp[Commons._match_map[k]]
         end
     else
         v
@@ -86,7 +83,7 @@ bottompad(sp::Subplot) = sp.minpad[4]
 
 function attr!(sp::Subplot; kw...)
     plotattributes = KW(kw)
-    Plots.preprocess_attributes!(plotattributes)
+    Plots.Commons.preprocess_attributes!(plotattributes)
     for (k, v) in plotattributes
         if haskey(_subplot_defaults, k)
             sp[k] = v
@@ -192,6 +189,12 @@ _update_margins(sp::Subplot) =
         end
     end
 
+needs_any_3d_axes(sp::Subplot) = any(
+    RecipesPipeline.needs_3d_axes(
+        _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
+    ) for s in series_list(sp)
+)
+
 function Plots.expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # first expand for the data
@@ -273,4 +276,8 @@ function Plots.expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
     expand_extrema!(sp[:xaxis], (xmin, xmax))
     expand_extrema!(sp[:yaxis], (ymin, ymax))
 end
+
+
+Commons.get_size(sp::Subplot) = Commons.get_size(sp.plt)
+Commons.get_thickness_scaling(sp::Subplot) = Commons.get_thickness_scaling(sp.plt)
 end # Subplots

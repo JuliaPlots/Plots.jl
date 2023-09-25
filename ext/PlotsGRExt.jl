@@ -1,19 +1,15 @@
 module PlotsGRExt
 
-import GR
-import Plots: DEFAULT_LINEWIDTH
-import Plots: Plots, Shape, Font, GRBackend, PlotText, Arrow, EachAnn
-import Plots:
-    _display,
-    _show,
-    closeall,
-    get_size,
-    _cycle,
-    get_ticks,
-    is_horizontal,
-    get_thickness_scaling,
-    plot_color,
-    text,
+using GR: GR
+using Plots: Plots, GRBackend
+using Plots:
+#     _display,
+#     _show,
+#     closeall,
+#     get_size,
+#     _cycle,
+#     get_thickness_scaling,
+#     text,
     bbox,
     left,
     right,
@@ -21,52 +17,53 @@ import Plots:
     top,
     hascolorbar,
     plotarea,
-    series_list,
-    should_add_to_legend,
-    get_aspect_ratio,
-    ispolar,
-    is3d,
-    needs_any_3d_axes,
-    _logScales,
+#     series_list,
+#     get_aspect_ratio,
+#     ispolar,
+#     is3d,
+#     needs_any_3d_axes,
     axis_drawing_info,
-    get_attr_symbol,
-    ok,
+#     get_attr_symbol,
+#     ok,
     axes_letters,
-    reverse_if,
-    _debug,
-    get_colorgradient,
-    handle_surface,
-    series_annotations_shapes!,
-    get_clims,
-    series_segments,
-    get_linecolor,
-    get_linewidth,
-    get_linestyle,
-    get_linealpha,
-    colorbar_style,
-    _guess_best_legend_position,
-    isortho,
-    isautop,
-    axis_drawing_info_3d,
-    sort_3d_axes,
-    _as_gradient,
-    heatmap_edges,
-    is_uniformly_spaced,
-    cbar_gradient,
-    get_fillalpha,
-    shape_data,
-    get_fillcolor,
-    get_fillstyle
-import RecipesPipeline
-import NaNMath
+#     reverse_if,
+#     _debug,
+#     get_colorgradient,
+#     handle_surface,
+    get_clims
+#     series_segments,
+#     get_linecolor,
+#     get_linewidth,
+#     get_linestyle,
+#     get_linealpha,
+#     colorbar_style,
+#     _guess_best_legend_position,
+#     isortho,
+#     isautop,
+#     axis_drawing_info_3d,
+#     sort_3d_axes,
+#     heatmap_edges,
+#     is_uniformly_spaced,
+#     cbar_gradient,
+#     get_fillalpha,
+#     shape_data,
+#     get_fillcolor,
+#     get_fillstyle
+using RecipesPipeline: RecipesPipeline
+using NaNMath: NaNMath
+using Plots.Axes
+using Plots.Annotations
 using Plots.Commons
 using Plots.Colors
+using Plots.Fonts
+using Plots.Fonts: Font, PlotText
 using Plots.PlotMeasures
-using Plots.Ticks
 using Plots.PlotsPlots
-using Plots.Subplots
-using Plots.Axes
 using Plots.PlotsSeries
+using Plots.Subplots
+using Plots.Shapes
+using Plots.Shapes: Shape
+using Plots.Ticks
 
 # https://github.com/jheinen/GR.jl - significant contributions by @jheinen
 

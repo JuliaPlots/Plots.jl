@@ -12,13 +12,12 @@ using Plots:
     Axis,
     Subplot,
     AbstractLayout,
-    RecipesPipeline,
-    _subplot_defaults,
-    _match_map
+    RecipesPipeline
 using Plots.Subplots: _update_subplot_colors, _update_margins
 using Plots.Axes: get_axis
 using Plots.PlotUtils: get_color_palette
 using Plots.Commons
+using Plots.Commons.Frontend
 
 const SubplotMap = Dict{Any,Subplot}
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
@@ -138,7 +137,7 @@ ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 
 Base.getindex(plt::Plot, k::Symbol) =
     if (v = plt.attr[k]) === :match
-        plt[_match_map[k]]
+        plt[Commons._match_map[k]]
     else
         v
     end
@@ -166,7 +165,7 @@ get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
 
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
 Plots.RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
-    Plots.preprocess_attributes!(plotattributes)
+    Commons.preprocess_attributes!(plotattributes)
 
 plottitlefont(p::Plot) = font(;
     family = p[:plot_titlefontfamily],
@@ -270,5 +269,6 @@ function scale_lims!(plt::Union{Plot,Subplot}, factor)
     foreach(letter -> scale_lims!(plt, letter, factor), (:x, :y, :z))
     plt
 end
-
+Commons.get_size(plt::Plot) = get_size(plt.attr)
+Commons.get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
 end # PlotsPlots

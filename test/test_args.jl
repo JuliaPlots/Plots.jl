@@ -92,7 +92,7 @@ end
 
 @testset "aliases" begin
     @test :legend in aliases(:legend_position)
-    Plots.add_non_underscore_aliases!(Plots._typeAliases)
+    Plots.add_non_underscore_aliases!(Plots.Commons._typeAliases)
     Plots.add_axes_aliases(:ticks, :tick)
 end
 

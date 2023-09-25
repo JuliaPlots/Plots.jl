@@ -1,6 +1,7 @@
 module PlotsSeries
 
-export Series, should_add_to_legend
+export Series, should_add_to_legend, get_colorgradient, iscontour, isfilledcontour, contour_levels
+import Plots.Commons
 using Plots: Plots, DefaultsDict, RecipesPipeline
 
 mutable struct Series
@@ -18,7 +19,7 @@ attr(series::Series, k::Symbol) = series.plotattributes[k]
 attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 function attr!(series::Series; kw...)
     plotattributes = KW(kw)
-    Plots.preprocess_attributes!(plotattributes)
+    Plots.Commons.preprocess_attributes!(plotattributes)
     for (k, v) in plotattributes
         if haskey(_series_defaults, k)
             series[k] = v
@@ -95,5 +96,35 @@ extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x
 extend_by_data!(v::AbstractVector, x::AbstractVector) =
     isimmutable(v) ? vcat(v, x) : append!(v, x)
 
+function get_colorgradient(series::Series)
+    if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)
+        series[:fillcolor]
+    elseif st in (:contour, :wireframe, :contour3d)
+        series[:linecolor]
+    elseif series[:marker_z] !== nothing
+        series[:markercolor]
+    elseif series[:line_z] !== nothing
+        series[:linecolor]
+    elseif series[:fill_z] !== nothing
+        series[:fillcolor]
+    end
+end
+
+iscontour(series::Series) = series[:seriestype] in (:contour, :contour3d)
+isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
+
+function contour_levels(series::Series, clims)
+    iscontour(series) || error("Not a contour series")
+    zmin, zmax = clims
+    levels = series[:levels]
+    if levels isa Integer
+        levels = range(zmin, stop = zmax, length = levels + 2)
+        isfilledcontour(series) || (levels = levels[2:(end - 1)])
+    end
+    levels
+end
 # -------------------------------------------------------
+Commons.get_size(series::Series) = Commons.get_size(series.plotattributes[:subplot])
+Commons.get_thickness_scaling(series::Series) =
+    Commons.get_thickness_scaling(series.plotattributes[:subplot])
 end # PlotsSeries

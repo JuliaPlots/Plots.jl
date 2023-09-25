@@ -7,11 +7,10 @@ using Plots:
     Plots,
     RecipesPipeline,
     Subplot,
-    DefaultsDict,
+    DefaultsDict
+using Plots.Commons:
     _axis_defaults_byletter,
-    _all_axis_args,
-    _match_map,
-    _match_map2
+    _all_axis_args
 using Plots.Commons
 using Plots.Ticks
 using Plots.Fonts
@@ -65,10 +64,10 @@ end
 # properly retrieve from axis.attr, passing `:match` to the correct key
 Base.getindex(axis::Axis, k::Symbol) =
     if (v = axis.plotattributes[k]) === :match
-        if haskey(_match_map2, k)
-            axis.sps[1][_match_map2[k]]
+        if haskey(Commons.Commons._match_map2, k)
+            axis.sps[1][Commons.Commons._match_map2[k]]
         else
-            axis[_match_map[k]]
+            axis[Commons._match_map[k]]
         end
     else
         v
@@ -303,7 +302,7 @@ function attr!(axis::Axis, args...; kw...)
     foreach(arg -> process_axis_arg!(plotattributes, arg), args)
 
     # then preprocess keyword arguments
-    Plots.preprocess_attributes!(KW(kw))
+    Plots.Commons.preprocess_attributes!(KW(kw))
 
     # then override for any keywords... only those keywords that already exists in plotattributes
     for (k, v) in kw

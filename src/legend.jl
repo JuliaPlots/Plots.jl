@@ -72,3 +72,8 @@ legend_angle(leg::Symbol) = get(
     leg,
     (45, :inner),
 )
+
+Commons._initial_sp_fontsizes[:legend_font_pointsize] = _subplot_defaults[:legend_font_pointsize]
+Commons._initial_sp_fontsizes[:legend_title_font_pointsize] = _subplot_defaults[:legend_title_font_pointsize]
+Commons._initial_fontsizes[:legend_font_pointsize] = _subplot_defaults[:legend_font_pointsize]
+Commons._initial_fontsizes[:legend_title_font_pointsize] = _subplot_defaults[:legend_title_font_pointsize]

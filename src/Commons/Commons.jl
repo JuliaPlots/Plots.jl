@@ -1,20 +1,24 @@
-"Things that should be common to all backends"
+"Things that should be common to all backends and frontend modules"
 module Commons
 
 export AVec, AMat, KW, AKW, TicksArgs
-export PLOTS_SEED, PX_PER_INCH, DPI, MM_PER_INCH, MM_PER_PX, DEFAULT_BBOX, DEFAULT_MINPAD
+export PLOTS_SEED, PX_PER_INCH, DPI, MM_PER_INCH, MM_PER_PX, DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
 export _haligns, _valigns, _cbar_width
 # Functions
-export get_subplot, coords, ispolar, expand_extrema!, series_list, axis_limits
+export get_subplot, coords, ispolar, expand_extrema!, series_list, axis_limits, get_size, get_thickness_scaling
 export fg_color, plot_color, alpha, isdark, color_or_nothing!
-export get_attr_symbol, _cycle, _as_gradient, makevec, maketuple, unzip, get_aspect_ratio
+export get_attr_symbol, _cycle, _as_gradient, makevec, maketuple, unzip, get_aspect_ratio, ok, handle_surface, reverse_if, _debug
 export _allScales, _logScales, _logScaleBases, _scaleAliases
+#exports from args.jl
+export default, wraptuple
 
+using Plots: Plots, Printf
 import Plots: RecipesPipeline
 using Plots.Colors: Colorant, @colorant_str
-using Plots.PlotUtils: PlotUtils, ColorPalette, plot_color, isdark
 using Plots.ColorTypes: alpha
 using Plots.Measures: mm, BoundingBox
+using Plots.PlotUtils: PlotUtils, ColorPalette, plot_color, isdark
+using Plots.RecipesBase
 
 const AVec = AbstractVector
 const AMat = AbstractMatrix
@@ -32,10 +36,12 @@ const _valigns = :vcenter, :top, :bottom
 const _cbar_width = 5mm
 const DEFAULT_BBOX = Ref(BoundingBox(0mm, 0mm, 0mm, 0mm))
 const DEFAULT_MINPAD = Ref((20mm, 5mm, 2mm, 10mm))
+const DEFAULT_LINEWIDTH = Ref(1)
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _logScales = [:ln, :log2, :log10]
 const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 const _scaleAliases = Dict{Symbol,Symbol}(:none => :identity, :log => :log10)
+const _debug = Ref(false)
 
 function get_subplot end
 function series_list end
@@ -43,6 +49,56 @@ function coords end
 function ispolar end
 function expand_extrema! end
 function axis_limits end
+function preprocess_attributes! end
+# ---------------------------------------------------------------
+wraptuple(x::Tuple) = x
+wraptuple(x) = (x,)
+
+trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
+trueOrAllTrue(f::Function, x) = f(x)
+
+allLineTypes(arg) = trueOrAllTrue(a -> get(Commons._typeAliases, a, a) in Commons._allTypes, arg)
+allStyles(arg) = trueOrAllTrue(a -> get(Commons._styleAliases, a, a) in Commons._allStyles, arg)
+allShapes(arg) =
+    (trueOrAllTrue(a -> get(Commons._markerAliases, a, a) in Commons._allMarkers || a isa Shape, arg))
+allAlphas(arg) = trueOrAllTrue(
+    a ->
+        (typeof(a) <: Real && a > 0 && a < 1) || (
+            typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))
+        ),
+    arg,
+)
+allReals(arg) = trueOrAllTrue(a -> typeof(a) <: Real, arg)
+allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
+
+# ---------------------------------------------------------------
+include("args.jl")
+
+function _override_seriestype_check(plotattributes::AKW, st::Symbol)
+    # do we want to override the series type?
+    if !RecipesPipeline.is3d(st) && st ∉ (:contour, :contour3d, :quiver)
+        if (z = plotattributes[:z]) !== nothing &&
+           size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)
+            st = st === :scatter ? :scatter3d : :path3d
+            plotattributes[:seriestype] = st
+        end
+    end
+    st
+end
+
+"These should only be needed in frontend modules"
+Plots.@ScopeModule(Frontend, Commons,
+    _subplot_defaults,
+    _axis_defaults,
+    _plot_defaults,
+    _series_defaults,
+    _match_map,
+    _match_map2,
+    @add_attributes,
+    preprocess_attributes!,
+    _override_seriestype_check
+)
+
 function fg_color(plotattributes::AKW)
     fg = get(plotattributes, :foreground_color, :auto)
     if fg === :auto
@@ -98,6 +154,13 @@ check_aspect_ratio(ar::Symbol) =
 check_aspect_ratio(ar::T) where {T} =
     throw(ArgumentError("Invalid `aspect_ratio`::$T = $ar "))
 
+ok(x::Number, y::Number, z::Number = 0) = isfinite(x) && isfinite(y) && isfinite(z)
+ok(tup::Tuple) = ok(tup...)
+
+handle_surface(z) = z
+
+reverse_if(x, cond) = cond ? reverse(x) : x
+
 function get_aspect_ratio(sp)
     ar = sp[:aspect_ratio]
     check_aspect_ratio(ar)
@@ -112,5 +175,25 @@ function get_aspect_ratio(sp)
     ar isa Bool && (ar = Int(ar))  # NOTE: Bool <: ... <: Number
     ar
 end
+
+get_size(kw) = get(kw, :size, default(:size))
+get_thickness_scaling(kw) = get(kw, :thickness_scaling, default(:thickness_scaling))
+
+debug!(on = true) = _debug[] = on
+debugshow(io, x) = show(io, x)
+debugshow(io, x::AbstractArray) = print(io, summary(x))
+
+function dumpdict(io::IO, plotattributes::AKW, prefix = "")
+    _debug[] || return
+    println(io)
+    prefix == "" || println(io, prefix, ":")
+    for k in sort(collect(keys(plotattributes)))
+        Printf.@printf(io, "%14s: ", k)
+        debugshow(io, plotattributes[k])
+        println(io)
+    end
+    println(io)
+end
+include("postprocess_args.jl")
 
 end

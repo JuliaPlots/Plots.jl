@@ -1,10 +1,9 @@
 module Shapes
 
-# keep in mind: these will be reexported and are public API
-import ..Plots
-using ..Plots.Commons
-import ..RecipesPipeline
+using Plots: Plots, RecipesPipeline
+using Plots.Commons
 
+# keep in mind: these will be reexported and are public API
 export shape,
     partialcircle,
     weave,

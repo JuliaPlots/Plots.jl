@@ -1,9 +1,12 @@
 module Surfaces
 
-export SurfaceFunction
+export SurfaceFunction, Surface
 
-import Plots: Plots, Axis, Surface, AbstractSurface
-import Plots: expand_extrema!
+using Plots: Plots, Axis
+using RecipesPipeline: AbstractSurface, Surface
+using Plots.Commons
+import Plots: expand_extrema!, Commons
+
 
 function Plots.expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]
@@ -16,4 +19,5 @@ struct SurfaceFunction <: AbstractSurface
     f::Function
 end
 
+Commons.handle_surface(z::Surface) = permutedims(z.surf)
 end

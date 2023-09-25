@@ -358,6 +358,73 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
     end
 end
 
+# -----------------------------------------------------------------------------
+
+const _already_warned = Dict{Symbol,Set{Symbol}}()
+const _to_warn = Set{Symbol}()
+
+should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
+
+function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
+    empty!(_to_warn)
+    bend = Plots.backend_name(pkg)
+    already_warned = get!(_already_warned, bend) do
+        Set{Symbol}()
+    end
+    extra_kwargs = Dict{Symbol,Any}()
+    for k in Plots.explicitkeys(plotattributes)
+        (is_attr_supported(pkg, k) && k ∉ keys(Commons._deprecated_attributes)) && continue
+        k in Commons._suppress_warnings && continue
+        if ismissing(default(k))
+            extra_kwargs[k] = pop_kw!(plotattributes, k)
+        elseif plotattributes[k] != default(k)
+            k in already_warned || push!(_to_warn, k)
+        end
+    end
+
+    if !isempty(_to_warn) &&
+       get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
+        for k in sort(collect(_to_warn))
+            push!(already_warned, k)
+            if k in keys(Commons._deprecated_attributes)
+                @warn """
+                Keyword argument `$k` is deprecated.
+                Please use `$(Commons._deprecated_attributes[k])` instead.
+                """
+            else
+                @warn "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
+            end
+        end
+    end
+    extra_kwargs
+end
+
+function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
+    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
+    is_seriestype_supported(pkg, plotattributes[:seriestype]) ||
+        @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
+    is_style_supported(pkg, plotattributes[:linestyle]) ||
+        @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
+    is_marker_supported(pkg, plotattributes[:markershape]) ||
+        @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
+end
+
+function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
+    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
+    for k in (:xscale, :yscale, :zscale, :scale)
+        if haskey(plotattributes, k)
+            v = plotattributes[k]
+            if !all(is_scale_supported.(Ref(pkg), v))
+                @warn """
+                scale $v is unsupported with $pkg.
+                Choose from: $(supported_scales(pkg))
+                """
+            end
+        end
+    end
+end
+
+# -----------------------------------------------------------------------------
 ################################################################################
 # custom hooks
 
@@ -540,7 +607,7 @@ const _gr_seriestype = [
     :shape,
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _gr_marker = vcat(_allMarkers, :pixel)
+const _gr_marker = vcat(Commons._allMarkers, :pixel)
 const _gr_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::GRBackend, shape::Shape) = true
 
@@ -835,7 +902,7 @@ const _pgfplots_marker = [
     :pentagon,
     :hline,
     :vline,
-] #vcat(_allMarkers, Shape)
+] #vcat(Commons._allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
@@ -1033,7 +1100,7 @@ const _pyplot_seriestype = [
     :wireframe,
 ]
 const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _pyplot_marker = vcat(_allMarkers, :pixel)
+const _pyplot_marker = vcat(Commons._allMarkers, :pixel)
 const _pyplot_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
@@ -1445,7 +1512,7 @@ const _hdf5_seriestype = [
     :wireframe,
 ]
 const _hdf5_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _hdf5_marker = vcat(_allMarkers, :pixel)
+const _hdf5_marker = vcat(Commons._allMarkers, :pixel)
 const _hdf5_scale = [:identity, :ln, :log2, :log10]
 
 # Additional constants
@@ -1534,7 +1601,7 @@ const _inspectdr_seriestype = [
     :shape,
     :straightline, #, :steppre, :stepmid, :steppost
 ]
-#see: _allMarkers, _shape_keys
+#see: Commons._allMarkers, _shape_keys
 const _inspectdr_marker = Symbol[
     :none,
     :auto,

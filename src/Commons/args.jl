@@ -27,6 +27,14 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     end
 end
 
+replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
+    if haskey(aliases, k)
+        plotattributes[aliases[k]] = RecipesPipeline.pop_kw!(plotattributes, k)
+    end
+
+replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
+    foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
+
 macro attributes(expr::Expr)
     RecipesBase.process_recipe_body!(expr)
     expr
@@ -573,6 +581,31 @@ const _all_plot_args = _plot_args
 const _all_args =
     union(_lettered_all_axis_args, _all_subplot_args, _all_series_args, _all_plot_args)
 
+const _deprecated_attributes = Dict{Symbol,Symbol}()
+const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
+
+const _initial_defaults = deepcopy(_all_defaults)
+const _initial_axis_defaults = deepcopy(_axis_defaults)
+
+# to be able to reset font sizes to initial values
+const _initial_plt_fontsizes =
+    Dict(:plot_titlefontsize => _plot_defaults[:plot_titlefontsize])
+
+const _initial_sp_fontsizes = Dict(
+    :titlefontsize => _subplot_defaults[:titlefontsize],
+    :annotationfontsize => _subplot_defaults[:annotationfontsize],
+    :colorbar_tickfontsize => _subplot_defaults[:colorbar_tickfontsize],
+    :colorbar_titlefontsize => _subplot_defaults[:colorbar_titlefontsize],
+)
+
+const _initial_ax_fontsizes = Dict(
+    :tickfontsize  => _axis_defaults[:tickfontsize],
+    :guidefontsize => _axis_defaults[:guidefontsize],
+)
+
+const _initial_fontsizes =
+    merge(_initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes)
+
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
 is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
@@ -1064,7 +1097,7 @@ end
 function default(; reset = true, kw...)
     (reset && isempty(kw)) && reset_defaults()
     kw = KW(kw)
-    Plots.preprocess_attributes!(kw)
+    preprocess_attributes!(kw)
     for (k, v) in kw
         default(k, v)
     end
@@ -1355,272 +1388,7 @@ function _add_markershape(plotattributes::AKW)
     end
 end
 
-"Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
-function preprocess_attributes!(plotattributes::AKW)
-    replaceAliases!(plotattributes, _keyAliases)
 
-    # handle axis args common to all axis
-    args = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :axis, ()))
-    showarg = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :showaxis, ()))
-    for arg in wraptuple((args..., showarg...))
-        for letter in (:x, :y, :z)
-            process_axis_arg!(plotattributes, arg, letter)
-        end
-    end
-    # handle axis args
-    for letter in (:x, :y, :z)
-        asym = get_attr_symbol(letter, :axis)
-        args = RecipesPipeline.pop_kw!(plotattributes, asym, ())
-        if !(typeof(args) <: Axis)
-            for arg in wraptuple(args)
-                process_axis_arg!(plotattributes, arg, letter)
-            end
-        end
-    end
-
-    # vline and others accesses the y argument but actually maps it to the x axis.
-    # Hence, we have to take care of formatters
-    if treats_y_as_x(get(plotattributes, :seriestype, :path))
-        xformatter = get(plotattributes, :xformatter, :auto)
-        yformatter = get(plotattributes, :yformatter, :auto)
-        yformatter !== :auto && (plotattributes[:xformatter] = yformatter)
-        xformatter === :auto &&
-            haskey(plotattributes, :yformatter) &&
-            pop!(plotattributes, :yformatter)
-    end
-
-    # handle grid args common to all axes
-    args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
-    for arg in wraptuple(args)
-        for letter in (:x, :y, :z)
-            processGridArg!(plotattributes, arg, letter)
-        end
-    end
-    # handle individual axes grid args
-    for letter in (:x, :y, :z)
-        gridsym = get_attr_symbol(letter, :grid)
-        args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
-        for arg in wraptuple(args)
-            processGridArg!(plotattributes, arg, letter)
-        end
-    end
-    # handle minor grid args common to all axes
-    args = RecipesPipeline.pop_kw!(plotattributes, :minorgrid, ())
-    for arg in wraptuple(args)
-        for letter in (:x, :y, :z)
-            processMinorGridArg!(plotattributes, arg, letter)
-        end
-    end
-    # handle individual axes grid args
-    for letter in (:x, :y, :z)
-        gridsym = get_attr_symbol(letter, :minorgrid)
-        args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
-        for arg in wraptuple(args)
-            processMinorGridArg!(plotattributes, arg, letter)
-        end
-    end
-    # handle font args common to all axes
-    for fontname in (:tickfont, :guidefont)
-        args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
-        for arg in wraptuple(args)
-            for letter in (:x, :y, :z)
-                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
-            end
-        end
-    end
-    # handle individual axes font args
-    for letter in (:x, :y, :z)
-        for fontname in (:tickfont, :guidefont)
-            args = RecipesPipeline.pop_kw!(
-                plotattributes,
-                get_attr_symbol(letter, fontname),
-                (),
-            )
-            for arg in wraptuple(args)
-                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
-            end
-        end
-    end
-    # handle axes args
-    for k in _axis_args
-        if haskey(plotattributes, k) && k !== :link
-            v = plotattributes[k]
-            for letter in (:x, :y, :z)
-                lk = get_attr_symbol(letter, k)
-                if !is_explicit(plotattributes, lk)
-                    plotattributes[lk] = v
-                end
-            end
-        end
-    end
-
-    # fonts
-    for fontname in
-        (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
-        args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
-        for arg in wraptuple(args)
-            processFontArg!(plotattributes, fontname, arg)
-        end
-    end
-
-    # handle line args
-    for arg in wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
-        processLineArg(plotattributes, arg)
-    end
-
-    if haskey(plotattributes, :seriestype) &&
-       haskey(_typeAliases, plotattributes[:seriestype])
-        plotattributes[:seriestype] = _typeAliases[plotattributes[:seriestype]]
-    end
-
-    # handle marker args... default to ellipse if shape not set
-    anymarker = false
-    for arg in wraptuple(get(plotattributes, :marker, ()))
-        processMarkerArg(plotattributes, arg)
-        anymarker = true
-    end
-    RecipesPipeline.reset_kw!(plotattributes, :marker)
-    if haskey(plotattributes, :markershape)
-        plotattributes[:markershape] = _replace_markershape(plotattributes[:markershape])
-        if plotattributes[:markershape] === :none &&
-           get(plotattributes, :seriestype, :path) in
-           (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
-            plotattributes[:markershape] = :circle
-        end
-    elseif anymarker
-        plotattributes[:markershape_to_add] = :circle  # add it after _apply_recipe
-    end
-
-    # handle fill
-    for arg in wraptuple(get(plotattributes, :fill, ()))
-        processFillArg(plotattributes, arg)
-    end
-    RecipesPipeline.reset_kw!(plotattributes, :fill)
-
-    # handle series annotations
-    if haskey(plotattributes, :series_annotations)
-        plotattributes[:series_annotations] =
-            series_annotations(wraptuple(plotattributes[:series_annotations])...)
-    end
-
-    # convert into strokes and brushes
-
-    if haskey(plotattributes, :arrow)
-        a = plotattributes[:arrow]
-        plotattributes[:arrow] = if a == true
-            arrow()
-        elseif a in (false, nothing, :none)
-            nothing
-        elseif !(typeof(a) <: Arrow || typeof(a) <: AbstractArray{Arrow})
-            arrow(wraptuple(a)...)
-        else
-            a
-        end
-    end
-
-    # legends - defaults are set in `src/components.jl` (see `@add_attributes`)
-    if haskey(plotattributes, :legend_position)
-        plotattributes[:legend_position] =
-            convert_legend_value(plotattributes[:legend_position])
-    end
-    if haskey(plotattributes, :colorbar)
-        plotattributes[:colorbar] = convert_legend_value(plotattributes[:colorbar])
-    end
-
-    # framestyle
-    if haskey(plotattributes, :framestyle) &&
-       haskey(_framestyleAliases, plotattributes[:framestyle])
-        plotattributes[:framestyle] = _framestyleAliases[plotattributes[:framestyle]]
-    end
-
-    # contours
-    if haskey(plotattributes, :levels)
-        check_contour_levels(plotattributes[:levels])
-    end
-
-    # warnings for moved recipes
-    st = get(plotattributes, :seriestype, :path)
-    if st in (:boxplot, :violin, :density) &&
-       !haskey(
-        Base.loaded_modules,
-        Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
-    )
-        @warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
-    end
-    nothing
-end
-
-# -----------------------------------------------------------------------------
-
-const _already_warned = Dict{Symbol,Set{Symbol}}()
-const _to_warn = Set{Symbol}()
-
-should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
-
-function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
-    empty!(_to_warn)
-    bend = backend_name(pkg)
-    already_warned = get!(_already_warned, bend) do
-        Set{Symbol}()
-    end
-    extra_kwargs = Dict{Symbol,Any}()
-    for k in explicitkeys(plotattributes)
-        (is_attr_supported(pkg, k) && k ∉ keys(_deprecated_attributes)) && continue
-        k in _suppress_warnings && continue
-        if ismissing(default(k))
-            extra_kwargs[k] = pop_kw!(plotattributes, k)
-        elseif plotattributes[k] != default(k)
-            k in already_warned || push!(_to_warn, k)
-        end
-    end
-
-    if !isempty(_to_warn) &&
-       get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
-        for k in sort(collect(_to_warn))
-            push!(already_warned, k)
-            if k in keys(_deprecated_attributes)
-                @warn """
-                Keyword argument `$k` is deprecated.
-                Please use `$(_deprecated_attributes[k])` instead.
-                """
-            else
-                @warn "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
-            end
-        end
-    end
-    extra_kwargs
-end
-
-# _markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supported_markers(pkg)
-# _markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supported_markers(pkg)
-# _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
-
-function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
-    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
-    is_seriestype_supported(pkg, plotattributes[:seriestype]) ||
-        @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
-    is_style_supported(pkg, plotattributes[:linestyle]) ||
-        @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
-    is_marker_supported(pkg, plotattributes[:markershape]) ||
-        @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
-end
-
-function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
-    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
-    for k in (:xscale, :yscale, :zscale, :scale)
-        if haskey(plotattributes, k)
-            v = plotattributes[k]
-            if !all(is_scale_supported.(Ref(pkg), v))
-                @warn """
-                scale $v is unsupported with $pkg.
-                Choose from: $(supported_scales(pkg))
-                """
-            end
-        end
-    end
-end
-
-# -----------------------------------------------------------------------------
 
 function convert_legend_value(val::Symbol)
     if val in (:both, :all, :yes)
@@ -1752,8 +1520,6 @@ ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
             cgrad(alpha = plotattributes[asym])
     end
 
-const DEFAULT_LINEWIDTH = Ref(1)
-
 # get a good default linewidth... 0 for surface and heatmaps
 _replace_linewidth(plotattributes::AKW) =
     if plotattributes[:linewidth] === :auto
@@ -1822,14 +1588,14 @@ macro add_attributes(level, expr, match_table)
                 Expr(:ref, Expr(:call, getfield, Plots, field), QuoteNode(exp_key)),
                 value,
             ),
-            :(Plots.add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
-            :(Plots.add_aliases(
+            :($add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
+            :($add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(Plots.make_non_underscore(exp_key))),
+                $(QuoteNode(make_non_underscore(exp_key))),
             )),
-            :(Plots.add_aliases(
+            :($add_aliases(
                 $(QuoteNode(exp_key)),
-                $(QuoteNode(Plots.make_non_underscore(pl_key))),
+                $(QuoteNode(make_non_underscore(pl_key))),
             )),
         )
     end
