@@ -765,6 +765,11 @@
             "name": "Alexander Von Moll",
             "orcid": "0000-0002-7661-5752",
             "type": "Other"
+        },
+        {
+            "name": "Syver Døving Agdestein",
+            "orcid": "0000-0002-1589-2916", 
+            "type": "Other"
         }
     ],
     "upload_type": "software"
