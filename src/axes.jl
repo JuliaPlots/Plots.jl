@@ -886,6 +886,21 @@ function axis_drawing_info(sp, letter)
                 grid_factor_2d[] / ax_length,
                 ax[:tick_direction] !== :none,
             )
+            if sp[:framestyle] === :box
+                add_major_or_minor_segments_2d(
+                    sp,
+                    ax,
+                    oax,
+                    reverse(oas),
+                    oamM,
+                    first(ticks),
+                    ax[:grid],
+                    tick_segments,
+                    grid_segments,
+                    grid_factor_2d[] / ax_length,
+                    ax[:tick_direction] !== :none,
+                )
+            end
 
             # add minor grid segments
             if ax[:minorticks] ∉ (:none, nothing, false) || ax[:minorgrid]
@@ -902,10 +917,25 @@ function axis_drawing_info(sp, letter)
                     grid_factor_2d[] / 2ax_length,
                     true,
                 )
+                if sp[:framestyle] === :box
+                    add_major_or_minor_segments_2d(
+                        sp,
+                        ax,
+                        oax,
+                        reverse(oas),
+                        oamM,
+                        minor_ticks,
+                        ax[:minorgrid],
+                        tick_segments,
+                        minorgrid_segments,
+                        grid_factor_2d[] / 2ax_length,
+                        true,
+                    )
+                end
             end
         end
     end
-
+    
     (
         ticks = ticks,
         segments = segments,
