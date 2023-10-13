@@ -935,7 +935,7 @@ function axis_drawing_info(sp, letter)
             end
         end
     end
-    
+
     (
         ticks = ticks,
         segments = segments,
