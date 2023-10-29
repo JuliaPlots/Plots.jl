@@ -57,6 +57,7 @@ UnitfulExt = "Unitful"
 
 [compat]
 Contour = "0.5 - 0.6"
+Downloads = "1"
 FFMPEG = "0.2 - 0.4"
 FixedPointNumbers = "0.6 - 0.8"
 GR = "0.69.5 - 0.72"
