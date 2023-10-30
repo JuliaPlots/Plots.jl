@@ -8,3 +8,5 @@
 - [ ] Does it work in layouts?
 - [ ] Does it work in recipes?
 - [ ] Does it work with multiple series in one call?
+- [ ] PR includes or updates tests?
+- [ ] PR includes or updates documentation?

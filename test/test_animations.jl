@@ -1,3 +1,14 @@
+@testset "Animation constructors" begin
+    @test Animation() isa Animation
+    @test Animation("dir") isa Animation
+    @test Animation("dir", String[]) isa Animation
+end
+
+@testset "Missing animation directory" begin
+    anim = Animation("nonexisting_dir")
+    @test_throws SystemError frame(anim, plot([1, 2, 3]))
+end
+
 @testset "Empty anim" begin
     anim = @animate for i in []
     end

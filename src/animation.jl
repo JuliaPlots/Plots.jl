@@ -13,7 +13,7 @@ struct Animation
     frames::Vector{String}
 end
 
-Animation() = Animation(convert(String, mktempdir()), String[])
+Animation(dir = convert(String, mktempdir())) = Animation(dir, String[])
 
 """
     frame(animation[, plot])
