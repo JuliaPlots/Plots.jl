@@ -115,4 +115,3 @@ end
     plt = plot(size = ())
     @test_throws ArgumentError savefig(plt, tempname())
 end
-    
