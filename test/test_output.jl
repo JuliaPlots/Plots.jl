@@ -113,7 +113,7 @@ end
     plt = plot(size=())
     @test_throws ArgumentError plot(plt) 
     @test_throws ArgumentError savefig(plt, "foo.png")
-    plt = plot(size=())
+    plt = plot(size=(1))
     @test_throws ArgumentError plot(plt) 
     @test_throws ArgumentError savefig(plt, "foo.png")
 end
