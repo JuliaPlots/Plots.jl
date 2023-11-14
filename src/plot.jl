@@ -233,7 +233,7 @@ function prepare_output(plt::Plot)
 
     _wh = plt.attr[:size]
     if length(_wh) != 2
-        throw(ArgumentError("size have length = 2, got size = $_wh"))
+        throw(ArgumentError("size must have length = 2, got size = $_wh"))
     end
     w, h = _wh
 
