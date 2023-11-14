@@ -108,3 +108,13 @@ end
         Plots._show(io, MIME("text/html"), pl)
     end
 end
+
+@testset "size error handling" begin
+    plt = plot(size=())
+    @test_throws ArgumentError plot(plt) 
+    @test_throws ArgumentError savefig(plt, "foo.png")
+    plt = plot(size=())
+    @test_throws ArgumentError plot(plt) 
+    @test_throws ArgumentError savefig(plt, "foo.png")
+end
+    
