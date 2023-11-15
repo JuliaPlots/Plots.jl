@@ -231,7 +231,12 @@ end
 function prepare_output(plt::Plot)
     _before_layout_calcs(plt)
 
-    w, h = plt.attr[:size]
+    _wh = plt.attr[:size]
+    if length(_wh) != 2
+        throw(ArgumentError("plot size must have length = 2, got size = $_wh"))
+    end
+    w, h = _wh
+
     plt.layout.bbox = BoundingBox(0mm, 0mm, w * px, h * px)
 
     # One pass down and back up the tree to compute the minimum padding
