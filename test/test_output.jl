@@ -112,6 +112,8 @@ end
 @testset "size error handling" begin
     plt = plot(size = ())
     @test_throws ArgumentError savefig(plt, tempname())
-    plt = plot(size = ())
+    plt = plot(size = (1))
+    @test_throws ArgumentError savefig(plt, tempname())
+    plt = plot(size = (1,2,3))
     @test_throws ArgumentError savefig(plt, tempname())
 end
