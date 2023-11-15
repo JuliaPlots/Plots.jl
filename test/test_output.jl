@@ -114,6 +114,6 @@ end
     @test_throws ArgumentError savefig(plt, tempname())
     plt = plot(size = (1))
     @test_throws ArgumentError savefig(plt, tempname())
-    plt = plot(size = (1,2,3))
+    plt = plot(size = (1, 2, 3))
     @test_throws ArgumentError savefig(plt, tempname())
 end
