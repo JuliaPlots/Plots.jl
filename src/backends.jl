@@ -593,7 +593,7 @@ function _initialize_backend(pkg::PlotlyBackend)
         _runtime_init(pkg)
     catch err
         if err isa ArgumentError
-            @warn "Failed to load integration with PlotlyBase & PlotlyKaleide." exception =
+            @warn "Failed to load integration with PlotlyBase & PlotlyKaleido." exception =
                 (err, catch_backtrace())
         else
             rethrow(err)
