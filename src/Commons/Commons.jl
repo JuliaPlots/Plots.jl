@@ -1,6 +1,7 @@
 "Things that should be common to all backends and frontend modules"
 module Commons
 
+
 export AVec, AMat, KW, AKW, TicksArgs
 export PLOTS_SEED, PX_PER_INCH, DPI, MM_PER_INCH, MM_PER_PX, DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
 export _haligns, _valigns, _cbar_width
@@ -10,12 +11,13 @@ export fg_color, plot_color, alpha, isdark, color_or_nothing!
 export get_attr_symbol, _cycle, _as_gradient, makevec, maketuple, unzip, get_aspect_ratio, ok, handle_surface, reverse_if, _debug
 export _allScales, _logScales, _logScaleBases, _scaleAliases
 export _segmenting_array_attributes, _segmenting_vector_attributes
-export anynan, allnan, round_base, floor_base, ceil_base, ignorenan_min_max
+export anynan, allnan, round_base, floor_base, ceil_base, ignorenan_min_max, ignorenan_extrema, ignorenan_maximum, ignorenan_mean, ignorenan_minimum
 #exports from args.jl
 export default, wraptuple
 
 using Plots: Plots, Printf
 import Plots: RecipesPipeline
+import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
 using Plots.Colors: Colorant, @colorant_str
 using Plots.ColorTypes: alpha
 using Plots.Measures: mm, BoundingBox
@@ -194,6 +196,14 @@ ceil_base(x, b) = round_base(x, b, RoundUp)
 round_base(x::T, b, ::RoundingMode{:Down}) where {T} = T(b^floor(log(b, x)))
 round_base(x::T, b, ::RoundingMode{:Up}) where {T} = T(b^ceil(log(b, x)))
 
+ignorenan_minimum(x::AbstractArray{<:AbstractFloat}) = NaNMath.minimum(x)
+ignorenan_minimum(x) = Base.minimum(x)
+ignorenan_maximum(x::AbstractArray{<:AbstractFloat}) = NaNMath.maximum(x)
+ignorenan_maximum(x) = Base.maximum(x)
+ignorenan_mean(x::AbstractArray{<:AbstractFloat}) = NaNMath.mean(x)
+ignorenan_mean(x) = Statistics.mean(x)
+ignorenan_extrema(x::AbstractArray{<:AbstractFloat}) = NaNMath.extrema(x)
+ignorenan_extrema(x) = Base.extrema(x)
 ignorenan_min_max(::Any, ex) = ex
 function ignorenan_min_max(x::AbstractArray{<:AbstractFloat}, ex::Tuple)
     mn, mx = ignorenan_extrema(x)

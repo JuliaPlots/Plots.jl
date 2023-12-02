@@ -2,10 +2,10 @@ module Surfaces
 
 export SurfaceFunction, Surface
 
-using Plots: Plots, Axis
+import Plots: Plots, expand_extrema!, Commons
+using Plots.Axes: Axis
 using RecipesPipeline: AbstractSurface, Surface
 using Plots.Commons
-import Plots: expand_extrema!, Commons
 
 
 function Plots.expand_extrema!(a::Axis, surf::Surface)

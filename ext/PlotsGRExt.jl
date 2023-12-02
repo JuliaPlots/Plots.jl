@@ -53,8 +53,9 @@ using NaNMath: NaNMath
 using Plots.Arrows
 using Plots.Axes
 using Plots.Annotations
-using Plots.Commons
+using Plots.Colorbars
 using Plots.Colors
+using Plots.Commons
 using Plots.Fonts
 using Plots.Fonts: Font, PlotText
 using Plots.PlotMeasures

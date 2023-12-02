@@ -154,15 +154,16 @@ include("Subplots.jl")
 using .Subplots
 include("Axes.jl")
 using .Axes
+include("Surfaces.jl")
+include("Colorbars.jl")
+using .Colorbars
 include("PlotsPlots.jl")
 using .PlotsPlots
 include("layouts.jl")
 # ---------------------------------------------------------
 include("utils.jl")
-include("Surfaces.jl")
 using .Surfaces
 include("axes_utils.jl")
-include("colorbars.jl")
 include("legend.jl")
 include("Shapes.jl")
 @reexport using .Shapes

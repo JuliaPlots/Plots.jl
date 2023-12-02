@@ -2,6 +2,7 @@ module PlotsPlots
 
 export Plot, PlotOrSubplot, _update_plot_args, plottitlefont, ignorenan_extrema
 import Plots.Axes: _update_axis, scale_lims!
+import Plots.Commons: ignorenan_extrema
 import Plots.Ticks: get_ticks
 using Plots:
     Plots,
@@ -13,6 +14,7 @@ using Plots:
     Subplot,
     AbstractLayout,
     RecipesPipeline
+using Plots.Colorbars: _update_subplot_colorbars
 using Plots.Subplots: _update_subplot_colors, _update_margins
 using Plots.Axes: get_axis
 using Plots.PlotUtils: get_color_palette
@@ -241,7 +243,7 @@ function _update_subplot_args(
     colorbar_update_keys =
         (:clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry)
     if any(haskey.(Ref(plotattributes_in), colorbar_update_keys))
-        Plots._update_subplot_colorbars(sp)
+        _update_subplot_colorbars(sp)
     end
 
     lims_warned = false

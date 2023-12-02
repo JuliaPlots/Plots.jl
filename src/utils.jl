@@ -1,12 +1,3 @@
-import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
-ignorenan_minimum(x::AbstractArray{<:AbstractFloat}) = NaNMath.minimum(x)
-ignorenan_minimum(x) = Base.minimum(x)
-ignorenan_maximum(x::AbstractArray{<:AbstractFloat}) = NaNMath.maximum(x)
-ignorenan_maximum(x) = Base.maximum(x)
-ignorenan_mean(x::AbstractArray{<:AbstractFloat}) = NaNMath.mean(x)
-ignorenan_mean(x) = Statistics.mean(x)
-ignorenan_extrema(x::AbstractArray{<:AbstractFloat}) = NaNMath.extrema(x)
-ignorenan_extrema(x) = Base.extrema(x)
 
 # ---------------------------------------------------------------
 bool_env(x, default)::Bool =
