@@ -1,7 +1,7 @@
 module Arrows
 
 using ..Plots.Commons
-export arrow, add_arrows
+export Arrow, arrow, add_arrows
 
 # style is :open or :closed (for now)
 struct Arrow

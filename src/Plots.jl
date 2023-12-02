@@ -172,7 +172,6 @@ using .Annotations
 using .Annotations: SeriesAnnotations
 include("Arrows.jl")
 using .Arrows
-using .Arrows: Arrow
 include("Strokes.jl")
 using .Strokes
 include("BezierCurves.jl")

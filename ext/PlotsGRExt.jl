@@ -50,6 +50,7 @@ using Plots:
 #     get_fillstyle
 using RecipesPipeline: RecipesPipeline
 using NaNMath: NaNMath
+using Plots.Arrows
 using Plots.Axes
 using Plots.Annotations
 using Plots.Commons
