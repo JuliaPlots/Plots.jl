@@ -1,7 +1,10 @@
 module PlotsSeries
 
-export Series, should_add_to_legend, get_colorgradient, iscontour, isfilledcontour, contour_levels
+export Series, should_add_to_legend, get_colorgradient, iscontour, isfilledcontour, contour_levels, series_segments
+export get_linestyle, get_linewidth, get_markerstrokealpha, get_markerstrokealpha, get_markerstrokewidth, get_linecolor, get_linealpha, get_fillstyle, get_fillcolor, get_fillalpha, get_markercolor, get_markeralpha
 import Plots.Commons
+using Plots.Commons: _cycle, AVec
+using Plots.PlotUtils: ColorGradient, plot_color
 using Plots: Plots, DefaultsDict, RecipesPipeline
 
 mutable struct Series
@@ -96,6 +99,65 @@ extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x
 extend_by_data!(v::AbstractVector, x::AbstractVector) =
     isimmutable(v) ? vcat(v, x) : append!(v, x)
 
+for comp in (:line, :fill, :marker)
+    compcolor = string(comp, :color)
+    get_compcolor = Symbol(:get_, compcolor)
+    comp_z = string(comp, :_z)
+
+    compalpha = string(comp, :alpha)
+    get_compalpha = Symbol(:get_, compalpha)
+
+    @eval begin
+        # defines `get_linecolor`, `get_fillcolor` and `get_markercolor` <- for grep
+        function $get_compcolor(
+            series,
+            cmin::Real,
+            cmax::Real,
+            i::Integer = 1,
+            s::Symbol = :identity,
+        )
+            c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
+            z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
+            if z === nothing
+                isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
+            else
+                grad = get_gradient(c)
+                if s === :identity
+                    get(grad, z[i], (cmin, cmax))
+                else
+                    base = _logScaleBases[s]
+                    get(grad, log(base, z[i]), (log(base, cmin), log(base, cmax)))
+                end
+            end
+        end
+
+        function $get_compcolor(series, i::Integer = 1, s::Symbol = :identity)
+            if series[$Symbol($comp_z)] === nothing
+                $get_compcolor(series, 0, 1, i, s)
+            else
+                $get_compcolor(series, get_clims(series[:subplot]), i, s)
+            end
+        end
+
+        $get_compcolor(series, clims::NTuple{2,<:Number}, args...) =
+            $get_compcolor(series, clims[1], clims[2], args...)
+
+        $get_compalpha(series, i::Integer = 1) = _cycle(series[$Symbol($compalpha)], i)
+    end
+end
+
+get_linewidth(series, i::Integer = 1) = _cycle(series[:linewidth], i)
+get_linestyle(series, i::Integer = 1) = _cycle(series[:linestyle], i)
+get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
+
+get_markerstrokecolor(series, i::Integer = 1) =
+    let msc = series[:markerstrokecolor]
+        msc isa ColorGradient ? msc : _cycle(msc, i)
+    end
+
+get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
+get_markerstrokewidth(series, i::Integer = 1) = _cycle(series[:markerstrokewidth], i)
+
 function get_colorgradient(series::Series)
     if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)
         series[:fillcolor]
@@ -127,4 +189,120 @@ end
 Commons.get_size(series::Series) = Commons.get_size(series.plotattributes[:subplot])
 Commons.get_thickness_scaling(series::Series) =
     Commons.get_thickness_scaling(series.plotattributes[:subplot])
+
+
+# -------------------------------------------------------
+struct SeriesSegment
+    # indexes of this segment in series data vectors
+    range::UnitRange
+    # index into vector-valued attributes corresponding to this segment
+    attr_index::Int
+end
+
+# helper to manage NaN-separated segments
+struct NaNSegmentsIterator
+    args::Tuple
+    n1::Int
+    n2::Int
+end
+
+function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
+    (i = findfirst(!Plots.Commons.anynan(itr.args), nextidx:(itr.n2))) === nothing && return
+    nextval = nextidx + i - 1
+
+    j = findfirst(Plots.Commons.anynan(itr.args), nextval:(itr.n2))
+    nextnan = j === nothing ? itr.n2 + 1 : nextval + j - 1
+
+    nextval:(nextnan - 1), nextnan
+end
+
+Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()  # COV_EXCL_LINE
+
+function iter_segments(args...)
+    tup = Plots.wraptuple(args)
+    n1 = minimum(map(firstindex, tup))
+    n2 = maximum(map(lastindex, tup))
+    NaNSegmentsIterator(tup, n1, n2)
+end
+
+# we want to check if a series needs to be split into segments just because
+# of its attributes
+# check relevant attributes if they have multiple inputs
+has_attribute_segments(series::Series) =
+    any(
+        series[attr] isa AbstractVector && length(series[attr]) > 1 for
+        attr in Plots.Commons._segmenting_vector_attributes
+    ) || any(series[attr] isa AbstractArray for attr in Plots.Commons._segmenting_array_attributes)
+
+function series_segments(series::Series, seriestype::Symbol = :path; check = false)
+    x, y, z = series[:x], series[:y], series[:z]
+    (x === nothing || isempty(x)) && return UnitRange{Int}[]
+
+    args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
+    nan_segments = collect(iter_segments(args...))
+
+    if check
+        scales = :xscale, :yscale, :zscale
+        for (n, s) in enumerate(args)
+            (scale = get(series, scales[n], :identity)) ∈ Plots.Commons._logScales || continue
+            for (i, v) in enumerate(s)
+                if v <= 0
+                    @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
+                    @debug "" exception = (DomainError(v), stacktrace())
+                    break
+                end
+            end
+        end
+    end
+
+    segments = if has_attribute_segments(series)
+        map(nan_segments) do r
+            if seriestype === :shape
+                warn_on_inconsistent_shape_attr(series, x, y, z, r)
+                (SeriesSegment(r, first(r)),)
+            elseif seriestype in (:scatter, :scatter3d)
+                (SeriesSegment(i:i, i) for i in r)
+            else
+                (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
+            end
+        end |> Iterators.flatten
+    else
+        (SeriesSegment(r, 1) for r in nan_segments)
+    end
+
+    warn_on_attr_dim_mismatch(series, x, y, z, segments)
+    segments
+end
+
+function warn_on_attr_dim_mismatch(series, x, y, z, segments)
+    isempty(segments) && return
+    seg_range = UnitRange(
+        minimum(map(seg -> first(seg.range), segments)),
+        maximum(map(seg -> last(seg.range), segments)),
+    )
+    for attr in Plots.Commons._segmenting_vector_attributes
+        if (v = get(series, attr, nothing)) isa Plots.Commons.AVec && eachindex(v) != seg_range
+            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
+            if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
+                @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
+                    If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
+                    pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
+                    may be suppressed by passing an empty label.
+                    For example,
+                        plot([1:2,1:3], [[4,5],[3,4,5]], label=["y" ""], $attr=[1 2])
+                    """
+            end
+        end
+    end
+end
+
+function warn_on_inconsistent_shape_attr(series, x, y, z, r)
+    for attr in Plots.Commons._segmenting_vector_attributes
+        v = get(series, attr, nothing)
+        if v isa Plots.Commons.AVec && length(unique(v[r])) > 1
+            @warn "Different values of `$attr` specified for different shape vertices. Only first one will be used."
+            break
+        end
+    end
+end
 end # PlotsSeries

@@ -9,6 +9,8 @@ export get_subplot, coords, ispolar, expand_extrema!, series_list, axis_limits, 
 export fg_color, plot_color, alpha, isdark, color_or_nothing!
 export get_attr_symbol, _cycle, _as_gradient, makevec, maketuple, unzip, get_aspect_ratio, ok, handle_surface, reverse_if, _debug
 export _allScales, _logScales, _logScaleBases, _scaleAliases
+export _segmenting_array_attributes, _segmenting_vector_attributes
+export anynan, allnan, round_base, floor_base, ceil_base, ignorenan_min_max
 #exports from args.jl
 export default, wraptuple
 
@@ -17,7 +19,7 @@ import Plots: RecipesPipeline
 using Plots.Colors: Colorant, @colorant_str
 using Plots.ColorTypes: alpha
 using Plots.Measures: mm, BoundingBox
-using Plots.PlotUtils: PlotUtils, ColorPalette, plot_color, isdark
+using Plots.PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
 using Plots.RecipesBase
 
 const AVec = AbstractVector
@@ -41,6 +43,25 @@ const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _logScales = [:ln, :log2, :log10]
 const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 const _scaleAliases = Dict{Symbol,Symbol}(:none => :identity, :log => :log10)
+const _segmenting_vector_attributes = (
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linealpha,
+    :linewidth,
+    :linestyle,
+    :fillcolor,
+    :fillalpha,
+    :fillstyle,
+    :markercolor,
+    :markeralpha,
+    :markersize,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :markerstrokewidth,
+    :markershape,
+)
+const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 const _debug = Ref(false)
 
 function get_subplot end
@@ -135,6 +156,13 @@ _as_gradient(v::AbstractVector{<:Colorant}) = cgrad(v)
 _as_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 _as_gradient(c::Colorant) = cgrad([c, c])
 
+single_color(c, v = 0.5) = c
+single_color(grad::ColorGradient, v = 0.5) = grad[v]
+
+get_gradient(c) = cgrad()
+get_gradient(cg::ColorGradient) = cg
+get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
+
 makevec(v::AVec) = v
 makevec(v::T) where {T} = T[v]
 
@@ -156,6 +184,32 @@ check_aspect_ratio(ar::T) where {T} =
 
 ok(x::Number, y::Number, z::Number = 0) = isfinite(x) && isfinite(y) && isfinite(z)
 ok(tup::Tuple) = ok(tup...)
+
+"floor number x in base b, note this is different from using Base.round(...; base=b) !"
+floor_base(x, b) = round_base(x, b, RoundDown)
+
+"ceil number x in base b"
+ceil_base(x, b) = round_base(x, b, RoundUp)
+
+round_base(x::T, b, ::RoundingMode{:Down}) where {T} = T(b^floor(log(b, x)))
+round_base(x::T, b, ::RoundingMode{:Up}) where {T} = T(b^ceil(log(b, x)))
+
+ignorenan_min_max(::Any, ex) = ex
+function ignorenan_min_max(x::AbstractArray{<:AbstractFloat}, ex::Tuple)
+    mn, mx = ignorenan_extrema(x)
+    NaNMath.min(ex[1], mn), NaNMath.max(ex[2], mx)
+end
+
+
+# helpers to figure out if there are NaN values in a list of array types
+anynan(i::Int, args::Tuple) = any(a -> try
+    isnan(_cycle(a, i))
+catch MethodError
+    false
+end, args)
+anynan(args::Tuple) = i -> anynan(i, args)
+anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
+allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
 handle_surface(z) = z
 

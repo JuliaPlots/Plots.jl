@@ -31,7 +31,6 @@ using Plots:
 #     get_colorgradient,
 #     handle_surface,
     get_clims
-#     series_segments,
 #     get_linecolor,
 #     get_linewidth,
 #     get_linestyle,
