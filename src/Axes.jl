@@ -2,6 +2,7 @@
 module Axes
 
 export Axis, tickfont, guidefont, widen_factor, scale_inverse_scale_func
+export sort_3d_axes, axes_letters
 import Plots: get_ticks
 using Plots:
     Plots,
@@ -82,6 +83,22 @@ end
 
 Extrema() = Extrema(Inf, -Inf)
 # -------------------------------------------------------------------------
+sort_3d_axes(x, y, z, letter) =
+    if letter === :x
+        x, y, z
+    elseif letter === :y
+        y, x, z
+    else
+        z, y, x
+    end
+
+axes_letters(sp, letter) =
+    if RecipesPipeline.is3d(sp)
+        sort_3d_axes(:x, :y, :z, letter)
+    else
+        letter === :x ? (:x, :y) : (:y, :x)
+    end
+
 scale_inverse_scale_func(scale::Symbol) = (
     RecipesPipeline.scale_func(scale),
     RecipesPipeline.inverse_scale_func(scale),

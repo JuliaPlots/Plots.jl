@@ -325,23 +325,6 @@ function nanvcat(vs::AVec)
     v_out
 end
 
-sort_3d_axes(x, y, z, letter) =
-    if letter === :x
-        x, y, z
-    elseif letter === :y
-        y, x, z
-    else
-        z, y, x
-    end
-
-axes_letters(sp, letter) =
-    if RecipesPipeline.is3d(sp)
-        sort_3d_axes(:x, :y, :z, letter)
-    else
-        letter === :x ? (:x, :y) : (:y, :x)
-    end
-
-
 # compute one side of a fill range from a ribbon
 function make_fillrange_side(y::AVec, rib)
     frs = zeros(axes(y))

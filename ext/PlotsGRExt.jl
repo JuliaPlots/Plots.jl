@@ -2,52 +2,16 @@ module PlotsGRExt
 
 using GR: GR
 using Plots: Plots, GRBackend
+# TODO: eliminate this list
 using Plots:
-#     _display,
-#     _show,
-#     closeall,
-#     get_size,
-#     _cycle,
-#     get_thickness_scaling,
-#     text,
     bbox,
     left,
     right,
     bottom,
     top,
-    hascolorbar,
     plotarea,
-#     series_list,
-#     get_aspect_ratio,
-#     ispolar,
-#     is3d,
-#     needs_any_3d_axes,
     axis_drawing_info,
-#     get_attr_symbol,
-#     ok,
-    axes_letters,
-#     reverse_if,
-#     _debug,
-#     get_colorgradient,
-#     handle_surface,
-    get_clims
-#     get_linecolor,
-#     get_linewidth,
-#     get_linestyle,
-#     get_linealpha,
-#     colorbar_style,
-#     _guess_best_legend_position,
-#     isortho,
-#     isautop,
-#     axis_drawing_info_3d,
-#     sort_3d_axes,
-#     heatmap_edges,
-#     is_uniformly_spaced,
-#     cbar_gradient,
-#     get_fillalpha,
-#     shape_data,
-#     get_fillcolor,
-#     get_fillstyle
+    _guess_best_legend_position
 using RecipesPipeline: RecipesPipeline
 using NaNMath: NaNMath
 using Plots.Arrows
