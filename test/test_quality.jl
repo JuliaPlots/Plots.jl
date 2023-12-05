@@ -15,10 +15,9 @@
                 :UnitfulLatexify,
             ]
         ),
-        project_toml_formatting = false,  # issues since weak deps
         ambiguities = false,
         deps_compat = false,  # FIXME: fails `CondaPkg`
-        piracy = false,
+        piracies = false,
     )
     Aqua.test_ambiguities(Plots; exclude = [RecipesBase.apply_recipe])  # FIXME: remaining ambiguities
 end
