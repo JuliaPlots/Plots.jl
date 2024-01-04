@@ -141,7 +141,7 @@ end
 @testset "Twinx" begin
     pl = plot(1:10, margin = 2Plots.cm)
     twpl = twinx(pl)
-    pl! = plot!(twinx(), -(1:10))
+    pl! = plot!(twpl, -(1:10))
     @test twpl[:right_margin] == 2Plots.cm
     @test twpl[:left_margin] == 2Plots.cm
     @test twpl[:top_margin] == 2Plots.cm
