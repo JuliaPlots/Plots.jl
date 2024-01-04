@@ -45,6 +45,13 @@ end
     @test Plots.ylims(vsp) == (-2, 5)
 end
 
+@testset "steps offset" begin
+    data = OffsetArray(rand(11), -5:5)
+    plot(data, linetype = :steppre)
+    plot(data, linetype = :stepmid)
+    plot(data, linetype = :steppost)
+end
+
 @testset "offset axes" begin
     tri = OffsetVector(vcat(1:5, 4:-1:1), 11:19)
     sticks = plot(tri, seriestype = :sticks)
