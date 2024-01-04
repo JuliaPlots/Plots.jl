@@ -2,6 +2,7 @@
 
 is_marker_supported(::PythonPlotBackend, shape::Shape) = true
 
+# As this gets longer perhaps it should be a Set
 extra_supported_kws(::PythonPlotBackend) =
     [:levels, :mincnt, :edgecolors, :extend3d, :colors, :cmap, :facecolors, :shade]
 
