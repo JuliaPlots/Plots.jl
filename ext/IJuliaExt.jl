@@ -8,9 +8,7 @@ const IJulia =
 
 function _init_ijulia_plotting()
     # IJulia is more stable with local file
-    Plots._use_local_plotlyjs[] =
-        Plots._plotly_local_file_path[] === nothing ? false :
-        isfile(Plots._plotly_local_file_path[])
+    Plots._use_local_plotlyjs[] = true
 
     ENV["MPLBACKEND"] = "Agg"
 end

@@ -1,10 +1,10 @@
-using Scratch
 using REPL
+import PlotlyJS
 
-const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+const _plotly_local_file_path = PlotlyJS._js_path
 # use fixed version of Plotly instead of the latest one for stable dependency
 # see github.com/JuliaPlots/Plots.jl/pull/2779
-const _plotly_min_js_filename = "plotly-2.6.3.min.js"
+const _plotly_min_js_filename = "plotly-$(PlotlyJS._js_version).min.js"
 
 const _use_local_dependencies = Ref(false)
 const _use_local_plotlyjs = Ref(false)
@@ -23,10 +23,6 @@ end
 
 function _plots_plotly_defaults()
     if bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", "false")
-        _plotly_local_file_path[] =
-            fn = joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
-        isfile(fn) ||
-            Downloads.download("https://cdn.plot.ly/$(_plotly_min_js_filename)", fn)
         _use_local_plotlyjs[] = true
     end
     _use_local_dependencies[] = _use_local_plotlyjs[]
