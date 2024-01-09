@@ -3,7 +3,6 @@ import Plots: PLOTS_SEED, Plot, with
 import SentinelArrays: ChainedVector
 import GeometryBasics
 import OffsetArrays
-import ImageMagick
 import FreeType  # for `unicodeplots`
 import LibGit2
 import Aqua
@@ -31,12 +30,13 @@ const TEST_BACKENDS =
     :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
 
 # initial load - required for `should_warn_on_unsupported`
-unicodeplots()
-pgfplotsx()
-plotlyjs()
-plotly()
-hdf5()
-gr()
+# TODO add back once packageext with backends work
+# unicodeplots()
+# pgfplotsx()
+# plotlyjs()
+# plotly()
+# hdf5()
+# gr()
 
 is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
 is_pkgeval() = Plots.bool_env("JULIA_PKGEVAL", "false")

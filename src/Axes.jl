@@ -4,14 +4,8 @@ module Axes
 export Axis, tickfont, guidefont, widen_factor, scale_inverse_scale_func
 export sort_3d_axes, axes_letters
 import Plots: get_ticks
-using Plots:
-    Plots,
-    RecipesPipeline,
-    Subplot,
-    DefaultsDict
-using Plots.Commons:
-    _axis_defaults_byletter,
-    _all_axis_args
+using Plots: Plots, RecipesPipeline, Subplot, DefaultsDict
+using Plots.Commons: _axis_defaults_byletter, _all_axis_args
 using Plots.Commons
 using Plots.Ticks
 using Plots.Fonts
@@ -376,14 +370,14 @@ function _update_axis(
         # first get the args without the letter: `tickfont = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
         if haskey(plotattributes_in, k)
-            kw[k] = slice_arg(plotattributes_in[k], subplot_index)
+            kw[k] = Plots.slice_arg(plotattributes_in[k], subplot_index)
         end
 
         # then get those args that were passed with a leading letter: `xlabel = "X"`
         lk = get_attr_symbol(letter, k)
 
         if haskey(plotattributes_in, lk)
-            kw[k] = slice_arg(plotattributes_in[lk], subplot_index)
+            kw[k] = Plots.slice_arg(plotattributes_in[lk], subplot_index)
         end
     end
 

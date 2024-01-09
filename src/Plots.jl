@@ -50,7 +50,6 @@ export
     plotarea,
     KW,
 
-    wrap,
     theme,
 
     plot,
@@ -85,7 +84,6 @@ export
     backends,
     backend_name,
     backend_object,
-    aliases,
 
     text,
     font,
@@ -105,18 +103,13 @@ export
     @P_str,
 
     test_examples,
-    iter_segments,
     coords,
 
     translate,
     translate!,
     rotate,
-    rotate!,
     center,
-    BezierCurve,
-
     plotattr,
-    scalefontsize,
     scalefontsizes,
     resetfontsizes
 #! format: on
@@ -127,22 +120,29 @@ using .PlotMeasures: Length, AbsoluteLength, Measure
 import .PlotMeasures: width, height
 # ---------------------------------------------------------
 macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
-    Expr(:module, true, mod,
-      Expr(:block,
-        Expr(:import,
-          Expr(:(:),
-            Expr(:., :., :., parent),
-            (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...
-          )
+    Expr(
+        :module,
+        true,
+        mod,
+        Expr(
+            :block,
+            Expr(
+                :import,
+                Expr(
+                    :(:),
+                    Expr(:., :., :., parent),
+                    (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
+                ),
+            ),
+            Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...),
         ),
-        Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
-      )
     ) |> esc
 end
 include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
 # ---------------------------------------------------------
+import NaNMath
 include("Fonts.jl")
 @reexport using .Fonts
 using .Fonts: Font, PlotText
@@ -166,7 +166,7 @@ using .Surfaces
 include("axes_utils.jl")
 include("legend.jl")
 include("Shapes.jl")
-@reexport using .Shapes
+using .Shapes
 using .Shapes: Shape, _shapes
 include("Annotations.jl")
 using .Annotations

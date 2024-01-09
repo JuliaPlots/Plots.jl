@@ -54,8 +54,6 @@ function Base.push!(segments::Segments{T}, vs::AVec) where {T}
     segments
 end
 
-
-
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
 
@@ -102,10 +100,10 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] === :auto
             plot_color(if Commons.has_black_border_for_default(stype) && s === :line
-                sp[:foreground_color_subplot]
-            else
-                scolor
-            end)
+                    sp[:foreground_color_subplot]
+                else
+                    scolor
+                end)
         elseif plotattributes[csym] === :match
             plot_color(scolor)
         else
@@ -124,13 +122,13 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
     if plotattributes[:marker_z] !== nothing
-        ensure_gradient!(plotattributes, :markercolor, :markeralpha)
+        Commons.ensure_gradient!(plotattributes, :markercolor, :markeralpha)
     end
     if plotattributes[:line_z] !== nothing
-        ensure_gradient!(plotattributes, :linecolor, :linealpha)
+        Commons.ensure_gradient!(plotattributes, :linecolor, :linealpha)
     end
     if plotattributes[:fill_z] !== nothing
-        ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
+        Commons.ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     end
 
     # scatter plots don't have a line, but must have a shape
@@ -494,19 +492,20 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
 
     if haskey(plotattributes, :seriestype) &&
-       haskey(_typeAliases, plotattributes[:seriestype])
-        plotattributes[:seriestype] = _typeAliases[plotattributes[:seriestype]]
+       haskey(Commons._typeAliases, plotattributes[:seriestype])
+        plotattributes[:seriestype] = Commons._typeAliases[plotattributes[:seriestype]]
     end
 
     # handle marker args... default to ellipse if shape not set
     anymarker = false
     for arg in wraptuple(get(plotattributes, :marker, ()))
-        processMarkerArg(plotattributes, arg)
+        Commons.processMarkerArg(plotattributes, arg)
         anymarker = true
     end
     RecipesPipeline.reset_kw!(plotattributes, :marker)
     if haskey(plotattributes, :markershape)
-        plotattributes[:markershape] = _replace_markershape(plotattributes[:markershape])
+        plotattributes[:markershape] =
+            Commons._replace_markershape(plotattributes[:markershape])
         if plotattributes[:markershape] === :none &&
            get(plotattributes, :seriestype, :path) in
            (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
@@ -555,7 +554,8 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # framestyle
     if haskey(plotattributes, :framestyle) &&
        haskey(Commons._framestyleAliases, plotattributes[:framestyle])
-        plotattributes[:framestyle] = Commons._framestyleAliases[plotattributes[:framestyle]]
+        plotattributes[:framestyle] =
+            Commons._framestyleAliases[plotattributes[:framestyle]]
     end
 
     # contours

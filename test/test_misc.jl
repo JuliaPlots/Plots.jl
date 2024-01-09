@@ -211,12 +211,12 @@ end
 end
 
 @testset "docstring" begin
-    @test occursin("label", Plots._generate_doclist(Plots._all_series_args))
+    @test occursin("label", Plots._generate_doclist(Plots.Commons._all_series_args))
 end
 
 @testset "wrap" begin
     # not sure what is intended here ...
-    wrapped = wrap([:red, :blue])
+    wrapped = Plots.wrap([:red, :blue])
     @test !isempty(wrapped)
     @test scatter(1:2, color = wrapped) isa Plots.Plot
 end
@@ -239,7 +239,7 @@ with(:gr) do
         io = PipeBuffer()
         x = y = range(-3, 3, length = 10)
         extra_kwargs = Dict(
-            :series => Dict(:display_option => Plots.GR.OPTION_SHADED_MESH),
+            # :series => Dict(:display_option => GR.OPTION_SHADED_MESH), # let's remove this for now
             :subplot => Dict(:legend_hfactor => 2),
             :plot => Dict(:foo => nothing),
         )

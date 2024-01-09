@@ -1,6 +1,12 @@
 module Subplots
 
-export Subplot, colorbartitlefont, legendfont, legendtitlefont, titlefont, get_series_color, needs_any_3d_axes
+export Subplot,
+    colorbartitlefont,
+    legendfont,
+    legendtitlefont,
+    titlefont,
+    get_series_color,
+    needs_any_3d_axes
 import Plots.Ticks: get_ticks
 using Plots:
     Plots,
@@ -104,7 +110,7 @@ get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
 # and assigns a color automatically
 get_series_color(c, sp::Subplot, n::Int, seriestype) =
     if c === :auto
-        like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
+        like_surface(seriestype) ? Plots.cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
         _cycle(sp[:color_palette], c)
     else
@@ -228,7 +234,7 @@ function Plots.expand_extrema!(sp::Subplot, plotattributes::AKW)
             #       correspond to the same x-value)
             plotattributes[letter],
             plotattributes[get_attr_symbol(letter, :(_discrete_indices))] =
-                discrete_value!(axis, data)
+                Plots.discrete_value!(axis, data)
             expand_extrema!(axis, plotattributes[letter])
         end
     end
@@ -267,7 +273,7 @@ function Plots.expand_extrema!(sp::Subplot, plotattributes::AKW)
             data = plotattributes[letter]
             axis = sp[get_attr_symbol(letter, :axis)]
             scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
-            expand_extrema!(axis, heatmap_edges(data, scale))
+            expand_extrema!(axis, Plots.heatmap_edges(data, scale))
         end
     end
 end
@@ -276,7 +282,6 @@ function Plots.expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
     expand_extrema!(sp[:xaxis], (xmin, xmax))
     expand_extrema!(sp[:yaxis], (ymin, ymax))
 end
-
 
 Commons.get_size(sp::Subplot) = Commons.get_size(sp.plt)
 Commons.get_thickness_scaling(sp::Subplot) = Commons.get_thickness_scaling(sp.plt)

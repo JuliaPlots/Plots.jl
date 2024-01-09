@@ -423,7 +423,7 @@ end
     # compute half-width of bars
     bw = plotattributes[:bar_width]
     hw = if bw === nothing
-        0.5_bar_width * if nx > 1
+        0.5Commons._bar_width * if nx > 1
             ignorenan_minimum(filter(x -> x > 0, diff(sort(procx))))
         else
             1
@@ -464,7 +464,7 @@ end
     # widen limits out a bit
     expand_extrema!(
         axis,
-        scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor),
+        Axes.scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor),
     )
 
     # draw the bar shapes
