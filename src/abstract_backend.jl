@@ -47,28 +47,6 @@ backend_package_name(::AbstractBackend) = nothing
 
 initialized(sym::Symbol) = sym ∈ _initialized_backends
 
-backend(sym::Symbol) =
-    if sym in _backends
-        backend(_backend_instance(sym))
-    else
-        @warn "`:$sym` is not a supported backend."
-        backend()
-    end
-
-function get_backend(name::Symbol)
-    ext_name = Symbol("Plots", name, "Ext")
-    ext = Base.get_extension(@__MODULE__, ext_name)
-    if !isnothing(ext)
-        GR = ext.GR
-        # Concrete as opposed to abstract
-        ConcreteBackend = ext.get_concrete_backend()
-        return (GR, ConcreteBackend)
-    else
-        @error "Extension $name is not loaded yet, run `import $name` to load it"
-        return nothing
-    end
-end
-
 """
 Set the plot backend.
 """
@@ -83,15 +61,27 @@ function backend(pkg::AbstractBackend)
     pkg
 end
 
-# function backend(name::Symbol)
-#     backend_subtype = get_backend(name)
-#     if isnothing(backend_subtype)
-#         return nothing
-#     end
-#     _, ConcreteBackend = backend_subtype
-#     CURRENT_BACKEND.pkg = ConcreteBackend()
-#     CURRENT_BACKEND.sym = name
-# end
+backend(sym::Symbol) =
+    if sym in _backends
+        backend(_backend_instance(sym))
+    else
+        @warn "`:$sym` is not a supported backend."
+        backend()
+    end
+
+function get_backend_module(name::Symbol)
+    ext_name = Symbol("Plots", name, "Ext")
+    ext = Base.get_extension(@__MODULE__, ext_name)
+    if !isnothing(ext)
+        module_name = ext
+        # Concrete as opposed to abstract
+        ConcreteBackend = ext.get_concrete_backend()
+        return (module_name, ConcreteBackend)
+    else
+        @error "Extension $name is not loaded yet, run `import $name` to load it"
+        return nothing
+    end
+end
 
 const _base_supported_args = [
     :color_palette,

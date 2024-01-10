@@ -3,35 +3,26 @@
 const package_str = "GR"
 const str = "gr"
 const sym = :gr
-const T = :GRBackend
 
 struct GRBackend <: Plots.AbstractBackend end
+const T = GRBackend
 
 get_concrete_backend() = GRBackend  # opposite to abstract
 
+function __init__()
+    @info "initialization of GR"
+    Plots._backendType[sym] = get_concrete_backend()
+    Plots._backendSymbol[GRBackend] = sym
+    Plots._backend_packages[sym] = Symbol(package_str)
+
+    push!(Plots._backends, sym)
+    push!(Plots._initialized_backends, sym)
+end
 # Make GR know to Plots
 Plots.backend_name(::GRBackend) = sym
 Plots.backend_package_name(::GRBackend) = Plots.backend_package_name(sym)
-Plots._backendType[sym] = get_concrete_backend()
-Plots._backendSymbol[GRBackend] = sym
-Plots._backend_packages[sym] = Symbol(package_str)
-
-push!(Plots._backends, sym)
-push!(Plots._initialized_backends, sym)
 
 _post_imports(::GRBackend) = nothing
-
-# quote
-#     struct $T <: AbstractBackend end
-#     export $sym
-#     $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
-#     backend_name(::$T) = Symbol($str)
-#     backend_package_name(::$T) = backend_package_name(Symbol($str))
-#     push!(_backends, Symbol($str))
-#     _backendType[Symbol($str)] = $T
-#     _backendSymbol[$T] = Symbol($str)
-#     _backend_packages[Symbol($str)] = Symbol($package_str)
-# end |> esc
 
 const _gr_attr = Plots.merge_with_base_supported([
     :annotations,
@@ -196,21 +187,21 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
     f1 = Symbol("is_", s, "_supported")
     f2 = Symbol("supported_", s, "s")
     v = Symbol("_gr_", s)
-    @eval begin
-        $f1(::GRBackend, $s::Symbol) = $s in $v
-        $f2(::GRBackend) = sort(collect($v))
-    end
+    eval(quote
+        Plots.$f1(::GRBackend, $s::Symbol) = $s in $v
+        Plots.$f2(::GRBackend) = sort(collect($v))
+    end)
 end
 
 ## results in:
-# is_attr_supported(::GRbackend, attrname) -> Bool
+# Plots.is_attr_supported(::GRbackend, attrname) -> Bool
 # ...
-# supported_attrs(::GRbackend) -> ::Vector{Symbol}
+# Plots.supported_attrs(::GRbackend) -> ::Vector{Symbol}
 # ...
-# supported_scales(::GRbackend) -> ::Vector{Symbol}
+# Plots.supported_scales(::GRbackend) -> ::Vector{Symbol}
 # -----------------------------------------------------------------------------
 
-is_marker_supported(::GRBackend, shape::Shape) = true
+Plots.is_marker_supported(::GRBackend, shape::Shape) = true
 
 # From, delete this later
 # https://github.com/JuliaLang/Pkg.jl/pull/3552/files#diff-1af5f877eb4497fc1f22daf47044d0958aa02ab39cc6da8ef052624870d75d28R393
