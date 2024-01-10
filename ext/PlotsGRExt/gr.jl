@@ -1,35 +1,3 @@
-module PlotsGRExt
-
-using GR: GR
-using Plots: Plots, GRBackend
-# TODO: eliminate this list
-using Plots:
-    bbox,
-    left,
-    right,
-    bottom,
-    top,
-    plotarea,
-    axis_drawing_info,
-    _guess_best_legend_position
-using RecipesPipeline: RecipesPipeline
-using NaNMath: NaNMath
-using Plots.Arrows
-using Plots.Axes
-using Plots.Annotations
-using Plots.Colorbars
-using Plots.Colors
-using Plots.Commons
-using Plots.Fonts
-using Plots.Fonts: Font, PlotText
-using Plots.PlotMeasures
-using Plots.PlotsPlots
-using Plots.PlotsSeries
-using Plots.Subplots
-using Plots.Shapes
-using Plots.Shapes: Shape
-using Plots.Ticks
-
 # https://github.com/jheinen/GR.jl - significant contributions by @jheinen
 
 const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
@@ -2080,7 +2048,7 @@ for (mime, fmt) in (
     "application/postscript" => "ps",
     "image/svg+xml" => "svg",
 )
-    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
+    @eval function Plots._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         dpi_factor = $fmt == "png" ? plt[:dpi] / Plots.DPI : 1
         filepath = tempname() * "." * $fmt
         # workaround  windows bug github.com/JuliaLang/julia/issues/46989
@@ -2125,5 +2093,3 @@ function Plots._display(plt::Plot{GRBackend})
 end
 
 closeall(::GRBackend) = GR.emergencyclosegks()
-
-end # module
