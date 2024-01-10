@@ -431,7 +431,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     args = RecipesPipeline.pop_kw!(plotattributes, :minorgrid, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
-            processMinorGridArg!(plotattributes, arg, letter)
+            Commons.processMinorGridArg!(plotattributes, arg, letter)
         end
     end
     # handle individual axes grid args
@@ -439,7 +439,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         gridsym = get_attr_symbol(letter, :minorgrid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
-            processMinorGridArg!(plotattributes, arg, letter)
+            Commons.processMinorGridArg!(plotattributes, arg, letter)
         end
     end
     # handle font args common to all axes

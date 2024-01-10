@@ -1,7 +1,24 @@
 module PlotsSeries
 
-export Series, should_add_to_legend, get_colorgradient, iscontour, isfilledcontour, contour_levels, series_segments
-export get_linestyle, get_linewidth, get_markerstrokealpha, get_markerstrokealpha, get_markerstrokewidth, get_linecolor, get_linealpha, get_fillstyle, get_fillcolor, get_fillalpha, get_markercolor, get_markeralpha
+export Series,
+    should_add_to_legend,
+    get_colorgradient,
+    iscontour,
+    isfilledcontour,
+    contour_levels,
+    series_segments
+export get_linestyle,
+    get_linewidth,
+    get_markerstrokealpha,
+    get_markerstrokealpha,
+    get_markerstrokewidth,
+    get_linecolor,
+    get_linealpha,
+    get_fillstyle,
+    get_fillcolor,
+    get_fillalpha,
+    get_markercolor,
+    get_markeralpha
 import Plots.Commons
 using Plots.Commons: _cycle, AVec
 using Plots.PlotUtils: ColorGradient, plot_color
@@ -54,7 +71,7 @@ should_add_to_legend(series::Series) =
 
 Plots.get_subplot(series::Series) = series.plotattributes[:subplot]
 Plots.RecipesPipeline.is3d(series::Series) = RecipesPipeline.is3d(series.plotattributes)
-Plots.ispolar(series::Series) = ispolar(series.plotattributes[:subplot])
+Plots.ispolar(series::Series) = Plots.ispolar(series.plotattributes[:subplot])
 # -------------------------------------------------------
 # operate on individual series
 
@@ -190,7 +207,6 @@ Commons.get_size(series::Series) = Commons.get_size(series.plotattributes[:subpl
 Commons.get_thickness_scaling(series::Series) =
     Commons.get_thickness_scaling(series.plotattributes[:subplot])
 
-
 # -------------------------------------------------------
 struct SeriesSegment
     # indexes of this segment in series data vectors
@@ -232,7 +248,10 @@ has_attribute_segments(series::Series) =
     any(
         series[attr] isa AbstractVector && length(series[attr]) > 1 for
         attr in Plots.Commons._segmenting_vector_attributes
-    ) || any(series[attr] isa AbstractArray for attr in Plots.Commons._segmenting_array_attributes)
+    ) || any(
+        series[attr] isa AbstractArray for
+        attr in Plots.Commons._segmenting_array_attributes
+    )
 
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
     x, y, z = series[:x], series[:y], series[:z]
@@ -244,7 +263,8 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     if check
         scales = :xscale, :yscale, :zscale
         for (n, s) in enumerate(args)
-            (scale = get(series, scales[n], :identity)) ∈ Plots.Commons._logScales || continue
+            (scale = get(series, scales[n], :identity)) ∈ Plots.Commons._logScales ||
+                continue
             for (i, v) in enumerate(s)
                 if v <= 0
                     @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
@@ -281,7 +301,8 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
         maximum(map(seg -> last(seg.range), segments)),
     )
     for attr in Plots.Commons._segmenting_vector_attributes
-        if (v = get(series, attr, nothing)) isa Plots.Commons.AVec && eachindex(v) != seg_range
+        if (v = get(series, attr, nothing)) isa Plots.Commons.AVec &&
+           eachindex(v) != seg_range
             @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
             if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.

@@ -1293,7 +1293,7 @@ function processMinorGridArg!(plotattributes::AKW, arg, letter)
         plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
-    elseif typeof(arg) <: Stroke
+    elseif typeof(arg) <: Plots.Strokes.Stroke
         arg.width === nothing ||
             (plotattributes[get_attr_symbol(letter, :minorgridlinewidth)] = arg.width)
         arg.color === nothing || (
@@ -1387,8 +1387,6 @@ function _add_markershape(plotattributes::AKW)
         plotattributes[:markershape] = ms
     end
 end
-
-
 
 function convert_legend_value(val::Symbol)
     if val in (:both, :all, :yes)

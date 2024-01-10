@@ -494,9 +494,10 @@ end
 function gr_update_colorbar!(cbar::GRColorbar, series::Series)
     (style = colorbar_style(series)) === nothing && return
     list =
-        style == cbar_gradient ? cbar.gradients :
-        style == cbar_fill ? cbar.fills :
-        style == cbar_lines ? cbar.lines : error("Unknown colorbar style: $style.")
+        style == Plots.Colorbars.cbar_gradient ? cbar.gradients :
+        style == Plots.Colorbars.cbar_fill ? cbar.fills :
+        style == Plots.Colorbars.cbar_lines ? cbar.lines :
+        error("Unknown colorbar style: $style.")
     push!(list, series)
 end
 
@@ -1394,8 +1395,8 @@ function gr_draw_axes(sp, vp)
         azimuth, elevation = sp[:camera]
 
         GR.setwindow3d(x_min, x_max, y_min, y_max, z_min, z_max)
-        fov = (isortho(sp) || isautop(sp)) ? NaN : 30
-        cam = (isortho(sp) || isautop(sp)) ? 0 : NaN
+        fov = (Plots.isortho(sp) || Plots.isautop(sp)) ? NaN : 30
+        cam = (Plots.isortho(sp) || Plots.isautop(sp)) ? 0 : NaN
         GR.setspace3d(-90 + azimuth, 90 - elevation, fov, cam)
         gr_set_projectiontype(sp)
 
@@ -1438,7 +1439,7 @@ function gr_draw_axis(sp, letter, vp)
 end
 
 function gr_draw_axis_3d(sp, letter, vp)
-    ax = axis_drawing_info_3d(sp, letter)
+    ax = Plots.axis_drawing_info_3d(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
 
     # draw segments
@@ -1760,7 +1761,7 @@ function gr_add_series(sp, series)
         GR.gr3.clear()
     elseif st === :heatmap
         # `z` is already transposed, so we need to reverse before passing its size.
-        x, y = heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
+        x, y = Plots.heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
         gr_draw_heatmap(series, x, y, z, clims)
     elseif st === :image
         gr_draw_image(series, x, y, z, clims)
@@ -1990,7 +1991,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
     GR.setspace(clims..., 0, 90)
     w, h = length(x) - 1, length(y) - 1
     sp = series[:subplot]
-    if !ispolar(series) && is_uniformly_spaced(x) && is_uniformly_spaced(y)
+    if !ispolar(series) && Plots.is_uniformly_spaced(x) && Plots.is_uniformly_spaced(y)
         # For uniformly spaced data use GR.drawimage, which can be
         # much faster than GR.nonuniformcellarray, especially for
         # pdf output, and also supports alpha values.

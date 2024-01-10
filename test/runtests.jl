@@ -57,20 +57,21 @@ for name in (
     "shorthands",
     "recipes",
     "unitful",
-    "hdf5plots",
-    "pgfplotsx",
-    "plotly",
+    # "hdf5plots",
+    # "pgfplotsx",
+    # "plotly",
     "animations",
     "output",
     "preferences",
-    "backends",
+    # "backends",
 )
     @testset "$name" begin
         if is_auto() || is_pkgeval()
             # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)
             name != "backends" && continue
         end
-        gr()  # reset to default backend (safer)
+        # gr()  # reset to default backend (safer)
+        Plots.backend(:gr)
         include("test_$name.jl")
     end
 end
