@@ -241,7 +241,7 @@ closeall() = closeall(backend())
 
 # COV_EXCL_START
 
-Base.showable(::MIME"text/html", plt::Plot{UnicodePlotsBackend}) = false  # Pluto
+# Base.showable(::MIME"text/html", plt::Plot{UnicodePlotsBackend}) = false  # Pluto
 
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)
