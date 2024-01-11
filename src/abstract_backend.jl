@@ -35,6 +35,10 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 backend() = CURRENT_BACKEND.pkg
+
+"Returns a list of supported backends"
+backends() = _backends
+
 backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol)::AbstractBackend =
     haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
