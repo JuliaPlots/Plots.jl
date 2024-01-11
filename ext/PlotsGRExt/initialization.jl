@@ -10,7 +10,7 @@ const T = GRBackend
 get_concrete_backend() = GRBackend  # opposite to abstract
 
 function __init__()
-    @info "Initializing GR backend in Plots..."
+    @info "Initializing GR backend in Plots; run `gr()` to activate it."
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[GRBackend] = sym
     Plots._backend_packages[sym] = Symbol(package_str)

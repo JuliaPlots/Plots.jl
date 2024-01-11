@@ -147,6 +147,12 @@ function gr(; kw...)
 end
 export gr
 
+function unicodeplots(; kw...)
+    default(; reset = false, kw...)
+    backend(:unicodeplots)
+end
+export unicodeplots
+
 # $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
 # ---------------------------------------------------------
 

@@ -12,7 +12,7 @@ const _canvas_map = (
 
 should_warn_on_unsupported(::UnicodePlotsBackend) = false
 
-function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
+function Plots._before_layout_calcs(plt::Plots.Plot{UnicodePlotsBackend})
     plt.o = UnicodePlots.Plot[]
     up_width = UnicodePlots.DEFAULT_WIDTH[]
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
@@ -276,7 +276,7 @@ end
 
 # ------------------------------------------------------------------------------------------
 
-function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
+function _show(io::IO, ::MIME"image/png", plt::Plots.Plot{UnicodePlotsBackend})
     applicable(UnicodePlots.save_image, io) ||
         "Plots(UnicodePlots): saving to `.png` requires `import FreeType, FileIO`" |>
         ArgumentError |>
@@ -321,12 +321,12 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
     nothing
 end
 
-Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
-Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
+Base.show(plt::Plots.Plot{UnicodePlotsBackend}) = show(stdout, plt)
+Base.show(io::IO, plt::Plots.Plot{UnicodePlotsBackend}) = _show(io, MIME("text/plain"), plt)
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
-function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
-    prepare_output(plt)
+function _show(io::IO, ::MIME"text/plain", plt::Plots.Plot{UnicodePlotsBackend})
+    Plots.prepare_output(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
         n = length(plt.o)
@@ -386,7 +386,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
 end
 
 # we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
-function _display(plt::Plot{UnicodePlotsBackend})
+function Plots._display(plt::Plots.Plot{UnicodePlotsBackend})
     show(stdout, plt)
     println(stdout)
 end
