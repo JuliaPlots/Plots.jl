@@ -15,13 +15,13 @@
         @test isequal(collect(zip(Plots.unzip(z)...)), z)
         @test isequal(collect(zip(Plots.unzip(GeometryBasics.Point.(z))...)), z)
     end
-    op1 = Plots.process_clims((1.0, 2.0))
-    op2 = Plots.process_clims((1, 2.0))
+    op1 = Plots.Colorbars.process_clims((1.0, 2.0))
+    op2 = Plots.Colorbars.process_clims((1, 2.0))
     data = randn(100, 100)
     @test op1(data) == op2(data)
-    @test Plots.process_clims(nothing) ==
-          Plots.process_clims(missing) ==
-          Plots.process_clims(:auto)
+    @test Plots.Colorbars.process_clims(nothing) ==
+          Plots.Colorbars.process_clims(missing) ==
+          Plots.Colorbars.process_clims(:auto)
 
     @test (==)(
         Plots.texmath2unicode(
@@ -49,12 +49,12 @@
     @test Plots.nansplit([1, 2, NaN, 3, 4]) == [[1.0, 2.0], [3.0, 4.0]]
     @test Plots.nanvcat([1, NaN]) |> length == 4
 
-    @test Plots.inch2px(1) isa AbstractFloat
-    @test Plots.px2inch(1) isa AbstractFloat
-    @test Plots.inch2mm(1) isa AbstractFloat
-    @test Plots.mm2inch(1) isa AbstractFloat
-    @test Plots.px2mm(1) isa AbstractFloat
-    @test Plots.mm2px(1) isa AbstractFloat
+    @test Plots.PlotMeasures.inch2px(1) isa AbstractFloat
+    @test Plots.PlotMeasures.px2inch(1) isa AbstractFloat
+    @test Plots.PlotMeasures.inch2mm(1) isa AbstractFloat
+    @test Plots.PlotMeasures.mm2inch(1) isa AbstractFloat
+    @test Plots.PlotMeasures.px2mm(1) isa AbstractFloat
+    @test Plots.PlotMeasures.mm2px(1) isa AbstractFloat
 
     pl = plot()
     @test xlims() isa Tuple
@@ -67,14 +67,14 @@
     @test plot(-1:10, xscale = :log10) isa Plots.Plot
 
     ######################
-    Plots.debug!(true)
+    Plots.Commons.debug!(true)
 
     io = PipeBuffer()
-    Plots.debugshow(io, nothing)
-    Plots.debugshow(io, [1])
+    Plots.Commons.debugshow(io, nothing)
+    Plots.Commons.debugshow(io, [1])
 
     pl = plot(1:2)
-    Plots.dumpdict(devnull, first(pl.series_list).plotattributes)
+    Plots.Commons.dumpdict(devnull, first(pl.series_list).plotattributes)
     show(devnull, pl[1][:xaxis])
 
     # bounding boxes
@@ -82,7 +82,7 @@
         show(devnull, plot(1:2))
     end
 
-    Plots.debug!(false)
+    Plots.Commons.debug!(false)
     ######################
 
     let pl = plot(1)
@@ -102,12 +102,12 @@
     push!(pl, 1:2, 2:3, 3:4)
 
     pl = plot([1, 2, 3], [4, 5, 6])
-    @test Plots.xmin(pl) == 1
-    @test Plots.xmax(pl) == 3
-    @test Plots.ignorenan_extrema(pl) == (1, 3)
+    @test Plots.PlotsPlots.xmin(pl) == 1
+    @test Plots.PlotsPlots.xmax(pl) == 3
+    @test Plots.Commons.ignorenan_extrema(pl) == (1, 3)
 
-    @test Plots.get_attr_symbol(:x, "lims") === :xlims
-    @test Plots.get_attr_symbol(:x, :lims) === :xlims
+    @test Plots.Commons.get_attr_symbol(:x, "lims") === :xlims
+    @test Plots.Commons.get_attr_symbol(:x, :lims) === :xlims
 
     @test contains(Plots._document_argument(:bar_position), "bar_position")
 
@@ -130,23 +130,23 @@
     let pl = plot(1:2)
         series = first(pl.series_list)
         label = "fancy label"
-        attr!(series; label)
+        Plots.PlotsSeries.attr!(series; label)
         @test series[:label] == label
-        @test Plots.attr(series, :label) == label
+        @test Plots.PlotsSeries.attr(series, :label) == label
 
         label = "another label"
-        attr!(series, label, :label)
-        @test Plots.attr(series, :label) == label
+        Plots.PlotsSeries.attr!(series, label, :label)
+        @test Plots.PlotsSeries.attr(series, :label) == label
 
         sp = first(pl.subplots)
         title = "fancy title"
-        attr!(sp; title)
+        Plots.Subplots.attr!(sp; title)
         @test sp[:title] == title
     end
 end
 
 @testset "NaN-separated Segments" begin
-    segments(args...) = collect(iter_segments(args...))
+    segments(args...) = collect(Plots.PlotsSeries.iter_segments(args...))
 
     nan10 = fill(NaN, 10)
     @test segments(11:20) == [1:10]
@@ -299,7 +299,7 @@ end
         pl = heatmap(rand(10, 10); xscale = :log10, yscale = :log10)
         @test show(devnull, pl) isa Nothing
 
-        pl = plot(Shape([(1, 1), (2, 1), (2, 2), (1, 2)]); xscale = :log10)
+        pl = plot(Plots.Shape([(1, 1), (2, 1), (2, 2), (1, 2)]); xscale = :log10)
         @test show(devnull, pl) isa Nothing
     end
 end

@@ -216,7 +216,7 @@ end
 
 @testset "wrap" begin
     # not sure what is intended here ...
-    wrapped = wrap([:red, :blue])
+    wrapped = Plots.PlotsPlots.wrap([:red, :blue])
     @test !isempty(wrapped)
     @test scatter(1:2, color = wrapped) isa Plots.Plot
 end

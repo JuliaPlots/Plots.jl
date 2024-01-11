@@ -65,7 +65,7 @@ function _preprocess_userrecipe(kw::AKW)
 
     if get(kw, :permute, default(:permute)) !== :none
         l1, l2 = kw[:permute]
-        for k in _axis_args
+        for k in Commons._axis_args
             k1 = Commons._attrsymbolcache[l1][k]
             k2 = Commons._attrsymbolcache[l2][k]
             kwk = keys(kw)

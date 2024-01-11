@@ -4,8 +4,8 @@ module Axes
 export Axis, tickfont, guidefont, widen_factor, scale_inverse_scale_func
 export sort_3d_axes, axes_letters
 import Plots: get_ticks
-using Plots: Plots, RecipesPipeline, Subplot, DefaultsDict
-using Plots.Commons: _axis_defaults_byletter, _all_axis_args
+using Plots: Plots, RecipesPipeline, Subplot, DefaultsDict, TimeType
+using Plots.Commons: _axis_defaults_byletter, _all_axis_args, dumpdict
 using Plots.Commons
 using Plots.Ticks
 using Plots.Fonts
@@ -163,8 +163,8 @@ function Commons.axis_limits(
         !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
     )
         aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
-        area = plotarea(sp)
-        plot_ratio = height(area) / width(area)
+        area = Plots.plotarea(sp)
+        plot_ratio = Plots.height(area) / Plots.width(area)
         dist = amax - amin
 
         factor = if letter === :x

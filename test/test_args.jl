@@ -91,9 +91,9 @@ end
 end
 
 @testset "aliases" begin
-    @test :legend in aliases(:legend_position)
-    Plots.add_non_underscore_aliases!(Plots.Commons._typeAliases)
-    Plots.add_axes_aliases(:ticks, :tick)
+    @test :legend in Plots.Commons.aliases(:legend_position)
+    Plots.Commons.add_non_underscore_aliases!(Plots.Commons._typeAliases)
+    Plots.Commons.add_axes_aliases(:ticks, :tick)
 end
 
 @userplot MatrixHeatmap

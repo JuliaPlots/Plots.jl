@@ -447,7 +447,11 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             for letter in (:x, :y, :z)
-                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
+                Commons.processFontArg!(
+                    plotattributes,
+                    get_attr_symbol(letter, fontname),
+                    arg,
+                )
             end
         end
     end
@@ -460,7 +464,11 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
                 (),
             )
             for arg in wraptuple(args)
-                processFontArg!(plotattributes, get_attr_symbol(letter, fontname), arg)
+                Commons.processFontArg!(
+                    plotattributes,
+                    get_attr_symbol(letter, fontname),
+                    arg,
+                )
             end
         end
     end
@@ -482,13 +490,13 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
-            processFontArg!(plotattributes, fontname, arg)
+            Commons.processFontArg!(plotattributes, fontname, arg)
         end
     end
 
     # handle line args
     for arg in wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
-        processLineArg(plotattributes, arg)
+        Commons.processLineArg(plotattributes, arg)
     end
 
     if haskey(plotattributes, :seriestype) &&

@@ -1,17 +1,42 @@
 "Things that should be common to all backends and frontend modules"
 module Commons
 
-
 export AVec, AMat, KW, AKW, TicksArgs
-export PLOTS_SEED, PX_PER_INCH, DPI, MM_PER_INCH, MM_PER_PX, DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
+export PLOTS_SEED
 export _haligns, _valigns, _cbar_width
 # Functions
-export get_subplot, coords, ispolar, expand_extrema!, series_list, axis_limits, get_size, get_thickness_scaling
+export get_subplot,
+    coords,
+    ispolar,
+    expand_extrema!,
+    series_list,
+    axis_limits,
+    get_size,
+    get_thickness_scaling
 export fg_color, plot_color, alpha, isdark, color_or_nothing!
-export get_attr_symbol, _cycle, _as_gradient, makevec, maketuple, unzip, get_aspect_ratio, ok, handle_surface, reverse_if, _debug
+export get_attr_symbol,
+    _cycle,
+    _as_gradient,
+    makevec,
+    maketuple,
+    unzip,
+    get_aspect_ratio,
+    ok,
+    handle_surface,
+    reverse_if,
+    _debug
 export _allScales, _logScales, _logScaleBases, _scaleAliases
 export _segmenting_array_attributes, _segmenting_vector_attributes
-export anynan, allnan, round_base, floor_base, ceil_base, ignorenan_min_max, ignorenan_extrema, ignorenan_maximum, ignorenan_mean, ignorenan_minimum
+export anynan,
+    allnan,
+    round_base,
+    floor_base,
+    ceil_base,
+    ignorenan_min_max,
+    ignorenan_extrema,
+    ignorenan_maximum,
+    ignorenan_mean,
+    ignorenan_minimum
 #exports from args.jl
 export default, wraptuple
 
@@ -80,10 +105,14 @@ wraptuple(x) = (x,)
 trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
 trueOrAllTrue(f::Function, x) = f(x)
 
-allLineTypes(arg) = trueOrAllTrue(a -> get(Commons._typeAliases, a, a) in Commons._allTypes, arg)
-allStyles(arg) = trueOrAllTrue(a -> get(Commons._styleAliases, a, a) in Commons._allStyles, arg)
-allShapes(arg) =
-    (trueOrAllTrue(a -> get(Commons._markerAliases, a, a) in Commons._allMarkers || a isa Shape, arg))
+allLineTypes(arg) =
+    trueOrAllTrue(a -> get(Commons._typeAliases, a, a) in Commons._allTypes, arg)
+allStyles(arg) =
+    trueOrAllTrue(a -> get(Commons._styleAliases, a, a) in Commons._allStyles, arg)
+allShapes(arg) = (trueOrAllTrue(
+    a -> get(Commons._markerAliases, a, a) in Commons._allMarkers || a isa Shape,
+    arg,
+))
 allAlphas(arg) = trueOrAllTrue(
     a ->
         (typeof(a) <: Real && a > 0 && a < 1) || (
@@ -110,7 +139,9 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
 end
 
 "These should only be needed in frontend modules"
-Plots.@ScopeModule(Frontend, Commons,
+Plots.@ScopeModule(
+    Frontend,
+    Commons,
     _subplot_defaults,
     _axis_defaults,
     _plot_defaults,
@@ -209,7 +240,6 @@ function ignorenan_min_max(x::AbstractArray{<:AbstractFloat}, ex::Tuple)
     mn, mx = ignorenan_extrema(x)
     NaNMath.min(ex[1], mn), NaNMath.max(ex[2], mx)
 end
-
 
 # helpers to figure out if there are NaN values in a list of array types
 anynan(i::Int, args::Tuple) = any(a -> try
