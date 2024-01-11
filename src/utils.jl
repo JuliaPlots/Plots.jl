@@ -979,3 +979,10 @@ end
 
 # for `PGFPlotsx` together with `UnitfulExt`
 function pgfx_sanitize_string end  # COV_EXCL_LINE
+
+function extrema_plus_buffer(v, buffmult = 0.2)
+    vmin, vmax = ignorenan_extrema(v)
+    vdiff = vmax - vmin
+    buffer = vdiff * buffmult
+    vmin - buffer, vmax + buffer
+end

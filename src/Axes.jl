@@ -2,7 +2,7 @@
 module Axes
 
 export Axis, tickfont, guidefont, widen_factor, scale_inverse_scale_func
-export sort_3d_axes, axes_letters
+export sort_3d_axes, axes_letters, process_axis_arg!
 import Plots: get_ticks
 using Plots: Plots, RecipesPipeline, Subplot, DefaultsDict, TimeType
 using Plots.Commons: _axis_defaults_byletter, _all_axis_args, dumpdict
@@ -251,12 +251,12 @@ given `factor` around the limits' middle point.
 If `letter` is omitted, all axes are affected.
 """
 function scale_lims!(sp::Subplot, letter, factor)
-    axis = Plots.get_axis(sp, letter)
+    axis = get_axis(sp, letter)
     from, to = Plots.get_sp_lims(sp, letter)
     axis[:lims] = scale_lims(from, to, factor, axis[:scale])
 end
-scale_lims!(factor::Number) = scale_lims!(current(), factor)
-scale_lims!(letter::Symbol, factor) = scale_lims!(current(), letter, factor)
+scale_lims!(factor::Number) = scale_lims!(Plots.current(), factor)
+scale_lims!(letter::Symbol, factor) = scale_lims!(Plots.current(), letter, factor)
 #----------------------------------------------------------------------
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
@@ -286,8 +286,8 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     elseif arg === nothing
         plotattributes[get_attr_symbol(letter, :ticks)] = []
 
-    elseif T <: Bool || arg in _allShowaxisArgs
-        plotattributes[get_attr_symbol(letter, :showaxis)] = showaxis(arg, letter)
+    elseif T <: Bool || arg in Commons._allShowaxisArgs
+        plotattributes[get_attr_symbol(letter, :showaxis)] = Commons.showaxis(arg, letter)
 
     elseif typeof(arg) <: Number
         plotattributes[get_attr_symbol(letter, :rotation)] = arg

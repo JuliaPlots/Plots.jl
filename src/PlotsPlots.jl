@@ -14,6 +14,7 @@ using Plots:
     Subplot,
     AbstractLayout,
     RecipesPipeline
+using Plots.PlotMeasures
 using Plots.Colorbars: _update_subplot_colorbars
 using Plots.Subplots: _update_subplot_colors, _update_margins
 using Plots.Axes: get_axis
@@ -56,9 +57,9 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         sp = deepcopy(osp)  # FIXME: fails `PlotlyJS` ?
         plt.layout.grid[1, 1] = sp
         # reset some attributes
-        sp.minpad = DEFAULT_MINPAD[]
-        sp.bbox = DEFAULT_BBOX[]
-        sp.plotarea = DEFAULT_BBOX[]
+        sp.minpad = PlotMeasures.DEFAULT_MINPAD[]
+        sp.bbox = PlotMeasures.DEFAULT_BBOX[]
+        sp.plotarea = PlotMeasures.DEFAULT_BBOX[]
         sp.plt = plt  # change the enclosing plot
         push!(plt.subplots, sp)
         plt

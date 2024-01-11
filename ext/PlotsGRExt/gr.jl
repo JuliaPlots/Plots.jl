@@ -752,8 +752,8 @@ function gr_get_ticks_size(ticks, rot)
     w, h
 end
 
-function labelfunc(scale::Symbol, backend::GRBackend)
-    texfunc = labelfunc_tex(scale)
+function Plots.labelfunc(scale::Symbol, backend::GRBackend)
+    texfunc = Plots.labelfunc_tex(scale)
     # replace dash with \minus (U+2212)
     label -> replace(texfunc(label), "-" => "−")
 end
@@ -790,7 +790,7 @@ function gr_axis_width(sp, axis)
     w
 end
 
-function _update_min_padding!(sp::Subplot{GRBackend})
+function Plots._update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
     width, height = sp_size = get_size(sp)
 
@@ -928,7 +928,7 @@ function gr_viewport_bbox(vp, sp, color)
 end
 
 function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
-    _update_min_padding!(sp)
+    Plots._update_min_padding!(sp)
 
     # the viewports for this subplot and the whole plot
     vp_sp = gr_viewport_from_bbox(sp, bbox(sp), w, h, vp_canvas)
@@ -2093,4 +2093,4 @@ function Plots._display(plt::Plot{GRBackend})
     end
 end
 
-closeall(::GRBackend) = GR.emergencyclosegks()
+Plots.closeall(::GRBackend) = GR.emergencyclosegks()

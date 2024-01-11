@@ -2,10 +2,11 @@
 module Annotations
 
 using ..Plots.Commons
-using ..Plots.Fonts: Font, PlotText, text
-using ..Plots.Shapes: Shape
+using ..Plots.Fonts: Font, PlotText, text, font
+using ..Plots.Shapes: Shape, _shapes
 using ..Plots: Series, Subplot, TimeType, Length
-
+using ..Plots.PlotMeasures: pct
+using ..Plots: is_2tuple, is3d, discrete_value!
 export EachAnn,
     series_annotations,
     series_annotations_shapes!,
@@ -161,7 +162,7 @@ _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwx
 assign_annotation_coord!(axis, x) = discrete_value!(axis, x)[1]
 assign_annotation_coord!(axis, x::TimeType) = assign_annotation_coord!(axis, Dates.value(x))
 
-_annotation_coords(pos::Symbol) = get(_positionAliases, pos, pos)
+_annotation_coords(pos::Symbol) = get(Commons._positionAliases, pos, pos)
 _annotation_coords(pos) = pos
 
 function _process_annotation_2d(sp::Subplot, x, y, lab, font = _annotationfont(sp))

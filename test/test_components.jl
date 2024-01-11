@@ -1,9 +1,15 @@
 @testset "Shapes" begin
+    Shape = Plots.Shape
+    brush = Plots.brush
+    get_xs = Plots.Shapes.get_xs
+    get_ys = Plots.Shapes.get_ys
+    vertices = Plots.Shapes.vertices
+    rotate! = Plots.Shapes.rotate!
     @testset "Type" begin
         square = Shape([(0, 0.0), (1, 0.0), (1, 1.0), (0, 1.0)])
-        @test Plots.get_xs(square) == [0, 1, 1, 0]
-        @test Plots.get_ys(square) == [0, 0, 1, 1]
-        @test Plots.vertices(square) == [(0, 0), (1, 0), (1, 1), (0, 1)]
+        @test get_xs(square) == [0, 1, 1, 0]
+        @test get_ys(square) == [0, 0, 1, 1]
+        @test vertices(square) == [(0, 0), (1, 0), (1, 1), (0, 1)]
         @test isa(square, Shape{Int64,Float64})
         @test coords(square) isa Tuple{Vector{S},Vector{T}} where {T,S}
         @test Shape(:circle) isa Shape
@@ -12,7 +18,7 @@
         ys = view([6 4 7; 9 9 9], 1, :)
         tri = Shape(xs, ys)
         @test isa(tri, Shape{Float64,Int64})
-        @test Plots.vertices(tri) == [(0.0, 6), (1.0, 4), (2.0, 7)]
+        @test vertices(tri) == [(0.0, 6), (1.0, 4), (2.0, 7)]
     end
 
     @testset "Copy" begin
@@ -80,8 +86,8 @@
         star_scaled = Plots.scale(star, 0.5)
 
         Plots.scale!(star, 0.5)
-        @test Plots.get_xs(star) == Plots.get_xs(star_scaled)
-        @test Plots.get_ys(star) == Plots.get_ys(star_scaled)
+        @test get_xs(star) == get_xs(star_scaled)
+        @test get_ys(star) == get_ys(star_scaled)
 
         @test Plots.extrema_plus_buffer([1, 2], 0.1) == (0.9, 2.1)
     end
@@ -218,6 +224,12 @@ end
 end
 
 @testset "Series Annotations" begin
+    Shape = Plots.Shape
+    brush = Plots.brush
+    get_xs = Plots.Shapes.get_xs
+    get_ys = Plots.Shapes.get_ys
+    vertices = Plots.Shapes.vertices
+    rotate! = Plots.Shapes.rotate!
     square = Shape([(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
     @test_logs (:warn, "Unused SeriesAnnotations arg: triangle (Symbol)") begin
         pl = plot(
@@ -308,7 +320,7 @@ end
 end
 
 @testset "Bezier" begin
-    curve = Plots.BezierCurve([(0.0, 0.0), (0.5, 1.0), (1.0, 0.0)])
+    curve = Plots.BezierCurves.BezierCurve([(0.0, 0.0), (0.5, 1.0), (1.0, 0.0)])
     @test curve(0.75) == (0.75, 0.375)
     @test length(coords(curve, 10)) == 10
 end

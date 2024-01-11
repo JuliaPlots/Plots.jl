@@ -170,7 +170,7 @@ using .Shapes
 using .Shapes: Shape, _shapes
 include("Annotations.jl")
 using .Annotations
-using .Annotations: SeriesAnnotations
+using .Annotations: SeriesAnnotations, process_annotation
 include("Arrows.jl")
 using .Arrows
 include("Strokes.jl")

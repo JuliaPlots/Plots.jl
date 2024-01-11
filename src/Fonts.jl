@@ -2,6 +2,8 @@ module Fonts
 
 using Plots.Colors
 using Plots.Commons
+using Plots.Commons:
+    _initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes, _initial_fontsizes
 # keep in mind: these will be reexported and are public API
 export font, scalefontsizes, resetfontsizes, text, is_horizontal, Font
 

@@ -1,10 +1,12 @@
 @testset "check_contour_levels" begin
-    @test Plots.check_contour_levels(2) === nothing
-    @test Plots.check_contour_levels(-1.0:0.2:10.0) === nothing
-    @test Plots.check_contour_levels([-100, -2, -1, 0, 1, 2, 100]) === nothing
-    @test_throws ArgumentError Plots.check_contour_levels(1.0)
-    @test_throws ArgumentError Plots.check_contour_levels((1, 2, 3))
-    @test_throws ArgumentError Plots.check_contour_levels(-3)
+    let check_contour_levels = Plots.Commons.check_contour_levels
+        @test check_contour_levels(2) === nothing
+        @test check_contour_levels(-1.0:0.2:10.0) === nothing
+        @test check_contour_levels([-100, -2, -1, 0, 1, 2, 100]) === nothing
+        @test_throws ArgumentError check_contour_levels(1.0)
+        @test_throws ArgumentError check_contour_levels((1, 2, 3))
+        @test_throws ArgumentError check_contour_levels(-3)
+    end
 end
 
 @testset "Plots.Commons.preprocess_attributes!" begin
@@ -18,7 +20,9 @@ end
     @test equal_after_pipeline(KW(:levels => 1:10))
     @test equal_after_pipeline(KW(:levels => [1.0, 3.0, 5.0]))
     @test_throws ArgumentError Plots.Commons.preprocess_attributes!(KW(:levels => 1.0))
-    @test_throws ArgumentError Plots.Commons.preprocess_attributes!(KW(:levels => (1, 2, 3)))
+    @test_throws ArgumentError Plots.Commons.preprocess_attributes!(
+        KW(:levels => (1, 2, 3)),
+    )
     @test_throws ArgumentError Plots.Commons.preprocess_attributes!(KW(:levels => -3))
 end
 

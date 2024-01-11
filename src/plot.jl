@@ -153,7 +153,7 @@ function plot!(
 
     series_attr = KW()
     for (k, v) in plotattributes
-        is_series_attr(k) && (series_attr[k] = pop!(plotattributes, k))
+        Commons.is_series_attr(k) && (series_attr[k] = pop!(plotattributes, k))
     end
 
     # create the layout
