@@ -69,7 +69,7 @@ backend(sym::Symbol) =
     if sym in _backends
         backend(_backend_instance(sym))
     else
-        @warn "`:$sym` is not a supported backend."
+        @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. `import GR; gr()`."
         backend()
     end
 
@@ -138,6 +138,16 @@ function merge_with_base_supported(v::AVec)
     Set(v)
 end
 
+# -- Create backend init functions by hand as the corresponding structs do not
+# exist yet
+
+function gr(; kw...)
+    default(; reset = false, kw...)
+    backend(:gr)
+end
+export gr
+
+# $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
 # ---------------------------------------------------------
 
 # create the various `is_xxx_supported` and `supported_xxxs` methods
