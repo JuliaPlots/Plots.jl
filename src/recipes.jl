@@ -1080,8 +1080,9 @@ end
 
 Commons.@attributes function error_style!(plotattributes::AKW)
     # errorbar color should soley determined by markerstrokecolor
-    haskey(plotattributes, :marker_z) && reset_kw!(plotattributes, :marker_z)
-    haskey(plotattributes, :line_z) && reset_kw!(plotattributes, :line_z)
+    haskey(plotattributes, :marker_z) &&
+        RecipesPipeline.reset_kw!(plotattributes, :marker_z)
+    haskey(plotattributes, :line_z) && RecipesPipeline.reset_kw!(plotattributes, :line_z)
 
     msc = if (msc = plotattributes[:markerstrokecolor]) === :match
         plotattributes[:subplot][:foreground_color_subplot]
@@ -1133,7 +1134,7 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
 @nospecialize
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)  # COV_EXCL_LINE
-    error_style!(plotattributes)
+    Commons.error_style!(plotattributes)
     markershape := :vline
     xerr = error_zipit(plotattributes[:xerror])
     if z === nothing
@@ -1150,7 +1151,7 @@ end
 @deps xerror path
 
 @recipe function f(::Type{Val{:yerror}}, x, y, z)  # COV_EXCL_LINE
-    error_style!(plotattributes)
+    Commons.error_style!(plotattributes)
     markershape := :hline
     yerr = error_zipit(plotattributes[:yerror])
     if z === nothing
@@ -1167,7 +1168,7 @@ end
 @deps yerror path
 
 @recipe function f(::Type{Val{:zerror}}, x, y, z)  # COV_EXCL_LINE
-    error_style!(plotattributes)
+    Commons.error_style!(plotattributes)
     markershape := :hline
     if z !== nothing
         zerr = error_zipit(plotattributes[:zerror])

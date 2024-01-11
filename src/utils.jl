@@ -413,6 +413,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
 
     # handle grid args common to all axes
+    processGridArg! = Commons.processGridArg!
     args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
