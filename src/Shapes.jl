@@ -4,7 +4,7 @@ using Plots: Plots, RecipesPipeline
 using Plots.Commons
 
 # keep in mind: these will be reexported and are public API
-export shape,
+export Shape,
     partialcircle,
     weave,
     makestar,
@@ -43,9 +43,9 @@ end
 
 Construct a polygon to be plotted
 """
-shape(verts::AVec) = Shape(RecipesPipeline.unzip(verts)...)
+Shape(verts::AVec) = Shape(RecipesPipeline.unzip(verts)...)
 Shape(s::Shape) = deepcopy(s)
-function shape(x::AVec{X}, y::AVec{Y}) where {X,Y}
+function Shape(x::AVec{X}, y::AVec{Y}) where {X,Y}
     return Shape(convert(Vector{X}, x), convert(Vector{Y}, y))
 end
 
@@ -84,19 +84,19 @@ function makestar(n; offset = -0.5, radius = 1.0)
     z2 = z1 + π / (n)
     outercircle = partialcircle(z1, z1 + 2π, n + 1, radius)
     innercircle = partialcircle(z2, z2 + 2π, n + 1, 0.4radius)
-    shape(weave(outercircle, innercircle))
+    Shape(weave(outercircle, innercircle))
 end
 
 "create a shape by picking points around the unit circle.  `n` is the number of point/sides, `offset` is the starting angle"
 makeshape(n; offset = -0.5, radius = 1.0) =
-    shape(partialcircle(offset * π, offset * π + 2π, n + 1, radius))
+    Shape(partialcircle(offset * π, offset * π + 2π, n + 1, radius))
 
 function makecross(; offset = -0.5, radius = 1.0)
     z2 = offset * π
     z1 = z2 - π / 8
     outercircle = partialcircle(z1, z1 + 2π, 9, radius)
     innercircle = partialcircle(z2, z2 + 2π, 5, 0.5radius)
-    shape(
+    Shape(
         weave(
             outercircle,
             innercircle,
@@ -130,8 +130,8 @@ const _shapes = KW(
     :octagon   => makeshape(8),
     :cross     => makecross(offset = -0.25),
     :xcross    => makecross(),
-    :vline     => shape([(0, 1), (0, -1)]),
-    :hline     => shape([(1, 0), (-1, 0)]),
+    :vline     => Shape([(0, 1), (0, -1)]),
+    :hline     => Shape([(1, 0), (-1, 0)]),
     :star4     => makestar(4),
     :star5     => makestar(5),
     :star6     => makestar(6),
@@ -139,7 +139,7 @@ const _shapes = KW(
     :star8     => makestar(8),
 )
 
-shape(k::Symbol) = deepcopy(_shapes[k])
+Shape(k::Symbol) = deepcopy(_shapes[k])
 
 # -----------------------------------------------------------------------
 
