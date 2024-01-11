@@ -1180,7 +1180,7 @@ function processMarkerArg(plotattributes::AKW, arg)
     elseif allStyles(arg)
         plotattributes[:markerstrokestyle] = arg
 
-    elseif typeof(arg) <: Stroke
+    elseif typeof(arg) <: Plots.Stroke
         arg.width === nothing || (plotattributes[:markerstrokewidth] = arg.width)
         arg.color === nothing || (
             plotattributes[:markerstrokecolor] =
@@ -1189,7 +1189,7 @@ function processMarkerArg(plotattributes::AKW, arg)
         arg.alpha === nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:markerstrokestyle] = arg.style)
 
-    elseif typeof(arg) <: Brush
+    elseif typeof(arg) <: Plots.Brush
         arg.size === nothing || (plotattributes[:markersize] = arg.size)
         arg.color === nothing || (
             plotattributes[:markercolor] =
@@ -1334,7 +1334,7 @@ end
         # TODO: this is neccessary while old and new font names coexist and should be standard after the transition
         fontname = Symbol(fontname, :_)
     end
-    if T <: Font
+    if T <: Plots.Font
         Symbol(fontname, :family) --> arg.family
 
         # TODO: this is neccessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
