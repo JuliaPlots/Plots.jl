@@ -22,6 +22,7 @@ using Plots.Commons
 using Plots.Commons.Frontend
 using Plots.Commons: convert_legend_value, like_surface
 using Plots.Fonts
+using Plots.PlotMeasures
 
 # a single subplot
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout

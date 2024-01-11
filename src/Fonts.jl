@@ -3,7 +3,7 @@ module Fonts
 using Plots.Colors
 using Plots.Commons
 # keep in mind: these will be reexported and are public API
-export font, scalefontsizes, resetfontsizes, text, is_horizontal
+export font, scalefontsizes, resetfontsizes, text, is_horizontal, Font
 
 mutable struct Font
     family::AbstractString

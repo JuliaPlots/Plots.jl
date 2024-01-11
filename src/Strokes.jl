@@ -1,6 +1,6 @@
 module Strokes
 
-export stroke, brush
+export stroke, brush, Stroke, Brush
 
 struct Stroke
     width

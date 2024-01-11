@@ -175,6 +175,7 @@ include("Arrows.jl")
 using .Arrows
 include("Strokes.jl")
 using .Strokes
+using .Strokes: Stroke, Brush
 include("BezierCurves.jl")
 using .BezierCurves
 include("themes.jl")

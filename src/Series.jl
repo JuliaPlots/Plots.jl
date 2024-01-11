@@ -20,9 +20,9 @@ export get_linestyle,
     get_markercolor,
     get_markeralpha
 import Plots.Commons
-using Plots.Commons: _cycle, AVec
+using Plots.Commons: _cycle, AVec, expand_extrema!, ignorenan_maximum, _series_defaults
 using Plots.PlotUtils: ColorGradient, plot_color
-using Plots: Plots, DefaultsDict, RecipesPipeline
+using Plots: Plots, DefaultsDict, RecipesPipeline, get_attr_symbol, KW
 
 mutable struct Series
     plotattributes::DefaultsDict
@@ -47,7 +47,7 @@ function attr!(series::Series; kw...)
             @warn "unused key $k in series attr"
         end
     end
-    _series_updated(series[:subplot].plt, series)
+    Plots._series_updated(series[:subplot].plt, series)
     series
 end
 
