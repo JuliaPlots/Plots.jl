@@ -66,6 +66,15 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
 end # Plot
 
 const PlotOrSubplot = Union{Plot,Subplot}
+# -----------------------------------------------------------
+
+struct InputWrapper{T}
+    obj::T
+end
+wrap(obj::T) where {T} = InputWrapper{T}(obj)
+Base.isempty(wrapper::InputWrapper) = false
+
+# -----------------------------------------------------------
 
 Base.iterate(plt::Plot) = iterate(plt.subplots)
 # -------------------------------------------------------
