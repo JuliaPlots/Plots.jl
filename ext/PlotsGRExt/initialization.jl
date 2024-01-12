@@ -1,5 +1,6 @@
-# unrolling the old # init_backend macro by hand case by case
+import Plots: backend_name, backend_package_name, is_marker_supported
 
+# unrolling the old # init_backend macro by hand case by case
 const package_str = "GR"
 const str = "gr"
 const sym = :gr
@@ -19,8 +20,8 @@ function __init__()
     push!(Plots._initialized_backends, sym)
 end
 # Make GR know to Plots
-Plots.backend_name(::GRBackend) = sym
-Plots.backend_package_name(::GRBackend) = Plots.backend_package_name(sym)
+backend_name(::GRBackend) = sym
+backend_package_name(::GRBackend) = backend_package_name(sym)
 
 const _gr_attr = Plots.merge_with_base_supported([
     :annotations,
@@ -199,4 +200,4 @@ end
 # Plots.supported_scales(::GRbackend) -> ::Vector{Symbol}
 # -----------------------------------------------------------------------------
 
-Plots.is_marker_supported(::GRBackend, shape::Shape) = true
+is_marker_supported(::GRBackend, shape::Shape) = true

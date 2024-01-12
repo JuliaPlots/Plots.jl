@@ -153,9 +153,10 @@ function unicodeplots(; kw...)
 end
 export unicodeplots
 
+# Consider moving to a macro:
 # $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
-# ---------------------------------------------------------
 
+# ---------------------------------------------------------
 # create the various `is_xxx_supported` and `supported_xxxs` methods
 # these methods should be overloaded (dispatched) by each backend in its init_code
 for s in (:attr, :seriestype, :marker, :style, :scale)
@@ -168,7 +169,6 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
         $f2() = $f2(backend())
     end
 end
-
 # -----------------------------------------------------------------------------
 
 should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
@@ -176,7 +176,7 @@ should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsuppor
 const _already_warned = Dict{Symbol,Set{Symbol}}()
 function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     _to_warn = Set{Symbol}()
-    bend = Plots.backend_name(pkg)
+    bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend) do
         Set{Symbol}()
     end
