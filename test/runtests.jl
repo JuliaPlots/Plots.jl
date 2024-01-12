@@ -52,11 +52,11 @@ for name in (
     "defaults", # only legends failing
     "dates",
     "axes",
-    "layouts", # only pythonplot failing
+    "layouts",
     "contours",
     "components",
     "shorthands",
-    "recipes", # only unicode failing
+    "recipes",
     "unitful", # many fail
     # "hdf5plots",
     # "pgfplotsx",
@@ -64,7 +64,7 @@ for name in (
     "animations",
     "output",
     "preferences",
-    "backends", # unicode passes
+    "backends",
 )
     @testset "$name" begin
         if is_auto() || is_pkgeval()
