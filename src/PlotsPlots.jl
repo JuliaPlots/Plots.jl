@@ -72,7 +72,7 @@ const PlotOrSubplot = Union{Plot,Subplot}
 struct InputWrapper{T}
     obj::T
 end
-wrap(obj::T) where {T} = InputWrapper{T}(obj)
+protect(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
 
 # -----------------------------------------------------------

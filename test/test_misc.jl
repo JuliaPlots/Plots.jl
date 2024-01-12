@@ -214,11 +214,11 @@ end
     @test occursin("label", Plots._generate_doclist(Plots.Commons._all_series_args))
 end
 
-@testset "wrap" begin
+@testset "protect" begin
     # not sure what is intended here ...
-    wrapped = Plots.PlotsPlots.wrap([:red, :blue])
-    @test !isempty(wrapped)
-    @test scatter(1:2, color = wrapped) isa Plots.Plot
+    protected = protect([:red, :blue])
+    @test !isempty(protected)
+    @test scatter(1:2, color = protected) isa Plots.Plot
 end
 
 @testset "group" begin
