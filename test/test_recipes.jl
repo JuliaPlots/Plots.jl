@@ -94,8 +94,9 @@ end
 
 @testset "coverage" begin
     @test :surface in Plots.all_seriestypes()
-    @test Plots.seriestype_supported(Plots.UnicodePlotsBackend(), :surface) === :native
-    @test Plots.seriestype_supported(Plots.UnicodePlotsBackend(), :hspan) === :recipe
+    unicode_instance = Plots._backend_instance(:unicodeplots)
+    @test Plots.seriestype_supported(unicode_instance, :surface) === :native
+    @test Plots.seriestype_supported(unicode_instance, :hspan) === :recipe
     @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :no
 end
 

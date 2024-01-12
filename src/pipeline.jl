@@ -315,8 +315,7 @@ function _add_plot_title!(plt)
                 subplot = Subplot(plt.backend, parent = plt.layout[1, 1])
             plt.layout.grid[2, 1] = the_layout
             subplot.plt = plt
-
-            top = plt.backend isa PyPlotBackend ? nothing : 0mm
+            top = plt.backend isa get(_backendType, :pythonplot, NoBackend) ? nothing : 0mm
             bot = 0mm
             plt[:force_minpad] = nothing, top, nothing, bot
             subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
