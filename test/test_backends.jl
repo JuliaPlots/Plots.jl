@@ -141,7 +141,7 @@ end
 
 @testset "UnicodePlots" begin
     with(:unicodeplots) do
-        @test backend() == Plots.UnicodePlotsBackend()
+        @test backend() == Plots._backend_instance(:unicodeplots)
 
         io = IOContext(IOBuffer(), :color => true)
 
@@ -192,7 +192,7 @@ push!(blacklist, 50)  # NOTE:  remove when github.com/jheinen/GR.jl/issues/507 i
 @testset "GR - reference images" begin
     with(:gr) do
         # NOTE: use `ENV["VISUAL_REGRESSION_TESTS_AUTO"] = true;` to automatically replace reference images
-        @test backend() == Plots.GRBackend()
+        @test backend() == Plots._backend_instance(:gr)
         @test backend_name() === :gr
         image_comparison_facts(
             :gr,

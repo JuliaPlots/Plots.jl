@@ -2,6 +2,7 @@
 module Annotations
 
 using ..Plots.Commons
+using ..Plots.Dates
 using ..Plots.Fonts: Font, PlotText, text, font
 using ..Plots.Shapes: Shape, _shapes
 using ..Plots: Series, Subplot, TimeType, Length

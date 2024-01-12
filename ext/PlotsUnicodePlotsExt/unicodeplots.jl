@@ -167,9 +167,9 @@ function addUnicodeSeries!(
 
     # get the series data and label
     x, y = if st ≡ :straightline
-        straightline_data(series)
+        Plots.straightline_data(series)
     elseif st ≡ :shape
-        shape_data(series)
+        Plots.shape_data(series)
     else
         series[:x], series[:y]
     end

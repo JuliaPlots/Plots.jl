@@ -5,6 +5,7 @@ using Plots: Plots, isijulia, texmath2unicode
 # TODO: eliminate this list
 using Plots:
     bbox, left, right, bottom, top, plotarea, axis_drawing_info, _guess_best_legend_position
+using Plots: GridLayout
 using RecipesPipeline: RecipesPipeline
 using NaNMath: NaNMath
 using Plots.Arrows
