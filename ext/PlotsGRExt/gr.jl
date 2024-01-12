@@ -494,10 +494,9 @@ end
 function gr_update_colorbar!(cbar::GRColorbar, series::Series)
     (style = colorbar_style(series)) === nothing && return
     list =
-        style == Plots.Colorbars.cbar_gradient ? cbar.gradients :
-        style == Plots.Colorbars.cbar_fill ? cbar.fills :
-        style == Plots.Colorbars.cbar_lines ? cbar.lines :
-        error("Unknown colorbar style: $style.")
+        style == cbar_gradient ? cbar.gradients :
+        style == cbar_fill ? cbar.fills :
+        style == cbar_lines ? cbar.lines : error("Unknown colorbar style: $style.")
     push!(list, series)
 end
 
@@ -752,8 +751,8 @@ function gr_get_ticks_size(ticks, rot)
     w, h
 end
 
-function Plots.labelfunc(scale::Symbol, backend::GRBackend)
-    texfunc = Plots.labelfunc_tex(scale)
+function labelfunc(scale::Symbol, backend::GRBackend)
+    texfunc = labelfunc_tex(scale)
     # replace dash with \minus (U+2212)
     label -> replace(texfunc(label), "-" => "−")
 end
@@ -790,7 +789,7 @@ function gr_axis_width(sp, axis)
     w
 end
 
-function Plots._update_min_padding!(sp::Subplot{GRBackend})
+function _update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
     width, height = sp_size = get_size(sp)
 
@@ -928,7 +927,7 @@ function gr_viewport_bbox(vp, sp, color)
 end
 
 function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
-    Plots._update_min_padding!(sp)
+    _update_min_padding!(sp)
 
     # the viewports for this subplot and the whole plot
     vp_sp = gr_viewport_from_bbox(sp, bbox(sp), w, h, vp_canvas)
@@ -1097,7 +1096,7 @@ function gr_add_legend(sp, leg, viewport_area)
                     1,
                     min(max_markersize, mfac * msz),
                     min(max_markersize, mfac * msw),
-                    Plots._cycle(msh, 1),
+                    _cycle(msh, 1),
                 )
             end
 
@@ -1395,8 +1394,8 @@ function gr_draw_axes(sp, vp)
         azimuth, elevation = sp[:camera]
 
         GR.setwindow3d(x_min, x_max, y_min, y_max, z_min, z_max)
-        fov = (Plots.isortho(sp) || Plots.isautop(sp)) ? NaN : 30
-        cam = (Plots.isortho(sp) || Plots.isautop(sp)) ? 0 : NaN
+        fov = (isortho(sp) || isautop(sp)) ? NaN : 30
+        cam = (isortho(sp) || isautop(sp)) ? 0 : NaN
         GR.setspace3d(-90 + azimuth, 90 - elevation, fov, cam)
         gr_set_projectiontype(sp)
 
@@ -1439,7 +1438,7 @@ function gr_draw_axis(sp, letter, vp)
 end
 
 function gr_draw_axis_3d(sp, letter, vp)
-    ax = Plots.axis_drawing_info_3d(sp, letter)
+    ax = axis_drawing_info_3d(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
 
     # draw segments
@@ -1761,7 +1760,7 @@ function gr_add_series(sp, series)
         GR.gr3.clear()
     elseif st === :heatmap
         # `z` is already transposed, so we need to reverse before passing its size.
-        x, y = Plots.heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
+        x, y = heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
         gr_draw_heatmap(series, x, y, z, clims)
     elseif st === :image
         gr_draw_image(series, x, y, z, clims)
@@ -1991,7 +1990,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
     GR.setspace(clims..., 0, 90)
     w, h = length(x) - 1, length(y) - 1
     sp = series[:subplot]
-    if !ispolar(series) && Plots.is_uniformly_spaced(x) && Plots.is_uniformly_spaced(y)
+    if !ispolar(series) && is_uniformly_spaced(x) && is_uniformly_spaced(y)
         # For uniformly spaced data use GR.drawimage, which can be
         # much faster than GR.nonuniformcellarray, especially for
         # pdf output, and also supports alpha values.
@@ -2049,8 +2048,8 @@ for (mime, fmt) in (
     "application/postscript" => "ps",
     "image/svg+xml" => "svg",
 )
-    @eval function Plots._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
-        dpi_factor = $fmt == "png" ? plt[:dpi] / Plots.DPI : 1
+    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
+        dpi_factor = $fmt == "png" ? plt[:dpi] / DPI : 1
         filepath = tempname() * "." * $fmt
         # workaround  windows bug github.com/JuliaLang/julia/issues/46989
         touch(filepath)
@@ -2068,7 +2067,7 @@ for (mime, fmt) in (
     end
 end
 
-function Plots._display(plt::Plot{GRBackend})
+function _display(plt::Plot{GRBackend})
     if plt[:display_type] === :inline
         filepath = tempname() * ".pdf"
         GR.emergencyclosegks()
@@ -2093,4 +2092,4 @@ function Plots._display(plt::Plot{GRBackend})
     end
 end
 
-Plots.closeall(::GRBackend) = GR.emergencyclosegks()
+closeall(::GRBackend) = GR.emergencyclosegks()

@@ -12,7 +12,7 @@ const _canvas_map = (
 
 should_warn_on_unsupported(::UnicodePlotsBackend) = false
 
-function Plots._before_layout_calcs(plt::Plots.Plot{UnicodePlotsBackend})
+function _before_layout_calcs(plt::Plots.Plot{UnicodePlotsBackend})
     plt.o = UnicodePlots.Plot[]
     up_width = UnicodePlots.DEFAULT_WIDTH[]
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
@@ -167,9 +167,9 @@ function addUnicodeSeries!(
 
     # get the series data and label
     x, y = if st ≡ :straightline
-        Plots.straightline_data(series)
+        straightline_data(series)
     elseif st ≡ :shape
-        Plots.shape_data(series)
+        shape_data(series)
     else
         series[:x], series[:y]
     end
@@ -326,7 +326,7 @@ Base.show(io::IO, plt::Plots.Plot{UnicodePlotsBackend}) = _show(io, MIME("text/p
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
 function _show(io::IO, ::MIME"text/plain", plt::Plots.Plot{UnicodePlotsBackend})
-    Plots.prepare_output(plt)
+    prepare_output(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
         n = length(plt.o)
@@ -386,7 +386,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plots.Plot{UnicodePlotsBackend})
 end
 
 # we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
-function Plots._display(plt::Plots.Plot{UnicodePlotsBackend})
+function _display(plt::Plots.Plot{UnicodePlotsBackend})
     show(stdout, plt)
     println(stdout)
 end
