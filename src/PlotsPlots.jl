@@ -1,8 +1,14 @@
 module PlotsPlots
 
-export Plot, PlotOrSubplot, _update_plot_args, plottitlefont, ignorenan_extrema
+export Plot,
+    PlotOrSubplot,
+    _update_plot_args,
+    plottitlefont,
+    ignorenan_extrema,
+    protect,
+    InputWrapper
 import Plots.Axes: _update_axis, scale_lims!
-import Plots.Commons: ignorenan_extrema
+import Plots.Commons: ignorenan_extrema, _cycle
 import Plots.Ticks: get_ticks
 using Plots:
     Plots,
@@ -74,6 +80,8 @@ struct InputWrapper{T}
 end
 protect(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
+_cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
+_cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
 # -----------------------------------------------------------
 

@@ -57,7 +57,6 @@ function __init__()
             )
         end |> atreplinit
 
-    _runtime_init(backend())
     nothing
 end
 

@@ -21,7 +21,7 @@ end
 
 @testset "NoFail" begin
     with(:unicodeplots) do
-        @test backend() == Plots.UnicodePlotsBackend()
+        @test backend() == Plots._backend_instance(:unicodeplots)
 
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 
@@ -239,7 +239,7 @@ with(:gr) do
         io = PipeBuffer()
         x = y = range(-3, 3, length = 10)
         extra_kwargs = Dict(
-            # :series => Dict(:display_option => GR.OPTION_SHADED_MESH), # let's remove this for now
+            :series => Dict(:display_option => GR.OPTION_SHADED_MESH),
             :subplot => Dict(:legend_hfactor => 2),
             :plot => Dict(:foo => nothing),
         )

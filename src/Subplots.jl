@@ -116,7 +116,7 @@ get_series_color(c, sp::Subplot, n::Int, seriestype) =
         _cycle(sp[:color_palette], c)
     else
         c
-    end |> plot_color
+    end |> Plots.plot_color
 
 get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
     map(x -> get_series_color(x, sp, n, seriestype), c)

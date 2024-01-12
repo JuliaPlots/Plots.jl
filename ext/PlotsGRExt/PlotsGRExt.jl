@@ -27,7 +27,7 @@ using Plots.Arrows
 using Plots.Axes
 using Plots.Annotations
 using Plots.Colorbars
-using Plots.Colorbars: cbar_gradient, cbar_fill, cbar_line
+using Plots.Colorbars: cbar_gradient, cbar_fill, cbar_lines
 using Plots.Colors
 using Plots.Commons
 using Plots.Fonts
@@ -41,7 +41,7 @@ using Plots.Shapes: Shape
 using Plots.Ticks
 
 # These are overriden by GR
-import Plots: labelfunc, _update_min_padding!, _show, _display, closall
+import Plots: labelfunc, _update_min_padding!, _show, _display, closeall
 
 include("initialization.jl")
 include("gr.jl")

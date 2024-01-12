@@ -156,6 +156,7 @@ function slice_arg(v::AMat, idx::Int)
     m, n = axes(v)
     size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
 end
+slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
 slice_arg(v, idx) = v
 

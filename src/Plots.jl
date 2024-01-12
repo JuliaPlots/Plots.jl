@@ -51,7 +51,7 @@ export
     KW,
 
     theme,
-    PlotsPlots.protect,
+    protect,
     plot,
     plot!,
     attr!,
