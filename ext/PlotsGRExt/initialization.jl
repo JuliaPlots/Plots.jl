@@ -22,8 +22,6 @@ end
 Plots.backend_name(::GRBackend) = sym
 Plots.backend_package_name(::GRBackend) = Plots.backend_package_name(sym)
 
-_post_imports(::GRBackend) = nothing
-
 const _gr_attr = Plots.merge_with_base_supported([
     :annotations,
     :annotationrotation,
@@ -202,6 +200,3 @@ end
 # -----------------------------------------------------------------------------
 
 Plots.is_marker_supported(::GRBackend, shape::Shape) = true
-
-# From, delete this later
-# https://github.com/JuliaLang/Pkg.jl/pull/3552/files#diff-1af5f877eb4497fc1f22daf47044d0958aa02ab39cc6da8ef052624870d75d28R393
