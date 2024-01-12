@@ -21,7 +21,6 @@ using Plots
 using Dates
 using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
-import GR
 # get `Preferences` set backend, if any
 const PREVIOUS_DEFAULT_BACKEND = load_preference(Plots, "default_backend")
 
@@ -37,7 +36,9 @@ const TEST_BACKENDS =
 # plotly()
 # hdf5()
 # gr()
-Plots.backend(:gr)
+import GR
+import UnicodePlots
+gr()
 
 is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
 is_pkgeval() = Plots.bool_env("JULIA_PKGEVAL", "false")
@@ -48,30 +49,29 @@ for name in (
     "misc",
     "utils",
     "args",
-    "defaults",
+    "defaults", # only legends failing
     "dates",
     "axes",
-    "layouts",
+    "layouts", # only pythonplot failing
     "contours",
     "components",
     "shorthands",
-    "recipes",
-    "unitful",
+    "recipes", # only unicode failing
+    "unitful", # many fail
     # "hdf5plots",
     # "pgfplotsx",
     # "plotly",
     "animations",
     "output",
     "preferences",
-    # "backends",
+    "backends", # unicode passes
 )
     @testset "$name" begin
         if is_auto() || is_pkgeval()
             # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)
             name != "backends" && continue
         end
-        # gr()  # reset to default backend (safer)
-        Plots.backend(:gr)
+        gr()  # reset to default backend (safer)
         include("test_$name.jl")
     end
 end
