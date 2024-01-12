@@ -51,7 +51,7 @@ export
     KW,
 
     theme,
-    PlotsPlots.protect
+    PlotsPlots.protect,
     plot,
     plot!,
     attr!,
@@ -186,7 +186,6 @@ include("recipes.jl")
 include("animation.jl")
 include("examples.jl")
 include("plotattr.jl")
-# include("backends.jl")
 include("abstract_backend.jl")
 include("alignment.jl")
 const CURRENT_BACKEND = CurrentBackend(:none, NoBackend())
