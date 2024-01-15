@@ -76,7 +76,7 @@ Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
 [compat]
 NaNMath = "0.3, 1"
 Showoff = "0.3.1, 1"
-GR = "0.69.5 - 0.72"
+GR = "0.69.5 - 0.73"
 PlotlyKaleido = "1"
 Gaston = "1"
 FixedPointNumbers = "0.6 - 0.8"
