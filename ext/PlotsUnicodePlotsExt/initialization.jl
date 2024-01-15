@@ -22,8 +22,6 @@ end
 Plots.backend_name(::UnicodePlotsBackend) = sym
 Plots.backend_package_name(::UnicodePlotsBackend) = Plots.backend_package_name(sym)
 
-_post_imports(::UnicodePlotsBackend) = nothing
-
 const _unicodeplots_attr = Plots.merge_with_base_supported([
     :annotations,
     :bins,
