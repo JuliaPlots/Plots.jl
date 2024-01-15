@@ -85,6 +85,7 @@ export
     backend_name,
     backend_object,
 
+    Shape,
     text,
     font,
     stroke,
@@ -108,6 +109,7 @@ export
     translate,
     translate!,
     rotate,
+    rotate!,
     center,
     plotattr,
     scalefontsizes,
@@ -167,7 +169,7 @@ include("axes_utils.jl")
 include("legend.jl")
 include("Shapes.jl")
 using .Shapes
-using .Shapes: Shape, _shapes
+using .Shapes: Shape, _shapes, rotate!
 include("Annotations.jl")
 using .Annotations
 using .Annotations: SeriesAnnotations, process_annotation

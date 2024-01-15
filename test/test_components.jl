@@ -1,10 +1,7 @@
 @testset "Shapes" begin
-    Shape = Plots.Shape
-    brush = Plots.brush
     get_xs = Plots.Shapes.get_xs
     get_ys = Plots.Shapes.get_ys
     vertices = Plots.Shapes.vertices
-    rotate! = Plots.Shapes.rotate!
     @testset "Type" begin
         square = Shape([(0, 0.0), (1, 0.0), (1, 1.0), (0, 1.0)])
         @test get_xs(square) == [0, 1, 1, 0]
@@ -224,12 +221,9 @@ end
 end
 
 @testset "Series Annotations" begin
-    Shape = Plots.Shape
-    brush = Plots.brush
     get_xs = Plots.Shapes.get_xs
     get_ys = Plots.Shapes.get_ys
     vertices = Plots.Shapes.vertices
-    rotate! = Plots.Shapes.rotate!
     square = Shape([(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
     @test_logs (:warn, "Unused SeriesAnnotations arg: triangle (Symbol)") begin
         pl = plot(
