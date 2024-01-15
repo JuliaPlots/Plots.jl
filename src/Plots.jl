@@ -85,7 +85,6 @@ export
     backend_name,
     backend_object,
 
-    Shape,
     text,
     font,
     stroke,

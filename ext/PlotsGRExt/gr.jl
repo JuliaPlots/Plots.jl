@@ -1,3 +1,4 @@
+
 # https://github.com/jheinen/GR.jl - significant contributions by @jheinen
 
 const gr_projections = (auto = 1, ortho = 1, orthographic = 1, persp = 2, perspective = 2)
@@ -2067,7 +2068,7 @@ for (mime, fmt) in (
     end
 end
 
-function _display(plt::Plot{GRBackend})
+function Plots._display(plt::Plot{GRBackend})
     if plt[:display_type] === :inline
         filepath = tempname() * ".pdf"
         GR.emergencyclosegks()
