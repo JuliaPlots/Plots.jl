@@ -26,14 +26,6 @@ end
 Plots.backend_name(::T) = sym
 Plots.backend_package_name(::T) = Plots.backend_package_name(sym)
 
-# Maybe this is not needed as PGFPlotsX relies on pkgextensions too
-# _pre_imports(::T) = @eval Plots begin
-#     import LaTeXStrings: LaTeXString
-#     import UUIDs: uuid4
-#     import Latexify
-#     import Contour
-#     @require_backend PGFPlotsX
-# end
 
 const _pgfplotsx_attr = merge_with_base_supported([
     :annotations,

@@ -153,6 +153,12 @@ function unicodeplots(; kw...)
 end
 export unicodeplots
 
+function pgfplotsx(; kw...)
+    default(; reset = false, kw...)
+    backend(:pgfplotsx)
+end
+export pgfplotsx
+
 # Consider moving to a macro:
 # $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
 

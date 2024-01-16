@@ -1,6 +1,11 @@
-module PlotsPGFPlotsExt
+module PlotsPGFPlotsXExt
 
 using PGFPlotsX
+using LaTeXStrings: LaTeXString
+using UUIDs: uuid4
+using Latexify: Latexify
+using Contour: Contour # TODO: this could become its own extension
+
 using Plots: Plots, isijulia, texmath2unicode, straightline_data, shape_data
 # TODO: eliminate this list
 using Plots:
