@@ -1108,6 +1108,7 @@ default(plotattributes::AKW, k::Symbol) = get(plotattributes, k, default(k))
 function reset_defaults()
     foreach(merge!, _all_defaults, _initial_defaults)
     merge!(_axis_defaults, _initial_axis_defaults)
+    Plots.Fonts.resetfontsizes()
     reset_axis_defaults_byletter!()
 end
 

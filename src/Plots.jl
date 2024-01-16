@@ -91,6 +91,8 @@ export
     brush,
     OHLC,
     arrow,
+    Shape,
+    cgrad,
 
     frame,
     gif,
@@ -101,6 +103,7 @@ export
     @animate,
     @gif,
     @P_str,
+    Animation,
 
     test_examples,
     coords,

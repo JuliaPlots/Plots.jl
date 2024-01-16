@@ -40,7 +40,7 @@ export anynan,
 #exports from args.jl
 export default, wraptuple
 
-using Plots: Plots, Printf
+using Plots: Plots, Printf, cgrad
 import Plots: RecipesPipeline
 import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
 using Plots.Colors: Colorant, @colorant_str
