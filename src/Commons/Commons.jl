@@ -63,9 +63,6 @@ const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
 const _cbar_width = 5mm
-const DEFAULT_BBOX = Ref(BoundingBox(0mm, 0mm, 0mm, 0mm))
-const DEFAULT_MINPAD = Ref((20mm, 5mm, 2mm, 10mm))
-const DEFAULT_LINEWIDTH = Ref(1)
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _logScales = [:ln, :log2, :log10]
 const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
