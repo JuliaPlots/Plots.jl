@@ -611,7 +611,7 @@ is_series_attr(k) = k in _all_series_args
 is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
 is_axis_attr_noletter(k) = k in _all_axis_args
 
-RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
+RecipesBase.is_key_supported(k::Symbol) = Plots.is_attr_supported(k)
 
 # -----------------------------------------------------------------------------
 autopick_ignore_none_auto(arr::AVec, idx::Integer) =

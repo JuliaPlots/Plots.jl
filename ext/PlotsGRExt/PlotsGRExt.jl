@@ -21,7 +21,10 @@ using Plots:
     is_uniformly_spaced,
     DPI,
     shape_data,
-    is_2tuple
+    is_2tuple,
+    is3d,
+    straightline_data,
+    convert_to_polar
 
 using RecipesPipeline: RecipesPipeline
 using NaNMath: NaNMath
