@@ -37,7 +37,6 @@ PlotThemes = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
 Contour = "d38c429a-6771-53c6-b99e-75d170b6e991"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 
 [extras]
@@ -106,7 +105,6 @@ UnicodeFun = "0.4"
 UnicodePlots = "3.4"
 PlotThemes = "2, 3"
 Contour = "0.5 - 0.6"
-Requires = "1"
 PlotlyJS = "0.18"
 Reexport = "0.2, 1"
 

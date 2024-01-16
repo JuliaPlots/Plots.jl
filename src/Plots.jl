@@ -16,7 +16,6 @@ using Base.Meta
 
 import RecipesBase: plot, plot!, animate, is_explicit, grid
 import RecipesPipeline
-import Requires: @require
 import RecipesPipeline:
     inverse_scale_func,
     datetimeformatter,
