@@ -19,7 +19,9 @@ using Plots:
     isautop,
     heatmap_edges,
     is_uniformly_spaced,
-    DPI
+    DPI,
+    shape_data,
+    is_2tuple
 
 using RecipesPipeline: RecipesPipeline
 using NaNMath: NaNMath

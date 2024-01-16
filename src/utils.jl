@@ -527,7 +527,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
 
     # handle fill
     for arg in wraptuple(get(plotattributes, :fill, ()))
-        processFillArg(plotattributes, arg)
+        Commons.processFillArg(plotattributes, arg)
     end
     RecipesPipeline.reset_kw!(plotattributes, :fill)
 

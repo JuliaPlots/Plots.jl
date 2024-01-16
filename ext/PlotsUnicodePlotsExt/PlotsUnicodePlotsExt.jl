@@ -33,7 +33,7 @@ using Plots.Shapes
 using Plots.Shapes: Shape
 using Plots.Ticks
 
-import Plots: _before_layout_calcs, _display
+import Plots: _before_layout_calcs, _display, _show
 
 include("initialization.jl")
 include("unicodeplots.jl")

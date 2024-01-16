@@ -2,7 +2,7 @@ module Strokes
 
 export stroke, brush, Stroke, Brush
 using Plots.Colors: Colorant
-using Plots.Commons: allAlphas, allReals
+using Plots.Commons: allAlphas, allReals, allStyles
 struct Stroke
     width
     color

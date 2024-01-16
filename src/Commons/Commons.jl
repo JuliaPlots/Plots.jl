@@ -108,7 +108,7 @@ allLineTypes(arg) =
 allStyles(arg) =
     trueOrAllTrue(a -> get(Commons._styleAliases, a, a) in Commons._allStyles, arg)
 allShapes(arg) = (trueOrAllTrue(
-    a -> get(Commons._markerAliases, a, a) in Commons._allMarkers || a isa Shape,
+    a -> get(Commons._markerAliases, a, a) in Commons._allMarkers || a isa Plots.Shape,
     arg,
 ))
 allAlphas(arg) = trueOrAllTrue(

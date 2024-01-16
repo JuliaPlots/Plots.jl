@@ -1137,7 +1137,7 @@ function processLineArg(plotattributes::AKW, arg)
     elseif allStyles(arg)
         plotattributes[:linestyle] = arg
 
-    elseif typeof(arg) <: Stroke
+    elseif typeof(arg) <: Plots.Stroke
         arg.width === nothing || (plotattributes[:linewidth] = arg.width)
         arg.color === nothing || (
             plotattributes[:linecolor] =
@@ -1146,7 +1146,7 @@ function processLineArg(plotattributes::AKW, arg)
         arg.alpha === nothing || (plotattributes[:linealpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:linestyle] = arg.style)
 
-    elseif typeof(arg) <: Brush
+    elseif typeof(arg) <: Plots.Brush
         arg.size === nothing || (plotattributes[:fillrange] = arg.size)
         arg.color === nothing || (
             plotattributes[:fillcolor] =
@@ -1155,7 +1155,7 @@ function processLineArg(plotattributes::AKW, arg)
         arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
         arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
 
-    elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
+    elseif typeof(arg) <: Plots.Arrow || arg in (:arrow, :arrows)
         plotattributes[:arrow] = arg
 
         # linealpha
@@ -1218,7 +1218,7 @@ end
 
 function processFillArg(plotattributes::AKW, arg)
     # fr = get(plotattributes, :fillrange, 0)
-    if typeof(arg) <: Brush
+    if typeof(arg) <: Plots.Brush
         arg.size === nothing || (plotattributes[:fillrange] = arg.size)
         arg.color === nothing || (
             plotattributes[:fillcolor] =
@@ -1256,7 +1256,7 @@ function processGridArg!(plotattributes::AKW, arg, letter)
     elseif allStyles(arg)
         plotattributes[get_attr_symbol(letter, :gridstyle)] = arg
 
-    elseif typeof(arg) <: Stroke
+    elseif typeof(arg) <: Plots.Stroke
         arg.width === nothing ||
             (plotattributes[get_attr_symbol(letter, :gridlinewidth)] = arg.width)
         arg.color === nothing || (
@@ -1294,7 +1294,7 @@ function processMinorGridArg!(plotattributes::AKW, arg, letter)
         plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
-    elseif typeof(arg) <: Plots.Strokes.Stroke
+    elseif typeof(arg) <: Plots.Stroke
         arg.width === nothing ||
             (plotattributes[get_attr_symbol(letter, :minorgridlinewidth)] = arg.width)
         arg.color === nothing || (
