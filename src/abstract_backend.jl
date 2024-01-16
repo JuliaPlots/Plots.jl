@@ -40,8 +40,7 @@ backend() = CURRENT_BACKEND.pkg
 backends() = _backends
 
 backend_name() = CURRENT_BACKEND.sym
-_backend_instance(sym::Symbol)::AbstractBackend =
-    haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
+_backend_instance(sym::Symbol)::AbstractBackend = _backendType[sym]()
 
 backend_package_name(sym::Symbol = backend_name()) = _backend_packages[sym]
 
@@ -67,10 +66,14 @@ end
 
 backend(sym::Symbol) =
     if sym in _backends
-        backend(_backend_instance(sym))
+        if initialized(sym)
+            backend(_backend_instance(sym))
+        else
+            @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. `import GR; gr()`."
+            backend()
+        end
     else
-        @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. `import GR; gr()`."
-        backend()
+        error("Unsupported backend $sym")
     end
 
 function get_backend_module(name::Symbol)
