@@ -179,7 +179,7 @@ end
 # ---------------------------------------------------------
 
 const _best_html_output_type =
-    KW(:pyplot => :png, :unicodeplots => :txt, :plotlyjs => :html, :plotly => :html)
+    KW(:pythonplot => :png, :unicodeplots => :txt, :plotlyjs => :html, :plotly => :html)
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
 function _show(io::IO, ::MIME"text/html", plt::Plot)

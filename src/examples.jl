@@ -1329,7 +1329,8 @@ _backend_skips = Dict(
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
-_backend_skips[:pythonplot] = _backend_skips[:pyplot]
+# TODO: recover those numbers
+# _backend_skips[:pythonplot] = _backend_skips[:pyplot]
 
 # ---------------------------------------------------------------------------------
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
