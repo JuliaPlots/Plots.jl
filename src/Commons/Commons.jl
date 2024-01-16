@@ -48,6 +48,7 @@ using Plots.ColorTypes: alpha
 using Plots.Measures: mm, BoundingBox
 using Plots.PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
 using Plots.RecipesBase
+using Plots: DEFAULT_LINEWIDTH
 
 const AVec = AbstractVector
 const AMat = AbstractMatrix

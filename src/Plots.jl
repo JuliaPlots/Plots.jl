@@ -153,6 +153,7 @@ include("Series.jl")
 using .PlotsSeries
 include("Subplots.jl")
 using .Subplots
+import .Subplots: plotarea, leftpad, toppad, bottompad, rightpad
 include("Axes.jl")
 using .Axes
 include("Surfaces.jl")

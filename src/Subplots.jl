@@ -6,7 +6,12 @@ export Subplot,
     legendtitlefont,
     titlefont,
     get_series_color,
-    needs_any_3d_axes
+    needs_any_3d_axes,
+    plotarea,
+    toppad,
+    leftpad,
+    bottompad,
+    rightpad
 import Plots.Ticks: get_ticks
 using Plots:
     Plots,
