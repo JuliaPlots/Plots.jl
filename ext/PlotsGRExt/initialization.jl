@@ -16,7 +16,7 @@ function __init__()
     Plots._backendSymbol[GRBackend] = sym
     Plots._backend_packages[sym] = Symbol(package_str)
 
-    push!(Plots._backends, sym)
+
     push!(Plots._initialized_backends, sym)
 end
 # Make GR know to Plots

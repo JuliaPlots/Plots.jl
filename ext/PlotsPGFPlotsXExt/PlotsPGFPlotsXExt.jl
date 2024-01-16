@@ -1,10 +1,12 @@
 module PlotsPGFPlotsXExt
 
-using PGFPlotsX
+using PGFPlotsX: PGFPlotsX
 using LaTeXStrings: LaTeXString
 using UUIDs: uuid4
 using Latexify: Latexify
-using Contour: Contour # TODO: this could become its own extension
+using Contour: Contour # TODO: this could become its own extensionoo
+using PlotUtils: PlotUtils, ColorGradient
+using Printf: @sprintf
 
 using Plots: Plots, isijulia, texmath2unicode, straightline_data, shape_data
 # TODO: eliminate this list
@@ -34,6 +36,7 @@ using Plots.PlotMeasures
 using Plots.PlotsPlots
 using Plots.PlotsSeries
 using Plots.Subplots
+using Plots.Surfaces
 using Plots.Shapes
 using Plots.Shapes: Shape
 using Plots.Ticks

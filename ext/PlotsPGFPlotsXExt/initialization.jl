@@ -16,7 +16,7 @@ function __init__()
     Plots._backendSymbol[T] = sym
     Plots._backend_packages[sym] = Symbol(package_str)
 
-    push!(Plots._backends, sym)
+
     push!(Plots._initialized_backends, sym)
 
     # Additional setup required by the backend:
@@ -27,7 +27,7 @@ Plots.backend_name(::T) = sym
 Plots.backend_package_name(::T) = Plots.backend_package_name(sym)
 
 
-const _pgfplotsx_attr = merge_with_base_supported([
+const _pgfplotsx_attr = Plots.merge_with_base_supported([
     :annotations,
     :annotationrotation,
     :annotationhalign,
