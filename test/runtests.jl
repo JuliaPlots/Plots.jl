@@ -49,7 +49,7 @@ for name in (
     "misc",
     "utils",
     "args",
-    "defaults", # only legends failing
+    "defaults",
     "dates",
     "axes",
     "layouts",
@@ -57,13 +57,13 @@ for name in (
     "components",
     "shorthands",
     "recipes",
-    "unitful", # many fail
+    # "unitful", # many fail
     # "hdf5plots",
     # "pgfplotsx",
     # "plotly",
-    "animations",
-    "output",
-    "preferences",
+    # "animations", # some failing
+    # "output", # some plotly failing
+    # "preferences", # no default backend
     "backends",
 )
     @testset "$name" begin
