@@ -29,7 +29,7 @@ jobs:
       matrix:
         version:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
-          - '1.9' # latest stable
+          - '1.10' # latest stable
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
         include:
@@ -43,7 +43,10 @@ jobs:
             version:  '1.8' # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '~1.10.0-0'  # upcoming julia version, next `rc`
+            version:  '1.9' # only test intermediate release on `ubuntu` to spare resources
+          # - os: ubuntu-latest
+          #   prefix: xvfb-run
+          #   version: '~1.11.0-0'  # upcoming julia version, next `rc`
           - os: ubuntu-latest
             prefix: xvfb-run
             version: 'nightly'
