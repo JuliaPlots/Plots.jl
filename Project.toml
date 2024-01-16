@@ -97,7 +97,6 @@ RelocatableFolders = "0.3, 1"
 Scratch = "1"
 Latexify = "0.14 - 0.15, 0.16"
 PGFPlots = "3"
-PyPlot = "2"
 Preferences = "1"
 FFMPEG = "0.2 - 0.4"
 Measures = "0.3"
@@ -126,7 +125,7 @@ PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 
 [targets]
-test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "GR", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "GR", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
 
 [extensions]
 FileIOExt = "FileIO"
