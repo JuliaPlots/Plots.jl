@@ -41,7 +41,9 @@ end
 
 with(:unicodeplots) do
     @test_save :txt
-    if Plots.UnicodePlots.get_font_face() ≢ nothing
+    get_font_face =
+        Base.get_extension(Plots, :PlotsUnicodePlotsExt).UnicodePlots.get_font_face
+    if get_font_face() ≢ nothing
         @test_save :png
     end
 end

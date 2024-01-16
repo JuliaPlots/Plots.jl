@@ -86,7 +86,7 @@ function image_comparison_tests(
 
     imports = something(example.imports, :())
     exprs = quote
-        Plots.debug!($debug)
+        Plots.Commons.debug!($debug)
         backend($(QuoteNode(pkg)))
         theme(:default)
         rng = StableRNG(Plots.PLOTS_SEED)
