@@ -8,7 +8,7 @@ const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
 const _backend_packages     = Dict{Symbol,Symbol}()
 const _initialized_backends = Set{Symbol}()
-const _backends             = Symbol[]
+const _backends             = (:gr, :unicodeplots, :pgfplotsx, :pythonplot, :plotlyjs, :inspectdr, :gaston)
 
 const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
     merge(toml["deps"], toml["extras"])
@@ -141,26 +141,15 @@ end
 # -- Create backend init functions by hand as the corresponding structs do not
 # exist yet
 
-function gr(; kw...)
-    default(; reset = false, kw...)
-    backend(:gr)
+for be in _backends
+    @eval begin
+        function $be(; kw...)
+            default(; reset = false, kw...)
+            backend(Symbol($be))
+        end
+        export $be
+    end
 end
-export gr
-
-function unicodeplots(; kw...)
-    default(; reset = false, kw...)
-    backend(:unicodeplots)
-end
-export unicodeplots
-
-function pgfplotsx(; kw...)
-    default(; reset = false, kw...)
-    backend(:pgfplotsx)
-end
-export pgfplotsx
-
-# Consider moving to a macro:
-# $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
 
 # ---------------------------------------------------------
 # create the various `is_xxx_supported` and `supported_xxxs` methods
