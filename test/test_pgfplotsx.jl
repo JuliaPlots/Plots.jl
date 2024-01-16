@@ -108,7 +108,7 @@ with(:pgfplotsx) do
     @testset "Marker types" begin
         markers = filter((m -> begin
             m in Plots.supported_markers()
-        end), Plots._shape_keys)
+        end), Plots.Commons._shape_keys)
         markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = (range(0, stop = 10, length = n + 2))[2:(end - 1)]
