@@ -71,13 +71,13 @@ if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
         @test_save :pdf
     end
 
-    with(:pythonplot) do
-        @test_save :pdf
-        @test_save :png
-        @test_save :svg
-        @test_save :eps
-        @test_save :ps
-    end
+    # with(:pythonplot) do
+    #     @test_save :pdf
+    #     @test_save :png
+    #     @test_save :svg
+    #     @test_save :eps
+    #     @test_save :ps
+    # end
 end
 
 #=

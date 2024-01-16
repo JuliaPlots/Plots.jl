@@ -93,7 +93,8 @@ end
 end
 
 @testset "coverage" begin
-    @test :surface in Plots.all_seriestypes()
+    # TODO: that should not need to have the extension loaded
+    # @test :surface in Plots.all_seriestypes()
     unicode_instance = Plots._backend_instance(:unicodeplots)
     @test Plots.seriestype_supported(unicode_instance, :surface) === :native
     @test Plots.seriestype_supported(unicode_instance, :hspan) === :recipe

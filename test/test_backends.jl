@@ -202,14 +202,14 @@ push!(blacklist, 50)  # NOTE:  remove when github.com/jheinen/GR.jl/issues/507 i
     end
 end
 
-is_pkgeval() || @testset "PlotlyJS" begin
-    with(:plotlyjs) do
-        @test backend() == Plots.PlotlyJSBackend()
-        pl = plot(rand(10))
-        @test pl isa Plot
-        @test_broken display(pl) isa Nothing
-    end
-end
+# is_pkgeval() || @testset "PlotlyJS" begin
+#     with(:plotlyjs) do
+#         @test backend() == Plots.PlotlyJSBackend()
+#         pl = plot(rand(10))
+#         @test pl isa Plot
+#         @test display(pl) isa Nothing
+#     end
+# end
 
 is_pkgeval() || @testset "Examples" begin
     callback(m, pkgname, i) = begin

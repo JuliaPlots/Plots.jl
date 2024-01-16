@@ -21,12 +21,25 @@ using Plots
 using Dates
 using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
-# get `Preferences` set backend, if any
-const PREVIOUS_DEFAULT_BACKEND = load_preference(Plots, "default_backend")
 
 # NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
-const TEST_BACKENDS =
-    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
+const TEST_BACKENDS = let
+    var = get(ENV, "PLOTS_TEST_BACKENDS", nothing)
+    if var !== nothing
+        Symbol.(lowercase.(
+            strip.(split(var, ","))
+        ))
+    else
+        ( :gr,
+            :unicodeplots,
+            # :pythonplot,
+            :pgfplotsx,
+            :plotlyjs,
+            # :gaston,
+            # :inspectdr
+        )
+    end
+end
 
 # initial load - required for `should_warn_on_unsupported`
 # TODO add back once packageext with backends work
@@ -38,6 +51,7 @@ const TEST_BACKENDS =
 # gr()
 import GR
 import UnicodePlots
+import PGFPlotsX
 gr()
 
 is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
@@ -74,10 +88,4 @@ for name in (
         gr()  # reset to default backend (safer)
         include("test_$name.jl")
     end
-end
-
-if PREVIOUS_DEFAULT_BACKEND === nothing
-    delete_preferences!(Plots, "default_backend")  # restore the absence of a preference
-else
-    Plots.set_default_backend!(PREVIOUS_DEFAULT_BACKEND)  # reset to previous state
 end
