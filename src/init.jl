@@ -84,11 +84,14 @@ backend()
 include(_path(backend_name()))
 
 # COV_EXCL_START
+if VERSION >= v"1.10" && backend_name() !== :gr
+else
 @setup_workload begin
     @debug backend_package_name()
     n = length(_examples)
     imports = sizehint!(Expr[], n)
     examples = sizehint!(Expr[], 10n)
+    scratch_dir = mktempdir()
     for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
         _examples[i].external && continue
         (imp = _examples[i].imports) === nothing || push!(imports, imp)
@@ -99,7 +102,7 @@ include(_path(backend_name()))
                 $func() = begin  # evaluate each example in a local scope
                     $(_examples[i].exprs)
                     $i == 1 || return  # only for one example
-                    fn = tempname()
+                    fn = joinpath(scratch_dir, tempname())
                     pl = current()
                     show(devnull, pl)
                     # FIXME: pgfplotsx requires bug
@@ -127,5 +130,6 @@ include(_path(backend_name()))
         end
     end
     CURRENT_PLOT.nullableplot = nothing
+end
 end
 # COV_EXCL_STOP
