@@ -80,7 +80,7 @@ function __init__()
 end
 
 ##################################################################
-backend()
+
 include(_path(backend_name()))
 
 # COV_EXCL_START
