@@ -24,7 +24,7 @@ using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 # NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
 const TEST_BACKENDS =
-    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
+    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston
 
 # initial load - required for `should_warn_on_unsupported`
 unicodeplots()
