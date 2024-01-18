@@ -20,7 +20,7 @@ end
 end
 
 @testset "NoFail" begin
-    with(:unicodeplots) do
+    Plots.with(:unicodeplots) do
         @test backend() == Plots.UnicodePlotsBackend()
 
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
@@ -241,7 +241,7 @@ end
     @test plot(skipmissing(1:5)) isa Plots.Plot
 end
 
-with(:gr) do
+Plots.with(:gr) do
     @testset "text" begin
         io = PipeBuffer()
         x = y = range(-3, 3, length = 10)
