@@ -80,12 +80,10 @@ function __init__()
 end
 
 ##################################################################
-
+backend()
 include(_path(backend_name()))
 
 # COV_EXCL_START
-if VERSION >= v"1.10" && backend_name() !== :gr
-else
 @setup_workload begin
     @debug backend_package_name()
     n = length(_examples)
@@ -105,12 +103,6 @@ else
                     fn = joinpath(scratch_dir, tempname())
                     pl = current()
                     show(devnull, pl)
-                    # FIXME: pgfplotsx requires bug
-                    backend_name() === :pgfplotsx && return
-                    if backend_name() === :unicodeplots
-                        savefig(pl, "$fn.txt")
-                        return
-                    end
                     showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
                     showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
                     if showable(MIME"image/svg+xml"(), pl)
@@ -130,6 +122,5 @@ else
         end
     end
     CURRENT_PLOT.nullableplot = nothing
-end
 end
 # COV_EXCL_STOP
