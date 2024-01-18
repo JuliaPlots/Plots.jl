@@ -194,14 +194,9 @@ end
 CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
-# from github.com/JuliaPackaging/Preferences.jl/blob/master/README.md:
-# "Preferences that are accessed during compilation are automatically marked as compile-time preferences"
-# ==> this must always be done during precompilation, otherwise
-# the cache will not invalidate when preferences change
 const PLOTS_DEFAULT_BACKEND = "gr"
 
 function load_default_backend()
-    # environment variable preempts the `Preferences` based mechanism
     CURRENT_BACKEND.sym = :gr
     backend(CURRENT_BACKEND.sym)
 end
