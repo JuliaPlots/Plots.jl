@@ -7,7 +7,6 @@ using Plots.Axes: Axis
 using RecipesPipeline: AbstractSurface, Surface
 using Plots.Commons
 
-
 function Plots.expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]
     foreach(x -> expand_extrema!(ex, x), surf.surf)

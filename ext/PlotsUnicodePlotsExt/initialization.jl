@@ -15,7 +15,6 @@ function __init__()
     Plots._backendSymbol[T] = sym
     Plots._backend_packages[sym] = Symbol(package_str)
 
-
     push!(Plots._initialized_backends, sym)
 end
 # Make unicodeplots know to Plots

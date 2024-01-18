@@ -551,4 +551,3 @@ function axis_drawing_info_3d(sp, letter)
         border_segments = border_segments,
     )
 end
-

@@ -26,11 +26,10 @@ using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 const TEST_BACKENDS = let
     var = get(ENV, "PLOTS_TEST_BACKENDS", nothing)
     if var !== nothing
-        Symbol.(lowercase.(
-            strip.(split(var, ","))
-        ))
+        Symbol.(lowercase.(strip.(split(var, ","))))
     else
-        ( :gr,
+        (
+            :gr,
             :unicodeplots,
             # :pythonplot,
             :pgfplotsx,

@@ -179,7 +179,8 @@ const _examples = PlotExample[
     PlotExample( # 13
         "Marker types",
         quote
-            markers = filter(m -> m in Plots.supported_markers(), Plots.Commons._shape_keys)
+            markers =
+                filter(m -> m in Plots.supported_markers(), Plots.Commons._shape_keys)
             markers = permutedims(markers)
             n = length(markers)
             x = range(0, stop = 10, length = n + 2)[2:(end - 1)]
