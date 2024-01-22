@@ -634,7 +634,7 @@ allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
 """
 Allows temporary setting of backend and defaults for Plots. Settings apply only for the `do` block.  Example:
 ```
-with(:gr, size=(400,400), type=:histogram) do
+Plots.with(:gr, size=(400,400), type=:histogram) do
   plot(rand(10))
   plot(rand(10))
 end
