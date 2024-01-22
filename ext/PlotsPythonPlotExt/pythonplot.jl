@@ -8,12 +8,6 @@ let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.d
     append!(Base.Multimedia.displays, otherdisplays)
 end
 
-if PythonPlot.version < v"3.4"
-    @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
-    officially supported by the Plots community. To ensure smooth Plots.jl
-    integration update your Matplotlib library to a version ≥ 3.4.0
-    """
-end
 
 for k in (:linthresh, :base, :label)
     # add PythonPlot specific symbols to cache
