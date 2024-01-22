@@ -29,10 +29,11 @@ using Plots: DPI, PlotUtils, Plots, Surface, _cycle, _guess_best_legend_position
     is3d, is_2tuple, is_uniformly_spaced, isautop, isortho, labelfunc_tex, left,
 merge_with_base_supported, plotarea, right, shape_data, straightline_data, top, isscalar, isvector, supported_scales, ticksType, legend_angle, legend_anchor_index, legend_pos_from_angle, width, ispositive, height, bbox_to_pcts
 using PythonPlot: PythonPlot
+
 const PythonCall = PythonPlot.PythonCall
-const mpl_toolkits = PythonCall.pyimport("mpl_toolkits")
-const mpl = PythonCall.pyimport("matplotlib")
-const numpy = PythonCall.pyimport("numpy")
+const mpl_toolkits = PythonCall.pynew() # PythonCall.pyimport("mpl_toolkits")
+const mpl = PythonPlot.matplotlib
+const numpy = PythonCall.pynew() # PythonCall.pyimport("numpy")
 
 
 using RecipesPipeline: RecipesPipeline

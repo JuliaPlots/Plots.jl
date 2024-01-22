@@ -18,8 +18,6 @@ function __init__()
 
     push!(Plots._initialized_backends, sym)
 
-    PythonCall.pyimport("mpl_toolkits.axes_grid1")
-    numpy.seterr(invalid = "ignore")
 
   if PythonPlot.version < v"3.4"
     @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
@@ -28,6 +26,11 @@ function __init__()
     """
   end
 
+    # PythonCall.pycopy!(mpl, PythonCall.pyimport("matplotlib"))
+    PythonCall.pycopy!(mpl_toolkits, PythonCall.pyimport("mpl_toolkits"))
+    PythonCall.pycopy!(numpy, PythonCall.pyimport("numpy"))
+    # PythonCall.pyimport("mpl_toolkits.axes_grid1")
+    numpy.seterr(invalid = "ignore")
     PythonPlot.ioff() # we don't want every command to update the figure
 
 end
