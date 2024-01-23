@@ -194,33 +194,11 @@ end
 CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
-# from github.com/JuliaPackaging/Preferences.jl/blob/master/README.md:
-# "Preferences that are accessed during compilation are automatically marked as compile-time preferences"
-# ==> this must always be done during precompilation, otherwise
-# the cache will not invalidate when preferences change
-const PLOTS_DEFAULT_BACKEND = lowercase(load_preference(Plots, "default_backend", "gr"))
+const PLOTS_DEFAULT_BACKEND = "gr"
 
 function load_default_backend()
-    # environment variable preempts the `Preferences` based mechanism
-    CURRENT_BACKEND.sym =
-        get(ENV, "PLOTS_DEFAULT_BACKEND", PLOTS_DEFAULT_BACKEND) |> lowercase |> Symbol
+    CURRENT_BACKEND.sym = :gr
     backend(CURRENT_BACKEND.sym)
-end
-
-function set_default_backend!(
-    backend::Union{Nothing,AbstractString,Symbol} = nothing;
-    force = true,
-    kw...,
-)
-    if backend === nothing
-        delete_preferences!(Plots, "default_backend"; force, kw...)
-    else
-        # NOTE: `_check_installed` already throws a warning
-        if (value = lowercase(string(backend))) |> _check_installed !== nothing
-            set_preferences!(Plots, "default_backend" => value; force, kw...)
-        end
-    end
-    nothing
 end
 
 function diagnostics(io::IO = stdout)

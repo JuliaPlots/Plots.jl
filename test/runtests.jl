@@ -13,7 +13,6 @@ using VisualRegressionTests
 using RecipesPipeline
 using FilePathsBase
 using LaTeXStrings
-using Preferences
 using RecipesBase
 using TestImages
 using Unitful
@@ -23,12 +22,8 @@ using Dates
 using Test
 using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
-# get `Preferences` set backend, if any
-const PREVIOUS_DEFAULT_BACKEND = load_preference(Plots, "default_backend")
-
 # NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
-const TEST_BACKENDS =
-    :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston, :inspectdr
+const TEST_BACKENDS = :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :gaston
 
 # initial load - required for `should_warn_on_unsupported`
 unicodeplots()
@@ -61,7 +56,6 @@ for name in (
     "plotly",
     "animations",
     "output",
-    "preferences",
     "backends",
 )
     @testset "$name" begin
@@ -72,10 +66,4 @@ for name in (
         gr()  # reset to default backend (safer)
         include("test_$name.jl")
     end
-end
-
-if PREVIOUS_DEFAULT_BACKEND === nothing
-    delete_preferences!(Plots, "default_backend")  # restore the absence of a preference
-else
-    Plots.set_default_backend!(PREVIOUS_DEFAULT_BACKEND)  # reset to previous state
 end

@@ -99,7 +99,7 @@ end
     @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :no
 end
 
-with(:gr) do
+Plots.with(:gr) do
     @testset "error bars" begin
         x = y = 1:10
         yerror = fill(1, length(y))

@@ -122,25 +122,25 @@ end
 ## Uncomment the following lines to update reference images for different backends
 #=
 
-with(:gr) do
+Plots.with(:gr) do
     image_comparison_facts(:gr, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:gr])
 end
 
-with(:plotlyjs) do
+Plots.with(:plotlyjs) do
     image_comparison_facts(:plotlyjs, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:plotlyjs])
 end
 
-with(:pyplot) do
+Plots.with(:pyplot) do
     image_comparison_facts(:pyplot, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:pyplot])
 end
 
-with(:pgfplotsx) do
+Plots.with(:pgfplotsx) do
     image_comparison_facts(:pgfplotsx, tol = PLOTS_IMG_TOL, skip = Plots._backend_skips[:pgfplotsx])
 end
 =#
 
 @testset "UnicodePlots" begin
-    with(:unicodeplots) do
+    Plots.with(:unicodeplots) do
         @test backend() == Plots.UnicodePlotsBackend()
 
         io = IOContext(IOBuffer(), :color => true)
@@ -190,7 +190,7 @@ end
 push!(blacklist, 50)  # NOTE:  remove when github.com/jheinen/GR.jl/issues/507 is resolved
 
 @testset "GR - reference images" begin
-    with(:gr) do
+    Plots.with(:gr) do
         # NOTE: use `ENV["VISUAL_REGRESSION_TESTS_AUTO"] = true;` to automatically replace reference images
         @test backend() == Plots.GRBackend()
         @test backend_name() === :gr
@@ -203,7 +203,7 @@ push!(blacklist, 50)  # NOTE:  remove when github.com/jheinen/GR.jl/issues/507 i
 end
 
 is_pkgeval() || @testset "PlotlyJS" begin
-    with(:plotlyjs) do
+    Plots.with(:plotlyjs) do
         @test backend() == Plots.PlotlyJSBackend()
         pl = plot(rand(10))
         @test pl isa Plot

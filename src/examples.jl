@@ -937,7 +937,7 @@ const _examples = PlotExample[
         "3D axis flip / mirror",
         :(using LinearAlgebra),
         quote
-            with(scalefonts = 0.5) do
+            Plots.with(scalefonts = 0.5) do
                 x, y = collect(-6:0.5:10), collect(-8:0.5:8)
 
                 args = x, y, (x, y) -> sinc(norm([x, y]) / π)
@@ -1198,7 +1198,7 @@ const _examples = PlotExample[
                 legs,
             )
             w, h = Plots._plot_defaults[:size]
-            with(scalefonts = 0.5, size = (2w, 2h)) do
+            Plots.with(scalefonts = 0.5, size = (2w, 2h)) do
                 plot(leg_plots()..., leg_plots(legend_column = -1)...; layout = (6, 3))
             end
         end,
@@ -1230,7 +1230,7 @@ const _examples = PlotExample[
                 legs,
             )
             w, h = Plots._plot_defaults[:size]
-            with(scalefonts = 0.5, size = (2w, 2h)) do
+            Plots.with(scalefonts = 0.5, size = (2w, 2h)) do
                 plot(leg_plots()..., leg_plots(legend_column = -1)...; layout = (6, 3))
             end
         end,
