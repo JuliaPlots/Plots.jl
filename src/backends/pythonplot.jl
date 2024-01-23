@@ -1229,10 +1229,10 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
         # link axes
         x_ax_link, y_ax_link = xaxis.sps[1].o, yaxis.sps[1].o
         if Bool(ax != x_ax_link)  # twinx
-            ax.get_shared_x_axes().join(ax, x_ax_link)
+            ax.sharey(y_ax_link)
         end
         if Bool(ax != y_ax_link)  # twiny
-            ax.get_shared_y_axes().join(ax, y_ax_link)
+            ax.sharex(x_ax_link)
         end
     end  # for sp in pl.subplots
     _py_drawfig(fig)
