@@ -19,7 +19,13 @@ for (mime, fmt) in (
     "image/eps" => "eps",
 )
     @eval Plots._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend}) =
-        PlotlyKaleido.savefig(io, sprint(io -> plotly_show_js(io, plt)), height = plt[:size][2], width = plt[:size][1], format = $fmt)
+        PlotlyKaleido.savefig(
+            io,
+            sprint(io -> plotly_show_js(io, plt)),
+            height = plt[:size][2],
+            width = plt[:size][1],
+            format = $fmt,
+        )
 end
 
 end # module

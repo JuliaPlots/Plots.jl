@@ -18,13 +18,12 @@ function __init__()
 
     push!(Plots._initialized_backends, sym)
 
-
-  if PythonPlot.version < v"3.4"
-    @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
-    officially supported by the Plots community. To ensure smooth Plots.jl
-    integration update your Matplotlib library to a version ≥ 3.4.0
-    """
-  end
+    if PythonPlot.version < v"3.4"
+        @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
+        officially supported by the Plots community. To ensure smooth Plots.jl
+        integration update your Matplotlib library to a version ≥ 3.4.0
+        """
+    end
 
     # PythonCall.pycopy!(mpl, PythonCall.pyimport("matplotlib"))
     PythonCall.pycopy!(mpl_toolkits, PythonCall.pyimport("mpl_toolkits"))
@@ -32,7 +31,6 @@ function __init__()
     # PythonCall.pyimport("mpl_toolkits.axes_grid1")
     numpy.seterr(invalid = "ignore")
     PythonPlot.ioff() # we don't want every command to update the figure
-
 end
 # Make pythonplot known to Plots
 backend_name(::T) = sym
@@ -171,7 +169,6 @@ const _pythonplot_seriestype = [
 const _pythonplot_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _pythonplot_marker = vcat(_allMarkers, :pixel)
 const _pythonplot_scale = [:identity, :ln, :log2, :log10]
-
 
 # -----------------------------------------------------------------------------
 # Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods

@@ -8,7 +8,6 @@ let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.d
     append!(Base.Multimedia.displays, otherdisplays)
 end
 
-
 for k in (:linthresh, :base, :label)
     # add PythonPlot specific symbols to cache
     Commons._attrsymbolcache[k] = Dict{Symbol,Symbol}()
