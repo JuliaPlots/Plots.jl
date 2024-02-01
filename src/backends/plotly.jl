@@ -16,12 +16,12 @@ using UUIDs
 struct PlotlyBackend <: Plots.AbstractBackend end
 Plots._backendType[:plotly] = PlotlyBackend
 Plots._backendSymbol[PlotlyBackend] = :plotly
-Plots._backend_packages[:plotly] = :PlotlyBackend
+
 push!(Plots._initialized_backends, :plotly)
 backend_name(::PlotlyBackend) = :plotly
 backend_package_name(::PlotlyBackend) = backend_package_name(:plotly)
 
-const _plotly_attr = merge_with_base_supported([
+const _plotly_attrs = merge_with_base_supported([
     :annotations,
     :legend_background_color,
     :background_color_inside,
@@ -135,7 +135,7 @@ const _plotly_attr = merge_with_base_supported([
     :zguidefont,
 ])
 
-const _plotly_seriestype = [
+const _plotly_seriestypes = [
     :path,
     :scatter,
     :heatmap,
@@ -149,8 +149,8 @@ const _plotly_seriestype = [
     :straightline,
     :mesh3d,
 ]
-const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _plotly_marker = [
+const _plotly_styles = [:auto, :solid, :dash, :dot, :dashdot]
+const _plotly_markers = [
     :none,
     :auto,
     :circle,
@@ -167,14 +167,14 @@ const _plotly_marker = [
     :hline,
     :x,
 ]
-const _plotly_scale = [:identity, :log10]
+const _plotly_scales = [:identity, :log10]
 
 defaultOutputFormat(plt::Plot{Plots.PlotlyBackend}) = "html"
 
 for s in (:attr, :seriestype, :marker, :style, :scale)
     f1 = Symbol("is_", s, "_supported")
     f2 = Symbol("supported_", s, "s")
-    v = Symbol("_plotly_", s)
+    v = Symbol("_plotly_", s, "s")
     eval(quote
         Plots.$f1(::PlotlyBackend, $s::Symbol) = $s in $v
         Plots.$f2(::PlotlyBackend) = sort(collect($v))

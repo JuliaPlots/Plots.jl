@@ -14,7 +14,7 @@ function __init__()
     @info "Initializing $package_str backend in Plots; run `$str()` to activate it."
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[T] = sym
-    Plots._backend_packages[sym] = Symbol(package_str)
+    
 
     push!(Plots._initialized_backends, sym)
 
@@ -149,7 +149,7 @@ const _pgfplotsx_attrs = Plots.merge_with_base_supported([
     :tickfontrotation,
     :draw_arrow,
 ])
-const _pgfplotsx_seriestype = [
+const _pgfplotsx_seriestypes = [
     :path,
     :scatter,
     :straightline,
@@ -169,8 +169,8 @@ const _pgfplotsx_seriestype = [
     :ysticks,
     :xsticks,
 ]
-const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _pgfplotsx_marker = [
+const _pgfplotsx_styles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _pgfplotsx_markers = [
     :none,
     :auto,
     :circle,
@@ -190,7 +190,7 @@ const _pgfplotsx_marker = [
     :hline,
     :vline,
 ]
-const _pgfplotsx_scale = [:identity, :ln, :log2, :log10]
+const _pgfplotsx_scales = [:identity, :ln, :log2, :log10]
 is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
 
 # additional constants
@@ -203,7 +203,7 @@ const _pgfplotsx_series_ids = KW()
 for s in (:attr, :seriestype, :marker, :style, :scale)
     f1 = Symbol("is_", s, "_supported")
     f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s)
+    v = Symbol("_$(str)_", s, "s")
     eval(quote
         Plots.$f1(::T, $s::Symbol) = $s in $v
         Plots.$f2(::T) = sort(collect($v))

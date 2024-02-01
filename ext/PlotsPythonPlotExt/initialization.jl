@@ -14,7 +14,7 @@ function __init__()
     @info "Initializing $package_str backend in Plots; run `$str()` to activate it."
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[T] = sym
-    Plots._backend_packages[sym] = Symbol(package_str)
+    
 
     push!(Plots._initialized_backends, sym)
 
@@ -146,7 +146,7 @@ const _pythonplot_attrs = merge_with_base_supported([
     :connections,
 ])
 
-const _pythonplot_seriestype = [
+const _pythonplot_seriestypes = [
     :path,
     :steppre,
     :stepmid,
@@ -166,9 +166,9 @@ const _pythonplot_seriestype = [
     :wireframe,
 ]
 
-const _pythonplot_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _pythonplot_marker = vcat(_all_markers, :pixel)
-const _pythonplot_scale = [:identity, :ln, :log2, :log10]
+const _pythonplot_styles = [:auto, :solid, :dash, :dot, :dashdot]
+const _pythonplot_markers = vcat(_all_markers, :pixel)
+const _pythonplot_scales = [:identity, :ln, :log2, :log10]
 
 # -----------------------------------------------------------------------------
 # Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
@@ -177,7 +177,7 @@ const _pythonplot_scale = [:identity, :ln, :log2, :log10]
 for s in (:attr, :seriestype, :marker, :style, :scale)
     f1 = Symbol("is_", s, "_supported")
     f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s)
+    v = Symbol("_$(str)_", s, "s")
     eval(quote
         Plots.$f1(::T, $s::Symbol) = $s in $v
         Plots.$f2(::T) = sort(collect($v))

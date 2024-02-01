@@ -13,7 +13,7 @@ function __init__()
     @info "Initializing GR backend in Plots; run `gr()` to activate it."
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[GRBackend] = sym
-    Plots._backend_packages[sym] = Symbol(package_str)
+    
 
     push!(Plots._initialized_backends, sym)
 end
@@ -157,7 +157,7 @@ const _gr_attrs = Plots.merge_with_base_supported([
     :mirror,
     :guidefont,
 ])
-const _gr_seriestype = [
+const _gr_seriestypes = [
     :path,
     :scatter,
     :straightline,
@@ -172,9 +172,9 @@ const _gr_seriestype = [
     :volume,
     :shape,
 ]
-const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _gr_marker = vcat(Commons._all_markers, :pixel)
-const _gr_scale = [:identity, :ln, :log2, :log10]
+const _gr_styles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _gr_markers = vcat(Commons._all_markers, :pixel)
+const _gr_scales = [:identity, :ln, :log2, :log10]
 
 # -----------------------------------------------------------------------------
 # Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods

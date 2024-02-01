@@ -4,9 +4,19 @@ const _plots_compats         = _plots_project.compat
 
 const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
-const _backend_packages     = Dict{Symbol,Symbol}()
+const _backend_packages     = (
+    gr = :GR,
+    unicodeplots = :UnicodePlots,
+    pgfplotsx = :PGFPlotsX,
+    pythonplot = :PythonPlot,
+    plotly = nothing,
+    plotlyjs = :PlotlyJS,
+    inspectdr = :InspectDR,
+    gaston = :Gaston,
+    hdf5 = :HDF5
+)
 const _initialized_backends = Set{Symbol}()
-const _backends             = (:gr, :unicodeplots, :pgfplotsx, :pythonplot, :plotly, :plotlyjs, :inspectdr, :gaston, :hdf5)
+const _backends             = keys(_backend_packages)
 
 const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
     merge(toml["deps"], toml["extras"])
@@ -67,7 +77,8 @@ backend(sym::Symbol) =
         if initialized(sym)
             backend(_backend_instance(sym))
         else
-            @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. `import GR; gr()`."
+            name = backend_package_name(sym)
+            @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. $(name === nothing ? '`' : string("`import ", name, ";")) $sym()`."
             backend()
         end
     else

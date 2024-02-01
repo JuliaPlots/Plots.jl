@@ -13,7 +13,7 @@ function __init__()
     @info "Initializing $package_str backend in Plots; run `$str()` to activate it."
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[T] = sym
-    Plots._backend_packages[sym] = Symbol(package_str)
+    
 
     push!(Plots._initialized_backends, sym)
 end
@@ -48,7 +48,7 @@ const _unicodeplots_attrs = Plots.merge_with_base_supported([
     # :marker_z,
     :line_z,
 ])
-const _unicodeplots_seriestype = [
+const _unicodeplots_seriestypes = [
     :path,
     :path3d,
     :scatter,
@@ -66,8 +66,8 @@ const _unicodeplots_seriestype = [
     :wireframe,
     :mesh3d,
 ]
-const _unicodeplots_style = [:auto, :solid]
-const _unicodeplots_marker = [
+const _unicodeplots_styles = [:auto, :solid]
+const _unicodeplots_markers = [
     :none,
     :auto,
     :pixel,
@@ -95,7 +95,7 @@ const _unicodeplots_marker = [
     :+,
     :x,
 ]
-const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
+const _unicodeplots_scales = [:identity, :ln, :log2, :log10]
 # -----------------------------------------------------------------------------
 # Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
 # defined in abstract_backend.jl
@@ -103,7 +103,7 @@ const _unicodeplots_scale = [:identity, :ln, :log2, :log10]
 for s in (:attr, :seriestype, :marker, :style, :scale)
     f1 = Symbol("is_", s, "_supported")
     f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s)
+    v = Symbol("_$(str)_", s, "s")
     eval(quote
         Plots.$f1(::UnicodePlotsBackend, $s::Symbol) = $s in $v
         Plots.$f2(::UnicodePlotsBackend) = sort(collect($v))
