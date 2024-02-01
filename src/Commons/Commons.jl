@@ -13,7 +13,7 @@ export get_subplot,
     axis_limits,
     get_size,
     get_thickness_scaling
-export fg_color, plot_color, alpha, isdark, color_or_nothing!
+export fg_color, plot_color, single_color, alpha, isdark, color_or_nothing!
 export get_attr_symbol,
     _cycle,
     _as_gradient,

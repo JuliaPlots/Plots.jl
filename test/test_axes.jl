@@ -50,7 +50,7 @@
 end
 
 @testset "Showaxis" begin
-    for value in Plots.Commons._all_showaxis_attr
+    for value in Plots.Commons._all_showaxis_attrs
         @test plot(1:5, showaxis = value)[1][:yaxis][:showaxis] isa Bool
     end
     @test plot(1:5, showaxis = :y)[1][:yaxis][:showaxis]

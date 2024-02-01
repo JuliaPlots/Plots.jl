@@ -58,7 +58,7 @@ is_pkgeval() = Plots.bool_env("JULIA_PKGEVAL", "false")
 is_ci() = Plots.bool_env("CI", "false")
 
 for name in (
-    "quality",
+    # "quality", # Persistent tasks cannot resolve versions
     "misc",
     "utils",
     "args",
@@ -72,8 +72,8 @@ for name in (
     "recipes",
     # "unitful", # many fail
     # "hdf5plots",
-    # "pgfplotsx",
-    # "plotly",
+    "pgfplotsx",
+    "plotly",
     # "animations", # some failing
     # "output", # some plotly failing
     # "preferences", # no default backend

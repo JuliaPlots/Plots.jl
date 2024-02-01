@@ -16,17 +16,16 @@ using Plots:
     AbstractBackend,
     DefaultsDict,
     Series,
-    Axis,
-    Subplot,
     AbstractLayout,
     RecipesPipeline
 using Plots.PlotMeasures
 using Plots.Colorbars: _update_subplot_colorbars
-using Plots.Subplots: _update_subplot_colors, _update_margins
-using Plots.Axes: get_axis
+using Plots.Subplots: Subplot, _update_subplot_colors, _update_margins
+using Plots.Axes: Axis, get_axis
 using Plots.PlotUtils: get_color_palette
 using Plots.Commons
 using Plots.Commons.Frontend
+using Plots.Fonts: font
 
 const SubplotMap = Dict{Any,Subplot}
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}

@@ -286,7 +286,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     elseif arg === nothing
         plotattributes[get_attr_symbol(letter, :ticks)] = []
 
-    elseif T <: Bool || arg in Commons._all_showaxis_attr
+    elseif T <: Bool || arg in Commons._all_showaxis_attrs
         plotattributes[get_attr_symbol(letter, :showaxis)] = Commons.showaxis(arg, letter)
 
     elseif typeof(arg) <: Number

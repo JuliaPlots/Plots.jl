@@ -183,7 +183,7 @@ const _gr_scales = [:identity, :ln, :log2, :log10]
 for s in (:attr, :seriestype, :marker, :style, :scale)
     f1 = Symbol("is_", s, "_supported")
     f2 = Symbol("supported_", s, "s")
-    v = Symbol("_gr_", s)
+    v = Symbol("_gr_", s, "s")
     eval(quote
         Plots.$f1(::GRBackend, $s::Symbol) = $s in $v
         Plots.$f2(::GRBackend) = sort(collect($v))
