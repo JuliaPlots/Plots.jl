@@ -12,7 +12,8 @@ export get_subplot,
     series_list,
     axis_limits,
     get_size,
-    get_thickness_scaling
+    get_thickness_scaling,
+    get_clims
 export fg_color, plot_color, single_color, alpha, isdark, color_or_nothing!
 export get_attr_symbol,
     _cycle,
@@ -40,9 +41,8 @@ export anynan,
 #exports from args.jl
 export default, wraptuple
 
-using Plots: Plots, Printf, cgrad
+using Plots: Plots, Printf, NaNMath, cgrad
 import Plots: RecipesPipeline
-import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
 using Plots.Colors: Colorant, @colorant_str
 using Plots.ColorTypes: alpha
 using Plots.Measures: mm, BoundingBox
@@ -91,6 +91,7 @@ const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 const _debug = Ref(false)
 
 function get_subplot end
+function get_clims end
 function series_list end
 function coords end
 function ispolar end
@@ -225,7 +226,7 @@ ceil_base(x, b) = round_base(x, b, RoundUp)
 
 round_base(x::T, b, ::RoundingMode{:Down}) where {T} = T(b^floor(log(b, x)))
 round_base(x::T, b, ::RoundingMode{:Up}) where {T} = T(b^ceil(log(b, x)))
-
+# define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
 ignorenan_minimum(x::AbstractArray{<:AbstractFloat}) = NaNMath.minimum(x)
 ignorenan_minimum(x) = Base.minimum(x)
 ignorenan_maximum(x::AbstractArray{<:AbstractFloat}) = NaNMath.maximum(x)

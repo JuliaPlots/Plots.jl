@@ -11,11 +11,11 @@ using Plots:
     top,
     plotarea,
     axis_drawing_info,
+    mesh3d_triangles,
     _guess_best_legend_position,
     prepare_output
 using Plots: GridLayout
 using RecipesPipeline: RecipesPipeline
-using NaNMath: NaNMath
 using Plots.Arrows
 using Plots.Axes
 using Plots.Axes: has_ticks

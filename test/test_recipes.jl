@@ -93,12 +93,13 @@ end
 end
 
 @testset "coverage" begin
-    # TODO: that should not need to have the extension loaded
-    # @test :surface in Plots.all_seriestypes()
+    # TODO: that should cover all seriestypes without the need to have the extension loaded
+    # currently uses plotly seriestypes only
+    @test :surface in Plots.all_seriestypes()
     unicode_instance = Plots._backend_instance(:unicodeplots)
     @test Plots.seriestype_supported(unicode_instance, :surface) === :native
     @test Plots.seriestype_supported(unicode_instance, :hspan) === :recipe
-    @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :no
+    @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :native
 end
 
 with(:gr) do

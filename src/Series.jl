@@ -20,9 +20,9 @@ export get_linestyle,
     get_fillalpha,
     get_markercolor,
     get_markeralpha
-import Plots.Commons
-using Plots.Commons:
-    _cycle, AVec, expand_extrema!, ignorenan_maximum, _series_defaults, get_gradient
+import Plots.Commons: get_subplot, _series_defaults
+using Plots.Commons
+using Plots.Commons: get_gradient
 using Plots.PlotUtils: ColorGradient, plot_color
 using Plots: Plots, DefaultsDict, RecipesPipeline, get_attr_symbol, KW
 

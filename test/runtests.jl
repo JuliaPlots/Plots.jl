@@ -31,26 +31,27 @@ const TEST_BACKENDS = let
         (
             :gr,
             :unicodeplots,
-            # :pythonplot,
+            # :pythonplot, # currently segfaults
             :pgfplotsx,
             :plotlyjs,
-            # :gaston,
-            # :inspectdr
+            :gaston,
+            # :inspectdr # currently doesn't precompile
         )
     end
 end
 
 # initial load - required for `should_warn_on_unsupported`
-# TODO add back once packageext with backends work
-# unicodeplots()
-# pgfplotsx()
-# plotlyjs()
-# plotly()
-# hdf5()
-# gr()
+
 import GR
 import UnicodePlots
+import PythonPlot
 import PGFPlotsX
+import PlotlyJS
+import Gaston
+# initialize all backends
+for be in TEST_BACKENDS
+    getproperty(Plots, be)()
+end
 gr()
 
 is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")

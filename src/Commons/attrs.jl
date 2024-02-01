@@ -1573,7 +1573,7 @@ macro add_attributes(level, expr, match_table)
 
     insert_block = Expr(:block)
     for (key, value) in key_dict
-        # e.g. _series_defualts[key] = value
+        # e.g. _series_defaults[key] = value
         exp_key = Symbol(lowercase(string(T)), "_", key)
         pl_key = makeplural(exp_key)
         if QuoteNode(exp_key) in match_table.args[2].args

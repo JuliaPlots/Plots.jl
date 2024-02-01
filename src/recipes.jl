@@ -28,7 +28,7 @@ end
 # get a list of all seriestypes
 function all_seriestypes()
     sts = Set{Symbol}(keys(_series_recipe_deps))
-    for bsym in backends()
+    for bsym in _initialized_backends
         be = _backend_instance(bsym)
         sts = union(sts, Set{Symbol}(supported_seriestypes(be)))
     end

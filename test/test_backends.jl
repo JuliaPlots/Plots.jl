@@ -179,11 +179,11 @@ end
 end
 
 const blacklist = if VERSION.major == 1 && VERSION.minor ∈ (9, 10)
-    [41]  # FIXME: github.com/JuliaLang/julia/issues/47261
+    [25, 30, # FIXME: remove, when StatsPlots supports Plots v2
+    41]  # FIXME: github.com/JuliaLang/julia/issues/47261
 else
     []
 end
-push!(blacklist, 50)  # NOTE:  remove when github.com/jheinen/GR.jl/issues/507 is resolved
 
 @testset "GR - reference images" begin
     with(:gr) do

@@ -1,7 +1,8 @@
 module PlotsGastonExt
 
 using Gaston
-using Plots: Plots
+using Plots: Plots,
+    mesh3d_triangles
 import Plots: _show, _display
 using Plots.Commons
 using Plots.PlotsPlots

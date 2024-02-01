@@ -24,7 +24,7 @@ using Plots.Fonts
 using Plots.Fonts: Font, PlotText
 using Plots.PlotMeasures
 using Plots.PlotMeasures: px2inch
-using Plots.PlotUtils: ColorGradient, plot_color
+using Plots.PlotUtils: PlotUtils, ColorGradient, plot_color, color_list
 using Plots.PlotsPlots
 using Plots.PlotsSeries
 using Plots.Shapes
@@ -34,7 +34,6 @@ using Plots.Ticks
 using Plots.Ticks: no_minor_intervals
 using Plots:
     DPI,
-    PlotUtils,
     Plots,
     Surface,
     _cycle,
@@ -51,6 +50,7 @@ using Plots:
     isautop,
     isortho,
     labelfunc_tex,
+    mesh3d_triangles,
     left,
     merge_with_base_supported,
     plotarea,

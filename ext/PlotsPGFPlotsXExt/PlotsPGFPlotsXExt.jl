@@ -5,24 +5,27 @@ using LaTeXStrings: LaTeXString
 using UUIDs: uuid4
 using Latexify: Latexify
 using Contour: Contour # TODO: this could become its own extensionoo
-using PlotUtils: PlotUtils, ColorGradient
+using PlotUtils: PlotUtils, ColorGradient, color_list
 using Printf: @sprintf
 
-using Plots: Plots, isijulia, texmath2unicode, straightline_data, shape_data
+using Plots: Plots, straightline_data, shape_data
 # TODO: eliminate this list
 using Plots:
     bbox,
     left,
     right,
     bottom,
+    width,
+    height,
+    labelfunc_tex,
     top,
     plotarea,
     axis_drawing_info,
     _guess_best_legend_position,
-    prepare_output
+    prepare_output,
+    current
 using Plots: GridLayout
 using RecipesPipeline: RecipesPipeline
-using NaNMath: NaNMath
 using Plots.Arrows
 using Plots.Axes
 using Plots.Axes: has_ticks
@@ -41,7 +44,7 @@ using Plots.Shapes
 using Plots.Shapes: Shape
 using Plots.Ticks
 
-import Plots: _before_layout_calcs, _display, _update_min_padding!
+import Plots: _display, _show, _update_min_padding!, labelfunc, _create_backend_figure, _series_added, _update_plot_object, pgfx_sanitize_string
 
 include("initialization.jl")
 include("pgfplotsx.jl")

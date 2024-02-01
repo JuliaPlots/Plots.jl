@@ -611,7 +611,6 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
     end
 
     # save the backend
-    CURRENT_BACKEND.sym === :none && _pick_default_backend()
     oldbackend = CURRENT_BACKEND.sym
 
     for arg in args

@@ -1,4 +1,5 @@
 using Test, Plots, Unitful, LaTeXStrings
+import PGFPlotsX
 
 function create_plot(args...; kwargs...)
     pl = plot(args...; kwargs...)
@@ -12,7 +13,7 @@ end
 
 function get_pgf_axes(pl)
     Plots._update_plot_object(pl)
-    Plots.pgfx_axes(pl.o)
+    Plots.get_backend_module(:PGFPlotsX)[1].pgfx_axes(pl.o)
 end
 
 with(:pgfplotsx) do

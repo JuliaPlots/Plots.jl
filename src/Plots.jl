@@ -141,11 +141,11 @@ macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
         ),
     ) |> esc
 end
+using NaNMath: NaNMath
 include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
 # ---------------------------------------------------------
-import NaNMath
 include("Fonts.jl")
 @reexport using .Fonts
 using .Fonts: Font, PlotText
@@ -199,5 +199,6 @@ include("shorthands.jl")
 include("backends/web.jl")
 include("backends/plotly.jl")
 include("init.jl")
+include("users.jl")
 
 end

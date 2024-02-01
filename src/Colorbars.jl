@@ -6,6 +6,9 @@ using Plots.Commons: Commons, NaNMath, ignorenan_extrema
 using Plots.PlotsSeries
 using Plots.Subplots: Subplot, series_list
 using Plots.Surfaces: AbstractSurface
+using Plots.Ticks
+using Plots.Ticks: _transform_ticks
+import Plots.Commons.get_clims
 
 # These functions return an operator for use in `get_clims(::Seres, op)`
 process_clims(lims::Tuple{<:Number,<:Number}) =
@@ -13,12 +16,13 @@ process_clims(lims::Tuple{<:Number,<:Number}) =
 process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
-
-get_clims(sp::Subplot)::Tuple{Float64,Float64} =
-    haskey(sp.attr, :clims_calculated) ? sp[:clims_calculated] : update_clims(sp)
 get_clims(series::Series)::Tuple{Float64,Float64} =
     haskey(series.plotattributes, :clims_calculated) ?
     series[:clims_calculated]::Tuple{Float64,Float64} : update_clims(series)
+
+get_clims(sp::Subplot)::Tuple{Float64,Float64} =
+    haskey(sp.attr, :clims_calculated) ? sp[:clims_calculated] : update_clims(sp)
+
 get_clims(sp::Subplot, series::Series)::Tuple{Float64,Float64} =
     series[:colorbar_entry] ? get_clims(sp) : get_clims(series)
 
