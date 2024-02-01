@@ -6,7 +6,6 @@ const str = "gr"
 const sym = :gr
 
 struct GRBackend <: Plots.AbstractBackend end
-const T = GRBackend
 
 get_concrete_backend() = GRBackend  # opposite to abstract
 
@@ -22,7 +21,7 @@ end
 backend_name(::GRBackend) = sym
 backend_package_name(::GRBackend) = backend_package_name(sym)
 
-const _gr_attr = Plots.merge_with_base_supported([
+const _gr_attrs = Plots.merge_with_base_supported([
     :annotations,
     :annotationrotation,
     :annotationhalign,
@@ -174,7 +173,7 @@ const _gr_seriestype = [
     :shape,
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _gr_marker = vcat(Commons._allMarkers, :pixel)
+const _gr_marker = vcat(Commons._all_markers, :pixel)
 const _gr_scale = [:identity, :ln, :log2, :log10]
 
 # -----------------------------------------------------------------------------

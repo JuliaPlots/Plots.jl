@@ -162,11 +162,11 @@ end
     for i in axes(data4, 1)
         for attribute in (:fillrange, :ribbon)
             nt = NamedTuple{tuple(attribute)}
-            get_attr(pl) = pl[1][i][attribute]
-            @test plot(data4; nt(0)...) |> get_attr == 0
-            @test plot(data4; nt(Ref([1, 2]))...) |> get_attr == [1.0, 2.0]
-            @test plot(data4; nt(Ref([1 2]))...) |> get_attr == (iseven(i) ? 2 : 1)
-            @test plot(data4; nt(Ref(mat))...) |> get_attr == [2(i - 1) + 1, 2i]
+            get_attrs(pl) = pl[1][i][attribute]
+            @test plot(data4; nt(0)...) |> get_attrs == 0
+            @test plot(data4; nt(Ref([1, 2]))...) |> get_attrs == [1.0, 2.0]
+            @test plot(data4; nt(Ref([1 2]))...) |> get_attrs == (iseven(i) ? 2 : 1)
+            @test plot(data4; nt(Ref(mat))...) |> get_attrs == [2(i - 1) + 1, 2i]
         end
         @test sp[i][:ribbon] == ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
     end
@@ -211,7 +211,7 @@ end
 end
 
 @testset "docstring" begin
-    @test occursin("label", Plots._generate_doclist(Plots.Commons._all_series_args))
+    @test occursin("label", Plots._generate_doclist(Plots.Commons._all_series_attrs))
 end
 
 @testset "protect" begin

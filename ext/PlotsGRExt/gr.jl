@@ -609,7 +609,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     if _has_ticks(sp[:colorbar_ticks])
         z_tick = 0.5GR.tick(z_min, z_max)
         gr_set_line(1, :solid, plot_color(:black), sp)
-        (yscale = sp[:colorbar_scale]) ∈ _logScales && GR.setscale(gr_y_log_scales[yscale])
+        (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
         # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
         GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
     end
@@ -1365,13 +1365,13 @@ gr_set_window(sp, vp) =
         end
         if x_max > x_min && y_max > y_min && zok
             scaleop = 0
-            if (xscale = sp[:xaxis][:scale]) ∈ _logScales
+            if (xscale = sp[:xaxis][:scale]) ∈ _log_scales
                 scaleop |= gr_x_log_scales[xscale]
             end
-            if (yscale = sp[:yaxis][:scale]) ∈ _logScales
+            if (yscale = sp[:yaxis][:scale]) ∈ _log_scales
                 scaleop |= gr_y_log_scales[yscale]
             end
-            if needs_3d && (zscale = sp[:zaxis][:scale] ∈ _logScales)
+            if needs_3d && (zscale = sp[:zaxis][:scale] ∈ _log_scales)
                 scaleop |= gr_z_log_scales[zscale]
             end
             sp[:xaxis][:flip] && (scaleop |= GR.OPTION_FLIP_X)
@@ -1999,7 +1999,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
         # even on log scales, where it is visually non-uniform.
         _z, colors = if (scale = sp[:colorbar_scale]) === :identity
             z, plot_color.(get(fillgrad, z, clims), series[:fillalpha])
-        elseif scale ∈ _logScales
+        elseif scale ∈ _log_scales
             z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
             z_log, plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha])
         end
@@ -2013,7 +2013,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
         end
         _z, z_normalized = if (scale = sp[:colorbar_scale]) === :identity
             z, get_z_normalized.(z, clims...)
-        elseif scale ∈ _logScales
+        elseif scale ∈ _log_scales
             gr_z_normalized_log_scaled(scale, z, clims)
         end
         rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)

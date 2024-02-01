@@ -7,7 +7,6 @@ if ImageInTerminal.ENCODER_BACKEND[] == :Sixel
     get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
     for be in (
         Plots.GRBackend,
-        Plots.PyPlotBackend,
         Plots.PythonPlotBackend,
         # Plots.UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
         Plots.PGFPlotsXBackend,

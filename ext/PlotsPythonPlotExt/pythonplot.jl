@@ -783,7 +783,7 @@ function _py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     else
         "symlog",
         KW(
-            get_attr_symbol(:base, Symbol()) => _logScaleBases[scale],
+            get_attr_symbol(:base, Symbol()) => _log_scale_bases[scale],
             get_attr_symbol(:linthresh, Symbol()) => NaNMath.max(
                 1e-16,
                 _py_compute_axis_minval(sp, sp[get_attr_symbol(letter, :axis)]),
@@ -1142,7 +1142,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                     mpl.ticker.AutoMinorLocator(n_minor_intervals)
                 else
                     mpl.ticker.LogLocator(
-                        base = _logScaleBases[scale],
+                        base = _log_scale_bases[scale],
                         subs = 1:n_minor_intervals,
                     )
                 end |> pyaxis.set_minor_locator

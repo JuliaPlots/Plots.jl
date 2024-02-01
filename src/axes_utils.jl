@@ -45,7 +45,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
         optimize_ticks(
             sf(amin),
             sf(amax);
-            k_min = scale ∈ _logScales ? 2 : 4, # minimum number of ticks
+            k_min = scale ∈ _log_scales ? 2 : 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
             scale,
         ) |> first

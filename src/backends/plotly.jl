@@ -13,6 +13,8 @@ _plotly_framestyle(style::Symbol) =
 
 using UUIDs
 
+struct PlotlyBackend <: Plots.AbstractBackend end
+
 # ----------------------------------------------------------------
 
 function labelfunc(scale::Symbol, backend::PlotlyBackend)

@@ -17,10 +17,10 @@ Apply the type recipe with signature `(::Type{T}, ::T)`.
 """
 function _apply_type_recipe(plotattributes, v, letter)
     plt = plotattributes[:plot_object]
-    preprocess_axis_args!(plt, plotattributes, letter)
+    preprocess_axis_attrs!(plt, plotattributes, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
     warn_on_recipe_aliases!(plotattributes[:plot_object], plotattributes, :type, v)
-    postprocess_axis_args!(plt, plotattributes, letter)
+    postprocess_axis_attrs!(plt, plotattributes, letter)
     rdvec[1].args[1]
 end
 
@@ -29,20 +29,20 @@ end
 # and one to format tick values.
 function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     plt = plotattributes[:plot_object]
-    preprocess_axis_args!(plt, plotattributes, letter)
+    preprocess_axis_attrs!(plt, plotattributes, letter)
     # First we try to apply an array type recipe.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
     warn_on_recipe_aliases!(plt, plotattributes, :type, v)
     # If the type did not change try it element-wise
     if typeof(v) == typeof(w)
         if (smv = skipmissing(v)) |> isempty
-            postprocess_axis_args!(plt, plotattributes, letter)
+            postprocess_axis_attrs!(plt, plotattributes, letter)
             return Float64[]
         end
         x = first(smv)
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
         warn_on_recipe_aliases!(plt, plotattributes, :type, x)
-        postprocess_axis_args!(plt, plotattributes, letter)
+        postprocess_axis_attrs!(plt, plotattributes, letter)
         return if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
             Formatted(map(numfunc, v), formatter)
@@ -50,7 +50,7 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
             v
         end
     end
-    postprocess_axis_args!(plt, plotattributes, letter)
+    postprocess_axis_attrs!(plt, plotattributes, letter)
     w
 end
 

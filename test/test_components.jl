@@ -169,7 +169,7 @@ end
         annotate!(sp = 2, (0.03, 0.95), text("Cats&Dogs", :left))
     end
 
-    for scale in Plots._logScales
+    for scale in Plots._log_scales
         pl = plot(xlim = (1, 10), xscale = scale)
         annotate!(pl, (0.5, 0.5), "hello")
     end

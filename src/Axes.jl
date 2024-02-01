@@ -5,7 +5,7 @@ export Axis, tickfont, guidefont, widen_factor, scale_inverse_scale_func
 export sort_3d_axes, axes_letters, process_axis_arg!
 import Plots: get_ticks
 using Plots: Plots, RecipesPipeline, Subplot, DefaultsDict, TimeType
-using Plots.Commons: _axis_defaults_byletter, _all_axis_args, dumpdict
+using Plots.Commons: _axis_defaults_byletter, _all_axis_attrs, dumpdict
 using Plots.Commons
 using Plots.Ticks
 using Plots.Fonts
@@ -209,7 +209,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
 end
 
 function round_limits(amin, amax, scale)
-    base = get(_logScaleBases, scale, 10.0)
+    base = get(_log_scale_bases, scale, 10.0)
     factor = base^(1 - round(log(base, amax - amin)))
     amin = floor(amin * factor) / factor
     amax = ceil(amax * factor) / factor
@@ -260,12 +260,12 @@ scale_lims!(letter::Symbol, factor) = scale_lims!(Plots.current(), letter, facto
 #----------------------------------------------------------------------
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
-    arg = get(_scaleAliases, arg, arg)
+    arg = get(_scale_aliases, arg, arg)
     if typeof(arg) <: Font
         plotattributes[get_attr_symbol(letter, :tickfont)] = arg
         plotattributes[get_attr_symbol(letter, :guidefont)] = arg
 
-    elseif arg in _allScales
+    elseif arg in _all_scales
         plotattributes[get_attr_symbol(letter, :scale)] = arg
 
     elseif arg in (:flip, :invert, :inverted)
@@ -286,7 +286,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     elseif arg === nothing
         plotattributes[get_attr_symbol(letter, :ticks)] = []
 
-    elseif T <: Bool || arg in Commons._allShowaxisArgs
+    elseif T <: Bool || arg in Commons._all_showaxis_attr
         plotattributes[get_attr_symbol(letter, :showaxis)] = Commons.showaxis(arg, letter)
 
     elseif typeof(arg) <: Number
@@ -328,8 +328,8 @@ function attr!(axis::Axis, args...; kw...)
     end
 
     # replace scale aliases
-    if haskey(_scaleAliases, plotattributes[:scale])
-        plotattributes[:scale] = _scaleAliases[plotattributes[:scale]]
+    if haskey(_scale_aliases, plotattributes[:scale])
+        plotattributes[:scale] = _scale_aliases[plotattributes[:scale]]
     end
 
     axis
@@ -366,7 +366,7 @@ function _update_axis(
 )
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
-    for k in _all_axis_args
+    for k in _all_axis_attrs
         # first get the args without the letter: `tickfont = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
         if haskey(plotattributes_in, k)

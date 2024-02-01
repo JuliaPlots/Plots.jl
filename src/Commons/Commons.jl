@@ -25,7 +25,7 @@ export get_attr_symbol,
     handle_surface,
     reverse_if,
     _debug
-export _allScales, _logScales, _logScaleBases, _scaleAliases
+export _all_scales, _log_scales, _log_scale_bases, _scale_aliases
 export _segmenting_array_attributes, _segmenting_vector_attributes
 export anynan,
     allnan,
@@ -65,10 +65,10 @@ const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
 const _cbar_width = 5mm
-const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
-const _logScales = [:ln, :log2, :log10]
-const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
-const _scaleAliases = Dict{Symbol,Symbol}(:none => :identity, :log => :log10)
+const _all_scales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
+const _log_scales = [:ln, :log2, :log10]
+const _log_scale_bases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
+const _scale_aliases = Dict{Symbol,Symbol}(:none => :identity, :log => :log10)
 const _segmenting_vector_attributes = (
     :seriescolor,
     :seriesalpha,
@@ -105,11 +105,11 @@ trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
 trueOrAllTrue(f::Function, x) = f(x)
 
 allLineTypes(arg) =
-    trueOrAllTrue(a -> get(Commons._typeAliases, a, a) in Commons._allTypes, arg)
+    trueOrAllTrue(a -> get(Commons._typeAliases, a, a) in Commons._all_seriestypes, arg)
 allStyles(arg) =
-    trueOrAllTrue(a -> get(Commons._styleAliases, a, a) in Commons._allStyles, arg)
+    trueOrAllTrue(a -> get(Commons._styleAliases, a, a) in Commons._all_styles, arg)
 allShapes(arg) = (trueOrAllTrue(
-    a -> get(Commons._markerAliases, a, a) in Commons._allMarkers || a isa Plots.Shape,
+    a -> get(Commons._marker_aliases, a, a) in Commons._all_markers || a isa Plots.Shape,
     arg,
 ))
 allAlphas(arg) = trueOrAllTrue(
@@ -123,7 +123,7 @@ allReals(arg) = trueOrAllTrue(a -> typeof(a) <: Real, arg)
 allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
 
 # ---------------------------------------------------------------
-include("args.jl")
+include("attrs.jl")
 
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
@@ -287,6 +287,6 @@ function dumpdict(io::IO, plotattributes::AKW, prefix = "")
     end
     println(io)
 end
-include("postprocess_args.jl")
+include("postprocess_attrs.jl")
 
 end

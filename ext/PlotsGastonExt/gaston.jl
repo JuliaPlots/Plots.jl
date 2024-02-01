@@ -155,7 +155,7 @@ function gaston_init_subplot(
             end
             any_label |= should_add_to_legend(series)
         end
-        axesconf = gaston_parse_axes_args(plt, sp, dims, any_label)
+        axesconf = gaston_parse_axes_attrs(plt, sp, dims, any_label)
         sp.o = Gaston.Plot(; dims, curves = [], axesconf)
     end
     push!(plt.o.subplots, obj)
@@ -392,7 +392,7 @@ gaston_fillstyle(x) =
         "solid"
     end
 
-function gaston_parse_axes_args(
+function gaston_parse_axes_attrs(
     plt::Plot{GastonBackend},
     sp::Subplot{GastonBackend},
     dims::Int,

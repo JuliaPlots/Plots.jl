@@ -42,11 +42,11 @@ end
 
 # ------------------------------------------------------------
 
-const _allAxes = [:auto, :left, :right]
-const _axesAliases = Dict{Symbol,Symbol}(:a => :auto, :l => :left, :r => :right)
+const _all_axes = [:auto, :left, :right]
+const _axes_aliases = Dict{Symbol,Symbol}(:a => :auto, :l => :left, :r => :right)
 
 const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe, :contour3d, :volume, :mesh3d]
-const _allTypes = vcat(
+const _all_seriestypes = vcat(
     [
         :none,
         :line,
@@ -132,7 +132,7 @@ like_surface(seriestype::Symbol)   = RecipesPipeline.is_surface(seriestype)
 
 # ------------------------------------------------------------
 
-const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _all_styles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _styleAliases = Dict{Symbol,Symbol}(
     :a   => :auto,
     :s   => :solid,
@@ -166,8 +166,8 @@ const _shape_keys = Symbol[
     :x,
 ]
 
-const _allMarkers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))))
-const _markerAliases = Dict{Symbol,Symbol}(
+const _all_markers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))))
+const _marker_aliases = Dict{Symbol,Symbol}(
     :n             => :none,
     :no            => :none,
     :a             => :auto,
@@ -218,7 +218,7 @@ const _markerAliases = Dict{Symbol,Symbol}(
     :spike => :vline,
 )
 
-const _positionAliases = Dict{Symbol,Symbol}(
+const _position_aliases = Dict{Symbol,Symbol}(
     :top_left      => :topleft,
     :tl            => :topleft,
     :top_center    => :topcenter,
@@ -233,7 +233,7 @@ const _positionAliases = Dict{Symbol,Symbol}(
     :br            => :bottomright,
 )
 
-const _allGridSyms = [
+const _all_grid_syms = [
     :x,
     :y,
     :z,
@@ -259,11 +259,11 @@ const _allGridSyms = [
     :no,
     :hide,
 ]
-const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
+const _all_grid_attrs = [_all_grid_syms; string.(_all_grid_syms); nothing]
 hasgrid(arg::Nothing, letter) = false
 hasgrid(arg::Bool, letter) = arg
 function hasgrid(arg::Symbol, letter)
-    if arg in _allGridSyms
+    if arg in _all_grid_syms
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
         @warn "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
@@ -272,7 +272,7 @@ function hasgrid(arg::Symbol, letter)
 end
 hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
-const _allShowaxisSyms = [
+const _all_showaxis_syms = [
     :x,
     :y,
     :z,
@@ -297,11 +297,11 @@ const _allShowaxisSyms = [
     :no,
     :hide,
 ]
-const _allShowaxisArgs = [_allGridSyms; string.(_allGridSyms)]
+const _all_showaxis_attrs = [_all_grid_syms; string.(_all_grid_syms)]
 showaxis(arg::Nothing, letter) = false
 showaxis(arg::Bool, letter) = arg
 function showaxis(arg::Symbol, letter)
-    if arg in _allGridSyms
+    if arg in _all_grid_syms
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
         @warn "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
@@ -310,8 +310,8 @@ function showaxis(arg::Symbol, letter)
 end
 showaxis(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
-const _allFramestyles = [:box, :semi, :axes, :origin, :zerolines, :grid, :none]
-const _framestyleAliases = Dict{Symbol,Symbol}(
+const _all_framestyles = [:box, :semi, :axes, :origin, :zerolines, :grid, :none]
+const _framestyle_aliases = Dict{Symbol,Symbol}(
     :frame           => :box,
     :border          => :box,
     :on              => :box,
@@ -550,7 +550,7 @@ const _suppress_warnings = Set{Symbol}([
     :z_extrema,
 ])
 
-const _internal_args = [
+const _internal_attrs = [
     :plot_object,
     :series_plotindex,
     :series_index,
@@ -559,27 +559,27 @@ const _internal_args = [
     :idxfilter,
 ]
 
-const _axis_args = Set(keys(_axis_defaults))
-const _series_args = Set(keys(_series_defaults))
-const _subplot_args = Set(keys(_subplot_defaults))
-const _plot_args = Set(keys(_plot_defaults))
+const _axis_attrs = Set(keys(_axis_defaults))
+const _series_attrs = Set(keys(_series_defaults))
+const _subplot_attrs = Set(keys(_subplot_defaults))
+const _plot_attrs = Set(keys(_plot_defaults))
 
-const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
-const _magic_subplot_args =
+const _magic_axis_attrs = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
+const _magic_subplot_attrs =
     [:title_font, :legend_font, :legend_title_font, :plot_title_font, :colorbar_titlefont]
-const _magic_series_args = [:line, :marker, :fill]
-const _all_magic_args =
-    Set(union(_magic_axis_args, _magic_series_args, _magic_subplot_args))
+const _magic_series_attrs = [:line, :marker, :fill]
+const _all_magic_attrs =
+    Set(union(_magic_axis_attrs, _magic_series_attrs, _magic_subplot_attrs))
 
-const _all_axis_args = union(_axis_args, _magic_axis_args)
-const _lettered_all_axis_args =
-    Set([Symbol(letter, kw) for letter in (:x, :y, :z) for kw in _all_axis_args])
-const _all_subplot_args = union(_subplot_args, _magic_subplot_args)
-const _all_series_args = union(_series_args, _magic_series_args)
-const _all_plot_args = _plot_args
+const _all_axis_attrs = union(_axis_attrs, _magic_axis_attrs)
+const _lettered_all_axis_attrs =
+    Set([Symbol(letter, kw) for letter in (:x, :y, :z) for kw in _all_axis_attrs])
+const _all_subplot_attrs = union(_subplot_attrs, _magic_subplot_attrs)
+const _all_series_attrs = union(_series_attrs, _magic_series_attrs)
+const _all_plot_attrs = _plot_attrs
 
-const _all_args =
-    union(_lettered_all_axis_args, _all_subplot_args, _all_series_args, _all_plot_args)
+const _all_attrs =
+    union(_lettered_all_axis_attrs, _all_subplot_attrs, _all_series_attrs, _all_plot_attrs)
 
 const _deprecated_attributes = Dict{Symbol,Symbol}()
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
@@ -606,10 +606,10 @@ const _initial_ax_fontsizes = Dict(
 const _initial_fontsizes =
     merge(_initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes)
 
-is_subplot_attr(k) = k in _all_subplot_args
-is_series_attr(k) = k in _all_series_args
-is_axis_attr(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_args
-is_axis_attr_noletter(k) = k in _all_axis_args
+is_subplot_attrs(k) = k in _all_subplot_attrs
+is_series_attrs(k) = k in _all_series_attrs
+is_axis_attrs(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_attrs
+is_axis_attr_noletter(k) = k in _all_axis_attrs
 
 RecipesBase.is_key_supported(k::Symbol) = Plots.is_attr_supported(k)
 
@@ -1250,7 +1250,7 @@ function processFillArg(plotattributes::AKW, arg)
 end
 
 function processGridArg!(plotattributes::AKW, arg, letter)
-    if arg in _allGridArgs || isa(arg, Bool)
+    if arg in _all_grid_attrs || isa(arg, Bool)
         plotattributes[get_attr_symbol(letter, :grid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
@@ -1287,7 +1287,7 @@ function processGridArg!(plotattributes::AKW, arg, letter)
 end
 
 function processMinorGridArg!(plotattributes::AKW, arg, letter)
-    if arg in _allGridArgs || isa(arg, Bool)
+    if arg in _all_grid_attrs || isa(arg, Bool)
         plotattributes[get_attr_symbol(letter, :minorgrid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
@@ -1339,7 +1339,7 @@ end
         Symbol(fontname, :family) --> arg.family
 
         # TODO: this is neccessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
-        if in(Symbol(fontname, :size), _all_args)
+        if in(Symbol(fontname, :size), _all_attrs)
             Symbol(fontname, :size) --> arg.pointsize
         else
             Symbol(fontname, :pointsize) --> arg.pointsize
@@ -1364,7 +1364,7 @@ end
             Symbol(fontname, :family) --> string(arg)
         end
     elseif typeof(arg) <: Integer
-        if in(Symbol(fontname, :size), _all_args)
+        if in(Symbol(fontname, :size), _all_attrs)
             Symbol(fontname, :size) --> arg
         else
             Symbol(fontname, :pointsize) --> arg
@@ -1376,7 +1376,7 @@ end
     end
 end
 
-_replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
+_replace_markershape(shape::Symbol) = get(_marker_aliases, shape, shape)
 _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
 _replace_markershape(shape) = shape
 
@@ -1639,7 +1639,7 @@ function _splitdef!(blk, key_dict)
                 key_dict[var] = defexpr
             elseif ei.head === :block
                 # can arise with use of @static inside type decl
-                _kwdef!(ei, value_args, key_args)
+                _kwdef!(ei, value_attrs, key_attrs)
             end
         end
     end

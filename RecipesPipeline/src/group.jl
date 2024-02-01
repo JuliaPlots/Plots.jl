@@ -104,9 +104,9 @@ group_as_matrix(t) = false  # used in `StatsPlots`
             for indexes in groupby.group_indices
                 x[indexes] = eachindex(indexes)
             end
-            last_args = g.args
+            last_attrs = g.args
         else
-            x, last_args... = g.args
+            x, last_attrs... = g.args
         end
         x_u = unique(sort(x))
         x_ind = Dict(zip(x_u, eachindex(x_u)))
@@ -118,7 +118,7 @@ group_as_matrix(t) = false  # used in `StatsPlots`
         label --> reshape(groupby.group_labels, 1, :)
         typeof(g)((
             x_u,
-            (groupedvec2mat(x_ind, x, arg, groupby, NaN) for arg in last_args)...,
+            (groupedvec2mat(x_ind, x, arg, groupby, NaN) for arg in last_attrs)...,
         ))
     end
 end

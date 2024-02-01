@@ -23,7 +23,7 @@ function stroke(args...; alpha = nothing)
     for arg in args
         T = typeof(arg)
 
-        # if arg in _allStyles
+        # if arg in _all_styles
         if allStyles(arg)
             style = arg
         elseif T <: Colorant

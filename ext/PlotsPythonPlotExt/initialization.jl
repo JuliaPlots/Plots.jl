@@ -36,7 +36,7 @@ end
 backend_name(::T) = sym
 backend_package_name(::T) = backend_package_name(sym)
 
-const _pythonplot_attr = merge_with_base_supported([
+const _pythonplot_attrs = merge_with_base_supported([
     :annotations,
     :legend_background_color,
     :background_color_inside,
@@ -167,7 +167,7 @@ const _pythonplot_seriestype = [
 ]
 
 const _pythonplot_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _pythonplot_marker = vcat(_allMarkers, :pixel)
+const _pythonplot_marker = vcat(_all_markers, :pixel)
 const _pythonplot_scale = [:identity, :ln, :log2, :log10]
 
 # -----------------------------------------------------------------------------

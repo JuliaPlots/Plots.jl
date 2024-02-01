@@ -35,7 +35,7 @@ function num_minor_intervals(axis)
     if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
         max(1, n_intervals)  # 0 intervals makes no sense
     else   # `:auto` or `true`
-        if (base = get(_logScaleBases, axis[:scale], nothing)) == 10
+        if (base = get(_log_scale_bases, axis[:scale], nothing)) == 10
             Int(base - 1)
         else
             DEFAULT_MINOR_INTERVALS[]
@@ -61,10 +61,10 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
 
     amin, amax = axis_limits(sp, axis[:letter])
     scale = axis[:scale]
-    base = get(_logScaleBases, scale, nothing)
+    base = get(_log_scale_bases, scale, nothing)
 
     # add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
-    if (log_scaled = scale ∈ _logScales)
+    if (log_scaled = scale ∈ _log_scales)
         sub = round(Int, log(base, ticks[2] / ticks[1]))
         ticks = [ticks[1] / base; ticks; ticks[end] * base]
     else

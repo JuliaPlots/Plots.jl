@@ -25,7 +25,7 @@ end
 Plots.backend_name(::T) = sym
 Plots.backend_package_name(::T) = Plots.backend_package_name(sym)
 
-const _pgfplotsx_attr = Plots.merge_with_base_supported([
+const _pgfplotsx_attrs = Plots.merge_with_base_supported([
     :annotations,
     :annotationrotation,
     :annotationhalign,

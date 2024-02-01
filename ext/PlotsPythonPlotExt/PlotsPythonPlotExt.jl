@@ -19,7 +19,7 @@ using Plots.Colorbars
 using Plots.Colorbars: cbar_fill, cbar_gradient, cbar_lines
 using Plots.Colors
 using Plots.Commons
-using Plots.Commons: _allMarkers, _3dTypes, single_color
+using Plots.Commons: _all_markers, _3dTypes, single_color
 using Plots.Fonts
 using Plots.Fonts: Font, PlotText
 using Plots.PlotMeasures

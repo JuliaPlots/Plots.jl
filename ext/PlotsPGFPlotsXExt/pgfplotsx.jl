@@ -1054,17 +1054,17 @@ function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
     else
         opt[:x][rng], opt[:y][rng]
     end
-    return push!(axis, PGFPlotsX.PlotInc(fr_opt, pgfx_fillrange_args(fillrange, args...)))
+    return push!(axis, PGFPlotsX.PlotInc(fr_opt, pgfx_fillrange_attrs(fillrange, args...)))
 end
 
-function pgfx_fillrange_args(fillrange, x, y)
+function pgfx_fillrange_attrs(fillrange, x, y)
     n = length(x)
     x_fill = [x; x[n:-1:1]; x[1]]
     y_fill = [y; _cycle(fillrange, n:-1:1); y[1]]
     return PGFPlotsX.Coordinates(x_fill, y_fill)
 end
 
-function pgfx_fillrange_args(fillrange, x, y, z)
+function pgfx_fillrange_attrs(fillrange, x, y, z)
     n = length(x)
     x_fill = [x; x[n:-1:1]; x[1]]
     y_fill = [y; y[n:-1:1]; x[1]]

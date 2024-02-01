@@ -144,7 +144,7 @@ for comp in (:line, :fill, :marker)
                 if s === :identity
                     get(grad, z[i], (cmin, cmax))
                 else
-                    base = _logScaleBases[s]
+                    base = _log_scale_bases[s]
                     get(grad, log(base, z[i]), (log(base, cmin), log(base, cmax)))
                 end
             end
@@ -265,7 +265,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     if check
         scales = :xscale, :yscale, :zscale
         for (n, s) in enumerate(args)
-            (scale = get(series, scales[n], :identity)) ∈ Plots.Commons._logScales ||
+            (scale = get(series, scales[n], :identity)) ∈ Plots.Commons._log_scales ||
                 continue
             for (i, v) in enumerate(s)
                 if v <= 0
@@ -280,7 +280,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     segments = if has_attribute_segments(series)
         map(nan_segments) do r
             if seriestype === :shape
-                warn_on_inconsistent_shape_attr(series, x, y, z, r)
+                warn_on_inconsistent_shape_attrs(series, x, y, z, r)
                 (SeriesSegment(r, first(r)),)
             elseif seriestype in (:scatter, :scatter3d)
                 (SeriesSegment(i:i, i) for i in r)
@@ -319,7 +319,7 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
     end
 end
 
-function warn_on_inconsistent_shape_attr(series, x, y, z, r)
+function warn_on_inconsistent_shape_attrs(series, x, y, z, r)
     for attr in Plots.Commons._segmenting_vector_attributes
         v = get(series, attr, nothing)
         if v isa Plots.Commons.AVec && length(unique(v[r])) > 1

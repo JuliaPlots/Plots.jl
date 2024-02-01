@@ -75,7 +75,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     Commons.aliasesAndAutopick(
         plotattributes,
         :markershape,
-        Commons._markerAliases,
+        Commons._marker_aliases,
         supported_markers(pkg),
         plotIndex,
     )
@@ -173,7 +173,7 @@ function slice_arg!(
     remove_pair::Bool,
 )
     v = get(plotattributes_in, k, plotattributes_out[k])
-    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ Commons._plot_args
+    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ Commons._plot_attrs
         slice_arg(v, idx)
     else
         v
@@ -182,7 +182,7 @@ function slice_arg!(
     nothing
 end
 
-function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
+function _slice_series_attrs!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
     for k in keys(_series_defaults)
         haskey(plotattributes, k) &&
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
@@ -475,7 +475,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
     # handle axes args
-    for k in Commons._axis_args
+    for k in Commons._axis_attrs
         if haskey(plotattributes, k) && k !== :link
             v = plotattributes[k]
             for letter in (:x, :y, :z)
@@ -563,9 +563,9 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
 
     # framestyle
     if haskey(plotattributes, :framestyle) &&
-       haskey(Commons._framestyleAliases, plotattributes[:framestyle])
+       haskey(Commons._framestyle_aliases, plotattributes[:framestyle])
         plotattributes[:framestyle] =
-            Commons._framestyleAliases[plotattributes[:framestyle]]
+            Commons._framestyle_aliases[plotattributes[:framestyle]]
     end
 
     # contours

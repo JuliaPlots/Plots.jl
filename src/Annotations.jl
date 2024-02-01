@@ -36,7 +36,7 @@ function series_annotations(anns::AMat{SeriesAnnotations})
     anns
 end
 
-function series_annotations(anns::AMat, outer_args...)
+function series_annotations(anns::AMat, outer_attrs...)
     # Types that represent annotations for an entire series
     whole_series = Union{AVec,Tuple{AVec,Vararg{Any}}}
 
@@ -53,8 +53,8 @@ function series_annotations(anns::AMat, outer_args...)
         ann = first(col) isa whole_series ? first(col) : col
 
         # Override arguments from outer tuple with args from inner tuple
-        strs, inner_args = Iterators.peel(wraptuple(ann))
-        series_annotations(strs, outer_args..., inner_args...)
+        strs, inner_attrs = Iterators.peel(wraptuple(ann))
+        series_annotations(strs, outer_attrs..., inner_attrs...)
     end
 
     permutedims(ann_vec)
@@ -163,7 +163,7 @@ _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwx
 assign_annotation_coord!(axis, x) = discrete_value!(axis, x)[1]
 assign_annotation_coord!(axis, x::TimeType) = assign_annotation_coord!(axis, Dates.value(x))
 
-_annotation_coords(pos::Symbol) = get(Commons._positionAliases, pos, pos)
+_annotation_coords(pos::Symbol) = get(Commons._position_aliases, pos, pos)
 _annotation_coords(pos) = pos
 
 function _process_annotation_2d(sp::Subplot, x, y, lab, font = _annotationfont(sp))

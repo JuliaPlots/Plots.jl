@@ -2,7 +2,7 @@ module PlotsPlots
 
 export Plot,
     PlotOrSubplot,
-    _update_plot_args,
+    _update_plot_attrs,
     plottitlefont,
     ignorenan_extrema,
     protect,
@@ -197,7 +197,7 @@ plottitlefont(p::Plot) = font(;
 )
 
 # update attr from an input dictionary
-function _update_plot_args(plt::Plot, plotattributes_in::AKW)
+function _update_plot_attrs(plt::Plot, plotattributes_in::AKW)
     for (k, v) in Plots._plot_defaults
         Plots.slice_arg!(plotattributes_in, plt.attr, k, 1, true)
     end
@@ -242,7 +242,7 @@ function Plots.Axes._update_axis(
 end
 
 # update a subplots args and axes
-function _update_subplot_args(
+function _update_subplot_attrs(
     plt::Plot,
     sp::Subplot,
     plotattributes_in,

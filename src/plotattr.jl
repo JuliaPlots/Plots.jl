@@ -30,22 +30,22 @@ function plotattr()
         @warn "Fuzzy finding of attributes is disabled in notebooks."
         return
     end
-    attr = Symbol(JLFzf.inter_fzf(collect(Commons._all_args), "--read0", "--height=80%"))
+    attr = Symbol(JLFzf.inter_fzf(collect(Commons._all_attrs), "--read0", "--height=80%"))
     letter = ""
-    attrtype = if attr ∈ Commons._all_series_args
+    attrtype = if attr ∈ Commons._all_series_attrs
         "Series"
-    elseif attr ∈ Commons._all_subplot_args
+    elseif attr ∈ Commons._all_subplot_attrs
         "Subplot"
-    elseif attr ∈ Commons._lettered_all_axis_args
-        if attr ∉ Commons._all_axis_args
+    elseif attr ∈ Commons._lettered_all_axis_attrs
+        if attr ∉ Commons._all_axis_attrs
             letters = collect(String(attr))
             letter = first(letters)
             attr = Symbol(join(letters[2:end]))
         end
         "Axis"
-    elseif attr ∈ Commons._all_plot_args
+    elseif attr ∈ Commons._all_plot_attrs
         "Plot"
-    elseif attr ∈ Commons._all_magic_args
+    elseif attr ∈ Commons._all_magic_attr
         "Magic"
     else
         "Unknown"

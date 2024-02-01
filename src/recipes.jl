@@ -436,12 +436,12 @@ end
     if (fillto = plotattributes[:fillrange]) === nothing
         fillto = 0
     end
-    if yscale in _logScales && !all(_is_positive, fillto)
+    if yscale in _log_scales && !all(_is_positive, fillto)
         # github.com/JuliaPlots/Plots.jl/issues/4502
         # https://github.com/JuliaPlots/Plots.jl/issues/4774
         T = float(eltype(y))
         min_y = NaNMath.minimum(y)
-        base = _logScaleBases[yscale]
+        base = _log_scale_bases[yscale]
         baseline = floor_base(min_y, base)
         if min_y == baseline
             baseline /= base
@@ -546,11 +546,11 @@ _scale_adjusted_values(
     ::Type{T},
     V::AbstractVector,
     scale::Symbol,
-) where {T<:AbstractFloat} = scale in _logScales ? _positive_else_nan.(T, V) : T.(V)
+) where {T<:AbstractFloat} = scale in _log_scales ? _positive_else_nan.(T, V) : T.(V)
 
 _binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real} =
-    if scale in _logScales
-        isnan(min_value) ? T(1e-3) : floor_base(min_value, _logScaleBases[scale])
+    if scale in _log_scales
+        isnan(min_value) ? T(1e-3) : floor_base(min_value, _log_scale_bases[scale])
     else
         zero(T)
     end
@@ -616,8 +616,8 @@ end
 @specialize
 
 function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::Symbol)
-    log_scale_x = xscale in _logScales
-    log_scale_y = yscale in _logScales
+    log_scale_x = xscale in _log_scales
+    log_scale_y = yscale in _log_scales
 
     nbins = length(eachindex(weights))
     if length(eachindex(edge)) != nbins + 1
@@ -639,7 +639,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
         w, it_state_w = it_tuple_w
 
         if log_scale_x && a ≈ 0
-            a = oftype(a, b / _logScaleBases[xscale]^3)
+            a = oftype(a, b / _log_scale_bases[xscale]^3)
         end
 
         if isnan(w)

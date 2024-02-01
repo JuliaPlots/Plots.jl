@@ -418,10 +418,10 @@ end
 # constructors
 
 # pass the layout arg through
-layout_args(plotattributes::AKW) = layout_args(plotattributes[:layout])
+layout_attrs(plotattributes::AKW) = layout_attrs(plotattributes[:layout])
 
-function layout_args(plotattributes::AKW, n_override::Integer)
-    layout, n = layout_args(n_override, get(plotattributes, :layout, n_override))
+function layout_attrs(plotattributes::AKW, n_override::Integer)
+    layout, n = layout_attrs(n_override, get(plotattributes, :layout, n_override))
     if n < n_override
         error(
             "When doing layout, n ($n) < n_override ($(n_override)).  You're probably trying to force existing plots into a layout that doesn't fit them.",
@@ -430,60 +430,60 @@ function layout_args(plotattributes::AKW, n_override::Integer)
     layout, n
 end
 
-function layout_args(n::Integer)
+function layout_attrs(n::Integer)
     nr, nc = compute_gridsize(n, -1, -1)
     GridLayout(nr, nc), n
 end
 
-function layout_args(sztup::NTuple{2,Integer})
+function layout_attrs(sztup::NTuple{2,Integer})
     nr, nc = sztup
     GridLayout(nr, nc), nr * nc
 end
 
-layout_args(n_override::Integer, n::Integer) = layout_args(n)
-layout_args(n, sztup::NTuple{2,Integer}) = layout_args(sztup)
+layout_attrs(n_override::Integer, n::Integer) = layout_attrs(n)
+layout_attrs(n, sztup::NTuple{2,Integer}) = layout_attrs(sztup)
 
-function layout_args(n, sztup::Tuple{Colon,Integer})
+function layout_attrs(n, sztup::Tuple{Colon,Integer})
     nc = sztup[2]
     nr = ceil(Int, n / nc)
     GridLayout(nr, nc), n
 end
 
-function layout_args(n, sztup::Tuple{Integer,Colon})
+function layout_attrs(n, sztup::Tuple{Integer,Colon})
     nr = sztup[1]
     nc = ceil(Int, n / nr)
     GridLayout(nr, nc), n
 end
 
-function layout_args(sztup::NTuple{3,Integer})
+function layout_attrs(sztup::NTuple{3,Integer})
     n, nr, nc = sztup
     nr, nc = compute_gridsize(n, nr, nc)
     GridLayout(nr, nc), n
 end
 
-layout_args(nt::NamedTuple) = EmptyLayout(; nt...), 1
+layout_attrs(nt::NamedTuple) = EmptyLayout(; nt...), 1
 
-function layout_args(m::AbstractVecOrMat)
+function layout_attrs(m::AbstractVecOrMat)
     sz = size(m)
     nr = first(sz)
     nc = get(sz, 2, 1)
     gl = GridLayout(nr, nc)
     for ci in CartesianIndices(m)
-        gl[ci] = layout_args(m[ci])[1]
+        gl[ci] = layout_attrs(m[ci])[1]
     end
-    layout_args(gl)
+    layout_attrs(gl)
 end
 
 # recursively get the size of the grid
-layout_args(layout::GridLayout) = layout, calc_num_subplots(layout)
+layout_attrs(layout::GridLayout) = layout, calc_num_subplots(layout)
 
-layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) =
-    layout_args(layout)
+layout_attrs(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) =
+    layout_attrs(layout)
 
 # ----------------------------------------------------------------------
 
 function build_layout(args...)
-    layout, n = layout_args(args...)
+    layout, n = layout_attrs(args...)
     build_layout(layout, n, Array{Plot}(undef, 0))
 end
 

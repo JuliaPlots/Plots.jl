@@ -1,5 +1,3 @@
-struct NoBackend <: AbstractBackend end
-
 const _plots_project         = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
 const _current_plots_version = _plots_project.version
 const _plots_compats         = _plots_project.compat
@@ -8,7 +6,7 @@ const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
 const _backend_packages     = Dict{Symbol,Symbol}()
 const _initialized_backends = Set{Symbol}()
-const _backends             = (:gr, :unicodeplots, :pgfplotsx, :pythonplot, :plotlyjs, :inspectdr, :gaston)
+const _backends             = (:gr, :unicodeplots, :pgfplotsx, :pythonplot, :ploty, :plotlyjs, :inspectdr, :gaston, :hdf5)
 
 const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
     merge(toml["deps"], toml["extras"])
@@ -90,7 +88,7 @@ function get_backend_module(name::Symbol)
     end
 end
 
-const _base_supported_args = [
+const _base_supported_attrs = [
     :color_palette,
     :background_color,
     :background_color_subplot,
@@ -130,7 +128,7 @@ const _base_supported_args = [
 ]
 
 function merge_with_base_supported(v::AVec)
-    v = vcat(v, _base_supported_args)
+    v = vcat(v, _base_supported_attrs)
     for vi in v
         if haskey(_axis_defaults, vi)
             for letter in (:x, :y, :z)
@@ -172,7 +170,7 @@ end
 should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
 
 const _already_warned = Dict{Symbol,Set{Symbol}}()
-function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
+function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
     _to_warn = Set{Symbol}()
     bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend) do
