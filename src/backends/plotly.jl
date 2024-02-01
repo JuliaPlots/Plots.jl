@@ -14,7 +14,172 @@ _plotly_framestyle(style::Symbol) =
 using UUIDs
 
 struct PlotlyBackend <: Plots.AbstractBackend end
+Plots._backendType[:plotly] = PlotlyBackend
+Plots._backendSymbol[PlotlyBackend] = :plotly
+Plots._backend_packages[:plotly] = :PlotlyBackend
+push!(Plots._initialized_backends, :plotly)
+backend_name(::PlotlyBackend) = :plotly
+backend_package_name(::PlotlyBackend) = backend_package_name(:plotly)
 
+const _plotly_attr = merge_with_base_supported([
+    :annotations,
+    :legend_background_color,
+    :background_color_inside,
+    :background_color_outside,
+    :legend_foreground_color,
+    :foreground_color_guide,
+    :foreground_color_grid,
+    :foreground_color_axis,
+    :foreground_color_text,
+    :foreground_color_border,
+    :foreground_color_title,
+    :label,
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :markerstrokestyle,
+    :fill,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
+    :fontfamily,
+    :fontfamily_subplot,
+    :bins,
+    :title,
+    :titlelocation,
+    :titlefontfamily,
+    :titlefontsize,
+    :titlefonthalign,
+    :titlefontvalign,
+    :titlefontcolor,
+    :legend_column,
+    :legend_font,
+    :legend_font_family,
+    :legend_font_pointsize,
+    :legend_font_color,
+    :legend_title,
+    :legend_title_font_color,
+    :legend_title_font_family,
+    :legend_title_font_pointsize,
+    :tickfontfamily,
+    :tickfontsize,
+    :tickfontcolor,
+    :guidefontfamily,
+    :guidefontsize,
+    :guidefontcolor,
+    :window_title,
+    :arrow,
+    :guide,
+    :widen,
+    :lims,
+    :line,
+    :ticks,
+    :scale,
+    :flip,
+    :rotation,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    :gridalpha,
+    :gridlinewidth,
+    :legend,
+    :colorbar,
+    :colorbar_title,
+    :colorbar_entry,
+    :marker_z,
+    :fill_z,
+    :line_z,
+    :levels,
+    :ribbon,
+    :quiver,
+    :orientation,
+    # :overwrite_figure,
+    :polar,
+    :plot_title,
+    :plot_titlefontcolor,
+    :plot_titlefontfamily,
+    :plot_titlefontsize,
+    :plot_titlelocation,
+    :plot_titlevspan,
+    :normalize,
+    :weights,
+    # :contours,
+    :aspect_ratio,
+    :hover,
+    :inset_subplots,
+    :bar_width,
+    :clims,
+    :framestyle,
+    :tick_direction,
+    :camera,
+    :contour_labels,
+    :connections,
+    :xformatter,
+    :xshowaxis,
+    :xguidefont,
+    :yformatter,
+    :yshowaxis,
+    :yguidefont,
+    :zformatter,
+    :zguidefont,
+])
+
+const _plotly_seriestype = [
+    :path,
+    :scatter,
+    :heatmap,
+    :contour,
+    :surface,
+    :wireframe,
+    :path3d,
+    :scatter3d,
+    :shape,
+    :scattergl,
+    :straightline,
+    :mesh3d,
+]
+const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
+const _plotly_marker = [
+    :none,
+    :auto,
+    :circle,
+    :rect,
+    :diamond,
+    :utriangle,
+    :dtriangle,
+    :cross,
+    :xcross,
+    :pentagon,
+    :hexagon,
+    :octagon,
+    :vline,
+    :hline,
+    :x,
+]
+const _plotly_scale = [:identity, :log10]
+
+defaultOutputFormat(plt::Plot{Plots.PlotlyBackend}) = "html"
+
+for s in (:attr, :seriestype, :marker, :style, :scale)
+    f1 = Symbol("is_", s, "_supported")
+    f2 = Symbol("supported_", s, "s")
+    v = Symbol("_plotly_", s)
+    eval(quote
+        Plots.$f1(::PlotlyBackend, $s::Symbol) = $s in $v
+        Plots.$f2(::PlotlyBackend) = sort(collect($v))
+    end)
+end
 # ----------------------------------------------------------------
 
 function labelfunc(scale::Symbol, backend::PlotlyBackend)

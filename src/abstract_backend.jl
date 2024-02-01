@@ -6,7 +6,7 @@ const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
 const _backend_packages     = Dict{Symbol,Symbol}()
 const _initialized_backends = Set{Symbol}()
-const _backends             = (:gr, :unicodeplots, :pgfplotsx, :pythonplot, :ploty, :plotlyjs, :inspectdr, :gaston, :hdf5)
+const _backends             = (:gr, :unicodeplots, :pgfplotsx, :pythonplot, :plotly, :plotlyjs, :inspectdr, :gaston, :hdf5)
 
 const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
     merge(toml["deps"], toml["extras"])
@@ -43,8 +43,8 @@ _backend_instance(sym::Symbol)::AbstractBackend = _backendType[sym]()
 backend_package_name(sym::Symbol = backend_name()) = _backend_packages[sym]
 
 # Traits to be implemented by the extensions
-backend_name(::AbstractBackend) = nothing
-backend_package_name(::AbstractBackend) = nothing
+backend_name(::AbstractBackend) = @info "`backend_name(::Backend) not implemented."
+backend_package_name(::AbstractBackend) = @info "`backend_package_name(::Backend) not implemented."
 
 initialized(sym::Symbol) = sym ∈ _initialized_backends
 
