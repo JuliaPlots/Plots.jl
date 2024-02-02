@@ -1,4 +1,5 @@
 using REPL
+import Base64
 
 # Local uses artifacts now. To update this, also update Artifacts.toml.
 # using ArtifactUtils
@@ -12,6 +13,13 @@ const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 
 const _use_local_dependencies = Ref(false)
 const _use_local_plotlyjs = Ref(false)
+const _plotly_data_url_cached = Ref{Union{Nothing,String}}(nothing)
+
+_plotly_data_url() = if isnothing(_plotly_data_url_cached[])
+    _plotly_data_url_cached[] = "data:text/javascript;base64,$(Base64.base64encode(read(_plotly_local_file_path)))"
+else
+    _plotly_data_url_cached[]
+end
 
 _plots_defaults() =
     if isdefined(Main, :PLOTS_DEFAULTS)

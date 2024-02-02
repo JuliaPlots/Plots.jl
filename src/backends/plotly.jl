@@ -1055,7 +1055,7 @@ html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
 plotly_url() =
     if _use_local_dependencies[]
-        "file:///" * joinpath(artifact("plotly-dist"), "plotly.js-2.6.3", "dist", "plotly.min.js")
+        _plotly_data_url()
     else
         "https://cdn.plot.ly/$_plotly_min_js_filename"
     end
