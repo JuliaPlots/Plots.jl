@@ -20,7 +20,6 @@ using FileIO
 using Plots
 using Dates
 using Test
-using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 # NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
 const TEST_BACKENDS = let
@@ -57,6 +56,10 @@ gr()
 is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
 is_pkgeval() = Plots.bool_env("JULIA_PKGEVAL", "false")
 is_ci() = Plots.bool_env("CI", "false")
+
+if !is_ci()
+    @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
+end
 
 for name in (
     # "quality", # Persistent tasks cannot resolve versions
