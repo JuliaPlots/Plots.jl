@@ -74,7 +74,7 @@ jobs:
         run: |
           using Pkg
           foreach(("RecipesBase", "RecipesPipeline")) do name
-            Pkg.develop(path=name); Pkg.test(name; coverage=true)
+            Pkg.test(name; coverage=true)
           end
 
       - name: Install conda based matplotlib
