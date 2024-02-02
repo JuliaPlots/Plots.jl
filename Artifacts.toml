@@ -1,0 +1,6 @@
+[plotly-dist]
+git-tree-sha1 = "3039420613779f4cd3620456d5c7f0849e419e3d"
+
+    [[plotly-dist.download]]
+    sha256 = "20c27644d7791d01058cc3a61c1cac351e313931994d464dc1f7796703d32312"
+    url = "https://github.com/plotly/plotly.js/archive/refs/tags/v2.6.3.tar.gz"
