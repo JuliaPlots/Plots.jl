@@ -66,8 +66,7 @@ jobs:
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
-          Pkg.develop(path="./RecipesBase")
-          Pkg.develop(path="./RecipesPipeline")
+          Pkg.develop(path=["./RecipesBase", "./RecipesPipeline"])
       - uses: julia-actions/julia-buildpkg@latest
 
       - name: Run upstream RecipesBase & RecipesPipeline tests
