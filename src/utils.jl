@@ -65,14 +65,14 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     globalIndex = plotattributes[:series_plotindex]
     plotIndex = Commons._series_index(plotattributes, sp)
 
-    Commons.aliasesAndAutopick(
+    Commons.aliases_and_autopick(
         plotattributes,
         :linestyle,
         Commons._styleAliases,
         supported_styles(pkg),
         plotIndex,
     )
-    Commons.aliasesAndAutopick(
+    Commons.aliases_and_autopick(
         plotattributes,
         :markershape,
         Commons._marker_aliases,
@@ -414,7 +414,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
 
     # handle grid args common to all axes
-    processGridArg! = Commons.processGridArg!
+    processGridArg! = Commons.process_grid_attr!
     args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
@@ -433,7 +433,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     args = RecipesPipeline.pop_kw!(plotattributes, :minorgrid, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
-            Commons.processMinorGridArg!(plotattributes, arg, letter)
+            Commons.process_minor_grid_attr!(plotattributes, arg, letter)
         end
     end
     # handle individual axes grid args
@@ -441,7 +441,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         gridsym = get_attr_symbol(letter, :minorgrid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
-            Commons.processMinorGridArg!(plotattributes, arg, letter)
+            Commons.process_minor_grid_attr!(plotattributes, arg, letter)
         end
     end
     # handle font args common to all axes
@@ -449,7 +449,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             for letter in (:x, :y, :z)
-                Commons.processFontArg!(
+                Commons.process_font_attr!(
                     plotattributes,
                     get_attr_symbol(letter, fontname),
                     arg,
@@ -466,7 +466,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
                 (),
             )
             for arg in wraptuple(args)
-                Commons.processFontArg!(
+                Commons.process_font_attr!(
                     plotattributes,
                     get_attr_symbol(letter, fontname),
                     arg,
@@ -492,13 +492,13 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
-            Commons.processFontArg!(plotattributes, fontname, arg)
+            Commons.process_font_attr!(plotattributes, fontname, arg)
         end
     end
 
     # handle line args
     for arg in wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
-        Commons.processLineArg(plotattributes, arg)
+        Commons.process_line_attr(plotattributes, arg)
     end
 
     if haskey(plotattributes, :seriestype) &&
@@ -509,7 +509,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # handle marker args... default to ellipse if shape not set
     anymarker = false
     for arg in wraptuple(get(plotattributes, :marker, ()))
-        Commons.processMarkerArg(plotattributes, arg)
+        Commons.process_marker_attr(plotattributes, arg)
         anymarker = true
     end
     RecipesPipeline.reset_kw!(plotattributes, :marker)
@@ -527,7 +527,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
 
     # handle fill
     for arg in wraptuple(get(plotattributes, :fill, ()))
-        Commons.processFillArg(plotattributes, arg)
+        Commons.process_fill_attr(plotattributes, arg)
     end
     RecipesPipeline.reset_kw!(plotattributes, :fill)
 

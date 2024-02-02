@@ -39,7 +39,8 @@ export anynan,
     ignorenan_mean,
     ignorenan_minimum
 #exports from args.jl
-export default, wraptuple
+export default, wraptuple,
+    merge_with_base_supported
 
 using Plots: Plots, Printf, NaNMath, cgrad
 import Plots: RecipesPipeline
@@ -102,26 +103,26 @@ function preprocess_attributes! end
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 
-trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
-trueOrAllTrue(f::Function, x) = f(x)
+true_or_all_true(f::Function, x::AbstractArray) = all(f, x)
+true_or_all_true(f::Function, x) = f(x)
 
-allLineTypes(arg) =
-    trueOrAllTrue(a -> get(Commons._typeAliases, a, a) in Commons._all_seriestypes, arg)
-allStyles(arg) =
-    trueOrAllTrue(a -> get(Commons._styleAliases, a, a) in Commons._all_styles, arg)
-allShapes(arg) = (trueOrAllTrue(
+all_lineLtypes(arg) =
+    true_or_all_true(a -> get(Commons._typeAliases, a, a) in Commons._all_seriestypes, arg)
+all_styles(arg) =
+    true_or_all_true(a -> get(Commons._styleAliases, a, a) in Commons._all_styles, arg)
+all_shapes(arg) = (true_or_all_true(
     a -> get(Commons._marker_aliases, a, a) in Commons._all_markers || a isa Plots.Shape,
     arg,
 ))
-allAlphas(arg) = trueOrAllTrue(
+all_alphas(arg) = true_or_all_true(
     a ->
         (typeof(a) <: Real && a > 0 && a < 1) || (
             typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))
         ),
     arg,
 )
-allReals(arg) = trueOrAllTrue(a -> typeof(a) <: Real, arg)
-allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
+all_reals(arg) = true_or_all_true(a -> typeof(a) <: Real, arg)
+allFunctions(arg) = true_or_all_true(a -> isa(a, Function), arg)
 
 # ---------------------------------------------------------------
 include("attrs.jl")

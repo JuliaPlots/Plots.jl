@@ -99,57 +99,6 @@ function get_backend_module(name::Symbol)
     end
 end
 
-const _base_supported_attrs = [
-    :color_palette,
-    :background_color,
-    :background_color_subplot,
-    :foreground_color,
-    :foreground_color_subplot,
-    :group,
-    :seriestype,
-    :seriescolor,
-    :seriesalpha,
-    :smooth,
-    :xerror,
-    :yerror,
-    :zerror,
-    :subplot,
-    :x,
-    :y,
-    :z,
-    :show,
-    :size,
-    :margin,
-    :left_margin,
-    :right_margin,
-    :top_margin,
-    :bottom_margin,
-    :html_output_format,
-    :layout,
-    :link,
-    :primary,
-    :series_annotations,
-    :subplot_index,
-    :discrete_values,
-    :projection,
-    :show_empty_bins,
-    :z_order,
-    :permute,
-    :unitformat,
-]
-
-function merge_with_base_supported(v::AVec)
-    v = vcat(v, _base_supported_attrs)
-    for vi in v
-        if haskey(_axis_defaults, vi)
-            for letter in (:x, :y, :z)
-                push!(v, get_attr_symbol(letter, vi))
-            end
-        end
-    end
-    Set(v)
-end
-
 # -- Create backend init functions by hand as the corresponding structs do not
 # exist yet
 
