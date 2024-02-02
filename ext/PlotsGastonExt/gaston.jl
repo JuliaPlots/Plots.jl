@@ -557,7 +557,7 @@ function gaston_parse_axes_attrs(
         tmin, tmax = axis_limits(sp, :x, false, false)
         rmin, rmax = axis_limits(sp, :y, false, false)
         rticks = get_ticks(sp, :y)
-        gaston_ticks = if (ttype = ticksType(rticks)) === :ticks
+        gaston_ticks = if (ttype = ticks_type(rticks)) === :ticks
             string.(rticks)
         elseif ttype === :ticks_and_labels
             ["'$l' $t" for (t, l) in zip(rticks...)]
@@ -594,7 +594,7 @@ function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
         push!(axesconf, "unset $(maj_min)$(letter)tics")
         return
     end
-    gaston_ticks = if (ttype = ticksType(ticks)) === :ticks
+    gaston_ticks = if (ttype = ticks_type(ticks)) === :ticks
         tics = gaston_fix_ticks_overflow(ticks)
         if maj_min == "m"
             map(t -> "'' $t 1", tics)  # see gnuplot manual 'Mxtics'

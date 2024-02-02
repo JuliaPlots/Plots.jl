@@ -116,11 +116,11 @@
     @test Plots.limsType(:auto) === :auto
     @test Plots.limsType(NaN) === :invalid
 
-    @test Plots.ticksType([1, 2]) === :ticks
-    @test Plots.ticksType(["1", "2"]) === :labels
-    @test Plots.ticksType(([1, 2], ["1", "2"])) === :ticks_and_labels
-    @test Plots.ticksType(((1, 2), ("1", "2"))) === :ticks_and_labels
-    @test Plots.ticksType(:undefined) === :invalid
+    @test Plots.ticks_type([1, 2]) === :ticks
+    @test Plots.ticks_type(["1", "2"]) === :labels
+    @test Plots.ticks_type(([1, 2], ["1", "2"])) === :ticks_and_labels
+    @test Plots.ticks_type(((1, 2), ("1", "2"))) === :ticks_and_labels
+    @test Plots.ticks_type(:undefined) === :invalid
 
     pl = plot(1:2, 1:2, 1:2, proj_type = :ortho)
     @test Plots.isortho(first(pl.subplots))

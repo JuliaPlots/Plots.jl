@@ -860,7 +860,7 @@ function process_fill_attr(plotattributes::AKW, arg)
         plotattributes[:fillrange] = arg ? 0 : nothing
 
         # fillrange function
-    elseif allFunctions(arg)
+    elseif all_functionss(arg)
         plotattributes[:fillrange] = arg
 
         # fillalpha

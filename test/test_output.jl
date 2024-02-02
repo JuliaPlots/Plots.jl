@@ -30,7 +30,7 @@ macro test_save(fmt)
 end
 
 with(:gr) do
-    @test Plots.defaultOutputFormat(plot()) == "png"
+    @test Plots.default_output_format(plot()) == "png"
     @test Plots.addExtension("foo", "bar") == "foo.bar"
 
     @test_save :png

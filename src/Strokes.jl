@@ -2,7 +2,7 @@ module Strokes
 
 export stroke, brush, Stroke, Brush
 using Plots.Colors: Colorant
-using Plots.Commons: allAlphas, allReals, allStyles
+using Plots.Commons: all_alphas, all_reals, all_styles
 struct Stroke
     width
     color
@@ -24,7 +24,7 @@ function stroke(args...; alpha = nothing)
         T = typeof(arg)
 
         # if arg in _all_styles
-        if allStyles(arg)
+        if all_styles(arg)
             style = arg
         elseif T <: Colorant
             color = arg
@@ -33,9 +33,9 @@ function stroke(args...; alpha = nothing)
                 color = parse(Colorant, string(arg))
             catch
             end
-        elseif allAlphas(arg)
+        elseif all_alphas(arg)
             alpha = arg
-        elseif allReals(arg)
+        elseif all_reals(arg)
             width = arg
         else
             @warn "Unused stroke arg: $arg ($(typeof(arg)))"
@@ -65,9 +65,9 @@ function brush(args...; alpha = nothing)
                 color = parse(Colorant, string(arg))
             catch
             end
-        elseif allAlphas(arg)
+        elseif all_alphas(arg)
             alpha = arg
-        elseif allReals(arg)
+        elseif all_reals(arg)
             size = arg
         else
             @warn "Unused brush arg: $arg ($(typeof(arg)))"

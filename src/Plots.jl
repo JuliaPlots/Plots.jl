@@ -198,6 +198,7 @@ include("output.jl")
 include("shorthands.jl")
 include("backends/web.jl")
 include("backends/plotly.jl")
+using .Plotly
 include("init.jl")
 include("users.jl")
 

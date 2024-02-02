@@ -282,10 +282,10 @@ isscalar(::Any)  = false
 
 is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
-ticksType(ticks::AVec{<:Real}) = :ticks
-ticksType(ticks::AVec{<:AbstractString}) = :labels
-ticksType(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
-ticksType(ticks) = :invalid
+ticks_type(ticks::AVec{<:Real}) = :ticks
+ticks_type(ticks::AVec{<:AbstractString}) = :labels
+ticks_type(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
+ticks_type(ticks) = :invalid
 
 limsType(lims::Tuple{<:Real,<:Real}) = :limits
 limsType(lims::Symbol) = lims === :auto ? :auto : :invalid

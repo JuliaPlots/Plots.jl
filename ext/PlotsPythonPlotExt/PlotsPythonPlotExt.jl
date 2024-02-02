@@ -61,7 +61,7 @@ using Plots:
     isscalar,
     isvector,
     supported_scales,
-    ticksType,
+    ticks_type,
     legend_angle,
     legend_anchor_index,
     legend_pos_from_angle,

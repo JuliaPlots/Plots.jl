@@ -2,7 +2,7 @@
 module Commons
 
 export AVec, AMat, KW, AKW, TicksArgs
-export PLOTS_SEED
+export Plots, PLOTS_SEED
 export _haligns, _valigns, _cbar_width
 # Functions
 export get_subplot,
@@ -122,7 +122,7 @@ all_alphas(arg) = true_or_all_true(
     arg,
 )
 all_reals(arg) = true_or_all_true(a -> typeof(a) <: Real, arg)
-allFunctions(arg) = true_or_all_true(a -> isa(a, Function), arg)
+all_functionss(arg) = true_or_all_true(a -> isa(a, Function), arg)
 
 # ---------------------------------------------------------------
 include("attrs.jl")

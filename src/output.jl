@@ -1,6 +1,6 @@
 struct PlotsDisplay <: AbstractDisplay end
 
-defaultOutputFormat(plt::Plot) = "png"
+default_output_format(plt::Plot) = "png"
 
 function png(plt::Plot, fn)
     fn = addExtension(fn, "png")
@@ -142,7 +142,7 @@ function savefig(plt::Plot, fn) # fn might be an `AbstractString` or an `Abstrac
     # get the extension
     _, ext = splitext(fn)
     ext = chop(ext, head = 1, tail = 0)
-    isempty(ext) && (ext = defaultOutputFormat(plt))
+    isempty(ext) && (ext = default_output_format(plt))
 
     # save it
     if haskey(_savemap, ext)

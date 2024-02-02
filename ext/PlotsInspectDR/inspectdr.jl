@@ -96,7 +96,7 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
     TickCustom = InspectDR.TickCustom
     _xfrm(coord) = InspectDR.axis2aloc(Float64(coord), xfrm.spec) #Ensure Float64 - in case
 
-    ttype = ticksType(ticks)
+    ttype = ticks_type(ticks)
     if ticks === :native
         # keep current
     elseif ttype === :ticks_and_labels

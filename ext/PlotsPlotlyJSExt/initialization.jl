@@ -14,7 +14,7 @@ function __init__()
     @info "Initializing $package_str backend in Plots; run `$str()` to activate it."
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[T] = sym
-    
+
 
     push!(Plots._initialized_backends, sym)
 
@@ -25,11 +25,11 @@ end
 Plots.backend_name(::T) = sym
 Plots.backend_package_name(::T) = Plots.backend_package_name(sym)
 
-const _plotlyjs_attrs = Plots._plotly_attrs
-const _plotlyjs_seriestypes = Plots._plotly_seriestypes
-const _plotlyjs_styles = Plots._plotly_styles
-const _plotlyjs_markers = Plots._plotly_markers
-const _plotlyjs_scales = Plots._plotly_scales
+const _plotlyjs_attrs = Plots.Plotly._plotly_attrs
+const _plotlyjs_seriestypes = Plots.Plotly._plotly_seriestypes
+const _plotlyjs_styles = Plots.Plotly._plotly_styles
+const _plotlyjs_markers = Plots.Plotly._plotly_markers
+const _plotlyjs_scales = Plots.Plotly._plotly_scales
 
 # -----------------------------------------------------------------------------
 # Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods

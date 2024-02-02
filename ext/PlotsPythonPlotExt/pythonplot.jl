@@ -751,7 +751,7 @@ function _py_set_ticks(sp, ax, ticks, letter)
         return
     end
 
-    tick_values, tick_labels = if (ttype = ticksType(ticks)) === :ticks
+    tick_values, tick_labels = if (ttype = ticks_type(ticks)) === :ticks
         ticks, []
     elseif ttype === :ticks_and_labels
         ticks
@@ -1057,7 +1057,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
             ticks = framestyle === :none ? nothing : get_ticks(sp, axis)
 
             has_major_ticks = ticks !== :none && ticks !== nothing && ticks !== false
-            has_major_ticks &= if (ttype = ticksType(ticks)) === :ticks
+            has_major_ticks &= if (ttype = ticks_type(ticks)) === :ticks
                 length(ticks) > 0
             elseif ttype === :ticks_and_labels
                 tcs, labs = ticks

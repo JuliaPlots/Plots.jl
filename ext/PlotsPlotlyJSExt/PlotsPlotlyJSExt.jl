@@ -1,8 +1,10 @@
 module PlotsPlotlyJSExt
 
 using PlotlyJS: PlotlyJS
-using Plots: Plots, Plot, plotly_show_js, isplotnull, current
-import Plots: _show, _display, closeall
+using Plots.Commons
+using Plots.Plotly
+using Plots.PlotsPlots
+import Plots: _show, _display, closeall, current, isplotnull
 
 include("initialization.jl")
 include("plotlyjs.jl")

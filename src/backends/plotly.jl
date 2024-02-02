@@ -1,17 +1,28 @@
 # https://plot.ly/javascript/getting-started
+module Plotly
 
-_plotly_framestyle(style::Symbol) =
-    if style in (:box, :axes, :zerolines, :grid, :none)
-        style
-    else
-        default_style = get((semi = :box, origin = :zerolines), style, :axes)
-        @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
-        default_style
-    end
-
-# --------------------------------------------------------------------------------------
+export PlotlyBackend, plotly_show_js, plotly_series, plotly_layout, embeddable_html
 
 using UUIDs
+using Statistics: mean
+using Plots: bbox_to_pcts, labelfunc_tex, is_2tuple, ticks_type, recursive_merge
+using Plots.Annotations
+using Plots.Axes
+using Plots.Colorbars
+using Plots.Colors: Colorant
+using Plots.Commons
+using Plots.Fonts
+using Plots.Fonts: PlotText
+using Plots.PlotMeasures
+using Plots.PlotsPlots
+using Plots.PlotsSeries
+using Plots.PlotUtils: PlotUtils, ColorGradient, rgba_string, rgb_string
+using Plots.RecipesPipeline: RecipesPipeline
+using Plots.Subplots
+using Plots.Surfaces
+using Plots.Ticks
+import Plots: labelfunc, _show, _display, default_output_format
+import Plots: backend_name, backend_package_name
 
 struct PlotlyBackend <: Plots.AbstractBackend end
 Plots._backendType[:plotly] = PlotlyBackend
@@ -169,7 +180,7 @@ const _plotly_markers = [
 ]
 const _plotly_scales = [:identity, :log10]
 
-defaultOutputFormat(plt::Plot{Plots.PlotlyBackend}) = "html"
+default_output_format(plt::Plot{PlotlyBackend}) = "html"
 
 for s in (:attr, :seriestype, :marker, :style, :scale)
     f1 = Symbol("is_", s, "_supported")
@@ -191,6 +202,15 @@ function labelfunc(scale::Symbol, backend::PlotlyBackend)
         replace(sup_x, "-" => "−")
     end
 end
+
+_plotly_framestyle(style::Symbol) =
+    if style in (:box, :axes, :zerolines, :grid, :none)
+        style
+    else
+        default_style = get((semi = :box, origin = :zerolines), style, :axes)
+        @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
+        default_style
+    end
 
 plotly_font(font::Font, color = font.color) = KW(
     :family => font.family,
@@ -326,7 +346,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         # ticks
         if axis[:ticks] !== :native
             ticks = get_ticks(sp, axis)
-            ttype = ticksType(ticks)
+            ttype = ticks_type(ticks)
             if ttype === :ticks
                 ax[:tickmode] = "array"
                 ax[:tickvals] = ticks
@@ -1301,3 +1321,4 @@ _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend})
 _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) = write(io, embeddable_html(plt))
 
 _display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
+end # module
