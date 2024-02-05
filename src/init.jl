@@ -1,7 +1,15 @@
 using Scratch
 using REPL
+import Base64
 
 const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+const _plotly_data_url_cached = Ref{Union{Nothing,String}}(nothing)
+_plotly_data_url() =
+    if _plotly_data_url_cached[] === nothing
+        _plotly_data_url_cached[] = "data:text/javascript;base64,$(Base64.base64encode(read(_plotly_local_file_path)))"
+    else
+        _plotly_data_url_cached[]
+    end
 # use fixed version of Plotly instead of the latest one for stable dependency
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
