@@ -1,5 +1,6 @@
 using REPL
 import Base64
+using Artifacts
 
 # Local uses artifacts now. To update this, also update Artifacts.toml.
 # using ArtifactUtils
