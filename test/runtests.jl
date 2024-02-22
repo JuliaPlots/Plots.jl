@@ -33,7 +33,7 @@ const TEST_BACKENDS = let
             # :pythonplot, # currently segfaults
             :pgfplotsx,
             :plotlyjs,
-            :gaston,
+            # :gaston, # currently doesn't precompile (on julia v1.10)
             # :inspectdr # currently doesn't precompile
         ]
     end
@@ -46,7 +46,7 @@ import UnicodePlots
 import PythonPlot
 import PGFPlotsX
 import PlotlyJS
-import Gaston
+# import Gaston
 # initialize all backends
 for be in TEST_BACKENDS
     getproperty(Plots, be)()
