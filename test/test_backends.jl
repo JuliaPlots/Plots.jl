@@ -179,8 +179,11 @@ end
 end
 
 const blacklist = if VERSION.major == 1 && VERSION.minor ∈ (9, 10)
-    [25, 30, # FIXME: remove, when StatsPlots supports Plots v2
-    41]  # FIXME: github.com/JuliaLang/julia/issues/47261
+    [
+        25,
+        30, # FIXME: remove, when StatsPlots supports Plots v2
+        41,
+    ]  # FIXME: github.com/JuliaLang/julia/issues/47261
 else
     []
 end

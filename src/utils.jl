@@ -182,7 +182,12 @@ function slice_arg!(
     nothing
 end
 
-function _slice_series_attrs!(plotattributes::AKW, plt::Plot, sp::Subplot, commandIndex::Int)
+function _slice_series_attrs!(
+    plotattributes::AKW,
+    plt::Plot,
+    sp::Subplot,
+    commandIndex::Int,
+)
     for k in keys(_series_defaults)
         haskey(plotattributes, k) &&
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)

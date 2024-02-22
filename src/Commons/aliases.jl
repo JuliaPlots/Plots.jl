@@ -420,4 +420,3 @@ add_aliases(
 add_aliases(:camera, :cam, :viewangle, :view_angle)
 add_aliases(:contour_labels, :contourlabels, :clabels, :clabs)
 add_aliases(:warn_on_unsupported, :warn)
-

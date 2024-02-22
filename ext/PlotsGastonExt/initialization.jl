@@ -14,7 +14,6 @@ function __init__()
     @info "Initializing $package_str backend in Plots; run `$str()` to activate it."
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[T] = sym
-    
 
     push!(Plots._initialized_backends, sym)
 

@@ -13,7 +13,6 @@ function __init__()
     @info "Initializing GR backend in Plots; run `gr()` to activate it."
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[GRBackend] = sym
-    
 
     push!(Plots._initialized_backends, sym)
 end

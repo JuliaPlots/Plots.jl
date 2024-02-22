@@ -39,8 +39,7 @@ export anynan,
     ignorenan_mean,
     ignorenan_minimum
 #exports from args.jl
-export default, wraptuple,
-    merge_with_base_supported
+export default, wraptuple, merge_with_base_supported
 
 using Plots: Plots, Printf, NaNMath, cgrad
 import Plots: RecipesPipeline
@@ -111,7 +110,8 @@ all_lineLtypes(arg) =
 all_styles(arg) =
     true_or_all_true(a -> get(Commons._styleAliases, a, a) in Commons._all_styles, arg)
 all_shapes(arg) = (true_or_all_true(
-    a -> get(Commons._marker_aliases, a, a) in Commons._all_markers || a isa Plots.Shape,
+    a ->
+        get(Commons._marker_aliases, a, a) in Commons._all_markers || a isa Plots.Shape,
     arg,
 ))
 all_alphas(arg) = true_or_all_true(

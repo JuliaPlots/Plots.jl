@@ -4,17 +4,7 @@ const _plots_compats         = _plots_project.compat
 
 const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
-const _backend_packages     = (
-    gr = :GR,
-    unicodeplots = :UnicodePlots,
-    pgfplotsx = :PGFPlotsX,
-    pythonplot = :PythonPlot,
-    plotly = nothing,
-    plotlyjs = :PlotlyJS,
-    inspectdr = :InspectDR,
-    gaston = :Gaston,
-    hdf5 = :HDF5
-)
+const _backend_packages     = (gr = :GR, unicodeplots = :UnicodePlots, pgfplotsx = :PGFPlotsX, pythonplot = :PythonPlot, plotly = nothing, plotlyjs = :PlotlyJS, inspectdr = :InspectDR, gaston = :Gaston, hdf5 = :HDF5)
 const _initialized_backends = Set{Symbol}()
 const _backends             = keys(_backend_packages)
 
@@ -54,7 +44,8 @@ backend_package_name(sym::Symbol = backend_name()) = _backend_packages[sym]
 
 # Traits to be implemented by the extensions
 backend_name(::AbstractBackend) = @info "`backend_name(::Backend) not implemented."
-backend_package_name(::AbstractBackend) = @info "`backend_package_name(::Backend) not implemented."
+backend_package_name(::AbstractBackend) =
+    @info "`backend_package_name(::Backend) not implemented."
 
 initialized(sym::Symbol) = sym ∈ _initialized_backends
 

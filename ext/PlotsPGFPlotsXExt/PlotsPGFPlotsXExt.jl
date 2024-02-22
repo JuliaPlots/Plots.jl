@@ -44,7 +44,15 @@ using Plots.Shapes
 using Plots.Shapes: Shape
 using Plots.Ticks
 
-import Plots: _display, _show, _update_min_padding!, labelfunc, _create_backend_figure, _series_added, _update_plot_object, pgfx_sanitize_string
+import Plots:
+    _display,
+    _show,
+    _update_min_padding!,
+    labelfunc,
+    _create_backend_figure,
+    _series_added,
+    _update_plot_object,
+    pgfx_sanitize_string
 
 include("initialization.jl")
 include("pgfplotsx.jl")

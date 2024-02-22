@@ -15,7 +15,6 @@ function __init__()
     Plots._backendType[sym] = get_concrete_backend()
     Plots._backendSymbol[T] = sym
 
-
     push!(Plots._initialized_backends, sym)
 
     # Additional setup required by the backend:

@@ -11,4 +11,5 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
     end
 end
 
-_display(::Plot{NoBackend}) = @info "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
+_display(::Plot{NoBackend}) =
+    @info "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
