@@ -190,7 +190,7 @@ const _pgfplotsx_markers = [
     :vline,
 ]
 const _pgfplotsx_scales = [:identity, :ln, :log2, :log10]
-is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
+Plots.is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
 
 # additional constants
 const _pgfplotsx_series_ids = KW()
