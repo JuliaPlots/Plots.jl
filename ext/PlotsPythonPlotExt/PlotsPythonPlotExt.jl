@@ -24,7 +24,8 @@ using Plots.Fonts
 using Plots.Fonts: Font, PlotText
 using Plots.PlotMeasures
 using Plots.PlotMeasures: px2inch
-using Plots.PlotUtils: PlotUtils, ColorGradient, plot_color, color_list
+using Plots.PlotUtils: PlotUtils, ColorGradient, plot_color, color_list,
+        cgrad
 using Plots.PlotsPlots
 using Plots.PlotsSeries
 using Plots.Shapes
