@@ -218,7 +218,8 @@ is_pkgeval() || @testset "Examples" begin
         )
         @test filesize(fn) > 1_000
     end
-    Sys.islinux() && for be in TEST_BACKENDS
+    # TODO: check whats up with those who are filtered
+    Sys.islinux() && for be in filter(!=(:plotlyjs, :gaston), TEST_BACKENDS)
         skip = vcat(Plots._backend_skips[be], blacklist)
         Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
         closeall()

@@ -27,7 +27,7 @@ const TEST_BACKENDS = let
     if var !== nothing
         Symbol.(lowercase.(strip.(split(var, ","))))
     else
-        (
+        [
             :gr,
             :unicodeplots,
             # :pythonplot, # currently segfaults
@@ -35,7 +35,7 @@ const TEST_BACKENDS = let
             :plotlyjs,
             :gaston,
             # :inspectdr # currently doesn't precompile
-        )
+        ]
     end
 end
 
@@ -80,7 +80,6 @@ for name in (
     "plotly",
     # "animations", # some failing
     # "output", # some plotly failing
-    # "preferences", # no default backend
     "backends",
 )
     @testset "$name" begin
