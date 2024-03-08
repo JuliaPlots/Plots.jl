@@ -1,7 +1,7 @@
 name = "Plots"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 author = ["Tom Breloff (@tbreloff)"]
-version = "1.40.1"
+version = "1.40.2"
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -58,7 +58,7 @@ UnitfulExt = "Unitful"
 Aqua = "0.8"
 Contour = "0.5 - 0.6"
 Downloads = "1"
-FFMPEG = "0.2 - 0.4"
+FFMPEG = "0.3, 0.4"
 FixedPointNumbers = "0.6 - 0.8"
 GR = "0.69.5 - 0.73"
 Gaston = "1"
