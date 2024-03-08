@@ -211,10 +211,28 @@ grid(args...; kw...) = GridLayout(args...; kw...)
 function GridLayout(
     dims...;
     parent = RootLayout(),
-    widths = zeros(dims[2]),
-    heights = zeros(dims[1]),
+    widths = nothing,
+    heights = nothing,
     kw...,
 )
+# Check the values for heights and widths if values are provided
+if heights !== nothing && widths !== nothing
+    if sum(heights) != 1 
+    error("The sum of heights must be 1!")
+end
+if sum(widths) != 1
+    error("The sum of widths must be 1!")
+end
+if all(x -> 0 < x < 1, widths) == false 
+    error("Values for widths must be in the range (0, 1)!")
+end
+if all(x -> 0 < x < 1, heights) == false
+    error("Values for heights must be in the range (0, 1)!")
+end
+else
+    heights = zeros(dims[1])
+    widths = zeros(dims[2])
+end
     grid = Matrix{AbstractLayout}(undef, dims...)
     layout = GridLayout(
         parent,
@@ -227,11 +245,12 @@ function GridLayout(
         # convert(Vector{Float64}, heights),
         KW(kw),
     )
-    for i in eachindex(grid)
+     for i in eachindex(grid)
         grid[i] = EmptyLayout(layout)
     end
     layout
 end
+
 
 Base.size(layout::GridLayout) = size(layout.grid)
 Base.length(layout::GridLayout) = length(layout.grid)
