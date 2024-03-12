@@ -1,3 +1,20 @@
+### Legend
+
+@add_attributes subplot struct Legend
+    background_color = :match
+    foreground_color = :match
+    position = :best
+    title = nothing
+    font::Font = font(8)
+    title_font::Font = font(11)
+    column = 1
+end :match = (
+    :legend_font_family,
+    :legend_font_color,
+    :legend_title_font_family,
+    :legend_title_font_color,
+)
+
 """
 ```julia
 legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
@@ -55,3 +72,12 @@ legend_angle(leg::Symbol) = get(
     leg,
     (45, :inner),
 )
+
+Commons._initial_sp_fontsizes[:legend_font_pointsize] =
+    _subplot_defaults[:legend_font_pointsize]
+Commons._initial_sp_fontsizes[:legend_title_font_pointsize] =
+    _subplot_defaults[:legend_title_font_pointsize]
+Commons._initial_fontsizes[:legend_font_pointsize] =
+    _subplot_defaults[:legend_font_pointsize]
+Commons._initial_fontsizes[:legend_title_font_pointsize] =
+    _subplot_defaults[:legend_title_font_pointsize]

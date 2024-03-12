@@ -1,4 +1,5 @@
 using Test, Plots, Unitful, LaTeXStrings
+import PGFPlotsX
 
 function create_plot(args...; kwargs...)
     pl = plot(args...; kwargs...)
@@ -12,7 +13,7 @@ end
 
 function get_pgf_axes(pl)
     Plots._update_plot_object(pl)
-    Plots.pgfx_axes(pl.o)
+    Plots.get_backend_module(:PGFPlotsX)[1].pgfx_axes(pl.o)
 end
 
 with(:pgfplotsx) do
@@ -108,7 +109,7 @@ with(:pgfplotsx) do
     @testset "Marker types" begin
         markers = filter((m -> begin
             m in Plots.supported_markers()
-        end), Plots._shape_keys)
+        end), Plots.Commons._shape_keys)
         markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = (range(0, stop = 10, length = n + 2))[2:(end - 1)]

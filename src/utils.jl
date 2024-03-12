@@ -1,3 +1,4 @@
+
 # ---------------------------------------------------------------
 bool_env(x, default)::Bool =
     try
@@ -35,10 +36,10 @@ to_nan(::Type{Float64}) = NaN
 to_nan(::Type{NTuple{2,Float64}}) = (NaN, NaN)
 to_nan(::Type{NTuple{3,Float64}}) = (NaN, NaN, NaN)
 
-coords(segs::Segments{Float64}) = segs.pts
-coords(segs::Segments{NTuple{2,Float64}}) =
+Commons.coords(segs::Segments{Float64}) = segs.pts
+Commons.coords(segs::Segments{NTuple{2,Float64}}) =
     (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
-coords(segs::Segments{NTuple{3,Float64}}) =
+Commons.coords(segs::Segments{NTuple{3,Float64}}) =
     (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
@@ -53,187 +54,147 @@ function Base.push!(segments::Segments{T}, vs::AVec) where {T}
     segments
 end
 
-struct SeriesSegment
-    # indexes of this segment in series data vectors
-    range::UnitRange
-    # index into vector-valued attributes corresponding to this segment
-    attr_index::Int
-end
-
-# -----------------------------------------------------
-# helper to manage NaN-separated segments
-struct NaNSegmentsIterator
-    args::Tuple
-    n1::Int
-    n2::Int
-end
-
-function iter_segments(args...)
-    tup = Plots.wraptuple(args)
-    n1 = minimum(map(firstindex, tup))
-    n2 = maximum(map(lastindex, tup))
-    NaNSegmentsIterator(tup, n1, n2)
-end
-
-"floor number x in base b, note this is different from using Base.round(...; base=b) !"
-floor_base(x, b) = round_base(x, b, RoundDown)
-
-"ceil number x in base b"
-ceil_base(x, b) = round_base(x, b, RoundUp)
-
-round_base(x::T, b, ::RoundingMode{:Down}) where {T} = T(b^floor(log(b, x)))
-round_base(x::T, b, ::RoundingMode{:Up}) where {T} = T(b^ceil(log(b, x)))
-
-ignorenan_min_max(::Any, ex) = ex
-function ignorenan_min_max(x::AbstractArray{<:AbstractFloat}, ex::Tuple)
-    mn, mx = ignorenan_extrema(x)
-    NaNMath.min(ex[1], mn), NaNMath.max(ex[2], mx)
-end
-
-function series_segments(series::Series, seriestype::Symbol = :path; check = false)
-    x, y, z = series[:x], series[:y], series[:z]
-    (x === nothing || isempty(x)) && return UnitRange{Int}[]
-
-    args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
-    nan_segments = collect(iter_segments(args...))
-
-    if check
-        scales = :xscale, :yscale, :zscale
-        for (n, s) in enumerate(args)
-            (scale = get(series, scales[n], :identity)) ∈ _logScales || continue
-            for (i, v) in enumerate(s)
-                if v <= 0
-                    @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
-                    @debug "" exception = (DomainError(v), stacktrace())
-                    break
-                end
-            end
-        end
-    end
-
-    segments = if has_attribute_segments(series)
-        map(nan_segments) do r
-            if seriestype === :shape
-                warn_on_inconsistent_shape_attr(series, x, y, z, r)
-                (SeriesSegment(r, first(r)),)
-            elseif seriestype in (:scatter, :scatter3d)
-                (SeriesSegment(i:i, i) for i in r)
-            else
-                (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
-            end
-        end |> Iterators.flatten
-    else
-        (SeriesSegment(r, 1) for r in nan_segments)
-    end
-
-    warn_on_attr_dim_mismatch(series, x, y, z, segments)
-    segments
-end
-
-function warn_on_attr_dim_mismatch(series, x, y, z, segments)
-    isempty(segments) && return
-    seg_range = UnitRange(
-        minimum(map(seg -> first(seg.range), segments)),
-        maximum(map(seg -> last(seg.range), segments)),
-    )
-    for attr in _segmenting_vector_attributes
-        if (v = get(series, attr, nothing)) isa AVec && eachindex(v) != seg_range
-            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
-            if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
-                @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
-                    If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
-                    pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
-                    may be suppressed by passing an empty label.
-                    For example,
-                        plot([1:2,1:3], [[4,5],[3,4,5]], label=["y" ""], $attr=[1 2])
-                    """
-            end
-        end
-    end
-end
-
-function warn_on_inconsistent_shape_attr(series, x, y, z, r)
-    for attr in _segmenting_vector_attributes
-        v = get(series, attr, nothing)
-        if v isa AVec && length(unique(v[r])) > 1
-            @warn "Different values of `$attr` specified for different shape vertices. Only first one will be used."
-            break
-        end
-    end
-end
-
-# helpers to figure out if there are NaN values in a list of array types
-anynan(i::Int, args::Tuple) = any(a -> try
-    isnan(_cycle(a, i))
-catch MethodError
-    false
-end, args)
-anynan(args::Tuple) = i -> anynan(i, args)
-anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
-allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
-
-function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
-    (i = findfirst(!anynan(itr.args), nextidx:(itr.n2))) === nothing && return
-    nextval = nextidx + i - 1
-
-    j = findfirst(anynan(itr.args), nextval:(itr.n2))
-    nextnan = j === nothing ? itr.n2 + 1 : nextval + j - 1
-
-    nextval:(nextnan - 1), nextnan
-end
-Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()  # COV_EXCL_LINE
-
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
 
 float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
 float_extended_type(x::AbstractArray{Real}) = Float64
 
-# ------------------------------------------------------------------------------------
-_cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
-_cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
+function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
+    pkg = plt.backend
+    globalIndex = plotattributes[:series_plotindex]
+    plotIndex = Commons._series_index(plotattributes, sp)
 
-_cycle(v::AVec, idx::Int) = v[mod(idx, axes(v, 1))]
-_cycle(v::AMat, idx::Int) = size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]
-_cycle(v, idx::Int)       = v
+    Commons.aliases_and_autopick(
+        plotattributes,
+        :linestyle,
+        Commons._styleAliases,
+        supported_styles(pkg),
+        plotIndex,
+    )
+    Commons.aliases_and_autopick(
+        plotattributes,
+        :markershape,
+        Commons._marker_aliases,
+        supported_markers(pkg),
+        plotIndex,
+    )
 
-_cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v, i), indices)
-_cycle(v::AMat, indices::AVec{Int}) = map(i -> _cycle(v, i), indices)
-_cycle(v, indices::AVec{Int})       = fill(v, length(indices))
-
-_cycle(cl::PlotUtils.AbstractColorList, idx::Int) = cl[mod1(idx, end)]
-_cycle(cl::PlotUtils.AbstractColorList, idx::AVec{Int}) = cl[mod1.(idx, end)]
-
-_as_gradient(grad) = grad
-_as_gradient(v::AbstractVector{<:Colorant}) = cgrad(v)
-_as_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
-_as_gradient(c::Colorant) = cgrad([c, c])
-
-makevec(v::AVec) = v
-makevec(v::T) where {T} = T[v]
-
-"duplicate a single value, or pass the 2-tuple through"
-maketuple(x::Real) = (x, x)
-maketuple(x::Tuple) = x
-
-RecipesPipeline.unzip(v) = Unzip.unzip(v)  # COV_EXCL_LINE
-
-"collect into columns (convenience for `unzip` from `Unzip.jl`)"
-unzip(v) = RecipesPipeline.unzip(v)
-
-replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
-    if haskey(aliases, k)
-        plotattributes[aliases[k]] = RecipesPipeline.pop_kw!(plotattributes, k)
+    # update alphas
+    for asym in (:linealpha, :markeralpha, :fillalpha)
+        if plotattributes[asym] === nothing
+            plotattributes[asym] = plotattributes[:seriesalpha]
+        end
+    end
+    if plotattributes[:markerstrokealpha] === nothing
+        plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
     end
 
-replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
-    foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
+    # update series color
+    scolor = plotattributes[:seriescolor]
+    stype = plotattributes[:seriestype]
+    plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
-scale_inverse_scale_func(scale::Symbol) = (
-    RecipesPipeline.scale_func(scale),
-    RecipesPipeline.inverse_scale_func(scale),
-    scale === :identity,
+    # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
+    for s in (:line, :marker, :fill)
+        csym, asym = Symbol(s, :color), Symbol(s, :alpha)
+        plotattributes[csym] = if plotattributes[csym] === :auto
+            plot_color(if Commons.has_black_border_for_default(stype) && s === :line
+                    sp[:foreground_color_subplot]
+                else
+                    scolor
+                end)
+        elseif plotattributes[csym] === :match
+            plot_color(scolor)
+        else
+            get_series_color(plotattributes[csym], sp, plotIndex, stype)
+        end
+    end
+
+    # update markerstrokecolor
+    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] === :match
+        plot_color(sp[:foreground_color_subplot])
+    elseif plotattributes[:markerstrokecolor] === :auto
+        get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
+    else
+        get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
+    end
+
+    # if marker_z, fill_z or line_z are set, ensure we have a gradient
+    if plotattributes[:marker_z] !== nothing
+        Commons.ensure_gradient!(plotattributes, :markercolor, :markeralpha)
+    end
+    if plotattributes[:line_z] !== nothing
+        Commons.ensure_gradient!(plotattributes, :linecolor, :linealpha)
+    end
+    if plotattributes[:fill_z] !== nothing
+        Commons.ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
+    end
+
+    # scatter plots don't have a line, but must have a shape
+    if plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
+        plotattributes[:linewidth] = 0
+        if plotattributes[:markershape] === :none
+            plotattributes[:markershape] = :circle
+        end
+    end
+
+    # set label
+    plotattributes[:label] = Commons.label_to_string.(plotattributes[:label], globalIndex)
+
+    Commons._replace_linewidth(plotattributes)
+    plotattributes
+end
+"""
+1-row matrices will give an element
+multi-row matrices will give a column
+anything else is returned as-is
+"""
+function slice_arg(v::AMat, idx::Int)
+    isempty(v) && return v
+    c = mod1(idx, size(v, 2))
+    m, n = axes(v)
+    size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
+end
+slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
+slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
+slice_arg(v, idx) = v
+
+"""
+given an argument key `k`, extract the argument value for this index,
+and set into plotattributes[k]. Matrices are sliced by column.
+if nothing is set (or container is empty), return the existing value.
+"""
+function slice_arg!(
+    plotattributes_in,
+    plotattributes_out,
+    k::Symbol,
+    idx::Int,
+    remove_pair::Bool,
 )
+    v = get(plotattributes_in, k, plotattributes_out[k])
+    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ Commons._plot_attrs
+        slice_arg(v, idx)
+    else
+        v
+    end
+    remove_pair && RecipesPipeline.reset_kw!(plotattributes_in, k)
+    nothing
+end
+
+function _slice_series_attrs!(
+    plotattributes::AKW,
+    plt::Plot,
+    sp::Subplot,
+    commandIndex::Int,
+)
+    for k in keys(_series_defaults)
+        haskey(plotattributes, k) &&
+            slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
+    end
+    plotattributes
+end
+# -----------------------------------------------------------------------------
 
 function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
     (n = length(v)) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
@@ -326,14 +287,10 @@ isscalar(::Any)  = false
 
 is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
-isvertical(plotattributes::AKW) =
-    get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
-isvertical(series::Series) = isvertical(series.plotattributes)
-
-ticksType(ticks::AVec{<:Real}) = :ticks
-ticksType(ticks::AVec{<:AbstractString}) = :labels
-ticksType(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
-ticksType(ticks) = :invalid
+ticks_type(ticks::AVec{<:Real}) = :ticks
+ticks_type(ticks::AVec{<:AbstractString}) = :labels
+ticks_type(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
+ticks_type(ticks) = :invalid
 
 limsType(lims::Tuple{<:Real,<:Real}) = :limits
 limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
@@ -371,28 +328,6 @@ function nanvcat(vs::AVec)
     foreach(v -> nanappend!(v_out, v), vs)
     v_out
 end
-
-sort_3d_axes(x, y, z, letter) =
-    if letter === :x
-        x, y, z
-    elseif letter === :y
-        y, x, z
-    else
-        z, y, x
-    end
-
-axes_letters(sp, letter) =
-    if RecipesPipeline.is3d(sp)
-        sort_3d_axes(:x, :y, :z, letter)
-    else
-        letter === :x ? (:x, :y) : (:y, :x)
-    end
-
-handle_surface(z) = z
-handle_surface(z::Surface) = permutedims(z.surf)
-
-ok(x::Number, y::Number, z::Number = 0) = isfinite(x) && isfinite(y) && isfinite(z)
-ok(tup::Tuple) = ok(tup...)
 
 # compute one side of a fill range from a ribbon
 function make_fillrange_side(y::AVec, rib)
@@ -449,187 +384,211 @@ xlims(sp_idx::Int = 1) = xlims(current(), sp_idx)
 ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
-iscontour(series::Series) = series[:seriestype] in (:contour, :contour3d)
-isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
+"Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
+function Commons.preprocess_attributes!(plotattributes::AKW)
+    Commons.replaceAliases!(plotattributes, Commons._keyAliases)
 
-function contour_levels(series::Series, clims)
-    iscontour(series) || error("Not a contour series")
-    zmin, zmax = clims
-    levels = series[:levels]
-    if levels isa Integer
-        levels = range(zmin, stop = zmax, length = levels + 2)
-        isfilledcontour(series) || (levels = levels[2:(end - 1)])
+    # handle axis args common to all axis
+    args = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :axis, ()))
+    showarg = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :showaxis, ()))
+    for arg in wraptuple((args..., showarg...))
+        for letter in (:x, :y, :z)
+            process_axis_arg!(plotattributes, arg, letter)
+        end
     end
-    levels
-end
+    # handle axis args
+    for letter in (:x, :y, :z)
+        asym = get_attr_symbol(letter, :axis)
+        args = RecipesPipeline.pop_kw!(plotattributes, asym, ())
+        if !(typeof(args) <: Axis)
+            for arg in wraptuple(args)
+                process_axis_arg!(plotattributes, arg, letter)
+            end
+        end
+    end
 
-for comp in (:line, :fill, :marker)
-    compcolor = string(comp, :color)
-    get_compcolor = Symbol(:get_, compcolor)
-    comp_z = string(comp, :_z)
+    # vline and others accesses the y argument but actually maps it to the x axis.
+    # Hence, we have to take care of formatters
+    if treats_y_as_x(get(plotattributes, :seriestype, :path))
+        xformatter = get(plotattributes, :xformatter, :auto)
+        yformatter = get(plotattributes, :yformatter, :auto)
+        yformatter !== :auto && (plotattributes[:xformatter] = yformatter)
+        xformatter === :auto &&
+            haskey(plotattributes, :yformatter) &&
+            pop!(plotattributes, :yformatter)
+    end
 
-    compalpha = string(comp, :alpha)
-    get_compalpha = Symbol(:get_, compalpha)
-
-    @eval begin
-        # defines `get_linecolor`, `get_fillcolor` and `get_markercolor` <- for grep
-        function $get_compcolor(
-            series,
-            cmin::Real,
-            cmax::Real,
-            i::Integer = 1,
-            s::Symbol = :identity,
-        )
-            c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
-            z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
-            if z === nothing
-                isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
-            else
-                grad = get_gradient(c)
-                if s === :identity
-                    get(grad, z[i], (cmin, cmax))
-                else
-                    base = _logScaleBases[s]
-                    get(grad, log(base, z[i]), (log(base, cmin), log(base, cmax)))
+    # handle grid args common to all axes
+    processGridArg! = Commons.process_grid_attr!
+    args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
+    for arg in wraptuple(args)
+        for letter in (:x, :y, :z)
+            processGridArg!(plotattributes, arg, letter)
+        end
+    end
+    # handle individual axes grid args
+    for letter in (:x, :y, :z)
+        gridsym = get_attr_symbol(letter, :grid)
+        args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
+        for arg in wraptuple(args)
+            processGridArg!(plotattributes, arg, letter)
+        end
+    end
+    # handle minor grid args common to all axes
+    args = RecipesPipeline.pop_kw!(plotattributes, :minorgrid, ())
+    for arg in wraptuple(args)
+        for letter in (:x, :y, :z)
+            Commons.process_minor_grid_attr!(plotattributes, arg, letter)
+        end
+    end
+    # handle individual axes grid args
+    for letter in (:x, :y, :z)
+        gridsym = get_attr_symbol(letter, :minorgrid)
+        args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
+        for arg in wraptuple(args)
+            Commons.process_minor_grid_attr!(plotattributes, arg, letter)
+        end
+    end
+    # handle font args common to all axes
+    for fontname in (:tickfont, :guidefont)
+        args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
+        for arg in wraptuple(args)
+            for letter in (:x, :y, :z)
+                Commons.process_font_attr!(
+                    plotattributes,
+                    get_attr_symbol(letter, fontname),
+                    arg,
+                )
+            end
+        end
+    end
+    # handle individual axes font args
+    for letter in (:x, :y, :z)
+        for fontname in (:tickfont, :guidefont)
+            args = RecipesPipeline.pop_kw!(
+                plotattributes,
+                get_attr_symbol(letter, fontname),
+                (),
+            )
+            for arg in wraptuple(args)
+                Commons.process_font_attr!(
+                    plotattributes,
+                    get_attr_symbol(letter, fontname),
+                    arg,
+                )
+            end
+        end
+    end
+    # handle axes args
+    for k in Commons._axis_attrs
+        if haskey(plotattributes, k) && k !== :link
+            v = plotattributes[k]
+            for letter in (:x, :y, :z)
+                lk = get_attr_symbol(letter, k)
+                if !is_explicit(plotattributes, lk)
+                    plotattributes[lk] = v
                 end
             end
         end
-
-        function $get_compcolor(series, i::Integer = 1, s::Symbol = :identity)
-            if series[$Symbol($comp_z)] === nothing
-                $get_compcolor(series, 0, 1, i, s)
-            else
-                $get_compcolor(series, get_clims(series[:subplot]), i, s)
-            end
-        end
-
-        $get_compcolor(series, clims::NTuple{2,<:Number}, args...) =
-            $get_compcolor(series, clims[1], clims[2], args...)
-
-        $get_compalpha(series, i::Integer = 1) = _cycle(series[$Symbol($compalpha)], i)
-    end
-end
-
-function get_colorgradient(series::Series)
-    if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)
-        series[:fillcolor]
-    elseif st in (:contour, :wireframe, :contour3d)
-        series[:linecolor]
-    elseif series[:marker_z] !== nothing
-        series[:markercolor]
-    elseif series[:line_z] !== nothing
-        series[:linecolor]
-    elseif series[:fill_z] !== nothing
-        series[:fillcolor]
-    end
-end
-
-single_color(c, v = 0.5) = c
-single_color(grad::ColorGradient, v = 0.5) = grad[v]
-
-get_gradient(c) = cgrad()
-get_gradient(cg::ColorGradient) = cg
-get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
-
-get_linewidth(series, i::Integer = 1) = _cycle(series[:linewidth], i)
-get_linestyle(series, i::Integer = 1) = _cycle(series[:linestyle], i)
-get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
-
-get_markerstrokecolor(series, i::Integer = 1) =
-    let msc = series[:markerstrokecolor]
-        msc isa ColorGradient ? msc : _cycle(msc, i)
     end
 
-get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
-get_markerstrokewidth(series, i::Integer = 1) = _cycle(series[:markerstrokewidth], i)
-
-const _segmenting_vector_attributes = (
-    :seriescolor,
-    :seriesalpha,
-    :linecolor,
-    :linealpha,
-    :linewidth,
-    :linestyle,
-    :fillcolor,
-    :fillalpha,
-    :fillstyle,
-    :markercolor,
-    :markeralpha,
-    :markersize,
-    :markerstrokecolor,
-    :markerstrokealpha,
-    :markerstrokewidth,
-    :markershape,
-)
-
-const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
-
-# we want to check if a series needs to be split into segments just because
-# of its attributes
-# check relevant attributes if they have multiple inputs
-has_attribute_segments(series::Series) =
-    any(
-        series[attr] isa AbstractVector && length(series[attr]) > 1 for
-        attr in _segmenting_vector_attributes
-    ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
-
-check_aspect_ratio(ar::AbstractVector) = nothing  # for PyPlot
-check_aspect_ratio(ar::Number) = nothing
-check_aspect_ratio(ar::Symbol) =
-    ar in (:none, :equal, :auto) || throw(ArgumentError("Invalid `aspect_ratio` = $ar"))
-check_aspect_ratio(ar::T) where {T} =
-    throw(ArgumentError("Invalid `aspect_ratio`::$T = $ar "))
-
-function get_aspect_ratio(sp)
-    ar = sp[:aspect_ratio]
-    check_aspect_ratio(ar)
-    if ar === :auto
-        ar = :none
-        for series in series_list(sp)
-            if series[:seriestype] === :image
-                ar = :equal
-            end
+    # fonts
+    for fontname in
+        (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
+        args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
+        for arg in wraptuple(args)
+            Commons.process_font_attr!(plotattributes, fontname, arg)
         end
     end
-    ar isa Bool && (ar = Int(ar))  # NOTE: Bool <: ... <: Number
-    ar
+
+    # handle line args
+    for arg in wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
+        Commons.process_line_attr(plotattributes, arg)
+    end
+
+    if haskey(plotattributes, :seriestype) &&
+       haskey(Commons._typeAliases, plotattributes[:seriestype])
+        plotattributes[:seriestype] = Commons._typeAliases[plotattributes[:seriestype]]
+    end
+
+    # handle marker args... default to ellipse if shape not set
+    anymarker = false
+    for arg in wraptuple(get(plotattributes, :marker, ()))
+        Commons.process_marker_attr(plotattributes, arg)
+        anymarker = true
+    end
+    RecipesPipeline.reset_kw!(plotattributes, :marker)
+    if haskey(plotattributes, :markershape)
+        plotattributes[:markershape] =
+            Commons._replace_markershape(plotattributes[:markershape])
+        if plotattributes[:markershape] === :none &&
+           get(plotattributes, :seriestype, :path) in
+           (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
+            plotattributes[:markershape] = :circle
+        end
+    elseif anymarker
+        plotattributes[:markershape_to_add] = :circle  # add it after _apply_recipe
+    end
+
+    # handle fill
+    for arg in wraptuple(get(plotattributes, :fill, ()))
+        Commons.process_fill_attr(plotattributes, arg)
+    end
+    RecipesPipeline.reset_kw!(plotattributes, :fill)
+
+    # handle series annotations
+    if haskey(plotattributes, :series_annotations)
+        plotattributes[:series_annotations] =
+            series_annotations(wraptuple(plotattributes[:series_annotations])...)
+    end
+
+    # convert into strokes and brushes
+
+    if haskey(plotattributes, :arrow)
+        a = plotattributes[:arrow]
+        plotattributes[:arrow] = if a == true
+            arrow()
+        elseif a in (false, nothing, :none)
+            nothing
+        elseif !(typeof(a) <: Arrow || typeof(a) <: AbstractArray{Arrow})
+            arrow(wraptuple(a)...)
+        else
+            a
+        end
+    end
+
+    # legends - defaults are set in `src/components.jl` (see `@add_attributes`)
+    if haskey(plotattributes, :legend_position)
+        plotattributes[:legend_position] =
+            Commons.convert_legend_value(plotattributes[:legend_position])
+    end
+    if haskey(plotattributes, :colorbar)
+        plotattributes[:colorbar] = Commons.convert_legend_value(plotattributes[:colorbar])
+    end
+
+    # framestyle
+    if haskey(plotattributes, :framestyle) &&
+       haskey(Commons._framestyle_aliases, plotattributes[:framestyle])
+        plotattributes[:framestyle] =
+            Commons._framestyle_aliases[plotattributes[:framestyle]]
+    end
+
+    # contours
+    if haskey(plotattributes, :levels)
+        Commons.check_contour_levels(plotattributes[:levels])
+    end
+
+    # warnings for moved recipes
+    st = get(plotattributes, :seriestype, :path)
+    if st in (:boxplot, :violin, :density) &&
+       !haskey(
+        Base.loaded_modules,
+        Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
+    )
+        @warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
+    end
+    nothing
 end
-
-get_size(series::Series) = get_size(series.plotattributes[:subplot])
-get_size(kw) = get(kw, :size, default(:size))
-get_size(plt::Plot) = get_size(plt.attr)
-get_size(sp::Subplot) = get_size(sp.plt)
-
-get_thickness_scaling(kw) = get(kw, :thickness_scaling, default(:thickness_scaling))
-get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
-get_thickness_scaling(sp::Subplot) = get_thickness_scaling(sp.plt)
-get_thickness_scaling(series::Series) =
-    get_thickness_scaling(series.plotattributes[:subplot])
-
-# ---------------------------------------------------------------
-makekw(; kw...) = KW(kw)
-
-wraptuple(x::Tuple) = x
-wraptuple(x) = (x,)
-
-trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
-trueOrAllTrue(f::Function, x) = f(x)
-
-allLineTypes(arg) = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
-allStyles(arg) = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
-allShapes(arg) =
-    (trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers || a isa Shape, arg))
-allAlphas(arg) = trueOrAllTrue(
-    a ->
-        (typeof(a) <: Real && a > 0 && a < 1) || (
-            typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))
-        ),
-    arg,
-)
-allReals(arg) = trueOrAllTrue(a -> typeof(a) <: Real, arg)
-allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
-
-# ---------------------------------------------------------------
 
 """
 Allows temporary setting of backend and defaults for Plots. Settings apply only for the `do` block.  Example:
@@ -657,7 +616,6 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
     end
 
     # save the backend
-    CURRENT_BACKEND.sym === :none && _pick_default_backend()
     oldbackend = CURRENT_BACKEND.sym
 
     for arg in args
@@ -701,248 +659,6 @@ end
 
 # ---------------------------------------------------------------
 
-const _debug = Ref(false)
-
-debug!(on = true) = _debug[] = on
-debugshow(io, x) = show(io, x)
-debugshow(io, x::AbstractArray) = print(io, summary(x))
-
-function dumpdict(io::IO, plotattributes::AKW, prefix = "")
-    _debug[] || return
-    println(io)
-    prefix == "" || println(io, prefix, ":")
-    for k in sort(collect(keys(plotattributes)))
-        @printf(io, "%14s: ", k)
-        debugshow(io, plotattributes[k])
-        println(io)
-    end
-    println(io)
-end
-
-# -------------------------------------------------------
-# indexing notation
-
-Base.setindex!(plt::Plot, xy::NTuple{2}, i::Integer) = (setxy!(plt, xy, i); plt)
-Base.setindex!(plt::Plot, xyz::Tuple{3}, i::Integer) = (setxyz!(plt, xyz, i); plt)
-
-# -------------------------------------------------------
-# operate on individual series
-
-Base.push!(series::Series, args...) = extend_series!(series, args...)
-Base.append!(series::Series, args...) = extend_series!(series, args...)
-
-function extend_series!(series::Series, yi)
-    y = extend_series_data!(series, yi, :y)
-    x = extend_to_length!(series[:x], length(y))
-    expand_extrema!(series[:subplot][:xaxis], x)
-    x, y
-end
-
-extend_series!(series::Series, xi, yi) =
-    (extend_series_data!(series, xi, :x), extend_series_data!(series, yi, :y))
-
-extend_series!(series::Series, xi, yi, zi) = (
-    extend_series_data!(series, xi, :x),
-    extend_series_data!(series, yi, :y),
-    extend_series_data!(series, zi, :z),
-)
-
-function extend_series_data!(series::Series, v, letter)
-    copy_series!(series, letter)
-    d = extend_by_data!(series[letter], v)
-    expand_extrema!(series[:subplot][get_attr_symbol(letter, :axis)], d)
-    d
-end
-
-function copy_series!(series, letter)
-    plt = series[:plot_object]
-    for s in plt.series_list, l in (:x, :y, :z)
-        if (s !== series || l !== letter) && s[l] === series[letter]
-            series[letter] = copy(series[letter])
-        end
-    end
-end
-
-extend_to_length!(v::AbstractRange, n) = range(first(v), step = step(v), length = n)
-function extend_to_length!(v::AbstractVector, n)
-    vmax = isempty(v) ? 0 : ignorenan_maximum(v)
-    extend_by_data!(v, vmax .+ (1:(n - length(v))))
-end
-extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x)
-extend_by_data!(v::AbstractVector, x::AbstractVector) =
-    isimmutable(v) ? vcat(v, x) : append!(v, x)
-
-# -------------------------------------------------------
-
-function attr!(series::Series; kw...)
-    plotattributes = KW(kw)
-    Plots.preprocess_attributes!(plotattributes)
-    for (k, v) in plotattributes
-        if haskey(_series_defaults, k)
-            series[k] = v
-        else
-            @warn "unused key $k in series attr"
-        end
-    end
-    _series_updated(series[:subplot].plt, series)
-    series
-end
-
-function attr!(sp::Subplot; kw...)
-    plotattributes = KW(kw)
-    Plots.preprocess_attributes!(plotattributes)
-    for (k, v) in plotattributes
-        if haskey(_subplot_defaults, k)
-            sp[k] = v
-        else
-            @warn "unused key $k in subplot attr"
-        end
-    end
-    sp
-end
-
-# -------------------------------------------------------
-# push/append for one series
-
-Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
-Base.push!(plt::Plot, i::Integer, args::Real...) = push!(plt.series_list[i], args...)
-Base.append!(plt::Plot, args::AbstractVector) = append!(plt, 1, args...)
-Base.append!(plt::Plot, i::Integer, args::Real...) = append!(plt.series_list[i], args...)
-
-# tuples
-Base.push!(plt::Plot, t::Tuple) = push!(plt, 1, t...)
-Base.push!(plt::Plot, i::Integer, t::Tuple) = push!(plt, i, t...)
-Base.append!(plt::Plot, t::Tuple) = append!(plt, 1, t...)
-Base.append!(plt::Plot, i::Integer, t::Tuple) = append!(plt, i, t...)
-
-# -------------------------------------------------------
-# push/append for all series
-
-# push y[i] to the ith series
-function Base.push!(plt::Plot, y::AVec)
-    ny = length(y)
-    for i in 1:(plt.n)
-        push!(plt, i, y[mod1(i, ny)])
-    end
-    plt
-end
-
-# push y[i] to the ith series
-# same x for each series
-Base.push!(plt::Plot, x::Real, y::AVec) = push!(plt, [x], y)
-
-# push (x[i], y[i]) to the ith series
-function Base.push!(plt::Plot, x::AVec, y::AVec)
-    nx = length(x)
-    ny = length(y)
-    for i in 1:(plt.n)
-        push!(plt, i, x[mod1(i, nx)], y[mod1(i, ny)])
-    end
-    plt
-end
-
-# push (x[i], y[i], z[i]) to the ith series
-function Base.push!(plt::Plot, x::AVec, y::AVec, z::AVec)
-    nx = length(x)
-    ny = length(y)
-    nz = length(z)
-    for i in 1:(plt.n)
-        push!(plt, i, x[mod1(i, nx)], y[mod1(i, ny)], z[mod1(i, nz)])
-    end
-    plt
-end
-
-# ---------------------------------------------------------------
-
-# Some conversion functions
-# note: I borrowed these conversion constants from Compose.jl's Measure
-
-inch2px(inches::Real) = float(inches * PX_PER_INCH)
-px2inch(px::Real)     = float(px / PX_PER_INCH)
-inch2mm(inches::Real) = float(inches * MM_PER_INCH)
-mm2inch(mm::Real)     = float(mm / MM_PER_INCH)
-px2mm(px::Real)       = float(px * MM_PER_PX)
-mm2px(mm::Real)       = float(mm / MM_PER_PX)
-
-"Smallest x in plot"
-xmin(plt::Plot) = ignorenan_minimum([
-    ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
-])
-"Largest x in plot"
-xmax(plt::Plot) = ignorenan_maximum([
-    ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list
-])
-
-"Extrema of x-values in plot"
-ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
-
-# ---------------------------------------------------------------
-# get fonts from objects:
-
-plottitlefont(p::Plot) = font(;
-    family = p[:plot_titlefontfamily],
-    pointsize = p[:plot_titlefontsize],
-    valign = p[:plot_titlefontvalign],
-    halign = p[:plot_titlefonthalign],
-    rotation = p[:plot_titlefontrotation],
-    color = p[:plot_titlefontcolor],
-)
-
-colorbartitlefont(sp::Subplot) = font(;
-    family = sp[:colorbar_titlefontfamily],
-    pointsize = sp[:colorbar_titlefontsize],
-    valign = sp[:colorbar_titlefontvalign],
-    halign = sp[:colorbar_titlefonthalign],
-    rotation = sp[:colorbar_titlefontrotation],
-    color = sp[:colorbar_titlefontcolor],
-)
-
-titlefont(sp::Subplot) = font(;
-    family = sp[:titlefontfamily],
-    pointsize = sp[:titlefontsize],
-    valign = sp[:titlefontvalign],
-    halign = sp[:titlefonthalign],
-    rotation = sp[:titlefontrotation],
-    color = sp[:titlefontcolor],
-)
-
-legendfont(sp::Subplot) = font(;
-    family = sp[:legend_font_family],
-    pointsize = sp[:legend_font_pointsize],
-    valign = sp[:legend_font_valign],
-    halign = sp[:legend_font_halign],
-    rotation = sp[:legend_font_rotation],
-    color = sp[:legend_font_color],
-)
-
-legendtitlefont(sp::Subplot) = font(;
-    family = sp[:legend_title_font_family],
-    pointsize = sp[:legend_title_font_pointsize],
-    valign = sp[:legend_title_font_valign],
-    halign = sp[:legend_title_font_halign],
-    rotation = sp[:legend_title_font_rotation],
-    color = sp[:legend_title_font_color],
-)
-
-tickfont(ax::Axis) = font(;
-    family = ax[:tickfontfamily],
-    pointsize = ax[:tickfontsize],
-    valign = ax[:tickfontvalign],
-    halign = ax[:tickfonthalign],
-    rotation = ax[:tickfontrotation],
-    color = ax[:tickfontcolor],
-)
-
-guidefont(ax::Axis) = font(;
-    family = ax[:guidefontfamily],
-    pointsize = ax[:guidefontsize],
-    valign = ax[:guidefontvalign],
-    halign = ax[:guidefonthalign],
-    rotation = ax[:guidefontrotation],
-    color = ax[:guidefontcolor],
-)
-
-# ---------------------------------------------------------------
 # converts unicode scientific notation, as returned by Showoff,
 # to a tex-like format (supported by gr, pyplot, and pgfplots).
 
@@ -1036,7 +752,7 @@ end
 
 function straightline_data(series, expansion_factor = 1)
     sp = series[:subplot]
-    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+    xl, yl = (xlims(sp), ylims(sp))
 
     # handle axes scales
     xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
@@ -1080,7 +796,7 @@ end
 
 function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
-    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+    xl, yl = (xlims(sp), ylims(sp))
 
     # handle axes scales
     xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
@@ -1132,12 +848,6 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X, Y, Z
 end
 
-# cache joined symbols so they can be looked up instead of constructed each time
-const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
-
-get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
-get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
-
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
     replace(s, pat => m -> UnicodeFun.to_latex(m[2:(length(m) - 1)]))
 
@@ -1173,7 +883,7 @@ end
 
 _argument_description(s::Symbol) =
     if s ∈ keys(_arg_desc)
-        aliases = if (al = Plots.aliases(s)) |> length > 0
+        aliases = if (al = Plots.Commons.aliases(s)) |> length > 0
             " Aliases: " * string(Tuple(al)) * '.'
         else
             ""
@@ -1250,6 +960,9 @@ macro ext_imp_use(imp_use::QuoteNode, mod::Symbol, args...)
     Expr(imp_use.value, ex) |> esc
 end
 
+_generate_doclist(attributes) =
+    replace(join(sort(collect(attributes)), "\n- "), "_" => "\\_")
+
 # for UnitfulExt - cannot reside in `UnitfulExt` (macro)
 function protectedstring end  # COV_EXCL_LINE
 
@@ -1272,3 +985,10 @@ end
 
 # for `PGFPlotsx` together with `UnitfulExt`
 function pgfx_sanitize_string end  # COV_EXCL_LINE
+
+function extrema_plus_buffer(v, buffmult = 0.2)
+    vmin, vmax = ignorenan_extrema(v)
+    vdiff = vmax - vmin
+    buffer = vdiff * buffmult
+    vmin - buffer, vmax + buffer
+end

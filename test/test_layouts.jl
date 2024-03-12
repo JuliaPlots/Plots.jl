@@ -85,7 +85,7 @@ end
     @test gl isa Plots.GridLayout
     @test length(gl) == 1
     @test size(gl) == (1, 1)
-    @test Plots.layout_args(gl) == (gl, 1)
+    @test Plots.layout_attrs(gl) == (gl, 1)
 
     @test size(pl, 1) == 2
     @test size(pl, 2) == 2

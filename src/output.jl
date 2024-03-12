@@ -1,5 +1,6 @@
+struct PlotsDisplay <: AbstractDisplay end
 
-defaultOutputFormat(plt::Plot) = "png"
+default_output_format(plt::Plot) = "png"
 
 function png(plt::Plot, fn)
     fn = addExtension(fn, "png")
@@ -141,7 +142,7 @@ function savefig(plt::Plot, fn) # fn might be an `AbstractString` or an `Abstrac
     # get the extension
     _, ext = splitext(fn)
     ext = chop(ext, head = 1, tail = 0)
-    isempty(ext) && (ext = defaultOutputFormat(plt))
+    isempty(ext) && (ext = default_output_format(plt))
 
     # save it
     if haskey(_savemap, ext)
@@ -178,7 +179,7 @@ end
 # ---------------------------------------------------------
 
 const _best_html_output_type =
-    KW(:pyplot => :png, :unicodeplots => :txt, :plotlyjs => :html, :plotly => :html)
+    KW(:pythonplot => :png, :unicodeplots => :txt, :plotlyjs => :html, :plotly => :html)
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
 function _show(io::IO, ::MIME"text/html", plt::Plot)
@@ -240,7 +241,7 @@ closeall() = closeall(backend())
 
 # COV_EXCL_START
 
-Base.showable(::MIME"text/html", plt::Plot{UnicodePlotsBackend}) = false  # Pluto
+# Base.showable(::MIME"text/html", plt::Plot{UnicodePlotsBackend}) = false  # Pluto
 
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)

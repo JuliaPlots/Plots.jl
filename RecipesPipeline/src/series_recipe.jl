@@ -15,7 +15,7 @@ function _process_seriesrecipes!(plt, kw_list)
     end
     process_sliced_series_attributes!(plt, kw_list)
     for kw in kw_list
-        series_attr = DefaultsDict(kw, series_defaults(plt))
+        series_attrs = DefaultsDict(kw, series_defaults(plt))
         # now we have a fully specified series, with colors chosen. we must recursively
         # handle series recipes, which dispatch on seriestype. If a backend does not
         # natively support a seriestype, we check for a recipe that will convert that
@@ -24,7 +24,7 @@ function _process_seriesrecipes!(plt, kw_list)
         # really a filled step plot, and a step plot is really just a path. So any backend
         # that supports drawing a path will implicitly be able to support step, bar, and
         # histogram plots (and any recipes that use those components).
-        _process_seriesrecipe(plt, series_attr)
+        _process_seriesrecipe(plt, series_attrs)
     end
 end
 

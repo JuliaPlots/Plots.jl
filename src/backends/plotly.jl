@@ -1,18 +1,196 @@
 # https://plot.ly/javascript/getting-started
+module Plotly
 
-_plotly_framestyle(style::Symbol) =
-    if style in (:box, :axes, :zerolines, :grid, :none)
-        style
-    else
-        default_style = get((semi = :box, origin = :zerolines), style, :axes)
-        @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
-        default_style
-    end
-
-# --------------------------------------------------------------------------------------
+export PlotlyBackend, plotly_show_js, plotly_series, plotly_layout, embeddable_html
 
 using UUIDs
+using Statistics: mean
+using Plots: bbox_to_pcts, labelfunc_tex, is_2tuple, ticks_type, recursive_merge
+using Plots.Annotations
+using Plots.Axes
+using Plots.Colorbars
+using Plots.Colors: Colorant
+using Plots.Commons
+using Plots.Fonts
+using Plots.Fonts: PlotText
+using Plots.PlotMeasures
+using Plots.PlotsPlots
+using Plots.PlotsSeries
+using Plots.PlotUtils: PlotUtils, ColorGradient, rgba_string, rgb_string
+using Plots.RecipesPipeline: RecipesPipeline
+using Plots.Subplots
+using Plots.Surfaces
+using Plots.Ticks
+import Plots: labelfunc, _show, _display, default_output_format
+import Plots: backend_name, backend_package_name
 
+struct PlotlyBackend <: Plots.AbstractBackend end
+Plots._backendType[:plotly] = PlotlyBackend
+Plots._backendSymbol[PlotlyBackend] = :plotly
+
+push!(Plots._initialized_backends, :plotly)
+backend_name(::PlotlyBackend) = :plotly
+backend_package_name(::PlotlyBackend) = backend_package_name(:plotly)
+
+const _plotly_attrs = merge_with_base_supported([
+    :annotations,
+    :legend_background_color,
+    :background_color_inside,
+    :background_color_outside,
+    :legend_foreground_color,
+    :foreground_color_guide,
+    :foreground_color_grid,
+    :foreground_color_axis,
+    :foreground_color_text,
+    :foreground_color_border,
+    :foreground_color_title,
+    :label,
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linestyle,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :markerstrokestyle,
+    :fill,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
+    :fontfamily,
+    :fontfamily_subplot,
+    :bins,
+    :title,
+    :titlelocation,
+    :titlefontfamily,
+    :titlefontsize,
+    :titlefonthalign,
+    :titlefontvalign,
+    :titlefontcolor,
+    :legend_column,
+    :legend_font,
+    :legend_font_family,
+    :legend_font_pointsize,
+    :legend_font_color,
+    :legend_title,
+    :legend_title_font_color,
+    :legend_title_font_family,
+    :legend_title_font_pointsize,
+    :tickfontfamily,
+    :tickfontsize,
+    :tickfontcolor,
+    :guidefontfamily,
+    :guidefontsize,
+    :guidefontcolor,
+    :window_title,
+    :arrow,
+    :guide,
+    :widen,
+    :lims,
+    :line,
+    :ticks,
+    :scale,
+    :flip,
+    :rotation,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    :gridalpha,
+    :gridlinewidth,
+    :legend,
+    :colorbar,
+    :colorbar_title,
+    :colorbar_entry,
+    :marker_z,
+    :fill_z,
+    :line_z,
+    :levels,
+    :ribbon,
+    :quiver,
+    :orientation,
+    # :overwrite_figure,
+    :polar,
+    :plot_title,
+    :plot_titlefontcolor,
+    :plot_titlefontfamily,
+    :plot_titlefontsize,
+    :plot_titlelocation,
+    :plot_titlevspan,
+    :normalize,
+    :weights,
+    # :contours,
+    :aspect_ratio,
+    :hover,
+    :inset_subplots,
+    :bar_width,
+    :clims,
+    :framestyle,
+    :tick_direction,
+    :camera,
+    :contour_labels,
+    :connections,
+    :xformatter,
+    :xshowaxis,
+    :xguidefont,
+    :yformatter,
+    :yshowaxis,
+    :yguidefont,
+    :zformatter,
+    :zguidefont,
+])
+
+const _plotly_seriestypes = [
+    :path,
+    :scatter,
+    :heatmap,
+    :contour,
+    :surface,
+    :wireframe,
+    :path3d,
+    :scatter3d,
+    :shape,
+    :scattergl,
+    :straightline,
+    :mesh3d,
+]
+const _plotly_styles = [:auto, :solid, :dash, :dot, :dashdot]
+const _plotly_markers = [
+    :none,
+    :auto,
+    :circle,
+    :rect,
+    :diamond,
+    :utriangle,
+    :dtriangle,
+    :cross,
+    :xcross,
+    :pentagon,
+    :hexagon,
+    :octagon,
+    :vline,
+    :hline,
+    :x,
+]
+const _plotly_scales = [:identity, :log10]
+
+default_output_format(plt::Plot{PlotlyBackend}) = "html"
+
+for s in (:attr, :seriestype, :marker, :style, :scale)
+    f1 = Symbol("is_", s, "_supported")
+    f2 = Symbol("supported_", s, "s")
+    v = Symbol("_plotly_", s, "s")
+    eval(quote
+        Plots.$f1(::PlotlyBackend, $s::Symbol) = $s in $v
+        Plots.$f2(::PlotlyBackend) = sort(collect($v))
+    end)
+end
 # ----------------------------------------------------------------
 
 function labelfunc(scale::Symbol, backend::PlotlyBackend)
@@ -24,6 +202,15 @@ function labelfunc(scale::Symbol, backend::PlotlyBackend)
         replace(sup_x, "-" => "−")
     end
 end
+
+_plotly_framestyle(style::Symbol) =
+    if style in (:box, :axes, :zerolines, :grid, :none)
+        style
+    else
+        default_style = get((semi = :box, origin = :zerolines), style, :axes)
+        @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
+        default_style
+    end
 
 plotly_font(font::Font, color = font.color) = KW(
     :family => font.family,
@@ -159,7 +346,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         # ticks
         if axis[:ticks] !== :native
             ticks = get_ticks(sp, axis)
-            ttype = ticksType(ticks)
+            ttype = ticks_type(ticks)
             if ttype === :ticks
                 ax[:tickmode] = "array"
                 ax[:tickvals] = ticks
@@ -1134,3 +1321,4 @@ _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend})
 _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) = write(io, embeddable_html(plt))
 
 _display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
+end # module

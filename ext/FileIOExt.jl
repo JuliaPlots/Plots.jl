@@ -25,12 +25,14 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     write(io, read(open(pngfn), String))
 end
 
-for be in (
-    Plots.PGFPlotsBackend,  # NOTE: I guess this can be removed in Plots@2.0
-)
-    showable(MIME"image/png"(), Plot{be}) && continue
-    @eval Plots._show(io::IO, mime::MIME"image/png", plt::Plot{$be}) =
-        _show_pdfbackends(io, mime, plt)
-end
+# Possibly need to create another extension that has both pgfplotsx and showio
+# delete for now, as testing for pgfplotsx is hard; TODO restore later at @2.0
+# for be in (
+#     Plots.PGFPlotsBackend,  # NOTE: I guess this can be removed in Plots@2.0
+# )
+#     showable(MIME"image/png"(), Plot{be}) && continue
+#     @eval Plots._show(io::IO, mime::MIME"image/png", plt::Plot{$be}) =
+#         _show_pdfbackends(io, mime, plt)
+# end
 
 end  # module

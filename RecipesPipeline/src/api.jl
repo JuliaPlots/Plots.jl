@@ -87,12 +87,12 @@ is_axis_attribute(plt, attr) = false
 # ### processing of axis args
 # axis args before type recipes should still be mapped to all axes
 """
-    preprocess_axis_args!(plt, plotattributes)
+    preprocess_axis_attrs!(plt, plotattributes)
 
 Preprocessing of axis attributes.
 Prepends the axis letter to axis attributes by default.
 """
-function preprocess_axis_args!(plt, plotattributes)
+function preprocess_axis_attrs!(plt, plotattributes)
     for (k, v) in plotattributes
         is_axis_attribute(plt, k) || continue
         pop!(plotattributes, k)
@@ -103,22 +103,22 @@ function preprocess_axis_args!(plt, plotattributes)
 end
 
 """
-    preprocess_axis_args!(plt, plotattributes, letter)
+    preprocess_axis_attrs!(plt, plotattributes, letter)
 
 This version additionally stores the letter name in  `plotattributes[:letter]`.
 """
-function preprocess_axis_args!(plt, plotattributes, letter)
+function preprocess_axis_attrs!(plt, plotattributes, letter)
     plotattributes[:letter] = letter
-    preprocess_axis_args!(plt, plotattributes)
+    preprocess_axis_attrs!(plt, plotattributes)
 end
 
 # axis args in type recipes should only be applied to the current axis
 """
-    postprocess_axis_args!(plt, plotattributes, letter)
+    postprocess_axis_attrs!(plt, plotattributes, letter)
 
-Removes the `:letter` key from `plotattributes` and does the same prepending of the letters as `preprocess_axis_args!`.
+Removes the `:letter` key from `plotattributes` and does the same prepending of the letters as `preprocess_axis_attrs!`.
 """
-function postprocess_axis_args!(plt, plotattributes, letter)
+function postprocess_axis_attrs!(plt, plotattributes, letter)
     pop!(plotattributes, :letter)
     letter in (:x, :y, :z) || return
     for (k, v) in plotattributes

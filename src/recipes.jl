@@ -28,9 +28,9 @@ end
 # get a list of all seriestypes
 function all_seriestypes()
     sts = Set{Symbol}(keys(_series_recipe_deps))
-    for bsym in backends()
-        btype = _backendType[bsym]
-        sts = union(sts, Set{Symbol}(supported_seriestypes(btype())))
+    for bsym in _initialized_backends
+        be = _backend_instance(bsym)
+        sts = union(sts, Set{Symbol}(supported_seriestypes(be)))
     end
     sts |> collect |> sort
 end
@@ -373,7 +373,7 @@ end
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
-    for rng in iter_segments(args...)
+    for rng in PlotsSeries.iter_segments(args...)
         length(rng) < 2 && continue
         ts = range(0, stop = 1, length = npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x, rng), t), ts))
@@ -408,7 +408,7 @@ end
     ywiden --> false
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
-    axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
+    axis = plotattributes[:subplot][:xaxis]
     cv = map(xi -> discrete_value!(plotattributes, :x, xi)[1], procx)
     procx = if nx == ny
         cv
@@ -423,7 +423,7 @@ end
     # compute half-width of bars
     bw = plotattributes[:bar_width]
     hw = if bw === nothing
-        0.5_bar_width * if nx > 1
+        0.5Commons._bar_width * if nx > 1
             ignorenan_minimum(filter(x -> x > 0, diff(sort(procx))))
         else
             1
@@ -436,12 +436,12 @@ end
     if (fillto = plotattributes[:fillrange]) === nothing
         fillto = 0
     end
-    if yscale in _logScales && !all(_is_positive, fillto)
+    if yscale in _log_scales && !all(_is_positive, fillto)
         # github.com/JuliaPlots/Plots.jl/issues/4502
         # https://github.com/JuliaPlots/Plots.jl/issues/4774
         T = float(eltype(y))
         min_y = NaNMath.minimum(y)
-        base = _logScaleBases[yscale]
+        base = _log_scale_bases[yscale]
         baseline = floor_base(min_y, base)
         if min_y == baseline
             baseline /= base
@@ -462,16 +462,10 @@ end
     end
 
     # widen limits out a bit
-    expand_extrema!(axis, scale_lims(ignorenan_extrema(xseg.pts)..., default_widen_factor))
-
-    # switch back
-    if !isvertical(plotattributes)
-        xseg, yseg = yseg, xseg
-        x, y = y, x
-    end
-
-    # reset orientation
-    orientation := default(:orientation)
+    expand_extrema!(
+        axis,
+        Axes.scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor),
+    )
 
     # draw the bar shapes
     @series begin
@@ -552,11 +546,11 @@ _scale_adjusted_values(
     ::Type{T},
     V::AbstractVector,
     scale::Symbol,
-) where {T<:AbstractFloat} = scale in _logScales ? _positive_else_nan.(T, V) : T.(V)
+) where {T<:AbstractFloat} = scale in _log_scales ? _positive_else_nan.(T, V) : T.(V)
 
 _binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real} =
-    if scale in _logScales
-        isnan(min_value) ? T(1e-3) : floor_base(min_value, _logScaleBases[scale])
+    if scale in _log_scales
+        isnan(min_value) ? T(1e-3) : floor_base(min_value, _log_scale_bases[scale])
     else
         zero(T)
     end
@@ -622,8 +616,8 @@ end
 @specialize
 
 function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::Symbol)
-    log_scale_x = xscale in _logScales
-    log_scale_y = yscale in _logScales
+    log_scale_x = xscale in _log_scales
+    log_scale_y = yscale in _log_scales
 
     nbins = length(eachindex(weights))
     if length(eachindex(edge)) != nbins + 1
@@ -645,7 +639,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
         w, it_state_w = it_tuple_w
 
         if log_scale_x && a ≈ 0
-            a = oftype(a, b / _logScaleBases[xscale]^3)
+            a = oftype(a, b / _log_scale_bases[xscale]^3)
         end
 
         if isnan(w)
@@ -678,14 +672,10 @@ end
 
 @recipe function f(::Type{Val{:stepbins}}, x, y, z)  # COV_EXCL_LINE
     @nospecialize
-    axis = plotattributes[:subplot][Plots.isvertical(plotattributes) ? :xaxis : :yaxis]
 
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
 
     xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
-    if !isvertical(plotattributes)
-        xpts, ypts = ypts, xpts
-    end
 
     # create a secondary series for the markers
     if plotattributes[:markershape] !== :none
@@ -1088,10 +1078,11 @@ end
 # ---------------------------------------------------------------------------
 # Error Bars
 
-@attributes function error_style!(plotattributes::AKW)
+Commons.@attributes function error_style!(plotattributes::AKW)
     # errorbar color should soley determined by markerstrokecolor
-    haskey(plotattributes, :marker_z) && reset_kw!(plotattributes, :marker_z)
-    haskey(plotattributes, :line_z) && reset_kw!(plotattributes, :line_z)
+    haskey(plotattributes, :marker_z) &&
+        RecipesPipeline.reset_kw!(plotattributes, :marker_z)
+    haskey(plotattributes, :line_z) && RecipesPipeline.reset_kw!(plotattributes, :line_z)
 
     msc = if (msc = plotattributes[:markerstrokecolor]) === :match
         plotattributes[:subplot][:foreground_color_subplot]
@@ -1143,7 +1134,7 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
 @nospecialize
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)  # COV_EXCL_LINE
-    error_style!(plotattributes)
+    Commons.error_style!(plotattributes)
     markershape := :vline
     xerr = error_zipit(plotattributes[:xerror])
     if z === nothing
@@ -1160,7 +1151,7 @@ end
 @deps xerror path
 
 @recipe function f(::Type{Val{:yerror}}, x, y, z)  # COV_EXCL_LINE
-    error_style!(plotattributes)
+    Commons.error_style!(plotattributes)
     markershape := :hline
     yerr = error_zipit(plotattributes[:yerror])
     if z === nothing
@@ -1177,7 +1168,7 @@ end
 @deps yerror path
 
 @recipe function f(::Type{Val{:zerror}}, x, y, z)  # COV_EXCL_LINE
-    error_style!(plotattributes)
+    Commons.error_style!(plotattributes)
     markershape := :hline
     if z !== nothing
         zerr = error_zipit(plotattributes[:zerror])
@@ -1589,7 +1580,7 @@ end
     for c in axes(weights, 2)
         sx = vcat(weights[:, c], c == 1 ? zeros(n) : reverse(weights[:, c - 1]))
         sy = vcat(returns, reverse(returns))
-        @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
+        @series (sx, sy)
     end
 end
 

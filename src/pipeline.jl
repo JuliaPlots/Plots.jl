@@ -10,7 +10,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
 )
     pkeys = keys(plotattributes)
     for k in pkeys
-        if (dk = get(_keyAliases, k, nothing)) !== nothing
+        if (dk = get(Commons._keyAliases, k, nothing)) !== nothing
             kv = RecipesPipeline.pop_kw!(plotattributes, k)
             dk ∈ pkeys || (plotattributes[dk] = kv)
         end
@@ -31,20 +31,19 @@ RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
     )
 
 ## Preprocessing attributes
-function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
+function RecipesPipeline.preprocess_axis_attrs!(plt::Plot, plotattributes, letter)
     # Fix letter for seriestypes that are x only but data gets passed as y
-    if treats_y_as_x(get(plotattributes, :seriestype, :path)) &&
-       get(plotattributes, :orientation, :vertical) === :vertical
+    if treats_y_as_x(get(plotattributes, :seriestype, :path))
         letter = :x
     end
 
     plotattributes[:letter] = letter
-    RecipesPipeline.preprocess_axis_args!(plt, plotattributes)
+    RecipesPipeline.preprocess_axis_attrs!(plt, plotattributes)
 end
 
-RecipesPipeline.is_axis_attribute(plt::Plot, attr) = is_axis_attr_noletter(attr) # in src/args.jl
+RecipesPipeline.is_axis_attribute(plt::Plot, attr) = Commons.is_axis_attr_noletter(attr) # in src/args.jl
 
-RecipesPipeline.is_subplot_attribute(plt::Plot, attr) = is_subplot_attr(attr) # in src/args.jl
+RecipesPipeline.is_subplot_attribute(plt::Plot, attr) = Commons.is_subplot_attrs(attr) # in src/args.jl
 
 ## User recipes
 
@@ -62,13 +61,13 @@ function RecipesPipeline.process_userrecipe!(plt::Plot, kw_list, kw)
 end
 
 function _preprocess_userrecipe(kw::AKW)
-    _add_markershape(kw)
+    Commons._add_markershape(kw)
 
     if get(kw, :permute, default(:permute)) !== :none
         l1, l2 = kw[:permute]
-        for k in _axis_args
-            k1 = _attrsymbolcache[l1][k]
-            k2 = _attrsymbolcache[l2][k]
+        for k in Commons._axis_attrs
+            k1 = Commons._attrsymbolcache[l1][k]
+            k2 = Commons._attrsymbolcache[l2][k]
             kwk = keys(kw)
             if k1 in kwk || k2 in kwk
                 kw[k1], kw[k2] = get(kw, k2, default(k2)), get(kw, k1, default(k1))
@@ -140,7 +139,7 @@ RecipesPipeline.get_axis_limits(plt::Plot, letter) = axis_limits(plt[1], letter,
 
 ## Plot recipes
 
-RecipesPipeline.type_alias(plt::Plot, st) = get(_typeAliases, st, st)
+RecipesPipeline.type_alias(plt::Plot, st) = get(Commons._typeAliases, st, st)
 
 ## Plot setup
 
@@ -200,7 +199,7 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     end
 
     # TODO: init subplots here
-    _update_plot_args(plt, plotattributes)
+    _update_plot_attrs(plt, plotattributes)
     if !plt.init
         plt.o = Base.invokelatest(_create_backend_figure, plt)
 
@@ -258,14 +257,14 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         # extract subplot/axis attributes from kw and add to sp_attr
         attr = KW()
         for (k, v) in collect(kw)
-            if is_subplot_attr(k) || is_axis_attr(k)
+            if Commons.is_subplot_attrs(k) || Commons.is_axis_attrs(k)
                 v = pop!(kw, k)
                 if sps isa AbstractArray && v isa AbstractArray && length(v) == length(sps)
                     v = v[series_idx(kw_list, kw)]
                 end
                 attr[k] = v
             end
-            if is_axis_attr_noletter(k)
+            if Commons.is_axis_attr_noletter(k)
                 v = pop!(kw, k)
                 if sps isa AbstractArray && v isa AbstractArray && length(v) == length(sps)
                     v = v[series_idx(kw_list, kw)]
@@ -291,7 +290,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         else
             get(sp_attrs, sp, KW())
         end
-        _update_subplot_args(plt, sp, attr, idx, false)
+        PlotsPlots._update_subplot_attrs(plt, sp, attr, idx, false)
     end
 
     # do we need to link any axes together?
@@ -316,8 +315,7 @@ function _add_plot_title!(plt)
                 subplot = Subplot(plt.backend, parent = plt.layout[1, 1])
             plt.layout.grid[2, 1] = the_layout
             subplot.plt = plt
-
-            top = plt.backend isa PyPlotBackend ? nothing : 0mm
+            top = plt.backend isa get(_backendType, :pythonplot, NoBackend) ? nothing : 0mm
             bot = 0mm
             plt[:force_minpad] = nothing, top, nothing, bot
             subplot[:subplot_index] = last(plt.subplots)[:subplot_index] + 1
@@ -345,7 +343,7 @@ function RecipesPipeline.slice_series_attributes!(plt::Plot, kw_list, kw)
     sp::Subplot = kw[:subplot]
     # in series attributes given as vector with one element per series,
     # select the value for current series
-    _slice_series_args!(kw, plt, sp, series_idx(kw_list, kw))
+    _slice_series_attrs!(kw, plt, sp, series_idx(kw_list, kw))
     nothing
 end
 
@@ -383,8 +381,8 @@ end
 function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st::Symbol = plotattributes[:seriestype]
     sp::Subplot{T} = plotattributes[:subplot]
-    sp_idx = get_subplot_index(plt, sp)
-    _update_subplot_args(plt, sp, plotattributes, sp_idx, true)
+    sp_idx = PlotsPlots.get_subplot_index(plt, sp)
+    PlotsPlots._update_subplot_attrs(plt, sp, plotattributes, sp_idx, true)
 
     st = _override_seriestype_check(plotattributes, st)
 
@@ -403,24 +401,6 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     end
     sp
 end
-
-function _override_seriestype_check(plotattributes::AKW, st::Symbol)
-    # do we want to override the series type?
-    if !RecipesPipeline.is3d(st) && st ∉ (:contour, :contour3d, :quiver)
-        if (z = plotattributes[:z]) !== nothing &&
-           size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)
-            st = st === :scatter ? :scatter3d : :path3d
-            plotattributes[:seriestype] = st
-        end
-    end
-    st
-end
-
-needs_any_3d_axes(sp::Subplot) = any(
-    RecipesPipeline.needs_3d_axes(
-        _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
-    ) for s in series_list(sp)
-)
 
 function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
     # adjust extrema and discrete info
@@ -441,7 +421,7 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
 end
 
 function _add_the_series(plt, sp, plotattributes)
-    extra_kwargs = warn_on_unsupported_args(plt.backend, plotattributes)
+    extra_kwargs = warn_on_unsupported_attrs(plt.backend, plotattributes)
     if (kw = plt[:extra_kwargs]) isa AbstractDict
         plt[:extra_plot_kwargs] = get(kw, :plot, KW())
         sp[:extra_kwargs] = get(kw, :subplot, KW())

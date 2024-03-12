@@ -179,7 +179,8 @@ const _examples = PlotExample[
     PlotExample( # 13
         "Marker types",
         quote
-            markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)
+            markers =
+                filter(m -> m in Plots.supported_markers(), Plots.Commons._shape_keys)
             markers = permutedims(markers)
             n = length(markers)
             x = range(0, stop = 10, length = n + 2)[2:(end - 1)]
@@ -1249,8 +1250,7 @@ const _examples = PlotExample[
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [2, 31]
 _backend_skips = Dict(
-    :gr => [],
-    :pyplot => [],
+    :gr => [25, 30], # TODO: add back when StatsPlots is available
     :plotlyjs => [
         21,
         24,
@@ -1330,7 +1330,8 @@ _backend_skips = Dict(
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
-_backend_skips[:pythonplot] = _backend_skips[:pyplot]
+
+_backend_skips[:pythonplot] = Int[]
 
 # ---------------------------------------------------------------------------------
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
@@ -1365,7 +1366,7 @@ function test_examples(
     Base.eval(m, quote
         using Random
         using Plots
-        Plots.debug!($debug)
+        Plots.Commons.debug!($debug)
         backend($(QuoteNode(pkgname)))
         rng = $rng
         rng === nothing || Random.seed!(rng, Plots.PLOTS_SEED)

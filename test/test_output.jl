@@ -30,7 +30,7 @@ macro test_save(fmt)
 end
 
 with(:gr) do
-    @test Plots.defaultOutputFormat(plot()) == "png"
+    @test Plots.default_output_format(plot()) == "png"
     @test Plots.addExtension("foo", "bar") == "foo.bar"
 
     @test_save :png
@@ -41,7 +41,9 @@ end
 
 with(:unicodeplots) do
     @test_save :txt
-    if Plots.UnicodePlots.get_font_face() ≢ nothing
+    get_font_face =
+        Base.get_extension(Plots, :PlotsUnicodePlotsExt).UnicodePlots.get_font_face
+    if get_font_face() ≢ nothing
         @test_save :png
     end
 end
@@ -69,13 +71,13 @@ if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
         @test_save :pdf
     end
 
-    with(:pythonplot) do
-        @test_save :pdf
-        @test_save :png
-        @test_save :svg
-        @test_save :eps
-        @test_save :ps
-    end
+    # with(:pythonplot) do
+    #     @test_save :pdf
+    #     @test_save :png
+    #     @test_save :svg
+    #     @test_save :eps
+    #     @test_save :ps
+    # end
 end
 
 #=

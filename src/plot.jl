@@ -1,4 +1,5 @@
 
+struct PlaceHolder end
 mutable struct CurrentPlot
     nullableplot::Union{AbstractPlot,Nothing}
 end
@@ -78,27 +79,27 @@ Pass any attribute to `plotattr` as a String to look up its docstring, e.g., `pl
 # Extended help
 
 ## Series attributes
-- $(_generate_doclist(_all_series_args))
+- $(_generate_doclist(Commons._all_series_attrs))
 
 ## Axis attributes
 Prepend these with the axis letter (x, y or z)
-- $(_generate_doclist(_all_axis_args))
+- $(_generate_doclist(Commons._all_axis_attrs))
 
 ## Subplot attributes
-- $(_generate_doclist(_all_subplot_args))
+- $(_generate_doclist(Commons._all_subplot_attrs))
 
 ## Plot attributes
-- $(_generate_doclist(_all_plot_args))
+- $(_generate_doclist(Commons._all_plot_attrs))
 """
 function RecipesBase.plot(args...; kw...)
     @nospecialize
     # this creates a new plot with args/kw and sets it to be the current plot
     plotattributes = KW(kw)
-    Plots.preprocess_attributes!(plotattributes)
+    Plots.Commons.preprocess_attributes!(plotattributes)
 
     # create an empty Plot then process
     plt = Plot()
-    # plt.user_attr = plotattributes
+    # plt.user_attrs = plotattributes
     _plot!(plt, plotattributes, args)
 end
 
@@ -118,7 +119,7 @@ function plot!(
 )
     @nospecialize
     plotattributes = KW(kw)
-    Plots.preprocess_attributes!(plotattributes)
+    Plots.Commons.preprocess_attributes!(plotattributes)
 
     # build our plot vector from the args
     plts = Plot[plt1]
@@ -127,7 +128,7 @@ function plot!(
     n = length(plts)
 
     # compute the layout
-    layout = layout_args(plotattributes, n)[1]
+    layout = layout_attrs(plotattributes, n)[1]
     num_sp = sum(length(p.subplots) for p in plts)
 
     # create a new plot object, with subplot list/map made of existing subplots.
@@ -135,24 +136,24 @@ function plot!(
     # note: all subplots and series "belong" to this new plot...
     plt = Plot()
 
-    # TODO: build the user_attr dict by creating "Any matrices" for the args of each subplot
+    # TODO: build the user_attrs dict by creating "Any matrices" for the args of each subplot
 
-    # TODO: replace this with proper processing from a merged user_attr KW
+    # TODO: replace this with proper processing from a merged user_attrs KW
     # update plot args
     for p in plts
         plt.attr = merge(p.attr, plt.attr)  # plt.attr preempts p.attr (for `twinx`)
         plt.n += p.n
     end
     plt[:size] = last(sort(getindex.(plts, :size), by = x -> x[1] * x[2]))
-    _update_plot_args(plt, plotattributes)
+    _update_plot_attrs(plt, plotattributes)
 
     # pass new plot to the backend
     plt.o = _create_backend_figure(plt)
     plt.init = true
 
-    series_attr = KW()
+    series_attrs = KW()
     for (k, v) in plotattributes
-        is_series_attr(k) && (series_attr[k] = pop!(plotattributes, k))
+        Commons.is_series_attrs(k) && (series_attrs[k] = pop!(plotattributes, k))
     end
 
     # create the layout
@@ -170,8 +171,8 @@ function plot!(
         sp.plt = plt
         sp.attr[:subplot_index] = idx
         for series in serieslist
-            merge!(series.plotattributes, series_attr)
-            _slice_series_args!(series.plotattributes, plt, sp, cmdidx)
+            merge!(series.plotattributes, series_attrs)
+            _slice_series_attrs!(series.plotattributes, plt, sp, cmdidx)
             push!(plt.series_list, series)
             _series_added(plt, series)
             cmdidx += 1
@@ -181,7 +182,13 @@ function plot!(
 
     # first apply any args for the subplots
     for (idx, sp) in enumerate(plt.subplots)
-        _update_subplot_args(plt, sp, idx == ttl_idx ? KW() : plotattributes, idx, false)
+        PlotsPlots._update_subplot_attrs(
+            plt,
+            sp,
+            idx == ttl_idx ? KW() : plotattributes,
+            idx,
+            false,
+        )
     end
 
     # finish up
@@ -208,8 +215,8 @@ plot(plt::Plot, args...; kw...) = plot!(deepcopy(plt), args...; kw...)
 function plot!(plt::Plot, args...; kw...)
     @nospecialize
     plotattributes = KW(kw)
-    Plots.preprocess_attributes!(plotattributes)
-    # merge!(plt.user_attr, plotattributes)
+    Plots.Commons.preprocess_attributes!(plotattributes)
+    # merge!(plt.user_attrs, plotattributes)
     _plot!(plt, plotattributes, args)
 end
 

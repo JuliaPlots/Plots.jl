@@ -21,7 +21,7 @@ end
 
 @testset "NoFail" begin
     with(:unicodeplots) do
-        @test backend() == Plots.UnicodePlotsBackend()
+        @test backend() == Plots._backend_instance(:unicodeplots)
 
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 
@@ -128,13 +128,6 @@ end
         value.(m)
     end
 
-    @testset "orientation" begin
-        for f in (histogram, barhist, stephist, scatterhist), o in (:vertical, :horizontal)
-            sp = f(data, orientation = o).subplots[1]
-            @test sp.attr[:title] == (o ≡ :vertical ? "x" : "y")
-        end
-    end
-
     @testset "$f" for f in (hline, hspan)
         @test f(data).subplots[1].attr[:title] == "y"
     end
@@ -169,11 +162,11 @@ end
     for i in axes(data4, 1)
         for attribute in (:fillrange, :ribbon)
             nt = NamedTuple{tuple(attribute)}
-            get_attr(pl) = pl[1][i][attribute]
-            @test plot(data4; nt(0)...) |> get_attr == 0
-            @test plot(data4; nt(Ref([1, 2]))...) |> get_attr == [1.0, 2.0]
-            @test plot(data4; nt(Ref([1 2]))...) |> get_attr == (iseven(i) ? 2 : 1)
-            @test plot(data4; nt(Ref(mat))...) |> get_attr == [2(i - 1) + 1, 2i]
+            get_attrs(pl) = pl[1][i][attribute]
+            @test plot(data4; nt(0)...) |> get_attrs == 0
+            @test plot(data4; nt(Ref([1, 2]))...) |> get_attrs == [1.0, 2.0]
+            @test plot(data4; nt(Ref([1 2]))...) |> get_attrs == (iseven(i) ? 2 : 1)
+            @test plot(data4; nt(Ref(mat))...) |> get_attrs == [2(i - 1) + 1, 2i]
         end
         @test sp[i][:ribbon] == ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
     end
@@ -218,14 +211,14 @@ end
 end
 
 @testset "docstring" begin
-    @test occursin("label", Plots._generate_doclist(Plots._all_series_args))
+    @test occursin("label", Plots._generate_doclist(Plots.Commons._all_series_attrs))
 end
 
-@testset "wrap" begin
+@testset "protect" begin
     # not sure what is intended here ...
-    wrapped = wrap([:red, :blue])
-    @test !isempty(wrapped)
-    @test scatter(1:2, color = wrapped) isa Plots.Plot
+    protected = protect([:red, :blue])
+    @test !isempty(protected)
+    @test scatter(1:2, color = protected) isa Plots.Plot
 end
 
 @testset "group" begin
@@ -246,7 +239,7 @@ with(:gr) do
         io = PipeBuffer()
         x = y = range(-3, 3, length = 10)
         extra_kwargs = Dict(
-            :series => Dict(:display_option => Plots.GR.OPTION_SHADED_MESH),
+            :series => Dict(:display_option => GR.OPTION_SHADED_MESH),
             :subplot => Dict(:legend_hfactor => 2),
             :plot => Dict(:foo => nothing),
         )

@@ -218,7 +218,7 @@ append_unit_if_needed!(attr, key, u) =
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 function append_unit_if_needed!(attr, key, label::Nothing, u)
-    attr[key] = if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
+    attr[key] = if attr[:plot_object].backend == Plots._backend_instance(:pgfplotsx)
         UnitfulString(LaTeXString(latexify(u)), u)
     else
         UnitfulString(string(u), u)
@@ -226,7 +226,7 @@ function append_unit_if_needed!(attr, key, label::Nothing, u)
 end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
+    if attr[:plot_object].backend == Plots._backend_instance(:pgfplotsx)
         attr[key] = UnitfulString(
             LaTeXString(
                 format_unit_label(
@@ -323,9 +323,9 @@ end
 #==================#
 Plots._transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Quantity} =
     _ustrip.(getaxisunit(axis), ticks)
-Plots.process_limits(lims::AbstractArray{T}, axis) where {T<:Quantity} =
+Plots.Axes.process_limits(lims::AbstractArray{T}, axis) where {T<:Quantity} =
     _ustrip.(getaxisunit(axis), lims)
-Plots.process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
+Plots.Axes.process_limits(lims::Tuple{S,T}, axis) where {S<:Quantity,T<:Quantity} =
     _ustrip.(getaxisunit(axis), lims)
 
 function _ustrip(u, x)

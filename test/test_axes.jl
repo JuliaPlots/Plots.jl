@@ -4,12 +4,12 @@
     @test typeof(axis) == Plots.Axis
     @test Plots.discrete_value!(axis, "HI") == (0.5, 1)
     @test Plots.discrete_value!(axis, :yo) == (1.5, 2)
-    @test Plots.ignorenan_extrema(axis) == (0.5, 1.5)
+    @test Plots.Axes.ignorenan_extrema(axis) == (0.5, 1.5)
     @test axis[:discrete_map] == Dict{Any,Any}(:yo => 2, "HI" => 1)
 
     Plots.discrete_value!(axis, map(i -> "x$i", 1:5))
     Plots.discrete_value!(axis, map(i -> "x$i", 0:2))
-    @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
+    @test Plots.Axes.ignorenan_extrema(axis) == (0.5, 7.5)
 
     # github.com/JuliaPlots/Plots.jl/issues/4375
     for lab in ("foo", :foo)
@@ -50,7 +50,7 @@
 end
 
 @testset "Showaxis" begin
-    for value in Plots._allShowaxisArgs
+    for value in Plots.Commons._all_showaxis_attrs
         @test plot(1:5, showaxis = value)[1][:yaxis][:showaxis] isa Bool
     end
     @test plot(1:5, showaxis = :y)[1][:yaxis][:showaxis]
@@ -82,7 +82,8 @@ end
 end
 
 @testset "Axis limits" begin
-    default_widen(from, to) = Plots.scale_lims(from, to, Plots.default_widen_factor)
+    default_widen(from, to) =
+        Plots.Axes.scale_lims(from, to, Plots.Axes.default_widen_factor)
 
     pl = plot(1:5, xlims = :symmetric, widen = false)
     @test Plots.xlims(pl) == (-5, 5)
@@ -149,9 +150,9 @@ end
 end
 
 @testset "Axis-aliases" begin
-    @test haskey(Plots._keyAliases, :xguideposition)
-    @test haskey(Plots._keyAliases, :x_guide_position)
-    @test !haskey(Plots._keyAliases, :xguide_position)
+    @test haskey(Plots.Commons._keyAliases, :xguideposition)
+    @test haskey(Plots.Commons._keyAliases, :x_guide_position)
+    @test !haskey(Plots.Commons._keyAliases, :xguide_position)
     pl = plot(1:2, xl = "x label")
     @test pl[1][:xaxis][:guide] === "x label"
     pl = plot(1:2, xrange = (0, 3))
@@ -208,7 +209,7 @@ end
 @testset "scale_lims!" begin
     let pl = plot(1:2)
         xl, yl = xlims(pl), ylims(pl)
-        Plots.scale_lims!(:x, 1.1)
+        Plots.Axes.scale_lims!(:x, 1.1)
         @test first(xlims(pl)) < first(xl)
         @test last(xlims(pl)) > last(xl)
         @test ylims(pl) == yl
@@ -216,7 +217,7 @@ end
 
     let pl = plot(1:2)
         xl, yl = xlims(pl), ylims(pl)
-        Plots.scale_lims!(pl, 1.1)
+        Plots.PlotsPlots.scale_lims!(pl, 1.1)
         @test first(xlims(pl)) < first(xl)
         @test last(xlims(pl)) > last(xl)
         @test first(ylims(pl)) < first(yl)
@@ -226,7 +227,7 @@ end
 
 @testset "reset_extrema!" begin
     pl = plot(1:2)
-    Plots.reset_extrema!(pl[1])
+    Plots.Axes.reset_extrema!(pl[1])
     ax = pl[1][:xaxis]
     @test Plots.expand_extrema!(ax, nothing) == ax[:extrema]
     @test Plots.expand_extrema!(ax, true) == ax[:extrema]
@@ -242,9 +243,9 @@ end
     # FIXME in 2.0: this is awful to read, because `minorticks` represent the number of `intervals`
     for minor_intervals in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
         n_minor_ticks_per_major = if minor_intervals isa Bool
-            minor_intervals ? Plots.DEFAULT_MINOR_INTERVALS[] - 1 : 0
+            minor_intervals ? Plots.Ticks.DEFAULT_MINOR_INTERVALS[] - 1 : 0
         elseif minor_intervals === :auto
-            Plots.DEFAULT_MINOR_INTERVALS[] - 1
+            Plots.Ticks.DEFAULT_MINOR_INTERVALS[] - 1
         elseif minor_intervals === :none || minor_intervals isa Nothing
             0
         else

@@ -15,7 +15,7 @@ end
 
 function _theme(s::Symbol, defaults::AKW; kw...)
     # Reset to defaults to overwrite active theme
-    reset_defaults()
+    Commons.reset_defaults()
 
     # Set the theme's gradient as default
     if haskey(defaults, :colorgradient)
@@ -41,11 +41,11 @@ end
 
 _color_functions =
     KW(:protanopic => protanopic, :deuteranopic => deuteranopic, :tritanopic => tritanopic)
-_get_showtheme_args(thm::Symbol) = thm, identity
-_get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func, identity)
+_get_showtheme_attrs(thm::Symbol) = thm, identity
+_get_showtheme_attrs(thm::Symbol, func::Symbol) = thm, get(_color_functions, func, identity)
 
 @recipe function showtheme(st::ShowTheme)
-    thm, cfunc = _get_showtheme_args(st.args...)
+    thm, cfunc = _get_showtheme_attrs(st.args...)
     defaults = PlotThemes._themes[thm].defaults
 
     # get the gradient
@@ -60,7 +60,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
     for k in keys(defaults)
         k in (:colorgradient, :palette) && continue
         def = defaults[k]
-        arg = get(_keyAliases, k, k)
+        arg = get(Commons._keyAliases, k, k)
         plotattributes[arg] = if typeof(def) <: Colorant
             cfunc(RGB(def))
         elseif eltype(def) <: Colorant
