@@ -104,6 +104,8 @@ const gr_font_family = Dict(
     "computer modern" => 232,
     "dejavu sans" => 233,
 )
+extra_supported_kws(::GRBackend) =
+    [:legend_hfactor, :legend_wfactor, :nx, :ny, :display_option]
 
 mutable struct GRViewport{T}
     xmin::T
