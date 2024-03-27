@@ -60,6 +60,7 @@ function reference_file(backend, version, i)
     fn = ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
     for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
+        ver > version && continue
         if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
             reffn = tmpfn
             break
