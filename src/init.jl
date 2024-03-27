@@ -2,19 +2,36 @@ using Scratch
 using REPL
 import Base64
 
+"""
+Reference to hold path of local plotly temp file. Initialized to `nothing`.
+"""
 const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+
+"""
+Reference to hold cached plotly data URL. Initialized to `nothing`.
+"""
 const _plotly_data_url_cached = Ref{Union{Nothing,String}}(nothing)
+
 _plotly_data_url() =
     if _plotly_data_url_cached[] === nothing
         _plotly_data_url_cached[] = "data:text/javascript;base64,$(Base64.base64encode(read(_plotly_local_file_path)))"
     else
         _plotly_data_url_cached[]
     end
-# use fixed version of Plotly instead of the latest one for stable dependency
-# see github.com/JuliaPlots/Plots.jl/pull/2779
+
+"""
+use fixed version of Plotly instead of the latest one for stable dependency
+"""
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 
+"""
+Whether to use local embedded or local dependencies instead of CDN.
+"""
 const _use_local_dependencies = Ref(false)
+
+"""
+Whether to use local plotly.js files instead of CDN.
+"""
 const _use_local_plotlyjs = Ref(false)
 
 _plots_defaults() =
