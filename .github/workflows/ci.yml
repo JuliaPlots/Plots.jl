@@ -22,11 +22,10 @@ jobs:
       JULIA_CONDAPKG_BACKEND: "MicroMamba"
       MPLBACKEND: "agg"
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
       fail-fast: false
-      continue-on-error: ${{ matrix.experimental }}
       matrix:
         version:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
