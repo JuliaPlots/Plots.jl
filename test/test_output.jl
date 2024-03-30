@@ -46,7 +46,7 @@ Plots.with(:unicodeplots) do
     end
 end
 
-Plots.with(:plotlyjs) do
+Sys.isunix() && Plots.with(:plotlyjs) do
     @test_save :html
     @test_save :json
     @test_save :pdf
