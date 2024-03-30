@@ -1,9 +1,9 @@
 name: ci
 
 on:
+  pull_request:
   push:
     branches: [master]
-  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -22,32 +22,42 @@ jobs:
       JULIA_CONDAPKG_BACKEND: "MicroMamba"
       MPLBACKEND: "agg"
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
         version:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
-          - '1.9' # latest stable
+          - '1' # latest stable
+        experimental:
+          - false
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
         include:
           - os: ubuntu-latest
+            experimental: false
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
           - os: ubuntu-latest
+            experimental: false
             prefix: xvfb-run
             version:  '1.7' # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
+            experimental: false
             prefix: xvfb-run
             version:  '1.8' # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
+            experimental: false
             prefix: xvfb-run
-            version: '~1.10.0-0'  # upcoming julia version, next `rc`
+            version:  '1.9' # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
+            experimental: true
+            prefix: xvfb-run
+            version: '~1.11.0-0'  # upcoming julia version, next `rc`
+          - os: ubuntu-latest
+            experimental: true
             prefix: xvfb-run
             version: 'nightly'
-            allow_failure: true  # `nightly` often breaks
 
     steps:
       - uses: actions/checkout@v4
@@ -90,7 +100,9 @@ jobs:
               v"3.4.29" => ">=11.1,<12.1",
               v"3.4.30" => ">=12.1,<13.1",
               v"3.4.31" => ">=13.1,<14.1",
-              # ... keep this up-to-date with gcc 14
+              v"3.4.32" => ">=14.1,<15.1",
+              v"3.4.33" => ">=15.1,<16.1",
+              # ... keep this up-to-date with gcc 16
             )[Base.BinaryPlatforms.detect_libstdcxx_version()]
             ("libgcc-ng$specs", "libstdcxx-ng$specs")
           else

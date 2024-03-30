@@ -208,15 +208,15 @@ _py_renderer(fig) = _py_canvas(fig).get_renderer()
 _py_drawfig(fig) = fig.draw(_py_renderer(fig))
 
 # `get_points` returns a numpy array in the form [x0 y0; x1 y1] coords (origin is bottom-left (0, 0)!)
-_py_extents(obj) = PythonCall.PyArray(obj.get_window_extent().get_points())
+_py_extents(obj) = PythonPlot.PyArray(obj.get_window_extent().get_points())
 
 # see cjdoris.github.io/PythonCall.jl/stable/conversion-to-julia/#py2jl-conversion
-to_vec(x) = PythonCall.pyconvert(Vector, x)
-to_str(x) = PythonCall.pyconvert(String, x)
+to_vec(x) = PythonPlot.pyconvert(Vector, x)
+to_str(x) = PythonPlot.pyconvert(String, x)
 
 # compute a bounding box (with origin top-left), however PythonPlot gives coords with origin bottom-left
 function _py_bbox(obj)
-    PythonCall.pyisnone(obj) && return _py_bbox(nothing)
+    pyisnone(obj) && return _py_bbox(nothing)
     fl, fr, fb, ft = bb = _py_extents(obj.get_figure())
     l, r, b, t = ex = _py_extents(obj)
     # @show obj bb ex
@@ -912,7 +912,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                         (cmap = func(cbar_series)) === nothing || break
                     end
                     c_map = mpl.cm.ScalarMappable(; cmap, norm)
-                    c_map.set_array(PythonCall.pylist([]))
+                    c_map.set_array(PythonPlot.pylist([]))
                     c_map
                 else
                     cbar_series[:serieshandle][end]

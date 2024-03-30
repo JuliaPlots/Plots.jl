@@ -46,20 +46,22 @@ Plots.with(:unicodeplots) do
     end
 end
 
-Plots.with(:plotlyjs) do
-    @test_save :html
-    @test_save :json
-    @test_save :pdf
-    @test_save :png
-    @test_save :svg
-    # @test_save :eps
-end
+if Sys.isunix()
+    Plots.with(:plotlyjs) do
+        @test_save :html
+        @test_save :json
+        @test_save :pdf
+        @test_save :png
+        @test_save :svg
+        # @test_save :eps
+    end
 
-Plots.with(:plotly) do
-    @test_save :pdf
-    @test_save :png
-    @test_save :svg
-    @test_save :html
+    Plots.with(:plotly) do
+        @test_save :pdf
+        @test_save :png
+        @test_save :svg
+        @test_save :html
+    end
 end
 
 if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
