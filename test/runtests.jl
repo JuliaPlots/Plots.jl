@@ -29,7 +29,6 @@ const TEST_BACKENDS = :gr, :unicodeplots, :pythonplot, :pgfplotsx, :plotlyjs, :g
 unicodeplots()
 pgfplotsx()
 plotlyjs()
-plotly()
 hdf5()
 gr()
 

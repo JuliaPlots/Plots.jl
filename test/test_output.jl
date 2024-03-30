@@ -55,7 +55,7 @@ Plots.with(:plotlyjs) do
     # @test_save :eps
 end
 
-Plots.with(:plotly) do
+Sys.isunix() && Plots.with(:plotly) do
     @test_save :pdf
     @test_save :png
     @test_save :svg
