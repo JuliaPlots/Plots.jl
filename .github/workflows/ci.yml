@@ -26,10 +26,13 @@ jobs:
     continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
       fail-fast: false
+      continue-on-error: ${{ matrix.experimental }}
       matrix:
         version:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
-          - '1.9' # latest stable
+          - '1' # latest stable
+        experimental:
+          - false
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
         include:
@@ -43,11 +46,15 @@ jobs:
             version:  '1.8' # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
             prefix: xvfb-run
-            version: '~1.10.0-0'  # upcoming julia version, next `rc`
+            version:  '1.9' # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
+            experimental: true
+            prefix: xvfb-run
+            version: '~1.11.0-0'  # upcoming julia version, next `rc`
+          - os: ubuntu-latest
+            experimental: true
             prefix: xvfb-run
             version: 'nightly'
-            allow_failure: true  # `nightly` often breaks
 
     steps:
       - uses: actions/checkout@v4
