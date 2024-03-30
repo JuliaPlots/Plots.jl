@@ -23,7 +23,6 @@ PlotThemes = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
@@ -40,20 +39,6 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 UnitfulLatexify = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
-
-[weakdeps]
-FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-
-[extensions]
-FileIOExt = "FileIO"
-GeometryBasicsExt = "GeometryBasics"
-IJuliaExt = "IJulia"
-ImageInTerminalExt = "ImageInTerminal"
-UnitfulExt = "Unitful"
 
 [compat]
 Aqua = "0.8"
@@ -94,7 +79,14 @@ UnicodeFun = "0.4"
 UnicodePlots = "3.4"
 UnitfulLatexify = "1"
 Unzip = "0.1 - 0.2"
-julia = "1.10"
+julia = "1.6"
+
+[extensions]
+FileIOExt = "FileIO"
+GeometryBasicsExt = "GeometryBasics"
+IJuliaExt = "IJulia"
+ImageInTerminalExt = "ImageInTerminal"
+UnitfulExt = "Unitful"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -132,3 +124,10 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
 test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+
+[weakdeps]
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
