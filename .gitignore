@@ -13,3 +13,4 @@ test/tmpplotsave.hdf5
 /.benchmarkci
 /benchmark/*.json
 .vscode/
+.CondaPkg/
