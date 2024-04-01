@@ -1,93 +1,29 @@
-import Unitful: m, s, cm, DimensionError
-import Plots: PLOTS_SEED, Plot, with
-import SentinelArrays: ChainedVector
-import GeometryBasics
-import OffsetArrays
-import FreeType  # for `unicodeplots`
-import LibGit2
-import Aqua
-import JSON
+const TEST_PACKAGES =
+    strip.(split(get(ENV, "PLOTS_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot"), ","))
+using PlotsBase
 
-using VisualRegressionTests
-using RecipesPipeline
-using FilePathsBase
-using LaTeXStrings
-using Preferences
-using RecipesBase
-using TestImages
-using Unitful
-using FileIO
-using Plots
-using Dates
-using Test
-
-# NOTE: don't use `plotly` (test hang, not surprised), test only the backends used in the docs
-const TEST_BACKENDS = let
-    var = get(ENV, "PLOTS_TEST_BACKENDS", nothing)
-    if var !== nothing
-        Symbol.(lowercase.(strip.(split(var, ","))))
-    else
-        [
-            :gr,
-            :unicodeplots,
-            # :pythonplot, # currently segfaults
-            :pgfplotsx,
-            :plotlyjs,
-            # :gaston, # currently doesn't precompile (on julia v1.10)
-            # :inspectdr # currently doesn't precompile
-        ]
-    end
-end
-
-# initial load - required for `should_warn_on_unsupported`
-
-import GR
-import UnicodePlots
-import PythonPlot
-import PGFPlotsX
-import PlotlyJS
-# import Gaston
 # initialize all backends
-for be in TEST_BACKENDS
-    getproperty(Plots, be)()
+for pkg in TEST_PACKAGES
+    @eval import $(Symbol(pkg))  # trigger extension
+    getproperty(PlotsBase, Symbol(lowercase(pkg)))()
 end
 gr()
 
-is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
-is_pkgeval() = Plots.bool_env("JULIA_PKGEVAL", "false")
-is_ci() = Plots.bool_env("CI", "false")
+using Preferences
+using Plots
+using Test
 
-if !is_ci()
-    @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
-end
+is_auto() = Plots.PlotsBase.bool_env("VISUAL_REGRESSION_TESTS_AUTO")
+is_pkgeval() = Plots.PlotsBase.bool_env("JULIA_PKGEVAL")
+is_ci() = Plots.PlotsBase.bool_env("CI")
 
-for name in (
-    # "quality", # Persistent tasks cannot resolve versions
-    "misc",
-    "utils",
-    "args",
-    "defaults",
-    "dates",
-    "axes",
-    "layouts",
-    "contours",
-    "components",
-    "shorthands",
-    "recipes",
-    # "unitful", # many fail
-    # "hdf5plots",
-    "pgfplotsx",
-    "plotly",
-    # "animations", # some failing
-    # "output", # some plotly failing
-    "backends",
-)
-    @testset "$name" begin
-        if is_auto() || is_pkgeval()
-            # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)
-            name != "backends" && continue
-        end
-        gr()  # reset to default backend (safer)
-        include("test_$name.jl")
-    end
+# get `Preferences` set backend, if any
+const PREVIOUS_DEFAULT_BACKEND = load_preference(Plots, "default_backend")
+
+include("preferences.jl")
+
+if PREVIOUS_DEFAULT_BACKEND === nothing
+    delete_preferences!(Plots, "default_backend")  # restore the absence of a preference
+else
+    Plots.set_default_backend!(PREVIOUS_DEFAULT_BACKEND)  # reset to previous state
 end
