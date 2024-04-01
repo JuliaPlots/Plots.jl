@@ -1,5 +1,11 @@
 const TEST_PACKAGES =
-    strip.(split(get(ENV, "PLOTS_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot"), ","))
+    let val = get(
+            ENV,
+            "PLOTSBASE_TEST_PACKAGES",
+            "GR,UnicodePlots,PythonPlot",
+        )
+        strip.(split(val, ","))
+    end
 using PlotsBase
 
 # initialize all backends

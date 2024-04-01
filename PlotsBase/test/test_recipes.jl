@@ -96,7 +96,7 @@ end
     # TODO: that should cover all seriestypes without the need to have the extension loaded
     # currently uses plotly seriestypes only
     @test :surface in PlotsBase.all_seriestypes()
-    unicode_instance = PlotsBase._backend_instance(:unicodeplots)
+    unicode_instance = PlotsBase.backend_instance(:unicodeplots)
     @test PlotsBase.seriestype_supported(unicode_instance, :surface) === :native
     @test PlotsBase.seriestype_supported(unicode_instance, :hspan) === :recipe
     @test PlotsBase.seriestype_supported(PlotsBase.NoBackend(), :line) === :native

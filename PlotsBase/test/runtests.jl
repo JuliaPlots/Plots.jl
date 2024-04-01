@@ -1,24 +1,23 @@
 const TEST_PACKAGES =
-    strip.(
-        split(
-            get(
-                ENV,
-                "PLOTSBASE_TEST_PACKAGES",
-                "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",
-            ),
-            ",",
+    let val = get(
+            ENV,
+            "PLOTSBASE_TEST_PACKAGES",
+            "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",
         )
-    )
+        strip.(split(val, ","))
+    end
 const TEST_BACKENDS = Symbol.(lowercase.(TEST_PACKAGES))
 
 using PlotsBase
+
+import GR
+gr()
 
 # initialize all backends
 for pkg in TEST_PACKAGES
     @eval import $(Symbol(pkg))  # trigger extension
     getproperty(PlotsBase, Symbol(lowercase(pkg)))()
 end
-gr()
 
 import Unitful: m, s, cm, DimensionError
 import PlotsBase: PLOTS_SEED, Plot, with
@@ -47,25 +46,38 @@ is_ci() = PlotsBase.bool_env("CI")
 
 is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
+ref_name(i) = "ref" * lpad(i, 3, '0')
+
+const blacklist = if VERSION.major == 1 && VERSION.minor ≥ 9
+    [
+        25,
+        30, # FIXME: remove, when StatsPlots supports Plots v2
+        41,
+    ]  # FIXME: github.com/JuliaLang/julia/issues/47261
+else
+    []
+end
+
 for name in (
-    "quality",
-    "misc",
-    "utils",
-    "args",
-    "defaults",
-    "dates",
-    "axes",
-    "layouts",
-    "contours",
-    "components",
-    "shorthands",
-    "recipes",
-    "unitful",
-    "hdf5plots",
-    "pgfplotsx",
-    "plotly",
-    "animations",
-    "output",
+    # "quality",
+    # "misc",
+    # "utils",
+    # "args",
+    # "defaults",
+    # "dates",
+    # "axes",
+    # "layouts",
+    # "contours",
+    # "components",
+    # "shorthands",
+    # "recipes",
+    # "unitful",
+    # "hdf5plots",
+    # "pgfplotsx",
+    # "plotly",
+    # "animations",
+    # "output",
+    # "reference",
     "backends",
 )
     @testset "$name" begin

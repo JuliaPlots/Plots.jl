@@ -6,7 +6,7 @@ const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
 const _backend_packages     = (gaston = :Gaston, gr = :GR, unicodeplots = :UnicodePlots, pgfplotsx = :PGFPlotsX, pythonplot = :PythonPlot, plotly = nothing, plotlyjs = :PlotlyJS, hdf5 = :HDF5)
 const _initialized_backends = Set{Symbol}()
-const _backends             = keys(_backend_packages)
+const _supported_backends   = keys(_backend_packages)
 
 const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
     merge(toml["deps"], toml["extras"])
@@ -28,12 +28,12 @@ function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = t
     end
     # check installed
     pkg_id = Base.identify_package(str)
-    version = if pkg_id === nothing
+    version = if pkg_id ≡ nothing
         nothing
     else
         get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
     end
-    version === nothing && @warn "backend `$str` is not installed."
+    version ≡ nothing && @warn "backend `$str` is not installed."
     version
 end
 
@@ -55,7 +55,7 @@ mutable struct CurrentBackend
     pkg::AbstractBackend
 end
 
-CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
+CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend_instance(sym))
 
 """
 Returns the current plotting package name.  Initializes package on first call.
@@ -63,10 +63,10 @@ Returns the current plotting package name.  Initializes package on first call.
 backend() = CURRENT_BACKEND.pkg
 
 "Returns a list of supported backends"
-backends() = _backends
+backends() = _supported_backends
 
 backend_name() = CURRENT_BACKEND.sym
-_backend_instance(sym::Symbol)::AbstractBackend = _backendType[sym]()
+backend_instance(sym::Symbol) = _backendType[sym]()
 
 backend_package_name(sym::Symbol = backend_name()) = get(_backend_packages, sym, nothing)
 
@@ -82,22 +82,18 @@ Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
-    if !initialized(sym)
-        _initialize_backend(pkg)
-        push!(_initialized_backends, sym)
-    end
     CURRENT_BACKEND.sym = sym
     CURRENT_BACKEND.pkg = pkg
     pkg
 end
 
 backend(sym::Symbol) =
-    if sym in _backends
+    if sym in _supported_backends
         if initialized(sym)
-            backend(_backend_instance(sym))
+            backend(backend_instance(sym))
         else
             name = backend_package_name(sym)
-            @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. $(name === nothing ? '`' : string("`import ", name, ";")) $sym()`."
+            @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. $(name ≡ nothing ? '`' : string("`import ", name, ";")) $sym()`."
             backend()
         end
     else
@@ -117,7 +113,7 @@ end
 # -- Create backend init functions by hand as the corresponding structs do not
 # exist yet
 
-for be in _backends
+for be in _supported_backends
     @eval begin
         function $be(; kw...)
             default(; reset = false, kw...)
@@ -190,11 +186,11 @@ macro extension_static(be_type, be)
     quote
         $(PlotsBase.backend_defines(be_type, be))
         function __init__()
-            ccall(:jl_generating_output, Cint, ()) == 1 && return
             PlotsBase._backendType[$be_sym] = $be_type
             PlotsBase._backendSymbol[$be_type] = $be_sym
             push!(PlotsBase._initialized_backends, $be_sym)
-            Base.invokelatest(PlotsBase.extension_init, $be_type())
+            # ccall(:jl_generating_output, Cint, ()) == 1 && return
+            PlotsBase.extension_init($be_type())
             @debug "Initialized $be_type backend in PlotsBase; run `$be()` to activate it."
         end
     end |> esc

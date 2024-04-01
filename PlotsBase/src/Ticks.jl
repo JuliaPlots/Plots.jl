@@ -1,6 +1,7 @@
 module Ticks
 
-export get_ticks, _has_ticks, _transform_ticks, get_minor_ticks, no_minor_intervals
+export get_ticks,
+    _has_ticks, _transform_ticks, get_minor_ticks, no_minor_intervals, num_minor_intervals
 using PlotsBase.Commons
 using PlotsBase.Dates
 

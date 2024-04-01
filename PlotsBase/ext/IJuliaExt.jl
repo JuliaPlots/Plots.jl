@@ -10,7 +10,7 @@ const IJulia =
 function _init_ijulia_plotting()
     # IJulia is more stable with local file
     PlotsBase._use_local_plotlyjs[] =
-        PlotsBase._plotly_local_file_path[] === nothing ? false :
+        PlotsBase._plotly_local_file_path[] ≡ nothing ? false :
         isfile(PlotsBase._plotly_local_file_path[])
 
     ENV["MPLBACKEND"] = "Agg"
@@ -18,25 +18,25 @@ end
 
 function _ijulia_display_dict(plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
-    if output_type === :auto
+    if output_type ≡ :auto
         output_type =
             get(PlotsBase._best_html_output_type, PlotsBase.backend_name(plt.backend), :svg)
     end
     out = Dict()
-    if output_type === :txt
+    if output_type ≡ :txt
         mime = "text/plain"
         out[mime] = sprint(show, MIME(mime), plt)
-    elseif output_type === :png
+    elseif output_type ≡ :png
         mime = "image/png"
         out[mime] = base64encode(show, MIME(mime), plt)
-    elseif output_type === :svg
+    elseif output_type ≡ :svg
         mime = "image/svg+xml"
         out[mime] = sprint(show, MIME(mime), plt)
-    elseif output_type === :html
+    elseif output_type ≡ :html
         mime = "text/html"
         out[mime] = sprint(show, MIME(mime), plt)
         PlotsBase._ijulia__extra_mime_info!(plt, out)
-    elseif output_type === :pdf
+    elseif output_type ≡ :pdf
         mime = "application/pdf"
         out[mime] = base64encode(show, MIME(mime), plt)
     else

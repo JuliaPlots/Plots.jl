@@ -1,20 +1,22 @@
 module Plots
-using PrecompileTools
-using Preferences
+
 using Reexport
-using Pkg
 @reexport using PlotsBase
 
-function __init__()
-    ccall(:jl_generating_output, Cint, ()) == 1 && return
-    load_default_backend()
-end
+using PrecompileTools
+using Preferences
+using Pkg
 
 # from github.com/JuliaPackaging/Preferences.jl/blob/master/README.md:
 # "Preferences that are accessed during compilation are automatically marked as compile-time preferences"
 # ==> this must always be done during precompilation, otherwise
 # the cache will not invalidate when preferences change
 const PLOTS_DEFAULT_BACKEND = lowercase(load_preference(Plots, "default_backend", "gr"))
+
+function __init__()
+    ccall(:jl_generating_output, Cint, ()) == 1 && return
+    load_default_backend()
+end
 
 function load_default_backend()
     # environment variable preempts the `Preferences` based mechanism
@@ -23,7 +25,7 @@ function load_default_backend()
     if (pkg_name = PlotsBase.backend_package_name()) ≡ :GR
         @eval import GR
     end
-    Base.invokelatest(PlotsBase.backend, PlotsBase.CURRENT_BACKEND.sym)
+    PlotsBase.backend(PlotsBase.Plots.backend_instance(Base.CURRENT_BACKEND.sym))
 end
 
 function set_default_backend!(
@@ -118,4 +120,4 @@ end
 end
 # COV_EXCL_STOP
 
-end
+end  # module

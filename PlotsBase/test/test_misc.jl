@@ -21,7 +21,7 @@ end
 
 @testset "NoFail" begin
     with(:unicodeplots) do
-        @test backend() == PlotsBase._backend_instance(:unicodeplots)
+        @test backend() == PlotsBase.backend_instance(:unicodeplots)
 
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 

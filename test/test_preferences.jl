@@ -1,10 +1,10 @@
 
 Plots.set_default_backend!()  # start with empty preferences
 
-withenv("PLOTS_DEFAULT_BACKEND" => "invalid") do
+withenv("PLOTS_DEFAULT_BACKEND" => "test_invalid_backend") do
     @test_logs (:error, r"Unsupported backend.*") Plots.load_default_backend()
 end
-@test_logs (:error, r"Unsupported backend.*") backend(:invalid)
+@test_logs (:error, r"Unsupported backend.*") backend(:test_invalid_backend)
 
 @test Plots.load_default_backend() == Base.get_extension(PlotsBase, :GRExt).GRBackend()
 
@@ -23,7 +23,7 @@ end
 @test Plots.PlotsBase.merge_with_base_supported([:annotations, :guide]) isa Set
 @test Plots.PlotsBase.CurrentBackend(:gr).sym ≡ :gr
 
-@test_logs (:warn, r".*is not compatible with") Plots.set_default_backend!(:invalid)
+@test_logs (:warn, r".*is not compatible with") Plots.set_default_backend!(:test_invalid_backend)
 
 @testset "persistent backend" begin
     # this test mimics a restart, which is needed after a preferences change
