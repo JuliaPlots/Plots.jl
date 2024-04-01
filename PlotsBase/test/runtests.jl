@@ -1,4 +1,14 @@
-const TEST_PACKAGES = strip.(split(get(ENV, "PLOTSBASE_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston"), ","))
+const TEST_PACKAGES =
+    strip.(
+        split(
+            get(
+                ENV,
+                "PLOTSBASE_TEST_PACKAGES",
+                "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",
+            ),
+            ",",
+        )
+    )
 const TEST_BACKENDS = Symbol.(lowercase.(TEST_PACKAGES))
 
 using PlotsBase

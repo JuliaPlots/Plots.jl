@@ -155,7 +155,10 @@ end
 
         pl = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
         hline!(pl, [3.1])
-        annotate!(pl, [(Dates.Date(2019, 1, 15), 3.2, PlotsBase.text("Test", :red, :center))])
+        annotate!(
+            pl,
+            [(Dates.Date(2019, 1, 15), 3.2, PlotsBase.text("Test", :red, :center))],
+        )
         @test show(io, pl) isa Nothing
 
         pl = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
@@ -222,7 +225,7 @@ is_pkgeval() || @testset "Examples" begin
         )
         @test filesize(fn) > 1_000
     end
-    Sys.islinux() && for be ∈ TEST_BACKENDS
+    Sys.islinux() && for be in TEST_BACKENDS
         skip = vcat(PlotsBase._backend_skips[be], blacklist)
         PlotsBase.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
         closeall()

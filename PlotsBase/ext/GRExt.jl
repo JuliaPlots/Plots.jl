@@ -1,6 +1,5 @@
 module GRExt
 
-
 import PlotsBase: PlotsBase, _cycle
 import RecipesPipeline
 import NaNMath
@@ -220,7 +219,6 @@ end
 # -----------------------------------------------------------------------------
 
 PlotsBase.is_marker_supported(::GRBackend, shape::Shape) = true
-
 
 # https://github.com/jheinen/GR.jl - significant contributions by @jheinen
 
@@ -1984,7 +1982,8 @@ function gr_add_series(sp, series)
         GR.gr3.clear()
     elseif st === :heatmap
         # `z` is already transposed, so we need to reverse before passing its size.
-        x, y = PlotsBase.heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
+        x, y =
+            PlotsBase.heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
         gr_draw_heatmap(series, x, y, z, clims)
     elseif st === :image
         gr_draw_image(series, x, y, z, clims)
@@ -2214,7 +2213,9 @@ function gr_draw_heatmap(series, x, y, z, clims)
     GR.setspace(clims..., 0, 90)
     w, h = length(x) - 1, length(y) - 1
     sp = series[:subplot]
-    if !ispolar(series) && PlotsBase.is_uniformly_spaced(x) && PlotsBase.is_uniformly_spaced(y)
+    if !ispolar(series) &&
+       PlotsBase.is_uniformly_spaced(x) &&
+       PlotsBase.is_uniformly_spaced(y)
         # For uniformly spaced data use GR.drawimage, which can be
         # much faster than GR.nonuniformcellarray, especially for
         # pdf output, and also supports alpha values.

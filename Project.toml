@@ -21,8 +21,9 @@ Reexport = "0.2, 1"
 julia = "1.6"
 
 [extras]
+PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 
 [targets]
-test = ["Test", "UnicodePlots"]
+test = ["PythonPlot", "Test", "UnicodePlots"]

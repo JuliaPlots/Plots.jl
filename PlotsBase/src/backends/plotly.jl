@@ -519,7 +519,8 @@ function plotly_layout(plt::Plot)
         plotattributes_out[:hovermode] = "none"
     end
 
-    plotattributes_out = PlotsBase.recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
+    plotattributes_out =
+        PlotsBase.recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
 end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
@@ -1317,7 +1318,8 @@ Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyBacken
 PlotsBase._show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend}) =
     plotly_show_js(io, plot)
 
-PlotsBase._show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) = write(io, PlotsBase.embeddable_html(plt))
+PlotsBase._show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) =
+    write(io, PlotsBase.embeddable_html(plt))
 
 PlotsBase._display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
 

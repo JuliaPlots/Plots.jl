@@ -8,8 +8,10 @@ import PlotUtils.Colors: Colorant
 import RecipesPipeline
 
 import RecipesPipeline.datetimeformatter
-import PlotUtils.ColorPalette, PlotUtils.CategoricalColorGradient, PlotUtils.ContinuousColorGradient
-import PlotsBase: PlotsBase, Surface, Arrow, GridLayout, RootLayout, Font, PlotText, SeriesAnnotations
+import PlotUtils.ColorPalette,
+    PlotUtils.CategoricalColorGradient, PlotUtils.ContinuousColorGradient
+import PlotsBase:
+    PlotsBase, Surface, Arrow, GridLayout, RootLayout, Font, PlotText, SeriesAnnotations
 import PlotsBase: BoundingBox, Length, Plot, DefaultsDict, plot, plot!
 
 using PlotsBase.PlotsSeries
@@ -148,7 +150,6 @@ end
 # ...
 # PlotsBase.supported_scales(::HDF5Backend) -> ::Vector{Symbol}
 # -----------------------------------------------------------------------------
-
 
 # Additional constants
 # Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
@@ -619,6 +620,5 @@ end
 # Interface actually required to use HDF5Backend
 
 hdf5plot_write(path::AbstractString) = hdf5plot_write(current(), path)
-
 
 end # module

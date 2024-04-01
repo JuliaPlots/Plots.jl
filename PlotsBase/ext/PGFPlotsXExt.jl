@@ -321,7 +321,8 @@ curly(obj) = "{$(string(obj))}"
 latex_formatter(formatter::Symbol) = formatter in (:plain, :latex) ? formatter : :latex
 latex_formatter(formatter::Function) = formatter
 
-PlotsBase.labelfunc(scale::Symbol, backend::PGFPlotsXBackend) = PlotsBase.labelfunc_tex(scale)
+PlotsBase.labelfunc(scale::Symbol, backend::PGFPlotsXBackend) =
+    PlotsBase.labelfunc_tex(scale)
 
 pgfx_halign(k) = (left = "left", hcenter = "center", center = "center", right = "right")[k]
 
@@ -1601,18 +1602,27 @@ end
 
 PlotsBase._create_backend_figure(plt::Plot{PGFPlotsXBackend}) = plt.o = PGFPlotsXPlot()
 
-PlotsBase._series_added(plt::Plot{PGFPlotsXBackend}, series::Series) = plt.o.is_created = false
+PlotsBase._series_added(plt::Plot{PGFPlotsXBackend}, series::Series) =
+    plt.o.is_created = false
 
 PlotsBase._update_plot_object(plt::Plot{PGFPlotsXBackend}) = plt.o(plt)
 
 for mime in ("application/pdf", "image/svg+xml", "image/png")
-    @eval function PlotsBase._show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{PGFPlotsXBackend})
+    @eval function PlotsBase._show(
+        io::IO,
+        mime::MIME{Symbol($mime)},
+        plt::Plot{PGFPlotsXBackend},
+    )
         plt.o.was_shown = true
         show(io, mime, plt.o.the_plot)
     end
 end
 
-function PlotsBase._show(io::IO, mime::MIME{Symbol("application/x-tex")}, plt::Plot{PGFPlotsXBackend})
+function PlotsBase._show(
+    io::IO,
+    mime::MIME{Symbol("application/x-tex")},
+    plt::Plot{PGFPlotsXBackend},
+)
     plt.o.was_shown = true
     PGFPlotsX.print_tex(
         io,

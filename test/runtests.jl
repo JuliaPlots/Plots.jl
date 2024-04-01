@@ -1,4 +1,5 @@
-const TEST_PACKAGES = strip.(split(get(ENV, "PLOTS_TEST_PACKAGES", "GR,UnicodePlots"), ","))
+const TEST_PACKAGES =
+    strip.(split(get(ENV, "PLOTS_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot"), ","))
 using PlotsBase
 
 # initialize all backends

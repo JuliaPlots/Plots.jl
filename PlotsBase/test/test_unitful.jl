@@ -227,7 +227,8 @@ end
             @test plot(x * m, y * s, z * (m / s), yunit = u"ks") isa PlotsBase.Plot
             @test plot(x * m, y * s, z * (m / s), zlabel = "z") isa PlotsBase.Plot
             @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1)) isa PlotsBase.Plot
-            @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1) .* (m / s)) isa PlotsBase.Plot
+            @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1) .* (m / s)) isa
+                  PlotsBase.Plot
             @test plot(x * m, y * s, z * (m / s), zunit = u"km/hr") isa PlotsBase.Plot
             @test plot(x * m, y * s, z * (m / s), zticks = (1:2) * m / s) isa PlotsBase.Plot
             @test scatter(x * m, y * s, z * (m / s)) isa PlotsBase.Plot

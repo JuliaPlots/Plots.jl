@@ -1,6 +1,5 @@
 module PlotlyJSExt
 
-
 import PlotsBase: PlotsBase, Plot, isijulia
 using PlotsBase.PlotsPlots
 using PlotsBase.Commons
@@ -90,8 +89,11 @@ for (mime, fmt) in (
 end
 
 # Use the Plotly implementation for json and html:
-PlotsBase._show(io::IO, mime::MIME"application/vnd.plotly.v1+json", plt::Plot{PlotlyJSBackend}) =
-    plotly_show_js(io, plt)
+PlotsBase._show(
+    io::IO,
+    mime::MIME"application/vnd.plotly.v1+json",
+    plt::Plot{PlotlyJSBackend},
+) = plotly_show_js(io, plt)
 
 PlotsBase.html_head(plt::Plot{PlotlyJSBackend}) = PlotsBase.Plotly.plotly_html_head(plt)
 PlotsBase.html_body(plt::Plot{PlotlyJSBackend}) = PlotsBase.Plotly.plotly_html_body(plt)
@@ -101,8 +103,7 @@ PlotsBase._show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) =
 
 PlotsBase._display(plt::Plot{PlotlyJSBackend}) = display(plotlyjs_syncplot(plt))
 
-WebIO.render(plt::Plot{PlotlyJSBackend}) =
-    WebIO.render(plotlyjs_syncplot(plt))
+WebIO.render(plt::Plot{PlotlyJSBackend}) = WebIO.render(plotlyjs_syncplot(plt))
 
 PlotsBase.closeall(::PlotlyJSBackend) =
     if !PlotsBase.isplotnull() && isa(PlotsBase.current().o, PlotlyJS.SyncPlot)

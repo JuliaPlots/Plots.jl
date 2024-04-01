@@ -3,7 +3,20 @@
 
 module UnitfulExt
 
-import Unitful: Unitful, Quantity, unit, ustrip, dimension, Units, NoUnits, LogScaled, logunit, MixedUnits, Level, Gain, uconvert
+import Unitful:
+    Unitful,
+    Quantity,
+    unit,
+    ustrip,
+    dimension,
+    Units,
+    NoUnits,
+    LogScaled,
+    logunit,
+    MixedUnits,
+    Level,
+    Gain,
+    uconvert
 import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
 import LaTeXStrings: LaTeXString

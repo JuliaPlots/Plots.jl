@@ -1002,7 +1002,8 @@ function _py_compute_axis_minval(sp::Subplot, axis::Axis)
 end
 
 function _py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
-    scale ∈ PlotsBase.supported_scales() || return @warn "Unhandled scale value in PythonPlot: $scale"
+    scale ∈ PlotsBase.supported_scales() ||
+        return @warn "Unhandled scale value in PythonPlot: $scale"
     scl, kw = if scale === :identity
         "linear", KW()
     else
@@ -1451,7 +1452,8 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
 end
 
 expand_padding!(padding, bb, plotbb) =
-    if PlotsBase.ispositive(PlotsBase.width(bb)) && PlotsBase.ispositive(PlotsBase.height(bb))
+    if PlotsBase.ispositive(PlotsBase.width(bb)) &&
+       PlotsBase.ispositive(PlotsBase.height(bb))
         padding[1] = max(padding[1], PlotsBase.left(plotbb) - PlotsBase.left(bb))
         padding[2] = max(padding[2], PlotsBase.top(plotbb) - PlotsBase.top(bb))
         padding[3] = max(padding[3], PlotsBase.right(bb) - PlotsBase.right(plotbb))
@@ -1541,7 +1543,13 @@ function _py_legend_pos(pos::Tuple{<:Real,Symbol})
     s, c = sincosd(pos[1]) .* (pos[2] === :outer ? -1 : 1)
     yanchors = "lower", "center", "upper"
     xanchors = "left", "center", "right"
-    join([yanchors[PlotsBase.legend_anchor_index(s)], xanchors[PlotsBase.legend_anchor_index(c)]], ' ')
+    join(
+        [
+            yanchors[PlotsBase.legend_anchor_index(s)],
+            xanchors[PlotsBase.legend_anchor_index(c)],
+        ],
+        ' ',
+    )
 end
 
 # legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
@@ -1706,8 +1714,11 @@ function PlotsBase._update_plot_object(plt::Plot{PythonPlotBackend})
                 PlotsBase.width(bb),  # width
                 PlotsBase.height(sp.bbox) - 2pad,  # height
             )
-            get(sp[:extra_kwargs], "3d_colorbar_axis", PlotsBase.bbox_to_pcts(cb_bbox, figw, figh)) |>
-            sp.attr[:cbar_ax].set_position
+            get(
+                sp[:extra_kwargs],
+                "3d_colorbar_axis",
+                PlotsBase.bbox_to_pcts(cb_bbox, figw, figh),
+            ) |> sp.attr[:cbar_ax].set_position
         end
     end
     PythonPlot.draw()
@@ -1727,7 +1738,11 @@ for (mime, fmt) in (
     "image/svg+xml"          => "svg",
     "application/x-tex"      => "pgf",
 )
-    @eval function PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PythonPlotBackend})
+    @eval function PlotsBase._show(
+        io::IO,
+        ::MIME{Symbol($mime)},
+        plt::Plot{PythonPlotBackend},
+    )
         fig = plt.o
         fig.canvas.print_figure(
             io,

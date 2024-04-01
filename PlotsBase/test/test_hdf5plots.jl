@@ -5,7 +5,7 @@ using HDF5
     hdf5()
 
     x = 1:10
-    pl = plot(x, x.^2)  # create some plot
+    pl = plot(x, x .^ 2)  # create some plot
     PlotsBase.hdf5plot_write(pl, fname)
 
     # read back file

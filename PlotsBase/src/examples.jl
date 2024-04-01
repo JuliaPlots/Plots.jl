@@ -179,8 +179,10 @@ const _examples = PlotExample[
     PlotExample( # 13
         "Marker types",
         quote
-            markers =
-                filter(m -> m in PlotsBase.supported_markers(), PlotsBase.Commons._shape_keys)
+            markers = filter(
+                m -> m in PlotsBase.supported_markers(),
+                PlotsBase.Commons._shape_keys,
+            )
             markers = permutedims(markers)
             n = length(markers)
             x = range(0, stop = 10, length = n + 2)[2:(end - 1)]
@@ -295,7 +297,11 @@ const _examples = PlotExample[
         """,
         quote
             y = rand(10)
-            plot(y, annotations = (3, y[3], PlotsBase.text("this is #3", :left)), leg = false)
+            plot(
+                y,
+                annotations = (3, y[3], PlotsBase.text("this is #3", :left)),
+                leg = false,
+            )
             # single vector of annotation tuples
             annotate!([
                 (5, y[5], ("this is #5", 16, :red, :center)),
@@ -1328,7 +1334,7 @@ replace_module(ex) = ex
 function replace_module(ex::Expr)
     if Meta.isexpr(ex, :import) || Meta.isexpr(ex, :using)
         expr = Expr(ex.head)
-        for arg ∈ ex.args
+        for arg in ex.args
             mod = last(arg.args)
             new_arg = if Meta.isexpr(arg, :.)
                 mod ≡ :PlotsBase ? arg : Expr(:., :PlotsBase, mod)

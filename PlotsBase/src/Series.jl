@@ -225,7 +225,8 @@ struct NaNSegmentsIterator
 end
 
 function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
-    (i = findfirst(!PlotsBase.Commons.anynan(itr.args), nextidx:(itr.n2))) === nothing && return
+    (i = findfirst(!PlotsBase.Commons.anynan(itr.args), nextidx:(itr.n2))) === nothing &&
+        return
     nextval = nextidx + i - 1
 
     j = findfirst(PlotsBase.Commons.anynan(itr.args), nextval:(itr.n2))

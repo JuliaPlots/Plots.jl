@@ -110,7 +110,9 @@ end
     @test PlotsBase.legend_anchor_index(+1) == 3
 
     @test PlotsBase.legend_angle(:foo_bar) == (45, :inner)
-    @test PlotsBase.legend_angle(20.0) == PlotsBase.legend_angle((20.0, :inner)) == (20.0, :inner)
+    @test PlotsBase.legend_angle(20.0) ==
+          PlotsBase.legend_angle((20.0, :inner)) ==
+          (20.0, :inner)
     @test PlotsBase.legend_angle((20.0, 10.0)) == (20.0, 10.0)
 end
 
@@ -211,7 +213,10 @@ end
 end
 
 @testset "docstring" begin
-    @test occursin("label", PlotsBase._generate_doclist(PlotsBase.Commons._all_series_attrs))
+    @test occursin(
+        "label",
+        PlotsBase._generate_doclist(PlotsBase.Commons._all_series_attrs),
+    )
 end
 
 @testset "protect" begin
@@ -324,7 +329,8 @@ with(:gr) do
     end
 
     @testset "legends" begin
-        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa PlotsBase.Plot
+        @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa
+              PlotsBase.Plot
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa
               PlotsBase.Plot
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa

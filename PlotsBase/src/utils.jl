@@ -1,6 +1,6 @@
 
 # ---------------------------------------------------------------
-bool_env(x, default::String="0")::Bool = tryparse(Bool, get(ENV, x, default))
+bool_env(x, default::String = "0")::Bool = tryparse(Bool, get(ENV, x, default))
 
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
