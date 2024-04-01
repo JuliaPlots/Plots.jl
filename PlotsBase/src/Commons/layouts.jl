@@ -1,30 +1,3 @@
-module Measurements
-
-export GridLayout, EmptyLayout, RootLayout
-export leftpad, toppad, bottompad, rightpad
-export origin, left, right, bottom, top
-export bbox, bbox!, bbox_to_pcts, xy_mm_to_pcts
-export Length, AbsoluteLength, Measure
-export to_pixels, ispositive
-
-import ..Measures
-import ..Measures: Length, AbsoluteLength, Measure, BoundingBox
-import ..Measures: mm, cm, inch, pt, width, height, w, h
-using ..RecipesBase: AbstractLayout
-using ..Commons
-
-const BBox = Measures.Absolute2DBox
-export BBox, BoundingBox, mm, cm, inch, px, pct, pt, w, h
-
-to_pixels(m::AbsoluteLength) = m.value / 0.254
-
-left(bbox::BoundingBox) = bbox.x0[1]
-top(bbox::BoundingBox) = bbox.x0[2]
-right(bbox::BoundingBox) = left(bbox) + width(bbox)
-bottom(bbox::BoundingBox) = top(bbox) + height(bbox)
-origin(bbox::BoundingBox) = left(bbox) + width(bbox) / 2, top(bbox) + height(bbox) / 2
-Base.size(bbox::BoundingBox) = (width(bbox), height(bbox))
-
 make_measure_hor(n::Number) = n * w
 make_measure_hor(m::Measure) = m
 
@@ -77,32 +50,14 @@ function bbox(x, y, width, height; h_anchor = :left, v_anchor = :top)
     end
     BoundingBox(left, top, width, height)
 end
+
 # NOTE: (0,0) is the top-left !!!
-
-# convert x,y coordinates from absolute coords to percentages...
-# returns x_pct, y_pct
-function xy_mm_to_pcts(x::AbsoluteLength, y::AbsoluteLength, figw, figh, flipy = true)
-    xmm, ymm = x.value, y.value
-    if flipy
-        ymm = figh.value - ymm  # flip y when origin in bottom-left
-    end
-    xmm / figw.value, ymm / figh.value
-end
-
-# convert a bounding box from absolute coords to percentages...
-# returns an array of percentages of figure size: [left, bottom, width, height]
-function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
-    mms = Float64[f(bb).value for f in (left, bottom, width, height)]
-    if flipy
-        mms[2] = figh.value - mms[2]  # flip y when origin in bottom-left
-    end
-    mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
-end
-
-Base.show(io::IO, bbox::BoundingBox) = print(
-    io,
-    "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}",
-)
+left(bbox::BoundingBox) = bbox.x0[1]
+top(bbox::BoundingBox) = bbox.x0[2]
+right(bbox::BoundingBox) = left(bbox) + width(bbox)
+bottom(bbox::BoundingBox) = top(bbox) + height(bbox)
+origin(bbox::BoundingBox) = left(bbox) + width(bbox) / 2, top(bbox) + height(bbox) / 2
+Base.size(bbox::BoundingBox) = (width(bbox), height(bbox))
 
 # -----------------------------------------------------------
 # AbstractLayout
@@ -180,7 +135,6 @@ toppad(layout::GridLayout)    = toppad(layout.minpad)
 rightpad(layout::GridLayout)  = rightpad(layout.minpad)
 bottompad(layout::GridLayout) = bottompad(layout.minpad)
 
-
 function GridLayout(
     dims...;
     parent = RootLayout(),
@@ -211,41 +165,3 @@ Base.length(layout::GridLayout) = length(layout.grid)
 Base.getindex(layout::GridLayout, r::Int, c::Int) = layout.grid[r, c]
 Base.setindex!(layout::GridLayout, v, r::Int, c::Int) = layout.grid[r, c] = v
 Base.setindex!(layout::GridLayout, v, ci::CartesianIndex) = layout.grid[ci] = v
-
-# Base.:*{T,N}(m1::Length{T,N}, m2::Length{T,N}) = Length{T,N}(m1.value * m2.value)
-ispositive(m::Measure) = m.value > 0
-
-# union together bounding boxes
-function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
-    # empty boxes don't change the union
-    ispositive(width(bb1)) || return bb2
-    ispositive(height(bb1)) || return bb2
-    ispositive(width(bb2)) || return bb1
-    ispositive(height(bb2)) || return bb1
-
-    l = min(left(bb1), left(bb2))
-    t = min(top(bb1), top(bb2))
-    r = max(right(bb1), right(bb2))
-    b = max(bottom(bb1), bottom(bb2))
-    BoundingBox(l, t, r - l, b - t)
-end
-
-# allow pixels and percentages
-const px = AbsoluteLength(0.254)
-const pct = Length{:pct,Float64}(1.0)
-
-Base.convert(::Type{<:Measure}, x::Float64) = x * pct
-
-Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
-Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
-Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
-Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
-
-inch2px(inches::Real) = float(inches * PX_PER_INCH)
-px2inch(px::Real)     = float(px / PX_PER_INCH)
-inch2mm(inches::Real) = float(inches * MM_PER_INCH)
-mm2inch(mm::Real)     = float(mm / MM_PER_INCH)
-px2mm(px::Real)       = float(px * MM_PER_PX)
-mm2px(mm::Real)       = float(mm / MM_PER_PX)
-
-end  # module

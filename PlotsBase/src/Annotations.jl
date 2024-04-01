@@ -12,7 +12,6 @@ export SeriesAnnotations,
 
 import ..PlotsBase: Series, Subplot, TimeType, is3d, discrete_value!
 
-using ..Measurements
 using ..Commons
 using ..Shapes
 using ..Dates
@@ -240,7 +239,7 @@ locate_annotation(sp::Subplot, rel::Tuple, label::PlotText) = (
     map(1:length(rel), (:x, :y, :z)) do i, letter
         _relative_position(
             axis_limits(sp, letter)...,
-            rel[i] * Measurements.pct,
+            rel[i] * pct,
             sp[get_attr_symbol(letter, :axis)][:scale],
         )
     end...,
@@ -253,3 +252,5 @@ locate_annotation(sp::Subplot, pos::Symbol, label::PlotText) =
     locate_annotation(sp, position_multiplier[pos], label)
 
 end # Annotations
+
+using .Annotations

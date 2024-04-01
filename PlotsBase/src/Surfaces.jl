@@ -22,3 +22,5 @@ end
 Commons.handle_surface(z::Surface) = permutedims(z.surf)
 
 end  # module
+
+using .Surfaces

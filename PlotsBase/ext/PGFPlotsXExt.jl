@@ -11,7 +11,6 @@ import PGFPlotsX
 import Latexify
 import Contour
 
-using PlotsBase.Measurements
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
 using PlotsBase.Colorbars

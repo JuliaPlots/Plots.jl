@@ -62,3 +62,5 @@ function add_arrows(func::Function, x::AVec, y::AVec)
 end
 
 end  # module
+
+using .Arrows

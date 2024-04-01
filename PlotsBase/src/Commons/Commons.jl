@@ -39,19 +39,32 @@ export anynan,
 export istuple, isvector, ismatrix, isscalar, is_2tuple
 export default, wraptuple, merge_with_base_supported
 
+export px, pct
+export width, height, leftpad, toppad, bottompad, rightpad
+export origin, left, right, bottom, top, bbox, bbox!
 export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
 export MM_PER_PX, MM_PER_INCH, DPI, PX_PER_INCH
 
-using PlotsBase: PlotsBase, cgrad
-import PlotsBase: RecipesPipeline
+export GridLayout, EmptyLayout, RootLayout
+export BBox, BoundingBox, mm, cm, inch, pt, w, h
+export bbox_to_pcts, xy_mm_to_pcts
+export Length, AbsoluteLength, Measure
+export to_pixels, ispositive, get_ticks, scale_lims!
+
+import Measures:
+    Measures, Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, w, h
+import PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
+import PlotsBase: PlotsBase, RecipesPipeline, cgrad
+
 using ..Colors: Colorant, @colorant_str
 using ..ColorTypes: alpha
-using ..Measures: mm, BoundingBox
-using ..PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
 using ..RecipesBase
 using ..Statistics
 using ..NaNMath
 using ..Printf
+
+const width = Measures.width
+const height = Measures.height
 
 const AVec = AbstractVector
 const AMat = AbstractMatrix
@@ -59,16 +72,6 @@ const KW = Dict{Symbol,Any}
 const AKW = AbstractDict{Symbol,Any}
 const TicksArgs =
     Union{AVec{T},Tuple{AVec{T},AVec{S}},Symbol} where {T<:Real,S<:AbstractString}
-
-const DEFAULT_BBOX = Ref(BoundingBox(0mm, 0mm, 0mm, 0mm))
-const DEFAULT_MINPAD = Ref((20mm, 5mm, 2mm, 10mm))
-const DEFAULT_LINEWIDTH = Ref(1)
-const PLOTS_SEED = 1234
-const PX_PER_INCH = 100
-const DPI = PX_PER_INCH
-const MM_PER_INCH = 25.4
-const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
-const _cbar_width = 5mm
 
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
@@ -97,14 +100,24 @@ const _segmenting_vector_attributes = (
 const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 const _debug = Ref(false)
 
-function get_subplot end
-function get_clims end
-function series_list end
-function coords end
-function ispolar end
-function expand_extrema! end
-function axis_limits end
-function preprocess_attributes! end
+# docs.julialang.org/en/v1/manual/methods/#Empty-generic-functions
+macro generic_functions(args...)
+    blk = Expr(:block)
+    foreach(arg -> push!(blk.args, :(function $arg end)), args)
+    blk |> esc
+end
+
+@generic_functions get_ticks get_subplot get_clims
+@generic_functions series_list coords ispolar axis_limits
+@generic_functions expand_extrema! preprocess_attributes! scale_lims!
+
+@generic_functions width height leftpad toppad bottompad rightpad
+@generic_functions origin left right bottom top
+
+include("measures.jl")
+
+using ..RecipesBase: AbstractLayout
+include("layouts.jl")
 
 # ---------------------------------------------------------------
 wraptuple(x::Tuple) = x
@@ -117,12 +130,12 @@ all_lineLtypes(arg) =
     true_or_all_true(a -> get(Commons._typeAliases, a, a) in Commons._all_seriestypes, arg)
 all_styles(arg) =
     true_or_all_true(a -> get(Commons._styleAliases, a, a) in Commons._all_styles, arg)
-all_shapes(arg) = (true_or_all_true(
+all_shapes(arg) = true_or_all_true(
     a ->
         get(Commons._marker_aliases, a, a) in Commons._all_markers ||
             a isa PlotsBase.Shape,
     arg,
-))
+)
 all_alphas(arg) = true_or_all_true(
     a ->
         (typeof(a) <: Real && a > 0 && a < 1) || (

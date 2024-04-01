@@ -20,3 +20,5 @@ PlotsBase.coords(curve::BezierCurve, n::Integer = 30; range = [0, 1]) =
     map(curve, Base.range(first(range), stop = last(range), length = n))
 
 end  # module
+
+using .BezierCurves

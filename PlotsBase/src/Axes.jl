@@ -1,10 +1,10 @@
 module Axes
 
 export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
-export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, scale_lims!
+export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis
 
 import ..PlotsBase
-import ..PlotsBase: Subplot, DefaultsDict, TimeType
+import ..PlotsBase: Subplot, DefaultsDict, TimeType, attr!
 
 using ..RecipesPipeline
 using ..Commons
@@ -54,14 +54,14 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     attr = DefaultsDict(explicit, Commons._axis_defaults_byletter[letter])
 
     # update the defaults
-    PlotsBase.attr!(Axis([sp], attr), args...; kw...)
+    attr!(Axis([sp], attr), args...; kw...)
 end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
 Base.getindex(axis::Axis, k::Symbol) =
     if (v = axis.plotattributes[k]) ≡ :match
-        if haskey(Commons.Commons._match_map2, k)
-            axis.sps[1][Commons.Commons._match_map2[k]]
+        if haskey(Commons._match_map2, k)
+            axis.sps[1][Commons._match_map2[k]]
         else
             axis[Commons._match_map[k]]
         end
@@ -251,13 +251,15 @@ Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by 
 given `factor` around the limits' middle point.
 If `letter` is omitted, all axes are affected.
 """
-function scale_lims!(sp::Subplot, letter, factor)
+function Commons.scale_lims!(sp::Subplot, letter, factor)
     axis = get_axis(sp, letter)
     from, to = PlotsBase.get_sp_lims(sp, letter)
     axis[:lims] = scale_lims(from, to, factor, axis[:scale])
 end
-scale_lims!(factor::Number) = scale_lims!(PlotsBase.current(), factor)
-scale_lims!(letter::Symbol, factor) = scale_lims!(PlotsBase.current(), letter, factor)
+Commons.scale_lims!(factor::Number) = scale_lims!(PlotsBase.current(), factor)
+Commons.scale_lims!(letter::Symbol, factor) =
+    scale_lims!(PlotsBase.current(), letter, factor)
+
 #----------------------------------------------------------------------
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
@@ -383,7 +385,7 @@ function _update_axis(
     end
 
     # update the axis
-    PlotsBase.attr!(axis; kw...)
+    attr!(axis; kw...)
     nothing
 end
 
@@ -401,7 +403,7 @@ end
 """
 returns (continuous_values, discrete_values) for the ticks on this axis
 """
-function PlotsBase.get_ticks(
+function Commons.get_ticks(
     sp::Subplot,
     axis::Axis;
     update = true,
@@ -422,7 +424,7 @@ function PlotsBase.get_ticks(
             else
                 cvals = axis[:continuous_values]
                 alims = axis_limits(sp, axis[:letter])
-                PlotsBase.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
+                Commons.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
             end
     end
     axis.plotattributes[:optimized_ticks]
@@ -464,6 +466,8 @@ function PlotsBase.expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
     ex
 end
 
+end # Axes
+
 # -------------------------------------------------------------------------
 
-end # Axes
+using .Axes

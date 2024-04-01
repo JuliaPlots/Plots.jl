@@ -460,7 +460,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 29
         "Layouts, margins, label rotation, title location",
-        :(using PlotsBase.Measurements),  # for Measures, e.g. mm and px
+        :(using PlotsBase.Commons),  # for Measures, e.g. mm and px
         quote
             plot(
                 rand(100, 6),

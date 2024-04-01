@@ -1,6 +1,6 @@
 module Ticks
 
-export get_ticks, _has_ticks, _transform_ticks, get_minor_ticks
+export _has_ticks, _transform_ticks, get_minor_ticks
 export no_minor_intervals, num_minor_intervals, ticks_type
 
 using ..Commons
@@ -15,11 +15,11 @@ ticks_type(ticks) = :invalid
 
 # get_ticks from axis symbol :x, :y, or :z
 
-get_ticks(ticks::NTuple{2,Any}, args...) = ticks
-get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
-get_ticks(ticks::Bool, args...) =
+Commons.get_ticks(ticks::NTuple{2,Any}, args...) = ticks
+Commons.get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
+Commons.get_ticks(ticks::Bool, args...) =
     ticks ? get_ticks(:auto, args...) : get_ticks(nothing, args...)
-get_ticks(::T, args...) where {T} =
+Commons.get_ticks(::T, args...) where {T} =
     throw(ArgumentError("Unknown ticks type in get_ticks: $T"))
 
 # do not specify array item type to also catch e.g. "xlabel=[]" and "xlabel=([],[])"
@@ -105,3 +105,5 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
 end
 
 end  # module
+
+using .Ticks

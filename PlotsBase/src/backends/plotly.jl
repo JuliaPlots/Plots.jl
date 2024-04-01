@@ -11,7 +11,6 @@ import JSON
 using PlotUtils
 
 using PlotsBase.Colors: Colorant
-using PlotsBase.Measurements
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
 using PlotsBase.Colorbars
@@ -623,7 +622,10 @@ function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
     cinds = repeat(1:n, inner = 2)
     vinds = vcat((i:(i + 1) for i in 1:n)...)
     map(
-        i -> [cg.values[vinds[i]], rgba_string(plot_color(PlotsBase.color_list(cg)[cinds[i]], α))],
+        i -> [
+            cg.values[vinds[i]],
+            rgba_string(plot_color(PlotsBase.color_list(cg)[cinds[i]], α)),
+        ],
         eachindex(cinds),
     )
 end
@@ -1321,3 +1323,5 @@ function _ijulia__extra_mime_info!(plt::Plot{PlotlyBackend}, out::Dict)
 end
 
 end  # module
+
+using .Plotly

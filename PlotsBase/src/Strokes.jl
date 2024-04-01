@@ -80,3 +80,5 @@ function brush(args...; alpha = nothing)
 end
 
 end  # module
+
+using .Strokes

@@ -4,7 +4,6 @@ import PlotsBase: PlotsBase, texmath2unicode
 import RecipesPipeline
 import UnicodePlots
 
-using PlotsBase.Measurements
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
 using PlotsBase.Colorbars

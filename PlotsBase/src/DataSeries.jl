@@ -20,7 +20,7 @@ export get_linestyle,
     get_fillalpha,
     get_markercolor,
     get_markeralpha
-    
+
 import ..Commons: get_gradient, get_subplot, _series_defaults
 import ..PlotsBase
 
@@ -37,23 +37,6 @@ Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 Base.push!(series::Series, args...) = extend_series!(series, args...)
 Base.append!(series::Series, args...) = extend_series!(series, args...)
-
-# TODO: consider removing
-attr(series::Series, k::Symbol) = series.plotattributes[k]
-attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
-function attr!(series::Series; kw...)
-    plotattributes = KW(kw)
-    PlotsBase.Commons.preprocess_attributes!(plotattributes)
-    for (k, v) in plotattributes
-        if haskey(_series_defaults, k)
-            series[k] = v
-        else
-            @warn "unused key $k in series attr"
-        end
-    end
-    PlotsBase._series_updated(series[:subplot].plt, series)
-    series
-end
 
 should_add_to_legend(series::Series) =
     series.plotattributes[:primary] &&
@@ -333,3 +316,22 @@ function warn_on_inconsistent_shape_attrs(series, x, y, z, r)
 end
 
 end  # module
+
+using .DataSeries
+
+# TODO: consider removing
+attr(series::Series, k::Symbol) = series.plotattributes[k]
+attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
+function attr!(series::Series; kw...)
+    plotattributes = KW(kw)
+    Commons.preprocess_attributes!(plotattributes)
+    for (k, v) in plotattributes
+        if haskey(_series_defaults, k)
+            series[k] = v
+        else
+            @warn "unused key $k in series attr"
+        end
+    end
+    _series_updated(series[:subplot].plt, series)
+    series
+end

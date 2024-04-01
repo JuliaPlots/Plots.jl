@@ -8,11 +8,7 @@ export Subplot,
     get_series_color,
     needs_any_3d_axes,
     plotarea,
-    plotarea!,
-    toppad,
-    leftpad,
-    bottompad,
-    rightpad
+    plotarea!
 using PlotsBase:
     PlotsBase,
     RecipesPipeline,
@@ -23,7 +19,6 @@ using PlotsBase:
     DefaultsDict
 
 import ..Commons: convert_legend_value, like_surface
-using ..Measurements
 using ..RecipesPipeline: RecipesPipeline, Surface, Volume
 using ..PlotUtils: get_color_palette
 using ..Commons.Frontend
@@ -59,8 +54,8 @@ end
 # properly retrieve from sp.attr, passing `:match` to the correct key
 Base.getindex(sp::Subplot, k::Symbol) =
     if (v = sp.attr[k]) ≡ :match
-        if haskey(Commons.Commons._match_map2, k)
-            sp.plt[Commons.Commons._match_map2[k]]
+        if haskey(Commons._match_map2, k)
+            sp.plt[Commons._match_map2[k]]
         else
             sp[Commons._match_map[k]]
         end
@@ -90,29 +85,11 @@ Base.size(sp::Subplot) = (1, 1)
 Base.length(sp::Subplot) = 1
 Base.getindex(sp::Subplot, r::Int, c::Int) = sp
 
-PlotsBase.leftpad(sp::Subplot)   = sp.minpad[1]
-PlotsBase.toppad(sp::Subplot)    = sp.minpad[2]
-PlotsBase.rightpad(sp::Subplot)  = sp.minpad[3]
-PlotsBase.bottompad(sp::Subplot) = sp.minpad[4]
-
-function PlotsBase.attr!(sp::Subplot; kw...)
-    plotattributes = KW(kw)
-    PlotsBase.Commons.preprocess_attributes!(plotattributes)
-    for (k, v) in plotattributes
-        if haskey(_subplot_defaults, k)
-            sp[k] = v
-        else
-            @warn "unused key $k in subplot attr"
-        end
-    end
-    sp
-end
-
 PlotsBase.series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] ≡ sp, sp.plt.series_list)
 PlotsBase.RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 PlotsBase.ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
 
-get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
+Commons.get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
@@ -291,7 +268,29 @@ function PlotsBase.expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
     expand_extrema!(sp[:yaxis], (ymin, ymax))
 end
 
-Commons.get_size(sp::Subplot) = Commons.get_size(sp.plt)
-Commons.get_thickness_scaling(sp::Subplot) = Commons.get_thickness_scaling(sp.plt)
+Commons.get_size(sp::Subplot) = get_size(sp.plt)
+Commons.get_thickness_scaling(sp::Subplot) = get_thickness_scaling(sp.plt)
 
 end  # module
+
+# -------------------------------------------------------------------
+
+using .Subplots
+
+Commons.leftpad(sp::Subplot)   = sp.minpad[1]
+Commons.toppad(sp::Subplot)    = sp.minpad[2]
+Commons.rightpad(sp::Subplot)  = sp.minpad[3]
+Commons.bottompad(sp::Subplot) = sp.minpad[4]
+
+function attr!(sp::Subplot; kw...)
+    plotattributes = KW(kw)
+    PlotsBase.Commons.preprocess_attributes!(plotattributes)
+    for (k, v) in plotattributes
+        if haskey(_subplot_defaults, k)
+            sp[k] = v
+        else
+            @warn "unused key $k in subplot attr"
+        end
+    end
+    sp
+end

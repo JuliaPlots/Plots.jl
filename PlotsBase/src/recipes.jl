@@ -977,7 +977,7 @@ lens!(args...; kwargs...) = plot!(args...; seriestype = :lens, kwargs...)
 export lens!
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)  # COV_EXCL_LINE
     sp_index, inset_bbox = plotattributes[:inset_subplots]
-    width(inset_bbox) isa Measures.Length{:w,<:Real} ||
+    width(inset_bbox) isa Commons.Length{:w,<:Real} ||
         throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
     sp = plt.subplots[sp_index]
     xscale = sp[:xaxis][:scale]

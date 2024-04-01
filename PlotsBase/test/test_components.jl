@@ -55,7 +55,7 @@
         @test square2.y ≈ coordsRotated2[2, :]
 
         # unrotate the new square in place
-        rotate!(square2, 2)
+        PlotsBase.rotate!(square2, 2)
         @test square2.x ≈ coords[1, :]
         @test square2.y ≈ coords[2, :]
     end

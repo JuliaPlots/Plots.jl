@@ -5,7 +5,6 @@ import RecipesPipeline
 import NaNMath
 import GR
 
-using PlotsBase.Measurements
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
 using PlotsBase.Colorbars

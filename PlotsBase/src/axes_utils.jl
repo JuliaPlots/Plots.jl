@@ -75,7 +75,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     unscaled_ticks, labels
 end
 
-Ticks.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
+Commons.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
     if ticks ≡ :none
         T[], String[]
     elseif !isempty(dvals)
@@ -91,9 +91,9 @@ Ticks.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
         optimal_ticks_and_labels(nothing, args...)
     end
 
-Ticks.get_ticks(ticks::AVec, cvals, dvals, args...) =
+Commons.get_ticks(ticks::AVec, cvals, dvals, args...) =
     optimal_ticks_and_labels(ticks, args...)
-Ticks.get_ticks(ticks::Int, dvals, cvals, args...) =
+Commons.get_ticks(ticks::Int, dvals, cvals, args...) =
     if isempty(dvals)
         optimal_ticks_and_labels(ticks, args...)
     else

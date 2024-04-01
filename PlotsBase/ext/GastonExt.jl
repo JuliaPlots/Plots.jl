@@ -5,7 +5,6 @@ import PlotUtils
 import PlotsBase
 import Gaston
 
-using PlotsBase.Measurements
 using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots

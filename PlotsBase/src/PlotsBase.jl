@@ -116,15 +116,7 @@ export
     scalefontsizes,
     resetfontsizes
 
-import Measures: width, height
-
-function attr end
-function attr! end
-function rotate end
-function rotate! end
-
 #! format: on
-import Measures
 import NaNMath
 
 macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
@@ -142,40 +134,29 @@ end
 include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
-include("Measurements.jl")
-using .Measurements
+
+Commons.@generic_functions attr attr! rotate rotate!
+
 # ---------------------------------------------------------
 include("Fonts.jl")
 @reexport using .Fonts
 include("Ticks.jl")
-using .Ticks
 include("DataSeries.jl")
-using .DataSeries
 include("Subplots.jl")
-using .Subplots
 include("Axes.jl")
-using .Axes
 include("Surfaces.jl")
-using .Surfaces
 include("Colorbars.jl")
-using .Colorbars
 include("Plots.jl")
-using .Plots
 # ---------------------------------------------------------
 include("layouts.jl")
 include("utils.jl")
 include("axes_utils.jl")
 include("legend.jl")
 include("Shapes.jl")
-using .Shapes
 include("Annotations.jl")
-using .Annotations
 include("Arrows.jl")
-using .Arrows
 include("Strokes.jl")
-using .Strokes
 include("BezierCurves.jl")
-using .BezierCurves
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
@@ -193,10 +174,7 @@ include("alignment.jl")
 include("output.jl")
 include("shorthands.jl")
 include("backends/web.jl")
-
 include("backends/plotly.jl")
-using .Plotly
-
 include("init.jl")
 include("users.jl")
 

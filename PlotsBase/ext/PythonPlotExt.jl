@@ -17,7 +17,6 @@ using PlotUtils
 import PlotsBase
 import RecipesPipeline: Surface
 
-using PlotsBase.Measurements
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
 using PlotsBase.Colorbars
@@ -401,9 +400,9 @@ function _py_bbox(obj)
     fl, fr, fb, ft = bb = _py_extents(obj.get_figure())
     l, r, b, t = ex = _py_extents(obj)
     # @show obj bb ex
-    x0, y0, width, height = l * px, (ft - t) * px, (r - l) * px, (t - b) * px
-    # @show width height
-    BoundingBox(x0, y0, width, height)
+    x0, y0, w, h = l * px, (ft - t) * px, (r - l) * px, (t - b) * px
+    # @show w h
+    BoundingBox(x0, y0, w, h)
 end
 
 _py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
@@ -456,8 +455,7 @@ _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_
 
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{PythonPlotBackend})
-    w, h =
-        map(s -> PlotsBase.Measurements.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
+    w, h = map(s -> PlotsBase.Commons.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
     # reuse the current figure?
     plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end

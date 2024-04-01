@@ -9,7 +9,6 @@ import PlotUtils.Colors: Colorant
 
 import PlotsBase
 
-using PlotsBase.Measurements
 using PlotsBase.DataSeries
 using PlotsBase.Subplots
 using PlotsBase.Commons

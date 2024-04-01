@@ -23,7 +23,6 @@ import ..Commons: ignorenan_extrema, _cycle
 
 using ..PlotUtils
 using ..Commons.Frontend
-using ..Measurements
 using ..Commons
 using ..Fonts
 using ..Ticks
@@ -177,12 +176,12 @@ Base.ndims(plt::Plot) = 2
 
 # clear out series list, but retain subplots
 Base.empty!(plt::Plot) = foreach(sp -> empty!(sp.series_list), plt.subplots)
-PlotsBase.get_subplot(plt::Plot, sp::Subplot) = sp
-PlotsBase.get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
-PlotsBase.get_subplot(plt::Plot, k) = plt.spmap[k]
-PlotsBase.series_list(plt::Plot) = plt.series_list
+Commons.get_subplot(plt::Plot, sp::Subplot) = sp
+Commons.get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
+Commons.get_subplot(plt::Plot, k) = plt.spmap[k]
+Commons.series_list(plt::Plot) = plt.series_list
 
-get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
+Commons.get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
 
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x ≡ sp, plt.subplots)
 PlotsBase.RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
@@ -282,11 +281,11 @@ function _update_subplot_attrs(
     PlotsBase.Subplots._update_subplot_periphery(sp, anns)
 end
 
-function scale_lims!(plt::Plot, letter, factor)
+function Commons.scale_lims!(plt::Plot, letter, factor)
     foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
     plt
 end
-function scale_lims!(plt::Union{Plot,Subplot}, factor)
+function Commons.scale_lims!(plt::Union{Plot,Subplot}, factor)
     foreach(letter -> scale_lims!(plt, letter, factor), (:x, :y, :z))
     plt
 end
@@ -294,3 +293,7 @@ Commons.get_size(plt::Plot) = get_size(plt.attr)
 Commons.get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
 
 end  # module
+
+# -------------------------------------------------------------------
+
+using .Plots
