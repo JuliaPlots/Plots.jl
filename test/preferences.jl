@@ -55,7 +55,7 @@
         @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
         rm.(Base.find_all_in_cache_path(Base.module_keys[Plots]))  # make sure the compiled cache is removed
         script = tempname()
-        write(script, "import :$pkg; using Test, Plots; @test Plots.backend_name() == $be")
+        write(script, "import :$pkg; using Test, Plots; @test Plots.backend_name() ≡ :$be")
         @test success(run(```$(Base.julia_cmd()) $script```))  # test default precompilation
     end
 
