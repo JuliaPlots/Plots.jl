@@ -273,7 +273,7 @@ function _py_marker(marker::Symbol)
     marker ≡ :pixel && return ","
     marker ≡ :hline && return "_"
     marker ≡ :vline && return "|"
-    let _shapes = PlotsBase.Shapes._shapes
+    let _shapes = Shapes._shapes
         haskey(_shapes, marker) && return _py_marker(_shapes[marker])
     end
     @warn "Unknown marker $marker"
@@ -455,7 +455,7 @@ _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_
 
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{PythonPlotBackend})
-    w, h = map(s -> PlotsBase.Commons.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
+    w, h = map(s -> Commons.px2inch(s * plt[:dpi] / DPI), plt[:size])
     # reuse the current figure?
     plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end
@@ -538,8 +538,8 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
     # pass in an integer value as an arg, but a levels list as a keyword arg
     levels = series[:levels]
-    levelargs = PlotsBase.isscalar(levels) ? levels : ()
-    PlotsBase.isvector(levels) && (extrakw[:levels] = levels)
+    levelargs = isscalar(levels) ? levels : ()
+    isvector(levels) && (extrakw[:levels] = levels)
 
     # add custom frame shapes to markershape?
     series_annotations_shapes!(series, :xy)
@@ -1014,7 +1014,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig.clear()
-    fig.set_size_inches(w / DPI, h / PlotsBase.DPI, forward = true)
+    fig.set_size_inches(w / DPI, h / DPI, forward = true)
     fig.set_facecolor(_py_color(plt[:background_color_outside]))
     fig.set_dpi(plt[:dpi])
 
@@ -1458,7 +1458,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{PythonPlotBackend})
     # add ∈ the user-specified margin
     padding .+= [sp[:left_margin], sp[:top_margin], sp[:right_margin], sp[:bottom_margin]]
 
-    sp.minpad = Tuple((PlotsBase.DPI / sp.plt[:dpi]) .* padding)
+    sp.minpad = Tuple((DPI / sp.plt[:dpi]) .* padding)
 end
 
 # -----------------------------------------------------------------
@@ -1662,7 +1662,7 @@ function PlotsBase._update_plot_object(plt::Plot{PythonPlotBackend})
             bb = sp.attr[:cbar_bbox]
             # this is the bounding box of just the colors of the colorbar (not labels)
             pad = 2mm
-            cb_bbox = PlotsBase.BoundingBox(
+            cb_bbox = BoundingBox(
                 right(sp.bbox) - 2width(bb) - 2pad,  # x0
                 top(sp.bbox) + pad,  # y0
                 width(bb),  # width

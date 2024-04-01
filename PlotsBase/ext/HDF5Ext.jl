@@ -9,9 +9,11 @@ import PlotUtils.Colors: Colorant
 
 import PlotsBase
 
+using PlotsBase.Annotations
 using PlotsBase.DataSeries
 using PlotsBase.Subplots
 using PlotsBase.Commons
+using PlotsBase.Arrows
 using PlotsBase.Shapes
 using PlotsBase.Plots
 using PlotsBase.Fonts
@@ -108,7 +110,7 @@ const _hdf5_seriestypes = [
     :wireframe,
 ]
 const _hdf5_styles = [:auto, :solid, :dash, :dot, :dashdot]
-const _hdf5_markers = vcat(PlotsBase.Commons._all_markers, :pixel)
+const _hdf5_markers = vcat(Commons._all_markers, :pixel)
 const _hdf5_scales = [:identity, :ln, :log2, :log10]
 
 # Additional constants
@@ -150,14 +152,14 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
 
         # Sub-structure types:
         "DEFAULTSDICT" => DefaultsDict,
-        "FONT" => PlotsBase.Font,
+        "FONT" => Font,
         "BOUNDINGBOX" => BoundingBox,
         "GRIDLAYOUT" => GridLayout,
         "ROOTLAYOUT" => RootLayout,
-        "SERIESANNOTATIONS" => PlotsBase.SeriesAnnotations,
+        "SERIESANNOTATIONS" => SeriesAnnotations,
         "PLOTTEXT" => PlotText,
         "SHAPE" => Shape,
-        "ARROW" => PlotsBase.Arrow,
+        "ARROW" => Arrow,
         "COLORSCHEME" => ColorScheme,
         "COLORPALETTE" => PlotUtils.ColorPalette,
         "CONT_COLORGRADIENT" => PlotUtils.ContinuousColorGradient,

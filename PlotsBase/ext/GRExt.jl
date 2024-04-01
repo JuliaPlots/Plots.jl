@@ -633,10 +633,10 @@ end
 
 function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vp_canvas)
     viewport = GRViewport(
-        vp_canvas.xmax * (PlotsBase.left(bb) / w),
-        vp_canvas.xmax * (PlotsBase.right(bb) / w),
-        vp_canvas.ymax * (1 - PlotsBase.bottom(bb) / h),
-        vp_canvas.ymax * (1 - PlotsBase.top(bb) / h),
+        vp_canvas.xmax * (left(bb) / w),
+        vp_canvas.xmax * (right(bb) / w),
+        vp_canvas.ymax * (1 - bottom(bb) / h),
+        vp_canvas.ymax * (1 - top(bb) / h),
     )
     hascolorbar(sp) && (viewport.xmax -= 0.1(1 + 0.5gr_is3d(sp)))
     viewport
@@ -1112,8 +1112,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     PlotsBase._update_min_padding!(sp)
 
     # the viewports for this subplot and the whole plot
-    vp_sp = gr_viewport_from_bbox(sp, PlotsBase.bbox(sp), w, h, vp_canvas)
-    vp_plt = gr_viewport_from_bbox(sp, PlotsBase.plotarea(sp), w, h, vp_canvas)
+    vp_sp = gr_viewport_from_bbox(sp, bbox(sp), w, h, vp_canvas)
+    vp_plt = gr_viewport_from_bbox(sp, plotarea(sp), w, h, vp_canvas)
 
     # update plot viewport
     leg = gr_get_legend_geometry(vp_plt, sp)
@@ -1971,7 +1971,7 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
     (x ≡ nothing || length(x) ≤ 1) && return
     if fillrange ≢ nothing  # prepare fill-in
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
-        fr_from, fr_to = PlotsBase.is_2tuple(fillrange) ? fillrange : (y, fillrange)
+        fr_from, fr_to = is_2tuple(fillrange) ? fillrange : (y, fillrange)
     end
 
     # draw the line(s)
@@ -2229,7 +2229,7 @@ for (mime, fmt) in (
     "image/svg+xml" => "svg",
 )
     @eval function PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
-        dpi_factor = $fmt == "png" ? plt[:dpi] / PlotsBase.DPI : 1
+        dpi_factor = $fmt == "png" ? plt[:dpi] / DPI : 1
         filepath = tempname() * "." * $fmt
         # workaround  windows bug github.com/JuliaLang/julia/issues/46989
         touch(filepath)

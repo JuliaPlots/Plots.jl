@@ -206,7 +206,7 @@ function gaston_saveopts(plt::Plot{GastonBackend})
     saveopts = ["size " * join(plt[:size], ',')]
 
     # scale all plot elements to match PlotsBase.jl DPI standard
-    scaling = plt[:dpi] / PlotsBase.DPI
+    scaling = plt[:dpi] / DPI
 
     push!(
         saveopts,
@@ -229,7 +229,7 @@ function gaston_get_subplots(n, plt_subplots, layout)
     nr, nc = size(layout)
     sps = Array{Any}(nothing, nr, nc)
     for r in 1:nr, c in 1:nc  # NOTE: col major
-        sps[r, c] = if (l = layout[r, c]) isa PlotsBase.GridLayout
+        sps[r, c] = if (l = layout[r, c]) isa GridLayout
             n, sub = gaston_get_subplots(n, plt_subplots, l)
             size(sub) == (1, 1) ? only(sub) : sub
         else
@@ -288,7 +288,7 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
         # width and height (pct) are multiplicative (parent)
         w = layout.widths[c].value * parent_xy_wh[3]
         h = layout.heights[r].value * parent_xy_wh[4]
-        if isa(l, PlotsBase.EmptyLayout)
+        if isa(l, EmptyLayout)
             dat[r, c] = (c - 1) * w, (r - 1) * h, w, h, nothing
         else
             # previous position (origin)
@@ -298,7 +298,7 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
             prev_c isa Array && (prev_c = prev_c[end, end])
             x = prev_c ≢ nothing ? prev_c[1] + prev_c[3] : parent_xy_wh[1]
             y = prev_r ≢ nothing ? prev_r[2] + prev_r[4] : parent_xy_wh[2]
-            dat[r, c] = if l isa PlotsBase.GridLayout
+            dat[r, c] = if l isa GridLayout
                 sub = gaston_multiplot_pos_size(l, (x, y, w, h))
                 size(sub) == (1, 1) ? only(sub) : sub
             else

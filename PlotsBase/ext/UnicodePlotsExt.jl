@@ -110,7 +110,7 @@ const _canvas_map = (
 
 PlotsBase.should_warn_on_unsupported(::UnicodePlotsBackend) = false
 
-function PlotsBase._before_layout_calcs(plt::PlotsBase.Plot{UnicodePlotsBackend})
+function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
     plt.o = UnicodePlots.Plot[]
     up_width = UnicodePlots.DEFAULT_WIDTH[]
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
@@ -377,7 +377,7 @@ end
 function PlotsBase._show(
     io::IO,
     ::MIME"image/png",
-    plt::PlotsBase.Plot{UnicodePlotsBackend},
+    plt::Plot{UnicodePlotsBackend},
 )
     applicable(UnicodePlots.save_image, io) ||
         "PlotsBase(UnicodePlots): saving to `.png` requires `import FreeType, FileIO`" |>
@@ -390,7 +390,7 @@ function PlotsBase._show(
     imgs = []
     sps = 0
     for r in 1:nr, c in 1:nc
-        if (l = plt.layout[r, c]) isa PlotsBase.GridLayout && size(l) != (1, 1)
+        if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
             unsupported_layout_error()
         else
             img = UnicodePlots.png_image(plt.o[sps += 1]; pixelsize = 32)
@@ -423,15 +423,15 @@ function PlotsBase._show(
     nothing
 end
 
-Base.show(plt::PlotsBase.Plot{UnicodePlotsBackend}) = show(stdout, plt)
-Base.show(io::IO, plt::PlotsBase.Plot{UnicodePlotsBackend}) =
+Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
+Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) =
     PlotsBase._show(io, MIME("text/plain"), plt)
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
 function PlotsBase._show(
     io::IO,
     ::MIME"text/plain",
-    plt::PlotsBase.Plot{UnicodePlotsBackend},
+    plt::Plot{UnicodePlotsBackend},
 )
     PlotsBase.prepare_output(plt)
     nr, nc = size(plt.layout)
@@ -452,7 +452,7 @@ function PlotsBase._show(
         for r in 1:nr
             lmax = 0
             for c in 1:nc
-                if (l = plt.layout[r, c]) isa PlotsBase.GridLayout && size(l) != (1, 1)
+                if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
                     unsupported_layout_error()
                 else
                     if get(l.attr, :blank, false)
@@ -493,7 +493,7 @@ function PlotsBase._show(
 end
 
 # we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
-function PlotsBase._display(plt::PlotsBase.Plot{UnicodePlotsBackend})
+function PlotsBase._display(plt::Plot{UnicodePlotsBackend})
     show(stdout, plt)
     println(stdout)
 end

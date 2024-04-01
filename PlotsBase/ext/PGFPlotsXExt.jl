@@ -314,9 +314,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         for sp in plt.subplots
-            bb2 = PlotsBase.bbox(sp)
+            bb2 = bbox(sp)
             dx, dy = bb2.x0
-            sp_w, sp_h = PlotsBase.width(bb2), PlotsBase.height(bb2)
+            sp_w, sp_h = width(bb2), height(bb2)
             if sp[:subplot_index] == plt[:plot_titleindex]
                 x = dx + sp_w / 2 - 10mm  # FIXME: get rid of magic constant
                 y = dy + sp_h / 2

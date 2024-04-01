@@ -15,7 +15,7 @@ const pct = Measures.Length{:pct,Float64}(1.0)
 
 const BBox = Measures.Absolute2DBox
 
-to_pixels(m::AbsoluteLength) = m.value / 0.254
+to_pixels(m::AbsoluteLength) = m.value / px.value
 
 # convert x,y coordinates from absolute coords to percentages...
 # returns x_pct, y_pct
@@ -60,7 +60,7 @@ function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
     BoundingBox(l, t, r - l, b - t)
 end
 
-Base.convert(::Type{<:Measure}, x::Float64) = x * Commons.pct
+Base.convert(::Type{<:Measure}, x::Float64) = x * pct
 
 Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
 Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
