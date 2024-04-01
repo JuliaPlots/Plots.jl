@@ -4,7 +4,8 @@ import RecipesPipeline
 import PythonPlot
 
 const PythonCall = PythonPlot.PythonCall
-const pyisnone = isdefined(PythonCall, :pyisnone) ? PythonCall.pyisnone : PythonCall.Core.pyisnone
+const pyisnone =
+    isdefined(PythonCall, :pyisnone) ? PythonCall.pyisnone : PythonCall.Core.pyisnone
 
 const mpl = PythonPlot.matplotlib
 const mpl_toolkits = PythonCall.pynew()
@@ -456,7 +457,8 @@ _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_
 
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{PythonPlotBackend})
-    w, h = map(s -> PlotsBase.PlotMeasures.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
+    w, h =
+        map(s -> PlotsBase.PlotMeasures.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
     # reuse the current figure?
     plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end
@@ -971,7 +973,8 @@ function _py_compute_axis_minval(sp::Subplot, axis::Axis)
 end
 
 function _py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
-    scale ∈ PlotsBase.supported_scales() || return @warn "Unhandled scale value in PythonPlot: $scale"
+    scale ∈ PlotsBase.supported_scales() ||
+        return @warn "Unhandled scale value in PythonPlot: $scale"
     scl, kw = if scale === :identity
         "linear", KW()
     else

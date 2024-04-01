@@ -965,7 +965,8 @@ function pgfx_get_legend_pos(v::Tuple{<:Real,Symbol})
     else
         (-0.15, 0.5, 1.05, -0.15, 0.52, 1.1), anchors[4 - I, 4 - I]
     end
-    return "at" => string(PlotsBase.legend_pos_from_angle(v[1], rect...)), "anchor" => anchor
+    return "at" => string(PlotsBase.legend_pos_from_angle(v[1], rect...)),
+    "anchor" => anchor
 end
 
 function pgfx_get_legend_style(sp)
