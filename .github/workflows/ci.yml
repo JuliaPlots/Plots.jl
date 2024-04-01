@@ -67,7 +67,7 @@ jobs:
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
-          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase"))
+          foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline", "PlotsBase"))
 
       - uses: julia-actions/julia-buildpkg@latest
 
@@ -113,7 +113,7 @@ jobs:
           using Pkg
           foreach(("StatsPlots", "GraphRecipes")) do name
             Pkg.activate(tempdir())
-            foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "."))
+            foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline", "PlotsBase", "."))
             Pkg.add(name); Pkg.test(name; coverage=true)
           end
 
