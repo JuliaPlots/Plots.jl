@@ -270,22 +270,6 @@ end
 isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
 isatom() = :Atom in nameof.(collect(values(Base.loaded_modules)))
 
-istuple(::Tuple) = true
-istuple(::Any)   = false
-isvector(::AVec) = true
-isvector(::Any)  = false
-ismatrix(::AMat) = true
-ismatrix(::Any)  = false
-isscalar(::Real) = true
-isscalar(::Any)  = false
-
-is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
-
-ticks_type(ticks::AVec{<:Real}) = :ticks
-ticks_type(ticks::AVec{<:AbstractString}) = :labels
-ticks_type(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
-ticks_type(ticks) = :invalid
-
 limsType(lims::Tuple{<:Real,<:Real}) = :limits
 limsType(lims::Symbol) = lims ≡ :auto ? :auto : :invalid
 limsType(lims) = :invalid

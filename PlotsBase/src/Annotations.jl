@@ -1,20 +1,22 @@
 # internal module
 module Annotations
 
-using ..PlotsBase.Commons
-using ..PlotsBase.Dates
-using ..PlotsBase.Fonts: Font, PlotText, text, font
-using ..PlotsBase.Shapes: Shape, _shapes
-using ..PlotsBase.PlotMeasures: pct
-using ..PlotsBase: Series, Subplot, TimeType, Length
-using ..PlotsBase: is_2tuple, is3d, discrete_value!
-export EachAnn,
+export SeriesAnnotations,
+    EachAnn,
     series_annotations,
     series_annotations_shapes!,
     process_annotation,
     locate_annotation,
     annotations,
     assign_annotation_coord!
+
+import ..PlotsBase: Series, Subplot, TimeType, is3d, discrete_value!
+
+using ..Measurements
+using ..Commons
+using ..Shapes
+using ..Dates
+using ..Fonts
 
 mutable struct SeriesAnnotations
     strs::AVec  # the labels/names
@@ -69,8 +71,8 @@ function series_annotations(strs::AVec, args...)
             shp = arg
         elseif isa(arg, Font)
             fnt = arg
-        elseif isa(arg, Symbol) && haskey(_shapes, arg)
-            shp = _shapes[arg]
+        elseif isa(arg, Symbol) && haskey(Shapes._shapes, arg)
+            shp = Shapes._shapes[arg]
         elseif isa(arg, Number)
             scalefactor = arg, arg
         elseif is_2tuple(arg)
@@ -238,7 +240,7 @@ locate_annotation(sp::Subplot, rel::Tuple, label::PlotText) = (
     map(1:length(rel), (:x, :y, :z)) do i, letter
         _relative_position(
             axis_limits(sp, letter)...,
-            rel[i] * pct,
+            rel[i] * Measurements.pct,
             sp[get_attr_symbol(letter, :axis)][:scale],
         )
     end...,

@@ -37,7 +37,7 @@ export anynan,
     ignorenan_maximum,
     ignorenan_mean,
     ignorenan_minimum
-#exports from args.jl
+export istuple, isvector, ismatrix, isscalar, is_2tuple
 export default, wraptuple, merge_with_base_supported
 
 using PlotsBase: PlotsBase, Printf, NaNMath, cgrad
@@ -167,6 +167,17 @@ function color_or_nothing!(plotattributes, k::Symbol)
     plotattributes[k] = (v = plotattributes[k]) ≡ :match ? v : plot_color(v)
     nothing
 end
+
+istuple(::Tuple) = true
+istuple(::Any)   = false
+isvector(::AVec) = true
+isvector(::Any)  = false
+ismatrix(::AMat) = true
+ismatrix(::Any)  = false
+isscalar(::Real) = true
+isscalar(::Any)  = false
+
+is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
 # cache joined symbols so they can be looked up instead of constructed each time
 const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()

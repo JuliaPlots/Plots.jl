@@ -287,7 +287,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         else
             get(sp_attrs, sp, KW())
         end
-        PlotsPlots._update_subplot_attrs(plt, sp, attr, idx, false)
+        Plots._update_subplot_attrs(plt, sp, attr, idx, false)
     end
 
     # do we need to link any axes together?
@@ -378,8 +378,8 @@ end
 function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st::Symbol = plotattributes[:seriestype]
     sp::Subplot{T} = plotattributes[:subplot]
-    sp_idx = PlotsPlots.get_subplot_index(plt, sp)
-    PlotsPlots._update_subplot_attrs(plt, sp, plotattributes, sp_idx, true)
+    sp_idx = Plots.get_subplot_index(plt, sp)
+    Plots._update_subplot_attrs(plt, sp, plotattributes, sp_idx, true)
 
     st = _override_seriestype_check(plotattributes, st)
 

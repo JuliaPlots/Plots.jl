@@ -1,7 +1,8 @@
 module Arrows
 
-using ..PlotsBase.Commons
 export Arrow, arrow, add_arrows
+
+using ..PlotsBase.Commons
 
 # style is :open or :closed (for now)
 struct Arrow
@@ -59,4 +60,5 @@ function add_arrows(func::Function, x::AVec, y::AVec)
         end
     end
 end
-end # Arrows
+
+end  # module

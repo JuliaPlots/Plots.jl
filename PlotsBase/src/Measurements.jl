@@ -1,11 +1,12 @@
-module PlotMeasures
+module Measurements
 
-export PX_PER_INCH,
-    DPI, MM_PER_INCH, MM_PER_PX, DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
+export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
+export PX_PER_INCH, DPI, MM_PER_INCH, MM_PER_PX
+export Length, AbsoluteLength, Measure, width, height
 
 import ..Measures
-import ..Measures:
-    Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height, w, h
+import ..Measures: Length, AbsoluteLength, Measure, BoundingBox
+import ..Measures: mm, cm, inch, pt, width, height, w, h
 
 const BBox = Measures.Absolute2DBox
 export BBox, BoundingBox, mm, cm, inch, px, pct, pt, w, h
@@ -37,4 +38,4 @@ mm2inch(mm::Real)     = float(mm / MM_PER_INCH)
 px2mm(px::Real)       = float(px * MM_PER_PX)
 mm2px(mm::Real)       = float(mm / MM_PER_PX)
 
-end
+end  # module

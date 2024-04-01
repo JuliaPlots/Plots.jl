@@ -1,16 +1,18 @@
 module Colorbars
 
-export colorbar_style,
-    get_clims, update_clims, hascolorbar, get_colorbar_ticks, _update_subplot_colorbars
-using PlotsBase.Commons: Commons, NaNMath, ignorenan_extrema
-using PlotsBase.PlotsSeries
-using PlotsBase.Subplots: Subplot, series_list
-using PlotsBase.Surfaces: AbstractSurface
-using PlotsBase.Ticks
-using PlotsBase.Ticks: _transform_ticks
-import PlotsBase.Commons.get_clims
+export colorbar_style, get_clims, update_clims, hascolorbar
+export get_colorbar_ticks, _update_subplot_colorbars
 
-# These functions return an operator for use in `get_clims(::Seres, op)`
+import ..Commons: NaNMath, ignorenan_extrema, get_clims
+
+using ..Subplots: Subplot, series_list
+using ..Surfaces: AbstractSurface
+using ..Ticks: _transform_ticks
+using ..DataSeries
+using ..Commons
+using ..Ticks
+
+# these functions return an operator for use in `get_clims(::Seres, op)`
 process_clims(lims::Tuple{<:Number,<:Number}) =
     (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
 process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
@@ -137,7 +139,8 @@ function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar
     return sp.attr[:colorbar_optimized_ticks]
 end
 
-# Dynamic callback from the pipeline if needed
+# dynamic callback from the pipeline if needed
 _update_subplot_colorbars(sp::Subplot) = update_clims(sp)
 _update_subplot_colorbars(sp::Subplot, series::Series) = update_clims(sp, series)
-end # Colorbars
+
+end  # module

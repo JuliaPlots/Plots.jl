@@ -1,11 +1,12 @@
 module Fonts
 
-using PlotsBase.Colors
-using PlotsBase.Commons
-using PlotsBase.Commons:
+using ..Colors
+using ..Commons
+using ..Commons:
     _initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes, _initial_fontsizes
+
 # keep in mind: these will be reexported and are public API
-export font, scalefontsizes, resetfontsizes, text, is_horizontal, Font, PlotText
+export Font, PlotText, font, scalefontsizes, resetfontsizes, text, is_horizontal
 
 mutable struct Font
     family::AbstractString
@@ -174,4 +175,5 @@ text(str, args...; kw...) = PlotText(string(str), font(args...; kw...))
 Base.length(t::PlotText) = length(t.str)
 
 is_horizontal(t::PlotText) = abs(sind(t.font.rotation)) ≤ sind(45)
-end # Fonts
+
+end  # module

@@ -2,10 +2,11 @@ module Surfaces
 
 export SurfaceFunction, Surface
 
-import PlotsBase: PlotsBase, expand_extrema!, Commons
-using PlotsBase.Axes: Axis
-using RecipesPipeline: AbstractSurface, Surface
-using PlotsBase.Commons
+import PlotsBase: PlotsBase, expand_extrema!
+using ..RecipesPipeline: AbstractSurface, Surface
+
+using ..Commons
+using ..Axes
 
 function PlotsBase.expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]
@@ -19,4 +20,5 @@ struct SurfaceFunction <: AbstractSurface
 end
 
 Commons.handle_surface(z::Surface) = permutedims(z.surf)
-end
+
+end  # module

@@ -8,18 +8,18 @@ import Statistics
 import UUIDs
 import JSON
 
-using PlotUtils: PlotUtils, ColorGradient, rgba_string, rgb_string
+using PlotUtils
 
-import PlotsBase: right, left, bottom, top, width, height, bbox, ispolar
 using PlotsBase.Colors: Colorant
-using PlotsBase.PlotMeasures
+using PlotsBase.Measurements
 using PlotsBase.Annotations
-using PlotsBase.PlotsSeries
-using PlotsBase.PlotsPlots
+using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Surfaces
+using PlotsBase.Layouts
 using PlotsBase.Commons
+using PlotsBase.Plots
 using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
@@ -404,7 +404,7 @@ function plotly_layout(plt::Plot)
                 ymm = bottom(bb) - tpos[2] * height(bb)
                 halign, valign = sp[:titlefonthalign], sp[:titlefontvalign]
             end
-            titlex, titley = PlotsBase.xy_mm_to_pcts(xmm, ymm, w * px, h * px)
+            titlex, titley = xy_mm_to_pcts(xmm, ymm, w * px, h * px)
             title_font = font(titlefont(sp), halign = halign, valign = valign)
             push!(
                 plotattributes_out[:annotations],
@@ -624,7 +624,7 @@ function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
     cinds = repeat(1:n, inner = 2)
     vinds = vcat((i:(i + 1) for i in 1:n)...)
     map(
-        i -> [cg.values[vinds[i]], rgba_string(plot_color(color_list(cg)[cinds[i]], α))],
+        i -> [cg.values[vinds[i]], rgba_string(plot_color(PlotsBase.color_list(cg)[cinds[i]], α))],
         eachindex(cinds),
     )
 end

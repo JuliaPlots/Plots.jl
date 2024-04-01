@@ -1,12 +1,15 @@
 module Axes
 
 export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
-export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks
+export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, scale_lims!
 
-using PlotsBase: PlotsBase, RecipesPipeline, Subplot, DefaultsDict, TimeType
-using PlotsBase.Commons
-using PlotsBase.Ticks
-using PlotsBase.Fonts
+import ..PlotsBase
+import ..PlotsBase: Subplot, DefaultsDict, TimeType
+
+using ..RecipesPipeline
+using ..Commons
+using ..Ticks
+using ..Fonts
 
 const default_widen_factor = Ref(1.06)
 const _widen_seriestypes = (
@@ -51,7 +54,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     attr = DefaultsDict(explicit, Commons._axis_defaults_byletter[letter])
 
     # update the defaults
-    attr!(Axis([sp], attr), args...; kw...)
+    PlotsBase.attr!(Axis([sp], attr), args...; kw...)
 end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
@@ -305,7 +308,7 @@ end
 has_ticks(axis::Axis) = _has_ticks(get(axis, :ticks, nothing))
 
 # update an Axis object with magic args and keywords
-function attr!(axis::Axis, args...; kw...)
+function PlotsBase.attr!(axis::Axis, args...; kw...)
     # first process args
     plotattributes = axis.plotattributes
     foreach(arg -> process_axis_arg!(plotattributes, arg), args)
@@ -380,7 +383,7 @@ function _update_axis(
     end
 
     # update the axis
-    attr!(axis; kw...)
+    PlotsBase.attr!(axis; kw...)
     nothing
 end
 

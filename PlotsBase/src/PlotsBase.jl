@@ -115,11 +115,16 @@ export
     plotattr,
     scalefontsizes,
     resetfontsizes
+
+function attr end
+function attr! end
+function rotate end
+function rotate! end
+
 #! format: on
 import Measures
-include("PlotMeasures.jl")
-using .PlotMeasures
-import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
+include("Measurements.jl")
+using .Measurements
 # ---------------------------------------------------------
 macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
     import_ex = Expr(
@@ -140,38 +145,35 @@ using .Commons.Frontend
 # ---------------------------------------------------------
 include("Fonts.jl")
 @reexport using .Fonts
-using .Fonts: Font, PlotText
 include("Ticks.jl")
 using .Ticks
-include("Series.jl")
-using .PlotsSeries
+include("DataSeries.jl")
+using .DataSeries
+include("Layouts.jl")
+using .Layouts
 include("Subplots.jl")
 using .Subplots
-import .Subplots: plotarea, plotarea!, leftpad, toppad, bottompad, rightpad
 include("Axes.jl")
 using .Axes
 include("Surfaces.jl")
+using .Surfaces
 include("Colorbars.jl")
 using .Colorbars
-include("PlotsPlots.jl")
-using .PlotsPlots
-include("layouts.jl")
+include("Plots.jl")
+using .Plots
 # ---------------------------------------------------------
+include("layouts.jl")
 include("utils.jl")
-using .Surfaces
 include("axes_utils.jl")
 include("legend.jl")
 include("Shapes.jl")
 using .Shapes
-using .Shapes: Shape, _shapes, rotate!
 include("Annotations.jl")
 using .Annotations
-using .Annotations: SeriesAnnotations, process_annotation
 include("Arrows.jl")
 using .Arrows
 include("Strokes.jl")
 using .Strokes
-using .Strokes: Stroke, Brush
 include("BezierCurves.jl")
 using .BezierCurves
 include("themes.jl")
@@ -182,15 +184,19 @@ include("recipes.jl")
 include("animation.jl")
 include("examples.jl")
 include("plotattr.jl")
+
 include("backends/nobackend.jl")
 include("abstract_backend.jl")
-include("alignment.jl")
 const CURRENT_BACKEND = CurrentBackend(:none)
+
+include("alignment.jl")
 include("output.jl")
 include("shorthands.jl")
 include("backends/web.jl")
+
 include("backends/plotly.jl")
 using .Plotly
+
 include("init.jl")
 include("users.jl")
 

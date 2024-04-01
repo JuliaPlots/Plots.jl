@@ -13,7 +13,6 @@ export Subplot,
     leftpad,
     bottompad,
     rightpad
-import PlotsBase.Ticks: get_ticks
 using PlotsBase:
     PlotsBase,
     RecipesPipeline,
@@ -22,13 +21,16 @@ using PlotsBase:
     AbstractLayout,
     BoundingBox,
     DefaultsDict
-using PlotsBase.RecipesPipeline: RecipesPipeline, Surface, Volume
-using PlotsBase.PlotUtils: get_color_palette
-using PlotsBase.Commons
-using PlotsBase.Commons.Frontend
-using PlotsBase.Commons: convert_legend_value, like_surface
-using PlotsBase.Fonts
-using PlotsBase.PlotMeasures
+
+import ..Commons: convert_legend_value, like_surface
+using ..Measurements
+using ..RecipesPipeline: RecipesPipeline, Surface, Volume
+using ..PlotUtils: get_color_palette
+using ..Commons.Frontend
+using ..Layouts
+using ..Commons
+using ..Fonts
+using ..Ticks
 
 # a single subplot
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
@@ -42,7 +44,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
 
-    Subplot(::T; parent = PlotsBase.RootLayout()) where {T<:AbstractBackend} = new{T}(
+    Subplot(::T; parent = RootLayout()) where {T<:AbstractBackend} = new{T}(
         parent,
         Series[],
         0,
@@ -292,4 +294,5 @@ end
 
 Commons.get_size(sp::Subplot) = Commons.get_size(sp.plt)
 Commons.get_thickness_scaling(sp::Subplot) = Commons.get_thickness_scaling(sp.plt)
-end # Subplots
+
+end  # module

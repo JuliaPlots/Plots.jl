@@ -1,4 +1,4 @@
-module PlotsSeries
+module DataSeries
 
 export Series,
     should_add_to_legend,
@@ -20,11 +20,13 @@ export get_linestyle,
     get_fillalpha,
     get_markercolor,
     get_markeralpha
-import PlotsBase.Commons: get_subplot, _series_defaults
-using PlotsBase.Commons
-using PlotsBase.Commons: get_gradient
-using PlotsBase.PlotUtils: ColorGradient, plot_color
-using PlotsBase: PlotsBase, DefaultsDict, RecipesPipeline, get_attr_symbol, KW
+    
+import ..Commons: get_gradient, get_subplot, _series_defaults
+import ..PlotsBase
+
+using ..PlotsBase: DefaultsDict, RecipesPipeline, get_attr_symbol, KW
+using ..PlotUtils: ColorGradient, plot_color
+using ..Commons
 
 mutable struct Series
     plotattributes::DefaultsDict
@@ -329,4 +331,5 @@ function warn_on_inconsistent_shape_attrs(series, x, y, z, r)
         end
     end
 end
-end # PlotsSeries
+
+end  # module

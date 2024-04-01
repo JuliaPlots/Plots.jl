@@ -1,11 +1,17 @@
 module Ticks
 
-export get_ticks,
-    _has_ticks, _transform_ticks, get_minor_ticks, no_minor_intervals, num_minor_intervals
-using PlotsBase.Commons
-using PlotsBase.Dates
+export get_ticks, _has_ticks, _transform_ticks, get_minor_ticks
+export no_minor_intervals, num_minor_intervals, ticks_type
+
+using ..Commons
+using ..Dates
 
 const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
+
+ticks_type(ticks::AVec{<:Real}) = :ticks
+ticks_type(ticks::AVec{<:AbstractString}) = :labels
+ticks_type(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
+ticks_type(ticks) = :invalid
 
 # get_ticks from axis symbol :x, :y, or :z
 
@@ -98,4 +104,4 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
     minorticks[amin .≤ minorticks .≤ amax]
 end
 
-end # Ticks
+end  # module

@@ -1,4 +1,4 @@
-module PlotsPlots
+module Plots
 
 export Plot,
     PlotOrSubplot,
@@ -7,9 +7,7 @@ export Plot,
     ignorenan_extrema,
     protect,
     InputWrapper
-import PlotsBase.Axes: _update_axis, scale_lims!
-import PlotsBase.Commons: ignorenan_extrema, _cycle
-import PlotsBase.Ticks: get_ticks
+
 using PlotsBase:
     PlotsBase,
     AbstractPlot,
@@ -18,14 +16,19 @@ using PlotsBase:
     Series,
     AbstractLayout,
     RecipesPipeline
-using PlotsBase.PlotMeasures
-using PlotsBase.Colorbars: _update_subplot_colorbars
-using PlotsBase.Subplots: Subplot, _update_subplot_colors, _update_margins
-using PlotsBase.Axes: Axis, get_axis
-using PlotsBase.PlotUtils: get_color_palette
-using PlotsBase.Commons
-using PlotsBase.Commons.Frontend
-using PlotsBase.Fonts: font
+
+import ..Subplots: Subplot, _update_subplot_colors, _update_margins
+import ..Colorbars: _update_subplot_colorbars
+import ..Commons: ignorenan_extrema, _cycle
+
+using ..PlotUtils
+using ..Commons.Frontend
+using ..Measurements
+using ..Layouts
+using ..Commons
+using ..Fonts
+using ..Ticks
+using ..Axes
 
 const SubplotMap = Dict{Any,Subplot}
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
@@ -50,7 +53,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
             nothing,
             Subplot[],
             SubplotMap(),
-            PlotsBase.EmptyLayout(),
+            EmptyLayout(),
             Subplot[],
             false,
         )
@@ -62,9 +65,9 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         sp = deepcopy(osp)  # FIXME: fails `PlotlyJS` ?
         plt.layout.grid[1, 1] = sp
         # reset some attributes
-        sp.minpad = PlotMeasures.DEFAULT_MINPAD[]
-        sp.bbox = PlotMeasures.DEFAULT_BBOX[]
-        sp.plotarea = PlotMeasures.DEFAULT_BBOX[]
+        sp.minpad = DEFAULT_MINPAD[]
+        sp.bbox = DEFAULT_BBOX[]
+        sp.plotarea = DEFAULT_BBOX[]
         sp.plt = plt  # change the enclosing plot
         push!(plt.subplots, sp)
         plt
@@ -218,7 +221,7 @@ function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
     nothing
 end
 
-function PlotsBase.Axes._update_axis(
+function Axes._update_axis(
     plt::Plot,
     sp::Subplot,
     plotattributes_in::AKW,
@@ -228,14 +231,14 @@ function PlotsBase.Axes._update_axis(
     # get (maybe initialize) the axis
     axis = get_axis(sp, letter)
 
-    _update_axis(axis, plotattributes_in, letter, subplot_index)
+    Axes._update_axis(axis, plotattributes_in, letter, subplot_index)
 
     # convert a bool into auto or nothing
     if isa(axis[:ticks], Bool)
         axis[:ticks] = axis[:ticks] ? :auto : nothing
     end
 
-    PlotsBase.Axes._update_axis_colors(axis)
+    Axes._update_axis_colors(axis)
     _update_axis_links(plt, axis, letter)
     nothing
 end
@@ -265,7 +268,7 @@ function _update_subplot_attrs(
 
     lims_warned = false
     for letter in (:x, :y, :z)
-        _update_axis(plt, sp, plotattributes_in, letter, subplot_index)
+        Axes._update_axis(plt, sp, plotattributes_in, letter, subplot_index)
         lk = get_attr_symbol(letter, :lims)
 
         # warn against using `Range` in x,y,z lims
@@ -290,4 +293,5 @@ function scale_lims!(plt::Union{Plot,Subplot}, factor)
 end
 Commons.get_size(plt::Plot) = get_size(plt.attr)
 Commons.get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
-end # PlotsPlots
+
+end  # module

@@ -182,7 +182,7 @@ function plot!(
 
     # first apply any args for the subplots
     for (idx, sp) in enumerate(plt.subplots)
-        PlotsPlots._update_subplot_attrs(
+        Plots._update_subplot_attrs(
             plt,
             sp,
             idx == ttl_idx ? KW() : plotattributes,
