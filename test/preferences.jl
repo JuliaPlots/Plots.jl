@@ -51,10 +51,12 @@
     is_pkgeval() || for pkg in TEST_PACKAGES
         be = Symbol(lowercase(pkg))
         (Sys.isapple() && be ≡ :gaston) && continue  # FIXME: hangs
-        (Sys.iswindows() && be ≡ :plotlyjs && is_ci()) && continue # OutOfMemory
+        (Sys.iswindows() && be ≡ :plotlyjs && is_ci()) && continue  # FIXME: OutOfMemory
         @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
         rm.(Base.find_all_in_cache_path(Base.module_keys[Plots]))  # make sure the compiled cache is removed
-        @test success(run(```$(Base.julia_cmd()) -e 'using Plots'```))  # test default precompilation
+        script = tempname()
+        write(script, "import :$pkg; using Test, Plots; @test Plots.backend_name() == $be")
+        @test success(run(```$(Base.julia_cmd()) $script```))  # test default precompilation
     end
 
     Plots.set_default_backend!()  # clear `Preferences` key
