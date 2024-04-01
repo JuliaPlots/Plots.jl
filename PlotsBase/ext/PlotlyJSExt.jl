@@ -1,9 +1,9 @@
 module PlotlyJSExt
 
 import PlotsBase: PlotsBase, Plot
-using PlotsBase.PlotsPlots
 using PlotsBase.Commons
 using PlotsBase.Plotly
+using PlotsBase.Plots
 
 import PlotlyJS: PlotlyJS, WebIO
 

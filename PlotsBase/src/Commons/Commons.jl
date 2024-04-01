@@ -3,7 +3,6 @@ module Commons
 
 export AVec,
     AMat, KW, AKW, TicksArgs, PlotsBase, PLOTS_SEED, _haligns, _valigns, _cbar_width
-# Functions
 export get_subplot,
     coords,
     ispolar,
@@ -40,15 +39,19 @@ export anynan,
 export istuple, isvector, ismatrix, isscalar, is_2tuple
 export default, wraptuple, merge_with_base_supported
 
-using PlotsBase: PlotsBase, Printf, NaNMath, cgrad
+export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
+export MM_PER_PX, MM_PER_INCH, DPI, PX_PER_INCH
+
+using PlotsBase: PlotsBase, cgrad
 import PlotsBase: RecipesPipeline
-using PlotsBase.Colors: Colorant, @colorant_str
-using PlotsBase.ColorTypes: alpha
-using PlotsBase.Measures: mm, BoundingBox
-using PlotsBase.PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
-using PlotsBase.RecipesBase
-using PlotsBase: DEFAULT_LINEWIDTH
-using PlotsBase: Statistics
+using ..Colors: Colorant, @colorant_str
+using ..ColorTypes: alpha
+using ..Measures: mm, BoundingBox
+using ..PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
+using ..RecipesBase
+using ..Statistics
+using ..NaNMath
+using ..Printf
 
 const AVec = AbstractVector
 const AMat = AbstractMatrix
@@ -56,14 +59,19 @@ const KW = Dict{Symbol,Any}
 const AKW = AbstractDict{Symbol,Any}
 const TicksArgs =
     Union{AVec{T},Tuple{AVec{T},AVec{S}},Symbol} where {T<:Real,S<:AbstractString}
+
+const DEFAULT_BBOX = Ref(BoundingBox(0mm, 0mm, 0mm, 0mm))
+const DEFAULT_MINPAD = Ref((20mm, 5mm, 2mm, 10mm))
+const DEFAULT_LINEWIDTH = Ref(1)
 const PLOTS_SEED = 1234
 const PX_PER_INCH = 100
 const DPI = PX_PER_INCH
 const MM_PER_INCH = 25.4
 const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
+const _cbar_width = 5mm
+
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
-const _cbar_width = 5mm
 const _all_scales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _log_scales = [:ln, :log2, :log10]
 const _log_scale_bases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
@@ -97,6 +105,7 @@ function ispolar end
 function expand_extrema! end
 function axis_limits end
 function preprocess_attributes! end
+
 # ---------------------------------------------------------------
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)

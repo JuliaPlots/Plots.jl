@@ -102,8 +102,8 @@
     push!(pl, 1:2, 2:3, 3:4)
 
     pl = plot([1, 2, 3], [4, 5, 6])
-    @test PlotsBase.PlotsPlots.xmin(pl) == 1
-    @test PlotsBase.PlotsPlots.xmax(pl) == 3
+    @test PlotsBase.Plots.xmin(pl) == 1
+    @test PlotsBase.Plots.xmax(pl) == 3
     @test PlotsBase.Commons.ignorenan_extrema(pl) == (1, 3)
 
     @test PlotsBase.Commons.get_attr_symbol(:x, "lims") ≡ :xlims

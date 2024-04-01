@@ -2,6 +2,7 @@ module PythonPlotExt
 
 import RecipesPipeline
 import PythonPlot
+import NaNMath
 
 const PythonCall = PythonPlot.PythonCall
 const pyisnone =
@@ -11,25 +12,21 @@ const mpl = PythonPlot.matplotlib
 const mpl_toolkits = PythonCall.pynew()
 const numpy = PythonCall.pynew()
 
-import NaNMath
+using PlotUtils
 
 import PlotsBase
-import PlotsBase.PlotUtils: PlotUtils, ColorGradient, plot_color, color_list, cgrad
-import PlotsBase: bbox_to_pcts, right, left, bottom, top, width, height, ticks_type
-import PlotsBase: ispositive, ismatrix
-import PlotsBase.Commons: Commons, single_color
 import RecipesPipeline: Surface
 
-using PlotsBase.PlotMeasures
+using PlotsBase.Measurements
 using PlotsBase.Annotations
-using PlotsBase.PlotsSeries
-using PlotsBase.PlotsPlots
+using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Commons
 using PlotsBase.Colors
 using PlotsBase.Arrows
 using PlotsBase.Shapes
+using PlotsBase.Plots
 using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
@@ -460,7 +457,7 @@ _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{PythonPlotBackend})
     w, h =
-        map(s -> PlotsBase.PlotMeasures.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
+        map(s -> PlotsBase.Measurements.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
     # reuse the current figure?
     plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end
@@ -890,7 +887,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             n = length(dim1)
             args = if typeof(fillrange) <: Union{Real,AVec}
                 dim1, _cycle(fillrange, rng), dim2
-            elseif PlotsBase.is_2tuple(fillrange)
+            elseif is_2tuple(fillrange)
                 dim1, _cycle(fillrange[1], rng), _cycle(fillrange[2], rng)
             end
 

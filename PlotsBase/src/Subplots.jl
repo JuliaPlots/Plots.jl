@@ -27,7 +27,6 @@ using ..Measurements
 using ..RecipesPipeline: RecipesPipeline, Surface, Volume
 using ..PlotUtils: get_color_palette
 using ..Commons.Frontend
-using ..Layouts
 using ..Commons
 using ..Fonts
 using ..Ticks
@@ -91,12 +90,12 @@ Base.size(sp::Subplot) = (1, 1)
 Base.length(sp::Subplot) = 1
 Base.getindex(sp::Subplot, r::Int, c::Int) = sp
 
-leftpad(sp::Subplot)   = sp.minpad[1]
-toppad(sp::Subplot)    = sp.minpad[2]
-rightpad(sp::Subplot)  = sp.minpad[3]
-bottompad(sp::Subplot) = sp.minpad[4]
+PlotsBase.leftpad(sp::Subplot)   = sp.minpad[1]
+PlotsBase.toppad(sp::Subplot)    = sp.minpad[2]
+PlotsBase.rightpad(sp::Subplot)  = sp.minpad[3]
+PlotsBase.bottompad(sp::Subplot) = sp.minpad[4]
 
-function attr!(sp::Subplot; kw...)
+function PlotsBase.attr!(sp::Subplot; kw...)
     plotattributes = KW(kw)
     PlotsBase.Commons.preprocess_attributes!(plotattributes)
     for (k, v) in plotattributes

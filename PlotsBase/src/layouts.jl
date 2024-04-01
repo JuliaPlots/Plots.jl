@@ -1,13 +1,35 @@
 
-leftpad(pad)   = pad[1]
-toppad(pad)    = pad[2]
-rightpad(pad)  = pad[3]
-bottompad(pad) = pad[4]
+"""
+    grid(args...; kw...)
 
-leftpad(layout::GridLayout)   = leftpad(layout.minpad)
-toppad(layout::GridLayout)    = toppad(layout.minpad)
-rightpad(layout::GridLayout)  = rightpad(layout.minpad)
-bottompad(layout::GridLayout) = bottompad(layout.minpad)
+Create a grid layout for subplots. `args` specify the dimensions, e.g.
+`grid(3,2, widths = (0.6,0.4))` creates a grid with three rows and two
+columns of different width.
+"""
+grid(args...; kw...) = GridLayout(args...; kw...)
+
+# padding_w(layout::AbstractLayout) = left_padding(layout) + right_padding(layout)
+# padding_h(layout::AbstractLayout) = bottom_padding(layout) + top_padding(layout)
+# padding(layout::AbstractLayout) = (padding_w(layout), padding_h(layout))
+
+update_position!(layout::AbstractLayout) = nothing
+update_child_bboxes!(
+    layout::AbstractLayout,
+    minimum_perimeter = [0mm, 0mm, 0mm, 0mm];
+    kw...,
+) = nothing
+
+# pass these through to the bbox methods if there's no plotarea
+plotarea(layout::AbstractLayout) = bbox(layout)
+plotarea!(layout::AbstractLayout, bb::BoundingBox) = bbox!(layout, bb)
+
+_update_min_padding!(layout::EmptyLayout) = nothing
+_update_inset_padding!(layout::EmptyLayout) = nothing
+
+attr(layout::AbstractLayout, k::Symbol) = layout.attr[k]
+attr(layout::AbstractLayout, k::Symbol, v) = get(layout.attr, k, v)
+attr!(layout::AbstractLayout, v, k::Symbol) = (layout.attr[k] = v)
+# hasattr(layout::AbstractLayout, k::Symbol) = haskey(layout.attr, k)
 
 # here's how this works... first we recursively "update the minimum padding" (which
 # means to calculate the minimum size needed from the edge of the subplot to plot area)

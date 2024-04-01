@@ -11,10 +11,9 @@ import PGFPlotsX
 import Latexify
 import Contour
 
-using PlotsBase.PlotMeasures
+using PlotsBase.Measurements
 using PlotsBase.Annotations
-using PlotsBase.PlotsSeries
-using PlotsBase.PlotsPlots
+using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Surfaces
@@ -22,6 +21,7 @@ using PlotsBase.Commons
 using PlotsBase.Colors
 using PlotsBase.Shapes
 using PlotsBase.Arrows
+using PlotsBase.Plots
 using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes

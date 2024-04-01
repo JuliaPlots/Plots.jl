@@ -116,6 +116,8 @@ export
     scalefontsizes,
     resetfontsizes
 
+import Measures: width, height
+
 function attr end
 function attr! end
 function rotate end
@@ -123,9 +125,8 @@ function rotate! end
 
 #! format: on
 import Measures
-include("Measurements.jl")
-using .Measurements
-# ---------------------------------------------------------
+import NaNMath
+
 macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
     import_ex = Expr(
         :import,
@@ -138,10 +139,11 @@ macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
     export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
     Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
 end
-import NaNMath
 include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
+include("Measurements.jl")
+using .Measurements
 # ---------------------------------------------------------
 include("Fonts.jl")
 @reexport using .Fonts
@@ -149,8 +151,6 @@ include("Ticks.jl")
 using .Ticks
 include("DataSeries.jl")
 using .DataSeries
-include("Layouts.jl")
-using .Layouts
 include("Subplots.jl")
 using .Subplots
 include("Axes.jl")

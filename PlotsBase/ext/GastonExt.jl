@@ -5,12 +5,12 @@ import PlotUtils
 import PlotsBase
 import Gaston
 
-using PlotsBase.PlotMeasures
-using PlotsBase.PlotsSeries
-using PlotsBase.PlotsPlots
+using PlotsBase.Measurements
+using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Commons
+using PlotsBase.Plots
 using PlotsBase.Ticks
 using PlotsBase.Fonts
 using PlotsBase.Axes

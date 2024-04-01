@@ -7,12 +7,14 @@ import PlotUtils: PlotUtils, Colors
 import PlotUtils.ColorSchemes: ColorScheme
 import PlotUtils.Colors: Colorant
 
-import PlotsBase: PlotsBase, GridLayout, RootLayout, BoundingBox, Length, Plot
+import PlotsBase
 
-using PlotsBase.PlotsSeries
+using PlotsBase.Measurements
+using PlotsBase.DataSeries
 using PlotsBase.Subplots
 using PlotsBase.Commons
 using PlotsBase.Shapes
+using PlotsBase.Plots
 using PlotsBase.Fonts
 using PlotsBase.Axes
 

@@ -17,7 +17,6 @@ using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Surfaces
-using PlotsBase.Layouts
 using PlotsBase.Commons
 using PlotsBase.Plots
 using PlotsBase.Fonts

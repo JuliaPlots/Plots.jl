@@ -5,16 +5,16 @@ import RecipesPipeline
 import NaNMath
 import GR
 
-using PlotsBase.PlotMeasures
+using PlotsBase.Measurements
 using PlotsBase.Annotations
-using PlotsBase.PlotsSeries
-using PlotsBase.PlotsPlots
+using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Commons
 using PlotsBase.Arrows
 using PlotsBase.Shapes
 using PlotsBase.Colors
+using PlotsBase.Plots
 using PlotsBase.Fonts
 using PlotsBase.Fonts
 using PlotsBase.Ticks

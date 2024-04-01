@@ -24,7 +24,6 @@ import ..Commons: ignorenan_extrema, _cycle
 using ..PlotUtils
 using ..Commons.Frontend
 using ..Measurements
-using ..Layouts
 using ..Commons
 using ..Fonts
 using ..Ticks

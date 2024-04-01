@@ -220,7 +220,7 @@ end
 
     let pl = plot(1:2)
         xl, yl = xlims(pl), ylims(pl)
-        PlotsBase.PlotsPlots.scale_lims!(pl, 1.1)
+        PlotsBase.scale_lims!(pl, 1.1)
         @test first(xlims(pl)) < first(xl)
         @test last(xlims(pl)) > last(xl)
         @test first(ylims(pl)) < first(yl)
