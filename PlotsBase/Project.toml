@@ -105,7 +105,7 @@ UnicodePlots = "3"
 UnitfulLatexify = "1"
 Unzip = "0.1 - 0.2"
 UUIDs = "1"
-julia = "1.6"
+julia = "1.9"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"

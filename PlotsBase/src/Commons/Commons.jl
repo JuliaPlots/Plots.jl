@@ -1,9 +1,8 @@
 "Things that should be common to all backends and frontend modules"
 module Commons
 
-export AVec, AMat, KW, AKW, TicksArgs
-export PlotsBase, PLOTS_SEED
-export _haligns, _valigns, _cbar_width
+export AVec,
+    AMat, KW, AKW, TicksArgs, PlotsBase, PLOTS_SEED, _haligns, _valigns, _cbar_width
 # Functions
 export get_subplot,
     coords,

@@ -5,44 +5,25 @@ import HDF5: HDF5, Group, Dataset
 import PlotUtils: PlotUtils, Colors
 import PlotUtils.ColorSchemes: ColorScheme
 import PlotUtils.Colors: Colorant
-import RecipesPipeline
+import RecipesPipeline: RecipesPipeline, Surface, DefaultsDict, datetimeformatter
 
-import RecipesPipeline.datetimeformatter
 import PlotUtils.ColorPalette,
     PlotUtils.CategoricalColorGradient, PlotUtils.ContinuousColorGradient
-import PlotsBase:
-    PlotsBase, Surface, Arrow, GridLayout, RootLayout, Font, PlotText, SeriesAnnotations
-import PlotsBase: BoundingBox, Length, Plot, DefaultsDict, plot, plot!
+import PlotsBase: PlotsBase, GridLayout, RootLayout, BoundingBox, Length, Plot
 
 using PlotsBase.PlotsSeries
 using PlotsBase.Subplots
 using PlotsBase.Commons
 using PlotsBase.Shapes
+using PlotsBase.Fonts
 using PlotsBase.Axes
 
 import Dates
 
-const package_str = "HDF5"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct HDF5Backend <: PlotsBase.AbstractBackend end
-const T = HDF5Backend
+@PlotsBase.extension_static HDF5Backend hdf5
 
-get_concrete_backend() = T  # opposite to abstract
-
-function __init__()
-    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[T] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-end
-
-PlotsBase.backend_name(::T) = sym
-PlotsBase.backend_package_name(::T) = PlotsBase.backend_package_name(sym)
-
-const _hdf5_attr = PlotsBase.merge_with_base_supported([
+const _hdf5_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
     :legend_background_color,
     :background_color_inside,
@@ -109,7 +90,7 @@ const _hdf5_attr = PlotsBase.merge_with_base_supported([
     :dpi,
     :colorbar_title,
 ])
-const _hdf5_seriestype = [
+const _hdf5_seriestypes = [
     :path,
     :steppre,
     :stepmid,
@@ -127,29 +108,9 @@ const _hdf5_seriestype = [
     :surface,
     :wireframe,
 ]
-const _hdf5_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _hdf5_marker = vcat(PlotsBase.Commons._all_markers, :pixel)
-const _hdf5_scale = [:identity, :ln, :log2, :log10]
-
-#=
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::HDF5Backend, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::HDF5Backend) = sort(collect($v))
-    end |> eval
-end
-=#
-
-## results in:
-# PlotsBase.is_attr_supported(::HDF5Backend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::HDF5Backend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::HDF5Backend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
+const _hdf5_styles = [:auto, :solid, :dash, :dot, :dashdot]
+const _hdf5_markers = vcat(PlotsBase.Commons._all_markers, :pixel)
+const _hdf5_scales = [:identity, :ln, :log2, :log10]
 
 # Additional constants
 # Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
@@ -190,14 +151,14 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
 
         # Sub-structure types:
         "DEFAULTSDICT" => DefaultsDict,
-        "FONT" => Font,
+        "FONT" => PlotsBase.Font,
         "BOUNDINGBOX" => BoundingBox,
         "GRIDLAYOUT" => GridLayout,
         "ROOTLAYOUT" => RootLayout,
-        "SERIESANNOTATIONS" => SeriesAnnotations,
+        "SERIESANNOTATIONS" => PlotsBase.SeriesAnnotations,
         "PLOTTEXT" => PlotText,
         "SHAPE" => Shape,
-        "ARROW" => Arrow,
+        "ARROW" => PlotsBase.Arrow,
         "COLORSCHEME" => ColorScheme,
         "COLORPALETTE" => ColorPalette,
         "CONT_COLORGRADIENT" => ContinuousColorGradient,
@@ -540,7 +501,7 @@ function _read(grp::Group, sp::Subplot)
         sgrp = HDF5.open_group(listgrp, "$i")
         seriesinfo = _read(KW, sgrp)
 
-        plot!(sp, seriesinfo[:x], seriesinfo[:y]) # Add data & create data structures
+        PlotsBase.plot!(sp, seriesinfo[:x], seriesinfo[:y]) # Add data & create data structures
         _hdf5_merge!(sp.series_list[end].plotattributes, seriesinfo)
     end
 
@@ -556,7 +517,7 @@ function _read_plot(grp::Group)
     n = _read_length_attrs(Vector, listgrp)
 
     # Construct new plot, +allocate subplots:
-    plt = plot(layout = n)
+    plt = PlotsBase.plot(layout = n)
     HDF5PLOT_PLOTREF.ref = plt  # Used when reading "layout"
 
     agrp = HDF5.open_group(grp, "attr")
@@ -578,39 +539,39 @@ hdf5plot_read(path::AbstractString; name::String = "_unnamed") =
 
 # Implement PlotsBase.jl backend interface for HDF5Backend
 
-is_marker_supported(::HDF5Backend, shape::Shape) = true
+PlotsBase.is_marker_supported(::HDF5Backend, shape::Shape) = true
 
 # Create the window/figure for this backend.
-function _create_backend_figure(plt::Plot{HDF5Backend}) end
+function PlotsBase._create_backend_figure(plt::Plot{HDF5Backend}) end
 
 # Set up the subplot within the backend object.
-function _initialize_subplot(plt::Plot{HDF5Backend}, sp::Subplot{HDF5Backend}) end
+function PlotsBase._initialize_subplot(plt::Plot{HDF5Backend}, sp::Subplot{HDF5Backend}) end
 
 # Add one series to the underlying backend object.
 # Called once per series
 # NOTE: Seems to be called when user calls plot()... even if backend
 #       plot, sp.o has not yet been constructed...
-function _series_added(plt::Plot{HDF5Backend}, series::Series) end
+function PlotsBase._series_added(plt::Plot{HDF5Backend}, series::Series) end
 
 # When series data is added/changed, this callback can do dynamic updates to the backend object.
 # note: if the backend rebuilds the plot from scratch on display, then you might not do anything here.
-function _series_updated(plt::Plot{HDF5Backend}, series::Series) end
+function PlotsBase._series_updated(plt::Plot{HDF5Backend}, series::Series) end
 
 # called just before updating layout bounding boxes... in case you need to prep
 # for the calcs
-function _before_layout_calcs(plt::Plot{HDF5Backend}) end
+function PlotsBase._before_layout_calcs(plt::Plot{HDF5Backend}) end
 
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
-function _update_min_padding!(sp::Subplot{HDF5Backend}) end
+function PlotsBase._update_min_padding!(sp::Subplot{HDF5Backend}) end
 
 # Override this to update plot items (title, xlabel, etc), and add annotations (plotattributes[:annotations])
-function _update_plot_object(plt::Plot{HDF5Backend}) end
+function PlotsBase._update_plot_object(plt::Plot{HDF5Backend}) end
 
 # ----------------------------------------------------------------
 
 # Display/show the plot (open a GUI window, or browser page, for example).
-function _display(plt::Plot{HDF5Backend})
+function PlotsBase._display(plt::Plot{HDF5Backend})
     msg = "HDF5 interface does not support `display()` function."
     msg *= "\nUse `PlotsBase.hdf5plot_write(::String)` method to write to .HDF5 \"plot\" file instead."
     @warn msg
@@ -619,6 +580,6 @@ end
 
 # Interface actually required to use HDF5Backend
 
-hdf5plot_write(path::AbstractString) = hdf5plot_write(current(), path)
+PlotsBase.hdf5plot_write(path::AbstractString) = hdf5plot_write(current(), path)
 
 end # module

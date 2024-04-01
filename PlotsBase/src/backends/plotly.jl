@@ -1323,4 +1323,10 @@ PlotsBase._show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) =
 
 PlotsBase._display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
 
+function _ijulia__extra_mime_info!(plt::Plot{PlotlyBackend}, out::Dict)
+    out["application/vnd.plotly.v1+json"] =
+        Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
+    out
+end
+
 end # module

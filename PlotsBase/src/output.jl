@@ -163,8 +163,6 @@ Display a plot using the backends' gui window
 """
 gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
-function inline end  # for IJulia
-
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
     _display(plt)
@@ -246,6 +244,20 @@ closeall() = closeall(backend())
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)
 
+
+function inline end  # for IJulia
+
+function hdf5plot_write end
+
+"""
+Add extra jupyter mimetypes to display_dict based on the plot backed.
+
+The default is nothing, except for plotly based backends, where it
+adds data for `application/vnd.plotly.v1+json` that is used in
+frontends like jupyterlab and nteract.
+"""
+_ijulia__extra_mime_info!(::Plot, out::Dict) = out
+
 # Atom PlotPane
 function showjuno(io::IO, m, plt)
     dpi = plt[:dpi]
@@ -270,4 +282,5 @@ _showjuno(io::IO, m::MIME"image/svg+xml", plt) =
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot) = false
 
 _showjuno(io::IO, m, plt) = _show(io, m, plt)
+
 # COV_EXCL_STOP

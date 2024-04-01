@@ -1,8 +1,8 @@
 module GastonExt
 
 import RecipesPipeline
-import PlotsBase: PlotsBase, ticks_type
 import PlotUtils
+import PlotsBase
 import Gaston
 
 using PlotsBase.PlotMeasures
@@ -15,25 +15,8 @@ using PlotsBase.Ticks
 using PlotsBase.Fonts
 using PlotsBase.Axes
 
-const package_str = "Gaston"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct GastonBackend <: PlotsBase.AbstractBackend end
-const T = GastonBackend
-
-get_concrete_backend() = T  # opposite to abstract
-
-function __init__()
-    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[T] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-end
-
-PlotsBase.backend_name(::T) = sym
-PlotsBase.backend_package_name(::T) = PlotsBase.backend_package_name(sym)
+@PlotsBase.extension_static GastonBackend gaston
 
 const _gaston_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -132,28 +115,6 @@ const _gaston_markers = [
 ]
 
 const _gaston_scales = [:identity, :ln, :log2, :log10]
-
-# -----------------------------------------------------------------------------
-# Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
-# defined in abstract_backend.jl
-
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::T, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::T) = sort(collect($v))
-    end |> eval
-end
-
-## results in:
-# PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
 
 # https://github.com/mbaz/Gaston.
 
@@ -714,7 +675,7 @@ function gaston_parse_axes_attrs(
         tmin, tmax = axis_limits(sp, :x, false, false)
         rmin, rmax = axis_limits(sp, :y, false, false)
         rticks = get_ticks(sp, :y)
-        gaston_ticks = if (ttype = ticks_type(rticks)) === :ticks
+        gaston_ticks = if (ttype = PlotsBase.ticks_type(rticks)) === :ticks
             string.(rticks)
         elseif ttype === :ticks_and_labels
             ["'$l' $t" for (t, l) in zip(rticks...)]
@@ -751,7 +712,7 @@ function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
         push!(axesconf, "unset $(maj_min)$(letter)tics")
         return
     end
-    gaston_ticks = if (ttype = ticks_type(ticks)) === :ticks
+    gaston_ticks = if (ttype = PlotsBase.ticks_type(ticks)) === :ticks
         tics = gaston_fix_ticks_overflow(ticks)
         if maj_min == "m"
             map(t -> "'' $t 1", tics)  # see gnuplot manual 'Mxtics'

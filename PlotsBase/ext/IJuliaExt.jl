@@ -16,27 +16,6 @@ function _init_ijulia_plotting()
     ENV["MPLBACKEND"] = "Agg"
 end
 
-"""
-Add extra jupyter mimetypes to display_dict based on the plot backed.
-
-The default is nothing, except for plotly based backends, where it
-adds data for `application/vnd.plotly.v1+json` that is used in
-frontends like jupyterlab and nteract.
-"""
-_ijulia__extra_mime_info!(plt::Plot, out::Dict) = out
-
-function _ijulia__extra_mime_info!(plt::Plot{PlotsBase.PlotlyJSBackend}, out::Dict)
-    out["application/vnd.plotly.v1+json"] =
-        Dict(:data => PlotsBase.plotly_series(plt), :layout => PlotsBase.plotly_layout(plt))
-    out
-end
-
-function _ijulia__extra_mime_info!(plt::Plot{PlotsBase.PlotlyBackend}, out::Dict)
-    out["application/vnd.plotly.v1+json"] =
-        Dict(:data => PlotsBase.plotly_series(plt), :layout => PlotsBase.plotly_layout(plt))
-    out
-end
-
 function _ijulia_display_dict(plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
     if output_type === :auto
@@ -56,7 +35,7 @@ function _ijulia_display_dict(plt::Plot)
     elseif output_type === :html
         mime = "text/html"
         out[mime] = sprint(show, MIME(mime), plt)
-        _ijulia__extra_mime_info!(plt, out)
+        PlotsBase._ijulia__extra_mime_info!(plt, out)
     elseif output_type === :pdf
         mime = "application/pdf"
         out[mime] = base64encode(show, MIME(mime), plt)

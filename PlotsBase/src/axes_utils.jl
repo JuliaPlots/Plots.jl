@@ -1,6 +1,6 @@
 const _label_func =
     Dict{Symbol,Function}(:log10 => x -> "10^$x", :log2 => x -> "2^$x", :ln => x -> "e^$x")
-labelfunc(scale::Symbol, backend::AbstractBackend) = get(_label_func, scale, string)
+labelfunc(scale::Symbol, ::AbstractBackend) = get(_label_func, scale, string)
 
 const _label_func_tex = Dict{Symbol,Function}(
     :log10 => x -> "10^{$x}",
@@ -101,18 +101,18 @@ Ticks.get_ticks(ticks::Int, dvals, cvals, args...) =
         cvals[rng], string.(dvals[rng])
     end
 
-function get_labels(formatter::Symbol, scaled_ticks, scale)
+get_labels(formatter::Symbol, scaled_ticks, scale) =
     if formatter in (:auto, :plain, :scientific, :engineering)
-        return map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
+        map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
     elseif formatter === :latex
-        return map(
+        map(
             l -> string("\$", replace(convert_sci_unicode(l), '×' => "\\times"), "\$"),
             get_labels(:auto, scaled_ticks, scale),
         )
     elseif formatter === :none
-        return String[]
+        String[]
     end
-end
+
 function get_labels(formatter::Function, scaled_ticks, scale)
     sf, invsf, _ = scale_inverse_scale_func(scale)
     fticks = map(formatter ∘ invsf, scaled_ticks)
@@ -120,7 +120,7 @@ function get_labels(formatter::Function, scaled_ticks, scale)
     #   CategoricalArrays's recipe gives "missing" label to those
     filter!(!ismissing, fticks)
     eltype(fticks) <: Number && return get_labels(:auto, map(sf, fticks), scale)
-    return fticks
+    fticks
 end
 
 # Ticks getter functions

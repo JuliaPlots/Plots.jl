@@ -22,39 +22,24 @@ using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
 
-const package_str = "PythonPlot"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct PythonPlotBackend <: PlotsBase.AbstractBackend end
-const T = PythonPlotBackend
 
-get_concrete_backend() = T
-
-function __init__()
-    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[T] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-
+function PlotsBase.extension_init(::PythonPlotBackend)
     if PythonPlot.version < v"3.4"
         @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
         officially supported by the Plots community. To ensure smooth PlotsBase.jl
         integration update your Matplotlib library to a version ≥ 3.4.0
         """
     end
-
     PythonCall.pycopy!(mpl, PythonCall.pyimport("matplotlib"))
     PythonCall.pycopy!(mpl_toolkits, PythonCall.pyimport("mpl_toolkits"))
     PythonCall.pycopy!(numpy, PythonCall.pyimport("numpy"))
     PythonCall.pyimport("mpl_toolkits.axes_grid1")
     numpy.seterr(invalid = "ignore")
-    PythonPlot.ioff() # we don't want every command to update the figure
+    PythonPlot.ioff()  # we don't want every command to update the figure
 end
 
-PlotsBase.backend_name(::T) = sym
-PlotsBase.backend_package_name(::T) = PlotsBase.backend_package_name(sym)
+@PlotsBase.extension_static PythonPlotBackend pythonplot
 
 const _pythonplot_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -189,28 +174,6 @@ const _pythonplot_seriestypes = [
 const _pythonplot_styles = [:auto, :solid, :dash, :dot, :dashdot]
 const _pythonplot_markers = vcat(Commons._all_markers, :pixel)
 const _pythonplot_scales = [:identity, :ln, :log2, :log10]
-
-# -----------------------------------------------------------------------------
-# Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
-# defined in abstract_backend.jl
-
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::T, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::T) = sort(collect($v))
-    end |> eval
-end
-
-## results in:
-# PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
 
 # github.com/stevengj/PythonPlot.jl
 
@@ -366,7 +329,7 @@ end
 get_locator_and_formatter(vals::AVec) =
     mpl.ticker.FixedLocator(eachindex(vals)), mpl.ticker.FixedFormatter(vals)
 
-labelfunc(scale::Symbol, backend::PythonPlotBackend) =
+PlotsBase.labelfunc(scale::Symbol, backend::PythonPlotBackend) =
     PythonPlot.LaTeXStrings.latexstring ∘ PlotsBase.labelfunc_tex(scale)
 
 _py_mask_nans(z) = PythonPlot.pycall(numpy.ma.masked_invalid, z)

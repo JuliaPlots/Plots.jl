@@ -130,17 +130,66 @@ end
 # ---------------------------------------------------------
 # create the various `is_xxx_supported` and `supported_xxxs` methods
 # these methods should be overloaded (dispatched) by each backend in its init_code
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
+for sym in (:attr, :seriestype, :marker, :style, :scale)
+    f1 = Symbol("is_$(sym)_supported")
+    f2 = Symbol("supported_$(sym)s")
     @eval begin
-        $f1(::AbstractBackend, $s) = false
-        $f1(be::AbstractBackend, $s::AbstractVector) = all(v -> $f1(be, v), $s)
-        $f1($s) = $f1(backend(), $s)
+        $f1(::AbstractBackend, $sym) = false
+        $f1(be::AbstractBackend, $sym::AbstractVector) = all(v -> $f1(be, v), $sym)
+        $f1($sym) = $f1(backend(), $sym)
         $f2() = $f2(backend())
     end
 end
 # -----------------------------------------------------------------------------
+
+extension_init(::AbstractBackend) = nothing
+
+"""
+function __init__()
+    PlotsBase._backendType[sym] = GRBackend
+    PlotsBase._backendSymbol[GRBackend] = sym
+    push!(PlotsBase._initialized_backends, sym)
+    @debug "Initializing GR backend in PlotsBase; run `gr()` to activate it."
+end
+"""
+macro extension_static(be_type, be)
+    be_sym = QuoteNode(be)
+    blk = Expr(
+        :block,
+        :(get_concrete_backend() = $be_type),
+        :(PlotsBase.backend_name(::$be_type)::Symbol = $be_sym),
+        :(PlotsBase.backend_package_name(::$be_type)::Symbol = PlotsBase.backend_package_name($be_sym)),
+    )
+    #=
+    Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods,
+    results in:
+        PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
+        ...
+        PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
+        ...
+        PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
+    =#
+    for sym in (:attr, :seriestype, :marker, :style, :scale)
+        be_syms = Symbol("_$(be)_$(sym)s")
+        f1 = Symbol("is_$(sym)_supported")
+        f2 = Symbol("supported_$(sym)s")
+        push!(
+            blk.args,
+            :(PlotsBase.$f1(::$be_type, $sym::Symbol)::Bool = $sym in $be_syms),
+            :(PlotsBase.$f2(::$be_type)::Vector = sort!(collect($be_syms))),
+        )
+    end
+    quote
+        $blk
+        function __init__()
+            PlotsBase._backendType[$be_sym] = $be_type
+            PlotsBase._backendSymbol[$be_type] = $be_sym
+            push!(PlotsBase._initialized_backends, $be_sym)
+            PlotsBase.extension_init($be_type())
+            @debug "Initialized " * string($be_type) * " backend in PlotsBase; run `$be()` to activate it."
+        end
+    end |> esc
+end
 
 should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
 

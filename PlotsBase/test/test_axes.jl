@@ -21,13 +21,15 @@
     @test PlotsBase.labelfunc_tex(:log2)(1) == "2^{1}"
     @test PlotsBase.labelfunc_tex(:ln)(1) == "e^{1}"
 
-    @test PlotsBase.get_labels(:auto, 1:3, :identity) == ["1", "2", "3"]
-    @test PlotsBase.get_labels(:scientific, float.(500:500:1500), :identity) ==
-          ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
-    @test PlotsBase.get_labels(:engineering, float.(500:500:1500), :identity) ==
-          ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
-    @test PlotsBase.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
-    # GR is used during tests and it correctly overrides labelfunc(), but PGFPlotsX did not
+    with(:gr) do  # NOTE: GR overrides `labelfunc`
+        @test PlotsBase.get_labels(:auto, 1:3, :identity) == ["1", "2", "3"]
+        @test PlotsBase.get_labels(:scientific, float.(500:500:1500), :identity) ==
+              ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
+        @test PlotsBase.get_labels(:engineering, float.(500:500:1500), :identity) ==
+              ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
+        @test PlotsBase.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
+    end
+    # GR is used during tests and it correctly overrides `labelfunc`, but PGFPlotsX did not
     with(:pgfplotsx) do
         @test PlotsBase.get_labels(:auto, 1:3, :log10) == ["10^{1}", "10^{2}", "10^{3}"]
     end

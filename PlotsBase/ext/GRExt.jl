@@ -5,8 +5,6 @@ import RecipesPipeline
 import NaNMath
 import GR
 
-import PlotsBase.Colorbars: cbar_gradient, cbar_fill, cbar_lines
-
 using PlotsBase.PlotMeasures
 using PlotsBase.Annotations
 using PlotsBase.PlotsSeries
@@ -22,24 +20,8 @@ using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
 
-const package_str = "GR"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct GRBackend <: PlotsBase.AbstractBackend end
-
-get_concrete_backend() = GRBackend  # opposite to abstract
-
-function __init__()
-    @debug "Initializing GR backend in PlotsBase; run `gr()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[GRBackend] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-end
-# Make GR know to Plots
-PlotsBase.backend_name(::GRBackend) = sym
-PlotsBase.backend_package_name(::GRBackend) = PlotsBase.backend_package_name(sym)
+@PlotsBase.extension_static GRBackend gr
 
 const _gr_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -195,28 +177,6 @@ const _gr_seriestypes = [
 const _gr_styles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _gr_markers = vcat(Commons._all_markers, :pixel)
 const _gr_scales = [:identity, :ln, :log2, :log10]
-
-# -----------------------------------------------------------------------------
-# Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
-# defined in abstract_backend.jl
-
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::GRBackend, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::GRBackend) = sort(collect($v))
-    end |> eval
-end
-
-## results in:
-# PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
 
 PlotsBase.is_marker_supported(::GRBackend, shape::Shape) = true
 
@@ -716,9 +676,9 @@ end
 function gr_update_colorbar!(cbar::GRColorbar, series::Series)
     (style = colorbar_style(series)) === nothing && return
     list =
-        style == cbar_gradient ? cbar.gradients :
-        style == cbar_fill ? cbar.fills :
-        style == cbar_lines ? cbar.lines : error("Unknown colorbar style: $style.")
+        style == Colorbars.cbar_gradient ? cbar.gradients :
+        style == Colorbars.cbar_fill ? cbar.fills :
+        style == Colorbars.cbar_lines ? cbar.lines : error("Unknown colorbar style: $style.")
     push!(list, series)
 end
 
@@ -973,12 +933,6 @@ function gr_get_ticks_size(ticks, rot)
     w, h
 end
 
-function labelfunc(scale::Symbol, backend::GRBackend)
-    texfunc = PlotsBase.labelfunc_tex(scale)
-    # replace dash with \minus (U+2212)
-    label -> replace(texfunc(label), "-" => "−")
-end
-
 function gr_axis_height(sp, axis)
     GR.savestate()
     ticks = get_ticks(sp, axis, update = false)
@@ -1009,6 +963,12 @@ function gr_axis_width(sp, axis)
     end
     GR.restorestate()
     w
+end
+
+function PlotsBase.labelfunc(scale::Symbol, backend::GRBackend)
+    texfunc = PlotsBase.labelfunc_tex(scale)
+    # replace dash with \minus (U+2212)
+    label -> replace(texfunc(label), "-" => "−")
 end
 
 function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})

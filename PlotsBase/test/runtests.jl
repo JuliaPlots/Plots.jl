@@ -61,7 +61,7 @@ for name in (
     "shorthands",
     "recipes",
     "unitful",
-    "hdf5plots",  # broken ?
+    "hdf5plots",
     "pgfplotsx",
     "plotly",
     "animations",

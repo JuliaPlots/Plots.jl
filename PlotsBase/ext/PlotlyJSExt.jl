@@ -1,64 +1,20 @@
 module PlotlyJSExt
 
-import PlotsBase: PlotsBase, Plot, isijulia
+import PlotsBase: PlotsBase, Plot
 using PlotsBase.PlotsPlots
 using PlotsBase.Commons
 using PlotsBase.Plotly
 
 import PlotlyJS: PlotlyJS, WebIO
 
-# unrolling the old # init_backend macro by hand case by case
-# this is not a macro for the backend maintainers and explicit control
-const package_str = "PlotlyJS"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct PlotlyJSBackend <: PlotsBase.AbstractBackend end
-const T = PlotlyJSBackend
-
-get_concrete_backend() = T  # opposite to abstract
-
-function __init__()
-    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[T] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-end
-
-PlotsBase.backend_name(::T) = sym
-PlotsBase.backend_package_name(::T) = PlotsBase.backend_package_name(sym)
+@PlotsBase.extension_static PlotlyJSBackend plotlyjs
 
 const _plotlyjs_attrs = PlotsBase.Plotly._plotly_attrs
 const _plotlyjs_seriestypes = PlotsBase.Plotly._plotly_seriestypes
 const _plotlyjs_styles = PlotsBase.Plotly._plotly_styles
 const _plotlyjs_markers = PlotsBase.Plotly._plotly_markers
 const _plotlyjs_scales = PlotsBase.Plotly._plotly_scales
-
-# -----------------------------------------------------------------------------
-# Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
-# defined in abstract_backend.jl
-
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::T, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::T) = sort(collect($v))
-    end |> eval
-end
-
-## results in:
-# PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
-# https://github.com/JuliaPlots/PlotlyJS.jl
-
-# ------------------------------------------------------------------------------
 
 function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     plt[:overwrite_figure] && PlotsBase.closeall()
@@ -111,5 +67,11 @@ PlotsBase.closeall(::PlotlyJSBackend) =
     end
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyJSBackend}) = true
+
+function PlotsBase._ijulia__extra_mime_info!(plt::Plot{PlotlyJSBackend}, out::Dict)
+    out["application/vnd.plotly.v1+json"] =
+        Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
+    out
+end
 
 end # module

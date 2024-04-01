@@ -18,24 +18,8 @@ using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
 
-const package_str = "UnicodePlots"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct UnicodePlotsBackend <: PlotsBase.AbstractBackend end
-const T = UnicodePlotsBackend
-
-get_concrete_backend() = UnicodePlotsBackend  # opposite to abstract
-
-function __init__()
-    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[T] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-end
-PlotsBase.backend_name(::UnicodePlotsBackend) = sym
-PlotsBase.backend_package_name(::UnicodePlotsBackend) = PlotsBase.backend_package_name(sym)
+@PlotsBase.extension_static UnicodePlotsBackend unicodeplots
 
 const _unicodeplots_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -112,27 +96,6 @@ const _unicodeplots_markers = [
     :x,
 ]
 const _unicodeplots_scales = [:identity, :ln, :log2, :log10]
-# -----------------------------------------------------------------------------
-# Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
-# defined in abstract_backend.jl
-
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::UnicodePlotsBackend, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::UnicodePlotsBackend) = sort(collect($v))
-    end |> eval
-end
-
-## results in:
-# PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
 
 # https://github.com/JuliaPlots/UnicodePlots.jl
 

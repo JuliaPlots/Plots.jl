@@ -659,27 +659,27 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
 end
 
 # ---------------------------------------------------------------
+const _convert_sci_unicode_dict = Dict(
+    '⁰' => "0",
+    '¹' => "1",
+    '²' => "2",
+    '³' => "3",
+    '⁴' => "4",
+    '⁵' => "5",
+    '⁶' => "6",
+    '⁷' => "7",
+    '⁸' => "8",
+    '⁹' => "9",
+    '⁻' => "-",
+    "×10" => "×10^{",
+)
 
 # converts unicode scientific notation, as returned by Showoff,
 # to a tex-like format (supported by gr, pyplot, and pgfplots).
 
 function convert_sci_unicode(label::AbstractString)
-    unicode_dict = Dict(
-        '⁰' => "0",
-        '¹' => "1",
-        '²' => "2",
-        '³' => "3",
-        '⁴' => "4",
-        '⁵' => "5",
-        '⁶' => "6",
-        '⁷' => "7",
-        '⁸' => "8",
-        '⁹' => "9",
-        '⁻' => "-",
-        "×10" => "×10^{",
-    )
-    for key in keys(unicode_dict)
-        label = replace(label, key => unicode_dict[key])
+    for key in keys(_convert_sci_unicode_dict)
+        label = replace(label, key => _convert_sci_unicode_dict[key])
     end
     if occursin("×10^{", label)
         label = string(label, "}")

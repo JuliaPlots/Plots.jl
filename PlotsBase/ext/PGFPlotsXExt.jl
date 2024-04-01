@@ -1,11 +1,12 @@
 module PGFPlotsXExt
 
 import PlotsBase: PlotsBase, pgfx_sanitize_string
-import PlotUtils: PlotUtils, ColorGradient
 import LaTeXStrings: LaTeXString
 import Printf: @sprintf
 import UUIDs: uuid4
+
 import RecipesPipeline
+import PlotUtils
 import PGFPlotsX
 import Latexify
 import Contour
@@ -25,25 +26,8 @@ using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
 
-const package_str = "PGFPlotsX"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct PGFPlotsXBackend <: PlotsBase.AbstractBackend end
-const T = PGFPlotsXBackend
-
-get_concrete_backend() = T  # opposite to abstract
-
-function __init__()
-    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[T] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-end
-
-PlotsBase.backend_name(::T) = sym
-PlotsBase.backend_package_name(::T) = PlotsBase.backend_package_name(sym)
+@PlotsBase.extension_static PGFPlotsXBackend pgfplotsx
 
 const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -215,28 +199,6 @@ PlotsBase.is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
 
 # additional constants
 const _pgfplotsx_series_ids = KW()
-
-# -----------------------------------------------------------------------------
-# Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
-# defined in abstract_backend.jl
-
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::T, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::T) = sort(collect($v))
-    end |> eval
-end
-
-## results in:
-# PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
 
 const Options = PGFPlotsX.Options
 const Table   = PGFPlotsX.Table
@@ -1124,7 +1086,7 @@ end
 pgfx_colormap(cl::PlotUtils.AbstractColorList) = pgfx_colormap(PlotUtils.color_list(cl))
 pgfx_colormap(v::Vector{<:Colorant}) =
     join(map(c -> @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c)), v), '\n')
-pgfx_colormap(cg::ColorGradient) = join(
+pgfx_colormap(cg::PlotUtils.ColorGradient) = join(
     map(1:length(cg)) do i
         @sprintf(
             "rgb(%.8f)=(%.8f,%.8f,%.8f)",

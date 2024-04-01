@@ -2,9 +2,8 @@ module Axes
 
 export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
 export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks
-import PlotsBase: get_ticks
+
 using PlotsBase: PlotsBase, RecipesPipeline, Subplot, DefaultsDict, TimeType
-using PlotsBase.Commons: _axis_defaults_byletter, _all_axis_attrs, dumpdict
 using PlotsBase.Commons
 using PlotsBase.Ticks
 using PlotsBase.Fonts
@@ -49,7 +48,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
 
-    attr = DefaultsDict(explicit, _axis_defaults_byletter[letter])
+    attr = DefaultsDict(explicit, Commons._axis_defaults_byletter[letter])
 
     # update the defaults
     attr!(Axis([sp], attr), args...; kw...)
@@ -303,7 +302,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     end
 end
 
-has_ticks(axis::Axis) = get(axis, :ticks, nothing) |> PlotsBase.Ticks._has_ticks
+has_ticks(axis::Axis) = _has_ticks(get(axis, :ticks, nothing))
 
 # update an Axis object with magic args and keywords
 function attr!(axis::Axis, args...; kw...)
@@ -336,7 +335,7 @@ end
 
 # -------------------------------------------------------------------------
 
-Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
+Base.show(io::IO, axis::Axis) = Commons.dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 tickfont(ax::Axis) = font(;
@@ -365,7 +364,7 @@ function _update_axis(
 )
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
-    for k in _all_axis_attrs
+    for k in Commons._all_axis_attrs
         # first get the args without the letter: `tickfont = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
         if haskey(plotattributes_in, k)
@@ -399,7 +398,12 @@ end
 """
 returns (continuous_values, discrete_values) for the ticks on this axis
 """
-function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:formatter])
+function PlotsBase.get_ticks(
+    sp::Subplot,
+    axis::Axis;
+    update = true,
+    formatter = axis[:formatter],
+)
     if update || !haskey(axis.plotattributes, :optimized_ticks)
         dvals = axis[:discrete_values]
         ticks = _transform_ticks(axis[:ticks], axis)
@@ -415,7 +419,7 @@ function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:for
             else
                 cvals = axis[:continuous_values]
                 alims = axis_limits(sp, axis[:letter])
-                get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
+                PlotsBase.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
             end
     end
     axis.plotattributes[:optimized_ticks]
