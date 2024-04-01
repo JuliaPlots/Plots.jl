@@ -20,7 +20,8 @@ import Unitful:
 import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
 import LaTeXStrings: LaTeXString
-import Latexify: latexify
+import Latexify
+
 using UnitfulLatexify
 
 const MissingOrQuantity = Union{Missing,<:Quantity,<:LogScaled}
@@ -232,7 +233,7 @@ append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 function append_unit_if_needed!(attr, key, label::Nothing, u)
     attr[key] = if attr[:plot_object].backend == PlotsBase._backend_instance(:pgfplotsx)
-        UnitfulString(LaTeXString(latexify(u)), u)
+        UnitfulString(LaTeXString(Latexify.latexify(u)), u)
     else
         UnitfulString(string(u), u)
     end
@@ -244,7 +245,7 @@ function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString
             LaTeXString(
                 format_unit_label(
                     label,
-                    latexify(u),
+                    Latexify.latexify(u),
                     get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
                 ),
             ),
@@ -351,8 +352,7 @@ function _unit(x)
     unit(x)
 end
 
-function PlotsBase.pgfx_sanitize_string(s::UnitfulString)
+PlotsBase.pgfx_sanitize_string(s::UnitfulString) =
     UnitfulString(PlotsBase.pgfx_sanitize_string(s.content), s.unit)
-end
 
 end  # module

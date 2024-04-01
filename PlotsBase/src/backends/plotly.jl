@@ -8,28 +8,28 @@ import Statistics
 import UUIDs
 import JSON
 
-using PlotsBase.Annotations
-using PlotsBase.Axes
-using PlotsBase.Colorbars
+using PlotUtils: PlotUtils, ColorGradient, rgba_string, rgb_string
+
 using PlotsBase.Colors: Colorant
-using PlotsBase.Commons
-using PlotsBase.Fonts
-using PlotsBase.Fonts: PlotText
 using PlotsBase.PlotMeasures
-using PlotsBase.PlotsPlots
+using PlotsBase.Annotations
 using PlotsBase.PlotsSeries
-using PlotsBase.PlotUtils: PlotUtils, ColorGradient, rgba_string, rgb_string
+using PlotsBase.PlotsPlots
+using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Surfaces
+using PlotsBase.Commons
+using PlotsBase.Fonts
 using PlotsBase.Ticks
+using PlotsBase.Axes
 
 struct PlotlyBackend <: PlotsBase.AbstractBackend end
+
 PlotsBase._backendType[:plotly] = PlotlyBackend
 PlotsBase._backendSymbol[PlotlyBackend] = :plotly
-
 push!(PlotsBase._initialized_backends, :plotly)
-PlotsBase.backend_name(::PlotlyBackend) = :plotly
-PlotsBase.backend_package_name(::PlotlyBackend) = PlotsBase.backend_package_name(:plotly)
+
+eval(PlotsBase.backend_defines(:PlotlyBackend, :plotly))
 
 const _plotly_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -181,15 +181,6 @@ const _plotly_scales = [:identity, :log10]
 
 PlotsBase.default_output_format(plt::Plot{PlotlyBackend}) = "html"
 
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_plotly_", s, "s")
-    eval(quote
-        PlotsBase.$f1(::PlotlyBackend, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::PlotlyBackend) = sort(collect($v))
-    end)
-end
 # ----------------------------------------------------------------
 
 function labelfunc(scale::Symbol, backend::PlotlyBackend)
@@ -1329,4 +1320,4 @@ function _ijulia__extra_mime_info!(plt::Plot{PlotlyBackend}, out::Dict)
     out
 end
 
-end # module
+end  # module

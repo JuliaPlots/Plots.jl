@@ -19,7 +19,7 @@ using PlotsBase.Ticks
 using PlotsBase.Axes
 
 struct UnicodePlotsBackend <: PlotsBase.AbstractBackend end
-@PlotsBase.extension_static UnicodePlotsBackend unicodeplots
+PlotsBase.@extension_static UnicodePlotsBackend unicodeplots
 
 const _unicodeplots_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -499,4 +499,4 @@ function PlotsBase._display(plt::PlotsBase.Plot{UnicodePlotsBackend})
     println(stdout)
 end
 
-end # module
+end  # module

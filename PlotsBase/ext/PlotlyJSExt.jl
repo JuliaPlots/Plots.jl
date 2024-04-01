@@ -8,7 +8,7 @@ using PlotsBase.Plotly
 import PlotlyJS: PlotlyJS, WebIO
 
 struct PlotlyJSBackend <: PlotsBase.AbstractBackend end
-@PlotsBase.extension_static PlotlyJSBackend plotlyjs
+PlotsBase.@extension_static PlotlyJSBackend plotlyjs
 
 const _plotlyjs_attrs = PlotsBase.Plotly._plotly_attrs
 const _plotlyjs_seriestypes = PlotsBase.Plotly._plotly_seriestypes
@@ -74,4 +74,4 @@ function PlotsBase._ijulia__extra_mime_info!(plt::Plot{PlotlyJSBackend}, out::Di
     out
 end
 
-end # module
+end  # module

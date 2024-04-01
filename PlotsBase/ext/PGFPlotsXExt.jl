@@ -27,7 +27,7 @@ using PlotsBase.Ticks
 using PlotsBase.Axes
 
 struct PGFPlotsXBackend <: PlotsBase.AbstractBackend end
-@PlotsBase.extension_static PGFPlotsXBackend pgfplotsx
+PlotsBase.@extension_static PGFPlotsXBackend pgfplotsx
 
 const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -1598,4 +1598,4 @@ function PlotsBase._display(plt::Plot{PGFPlotsXBackend})
     display(PGFPlotsX.PGFPlotsXDisplay(), plt.o.the_plot)
 end
 
-end # module
+end  # module

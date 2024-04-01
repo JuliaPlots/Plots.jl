@@ -39,7 +39,7 @@ function PlotsBase.extension_init(::PythonPlotBackend)
     PythonPlot.ioff()  # we don't want every command to update the figure
 end
 
-@PlotsBase.extension_static PythonPlotBackend pythonplot
+PlotsBase.@extension_static PythonPlotBackend pythonplot
 
 const _pythonplot_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -605,7 +605,9 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     if series[:markershape] !== :none && st ∈ _py_marker_series
         for segment in series_segments(series, :scatter)
             i, rng = segment.attr_index, segment.range
-            args = if st === :bar
+            args = if st === :bar && !isvertical(series)
+                y[rng], x[rng]
+            else
                 x[rng], y[rng]
             end
             RecipesPipeline.is3d(sp) && (args = (args..., z[rng]))
@@ -1720,4 +1722,4 @@ end
 
 PlotsBase.closeall(::PythonPlotBackend) = PythonPlot.close("all")
 
-end # module
+end  # module

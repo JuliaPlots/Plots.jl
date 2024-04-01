@@ -20,7 +20,13 @@ is_ci() = Plots.PlotsBase.bool_env("CI")
 # get `Preferences` set backend, if any
 const PREVIOUS_DEFAULT_BACKEND = load_preference(Plots, "default_backend")
 
-include("preferences.jl")
+for name in (
+    "preferences",
+)
+    @testset "$name" begin
+        include("test_$name.jl")
+    end
+end
 
 if PREVIOUS_DEFAULT_BACKEND === nothing
     delete_preferences!(Plots, "default_backend")  # restore the absence of a preference

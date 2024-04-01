@@ -21,7 +21,7 @@ using PlotsBase.Ticks
 using PlotsBase.Axes
 
 struct GRBackend <: PlotsBase.AbstractBackend end
-@PlotsBase.extension_static GRBackend gr
+PlotsBase.@extension_static GRBackend gr
 
 const _gr_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -678,7 +678,8 @@ function gr_update_colorbar!(cbar::GRColorbar, series::Series)
     list =
         style == Colorbars.cbar_gradient ? cbar.gradients :
         style == Colorbars.cbar_fill ? cbar.fills :
-        style == Colorbars.cbar_lines ? cbar.lines : error("Unknown colorbar style: $style.")
+        style == Colorbars.cbar_lines ? cbar.lines :
+        error("Unknown colorbar style: $style.")
     push!(list, series)
 end
 
@@ -2279,4 +2280,4 @@ end
 
 PlotsBase.closeall(::GRBackend) = GR.emergencyclosegks()
 
-end # module
+end  # module

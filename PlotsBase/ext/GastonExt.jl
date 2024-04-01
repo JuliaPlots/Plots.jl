@@ -16,7 +16,7 @@ using PlotsBase.Fonts
 using PlotsBase.Axes
 
 struct GastonBackend <: PlotsBase.AbstractBackend end
-@PlotsBase.extension_static GastonBackend gaston
+PlotsBase.@extension_static GastonBackend gaston
 
 const _gaston_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -844,4 +844,4 @@ function gaston_enclose_tick_string(tick_string)
     "$base^{$power}"
 end
 
-end # module
+end  # module

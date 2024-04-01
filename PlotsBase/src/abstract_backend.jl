@@ -4,7 +4,7 @@ const _plots_compats         = _plots_project.compat
 
 const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
-const _backend_packages     = (gaston = :Gaston, gr = :GR, unicodeplots = :UnicodePlots, pgfplotsx = :PGFPlotsX, pythonplot = :PythonPlot, plotly = :Plotly, plotlyjs = :PlotlyJS, hdf5 = :HDF5)
+const _backend_packages     = (gaston = :Gaston, gr = :GR, unicodeplots = :UnicodePlots, pgfplotsx = :PGFPlotsX, pythonplot = :PythonPlot, plotly = nothing, plotlyjs = :PlotlyJS, hdf5 = :HDF5)
 const _initialized_backends = Set{Symbol}()
 const _backends             = keys(_backend_packages)
 
@@ -68,7 +68,7 @@ backends() = _backends
 backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol)::AbstractBackend = _backendType[sym]()
 
-backend_package_name(sym::Symbol = backend_name()) = get(_backend_packages, sym, :None)
+backend_package_name(sym::Symbol = backend_name()) = get(_backend_packages, sym, nothing)
 
 # Traits to be implemented by the extensions
 backend_name(::AbstractBackend) = @info "`backend_name(::Backend) not implemented."
@@ -142,23 +142,16 @@ for sym in (:attr, :seriestype, :marker, :style, :scale)
 end
 # -----------------------------------------------------------------------------
 
-extension_init(::AbstractBackend) = nothing
-
-"""
-function __init__()
-    PlotsBase._backendType[sym] = GRBackend
-    PlotsBase._backendSymbol[GRBackend] = sym
-    push!(PlotsBase._initialized_backends, sym)
-    @debug "Initializing GR backend in PlotsBase; run `gr()` to activate it."
-end
-"""
-macro extension_static(be_type, be)
+function backend_defines(be_type::Symbol, be::Symbol)
     be_sym = QuoteNode(be)
     blk = Expr(
         :block,
         :(get_concrete_backend() = $be_type),
         :(PlotsBase.backend_name(::$be_type)::Symbol = $be_sym),
-        :(PlotsBase.backend_package_name(::$be_type)::Symbol = PlotsBase.backend_package_name($be_sym)),
+        :(
+            PlotsBase.backend_package_name(::$be_type)::Symbol =
+                PlotsBase.backend_package_name($be_sym)
+        ),
     )
     #=
     Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods,
@@ -179,14 +172,29 @@ macro extension_static(be_type, be)
             :(PlotsBase.$f2(::$be_type)::Vector = sort!(collect($be_syms))),
         )
     end
+    blk
+end
+
+extension_init(::AbstractBackend) = nothing
+
+"""
+function __init__()
+    PlotsBase._backendType[sym] = GRBackend
+    PlotsBase._backendSymbol[GRBackend] = sym
+    push!(PlotsBase._initialized_backends, sym)
+    @debug "Initializing GR backend in PlotsBase; run `gr()` to activate it."
+end
+"""
+macro extension_static(be_type, be)
+    be_sym = QuoteNode(be)
     quote
-        $blk
+        $(PlotsBase.backend_defines(be_type, be))
         function __init__()
             PlotsBase._backendType[$be_sym] = $be_type
             PlotsBase._backendSymbol[$be_type] = $be_sym
             push!(PlotsBase._initialized_backends, $be_sym)
             PlotsBase.extension_init($be_type())
-            @debug "Initialized " * string($be_type) * " backend in PlotsBase; run `$be()` to activate it."
+            @debug "Initialized $be_type backend in PlotsBase; run `$be()` to activate it."
         end
     end |> esc
 end

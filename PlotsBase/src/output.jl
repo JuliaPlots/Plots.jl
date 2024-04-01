@@ -244,10 +244,10 @@ closeall() = closeall(backend())
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)
 
-
 function inline end  # for IJulia
 
 function hdf5plot_write end
+function hdf5plot_read end
 
 """
 Add extra jupyter mimetypes to display_dict based on the plot backed.

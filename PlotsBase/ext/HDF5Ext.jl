@@ -2,13 +2,11 @@ module HDF5Ext
 
 import HDF5: HDF5, Group, Dataset
 
+import RecipesPipeline: RecipesPipeline, Surface, DefaultsDict, datetimeformatter
 import PlotUtils: PlotUtils, Colors
 import PlotUtils.ColorSchemes: ColorScheme
 import PlotUtils.Colors: Colorant
-import RecipesPipeline: RecipesPipeline, Surface, DefaultsDict, datetimeformatter
 
-import PlotUtils.ColorPalette,
-    PlotUtils.CategoricalColorGradient, PlotUtils.ContinuousColorGradient
 import PlotsBase: PlotsBase, GridLayout, RootLayout, BoundingBox, Length, Plot
 
 using PlotsBase.PlotsSeries
@@ -21,7 +19,7 @@ using PlotsBase.Axes
 import Dates
 
 struct HDF5Backend <: PlotsBase.AbstractBackend end
-@PlotsBase.extension_static HDF5Backend hdf5
+PlotsBase.@extension_static HDF5Backend hdf5
 
 const _hdf5_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -160,9 +158,9 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
         "SHAPE" => Shape,
         "ARROW" => PlotsBase.Arrow,
         "COLORSCHEME" => ColorScheme,
-        "COLORPALETTE" => ColorPalette,
-        "CONT_COLORGRADIENT" => ContinuousColorGradient,
-        "CAT_COLORGRADIENT" => CategoricalColorGradient,
+        "COLORPALETTE" => PlotUtils.ColorPalette,
+        "CONT_COLORGRADIENT" => PlotUtils.ContinuousColorGradient,
+        "CAT_COLORGRADIENT" => PlotUtils.CategoricalColorGradient,
         "AXIS" => Axis,
         "SURFACE" => Surface,
         "SUBPLOT" => Subplot,
@@ -176,7 +174,7 @@ end
 
 # Helper functions
 
-h5plotpath(plotname::String) = "plots/$plotname"
+h5plotpath(name::String) = "plots/$name"
 
 _hdf5_merge!(dest::AKW, src::AKW) =
     for (k, v) in src
@@ -367,18 +365,6 @@ function _write(grp::Group, plt::Plot{HDF5Backend})
     end
 end
 
-function hdf5plot_write(
-    plt::Plot{HDF5Backend},
-    path::AbstractString;
-    name::String = "_unnamed",
-)
-    HDF5.h5open(path, "w") do file
-        HDF5.write_dataset(file, "VERSION_INFO", string(PlotsBase._current_plots_version))
-        grp = HDF5.create_group(file, h5plotpath(name))
-        _write(grp, plt)
-    end
-end
-
 # _read(): Read data, but not type information.
 
 # Types with built-in HDF5 support:
@@ -531,12 +517,6 @@ function _read_plot(grp::Group)
     plt
 end
 
-hdf5plot_read(path::AbstractString; name::String = "_unnamed") =
-    HDF5.h5open(path, "r") do file
-        grp = HDF5.open_group(file, h5plotpath("_unnamed"))
-        return _read_plot(grp)
-    end
-
 # Implement PlotsBase.jl backend interface for HDF5Backend
 
 PlotsBase.is_marker_supported(::HDF5Backend, shape::Shape) = true
@@ -579,7 +559,17 @@ function PlotsBase._display(plt::Plot{HDF5Backend})
 end
 
 # Interface actually required to use HDF5Backend
+PlotsBase.hdf5plot_write(path::AbstractString; kw...) = PlotsBase.hdf5plot_write(current(), path; kw...)
 
-PlotsBase.hdf5plot_write(path::AbstractString) = hdf5plot_write(current(), path)
+PlotsBase.hdf5plot_write(plt::Plot{HDF5Backend}, path::AbstractString; name::String = "_unnamed") =
+    HDF5.h5open(path, "w") do file
+        HDF5.write_dataset(file, "VERSION_INFO", string(PlotsBase._current_plots_version))
+        _write(HDF5.create_group(file, h5plotpath(name)), plt)
+    end
 
-end # module
+PlotsBase.hdf5plot_read(path::AbstractString; name::String = "_unnamed") =
+    HDF5.h5open(path, "r") do file
+        return _read_plot(HDF5.open_group(file, h5plotpath("_unnamed")))
+    end
+
+end  # module
