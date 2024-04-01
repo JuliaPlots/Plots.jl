@@ -69,10 +69,10 @@ jobs:
           using Pkg
           foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase"))
 
-      - uses: julia-actions/julia-buildpkg@latest
+      # - uses: julia-actions/julia-buildpkg@latest
 
       - name: Install conda based matplotlib
-        shell: julia --project=@. --color=yes {0}
+        shell: julia --color=yes {0}
         run: |
           using Pkg; Pkg.add("CondaPkg")
           using CondaPkg; CondaPkg.resolve()
@@ -96,10 +96,10 @@ jobs:
           CondaPkg.status()
 
       - name: Run upstream RecipesBase, RecipesPipeline, PlotsBase tests
-        shell: julia --project=@. --color=yes {0}
+        shell: julia --color=yes {0}
         run: |
           using Pkg
-          foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase"))
+          foreach(name -> Pkg.test(name; coverage=true), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase"))
 
       - uses: julia-actions/julia-runtest@latest
         timeout-minutes: 60
@@ -108,12 +108,12 @@ jobs:
 
       - name: Run downstream tests
         if: startsWith(matrix.os, 'ubuntu')
-        shell: xvfb-run julia --project=@. --color=yes {0}
+        shell: xvfb-run julia --color=yes {0}
         run: |
           using Pkg
           foreach(("StatsPlots", "GraphRecipes")) do name
             Pkg.activate(tempdir())
-            foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline", "PlotsBase", "."))
+            foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "./"))
             Pkg.add(name); Pkg.test(name; coverage=true)
           end
 
