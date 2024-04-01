@@ -79,7 +79,7 @@ jobs:
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@latest
 
-      - name: Run upstream RecipesBase & RecipesPipeline tests
+      - name: Run upstream RecipesBase, RecipesPipeline tests
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
@@ -110,6 +110,14 @@ jobs:
           end
           CondaPkg.PkgREPL.add([libgcc..., "matplotlib"])
           CondaPkg.status()
+
+      - name: Run upstream PlotsBase tests
+        shell: julia --project=@. --color=yes {0}
+        run: |
+          using Pkg
+          foreach(("PlotsBase",)) do name
+            Pkg.develop(path=name); Pkg.test(name; coverage=true)
+          end
 
       - uses: julia-actions/julia-runtest@latest
         timeout-minutes: 60

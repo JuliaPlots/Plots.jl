@@ -1,19 +1,22 @@
 module HDF5Ext
 
-import PlotsBase: PlotsBase, @ext_imp_use
-@ext_imp_use :import HDF5 Group Dataset
+import HDF5: HDF5, Group, Dataset
 
-import PlotUtils
-import PlotUtils.Colors
+import PlotUtils: PlotUtils, Colors
 import PlotUtils.ColorSchemes: ColorScheme
 import PlotUtils.Colors: Colorant
 import RecipesPipeline
 
 import RecipesPipeline.datetimeformatter
 import PlotUtils.ColorPalette, PlotUtils.CategoricalColorGradient, PlotUtils.ContinuousColorGradient
-import PlotsBase: _current_plots_version, Surface, Shape, Arrow, GridLayout, RootLayout, Font, PlotText, SeriesAnnotations
-import PlotsBase: Series, BoundingBox, Length, Axis, Subplot, Plot, AKW, KW, DefaultsDict, _axis_defaults, plot, plot!
-import PlotsBase.Axes: Extrema
+import PlotsBase: PlotsBase, Surface, Arrow, GridLayout, RootLayout, Font, PlotText, SeriesAnnotations
+import PlotsBase: BoundingBox, Length, Plot, DefaultsDict, plot, plot!
+
+using PlotsBase.PlotsSeries
+using PlotsBase.Subplots
+using PlotsBase.Commons
+using PlotsBase.Shapes
+using PlotsBase.Axes
 
 import Dates
 
@@ -27,7 +30,7 @@ const T = HDF5Backend
 get_concrete_backend() = T  # opposite to abstract
 
 function __init__()
-    @info "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
+    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
     PlotsBase._backendType[sym] = get_concrete_backend()
     PlotsBase._backendSymbol[T] = sym
 
@@ -408,7 +411,7 @@ function hdf5plot_write(
     name::String = "_unnamed",
 )
     HDF5.h5open(path, "w") do file
-        HDF5.write_dataset(file, "VERSION_INFO", string(_current_plots_version))
+        HDF5.write_dataset(file, "VERSION_INFO", string(PlotsBase._current_plots_version))
         grp = HDF5.create_group(file, h5plotpath(name))
         _write(grp, plt)
     end
@@ -520,7 +523,7 @@ end
 
 # 1st arg appears to be ref to subplots. Seems to work without it.
 _read(::Type{Axis}, grp::Group) =
-    Axis([], DefaultsDict(_read(KW, grp["plotattributes"]), _axis_defaults))
+    Axis([], DefaultsDict(_read(KW, grp["plotattributes"]), PlotsBase._axis_defaults))
 
 # Not for use in main "Plot.subplots[]" hierarchy.  Just establishes reference with subplot_index.
 _read(::Type{Subplot}, grp::Group) =

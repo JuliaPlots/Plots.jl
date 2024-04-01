@@ -15,8 +15,8 @@ using Base.Meta
 @reexport using PlotUtils
 
 import RecipesBase: plot, plot!, animate, is_explicit, grid
-import RecipesPipeline
 import RecipesPipeline:
+    RecipesPipeline,
     inverse_scale_func,
     datetimeformatter,
     AbstractSurface,
@@ -116,11 +116,10 @@ export
     scalefontsizes,
     resetfontsizes
 #! format: on
-using Measures: Measures
+import Measures
 include("PlotMeasures.jl")
 using .PlotMeasures
-using .PlotMeasures: Length, AbsoluteLength, Measure
-import .PlotMeasures: width, height
+import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
     Expr(
@@ -141,7 +140,7 @@ macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
         ),
     ) |> esc
 end
-using NaNMath: NaNMath
+import NaNMath
 include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
@@ -193,7 +192,7 @@ include("plotattr.jl")
 include("backends/nobackend.jl")
 include("abstract_backend.jl")
 include("alignment.jl")
-const CURRENT_BACKEND = CurrentBackend(:none, NoBackend())
+const CURRENT_BACKEND = CurrentBackend(:none)
 include("output.jl")
 include("shorthands.jl")
 include("backends/web.jl")

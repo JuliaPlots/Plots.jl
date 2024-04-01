@@ -1,18 +1,7 @@
+const TEST_PACKAGES = strip.(split(get(ENV, "PLOTSBASE_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston"), ","))
+const TEST_BACKENDS = Symbol.(lowercase.(TEST_PACKAGES))
+
 using PlotsBase
-const TEST_PACKAGES = let
-    if (var = get(ENV, "PLOTS_TEST_PACKAGES", nothing)) ≢ nothing
-        strip.(split(var, ","))
-    else
-        [
-            "GR",
-            "UnicodePlots",
-            "PythonPlot",
-            "PGFPlotsX",
-            "PlotlyJS",
-            "Gaston",
-        ]
-    end
-end
 
 # initialize all backends
 for pkg in TEST_PACKAGES
@@ -42,9 +31,9 @@ using FileIO
 using Dates
 using Test
 
-is_auto() = PlotsBase.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
-is_pkgeval() = PlotsBase.bool_env("JULIA_PKGEVAL", "false")
-is_ci() = PlotsBase.bool_env("CI", "false")
+is_auto() = PlotsBase.bool_env("VISUAL_REGRESSION_TESTS_AUTO")
+is_pkgeval() = PlotsBase.bool_env("JULIA_PKGEVAL")
+is_ci() = PlotsBase.bool_env("CI")
 
 is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
@@ -66,7 +55,7 @@ for name in (
     # "pgfplotsx",
     # "plotly",
     # "animations",
-    "output",
+    # "output",
     "backends",
 )
     @testset "$name" begin

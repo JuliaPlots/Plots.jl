@@ -1,7 +1,7 @@
 module FileIOExt
 
-import PlotsBase: PlotsBase, Plot, @ext_imp_use
-@ext_imp_use :import FileIO
+import PlotsBase: PlotsBase, Plot
+import FileIO
 
 _fileio_load(@nospecialize(filename::AbstractString)) =
     FileIO.load(filename::AbstractString)

@@ -1,8 +1,9 @@
 module IJuliaExt
 
-import PlotsBase: @ext_imp_use, PlotsBase, Plot
+import PlotsBase: PlotsBase, Plot
 using Base64
 
+# NOTE: cannot use import IJulia
 const IJulia =
     Base.require(Base.PkgId(Base.UUID("7073ff75-c697-5162-941a-fcdaad2a7d2a"), "IJulia"))
 

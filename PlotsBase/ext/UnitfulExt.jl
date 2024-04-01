@@ -3,9 +3,9 @@
 
 module UnitfulExt
 
-import PlotsBase: PlotsBase, @ext_imp_use, @recipe, PlotText, Subplot, AVec, AMat, Axis
+import Unitful: Unitful, Quantity, unit, ustrip, dimension, Units, NoUnits, LogScaled, logunit, MixedUnits, Level, Gain, uconvert
+import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import RecipesBase
-@ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits LogScaled logunit MixedUnits Level Gain uconvert
 import LaTeXStrings: LaTeXString
 import Latexify: latexify
 using UnitfulLatexify

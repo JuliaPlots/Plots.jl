@@ -3,9 +3,11 @@ module Plotly
 
 export PlotlyBackend, plotly_show_js, plotly_series, plotly_layout, html_head, html_body
 
-using UUIDs
-using Statistics: mean
-using PlotsBase: bbox_to_pcts, labelfunc_tex, is_2tuple, ticks_type, recursive_merge
+import RecipesPipeline
+import Statistics
+import UUIDs
+import JSON
+
 using PlotsBase.Annotations
 using PlotsBase.Axes
 using PlotsBase.Colorbars
@@ -17,22 +19,19 @@ using PlotsBase.PlotMeasures
 using PlotsBase.PlotsPlots
 using PlotsBase.PlotsSeries
 using PlotsBase.PlotUtils: PlotUtils, ColorGradient, rgba_string, rgb_string
-using PlotsBase.RecipesPipeline: RecipesPipeline
 using PlotsBase.Subplots
 using PlotsBase.Surfaces
 using PlotsBase.Ticks
-import PlotsBase: labelfunc, _show, _display, default_output_format, embeddable_html
-import PlotsBase: backend_name, backend_package_name
 
 struct PlotlyBackend <: PlotsBase.AbstractBackend end
 PlotsBase._backendType[:plotly] = PlotlyBackend
 PlotsBase._backendSymbol[PlotlyBackend] = :plotly
 
 push!(PlotsBase._initialized_backends, :plotly)
-backend_name(::PlotlyBackend) = :plotly
-backend_package_name(::PlotlyBackend) = backend_package_name(:plotly)
+PlotsBase.backend_name(::PlotlyBackend) = :plotly
+PlotsBase.backend_package_name(::PlotlyBackend) = PlotsBase.backend_package_name(:plotly)
 
-const _plotly_attrs = merge_with_base_supported([
+const _plotly_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
     :legend_background_color,
     :background_color_inside,
@@ -180,7 +179,7 @@ const _plotly_markers = [
 ]
 const _plotly_scales = [:identity, :log10]
 
-default_output_format(plt::Plot{PlotlyBackend}) = "html"
+PlotsBase.default_output_format(plt::Plot{PlotlyBackend}) = "html"
 
 for s in (:attr, :seriestype, :marker, :style, :scale)
     f1 = Symbol("is_", s, "_supported")
@@ -194,7 +193,7 @@ end
 # ----------------------------------------------------------------
 
 function labelfunc(scale::Symbol, backend::PlotlyBackend)
-    texfunc = labelfunc_tex(scale)
+    texfunc = PlotsBase.labelfunc_tex(scale)
     x -> begin
         tex_x = texfunc(x)
         sup_x = replace(tex_x, r"\^{(.*)}" => s"<sup>\1</sup>")
@@ -291,7 +290,7 @@ end
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot)
     figw, figh = sp.plt[:size]
-    pcts = bbox_to_pcts(sp.plotarea, figw * px, figh * px)
+    pcts = PlotsBase.bbox_to_pcts(sp.plotarea, figw * px, figh * px)
     pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
     x_domain = [pcts[1], pcts[1] + pcts[3]]
     y_domain = [pcts[2], pcts[2] + pcts[4]]
@@ -345,8 +344,8 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
 
         # ticks
         if axis[:ticks] !== :native
-            ticks = get_ticks(sp, axis)
-            ttype = ticks_type(ticks)
+            ticks = PlotsBase.get_ticks(sp, axis)
+            ttype = PlotsBase.ticks_type(ticks)
             if ttype === :ticks
                 ax[:tickmode] = "array"
                 ax[:tickvals] = ticks
@@ -520,7 +519,7 @@ function plotly_layout(plt::Plot)
         plotattributes_out[:hovermode] = "none"
     end
 
-    plotattributes_out = recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
+    plotattributes_out = PlotsBase.recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
 end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
@@ -771,7 +770,7 @@ function plotly_series(plt::Plot, series::Series)
 
     plotattributes_out[:colorbar] = plotly_colorbar(sp)
 
-    if is_2tuple(clims) && all(!isnan, clims)
+    if PlotsBase.is_2tuple(clims) && all(!isnan, clims)
         plotattributes_out[:zmin], plotattributes_out[:zmax] = clims
     end
 
@@ -935,7 +934,7 @@ function plotly_colorbar(sp::Subplot)
     x_domain, y_domain = plotly_domain(sp)
     plot_attribute = KW(
         :title => sp[:colorbar_title],
-        :y => mean(y_domain),
+        :y => Statistics.mean(y_domain),
         :len => diff(y_domain)[1],
         :x => x_domain[2],
     )
@@ -1242,9 +1241,9 @@ html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
 plotly_url() =
     if PlotsBase._use_local_dependencies[]
-        "file:///" * _plotly_local_file_path[]
+        "file:///$(PlotsBase._plotly_local_file_path[])"
     else
-        "https://cdn.plot.ly/$_plotly_min_js_filename"
+        "https://cdn.plot.ly/$(PlotsBase._plotly_min_js_filename)"
     end
 
 function plotly_html_head(plt::Plot)
@@ -1264,7 +1263,7 @@ function plotly_html_head(plt::Plot)
         "<script src=\"$mathjax_file\"></script>\n\t\t"
     end
 
-    if isijulia()
+    if PlotsBase.isijulia()
         mathjax_head
     else
         "$mathjax_head<script src=$(repr(plotly))></script>"
@@ -1278,7 +1277,7 @@ function plotly_html_body(plt, style = nothing)
     end
 
     requirejs_prefix = requirejs_suffix = ""
-    if isijulia()
+    if PlotsBase.isijulia()
         # require.js adds .js automatically
         plotly_no_ext = plotly_url() |> splitext |> first
 
@@ -1315,10 +1314,11 @@ plotly_show_js(io::IO, plot::Plot) =
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyBackend}) = true
 
-_show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend}) =
+PlotsBase._show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend}) =
     plotly_show_js(io, plot)
 
-_show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) = write(io, embeddable_html(plt))
+PlotsBase._show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) = write(io, PlotsBase.embeddable_html(plt))
 
-_display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
+PlotsBase._display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
+
 end # module

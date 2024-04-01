@@ -4,13 +4,39 @@ const _plots_compats         = _plots_project.compat
 
 const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
-const _backend_packages     = (gaston = :Gaston, gr = :GR, unicodeplots = :UnicodePlots, pgfplotsx = :PGFPlotsX, pythonplot = :PythonPlot, plotly = nothing, plotlyjs = :PlotlyJS, hdf5 = :HDF5)
+const _backend_packages     = (gaston = :Gaston, gr = :GR, unicodeplots = :UnicodePlots, pgfplotsx = :PGFPlotsX, pythonplot = :PythonPlot, plotly = :Plotly, plotlyjs = :PlotlyJS, hdf5 = :HDF5)
 const _initialized_backends = Set{Symbol}()
 const _backends             = keys(_backend_packages)
 
 const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
     merge(toml["deps"], toml["extras"])
 end
+
+function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = true)
+    sym = Symbol(lowercase(string(backend)))
+    if warn && !haskey(_backend_packages, sym)
+        @warn "backend `$sym` is not compatible with `Plots`."
+        return
+    end
+    # lowercase -> CamelCase, falling back to the given input for `PlotlyBase` ...
+    str = string(get(_backend_packages, sym, backend))
+    str == "Plotly" && (str *= "Base")  # FIXME: `Plots` inconsistency, `plotly` should be named `plotlybase`
+    # check supported
+    if warn && !haskey(_plots_compats, str)
+        @warn "backend `$str` is not compatible with `Plots`."
+        return
+    end
+    # check installed
+    pkg_id = Base.identify_package(str)
+    version = if pkg_id === nothing
+        nothing
+    else
+        get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
+    end
+    version === nothing && @warn "backend `$str` is not installed."
+    version
+end
+
 _create_backend_figure(plt::Plot) = nothing
 _initialize_subplot(plt::Plot, sp::Subplot) = nothing
 
@@ -29,6 +55,8 @@ mutable struct CurrentBackend
     pkg::AbstractBackend
 end
 
+CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
+
 """
 Returns the current plotting package name.  Initializes package on first call.
 """
@@ -40,7 +68,7 @@ backends() = _backends
 backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol)::AbstractBackend = _backendType[sym]()
 
-backend_package_name(sym::Symbol = backend_name()) = _backend_packages[sym]
+backend_package_name(sym::Symbol = backend_name()) = get(_backend_packages, sym, :None)
 
 # Traits to be implemented by the extensions
 backend_name(::AbstractBackend) = @info "`backend_name(::Backend) not implemented."
@@ -73,7 +101,7 @@ backend(sym::Symbol) =
             backend()
         end
     else
-        error("Unsupported backend $sym")
+        @error "Unsupported backend $sym"
     end
 
 function get_backend_module(name::Symbol)

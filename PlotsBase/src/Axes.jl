@@ -1,8 +1,7 @@
-
 module Axes
 
-export Axis, tickfont, guidefont, widen_factor, scale_inverse_scale_func
-export sort_3d_axes, axes_letters, process_axis_arg!
+export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
+export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks
 import PlotsBase: get_ticks
 using PlotsBase: PlotsBase, RecipesPipeline, Subplot, DefaultsDict, TimeType
 using PlotsBase.Commons: _axis_defaults_byletter, _all_axis_attrs, dumpdict

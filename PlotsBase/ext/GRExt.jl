@@ -1,52 +1,27 @@
 module GRExt
 
-import PlotsBase: PlotsBase, @ext_imp_use
-@ext_imp_use :import GR
-# TODO: eliminate this list
-using PlotsBase:
-    bbox,
-    left,
-    right,
-    bottom,
-    top,
-    plotarea,
-    axis_drawing_info,
-    axis_drawing_info_3d,
-    _guess_best_legend_position,
-    labelfunc_tex,
-    _cycle,
-    isortho,
-    isautop,
-    heatmap_edges,
-    is_uniformly_spaced,
-    DPI,
-    shape_data,
-    is_2tuple,
-    is3d,
-    straightline_data,
-    convert_to_polar
 
-using RecipesPipeline: RecipesPipeline
-using NaNMath: NaNMath
-using PlotsBase.Arrows
-using PlotsBase.Axes
-using PlotsBase.Annotations
-using PlotsBase.Colorbars
-using PlotsBase.Colorbars: cbar_gradient, cbar_fill, cbar_lines
-using PlotsBase.Colors
-using PlotsBase.Commons
-using PlotsBase.Fonts
-using PlotsBase.Fonts: Font, PlotText
+import PlotsBase: PlotsBase, _cycle
+import RecipesPipeline
+import NaNMath
+import GR
+
+import PlotsBase.Colorbars: cbar_gradient, cbar_fill, cbar_lines
+
 using PlotsBase.PlotMeasures
-using PlotsBase.PlotsPlots
+using PlotsBase.Annotations
 using PlotsBase.PlotsSeries
+using PlotsBase.PlotsPlots
+using PlotsBase.Colorbars
 using PlotsBase.Subplots
+using PlotsBase.Commons
+using PlotsBase.Arrows
 using PlotsBase.Shapes
-using PlotsBase.Shapes: Shape
+using PlotsBase.Colors
+using PlotsBase.Fonts
+using PlotsBase.Fonts
 using PlotsBase.Ticks
-
-# These are overriden by GR
-import PlotsBase: labelfunc, _update_min_padding!, _show, _display, closeall
+using PlotsBase.Axes
 
 const package_str = "GR"
 const str = lowercase(package_str)
@@ -57,7 +32,7 @@ struct GRBackend <: PlotsBase.AbstractBackend end
 get_concrete_backend() = GRBackend  # opposite to abstract
 
 function __init__()
-    @info "Initializing GR backend in PlotsBase; run `gr()` to activate it."
+    @debug "Initializing GR backend in PlotsBase; run `gr()` to activate it."
     PlotsBase._backendType[sym] = get_concrete_backend()
     PlotsBase._backendSymbol[GRBackend] = sym
 
@@ -371,7 +346,7 @@ xposition(vp::GRViewport, pos) = vp.xmin + pos * width(vp)
 yposition(vp::GRViewport, pos) = vp.ymin + pos * height(vp)
 
 # --------------------------------------------------------------------------------------
-gr_is3d(st) = RecipesPipeline.is3d(st)
+gr_is3d(st) = PlotsBase.is3d(st)
 
 gr_color(c, ::Type) = gr_color(RGBA(c), RGB)
 gr_color(c) = gr_color(c, color_type(c))
@@ -701,10 +676,10 @@ end
 
 function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vp_canvas)
     viewport = GRViewport(
-        vp_canvas.xmax * (left(bb) / w),
-        vp_canvas.xmax * (right(bb) / w),
-        vp_canvas.ymax * (1 - bottom(bb) / h),
-        vp_canvas.ymax * (1 - top(bb) / h),
+        vp_canvas.xmax * (PlotsBase.left(bb) / w),
+        vp_canvas.xmax * (PlotsBase.right(bb) / w),
+        vp_canvas.ymax * (1 - PlotsBase.bottom(bb) / h),
+        vp_canvas.ymax * (1 - PlotsBase.top(bb) / h),
     )
     hascolorbar(sp) && (viewport.xmax -= 0.1(1 + 0.5gr_is3d(sp)))
     viewport
@@ -1001,7 +976,7 @@ function gr_get_ticks_size(ticks, rot)
 end
 
 function labelfunc(scale::Symbol, backend::GRBackend)
-    texfunc = labelfunc_tex(scale)
+    texfunc = PlotsBase.labelfunc_tex(scale)
     # replace dash with \minus (U+2212)
     label -> replace(texfunc(label), "-" => "−")
 end
@@ -1038,7 +1013,7 @@ function gr_axis_width(sp, axis)
     w
 end
 
-function _update_min_padding!(sp::Subplot{GRBackend})
+function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
     width, height = sp_size = get_size(sp)
 
@@ -1176,11 +1151,11 @@ function gr_viewport_bbox(vp, sp, color)
 end
 
 function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
-    _update_min_padding!(sp)
+    PlotsBase._update_min_padding!(sp)
 
     # the viewports for this subplot and the whole plot
-    vp_sp = gr_viewport_from_bbox(sp, bbox(sp), w, h, vp_canvas)
-    vp_plt = gr_viewport_from_bbox(sp, plotarea(sp), w, h, vp_canvas)
+    vp_sp = gr_viewport_from_bbox(sp, PlotsBase.bbox(sp), w, h, vp_canvas)
+    vp_plt = gr_viewport_from_bbox(sp, PlotsBase.plotarea(sp), w, h, vp_canvas)
 
     # update plot viewport
     leg = gr_get_legend_geometry(vp_plt, sp)
@@ -1222,7 +1197,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
 
     # add annotations
     for ann in sp[:annotations]
-        x, y = if is3d(sp)
+        x, y = if PlotsBase.is3d(sp)
             x, y, z, val = locate_annotation(sp, ann...)
             GR.setwindow(-1, 1, -1, 1)
             gr_w3tondc(x, y, z)
@@ -1391,7 +1366,7 @@ function gr_legend_pos(sp::Subplot, leg, vp)
         return gr_legend_pos(lp, vp)
     end
 
-    leg_str = string(_guess_best_legend_position(lp, sp))
+    leg_str = string(PlotsBase._guess_best_legend_position(lp, sp))
 
     xpos = if occursin("left", leg_str)
         vp.xmin + if occursin("outer", leg_str)
@@ -1643,8 +1618,8 @@ function gr_draw_axes(sp, vp)
         azimuth, elevation = sp[:camera]
 
         GR.setwindow3d(x_min, x_max, y_min, y_max, z_min, z_max)
-        fov = (isortho(sp) || isautop(sp)) ? NaN : 30
-        cam = (isortho(sp) || isautop(sp)) ? 0 : NaN
+        fov = (PlotsBase.isortho(sp) || PlotsBase.isautop(sp)) ? NaN : 30
+        cam = (PlotsBase.isortho(sp) || PlotsBase.isautop(sp)) ? 0 : NaN
         GR.setspace3d(-90 + azimuth, 90 - elevation, fov, cam)
         gr_set_projectiontype(sp)
 
@@ -1670,7 +1645,7 @@ function gr_draw_axes(sp, vp)
 end
 
 function gr_draw_axis(sp, letter, vp)
-    ax = axis_drawing_info(sp, letter)
+    ax = PlotsBase.axis_drawing_info(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
 
     # draw segments
@@ -1687,7 +1662,7 @@ function gr_draw_axis(sp, letter, vp)
 end
 
 function gr_draw_axis_3d(sp, letter, vp)
-    ax = axis_drawing_info_3d(sp, letter)
+    ax = PlotsBase.axis_drawing_info_3d(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
 
     # draw segments
@@ -1971,9 +1946,9 @@ function gr_add_series(sp, series)
     if ispolar(sp) && z === nothing
         extrema_r = gr_y_axislims(sp)
         if frng !== nothing
-            _, frng = convert_to_polar(x, frng, extrema_r)
+            _, frng = PlotsBase.convert_to_polar(x, frng, extrema_r)
         end
-        x, y = convert_to_polar(x, y, extrema_r)
+        x, y = PlotsBase.convert_to_polar(x, y, extrema_r)
     end
 
     # add custom frame shapes to markershape?
@@ -1986,7 +1961,7 @@ function gr_add_series(sp, series)
     clims = gr_clims(sp, series)
     if (st = series[:seriestype]) in (:path, :scatter, :straightline)
         if st === :straightline
-            x, y = straightline_data(series)
+            x, y = PlotsBase.straightline_data(series)
         end
         gr_draw_segments(series, x, y, nothing, frng, clims)
         if series[:markershape] !== :none
@@ -2009,7 +1984,7 @@ function gr_add_series(sp, series)
         GR.gr3.clear()
     elseif st === :heatmap
         # `z` is already transposed, so we need to reverse before passing its size.
-        x, y = heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
+        x, y = PlotsBase.heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
         gr_draw_heatmap(series, x, y, z, clims)
     elseif st === :image
         gr_draw_image(series, x, y, z, clims)
@@ -2042,7 +2017,7 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
     (x === nothing || length(x) ≤ 1) && return
     if fillrange !== nothing  # prepare fill-in
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
-        fr_from, fr_to = is_2tuple(fillrange) ? fillrange : (y, fillrange)
+        fr_from, fr_to = PlotsBase.is_2tuple(fillrange) ? fillrange : (y, fillrange)
     end
 
     # draw the line(s)
@@ -2112,7 +2087,7 @@ function gr_draw_markers(
 end
 
 function gr_draw_shapes(series, clims)
-    x, y = shape_data(series)
+    x, y = PlotsBase.shape_data(series)
     for segment in series_segments(series, :shape)
         i, rng = segment.attr_index, segment.range
         if length(rng) > 1
@@ -2239,7 +2214,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
     GR.setspace(clims..., 0, 90)
     w, h = length(x) - 1, length(y) - 1
     sp = series[:subplot]
-    if !ispolar(series) && is_uniformly_spaced(x) && is_uniformly_spaced(y)
+    if !ispolar(series) && PlotsBase.is_uniformly_spaced(x) && PlotsBase.is_uniformly_spaced(y)
         # For uniformly spaced data use GR.drawimage, which can be
         # much faster than GR.nonuniformcellarray, especially for
         # pdf output, and also supports alpha values.
@@ -2297,8 +2272,8 @@ for (mime, fmt) in (
     "application/postscript" => "ps",
     "image/svg+xml" => "svg",
 )
-    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
-        dpi_factor = $fmt == "png" ? plt[:dpi] / DPI : 1
+    @eval function PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
+        dpi_factor = $fmt == "png" ? plt[:dpi] / PlotsBase.DPI : 1
         filepath = tempname() * "." * $fmt
         # workaround  windows bug github.com/JuliaLang/julia/issues/46989
         touch(filepath)
@@ -2341,6 +2316,6 @@ function PlotsBase._display(plt::Plot{GRBackend})
     end
 end
 
-closeall(::GRBackend) = GR.emergencyclosegks()
+PlotsBase.closeall(::GRBackend) = GR.emergencyclosegks()
 
 end # module

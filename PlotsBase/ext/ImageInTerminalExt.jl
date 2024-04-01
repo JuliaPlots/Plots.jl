@@ -1,7 +1,7 @@
 module ImageInTerminalExt
 
+import ImageInTerminal
 import PlotsBase
-PlotsBase.@ext_imp_use :import ImageInTerminal
 
 if ImageInTerminal.ENCODER_BACKEND[] == :Sixel
     get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead

@@ -1,12 +1,6 @@
 
 # ---------------------------------------------------------------
-bool_env(x, default)::Bool =
-    try
-        return parse(Bool, get(ENV, x, default))
-    catch e
-        @warn e
-        return false
-    end
+bool_env(x, default::String="0")::Bool = tryparse(Bool, get(ENV, x, default))
 
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
@@ -622,8 +616,9 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
         # change backend?
         if arg isa Symbol
             if arg ∈ backends()
-                pkg = backend_package_name(arg)
-                @eval Main import $pkg
+                if (pkg = backend_package_name(arg)) ≢ nothing  # :plotly
+                    @eval Main import $pkg
+                end
                 backend(arg)
             end
         end
@@ -954,16 +949,6 @@ the ranges, and places the legend at the corner where the maximum distance to th
 function _guess_best_legend_position(lp::Symbol, plt)
     lp === :best || return lp
     _guess_best_legend_position(xlims(plt), ylims(plt), plt)
-end
-
-macro ext_imp_use(imp_use::QuoteNode, mod::Symbol, args...)
-    dots = ntuple(_ -> :., isdefined(Base, :get_extension) ? 1 : 3)
-    ex = if length(args) > 0
-        Expr(:(:), Expr(dots..., mod), Expr.(:., args)...)
-    else
-        Expr(dots..., mod)
-    end
-    Expr(imp_use.value, ex) |> esc
 end
 
 _generate_doclist(attributes) =

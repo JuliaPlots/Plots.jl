@@ -1316,9 +1316,29 @@ replace_rand(ex) = ex
 function replace_rand(ex::Expr)
     expr = Expr(ex.head)
     foreach(arg -> push!(expr.args, replace_rand(arg)), ex.args)
-    if Meta.isexpr(ex, :call) && ex.args[1] ∈ (:rand, :randn, :(PlotsBase.fakedata))
-        pushfirst!(expr.args, ex.args[1])
+    if Meta.isexpr(ex, :call) && first(ex.args) ∈ (:rand, :randn, :(PlotsBase.fakedata))
+        pushfirst!(expr.args, first(ex.args))
         expr.args[2] = :rng
+    end
+    expr
+end
+
+replace_module(ex) = ex
+
+function replace_module(ex::Expr)
+    if Meta.isexpr(ex, :import) || Meta.isexpr(ex, :using)
+        expr = Expr(ex.head)
+        for arg ∈ ex.args
+            mod = last(arg.args)
+            new_arg = if Meta.isexpr(arg, :.)
+                mod ≡ :PlotsBase ? arg : Expr(:., :PlotsBase, mod)
+            else
+                arg
+            end
+            push!(expr.args, new_arg)
+        end
+    else
+        expr = ex
     end
     expr
 end

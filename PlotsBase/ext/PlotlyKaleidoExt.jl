@@ -1,8 +1,7 @@
 module PlotlyKaleidoExt
 
-import PlotsBase: PlotsBase, @ext_imp_use
-@ext_imp_use :import PlotlyKaleido
-import PlotsBase: Plot, PlotlyBackend, plotly_show_js, _show
+import PlotsBase: PlotsBase, Plot, PlotlyBackend
+import PlotlyKaleido
 
 function __init__()
     ccall(:jl_generating_output, Cint, ()) == 1 && return
@@ -21,7 +20,7 @@ for (mime, fmt) in (
     @eval PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend}) =
         PlotlyKaleido.savefig(
             io,
-            sprint(io -> plotly_show_js(io, plt)),
+            sprint(io -> PlotsBase.plotly_show_js(io, plt)),
             height = plt[:size][2],
             width = plt[:size][1],
             format = $fmt,

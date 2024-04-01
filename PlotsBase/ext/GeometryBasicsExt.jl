@@ -1,10 +1,10 @@
 module GeometryBasicsExt
 
-import PlotsBase: PlotsBase, @ext_imp_use, @recipe
+import RecipesBase: @recipe
+import PlotsBase: AVec
 import RecipesPipeline
+import GeometryBasics
 import Unzip
-
-@ext_imp_use :import GeometryBasics
 
 RecipesPipeline.unzip(points::AbstractVector{<:GeometryBasics.Point}) =
     Unzip.unzip(Tuple.(points))
@@ -14,7 +14,7 @@ RecipesPipeline.unzip(points::AbstractVector{GeometryBasics.Point{N,T}}) where {
 # -----------------------------------------
 # Lists of tuples and GeometryBasics.Points
 # -----------------------------------------
-@recipe f(v::PlotsBase.AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
+@recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
 @recipe f(p::GeometryBasics.Point) = [p]  # Special case for 4-tuples in :ohlc series
 
 end  # module

@@ -1,44 +1,29 @@
 module PGFPlotsXExt
 
-import PlotsBase: PlotsBase, @ext_imp_use
-@ext_imp_use :import PGFPlotsX
-
-import PlotUtils: PlotUtils, ColorGradient, color_list
+import PlotsBase: PlotsBase, pgfx_sanitize_string
+import PlotUtils: PlotUtils, ColorGradient
 import LaTeXStrings: LaTeXString
 import Printf: @sprintf
 import UUIDs: uuid4
 import RecipesPipeline
+import PGFPlotsX
 import Latexify
 import Contour
 
-# TODO: eliminate this list
-import PlotsBase:
-    pgfx_sanitize_string,
-    bbox,
-    left,
-    right,
-    bottom,
-    width,
-    height,
-    top
-
-using PlotsBase.Arrows
-using PlotsBase.Axes
-using PlotsBase.Axes: has_ticks
-using PlotsBase.Annotations
-using PlotsBase.Colorbars
-using PlotsBase.Colors
-using PlotsBase.Commons
-using PlotsBase.Fonts
-using PlotsBase.Fonts: Font, PlotText
 using PlotsBase.PlotMeasures
-using PlotsBase.PlotsPlots
+using PlotsBase.Annotations
 using PlotsBase.PlotsSeries
+using PlotsBase.PlotsPlots
+using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Surfaces
+using PlotsBase.Commons
+using PlotsBase.Colors
 using PlotsBase.Shapes
-using PlotsBase.Shapes: Shape
+using PlotsBase.Arrows
+using PlotsBase.Fonts
 using PlotsBase.Ticks
+using PlotsBase.Axes
 
 const package_str = "PGFPlotsX"
 const str = lowercase(package_str)
@@ -50,7 +35,7 @@ const T = PGFPlotsXBackend
 get_concrete_backend() = T  # opposite to abstract
 
 function __init__()
-    @info "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
+    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
     PlotsBase._backendType[sym] = get_concrete_backend()
     PlotsBase._backendSymbol[T] = sym
 
@@ -367,9 +352,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         for sp in plt.subplots
-            bb2 = bbox(sp)
+            bb2 = PlotsBase.bbox(sp)
             dx, dy = bb2.x0
-            sp_w, sp_h = width(bb2), height(bb2)
+            sp_w, sp_h = PlotsBase.width(bb2), PlotsBase.height(bb2)
             if sp[:subplot_index] == plt[:plot_titleindex]
                 x = dx + sp_w / 2 - 10mm  # FIXME: get rid of magic constant
                 y = dy + sp_h / 2
@@ -1135,7 +1120,7 @@ function pgfx_filllegend!(series_opt, opt)
 end
 
 # Generates a colormap for pgfplots based on a ColorGradient
-pgfx_colormap(cl::PlotUtils.AbstractColorList) = pgfx_colormap(color_list(cl))
+pgfx_colormap(cl::PlotUtils.AbstractColorList) = pgfx_colormap(PlotUtils.color_list(cl))
 pgfx_colormap(v::Vector{<:Colorant}) =
     join(map(c -> @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c)), v), '\n')
 pgfx_colormap(cg::ColorGradient) = join(

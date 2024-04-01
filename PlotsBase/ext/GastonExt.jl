@@ -1,14 +1,19 @@
 module GastonExt
 
-import PlotsBase: PlotsBase, @ext_imp_use
-@ext_imp_use :import Gaston
-import PlotUtils: alphacolor, hex
-import PlotsBase: _show, _display
-using PlotsBase.PlotsPlots
+import RecipesPipeline
+import PlotsBase: PlotsBase, ticks_type
+import PlotUtils
+import Gaston
+
+using PlotsBase.PlotMeasures
 using PlotsBase.PlotsSeries
+using PlotsBase.PlotsPlots
+using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Commons
+using PlotsBase.Ticks
 using PlotsBase.Fonts
+using PlotsBase.Axes
 
 const package_str = "Gaston"
 const str = lowercase(package_str)
@@ -20,7 +25,7 @@ const T = GastonBackend
 get_concrete_backend() = T  # opposite to abstract
 
 function __init__()
-    @info "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
+    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
     PlotsBase._backendType[sym] = get_concrete_backend()
     PlotsBase._backendSymbol[T] = sym
 
@@ -201,16 +206,16 @@ end
 
 for (mime, term) in (
     "application/eps"        => "epscairo",
-    "image/eps"              => "epslatex",
+    "image/eps"              => "epscairo",
     "application/pdf"        => "pdfcairo",
     "application/postscript" => "postscript",
     "image/png"              => "png",
     "image/svg+xml"          => "svg",
     "text/latex"             => "tikz",
-    "application/x-tex"      => "epslatex",
+    "application/x-tex"      => "cairolatex",
     "text/plain"             => "dumb",
 )
-    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
+    @eval function PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         term = String($term)
         tmpfile = tempname() * ".$term"
         if plt.o !== nothing
@@ -231,7 +236,7 @@ for (mime, term) in (
     end
 end
 
-_display(plt::Plot{GastonBackend}) = display(plt.o)
+PlotsBase._display(plt::Plot{GastonBackend}) = display(plt.o)
 
 # --------------------------------------------
 # These functions are gaston specific
@@ -264,7 +269,7 @@ function gaston_get_subplots(n, plt_subplots, layout)
     nr, nc = size(layout)
     sps = Array{Any}(nothing, nr, nc)
     for r in 1:nr, c in 1:nc  # NOTE: col major
-        sps[r, c] = if (l = layout[r, c]) isa GridLayout
+        sps[r, c] = if (l = layout[r, c]) isa PlotsBase.GridLayout
             n, sub = gaston_get_subplots(n, plt_subplots, l)
             size(sub) == (1, 1) ? only(sub) : sub
         else
@@ -323,7 +328,7 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
         # width and height (pct) are multiplicative (parent)
         w = layout.widths[c].value * parent_xy_wh[3]
         h = layout.heights[r].value * parent_xy_wh[4]
-        if isa(l, EmptyLayout)
+        if isa(l, PlotsBase.EmptyLayout)
             dat[r, c] = (c - 1) * w, (r - 1) * h, w, h, nothing
         else
             # previous position (origin)
@@ -333,7 +338,7 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
             prev_c isa Array && (prev_c = prev_c[end, end])
             x = prev_c !== nothing ? prev_c[1] + prev_c[3] : parent_xy_wh[1]
             y = prev_r !== nothing ? prev_r[2] + prev_r[4] : parent_xy_wh[2]
-            dat[r, c] = if l isa GridLayout
+            dat[r, c] = if l isa PlotsBase.GridLayout
                 sub = gaston_multiplot_pos_size(l, (x, y, w, h))
                 size(sub) == (1, 1) ? only(sub) : sub
             else
@@ -769,7 +774,7 @@ end
 
 function gaston_set_legend!(axesconf, sp, any_label)
     if (lp = sp[:legend_position]) ∉ (:none, :inline) && any_label
-        leg_str = string(_guess_best_legend_position(lp, sp))
+        leg_str = string(PlotsBase._guess_best_legend_position(lp, sp))
 
         pos = occursin("outer", leg_str) ? "outside " : "inside "
         pos *= if occursin("top", leg_str)
@@ -859,8 +864,8 @@ end
 
 function gaston_color(col, alpha = 0)
     col = single_color(col)  # in case of gradients
-    col = alphacolor(col, gaston_alpha(alpha))  # add a default alpha if non existent
-    "rgbcolor '#$(hex(col, :aarrggbb))'"
+    col = PlotUtils.alphacolor(col, gaston_alpha(alpha))  # add a default alpha if non existent
+    "rgbcolor '#$(PlotUtils.hex(col, :aarrggbb))'"
 end
 
 function gaston_linestyle(style)

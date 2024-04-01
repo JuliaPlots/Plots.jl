@@ -7,10 +7,10 @@ ci_tol() =
         "1e-1"
     end
 
-const TESTS_MODULE = Module(:PlotsTestsModule)
+const TESTS_MODULE = Module(:PlotsBaseTestModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
 
-Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
+Base.eval(TESTS_MODULE, :(using Random, StableRNGs, PlotsBase))
 
 reference_dir(args...) =
     if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) !== nothing
@@ -222,8 +222,7 @@ is_pkgeval() || @testset "Examples" begin
         )
         @test filesize(fn) > 1_000
     end
-    # TODO: check whats up with those who are filtered
-    Sys.islinux() && for be in filter(∉(("PlotlyJS", "Gaston")), TEST_PACKAGES)
+    Sys.islinux() && for be ∈ TEST_BACKENDS
         skip = vcat(PlotsBase._backend_skips[be], blacklist)
         PlotsBase.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
         closeall()

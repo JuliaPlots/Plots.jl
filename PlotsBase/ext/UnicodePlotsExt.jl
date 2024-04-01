@@ -1,26 +1,22 @@
 module UnicodePlotsExt
 
-import PlotsBase: PlotsBase, @ext_imp_use
-@ext_imp_use :import UnicodePlots
-import PlotsBase: isijulia, texmath2unicode, straightline_data, shape_data
+import PlotsBase: PlotsBase, texmath2unicode
 import RecipesPipeline
+import UnicodePlots
 
-using PlotsBase.Arrows
-using PlotsBase.Axes
-using PlotsBase.Axes: has_ticks
-using PlotsBase.Annotations
-using PlotsBase.Colorbars
-using PlotsBase.Colors
-using PlotsBase.Commons
-using PlotsBase.Fonts
-using PlotsBase.Fonts: Font, PlotText
 using PlotsBase.PlotMeasures
-using PlotsBase.PlotsPlots
 using PlotsBase.PlotsSeries
+using PlotsBase.Annotations
+using PlotsBase.PlotsPlots
+using PlotsBase.Colorbars
 using PlotsBase.Subplots
+using PlotsBase.Commons
 using PlotsBase.Shapes
-using PlotsBase.Shapes: Shape
+using PlotsBase.Arrows
+using PlotsBase.Colors
+using PlotsBase.Fonts
 using PlotsBase.Ticks
+using PlotsBase.Axes
 
 const package_str = "UnicodePlots"
 const str = lowercase(package_str)
@@ -32,7 +28,7 @@ const T = UnicodePlotsBackend
 get_concrete_backend() = UnicodePlotsBackend  # opposite to abstract
 
 function __init__()
-    @info "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
+    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
     PlotsBase._backendType[sym] = get_concrete_backend()
     PlotsBase._backendSymbol[T] = sym
 
@@ -180,7 +176,7 @@ function PlotsBase._before_layout_calcs(plt::PlotsBase.Plot{UnicodePlotsBackend}
         # create a plot window with xlim/ylim set,
         # but the X/Y vectors are outside the bounds
         canvas = if (up_c = get(sp_kw, :canvas, :auto)) ≡ :auto
-            isijulia() ? :ascii : :braille
+            PlotsBase.isijulia() ? :ascii : :braille
         else
             up_c
         end
@@ -189,7 +185,7 @@ function PlotsBase._before_layout_calcs(plt::PlotsBase.Plot{UnicodePlotsBackend}
             if plot_3d
                 :none  # no plots border in 3d (consistency with other backends)
             else
-                isijulia() ? :ascii : :solid
+                PlotsBase.isijulia() ? :ascii : :solid
             end
         else
             up_b
@@ -307,9 +303,9 @@ function addUnicodeSeries!(
 
     # get the series data and label
     x, y = if st ≡ :straightline
-        straightline_data(series)
+        PlotsBase.straightline_data(series)
     elseif st ≡ :shape
-        shape_data(series)
+        PlotsBase.shape_data(series)
     else
         series[:x], series[:y]
     end

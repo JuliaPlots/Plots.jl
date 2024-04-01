@@ -1,12 +1,12 @@
 module PlotlyJSExt
 
-import PlotsBase: PlotsBase, @ext_imp_use
-@ext_imp_use :import PlotlyJS
 
-import PlotsBase: Plot
-using PlotsBase.Commons, PlotsBase.Plotly, PlotsBase.PlotsPlots
+import PlotsBase: PlotsBase, Plot, isijulia
+using PlotsBase.PlotsPlots
+using PlotsBase.Commons
+using PlotsBase.Plotly
 
-import PlotlyJS: WebIO
+import PlotlyJS: PlotlyJS, WebIO
 
 # unrolling the old # init_backend macro by hand case by case
 # this is not a macro for the backend maintainers and explicit control
@@ -20,7 +20,7 @@ const T = PlotlyJSBackend
 get_concrete_backend() = T  # opposite to abstract
 
 function __init__()
-    @info "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
+    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
     PlotsBase._backendType[sym] = get_concrete_backend()
     PlotsBase._backendSymbol[T] = sym
 
@@ -97,7 +97,7 @@ PlotsBase.html_head(plt::Plot{PlotlyJSBackend}) = PlotsBase.Plotly.plotly_html_h
 PlotsBase.html_body(plt::Plot{PlotlyJSBackend}) = PlotsBase.Plotly.plotly_html_body(plt)
 
 PlotsBase._show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) =
-    write(io, PlotsBase.Plotly.embeddable_html(plt))
+    write(io, PlotsBase.embeddable_html(plt))
 
 PlotsBase._display(plt::Plot{PlotlyJSBackend}) = display(plotlyjs_syncplot(plt))
 

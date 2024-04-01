@@ -1,24 +1,24 @@
 module PythonPlotExt
 
-import PlotsBase: PlotsBase, @ext_imp_use
-@ext_imp_use :import PythonPlot
-
 import RecipesPipeline
+import PythonPlot
 import NaNMath
 
-import PlotsBase: AVec
+import PlotsBase
 import PlotsBase.PlotUtils: PlotUtils, ColorGradient, plot_color, color_list, cgrad
-import PlotsBase.Colorbars: Colorbars, cbar_fill, cbar_gradient, cbar_lines
-import PlotsBase.PlotMeasures: PlotMeasures, px2inch
 import PlotsBase.Commons: Commons, single_color
-import PlotsBase.Fonts: Fonts, Font, PlotText
-import PlotsBase.Shapes: Shapes, Shape
-using PlotsBase.PlotsPlots
-using PlotsBase.PlotsSeries
+
+using PlotsBase.PlotMeasures
 using PlotsBase.Annotations
+using PlotsBase.PlotsSeries
+using PlotsBase.PlotsPlots
+using PlotsBase.Colorbars
 using PlotsBase.Subplots
+using PlotsBase.Commons
 using PlotsBase.Colors
 using PlotsBase.Arrows
+using PlotsBase.Shapes
+using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
 
@@ -32,7 +32,7 @@ const T = PythonPlotBackend
 get_concrete_backend() = T
 
 function __init__()
-    @info "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
+    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
     PlotsBase._backendType[sym] = get_concrete_backend()
     PlotsBase._backendSymbol[T] = sym
 
@@ -493,7 +493,7 @@ _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_
 
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{PythonPlotBackend})
-    w, h = map(s -> px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
+    w, h = map(s -> PlotMeasures.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
     # reuse the current figure?
     plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end
@@ -1360,7 +1360,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             end
 
             # minorticks
-            if !PlotsBase.no_minor_intervals(axis) && has_major_ticks
+            if !no_minor_intervals(axis) && has_major_ticks
                 ax.minorticks_on()
                 n_minor_intervals = num_minor_intervals(axis)
                 if (scale = axis[:scale]) === :identity

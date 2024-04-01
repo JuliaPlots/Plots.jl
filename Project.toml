@@ -5,6 +5,7 @@ version = "1.41.0"
 
 [deps]
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Preferences = "21216c6a-2e73-6563-6e65-726566657250"
@@ -12,8 +13,16 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 GR = "0.69.5 - 0.73"
-PlotsBase = "1"
+Pkg = "1"
+PlotsBase = "1.41"
 PrecompileTools = "1"
-Preferences 
+Preferences = "1"
 Reexport = "0.2, 1"
 julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
+
+[targets]
+test = ["Test", "UnicodePlots"]
