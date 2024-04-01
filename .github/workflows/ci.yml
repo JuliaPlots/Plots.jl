@@ -99,7 +99,7 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          foreach(name -> Pkg.test(name; coverage=true), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase"))
+          foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase"))
 
       - uses: julia-actions/julia-runtest@latest
         timeout-minutes: 60
