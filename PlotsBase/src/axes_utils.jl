@@ -190,7 +190,7 @@ end
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
 discrete_value!(plotattributes, letter::Symbol, dv) =
-    let l = if plotattributes[:permute] !== :none
+    let l = if plotattributes[:permute] ≢ :none
             filter(!=(letter), plotattributes[:permute]) |> only
         else
             letter
@@ -299,7 +299,7 @@ function axis_drawing_info(sp, letter)
     segments, tick_segments, grid_segments, minorgrid_segments, border_segments =
         map(_ -> Segments(2), 1:5)
 
-    if sp[:framestyle] !== :none
+    if sp[:framestyle] ≢ :none
         isy = letter ≡ :y
         oa1, oa2 = oas = if sp[:framestyle] in (:origin, :zerolines)
             0, 0
@@ -307,7 +307,7 @@ function axis_drawing_info(sp, letter)
             xor(ax[:mirror], oax[:flip]) ? reverse(oamM) : oamM
         end
         if ax[:showaxis]
-            if sp[:framestyle] !== :grid
+            if sp[:framestyle] ≢ :grid
                 push!(segments, reverse_if((amin, oa1), isy), reverse_if((amax, oa1), isy))
                 # don't show the 0 tick label for the origin framestyle
                 if (
@@ -315,7 +315,7 @@ function axis_drawing_info(sp, letter)
                     ticks ∉ (:none, nothing, false) &&
                     length(ticks) > 1
                 )
-                    if (i = findfirst(==(0), ticks[1])) !== nothing
+                    if (i = findfirst(==(0), ticks[1])) ≢ nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
                     end
@@ -343,7 +343,7 @@ function axis_drawing_info(sp, letter)
                 tick_segments,
                 grid_segments,
                 grid_factor_2d[] / ax_length,
-                ax[:tick_direction] !== :none,
+                ax[:tick_direction] ≢ :none,
             )
             if sp[:framestyle] ≡ :box
                 add_major_or_minor_segments_2d(
@@ -357,7 +357,7 @@ function axis_drawing_info(sp, letter)
                     tick_segments,
                     grid_segments,
                     grid_factor_2d[] / ax_length,
-                    ax[:tick_direction] !== :none,
+                    ax[:tick_direction] ≢ :none,
                 )
             end
 
@@ -467,7 +467,7 @@ function axis_drawing_info_3d(sp, letter)
     segments, tick_segments, grid_segments, minorgrid_segments, border_segments =
         map(_ -> Segments(3), 1:5)
 
-    if sp[:framestyle] !== :none  # && letter ≡ :x
+    if sp[:framestyle] ≢ :none  # && letter ≡ :x
         na0, na1 =
             nas = if sp[:framestyle] in (:origin, :zerolines)
                 0, 0
@@ -480,7 +480,7 @@ function axis_drawing_info_3d(sp, letter)
             reverse_if(famM, xor(ax[:mirror], fax[:flip]))
         end
         if ax[:showaxis]
-            if sp[:framestyle] !== :grid
+            if sp[:framestyle] ≢ :grid
                 push!(
                     segments,
                     sort_3d_axes(amin, na0, fa0, letter),
@@ -492,7 +492,7 @@ function axis_drawing_info_3d(sp, letter)
                     ticks ∉ (:none, nothing, false) &&
                     length(ticks) > 1
                 )
-                    if (i = findfirst(==(0), ticks[1])) !== nothing
+                    if (i = findfirst(==(0), ticks[1])) ≢ nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
                     end
@@ -519,7 +519,7 @@ function axis_drawing_info_3d(sp, letter)
                 tick_segments,
                 grid_segments,
                 grid_factor_3d[],
-                ax[:tick_direction] !== :none,
+                ax[:tick_direction] ≢ :none,
             )
 
             # add minor grid segments

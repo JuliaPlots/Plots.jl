@@ -87,7 +87,7 @@ end
 function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     anns = series[:series_annotations]
 
-    if anns !== nothing && anns.baseshape !== nothing
+    if anns ≢ nothing && anns.baseshape ≢ nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
         msw, msh = anns.scalefactor

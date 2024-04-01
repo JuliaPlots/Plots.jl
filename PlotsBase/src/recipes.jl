@@ -223,7 +223,7 @@ make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         @series begin
             seriestype := :scatter
             x := x
@@ -248,7 +248,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, true)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         @series begin
             seriestype := :scatter
             x := x
@@ -273,7 +273,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         @series begin
             seriestype := :scatter
             x := x
@@ -302,11 +302,11 @@ end
             NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
         end
     end
-    newx, newy, newz = zeros(3n), zeros(3n), z !== nothing ? zeros(3n) : nothing
-    for (i, (xi, yi, zi)) in enumerate(zip(x, y, z !== nothing ? z : 1:n))
+    newx, newy, newz = zeros(3n), zeros(3n), z ≢ nothing ? zeros(3n) : nothing
+    for (i, (xi, yi, zi)) in enumerate(zip(x, y, z ≢ nothing ? z : 1:n))
         rng = (3i - 2):(3i)
         newx[rng] = [xi, xi, NaN]
-        if z !== nothing
+        if z ≢ nothing
             newy[rng] = [yi, yi, NaN]
             newz[rng] = [_cycle(fr, i), zi, NaN]
         else
@@ -315,27 +315,27 @@ end
     end
     x := newx
     y := newy
-    if z !== nothing
+    if z ≢ nothing
         z := newz
     end
     fillrange := nothing
     seriestype := :path
     if (
         plotattributes[:linecolor] ≡ :auto &&
-        plotattributes[:marker_z] !== nothing &&
+        plotattributes[:marker_z] ≢ nothing &&
         plotattributes[:line_z] ≡ nothing
     )
         line_z := plotattributes[:marker_z]
     end
 
     # create a primary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         primary := false
         @series begin
             seriestype := :scatter
             x := x
             y := y
-            if z !== nothing
+            if z ≢ nothing
                 z := z
             end
             primary := true
@@ -366,10 +366,10 @@ end
 
 # create segmented bezier curves in place of line segments
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)  # COV_EXCL_LINE
-    args = z !== nothing ? (x, y, z) : (x, y)
+    args = z ≢ nothing ? (x, y, z) : (x, y)
     newx, newy = zeros(0), zeros(0)
-    newfr = (fr = plotattributes[:fillrange]) !== nothing ? zeros(0) : nothing
-    newz = z !== nothing ? zeros(0) : nothing
+    newfr = (fr = plotattributes[:fillrange]) ≢ nothing ? zeros(0) : nothing
+    newz = z ≢ nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
@@ -378,10 +378,10 @@ end
         ts = range(0, stop = 1, length = npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x, rng), t), ts))
         nanappend!(newy, map(t -> bezier_value(_cycle(y, rng), t), ts))
-        if z !== nothing
+        if z ≢ nothing
             nanappend!(newz, map(t -> bezier_value(_cycle(z, rng), t), ts))
         end
-        if fr !== nothing
+        if fr ≢ nothing
             nanappend!(newfr, map(t -> bezier_value(_cycle(fr, rng), t), ts))
         end
     end
@@ -394,7 +394,7 @@ end
         seriestype := :path3d
         z := newz
     end
-    if fr !== nothing
+    if fr ≢ nothing
         fillrange := newfr
     end
     ()
@@ -634,7 +634,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
 
     last_w = eltype(weights)(NaN)
 
-    while it_tuple_e !== nothing && it_tuple_w !== nothing
+    while it_tuple_e ≢ nothing && it_tuple_w ≢ nothing
         b, it_state_e = it_tuple_e
         w, it_state_w = it_tuple_w
 
@@ -678,7 +678,7 @@ end
     xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         @series begin
             seriestype := :scatter
             x := _bin_centers(edge)
@@ -948,7 +948,7 @@ end
 @recipe function f(::Type{Val{:mesh3d}}, x, y, z)  # COV_EXCL_LINE
     # As long as no i,j,k are supplied this should work with PyPlot and GR
     seriestype := :surface
-    if plotattributes[:connections] !== nothing
+    if plotattributes[:connections] ≢ nothing
         "Giving triangles using the connections argument is only supported on Plotly backend." |>
         ArgumentError |>
         throw
@@ -1170,7 +1170,7 @@ end
 @recipe function f(::Type{Val{:zerror}}, x, y, z)  # COV_EXCL_LINE
     Commons.error_style!(plotattributes)
     markershape := :hline
-    if z !== nothing
+    if z ≢ nothing
         zerr = error_zipit(plotattributes[:zerror])
         plotattributes[:z], plotattributes[:x], plotattributes[:y] =
             error_coords(zerr, z, x, y)

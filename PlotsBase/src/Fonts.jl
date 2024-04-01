@@ -44,7 +44,7 @@ function font(args...; kw...)
 
     for arg in args
         T = typeof(arg)
-        @assert arg !== :match
+        @assert arg ≢ :match
 
         if T == Font
             family = arg.family

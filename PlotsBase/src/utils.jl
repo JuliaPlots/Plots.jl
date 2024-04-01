@@ -115,13 +115,13 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
-    if plotattributes[:marker_z] !== nothing
+    if plotattributes[:marker_z] ≢ nothing
         Commons.ensure_gradient!(plotattributes, :markercolor, :markeralpha)
     end
-    if plotattributes[:line_z] !== nothing
+    if plotattributes[:line_z] ≢ nothing
         Commons.ensure_gradient!(plotattributes, :linecolor, :linealpha)
     end
-    if plotattributes[:fill_z] !== nothing
+    if plotattributes[:fill_z] ≢ nothing
         Commons.ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     end
 
@@ -406,7 +406,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     if treats_y_as_x(get(plotattributes, :seriestype, :path))
         xformatter = get(plotattributes, :xformatter, :auto)
         yformatter = get(plotattributes, :yformatter, :auto)
-        yformatter !== :auto && (plotattributes[:xformatter] = yformatter)
+        yformatter ≢ :auto && (plotattributes[:xformatter] = yformatter)
         xformatter ≡ :auto &&
             haskey(plotattributes, :yformatter) &&
             pop!(plotattributes, :yformatter)
@@ -475,7 +475,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
     # handle axes args
     for k in Commons._axis_attrs
-        if haskey(plotattributes, k) && k !== :link
+        if haskey(plotattributes, k) && k ≢ :link
             v = plotattributes[k]
             for letter in (:x, :y, :z)
                 lk = get_attr_symbol(letter, k)

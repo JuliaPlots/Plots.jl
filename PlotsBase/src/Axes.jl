@@ -147,7 +147,7 @@ function Commons.axis_limits(
             # widen max radius so ticks dont overlap with theta axis
             amin, amax = 0, amax + 0.1abs(amax - amin)
         end
-    elseif lims_factor !== nothing
+    elseif lims_factor ≢ nothing
         amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
     elseif lims ≡ :round
         amin, amax = round_limits(amin, amax, axis[:scale])
@@ -411,7 +411,7 @@ function PlotsBase.get_ticks(
             if (
                 axis[:letter] ≡ :x &&
                 ticks isa Symbol &&
-                ticks !== :none &&
+                ticks ≢ :none &&
                 !isempty(dvals) &&
                 ispolar(sp)
             )

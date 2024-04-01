@@ -214,9 +214,9 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
     for letter in (:x, :y, :z)
         data = plotattributes[letter]
         if (
-            letter !== :z &&
+            letter ≢ :z &&
             plotattributes[:seriestype] ≡ :straightline &&
-            any(series[:seriestype] !== :straightline for series in series_list(sp)) &&
+            any(series[:seriestype] ≢ :straightline for series in series_list(sp)) &&
             length(data) > 1 &&
             data[1] != data[2]
         )
@@ -235,7 +235,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
                 data = plotattributes[letter] = Surface(Matrix{Float64}(data.surf))
             end
             expand_extrema!(axis, data)
-        elseif data !== nothing
+        elseif data ≢ nothing
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
@@ -251,7 +251,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
     if fr ≡ nothing && plotattributes[:seriestype] ≡ :bar
         fr = 0.0
     end
-    if fr !== nothing && !RecipesPipeline.is3d(plotattributes)
+    if fr ≢ nothing && !RecipesPipeline.is3d(plotattributes)
         axis = sp.attr[:yaxis]
         if typeof(fr) <: Tuple
             foreach(x -> expand_extrema!(axis, x), fr)

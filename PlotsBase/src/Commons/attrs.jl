@@ -695,7 +695,7 @@ function default(k::Symbol)
         haskey(defaults, k) && return defaults[k]
     end
     haskey(_axis_defaults, k) && return _axis_defaults[k]
-    if (axis_k = parse_axis_kw(k)) !== nothing
+    if (axis_k = parse_axis_kw(k)) ≢ nothing
         letter, key = axis_k
         return _axis_defaults_byletter[letter][key]
     end
@@ -715,7 +715,7 @@ function default(k::Symbol, v)
         _axis_defaults[k] = v
         return v
     end
-    if (axis_k = parse_axis_kw(k)) !== nothing
+    if (axis_k = parse_axis_kw(k)) ≢ nothing
         letter, key = axis_k
         _axis_defaults_byletter[letter][key] = v
         return v
@@ -1013,7 +1013,7 @@ function _add_markershape(plotattributes::AKW)
     # add the markershape if it needs to be added... hack to allow "m=10" to add a shape,
     # and still allow overriding in _apply_recipe
     ms = pop!(plotattributes, :markershape_to_add, :none)
-    if !haskey(plotattributes, :markershape) && ms !== :none
+    if !haskey(plotattributes, :markershape) && ms ≢ :none
         plotattributes[:markershape] = ms
     end
 end

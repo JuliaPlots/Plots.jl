@@ -19,7 +19,7 @@ get_ticks(::T, args...) where {T} =
 # do not specify array item type to also catch e.g. "xlabel=[]" and "xlabel=([],[])"
 _has_ticks(v::AVec) = !isempty(v)
 _has_ticks(t::Tuple{AVec,AVec}) = !isempty(t[1])
-_has_ticks(s::Symbol) = s !== :none
+_has_ticks(s::Symbol) = s ≢ :none
 _has_ticks(b::Bool) = b
 _has_ticks(::Nothing) = false
 _has_ticks(::Any) = true

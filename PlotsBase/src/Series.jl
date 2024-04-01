@@ -103,7 +103,7 @@ end
 function copy_series!(series, letter)
     plt = series[:plot_object]
     for s in plt.series_list, l in (:x, :y, :z)
-        if (s !== series || l !== letter) && s[l] ≡ series[letter]
+        if (s ≢ series || l ≢ letter) && s[l] ≡ series[letter]
             series[letter] = copy(series[letter])
         end
     end
@@ -182,17 +182,17 @@ function get_colorgradient(series::Series)
         series[:fillcolor]
     elseif st in (:contour, :wireframe, :contour3d)
         series[:linecolor]
-    elseif series[:marker_z] !== nothing
+    elseif series[:marker_z] ≢ nothing
         series[:markercolor]
-    elseif series[:line_z] !== nothing
+    elseif series[:line_z] ≢ nothing
         series[:linecolor]
-    elseif series[:fill_z] !== nothing
+    elseif series[:fill_z] ≢ nothing
         series[:fillcolor]
     end
 end
 
 iscontour(series::Series) = series[:seriestype] in (:contour, :contour3d)
-isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
+isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] ≢ nothing
 
 function contour_levels(series::Series, clims)
     iscontour(series) || error("Not a contour series")

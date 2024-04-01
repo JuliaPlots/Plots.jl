@@ -336,8 +336,8 @@ with(:pgfplotsx) do
         @test haskey(plots[1].options.dict, "fill")
         @test haskey(plots[2].options.dict, "fill")
         @test !haskey(plots[3].options.dict, "fill")
-        @test pl.o !== nothing
-        @test pl.o.the_plot !== nothing
+        @test pl.o ≢ nothing
+        @test pl.o.the_plot ≢ nothing
     end
 
     @testset "Markers and Paths" begin
@@ -455,7 +455,7 @@ with(:pgfplotsx) do
         plt1 = plot(rand(10, 5))
         plt2 = plot(rand(10))
 
-        @test plot(plt1, plt2, layout = (1, 2), plot_titles = ["(a)" "(b)"]) !== nothing
+        @test plot(plt1, plt2, layout = (1, 2), plot_titles = ["(a)" "(b)"]) ≢ nothing
     end
 
     if Sys.islinux() && Sys.which("pdflatex") ≢ nothing

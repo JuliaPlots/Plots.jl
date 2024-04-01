@@ -10,7 +10,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
 )
     pkeys = keys(plotattributes)
     for k in pkeys
-        if (dk = get(Commons._keyAliases, k, nothing)) !== nothing
+        if (dk = get(Commons._keyAliases, k, nothing)) ≢ nothing
             kv = RecipesPipeline.pop_kw!(plotattributes, k)
             dk ∈ pkeys || (plotattributes[dk] = kv)
         end
@@ -63,7 +63,7 @@ end
 function _preprocess_userrecipe(kw::AKW)
     Commons._add_markershape(kw)
 
-    if get(kw, :permute, default(:permute)) !== :none
+    if get(kw, :permute, default(:permute)) ≢ :none
         l1, l2 = kw[:permute]
         for k in Commons._axis_attrs
             k1 = Commons._attrsymbolcache[l1][k]
@@ -99,7 +99,7 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     errors = (:xerror, :yerror, :zerror)
     if st ∉ errors
         for esym in errors
-            if get(kw, esym, nothing) !== nothing
+            if get(kw, esym, nothing) ≢ nothing
                 # we make a copy of the KW and apply an errorbar recipe
                 errkw = copy(kw)
                 errkw[:seriestype] = esym
@@ -181,10 +181,10 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::PlotsBase.Plot, 
             kw[:ribbon] = map(rib, kw[:x])
         end
         # convert a ribbon into a fillrange
-        if rib !== nothing
+        if rib ≢ nothing
             make_fillrange_from_ribbon(kw)
             # map fillrange if it's a Function
-        elseif fr !== nothing && fr isa Function
+        elseif fr ≢ nothing && fr isa Function
             kw[:fillrange] = map(fr, kw[:x])
         end
     end
@@ -214,7 +214,7 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     end
 
     # handle inset subplots
-    if (insets = plt[:inset_subplots]) !== nothing
+    if (insets = plt[:inset_subplots]) ≢ nothing
         typeof(insets) <: AVec || (insets = [insets])
         for inset in insets
             parent, bb = is_2tuple(inset) ? inset : (nothing, inset)
@@ -353,7 +353,7 @@ RecipesPipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported
 
 function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
-    if (perm = plotattributes[:permute]) !== :none
+    if (perm = plotattributes[:permute]) ≢ :none
         letter1, letter2 = perm
         ms = plotattributes[:markershape]
         if ms ≡ :hline && (perm == (:x, :y) || perm == (:y, :x))
@@ -389,7 +389,7 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     # change to a 3d projection for this subplot?
     if (
         RecipesPipeline.needs_3d_axes(st) ||
-        (st ≡ :quiver && plotattributes[:z] !== nothing)
+        (st ≡ :quiver && plotattributes[:z] ≢ nothing)
     )
         sp.attr[:projection] = "3d"
     end

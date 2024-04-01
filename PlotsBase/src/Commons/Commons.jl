@@ -130,7 +130,7 @@ include("attrs.jl")
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
     if !RecipesPipeline.is3d(st) && st ∉ (:contour, :contour3d, :quiver)
-        if (z = plotattributes[:z]) !== nothing &&
+        if (z = plotattributes[:z]) ≢ nothing &&
            size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)
             st = st ≡ :scatter ? :scatter3d : :path3d
             plotattributes[:seriestype] = st

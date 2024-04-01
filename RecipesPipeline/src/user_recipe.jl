@@ -115,9 +115,9 @@ end
 @recipe function f(x, y, z)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, x, y, z)
     did_replace = false
-    did_replace |= x !== (newx = _apply_type_recipe(plotattributes, x, :x))
-    did_replace |= y !== (newy = _apply_type_recipe(plotattributes, y, :y))
-    did_replace |= z !== (newz = _apply_type_recipe(plotattributes, z, :z))
+    did_replace |= x ≢ (newx = _apply_type_recipe(plotattributes, x, :x))
+    did_replace |= y ≢ (newy = _apply_type_recipe(plotattributes, y, :y))
+    did_replace |= z ≢ (newz = _apply_type_recipe(plotattributes, z, :z))
     if did_replace
         newx, newy, newz
     else
@@ -127,8 +127,8 @@ end
 @recipe function f(x, y)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, x, y)
     did_replace = false
-    did_replace |= x !== (newx = _apply_type_recipe(plotattributes, x, :x))
-    did_replace |= y !== (newy = _apply_type_recipe(plotattributes, y, :y))
+    did_replace |= x ≢ (newx = _apply_type_recipe(plotattributes, x, :x))
+    did_replace |= y ≢ (newy = _apply_type_recipe(plotattributes, y, :y))
     if did_replace
         newx, newy
     else
@@ -137,7 +137,7 @@ end
 end
 @recipe function f(y)  # COV_EXCL_LINE
     wrap_surfaces!(plotattributes, y)
-    if y !== (newy = _apply_type_recipe(plotattributes, y, :y))
+    if y ≢ (newy = _apply_type_recipe(plotattributes, y, :y))
         newy
     else
         SliceIt, nothing, y, nothing
@@ -150,7 +150,7 @@ end
     did_replace = false
     newargs = map(
         v -> begin
-            did_replace |= v !== (newv = _apply_type_recipe(plotattributes, v, :unknown))
+            did_replace |= v ≢ (newv = _apply_type_recipe(plotattributes, v, :unknown))
             newv
         end,
         (v1, v2, v3, v4, vrest...),
@@ -167,7 +167,7 @@ wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::AMat) = wrap_surfaces!(plota
 wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::Surface) =
     wrap_surfaces!(plotattributes)
 wrap_surfaces!(plotattributes) =
-    if (v = get(plotattributes, :fill_z, nothing)) !== nothing
+    if (v = get(plotattributes, :fill_z, nothing)) ≢ nothing
         v isa Surface || (plotattributes[:fill_z] = Surface(v))
     end
 
