@@ -559,9 +559,14 @@ function PlotsBase._display(plt::Plot{HDF5Backend})
 end
 
 # Interface actually required to use HDF5Backend
-PlotsBase.hdf5plot_write(path::AbstractString; kw...) = PlotsBase.hdf5plot_write(current(), path; kw...)
+PlotsBase.hdf5plot_write(path::AbstractString; kw...) =
+    PlotsBase.hdf5plot_write(current(), path; kw...)
 
-PlotsBase.hdf5plot_write(plt::Plot{HDF5Backend}, path::AbstractString; name::String = "_unnamed") =
+PlotsBase.hdf5plot_write(
+    plt::Plot{HDF5Backend},
+    path::AbstractString;
+    name::String = "_unnamed",
+) =
     HDF5.h5open(path, "w") do file
         HDF5.write_dataset(file, "VERSION_INFO", string(PlotsBase._current_plots_version))
         _write(HDF5.create_group(file, h5plotpath(name)), plt)

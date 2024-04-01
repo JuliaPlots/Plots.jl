@@ -190,10 +190,11 @@ macro extension_static(be_type, be)
     quote
         $(PlotsBase.backend_defines(be_type, be))
         function __init__()
+            ccall(:jl_generating_output, Cint, ()) == 1 && return
             PlotsBase._backendType[$be_sym] = $be_type
             PlotsBase._backendSymbol[$be_type] = $be_sym
             push!(PlotsBase._initialized_backends, $be_sym)
-            PlotsBase.extension_init($be_type())
+            Base.invokelatest(PlotsBase.extension_init, $be_type())
             @debug "Initialized $be_type backend in PlotsBase; run `$be()` to activate it."
         end
     end |> esc

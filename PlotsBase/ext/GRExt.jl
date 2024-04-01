@@ -1377,7 +1377,7 @@ function gr_legend_pos(theta::Real, leg, vp; axisclearance = nothing)
         ymin = vp.ymin - leg.yoffset - leg.dy - axisclearance[3]
         ymax = vp.ymax + leg.yoffset + leg.h + axisclearance[4]
     end
-    legend_pos_from_angle(theta, xmin, xcenter(vp), xmax, ymin, ycenter(vp), ymax)
+    PlotsBase.legend_pos_from_angle(theta, xmin, xcenter(vp), xmax, ymin, ycenter(vp), ymax)
 end
 
 const gr_legend_marker_to_line_factor = Ref(2.0)

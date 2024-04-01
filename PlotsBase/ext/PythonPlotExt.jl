@@ -2,11 +2,22 @@ module PythonPlotExt
 
 import RecipesPipeline
 import PythonPlot
+
+const PythonCall = PythonPlot.PythonCall
+const pyisnone = isdefined(PythonCall, :pyisnone) ? PythonCall.pyisnone : PythonCall.Core.pyisnone
+
+const mpl = PythonPlot.matplotlib
+const mpl_toolkits = PythonCall.pynew()
+const numpy = PythonCall.pynew()
+
 import NaNMath
 
 import PlotsBase
 import PlotsBase.PlotUtils: PlotUtils, ColorGradient, plot_color, color_list, cgrad
+import PlotsBase: bbox_to_pcts, right, left, bottom, top, width, height, ispositive
+import PlotsBase: ticks_type
 import PlotsBase.Commons: Commons, single_color
+import RecipesPipeline: Surface
 
 using PlotsBase.PlotMeasures
 using PlotsBase.Annotations
@@ -177,17 +188,6 @@ const _pythonplot_scales = [:identity, :ln, :log2, :log10]
 
 # github.com/stevengj/PythonPlot.jl
 
-const PythonCall = PythonPlot.PythonCall
-const mpl = PythonCall.pynew() # PythonCall.pyimport("matplotlib")
-const mpl_toolkits = PythonCall.pynew() # PythonCall.pyimport("mpl_toolkits")
-const numpy = PythonCall.pynew() # PythonCall.pyimport("numpy")
-
-const pyisnone = if isdefined(PythonCall, :pyisnone)
-    PythonCall.pyisnone
-else
-    PythonCall.Core.pyisnone
-end
-
 PlotsBase.is_marker_supported(::PythonPlotBackend, shape::Shape) = true
 
 # problem: github.com/tbreloff/Plots.jl/issues/308
@@ -205,7 +205,7 @@ for k in (:linthresh, :base, :label)
 end
 
 _py_handle_surface(v) = v
-_py_handle_surface(z::PlotsBase.Surface) = z.surf
+_py_handle_surface(z::Surface) = z.surf
 
 _py_color(s) = _py_color(parse(Colorant, string(s)))
 _py_color(c::Colorant) = [red(c), green(c), blue(c), alpha(c)]  # NOTE: returning a tuple fails `PythonPlot`
@@ -329,8 +329,8 @@ end
 get_locator_and_formatter(vals::AVec) =
     mpl.ticker.FixedLocator(eachindex(vals)), mpl.ticker.FixedFormatter(vals)
 
-PlotsBase.labelfunc(scale::Symbol, backend::PythonPlotBackend) =
-    PythonPlot.LaTeXStrings.latexstring ∘ PlotsBase.labelfunc_tex(scale)
+labelfunc(scale::Symbol, backend::PythonPlotBackend) =
+    PythonPlot.LaTeXStrings.latexstring ∘ labelfunc_tex(scale)
 
 _py_mask_nans(z) = PythonPlot.pycall(numpy.ma.masked_invalid, z)
 
@@ -340,7 +340,7 @@ function fix_xy_lengths!(plt::Plot{PythonPlotBackend}, series::Series)
     if (x = series[:x]) !== nothing
         y = series[:y]
         nx, ny = length(x), length(y)
-        if !(get(series.plotattributes, :z, nothing) isa PlotsBase.Surface || nx == ny)
+        if !(get(series.plotattributes, :z, nothing) isa Surface || nx == ny)
             if nx < ny
                 series[:x] = map(i -> Float64(x[mod1(i, nx)]), 1:ny)
             else
@@ -389,11 +389,11 @@ _py_renderer(fig) = _py_canvas(fig).get_renderer()
 _py_drawfig(fig) = fig.draw(_py_renderer(fig))
 
 # `get_points` returns a numpy array in the form [x0 y0; x1 y1] coords (origin is bottom-left (0, 0)!)
-_py_extents(obj) = PythonCall.PyArray(obj.get_window_extent().get_points())
+_py_extents(obj) = PythonPlot.PyArray(obj.get_window_extent().get_points())
 
 # see cjdoris.github.io/PythonCall.jl/stable/conversion-to-julia/#py2jl-conversion
-to_vec(x) = PythonCall.pyconvert(Vector, x)
-to_str(x) = PythonCall.pyconvert(String, x)
+to_vec(x) = PythonPlot.pyconvert(Vector, x)
+to_str(x) = PythonPlot.pyconvert(String, x)
 
 # compute a bounding box (with origin top-left), however PythonPlot gives coords with origin bottom-left
 function _py_bbox(obj)
@@ -403,10 +403,10 @@ function _py_bbox(obj)
     # @show obj bb ex
     x0, y0, width, height = l * px, (ft - t) * px, (r - l) * px, (t - b) * px
     # @show width height
-    PlotsBase.BoundingBox(x0, y0, width, height)
+    BoundingBox(x0, y0, width, height)
 end
 
-_py_bbox(::Nothing) = PlotsBase.BoundingBox(0mm, 0mm)
+_py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
 
 # get the bounding box of the union of the objects
 function _py_bbox(v::AVec)
@@ -456,7 +456,7 @@ _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_
 
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{PythonPlotBackend})
-    w, h = map(s -> PlotMeasures.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
+    w, h = map(s -> PlotsBase.PlotMeasures.px2inch(s * plt[:dpi] / PlotsBase.DPI), plt[:size])
     # reuse the current figure?
     plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end
@@ -505,9 +505,9 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     # ax = getAxis(plt, series)
     x, y, z = (_py_handle_surface(series[letter]) for letter in (:x, :y, :z))
     if st === :straightline
-        x, y = PlotsBase.straightline_data(series)
+        x, y = straightline_data(series)
     elseif st === :shape
-        x, y = PlotsBase.shape_data(series)
+        x, y = shape_data(series)
     end
 
     # make negative radii positive and flip the angle (PythonPlot ignores negative radii)
@@ -614,8 +614,8 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             ax.scatter(
                 args...;
                 zorder = zorder + 0.5,
-                marker = _py_marker(PlotsBase._cycle(series[:markershape], i)),
-                s = _py_thickness_scale(plt, PlotsBase._cycle(series[:markersize], i)) .^ 2,
+                marker = _py_marker(_cycle(series[:markershape], i)),
+                s = _py_thickness_scale(plt, _cycle(series[:markersize], i)) .^ 2,
                 facecolors = _py_color(
                     get_markercolor(series, i, cbar_scale),
                     get_markeralpha(series, i),
@@ -709,7 +709,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             aspect,
         ) |> push_h
     elseif st === :heatmap
-        x, y = PlotsBase.heatmap_edges(x, xaxis[:scale], y, yaxis[:scale], size(z))
+        x, y = heatmap_edges(x, xaxis[:scale], y, yaxis[:scale], size(z))
         expand_extrema!(xaxis, x)
         expand_extrema!(yaxis, y)
         ax.pcolormesh(
@@ -733,7 +733,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
         elseif cns isa NTuple{3,<:AbstractVector{<:Integer}}
             # Only triangles - connections have to be 0-based (indexing)
-            X, Y, Z = PlotsBase.mesh3d_triangles(x, y, z, cns)
+            X, Y, Z = mesh3d_triangles(x, y, z, cns)
             ntris = length(cns[1])
             polys = sizehint!(Matrix{eltype(x)}[], ntris)
             for n in 1:ntris
@@ -886,12 +886,16 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     if (fillrange = series[:fillrange]) !== nothing && st !== :contour
         for segment in series_segments(series)
             i, rng = segment.attr_index, segment.range
-            f, dim1, dim2 = :fill_between, x[rng], y[rng]
+            f, dim1, dim2 = if isvertical(series)
+                :fill_between, x[rng], y[rng]
+            else
+                :fill_betweenx, y[rng], x[rng]
+            end
             n = length(dim1)
             args = if typeof(fillrange) <: Union{Real,AVec}
-                dim1, PlotsBase._cycle(fillrange, rng), dim2
-            elseif PlotsBase.is_2tuple(fillrange)
-                dim1, PlotsBase._cycle(fillrange[1], rng), PlotsBase._cycle(fillrange[2], rng)
+                dim1, _cycle(fillrange, rng), dim2
+            elseif is_2tuple(fillrange)
+                dim1, _cycle(fillrange[1], rng), _cycle(fillrange[2], rng)
             end
 
             la = get_linealpha(series, i)
@@ -941,7 +945,7 @@ function _py_set_ticks(sp, ax, ticks, letter)
         return
     end
 
-    tick_values, tick_labels = if (ttype = PlotsBase.ticks_type(ticks)) === :ticks
+    tick_values, tick_labels = if (ttype = ticks_type(ticks)) === :ticks
         ticks, []
     elseif ttype === :ticks_and_labels
         ticks
@@ -967,14 +971,13 @@ function _py_compute_axis_minval(sp::Subplot, axis::Axis)
 end
 
 function _py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
-    scale ∈ PlotsBase.supported_scales() ||
-        return @warn "Unhandled scale value in PythonPlot: $scale"
+    scale ∈ PlotsBase.supported_scales() || return @warn "Unhandled scale value in PythonPlot: $scale"
     scl, kw = if scale === :identity
         "linear", KW()
     else
         "symlog",
         KW(
-            get_attr_symbol(:base, Symbol()) => _log_scale_bases[scale],
+            get_attr_symbol(:base, Symbol()) => _logScaleBases[scale],
             get_attr_symbol(:linthresh, Symbol()) => NaNMath.max(
                 1e-16,
                 _py_compute_axis_minval(sp, sp[get_attr_symbol(letter, :axis)]),
@@ -1019,7 +1022,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig.clear()
-    fig.set_size_inches(w / PlotsBase.DPI, h / PlotsBase.DPI, forward = true)
+    fig.set_size_inches(w / DPI, h / PlotsBase.DPI, forward = true)
     fig.set_facecolor(_py_color(plt[:background_color_outside]))
     fig.set_dpi(plt[:dpi])
 
@@ -1090,7 +1093,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                         (cmap = func(cbar_series)) === nothing || break
                     end
                     c_map = mpl.cm.ScalarMappable(; cmap, norm)
-                    c_map.set_array(PythonCall.pylist([]))
+                    c_map.set_array(PythonPlot.pylist([]))
                     c_map
                 else
                     cbar_series[:serieshandle][end]
@@ -1248,7 +1251,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             ticks = framestyle === :none ? nothing : get_ticks(sp, axis)
 
             has_major_ticks = ticks !== :none && ticks !== nothing && ticks !== false
-            has_major_ticks &= if (ttype = PlotsBase.ticks_type(ticks)) === :ticks
+            has_major_ticks &= if (ttype = ticks_type(ticks)) === :ticks
                 length(ticks) > 0
             elseif ttype === :ticks_and_labels
                 tcs, labs = ticks
@@ -1328,12 +1331,12 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             # minorticks
             if !no_minor_intervals(axis) && has_major_ticks
                 ax.minorticks_on()
-                n_minor_intervals = num_minor_intervals(axis)
+                n_minor_intervals = PlotsBase.num_minor_intervals(axis)
                 if (scale = axis[:scale]) === :identity
                     mpl.ticker.AutoMinorLocator(n_minor_intervals)
                 else
                     mpl.ticker.LogLocator(
-                        base = _log_scale_bases[scale],
+                        base = _logScaleBases[scale],
                         subs = 1:n_minor_intervals,
                     )
                 end |> pyaxis.set_minor_locator
@@ -1417,12 +1420,11 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
 end
 
 expand_padding!(padding, bb, plotbb) =
-    if PlotsBase.ispositive(PlotsBase.width(bb)) &&
-       PlotsBase.ispositive(PlotsBase.height(bb))
-        padding[1] = max(padding[1], PlotsBase.left(plotbb) - PlotsBase.left(bb))
-        padding[2] = max(padding[2], PlotsBase.top(plotbb) - PlotsBase.top(bb))
-        padding[3] = max(padding[3], PlotsBase.right(bb) - PlotsBase.right(plotbb))
-        padding[4] = max(padding[4], PlotsBase.bottom(bb) - PlotsBase.bottom(plotbb))
+    if ispositive(width(bb)) && ispositive(height(bb))
+        padding[1] = max(padding[1], left(plotbb) - left(bb))
+        padding[2] = max(padding[2], top(plotbb) - top(bb))
+        padding[3] = max(padding[3], right(bb) - right(plotbb))
+        padding[4] = max(padding[4], bottom(bb) - bottom(plotbb))
     end
 
 # Set the (left, top, right, bottom) minimum padding around the plot area
@@ -1508,13 +1510,9 @@ function _py_legend_pos(pos::Tuple{<:Real,Symbol})
     s, c = sincosd(pos[1]) .* (pos[2] === :outer ? -1 : 1)
     yanchors = "lower", "center", "upper"
     xanchors = "left", "center", "right"
-    join(
-        [
-            yanchors[PlotsBase.legend_anchor_index(s)],
-            xanchors[PlotsBase.legend_anchor_index(c)],
-        ],
-        ' ',
-    )
+    let lac = PlotsBase.legend_anchor_index
+        join([yanchors[lac(s)], xanchors[lac(c)]], ' ')
+    end
 end
 
 # legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
@@ -1585,7 +1583,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                 solid_joinstyle = "miter",
                 dash_capstyle = "butt",
                 dash_joinstyle = "miter",
-                marker = _py_marker(PlotsBase._cycle(series[:markershape], 1)),
+                marker = _py_marker(_cycle(series[:markershape], 1)),
                 markersize = _py_thickness_scale(plt, 0.8sp[:legend_font_pointsize]),
                 markeredgecolor = _py_color(
                     single_color(get_markerstrokecolor(series)),
@@ -1667,23 +1665,20 @@ function PlotsBase._update_plot_object(plt::Plot{PythonPlotBackend})
         figw, figh = sp.plt[:size] .* px
 
         # ax.set_position signature: `[left, bottom, width, height]`
-        PlotsBase.bbox_to_pcts(sp.plotarea, figw, figh) |> ax.set_position
+        bbox_to_pcts(sp.plotarea, figw, figh) |> ax.set_position
 
         if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)  # 2D plots are completely handled by axis dividers
             bb = sp.attr[:cbar_bbox]
             # this is the bounding box of just the colors of the colorbar (not labels)
             pad = 2mm
             cb_bbox = PlotsBase.BoundingBox(
-                PlotsBase.right(sp.bbox) - 2PlotsBase.width(bb) - 2pad,  # x0
-                PlotsBase.top(sp.bbox) + pad,  # y0
-                PlotsBase.width(bb),  # width
-                PlotsBase.height(sp.bbox) - 2pad,  # height
+                right(sp.bbox) - 2width(bb) - 2pad,  # x0
+                top(sp.bbox) + pad,  # y0
+                width(bb),  # width
+                height(sp.bbox) - 2pad,  # height
             )
-            get(
-                sp[:extra_kwargs],
-                "3d_colorbar_axis",
-                PlotsBase.bbox_to_pcts(cb_bbox, figw, figh),
-            ) |> sp.attr[:cbar_ax].set_position
+            get(sp[:extra_kwargs], "3d_colorbar_axis", bbox_to_pcts(cb_bbox, figw, figh)) |>
+            sp.attr[:cbar_ax].set_position
         end
     end
     PythonPlot.draw()
