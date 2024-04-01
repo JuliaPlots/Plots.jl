@@ -57,16 +57,16 @@ end
 
 CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend_instance(sym))
 
-"""
-Returns the current plotting package name.  Initializes package on first call.
-"""
-backend() = CURRENT_BACKEND.pkg
+"returns the current plotting package name. Initializes package on first call."
+@inline backend() = CURRENT_BACKEND.pkg
 
-"Returns a list of supported backends"
-backends() = _supported_backends
+"returns a list of supported backends."
+@inline backends() = _supported_backends
 
-backend_name() = CURRENT_BACKEND.sym
-backend_instance(sym::Symbol) = _backendType[sym]()
+@inline backend_name() = CURRENT_BACKEND.sym
+@inline backend_type(sym::Symbol) = get(_backendType, sym, NoBackend)
+@inline backend_instance(sym::Symbol) = backend_type(sym)()
+@inline backend(type::Type{<:AbstractBackend}) = backend(type())
 
 backend_package_name(sym::Symbol = backend_name()) = get(_backend_packages, sym, nothing)
 
@@ -77,9 +77,7 @@ backend_package_name(::AbstractBackend) =
 
 initialized(sym::Symbol) = sym ∈ _initialized_backends
 
-"""
-Set the plot backend.
-"""
+"set the plot backend."
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
     CURRENT_BACKEND.sym = sym
@@ -90,7 +88,7 @@ end
 backend(sym::Symbol) =
     if sym in _supported_backends
         if initialized(sym)
-            backend(backend_instance(sym))
+            backend(backend_type(sym))
         else
             name = backend_package_name(sym)
             @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. $(name ≡ nothing ? '`' : string("`import ", name, ";")) $sym()`."
@@ -110,9 +108,7 @@ function get_backend_module(name::Symbol)
     end
 end
 
-# -- Create backend init functions by hand as the corresponding structs do not
-# exist yet
-
+# create backend init functions by hand as the corresponding structs do not exist yet
 for be in _supported_backends
     @eval begin
         function $be(; kw...)
@@ -123,7 +119,6 @@ for be in _supported_backends
     end
 end
 
-# ---------------------------------------------------------
 # create the various `is_xxx_supported` and `supported_xxxs` methods
 # these methods should be overloaded (dispatched) by each backend in its init_code
 for sym in (:attr, :seriestype, :marker, :style, :scale)
@@ -136,7 +131,6 @@ for sym in (:attr, :seriestype, :marker, :style, :scale)
         $f2() = $f2(backend())
     end
 end
-# -----------------------------------------------------------------------------
 
 function backend_defines(be_type::Symbol, be::Symbol)
     be_sym = QuoteNode(be)
@@ -189,7 +183,7 @@ macro extension_static(be_type, be)
             PlotsBase._backendType[$be_sym] = $be_type
             PlotsBase._backendSymbol[$be_type] = $be_sym
             push!(PlotsBase._initialized_backends, $be_sym)
-            # ccall(:jl_generating_output, Cint, ()) == 1 && return
+            ccall(:jl_generating_output, Cint, ()) == 1 && return
             PlotsBase.extension_init($be_type())
             @debug "Initialized $be_type backend in PlotsBase; run `$be()` to activate it."
         end

@@ -1,5 +1,5 @@
 
-is_pkgeval() || @testset "Examples" begin
+is_pkgeval() || @testset "Backends" begin
     callback(m, pkgname, i) = begin
         save_func = (; pgfplotsx = m.PlotsBase.pdf, unicodeplots = m.PlotsBase.txt)  # fastest `savefig` for each backend
         pl = m.PlotsBase.current()

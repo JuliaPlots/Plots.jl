@@ -10,6 +10,7 @@ import JSON
 
 using PlotUtils: PlotUtils, ColorGradient, rgba_string, rgb_string
 
+import PlotsBase: right, left, bottom, top, width, height, bbox, ispolar
 using PlotsBase.Colors: Colorant
 using PlotsBase.PlotMeasures
 using PlotsBase.Annotations
@@ -403,7 +404,7 @@ function plotly_layout(plt::Plot)
                 ymm = bottom(bb) - tpos[2] * height(bb)
                 halign, valign = sp[:titlefonthalign], sp[:titlefontvalign]
             end
-            titlex, titley = xy_mm_to_pcts(xmm, ymm, w * px, h * px)
+            titlex, titley = PlotsBase.xy_mm_to_pcts(xmm, ymm, w * px, h * px)
             title_font = font(titlefont(sp), halign = halign, valign = valign)
             push!(
                 plotattributes_out[:annotations],
@@ -740,7 +741,7 @@ function plotly_series(plt::Plot, series::Series)
     plotattributes_out[:showlegend] = should_add_to_legend(series)
 
     if st ≡ :straightline
-        x, y = straightline_data(series, 100)
+        x, y = PlotsBase.straightline_data(series, 100)
         z = series[:z]
     else
         x, y, z = series[:x], series[:y], series[:z]
@@ -771,8 +772,8 @@ function plotly_series(plt::Plot, series::Series)
         return plotly_series_segments(series, plotattributes_out, x, y, z, clims)
 
     elseif st ≡ :heatmap
-        x = heatmap_edges(x, sp[:xaxis][:scale])
-        y = heatmap_edges(y, sp[:yaxis][:scale])
+        x = PlotsBase.heatmap_edges(x, sp[:xaxis][:scale])
+        y = PlotsBase.heatmap_edges(y, sp[:yaxis][:scale])
         plotattributes_out[:type] = "heatmap"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
         plotattributes_out[:colorscale] =
@@ -951,7 +952,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
 
     x, y = (
         plotly_data(series, letter, data) for
-        (letter, data) in zip((:x, :y), shape_data(series, 100))
+        (letter, data) in zip((:x, :y), PlotsBase.shape_data(series, 100))
     )
 
     for (k, segment) in enumerate(segments)

@@ -94,10 +94,10 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] ≡ :auto
             plot_color(if Commons.has_black_border_for_default(stype) && s ≡ :line
-                    sp[:foreground_color_subplot]
-                else
-                    scolor
-                end)
+                sp[:foreground_color_subplot]
+            else
+                scolor
+            end)
         elseif plotattributes[csym] ≡ :match
             plot_color(scolor)
         else
@@ -645,7 +645,7 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
     scalefonts ≡ nothing || scalefontsizes(scalefonts)
 
     # call the function
-    ret = f()
+    ret = Base.invokelatest(f)
 
     # put the defaults back
     scalefonts ≡ nothing || resetfontsizes()

@@ -169,15 +169,18 @@ function color_or_nothing!(plotattributes, k::Symbol)
 end
 
 # cache joined symbols so they can be looked up instead of constructed each time
-const _attrsymbolcache = Dict{Symbol,Dict{String,Symbol}}()
+const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
 
-get_attr_symbol(letter::Symbol, keyword::String) = _attrsymbolcache[letter][keyword]
-get_attr_symbol(letter::Symbol, keyword::Symbol) = get_attr_symbol(letter, string(keyword))
+get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
+get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
 
-new_attr_dict!(letter::Symbol) = get!(_attrsymbolcache, letter, Dict{String,Symbol}())
+new_attr_dict!(letter::Symbol)::Dict{Symbol,Symbol} =
+    get!(_attrsymbolcache, letter, Dict{Symbol,Symbol}())
+
+# NOTE: using `keyword::String` allows to disambiguate argument order
 set_attr_symbol!(letter::Symbol, keyword::String) =
     let letter_keyword = Symbol(letter, keyword)
-        _attrsymbolcache[letter][keyword] = letter_keyword
+        _attrsymbolcache[letter][Symbol(keyword)] = letter_keyword
     end
 
 # ------------------------------------------------------------------------------------

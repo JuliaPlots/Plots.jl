@@ -768,19 +768,15 @@ function process_line_attr(plotattributes::AKW, arg)
 
     elseif typeof(arg) <: PlotsBase.Stroke
         arg.width ≡ nothing || (plotattributes[:linewidth] = arg.width)
-        arg.color ≡ nothing || (
-            plotattributes[:linecolor] =
-                arg.color ≡ :auto ? :auto : plot_color(arg.color)
-        )
+        arg.color ≡ nothing ||
+            (plotattributes[:linecolor] = arg.color ≡ :auto ? :auto : plot_color(arg.color))
         arg.alpha ≡ nothing || (plotattributes[:linealpha] = arg.alpha)
         arg.style ≡ nothing || (plotattributes[:linestyle] = arg.style)
 
     elseif typeof(arg) <: PlotsBase.Brush
         arg.size ≡ nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color ≡ nothing || (
-            plotattributes[:fillcolor] =
-                arg.color ≡ :auto ? :auto : plot_color(arg.color)
-        )
+        arg.color ≡ nothing ||
+            (plotattributes[:fillcolor] = arg.color ≡ :auto ? :auto : plot_color(arg.color))
         arg.alpha ≡ nothing || (plotattributes[:fillalpha] = arg.alpha)
         arg.style ≡ nothing || (plotattributes[:fillstyle] = arg.style)
 
@@ -849,10 +845,8 @@ function process_fill_attr(plotattributes::AKW, arg)
     # fr = get(plotattributes, :fillrange, 0)
     if typeof(arg) <: PlotsBase.Brush
         arg.size ≡ nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color ≡ nothing || (
-            plotattributes[:fillcolor] =
-                arg.color ≡ :auto ? :auto : plot_color(arg.color)
-        )
+        arg.color ≡ nothing ||
+            (plotattributes[:fillcolor] = arg.color ≡ :auto ? :auto : plot_color(arg.color))
         arg.alpha ≡ nothing || (plotattributes[:fillalpha] = arg.alpha)
         arg.style ≡ nothing || (plotattributes[:fillstyle] = arg.style)
 

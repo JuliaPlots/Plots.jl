@@ -1,9 +1,5 @@
 const TEST_PACKAGES =
-    let val = get(
-            ENV,
-            "PLOTSBASE_TEST_PACKAGES",
-            "GR,UnicodePlots,PythonPlot",
-        )
+    let val = get(ENV, "PLOTSBASE_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot")
         strip.(split(val, ","))
     end
 using PlotsBase
@@ -26,9 +22,7 @@ is_ci() = Plots.PlotsBase.bool_env("CI")
 # get `Preferences` set backend, if any
 const PREVIOUS_DEFAULT_BACKEND = load_preference(Plots, "default_backend")
 
-for name in (
-    "preferences",
-)
+for name in ("preferences",)
     @testset "$name" begin
         include("test_$name.jl")
     end

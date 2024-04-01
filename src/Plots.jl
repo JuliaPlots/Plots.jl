@@ -13,19 +13,20 @@ using Pkg
 # the cache will not invalidate when preferences change
 const PLOTS_DEFAULT_BACKEND = lowercase(load_preference(Plots, "default_backend", "gr"))
 
-function __init__()
-    ccall(:jl_generating_output, Cint, ()) == 1 && return
-    load_default_backend()
+if PLOTS_DEFAULT_BACKEND == "gr"
+    @debug "loading default GR"
+    import GR
 end
 
-function load_default_backend()
+function __init__()
+    ccall(:jl_generating_output, Cint, ()) == 1 && return
+    default_backend()
+end
+
+function default_backend()
     # environment variable preempts the `Preferences` based mechanism
-    sym = PlotsBase.CURRENT_BACKEND.sym =
-        get(ENV, "PLOTS_DEFAULT_BACKEND", PLOTS_DEFAULT_BACKEND) |> lowercase |> Symbol
-    if (pkg_name = PlotsBase.backend_package_name()) ≡ :GR
-        @eval import GR
-    end
-    PlotsBase.backend(PlotsBase.backend_instance(sym))
+    sym = get(ENV, "PLOTS_DEFAULT_BACKEND", PLOTS_DEFAULT_BACKEND) |> lowercase |> Symbol
+    PlotsBase.backend(PlotsBase.backend_type(sym))
 end
 
 function set_default_backend!(
@@ -68,7 +69,7 @@ end
 
 # COV_EXCL_START
 @setup_workload begin
-    load_default_backend()
+    default_backend()
     @debug PlotsBase.backend_package_name()
     n = length(PlotsBase._examples)
     imports = sizehint!(Expr[], n)
@@ -111,7 +112,7 @@ end
     end
     withenv("GKSwstype" => "nul") do
         @compile_workload begin
-            load_default_backend()
+            default_backend()
             eval.(imports)
             eval.(examples)
         end

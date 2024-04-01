@@ -12,7 +12,7 @@ for letter in (:x, :y, :z)
         add_aliases(letter_keyword, Symbol(letter, "_", keyword))
     end
     for keyword in (_magic_axis_attrs..., :(_discrete_indices))
-        _attrsymbolcache[letter][string(keyword)] = Symbol(letter, keyword)
+        _attrsymbolcache[letter][keyword] = Symbol(letter, keyword)
     end
 end
 

@@ -247,10 +247,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         sps = get(kw, :subplot, :auto)
         sp = get_subplot(
             plt,
-            _cycle(
-                sps ≡ :auto ? plt.subplots : plt.subplots[sps],
-                series_idx(kw_list, kw),
-            ),
+            _cycle(sps ≡ :auto ? plt.subplots : plt.subplots[sps], series_idx(kw_list, kw)),
         )
         kw[:subplot] = sp
 
@@ -387,10 +384,7 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st = _override_seriestype_check(plotattributes, st)
 
     # change to a 3d projection for this subplot?
-    if (
-        RecipesPipeline.needs_3d_axes(st) ||
-        (st ≡ :quiver && plotattributes[:z] ≢ nothing)
-    )
+    if (RecipesPipeline.needs_3d_axes(st) || (st ≡ :quiver && plotattributes[:z] ≢ nothing))
         sp.attr[:projection] = "3d"
     end
 

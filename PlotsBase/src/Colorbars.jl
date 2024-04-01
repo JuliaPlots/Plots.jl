@@ -31,10 +31,7 @@ function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float6
     for series in series_list(sp)
         if series[:colorbar_entry]::Bool
             # Avoid calling the inner `update_clims` if at all possible; dynamic dispatch hell
-            if (
-                   series[:seriestype] ∈ Commons._z_colored_series &&
-                   series[:z] ≢ nothing
-               ) ||
+            if (series[:seriestype] ∈ Commons._z_colored_series && series[:z] ≢ nothing) ||
                series[:line_z] ≢ nothing ||
                series[:marker_z] ≢ nothing ||
                series[:fill_z] ≢ nothing

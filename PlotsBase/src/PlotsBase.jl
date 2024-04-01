@@ -122,23 +122,16 @@ using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
-    Expr(
-        :module,
-        true,
-        mod,
+    import_ex = Expr(
+        :import,
         Expr(
-            :block,
-            Expr(
-                :import,
-                Expr(
-                    :(:),
-                    Expr(:., :., :., parent),
-                    (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
-                ),
-            ),
-            Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...),
+            :(:),
+            Expr(:., :., :., parent),
+            (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
         ),
-    ) |> esc
+    )
+    export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
+    Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
 end
 import NaNMath
 include("Commons/Commons.jl")

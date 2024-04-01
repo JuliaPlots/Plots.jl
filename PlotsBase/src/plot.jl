@@ -254,8 +254,7 @@ function prepare_output(plt::Plot)
     force_minpad = get(plt, :force_minpad, ())
     isempty(force_minpad) || for i in eachindex(plt.layout.grid)
         plt.layout.grid[i].minpad = Tuple(
-            i ≡ nothing ? j : i for
-            (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
+            i ≡ nothing ? j : i for (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
         )
     end
 
