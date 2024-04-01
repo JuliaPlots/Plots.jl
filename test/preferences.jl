@@ -39,7 +39,7 @@
             Pkg.add("UnicodePlots"; io)  # checked by Plots
             import UnicodePlots
             using Plots
-            res = @testset "Prefs" begin
+            res = @testset "Preferences UnicodePlots" begin
                 @test_logs (:info, r".*Preferences") Plots.diagnostics(io)
                 @test backend() == Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlotsBackend()
             end
@@ -61,7 +61,8 @@
             """
             import $pkg
             using Test, Plots
-            res = @testset "Backends" begin
+            $be()
+            res = @testset "Persistent backend $pkg" begin
                 @test Plots.backend_name() ≡ :$be
             end
             exit(res.n_passed == 1 ? 0 : 123)
