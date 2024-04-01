@@ -20,12 +20,12 @@ end
 
 function load_default_backend()
     # environment variable preempts the `Preferences` based mechanism
-    PlotsBase.CURRENT_BACKEND.sym =
+    sym = PlotsBase.CURRENT_BACKEND.sym =
         get(ENV, "PLOTS_DEFAULT_BACKEND", PLOTS_DEFAULT_BACKEND) |> lowercase |> Symbol
     if (pkg_name = PlotsBase.backend_package_name()) ≡ :GR
         @eval import GR
     end
-    PlotsBase.backend(PlotsBase.Plots.backend_instance(Base.CURRENT_BACKEND.sym))
+    PlotsBase.backend(PlotsBase.backend_instance(sym))
 end
 
 function set_default_backend!(

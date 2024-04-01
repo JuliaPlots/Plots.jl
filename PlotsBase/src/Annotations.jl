@@ -127,7 +127,7 @@ mutable struct EachAnn
 end
 
 function Base.iterate(ea::EachAnn, i = 1)
-    (ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)) && return
+    (ea.anns ≡ nothing || isempty(ea.anns.strs) || i > length(ea.y)) && return
 
     tmp = _cycle(ea.anns.strs, i)
     str, fnt = if isa(tmp, PlotText)
@@ -156,7 +156,7 @@ _annotationfont(sp::Subplot) = font(;
 
 _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwxyz") = (
     pos...,
-    lab === :auto ? text("($(alphabet[sp[:subplot_index]]))", font) :
+    lab ≡ :auto ? text("($(alphabet[sp[:subplot_index]]))", font) :
     _text_label(lab, font),
 )
 
@@ -205,11 +205,11 @@ process_annotation(sp::Subplot, ann) =
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     # !TODO Add more scales in the future (asinh, sqrt) ?
-    if scale === :log || scale === :ln
+    if scale ≡ :log || scale ≡ :ln
         exp(log(xmin) + pos.value * log(xmax / xmin))
-    elseif scale === :log10
+    elseif scale ≡ :log10
         exp10(log10(xmin) + pos.value * log10(xmax / xmin))
-    elseif scale === :log2
+    elseif scale ≡ :log2
         exp2(log2(xmin) + pos.value * log2(xmax / xmin))
     else  # :identity (linear scale)
         xmin + pos.value * (xmax - xmin)

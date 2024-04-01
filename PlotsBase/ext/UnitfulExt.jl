@@ -33,7 +33,7 @@ Main recipe
 @recipe function f(::Type{T}, x::T) where {T<:AbstractArray{<:MissingOrQuantity}}  # COV_EXCL_LINE
     axisletter = plotattributes[:letter]   # x, y, or z
     clims_types = (:contour, :contourf, :heatmap, :surface)
-    if axisletter === :z && get(plotattributes, :seriestype, :nothing) ∈ clims_types
+    if axisletter ≡ :z && get(plotattributes, :seriestype, :nothing) ∈ clims_types
         u = get(plotattributes, :zunit, _unit(eltype(x)))
         ustripattribute!(plotattributes, :clims, u)
         append_unit_if_needed!(plotattributes, :colorbar_title, u)
@@ -60,7 +60,7 @@ function fixaxis!(attr, x, axisletter)
     # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
     append_unit_if_needed!(attr, axislabel, u)
     ustripattribute!(attr, err, u)
-    if axisletter === :y
+    if axisletter ≡ :y
         ustripattribute!(attr, :ribbon, u)
         ustripattribute!(attr, :fillrange, u)
     end
@@ -146,7 +146,7 @@ function fixaspectratio!(attr, u, axisletter)
         # Keep the default behavior (let PlotsBase figure it out)
         return
     end
-    if aspect_ratio === :equal
+    if aspect_ratio ≡ :equal
         aspect_ratio = 1
     end
     #=======================================================================================
@@ -159,9 +159,9 @@ function fixaspectratio!(attr, u, axisletter)
     made, and the default aspect ratio fixing of PlotsBase throws a `DimensionError` as it tries
     to compare `0 < 1u"m"`.
     =======================================================================================#
-    if axisletter === :y
+    if axisletter ≡ :y
         attr[:aspect_ratio] = aspect_ratio * u
-    elseif axisletter === :x
+    elseif axisletter ≡ :x
         attr[:aspect_ratio] = aspect_ratio / u
     end
     nothing

@@ -45,11 +45,11 @@ function num_minor_intervals(axis)
 end
 
 no_minor_intervals(axis) =
-    if (n_intervals = axis[:minorticks]) === false
+    if (n_intervals = axis[:minorticks]) ≡ false
         true  # must be tested with `===` since Bool <: Integer
     elseif n_intervals ∈ (:none, nothing)
         true
-    elseif (n_intervals === :auto && !axis[:minorgrid])
+    elseif (n_intervals ≡ :auto && !axis[:minorgrid])
         true
     else
         false

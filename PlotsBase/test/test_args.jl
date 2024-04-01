@@ -16,14 +16,14 @@ x = collect(0.0:10.0)
 foo = Foo(x, sin.(x))
 
 @testset "Magic attributes" begin
-    @test plot(foo)[1][1][:markershape] === :+
-    @test plot(foo, markershape = :diamond)[1][1][:markershape] === :diamond
-    @test plot(foo, marker = :diamond)[1][1][:markershape] === :diamond
+    @test plot(foo)[1][1][:markershape] ≡ :+
+    @test plot(foo, markershape = :diamond)[1][1][:markershape] ≡ :diamond
+    @test plot(foo, marker = :diamond)[1][1][:markershape] ≡ :diamond
     @test (@test_logs (:warn, "Skipped marker arg diamond.") plot(
         foo,
         marker = :diamond,
         markershape = :diamond,
-    )[1][1][:markershape]) === :diamond
+    )[1][1][:markershape]) ≡ :diamond
 end
 
 @testset "Subplot Attributes" begin

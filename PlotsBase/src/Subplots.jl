@@ -57,7 +57,7 @@ end
 
 # properly retrieve from sp.attr, passing `:match` to the correct key
 Base.getindex(sp::Subplot, k::Symbol) =
-    if (v = sp.attr[k]) === :match
+    if (v = sp.attr[k]) ≡ :match
         if haskey(Commons.Commons._match_map2, k)
             sp.plt[Commons.Commons._match_map2[k]]
         else
@@ -107,7 +107,7 @@ function attr!(sp::Subplot; kw...)
     sp
 end
 
-PlotsBase.series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)
+PlotsBase.series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] ≡ sp, sp.plt.series_list)
 PlotsBase.RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 PlotsBase.ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
 
@@ -116,7 +116,7 @@ get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
 get_series_color(c, sp::Subplot, n::Int, seriestype) =
-    if c === :auto
+    if c ≡ :auto
         like_surface(seriestype) ? PlotsBase.cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
         _cycle(sp[:color_palette], c)
@@ -174,7 +174,7 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # handle legend/colorbar
     sp.attr[:legend_position] = convert_legend_value(sp.attr[:legend_position])
     sp.attr[:colorbar] = convert_legend_value(sp.attr[:colorbar])
-    if sp.attr[:colorbar] === :legend
+    if sp.attr[:colorbar] ≡ :legend
         sp.attr[:colorbar] = sp.attr[:legend_position]
     end
     nothing
@@ -215,7 +215,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
         data = plotattributes[letter]
         if (
             letter !== :z &&
-            plotattributes[:seriestype] === :straightline &&
+            plotattributes[:seriestype] ≡ :straightline &&
             any(series[:seriestype] !== :straightline for series in series_list(sp)) &&
             length(data) > 1 &&
             data[1] != data[2]
@@ -248,7 +248,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # expand for fillrange
     fr = plotattributes[:fillrange]
-    if fr === nothing && plotattributes[:seriestype] === :bar
+    if fr ≡ nothing && plotattributes[:seriestype] ≡ :bar
         fr = 0.0
     end
     if fr !== nothing && !RecipesPipeline.is3d(plotattributes)
@@ -261,11 +261,11 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
     end
 
     # expand for bar_width
-    if plotattributes[:seriestype] === :bar
+    if plotattributes[:seriestype] ≡ :bar
         dsym = :x
         data = plotattributes[dsym]
 
-        if (bw = plotattributes[:bar_width]) === nothing
+        if (bw = plotattributes[:bar_width]) ≡ nothing
             pos = filter(>(0), diff(sort(data)))
             plotattributes[:bar_width] = bw = Commons._bar_width * ignorenan_minimum(pos)
         end
@@ -275,7 +275,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
     end
 
     # expand for heatmaps
-    if plotattributes[:seriestype] === :heatmap
+    if plotattributes[:seriestype] ≡ :heatmap
         for letter in (:x, :y)
             data = plotattributes[letter]
             axis = sp[get_attr_symbol(letter, :axis)]

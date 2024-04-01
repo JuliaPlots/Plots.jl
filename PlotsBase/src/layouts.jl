@@ -75,7 +75,7 @@ function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
     orighor = :left
     origver = :top
     for oarg in oargs
-        if oarg === :center
+        if oarg ≡ :center
             orighor = origver = oarg
         elseif oarg in (:left, :right, :hcenter)
             orighor = oarg
@@ -94,14 +94,14 @@ function bbox(x, y, width, height; h_anchor = :left, v_anchor = :top)
     y = make_measure_vert(y)
     width = make_measure_hor(width)
     height = make_measure_vert(height)
-    left = if h_anchor === :left
+    left = if h_anchor ≡ :left
         x
     elseif h_anchor in (:center, :hcenter)
         0.5w - 0.5width + x
     else
         1w - x - width
     end
-    top = if v_anchor === :top
+    top = if v_anchor ≡ :top
         y
     elseif v_anchor in (:center, :vcenter)
         0.5h - 0.5height + y
@@ -598,7 +598,7 @@ function link_axes!(layout::GridLayout, link::Symbol)
             link_axes!(layout.grid[r, :], :yaxis)
         end
     end
-    if link === :square
+    if link ≡ :square
         if (sps = filter(l -> isa(l, Subplot), layout.grid)) |> !isempty
             base_axis = sps[1][:xaxis]
             for sp in sps
@@ -607,7 +607,7 @@ function link_axes!(layout::GridLayout, link::Symbol)
             end
         end
     end
-    if link === :all
+    if link ≡ :all
         link_axes!(layout.grid, :xaxis)
         link_axes!(layout.grid, :yaxis)
     end
@@ -623,7 +623,7 @@ function twin(sp, letter)
         ax = orig_sp[get_attr_symbol(letter, :axis)]
         ax[:grid] = false  # disable the grid (overlaps with twin axis)
     end
-    if orig_sp[:framestyle] === :box
+    if orig_sp[:framestyle] ≡ :box
         # incompatible with shared axes (see github.com/JuliaPlots/Plots.jl/issues/2894)
         orig_sp[:framestyle] = :axes
     end

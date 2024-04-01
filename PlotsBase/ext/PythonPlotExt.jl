@@ -16,7 +16,7 @@ import NaNMath
 import PlotsBase
 import PlotsBase.PlotUtils: PlotUtils, ColorGradient, plot_color, color_list, cgrad
 import PlotsBase: bbox_to_pcts, right, left, bottom, top, width, height, ticks_type
-import PlotsBase: ispositive
+import PlotsBase: ispositive, ismatrix
 import PlotsBase.Commons: Commons, single_color
 import RecipesPipeline: Surface
 
@@ -50,10 +50,11 @@ function PlotsBase.extension_init(::PythonPlotBackend)
     numpy.seterr(invalid = "ignore")
     PythonPlot.ioff()  # we don't want every command to update the figure
 
-    for letter in (:x, :y, :z, Symbol(), :top, :bottom, :left, :right)
-        Commons.add_attr_dict!(letter)
-        for keyword in (:linthresh, :base, :label)
-            Commons.add_attr!(letter, keyword)
+    # WARNING: matplotlib uses a reverse convention: `labeltop` instead of `toplabel`
+    for keyword in (:linthresh, :base, :label)
+        Commons.new_attr_dict!(keyword)
+        for letter in (:x, :y, :z, Symbol(), :top, :bottom, :left, :right)
+            Commons.set_attr_symbol!(keyword, string(letter))
         end
     end
 
@@ -934,7 +935,7 @@ function _py_set_ticks(sp, ax, ticks, letter)
     if ticks ≡ :none || ticks ≡ nothing || ticks == false
         kw = KW()
         for dir in (:top, :bottom, :left, :right)
-            kw[dir] = kw[get_attr_symbol(dir, :label)] = false
+            kw[dir] = kw[get_attr_symbol(:label, dir)] = false
         end
         axis.set_tick_params(; which = "both", kw...)
         return
@@ -973,8 +974,8 @@ function _py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     else
         "symlog",
         KW(
-            get_attr_symbol(Symbol(), :base) => Commons._log_scale_bases[scale],
-            get_attr_symbol(Symbol(), :linthresh) => NaNMath.max(
+            get_attr_symbol(:base, Symbol()) => Commons._log_scale_bases[scale],
+            get_attr_symbol(:linthresh, Symbol()) => NaNMath.max(
                 1e-16,
                 _py_compute_axis_minval(sp, sp[get_attr_symbol(letter, :axis)]),
             ),
@@ -993,8 +994,8 @@ _py_set_spine_color(spines::Dict, color) =
 
 function _py_set_axis_colors(sp, ax, a::Axis)
     _py_set_spine_color(ax.spines, _py_color(a[:foreground_color_border]))
-    axissym = get_attr_symbol(a[:letter], :axis)
-    if hasproperty(ax, axissym)
+    axis_sym = get_attr_symbol(a[:letter], :axis)
+    if hasproperty(ax, axis_sym)
         tickcolor =
             sp[:framestyle] ∈ (:zerolines, :grid) ?
             _py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) :
@@ -1005,7 +1006,7 @@ function _py_set_axis_colors(sp, ax, a::Axis)
             colors = tickcolor,
             labelcolor = _py_color(a[:tickfontcolor]),
         )
-        getproperty(ax, axissym).label.set_color(_py_color(a[:guidefontcolor]))
+        getproperty(ax, axis_sym).label.set_color(_py_color(a[:guidefontcolor]))
     end
 end
 
@@ -1231,10 +1232,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
 
         # axis attributes
         for letter in (:x, :y, :z)
-            axissym = get_attr_symbol(letter, :axis)
-            hasproperty(ax, axissym) || continue
-            axis = sp[axissym]
-            pyaxis = getproperty(ax, axissym)
+            axis_sym = get_attr_symbol(letter, :axis)
+            hasproperty(ax, axis_sym) || continue
+            axis = sp[axis_sym]
+            pyaxis = getproperty(ax, axis_sym)
 
             if axis[:guide_position] ≢ :auto && letter ≢ :z
                 pyaxis.set_label_position(string(axis[:guide_position]))
@@ -1361,7 +1362,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             ispolar(sp) && ax.spines.polar.set_visible(false)
             for dir in (:top, :bottom)
                 ispolar(sp) || getproperty(ax.spines, string(dir)).set_visible(false)
-                kw[dir] = kw[get_attr_symbol(dir, :label)] = false
+                kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
             ax.xaxis.set_tick_params(; which = "both", kw...)
         end
@@ -1369,7 +1370,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             kw = KW()
             for dir in (:left, :right)
                 ispolar(sp) || getproperty(ax.spines, string(dir)).set_visible(false)
-                kw[dir] = kw[get_attr_symbol(dir, :label)] = false
+                kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
             ax.yaxis.set_tick_params(; which = "both", kw...)
         end

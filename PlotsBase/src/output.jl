@@ -170,7 +170,7 @@ end
 
 _do_plot_show(plt, showval::Bool) = showval && gui(plt)
 function _do_plot_show(plt, showval::Symbol)
-    showval === :gui && gui(plt)
+    showval ≡ :gui && gui(plt)
     showval in (:inline, :ijulia) && inline(plt)
 end
 
@@ -182,10 +182,10 @@ const _best_html_output_type =
 # a backup for html... passes to svg or png depending on the html_output_format arg
 function _show(io::IO, ::MIME"text/html", plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
-    if output_type === :auto
+    if output_type ≡ :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
     end
-    if output_type === :png
+    if output_type ≡ :png
         # @info "writing png to html output"
         print(
             io,
@@ -193,10 +193,10 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
             base64encode(show, MIME("image/png"), plt),
             "\" />",
         )
-    elseif output_type === :svg
+    elseif output_type ≡ :svg
         # @info "writing svg to html output"
         show(io, MIME("image/svg+xml"), plt)
-    elseif output_type === :txt
+    elseif output_type ≡ :txt
         show(io, MIME("text/plain"), plt)
     else
         error("only png or svg allowed. got: $(repr(output_type))")

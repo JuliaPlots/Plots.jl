@@ -5,7 +5,7 @@ const _keyAliases = Dict{Symbol,Symbol}()
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
-        (haskey(_keyAliases, alias) || alias === sym) && return
+        (haskey(_keyAliases, alias) || alias ≡ sym) && return
         _keyAliases[alias] = sym
     end
     nothing
@@ -699,7 +699,7 @@ function default(k::Symbol)
         letter, key = axis_k
         return _axis_defaults_byletter[letter][key]
     end
-    k === :letter && return k # for type recipe processing
+    k ≡ :letter && return k # for type recipe processing
     missing
 end
 
@@ -746,7 +746,7 @@ end
 # if arg is a valid color value, then set plotattributes[csym] and return true
 function handle_colors!(plotattributes::AKW, arg, csym::Symbol)
     try
-        plotattributes[csym] = if arg === :auto
+        plotattributes[csym] = if arg ≡ :auto
             :auto
         else
             plot_color(arg)
@@ -767,22 +767,22 @@ function process_line_attr(plotattributes::AKW, arg)
         plotattributes[:linestyle] = arg
 
     elseif typeof(arg) <: PlotsBase.Stroke
-        arg.width === nothing || (plotattributes[:linewidth] = arg.width)
-        arg.color === nothing || (
+        arg.width ≡ nothing || (plotattributes[:linewidth] = arg.width)
+        arg.color ≡ nothing || (
             plotattributes[:linecolor] =
-                arg.color === :auto ? :auto : plot_color(arg.color)
+                arg.color ≡ :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:linealpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:linestyle] = arg.style)
+        arg.alpha ≡ nothing || (plotattributes[:linealpha] = arg.alpha)
+        arg.style ≡ nothing || (plotattributes[:linestyle] = arg.style)
 
     elseif typeof(arg) <: PlotsBase.Brush
-        arg.size === nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color === nothing || (
+        arg.size ≡ nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color ≡ nothing || (
             plotattributes[:fillcolor] =
-                arg.color === :auto ? :auto : plot_color(arg.color)
+                arg.color ≡ :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
+        arg.alpha ≡ nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.style ≡ nothing || (plotattributes[:fillstyle] = arg.style)
 
     elseif typeof(arg) <: PlotsBase.Arrow || arg in (:arrow, :arrows)
         plotattributes[:arrow] = arg
@@ -811,21 +811,21 @@ function process_marker_attr(plotattributes::AKW, arg)
         plotattributes[:markerstrokestyle] = arg
 
     elseif typeof(arg) <: PlotsBase.Stroke
-        arg.width === nothing || (plotattributes[:markerstrokewidth] = arg.width)
-        arg.color === nothing || (
+        arg.width ≡ nothing || (plotattributes[:markerstrokewidth] = arg.width)
+        arg.color ≡ nothing || (
             plotattributes[:markerstrokecolor] =
-                arg.color === :auto ? :auto : plot_color(arg.color)
+                arg.color ≡ :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:markerstrokestyle] = arg.style)
+        arg.alpha ≡ nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
+        arg.style ≡ nothing || (plotattributes[:markerstrokestyle] = arg.style)
 
     elseif typeof(arg) <: PlotsBase.Brush
-        arg.size === nothing || (plotattributes[:markersize] = arg.size)
-        arg.color === nothing || (
+        arg.size ≡ nothing || (plotattributes[:markersize] = arg.size)
+        arg.color ≡ nothing || (
             plotattributes[:markercolor] =
-                arg.color === :auto ? :auto : plot_color(arg.color)
+                arg.color ≡ :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:markeralpha] = arg.alpha)
+        arg.alpha ≡ nothing || (plotattributes[:markeralpha] = arg.alpha)
 
         # linealpha
     elseif all_alphas(arg)
@@ -848,13 +848,13 @@ end
 function process_fill_attr(plotattributes::AKW, arg)
     # fr = get(plotattributes, :fillrange, 0)
     if typeof(arg) <: PlotsBase.Brush
-        arg.size === nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color === nothing || (
+        arg.size ≡ nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color ≡ nothing || (
             plotattributes[:fillcolor] =
-                arg.color === :auto ? :auto : plot_color(arg.color)
+                arg.color ≡ :auto ? :auto : plot_color(arg.color)
         )
-        arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
-        arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
+        arg.alpha ≡ nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.style ≡ nothing || (plotattributes[:fillstyle] = arg.style)
 
     elseif typeof(arg) <: Bool
         plotattributes[:fillrange] = arg ? 0 : nothing
@@ -886,15 +886,15 @@ function process_grid_attr!(plotattributes::AKW, arg, letter)
         plotattributes[get_attr_symbol(letter, :gridstyle)] = arg
 
     elseif typeof(arg) <: PlotsBase.Stroke
-        arg.width === nothing ||
+        arg.width ≡ nothing ||
             (plotattributes[get_attr_symbol(letter, :gridlinewidth)] = arg.width)
-        arg.color === nothing || (
+        arg.color ≡ nothing || (
             plotattributes[get_attr_symbol(letter, :foreground_color_grid)] =
                 arg.color in (:auto, :match) ? :match : plot_color(arg.color)
         )
-        arg.alpha === nothing ||
+        arg.alpha ≡ nothing ||
             (plotattributes[get_attr_symbol(letter, :gridalpha)] = arg.alpha)
-        arg.style === nothing ||
+        arg.style ≡ nothing ||
             (plotattributes[get_attr_symbol(letter, :gridstyle)] = arg.style)
 
         # linealpha
@@ -924,15 +924,15 @@ function process_minor_grid_attr!(plotattributes::AKW, arg, letter)
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
     elseif typeof(arg) <: PlotsBase.Stroke
-        arg.width === nothing ||
+        arg.width ≡ nothing ||
             (plotattributes[get_attr_symbol(letter, :minorgridlinewidth)] = arg.width)
-        arg.color === nothing || (
+        arg.color ≡ nothing || (
             plotattributes[get_attr_symbol(letter, :foreground_color_minor_grid)] =
                 arg.color in (:auto, :match) ? :match : plot_color(arg.color)
         )
-        arg.alpha === nothing ||
+        arg.alpha ≡ nothing ||
             (plotattributes[get_attr_symbol(letter, :minorgridalpha)] = arg.alpha)
-        arg.style === nothing ||
+        arg.style ≡ nothing ||
             (plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg.style)
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
 
@@ -977,7 +977,7 @@ end
         Symbol(fontname, :valign) --> arg.valign
         Symbol(fontname, :rotation) --> arg.rotation
         Symbol(fontname, :color) --> arg.color
-    elseif arg === :center
+    elseif arg ≡ :center
         Symbol(fontname, :halign) --> :hcenter
         Symbol(fontname, :valign) --> :vcenter
     elseif arg ∈ _haligns
@@ -1046,7 +1046,7 @@ function convert_legend_value(val::Symbol)
         :inline,
     )
         val
-    elseif val === :horizontal
+    elseif val ≡ :horizontal
         -1
     else
         error("Invalid symbol for legend: $val")
@@ -1150,7 +1150,7 @@ ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
 
 # get a good default linewidth... 0 for surface and heatmaps
 _replace_linewidth(plotattributes::AKW) =
-    if plotattributes[:linewidth] === :auto
+    if plotattributes[:linewidth] ≡ :auto
         plotattributes[:linewidth] =
             (get(plotattributes, :seriestype, :path) ∉ (:surface, :heatmap, :image)) *
             DEFAULT_LINEWIDTH[]
@@ -1161,9 +1161,9 @@ label_to_string(label::Bool, series_plotindex) =
 label_to_string(label::Nothing, series_plotindex) = ""
 label_to_string(label::Missing, series_plotindex) = ""
 label_to_string(label::Symbol, series_plotindex) =
-    if label === :auto
+    if label ≡ :auto
         string("y", series_plotindex)
-    elseif label === :none
+    elseif label ≡ :none
         ""
     else
         throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
@@ -1192,8 +1192,8 @@ Also creates pluralized and non-underscore aliases for these keywords.
 """
 macro add_attributes(level, expr, match_table)
     expr = macroexpand(__module__, expr) # to expand @static
-    expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
-    if (T = expr.args[2]) isa Expr && T.head === :<:
+    expr isa Expr && expr.head ≡ :struct || error("Invalid usage of @add_attributes")
+    if (T = expr.args[2]) isa Expr && T.head ≡ :<:
         T = T.args[1]
     end
 
@@ -1239,12 +1239,12 @@ function _splitdef!(blk, key_dict)
             #  var
             continue
         elseif ei isa Expr
-            if ei.head === :(=)
+            if ei.head ≡ :(=)
                 lhs = ei.args[1]
                 if lhs isa Symbol
                     #  var = defexpr
                     var = lhs
-                elseif lhs isa Expr && lhs.head === :(::) && lhs.args[1] isa Symbol
+                elseif lhs isa Expr && lhs.head ≡ :(::) && lhs.args[1] isa Symbol
                     #  var::T = defexpr
                     var = lhs.args[1]
                     type = lhs.args[2]
@@ -1262,11 +1262,11 @@ function _splitdef!(blk, key_dict)
                 defexpr = ei.args[2]  # defexpr
                 key_dict[var] = defexpr
                 blk.args[i] = lhs
-            elseif ei.head === :(::) && ei.args[1] isa Symbol
+            elseif ei.head ≡ :(::) && ei.args[1] isa Symbol
                 # var::Typ
                 var = ei.args[1]
                 key_dict[var] = defexpr
-            elseif ei.head === :block
+            elseif ei.head ≡ :block
                 # can arise with use of @static inside type decl
                 _kwdef!(ei, value_attrs, key_attrs)
             end

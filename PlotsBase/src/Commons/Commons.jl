@@ -132,7 +132,7 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     if !RecipesPipeline.is3d(st) && st ∉ (:contour, :contour3d, :quiver)
         if (z = plotattributes[:z]) !== nothing &&
            size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)
-            st = st === :scatter ? :scatter3d : :path3d
+            st = st ≡ :scatter ? :scatter3d : :path3d
             plotattributes[:seriestype] = st
         end
     end
@@ -156,7 +156,7 @@ PlotsBase.@ScopeModule(
 
 function fg_color(plotattributes::AKW)
     fg = get(plotattributes, :foreground_color, :auto)
-    if fg === :auto
+    if fg ≡ :auto
         bg = plot_color(get(plotattributes, :background_color, :white))
         fg = alpha(bg) > 0 && isdark(bg) ? colorant"white" : colorant"black"
     else
@@ -164,15 +164,22 @@ function fg_color(plotattributes::AKW)
     end
 end
 function color_or_nothing!(plotattributes, k::Symbol)
-    plotattributes[k] = (v = plotattributes[k]) === :match ? v : plot_color(v)
+    plotattributes[k] = (v = plotattributes[k]) ≡ :match ? v : plot_color(v)
     nothing
 end
 
 # cache joined symbols so they can be looked up instead of constructed each time
-const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
+const _attrsymbolcache = Dict{Symbol,Dict{String,Symbol}}()
 
-get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
-get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
+get_attr_symbol(letter::Symbol, keyword::String) = _attrsymbolcache[letter][keyword]
+get_attr_symbol(letter::Symbol, keyword::Symbol) = get_attr_symbol(letter, string(keyword))
+
+new_attr_dict!(letter::Symbol) = get!(_attrsymbolcache, letter, Dict{String,Symbol}())
+set_attr_symbol!(letter::Symbol, keyword::String) =
+    let letter_keyword = Symbol(letter, keyword)
+        _attrsymbolcache[letter][keyword] = letter_keyword
+    end
+
 # ------------------------------------------------------------------------------------
 _cycle(v::AVec, idx::Int) = v[mod(idx, axes(v, 1))]
 _cycle(v::AMat, idx::Int) = size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]
@@ -259,10 +266,10 @@ reverse_if(x, cond) = cond ? reverse(x) : x
 function get_aspect_ratio(sp)
     ar = sp[:aspect_ratio]
     check_aspect_ratio(ar)
-    if ar === :auto
+    if ar ≡ :auto
         ar = :none
         for series in series_list(sp)
-            if series[:seriestype] === :image
+            if series[:seriestype] ≡ :image
                 ar = :equal
             end
         end

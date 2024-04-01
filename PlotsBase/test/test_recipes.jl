@@ -7,16 +7,16 @@ using OffsetArrays
         (1:3, 1:3)
     end
     let pl = pl = plot(LegendPlot(); legend = :right)
-        @test pl[1][:legend_position] === :right
+        @test pl[1][:legend_position] ≡ :right
     end
     let pl = pl = plot(LegendPlot())
-        @test pl[1][:legend_position] === :topleft
+        @test pl[1][:legend_position] ≡ :topleft
     end
     let pl = plot(LegendPlot(); legend = :inline)
-        @test pl[1][:legend_position] === :inline
+        @test pl[1][:legend_position] ≡ :inline
     end
     let pl = plot(LegendPlot(); legend = :inline, ymirror = true)
-        @test pl[1][:legend_position] === :inline
+        @test pl[1][:legend_position] ≡ :inline
     end
 end
 
@@ -24,7 +24,7 @@ end
     pl = plot(1:5)
     lens!(pl, [1, 2], [1, 2], inset = (1, bbox(0.0, 0.0, 0.2, 0.2)), colorbar = false)
     @test length(pl.series_list) == 4
-    @test pl[2][:colorbar] === :none
+    @test pl[2][:colorbar] ≡ :none
 end
 
 @testset "vline, vspan" begin
@@ -97,9 +97,9 @@ end
     # currently uses plotly seriestypes only
     @test :surface in PlotsBase.all_seriestypes()
     unicode_instance = PlotsBase.backend_instance(:unicodeplots)
-    @test PlotsBase.seriestype_supported(unicode_instance, :surface) === :native
-    @test PlotsBase.seriestype_supported(unicode_instance, :hspan) === :recipe
-    @test PlotsBase.seriestype_supported(PlotsBase.NoBackend(), :line) === :native
+    @test PlotsBase.seriestype_supported(unicode_instance, :surface) ≡ :native
+    @test PlotsBase.seriestype_supported(unicode_instance, :hspan) ≡ :recipe
+    @test PlotsBase.seriestype_supported(PlotsBase.NoBackend(), :line) ≡ :native
 end
 
 with(:gr) do

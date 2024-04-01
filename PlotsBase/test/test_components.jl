@@ -67,7 +67,7 @@
         @test coords(myshapes) isa Tuple{Vector{Vector{S}},Vector{Vector{T}}} where {T,S}
         local pl
         @test_nowarn pl = plot(myshapes)
-        @test pl[1][1][:seriestype] === :shape
+        @test pl[1][1][:seriestype] ≡ :shape
     end
 
     @testset "Misc" begin
@@ -102,7 +102,7 @@ end
     end
     @testset "Alpha" begin
         @test brush(0.4).alpha == 0.4
-        @test brush(20).alpha === nothing
+        @test brush(20).alpha ≡ nothing
     end
     @testset "Bad Argument" begin
         # using test_logs because test_warn seems to not work anymore
@@ -138,7 +138,7 @@ end
 
     @test PlotsBase.series_annotations(["1" "2"; "3" "4"]) isa AbstractMatrix
     @test PlotsBase.series_annotations(10).strs[1].str == "10"
-    @test PlotsBase.series_annotations(nothing) === nothing
+    @test PlotsBase.series_annotations(nothing) ≡ nothing
     @test PlotsBase.series_annotations(ann) == ann
 
     @test PlotsBase.annotations(["1" "2"; "3" "4"]) isa AbstractMatrix

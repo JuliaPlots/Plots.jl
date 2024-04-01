@@ -162,7 +162,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::PlotsBase.Plot, 
     err_inds =
         findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
     for ind in err_inds
-        if ind > 1 && get(kw_list[ind - 1], :seriestype, :path) === :scatter
+        if ind > 1 && get(kw_list[ind - 1], :seriestype, :path) ≡ :scatter
             tmp = copy(kw_list[ind])
             kw_list[ind] = copy(kw_list[ind - 1])
             kw_list[ind - 1] = tmp
@@ -248,7 +248,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         sp = get_subplot(
             plt,
             _cycle(
-                sps === :auto ? plt.subplots : plt.subplots[sps],
+                sps ≡ :auto ? plt.subplots : plt.subplots[sps],
                 series_idx(kw_list, kw),
             ),
         )
@@ -356,12 +356,12 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     if (perm = plotattributes[:permute]) !== :none
         letter1, letter2 = perm
         ms = plotattributes[:markershape]
-        if ms === :hline && (perm == (:x, :y) || perm == (:y, :x))
+        if ms ≡ :hline && (perm == (:x, :y) || perm == (:y, :x))
             plotattributes[:markershape] = :vline
-        elseif ms === :vline && (perm == (:x, :y) || perm == (:y, :x))
+        elseif ms ≡ :vline && (perm == (:x, :y) || perm == (:y, :x))
             plotattributes[:markershape] = :hline
         end
-        if plotattributes[:seriestype] === :bar # bar calls expand_extrema! in its recipe...
+        if plotattributes[:seriestype] ≡ :bar # bar calls expand_extrema! in its recipe...
             sp = plotattributes[:subplot]
             sp[get_attr_symbol(letter1, :axis)][:lims],
             sp[get_attr_symbol(letter2, :axis)][:lims] =
@@ -389,7 +389,7 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     # change to a 3d projection for this subplot?
     if (
         RecipesPipeline.needs_3d_axes(st) ||
-        (st === :quiver && plotattributes[:z] !== nothing)
+        (st ≡ :quiver && plotattributes[:z] !== nothing)
     )
         sp.attr[:projection] = "3d"
     end
@@ -404,7 +404,7 @@ end
 
 function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
     # adjust extrema and discrete info
-    if st === :image
+    if st ≡ :image
         xmin, xmax = ignorenan_extrema(plotattributes[:x])
         ymin, ymax = ignorenan_extrema(plotattributes[:y])
         expand_extrema!(sp[:xaxis], (xmin, xmax))
@@ -426,11 +426,11 @@ function _add_the_series(plt, sp, plotattributes)
         plt[:extra_plot_kwargs] = get(kw, :plot, KW())
         sp[:extra_kwargs] = get(kw, :subplot, KW())
         plotattributes[:extra_kwargs] = get(kw, :series, KW())
-    elseif kw === :plot
+    elseif kw ≡ :plot
         plt[:extra_plot_kwargs] = extra_kwargs
-    elseif kw === :subplot
+    elseif kw ≡ :subplot
         sp[:extra_kwargs] = extra_kwargs
-    elseif kw === :series
+    elseif kw ≡ :series
         plotattributes[:extra_kwargs] = extra_kwargs
     else
         throw(ArgumentError("Unsupported type for extra keyword arguments"))
@@ -438,9 +438,9 @@ function _add_the_series(plt, sp, plotattributes)
     warn_on_unsupported(plt.backend, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
-    if (z_order = plotattributes[:z_order]) === :front
+    if (z_order = plotattributes[:z_order]) ≡ :front
         push!(sp.series_list, series)
-    elseif z_order === :back
+    elseif z_order ≡ :back
         pushfirst!(sp.series_list, series)
     elseif z_order isa Integer
         insert!(sp.series_list, z_order, series)

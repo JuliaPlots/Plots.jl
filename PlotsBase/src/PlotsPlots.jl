@@ -155,7 +155,7 @@ ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 # properly retrieve from plt.attr, passing `:match` to the correct key
 
 Base.getindex(plt::Plot, k::Symbol) =
-    if (v = plt.attr[k]) === :match
+    if (v = plt.attr[k]) ≡ :match
         plt[Commons._match_map[k]]
     else
         v
@@ -182,7 +182,7 @@ PlotsBase.series_list(plt::Plot) = plt.series_list
 
 get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
 
-get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
+get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x ≡ sp, plt.subplots)
 PlotsBase.RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Commons.preprocess_attributes!(plotattributes)
 

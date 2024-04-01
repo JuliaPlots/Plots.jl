@@ -56,7 +56,7 @@ end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
 Base.getindex(axis::Axis, k::Symbol) =
-    if (v = axis.plotattributes[k]) === :match
+    if (v = axis.plotattributes[k]) ≡ :match
         if haskey(Commons.Commons._match_map2, k)
             axis.sps[1][Commons.Commons._match_map2[k]]
         else
@@ -76,9 +76,9 @@ end
 Extrema() = Extrema(Inf, -Inf)
 # -------------------------------------------------------------------------
 sort_3d_axes(x, y, z, letter) =
-    if letter === :x
+    if letter ≡ :x
         x, y, z
-    elseif letter === :y
+    elseif letter ≡ :y
         y, x, z
     else
         z, y, x
@@ -88,13 +88,13 @@ axes_letters(sp, letter) =
     if RecipesPipeline.is3d(sp)
         sort_3d_axes(:x, :y, :z, letter)
     else
-        letter === :x ? (:x, :y) : (:y, :x)
+        letter ≡ :x ? (:x, :y) : (:y, :x)
     end
 
 scale_inverse_scale_func(scale::Symbol) = (
     RecipesPipeline.scale_func(scale),
     RecipesPipeline.inverse_scale_func(scale),
-    scale === :identity,
+    scale ≡ :identity,
 )
 function get_axis(sp::Subplot, letter::Symbol)
     axissym = get_attr_symbol(letter, :axis)
@@ -115,22 +115,22 @@ function Commons.axis_limits(
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = process_limits(axis[:lims], axis)
-    lims === nothing && warn_invalid_limits(axis[:lims], letter)
+    lims ≡ nothing && warn_invalid_limits(axis[:lims], letter)
 
     if (has_user_lims = lims isa Tuple)
         lmin, lmax = lims
         if lmin isa Number && isfinite(lmin)
             amin = lmin
         elseif lmin isa Symbol
-            lmin === :auto || @warn "Invalid min $(letter)limit" lmin
+            lmin ≡ :auto || @warn "Invalid min $(letter)limit" lmin
         end
         if lmax isa Number && isfinite(lmax)
             amax = lmax
         elseif lmax isa Symbol
-            lmax === :auto || @warn "Invalid max $(letter)limit" lmax
+            lmax ≡ :auto || @warn "Invalid max $(letter)limit" lmax
         end
     end
-    if lims === :symmetric
+    if lims ≡ :symmetric
         amax = max(abs(amin), abs(amax))
         amin = -amax
     end
@@ -141,15 +141,15 @@ function Commons.axis_limits(
         amin, amax = zero(amin), one(amax)
     end
     if ispolar(axis.sps[1])
-        if axis[:letter] === :x
+        if axis[:letter] ≡ :x
             amin, amax = 0, 2π
-        elseif lims === :auto
+        elseif lims ≡ :auto
             # widen max radius so ticks dont overlap with theta axis
             amin, amax = 0, amax + 0.1abs(amax - amin)
         end
     elseif lims_factor !== nothing
         amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
-    elseif lims === :round
+    elseif lims ≡ :round
         amin, amax = round_limits(amin, amax, axis[:scale])
     end
 
@@ -158,14 +158,14 @@ function Commons.axis_limits(
         !has_user_lims &&
         consider_aspect &&
         letter in (:x, :y) &&
-        !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
+        !(aspect_ratio ≡ :none || RecipesPipeline.is3d(:sp))
     )
         aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
         area = PlotsBase.plotarea(sp)
         plot_ratio = PlotsBase.height(area) / PlotsBase.width(area)
         dist = amax - amin
 
-        factor = if letter === :x
+        factor = if letter ≡ :x
             ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * ydist / dist
             axis_ratio / plot_ratio
@@ -194,12 +194,12 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     elseif widen isa Number
         return widen
     else
-        widen === :auto || @warn "Invalid value specified for `widen`: $widen"
+        widen ≡ :auto || @warn "Invalid value specified for `widen`: $widen"
     end
 
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims === :round) && return
+    (lims isa Tuple || lims ≡ :round) && return
     for sp in axis.sps, series in series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end
@@ -281,7 +281,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     elseif T <: AVec
         plotattributes[get_attr_symbol(letter, :ticks)] = arg
 
-    elseif arg === nothing
+    elseif arg ≡ nothing
         plotattributes[get_attr_symbol(letter, :ticks)] = []
 
     elseif T <: Bool || arg in Commons._all_showaxis_attrs
@@ -316,9 +316,9 @@ function attr!(axis::Axis, args...; kw...)
     # then override for any keywords... only those keywords that already exists in plotattributes
     for (k, v) in kw
         haskey(plotattributes, k) || continue
-        if k === :discrete_values
+        if k ≡ :discrete_values
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
-        elseif k === :lims && isa(v, NTuple{2,TimeType})
+        elseif k ≡ :lims && isa(v, NTuple{2,TimeType})
             plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
         else
             plotattributes[k] = v
@@ -409,7 +409,7 @@ function PlotsBase.get_ticks(
         ticks = _transform_ticks(axis[:ticks], axis)
         axis.plotattributes[:optimized_ticks] =
             if (
-                axis[:letter] === :x &&
+                axis[:letter] ≡ :x &&
                 ticks isa Symbol &&
                 ticks !== :none &&
                 !isempty(dvals) &&

@@ -103,7 +103,7 @@ end
 function copy_series!(series, letter)
     plt = series[:plot_object]
     for s in plt.series_list, l in (:x, :y, :z)
-        if (s !== series || l !== letter) && s[l] === series[letter]
+        if (s !== series || l !== letter) && s[l] ≡ series[letter]
             series[letter] = copy(series[letter])
         end
     end
@@ -137,11 +137,11 @@ for comp in (:line, :fill, :marker)
         )
             c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
-            if z === nothing
+            if z ≡ nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
                 grad = get_gradient(c)
-                if s === :identity
+                if s ≡ :identity
                     get(grad, z[i], (cmin, cmax))
                 else
                     base = _log_scale_bases[s]
@@ -151,7 +151,7 @@ for comp in (:line, :fill, :marker)
         end
 
         function $get_compcolor(series, i::Integer = 1, s::Symbol = :identity)
-            if series[$Symbol($comp_z)] === nothing
+            if series[$Symbol($comp_z)] ≡ nothing
                 $get_compcolor(series, 0, 1, i, s)
             else
                 $get_compcolor(series, get_clims(series[:subplot]), i, s)
@@ -225,12 +225,12 @@ struct NaNSegmentsIterator
 end
 
 function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
-    (i = findfirst(!PlotsBase.Commons.anynan(itr.args), nextidx:(itr.n2))) === nothing &&
+    (i = findfirst(!PlotsBase.Commons.anynan(itr.args), nextidx:(itr.n2))) ≡ nothing &&
         return
     nextval = nextidx + i - 1
 
     j = findfirst(PlotsBase.Commons.anynan(itr.args), nextval:(itr.n2))
-    nextnan = j === nothing ? itr.n2 + 1 : nextval + j - 1
+    nextnan = j ≡ nothing ? itr.n2 + 1 : nextval + j - 1
 
     nextval:(nextnan - 1), nextnan
 end
@@ -258,7 +258,7 @@ has_attribute_segments(series::Series) =
 
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
     x, y, z = series[:x], series[:y], series[:z]
-    (x === nothing || isempty(x)) && return UnitRange{Int}[]
+    (x ≡ nothing || isempty(x)) && return UnitRange{Int}[]
 
     args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
     nan_segments = collect(iter_segments(args...))
@@ -280,7 +280,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
 
     segments = if has_attribute_segments(series)
         map(nan_segments) do r
-            if seriestype === :shape
+            if seriestype ≡ :shape
                 warn_on_inconsistent_shape_attrs(series, x, y, z, r)
                 (SeriesSegment(r, first(r)),)
             elseif seriestype in (:scatter, :scatter3d)

@@ -964,9 +964,9 @@ const _examples = PlotExample[
                         wireframe(
                             args...,
                             title = "wire-flip-$ax",
-                            xflip = ax === :x,
-                            yflip = ax === :y,
-                            zflip = ax === :z;
+                            xflip = ax ≡ :x,
+                            yflip = ax ≡ :y,
+                            zflip = ax ≡ :z;
                             kw...,
                         ),
                     )
@@ -978,9 +978,9 @@ const _examples = PlotExample[
                         wireframe(
                             args...,
                             title = "wire-mirror-$ax",
-                            xmirror = ax === :x,
-                            ymirror = ax === :y,
-                            zmirror = ax === :z;
+                            xmirror = ax ≡ :x,
+                            ymirror = ax ≡ :y,
+                            zmirror = ax ≡ :z;
                             kw...,
                         ),
                     )
@@ -1371,16 +1371,16 @@ function test_examples(
         PlotsBase.Commons.debug!($debug)
         backend($(QuoteNode(pkgname)))
         rng = $rng
-        rng === nothing || Random.seed!(rng, PlotsBase.PLOTS_SEED)
+        rng ≡ nothing || Random.seed!(rng, PlotsBase.PLOTS_SEED)
         theme(:default)
     end)
-    (imp = _examples[i].imports) === nothing || Base.eval(m, imp)
+    (imp = _examples[i].imports) ≡ nothing || Base.eval(m, imp)
     exprs = _examples[i].exprs
-    rng === nothing || (exprs = PlotsBase.replace_rand(exprs))
+    rng ≡ nothing || (exprs = PlotsBase.replace_rand(exprs))
     Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))
-    callback === nothing || callback(m, pkgname, i)
+    callback ≡ nothing || callback(m, pkgname, i)
     m.PlotsBase.current()
 end
 
@@ -1415,7 +1415,7 @@ function test_examples(
             end
             # COV_EXCL_STOP
         end
-        sleep === nothing || Base.sleep(sleep)
+        sleep ≡ nothing || Base.sleep(sleep)
     end
     plts
 end

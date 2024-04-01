@@ -76,11 +76,11 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 
     # update alphas
     for asym in (:linealpha, :markeralpha, :fillalpha)
-        if plotattributes[asym] === nothing
+        if plotattributes[asym] ≡ nothing
             plotattributes[asym] = plotattributes[:seriesalpha]
         end
     end
-    if plotattributes[:markerstrokealpha] === nothing
+    if plotattributes[:markerstrokealpha] ≡ nothing
         plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
     end
 
@@ -92,13 +92,13 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
-        plotattributes[csym] = if plotattributes[csym] === :auto
-            plot_color(if Commons.has_black_border_for_default(stype) && s === :line
+        plotattributes[csym] = if plotattributes[csym] ≡ :auto
+            plot_color(if Commons.has_black_border_for_default(stype) && s ≡ :line
                     sp[:foreground_color_subplot]
                 else
                     scolor
                 end)
-        elseif plotattributes[csym] === :match
+        elseif plotattributes[csym] ≡ :match
             plot_color(scolor)
         else
             get_series_color(plotattributes[csym], sp, plotIndex, stype)
@@ -106,9 +106,9 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     end
 
     # update markerstrokecolor
-    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] === :match
+    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] ≡ :match
         plot_color(sp[:foreground_color_subplot])
-    elseif plotattributes[:markerstrokecolor] === :auto
+    elseif plotattributes[:markerstrokecolor] ≡ :auto
         get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
     else
         get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
@@ -128,7 +128,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     # scatter plots don't have a line, but must have a shape
     if plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
         plotattributes[:linewidth] = 0
-        if plotattributes[:markershape] === :none
+        if plotattributes[:markershape] ≡ :none
             plotattributes[:markershape] = :circle
         end
     end
@@ -215,7 +215,7 @@ heatmap_edges(
     scale::Symbol = :identity,
     isedges::Bool = false,
     ispolar::Bool = false,
-) = _heatmap_edges(Val(scale === :identity), v, scale, isedges, ispolar)
+) = _heatmap_edges(Val(scale ≡ :identity), v, scale, isedges, ispolar)
 
 function heatmap_edges(
     x::AVec,
@@ -239,8 +239,8 @@ function heatmap_edges(
         ArgumentError |>
         throw
     (
-        _heatmap_edges(Val(xscale === :identity), x, xscale, isedges, false),
-        _heatmap_edges(Val(yscale === :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
+        _heatmap_edges(Val(xscale ≡ :identity), x, xscale, isedges, false),
+        _heatmap_edges(Val(yscale ≡ :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
     )
 end
 
@@ -287,10 +287,10 @@ ticks_type(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_l
 ticks_type(ticks) = :invalid
 
 limsType(lims::Tuple{<:Real,<:Real}) = :limits
-limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
+limsType(lims::Symbol) = lims ≡ :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
-isautop(sp::Subplot) = sp[:projection_type] === :auto
+isautop(sp::Subplot) = sp[:projection_type] ≡ :auto
 isortho(sp::Subplot) = sp[:projection_type] ∈ (:ortho, :orthographic)
 ispersp(sp::Subplot) = sp[:projection_type] ∈ (:persp, :perspective)
 
@@ -305,7 +305,7 @@ nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b); nothing)
 function nansplit(v::AVec)
     vs = Vector{eltype(v)}[]
     while true
-        if (idx = findfirst(isnan, v)) === nothing
+        if (idx = findfirst(isnan, v)) ≡ nothing
             # no nans
             push!(vs, v)
             break
@@ -339,7 +339,7 @@ function make_fillrange_from_ribbon(kw::AKW)
     rib1, rib2 = -first(rib), last(rib)
     # kw[:ribbon] = nothing
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
-    (get(kw, :fillalpha, nothing) === nothing) && (kw[:fillalpha] = 0.5)
+    (get(kw, :fillalpha, nothing) ≡ nothing) && (kw[:fillalpha] = 0.5)
 end
 
 #turn tuple of fillranges to one path
@@ -407,7 +407,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         xformatter = get(plotattributes, :xformatter, :auto)
         yformatter = get(plotattributes, :yformatter, :auto)
         yformatter !== :auto && (plotattributes[:xformatter] = yformatter)
-        xformatter === :auto &&
+        xformatter ≡ :auto &&
             haskey(plotattributes, :yformatter) &&
             pop!(plotattributes, :yformatter)
     end
@@ -515,7 +515,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     if haskey(plotattributes, :markershape)
         plotattributes[:markershape] =
             Commons._replace_markershape(plotattributes[:markershape])
-        if plotattributes[:markershape] === :none &&
+        if plotattributes[:markershape] ≡ :none &&
            get(plotattributes, :seriestype, :path) in
            (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
             plotattributes[:markershape] = :circle
@@ -947,7 +947,7 @@ Computes the distances of the plot limits to a sample of points at the extremes 
 the ranges, and places the legend at the corner where the maximum distance to the limits is found.
 """
 function _guess_best_legend_position(lp::Symbol, plt)
-    lp === :best || return lp
+    lp ≡ :best || return lp
     _guess_best_legend_position(xlims(plt), ylims(plt), plt)
 end
 
