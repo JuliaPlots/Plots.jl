@@ -38,24 +38,24 @@ is_ci() = PlotsBase.bool_env("CI")
 is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 for name in (
-    # "quality",
-    # "misc",
-    # "utils",
-    # "args",
-    # "defaults",
-    # "dates",
-    # "axes",
-    # "layouts",
-    # "contours",
-    # "components",
-    # "shorthands",
-    # "recipes",
-    # "unitful",
-    # "hdf5plots",  # broken ?
-    # "pgfplotsx",
-    # "plotly",
-    # "animations",
-    # "output",
+    "quality",
+    "misc",
+    "utils",
+    "args",
+    "defaults",
+    "dates",
+    "axes",
+    "layouts",
+    "contours",
+    "components",
+    "shorthands",
+    "recipes",
+    "unitful",
+    "hdf5plots",  # broken ?
+    "pgfplotsx",
+    "plotly",
+    "animations",
+    "output",
     "backends",
 )
     @testset "$name" begin
