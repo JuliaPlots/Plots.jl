@@ -7,6 +7,7 @@
         stale_deps = (;
             ignore = [:CondaPkg, :Contour, :UnitfulLatexify, :LaTeXStrings, :Latexify]
         ),
+        persistent_tasks = false,
         ambiguities = false,
         deps_compat = false,  # FIXME: fails `CondaPkg`
         piracies = false,

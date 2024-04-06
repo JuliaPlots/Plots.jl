@@ -100,6 +100,7 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
             cmd=(xvfb-run ${cmd[@]})
           fi
+          echo ${cmd[@]}
           ${cmd[@]} -e '
             using Pkg
             foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
