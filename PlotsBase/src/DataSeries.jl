@@ -317,6 +317,8 @@ end
 
 end  # module
 
+# -------------------------------------------------------------------
+
 using .DataSeries
 
 # TODO: consider removing

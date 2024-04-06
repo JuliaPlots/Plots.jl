@@ -140,7 +140,6 @@ Commons.@generic_functions attr attr! rotate rotate!
 
 # ---------------------------------------------------------
 include("Fonts.jl")
-@reexport using .Fonts
 include("Ticks.jl")
 include("DataSeries.jl")
 include("Subplots.jl")

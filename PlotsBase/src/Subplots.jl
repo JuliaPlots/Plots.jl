@@ -10,10 +10,11 @@ export Subplot,
 import PlotsBase
 
 import ..Commons: BoundingBox, convert_legend_value, like_surface
-using ..RecipesPipeline: RecipesPipeline, Surface, Volume, DefaultsDict
-using ..RecipesBase: AbstractLayout, AbstractBackend
-using ..PlotUtils: get_color_palette
-using ..DataSeries: Series
+import ..RecipesPipeline: RecipesPipeline, Surface, Volume, DefaultsDict
+import ..RecipesBase: AbstractLayout, AbstractBackend
+import ..PlotUtils: get_color_palette
+import ..DataSeries: Series
+
 using ..Commons.Frontend
 using ..Commons
 using ..Fonts

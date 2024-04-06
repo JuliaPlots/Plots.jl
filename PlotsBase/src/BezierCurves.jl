@@ -21,4 +21,6 @@ PlotsBase.coords(curve::BezierCurve, n::Integer = 30; range = [0, 1]) =
 
 end  # module
 
+# -------------------------------------------------------------------
+
 using .BezierCurves

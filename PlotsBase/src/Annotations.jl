@@ -251,6 +251,8 @@ locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
 locate_annotation(sp::Subplot, pos::Symbol, label::PlotText) =
     locate_annotation(sp, position_multiplier[pos], label)
 
-end # Annotations
+end  # module
+
+# -------------------------------------------------------------------
 
 using .Annotations

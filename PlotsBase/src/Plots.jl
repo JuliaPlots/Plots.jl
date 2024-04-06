@@ -2,26 +2,20 @@ module Plots
 
 export Plot,
     PlotOrSubplot,
-    _update_plot_attrs,
     plottitlefont,
     ignorenan_extrema,
-    protect,
-    InputWrapper
+    _update_plot_attrs,
+    InputWrapper,
+    protect
 
-using PlotsBase:
-    PlotsBase,
-    AbstractPlot,
-    AbstractBackend,
-    DefaultsDict,
-    Series,
-    AbstractLayout,
-    RecipesPipeline
-
+import ..RecipesBase: AbstractLayout, AbstractBackend, AbstractPlot
+import ..RecipesPipeline: RecipesPipeline, DefaultsDict
 import ..Subplots: Subplot, _update_subplot_colors, _update_margins
 import ..Colorbars: _update_subplot_colorbars
 import ..Commons: ignorenan_extrema, _cycle
 
 using ..PlotUtils
+using ..DataSeries
 using ..Commons.Frontend
 using ..Commons
 using ..Fonts
@@ -29,6 +23,7 @@ using ..Ticks
 using ..Axes
 
 const SubplotMap = Dict{Any,Subplot}
+
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
     n::Int                       # number of series
@@ -70,7 +65,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         push!(plt.subplots, sp)
         plt
     end
-end # Plot
+end
 
 const PlotOrSubplot = Union{Plot,Subplot}
 # -----------------------------------------------------------
@@ -139,16 +134,16 @@ end
 
 # ---------------------------------------------------------------
 
-"Smallest x in plot"
+"smallest x in plot"
 xmin(plt::Plot) = ignorenan_minimum([
     ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
 ])
-"Largest x in plot"
+"largest x in plot"
 xmax(plt::Plot) = ignorenan_maximum([
     ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list
 ])
 
-"Extrema of x-values in plot"
+"extrema of x-values in plot"
 ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 
 # ---------------------------------------------------------------
@@ -184,7 +179,7 @@ Commons.series_list(plt::Plot) = plt.series_list
 Commons.get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
 
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x ≡ sp, plt.subplots)
-PlotsBase.RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
+RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Commons.preprocess_attributes!(plotattributes)
 
 plottitlefont(p::Plot) = font(;
