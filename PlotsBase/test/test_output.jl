@@ -81,7 +81,7 @@ if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
     end
 end
 
-with(:gaston) do
+Sys.islinux() && with(:gaston) do
     @test_save :png
     @test_save :pdf
     @test_save :eps
