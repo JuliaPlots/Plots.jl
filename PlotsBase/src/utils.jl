@@ -578,33 +578,31 @@ end
 ```
 """
 function with(f::Function, args...; scalefonts = nothing, kw...)
-    newdefs = KW(kw)
+    new_defs = KW(kw)
 
     if :canvas in args
-        newdefs[:xticks] = nothing
-        newdefs[:yticks] = nothing
-        newdefs[:grid] = false
-        newdefs[:legend_position] = false
+        new_defs[:xticks] = nothing
+        new_defs[:yticks] = nothing
+        new_defs[:grid] = false
+        new_defs[:legend_position] = false
     end
 
     # dict to store old and new keyword args for anything that changes
-    olddefs = KW()
-    for k in keys(newdefs)
-        olddefs[k] = default(k)
+    old_defs = KW()
+    for k in keys(new_defs)
+        old_defs[k] = default(k)
     end
 
     # save the backend
-    oldbackend = CURRENT_BACKEND.sym
+    old_backend = CURRENT_BACKEND.sym
 
     for arg in args
-        # change backend?
-        if arg isa Symbol
-            if arg ∈ backends()
-                if (pkg = backend_package_name(arg)) ≢ nothing  # :plotly
-                    @eval Main import $pkg
-                end
-                backend(arg)
+        # change backend ?
+        arg isa Symbol && if arg ∈ backends()
+            if (pkg = backend_package_name(arg)) ≢ nothing  # :plotly
+                @eval Main import $pkg
             end
+            Base.invokelatest(backend, arg)
         end
 
         # TODO: generalize this strategy to allow args as much as possible
@@ -613,19 +611,19 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
 
         k = :legend
         if arg in (k, :leg)
-            olddefs[k] = default(k)
-            newdefs[k] = true
+            old_defs[k] = default(k)
+            new_defs[k] = true
         end
 
         k = :grid
         if arg == k
-            olddefs[k] = default(k)
-            newdefs[k] = true
+            old_defs[k] = default(k)
+            new_defs[k] = true
         end
     end
 
     # now set all those defaults
-    default(; newdefs...)
+    default(; new_defs...)
     scalefonts ≡ nothing || scalefontsizes(scalefonts)
 
     # call the function
@@ -633,10 +631,10 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
 
     # put the defaults back
     scalefonts ≡ nothing || resetfontsizes()
-    default(; olddefs...)
+    default(; old_defs...)
 
     # revert the backend
-    CURRENT_BACKEND.sym != oldbackend && backend(oldbackend)
+    CURRENT_BACKEND.sym != old_backend && backend(old_backend)
 
     # return the result of the function
     ret

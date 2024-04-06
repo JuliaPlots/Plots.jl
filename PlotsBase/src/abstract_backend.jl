@@ -80,13 +80,17 @@ initialized(sym::Symbol) = sym ∈ _initialized_backends
 "set the plot backend."
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
-    CURRENT_BACKEND.sym = sym
-    CURRENT_BACKEND.pkg = pkg
+    if sym ∈ _supported_backends
+        CURRENT_BACKEND.sym = sym
+        CURRENT_BACKEND.pkg = pkg
+    else
+        @error "Unsupported backend $sym"
+    end
     pkg
 end
 
 backend(sym::Symbol) =
-    if sym in _supported_backends
+    if sym ∈ _supported_backends
         if initialized(sym)
             backend(backend_type(sym))
         else

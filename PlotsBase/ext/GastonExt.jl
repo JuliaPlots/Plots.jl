@@ -5,10 +5,13 @@ import PlotUtils
 import PlotsBase
 import Gaston
 
+using PlotsBase.Annotations
 using PlotsBase.DataSeries
 using PlotsBase.Colorbars
+using PlotsBase.Surfaces
 using PlotsBase.Subplots
 using PlotsBase.Commons
+using PlotsBase.Colors
 using PlotsBase.Plots
 using PlotsBase.Ticks
 using PlotsBase.Fonts

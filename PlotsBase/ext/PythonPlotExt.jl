@@ -15,11 +15,11 @@ const numpy = PythonCall.pynew()
 using PlotUtils
 
 import PlotsBase
-import RecipesPipeline: Surface
 
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
 using PlotsBase.Colorbars
+using PlotsBase.Surfaces
 using PlotsBase.Subplots
 using PlotsBase.Commons
 using PlotsBase.Colors

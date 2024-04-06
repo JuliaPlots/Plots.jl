@@ -2,12 +2,12 @@ struct NoBackend <: AbstractBackend end
 
 backend_name(::NoBackend) = :none
 
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
+for sym in (:attr, :seriestype, :marker, :style, :scale)
+    f1 = Symbol("is_$(sym)_supported")
+    f2 = Symbol("supported_$(sym)s")
     @eval begin
-        $f1(::NoBackend, $s::Symbol) = true
-        $f2(::NoBackend) = $(getproperty(Commons, Symbol("_all_", s, 's')))
+        $f1(::NoBackend, $sym::Symbol) = true
+        $f2(::NoBackend) = $(getproperty(Commons, Symbol("_all_$(sym)s")))
     end
 end
 

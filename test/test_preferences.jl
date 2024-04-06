@@ -27,6 +27,7 @@ end
     :test_invalid_backend,
 )
 
+const DEBUG = false
 @testset "persistent backend - restart" begin
     # this test mimics a restart, which is needed after a preferences change
     Plots.set_default_backend!(:unicodeplots)
@@ -48,6 +49,7 @@ end
         exit(res.n_passed == 2 ? 0 : 123)
         """,
     )
+    DEBUG && print(read(script, String))
     @test run(```$(Base.julia_cmd()) $script```) |> success
 end
 
@@ -72,6 +74,7 @@ is_pkgeval() || for pkg in TEST_PACKAGES
         exit(res.n_passed == 1 ? 0 : 123)
         """,
     )
+    DEBUG && print(read(script, String))
     @test run(```$(Base.julia_cmd()) $script```) |> success  # test default precompilation
 end
 

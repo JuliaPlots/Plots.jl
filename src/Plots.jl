@@ -26,7 +26,7 @@ end
 function default_backend()
     # environment variable preempts the `Preferences` based mechanism
     sym = get(ENV, "PLOTS_DEFAULT_BACKEND", PLOTS_DEFAULT_BACKEND) |> lowercase |> Symbol
-    PlotsBase.backend(sym)
+    backend(PlotsBase.backend_type(sym))
 end
 
 function set_default_backend!(
@@ -68,56 +68,76 @@ function diagnostics(io::IO = stdout)
 end
 
 # COV_EXCL_START
-@setup_workload begin
-    default_backend()
-    @debug PlotsBase.backend_package_name()
-    n = length(PlotsBase._examples)
-    imports = sizehint!(Expr[], n)
-    examples = sizehint!(Expr[], 10n)
-    scratch_dir = mktempdir()
-    for i in setdiff(
-        1:n,
-        PlotsBase._backend_skips[backend_name()],
-        PlotsBase._animation_examples,
-    )
-        PlotsBase._examples[i].external && continue
-        (imp = PlotsBase._examples[i].imports) ≡ nothing ||
-            push!(imports, PlotsBase.replace_module(imp))
-        func = gensym(string(i))
-        push!(
-            examples,
-            quote
-                $func() = begin  # evaluate each example in a local scope
-                    $(PlotsBase._examples[i].exprs)
-                    $i == 1 || return  # only for one example
-                    fn = joinpath(scratch_dir, tempname())
-                    pl = current()
-                    show(devnull, pl)
-                    # FIXME: pgfplotsx requires bug
-                    backend_name() ≡ :pgfplotsx && return
-                    if backend_name() ≡ :unicodeplots
-                        savefig(pl, "$fn.txt")
-                        return
-                    end
-                    showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
-                    showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
-                    if showable(MIME"image/svg+xml"(), pl)
-                        show(IOBuffer(), MIME"image/svg+xml"(), pl)
-                    end
-                    nothing
-                end
-                $func()
-            end,
-        )
-    end
-    withenv("GKSwstype" => "nul") do
-        @compile_workload begin
-            default_backend()
-            eval.(imports)
-            eval.(examples)
+# FIXME: Creating a new global in closed module `Main` (`UnicodePlots`) breaks incremental compilation because the side effects will not be permanent.
+if PLOTS_DEFAULT_BACKEND == "gr"
+    @setup_workload begin
+        #=
+        if PLOTS_DEFAULT_BACKEND == "gr"
+            import GR
+        elseif PLOTS_DEFAULT_BACKEND == "unicodeplots"
+            @eval Main import UnicodePlots
+        elseif PLOTS_DEFAULT_BACKEND == "pythonplot"
+            @eval Main import PythonPlot
+        elseif PLOTS_DEFAULT_BACKEND == "pgfplotsx"
+            @eval Main import PGFPlotsX
+        elseif PLOTS_DEFAULT_BACKEND == "plotlyjs"
+            @eval Main import PlotlyJS
+        elseif PLOTS_DEFAULT_BACKEND == "gaston"
+            @eval Main import Gaston
+        elseif PLOTS_DEFAULT_BACKEND == "hdf5"
+            @eval Main import HDF5
         end
+        =#
+        default_backend()
+        @debug PlotsBase.backend_package_name()
+        n = length(PlotsBase._examples)
+        imports = sizehint!(Expr[], n)
+        examples = sizehint!(Expr[], 10n)
+        scratch_dir = mktempdir()
+        for i in setdiff(
+            1:n,
+            PlotsBase._backend_skips[backend_name()],
+            PlotsBase._animation_examples,
+        )
+            PlotsBase._examples[i].external && continue
+            (imp = PlotsBase._examples[i].imports) ≡ nothing ||
+                push!(imports, PlotsBase.replace_module(imp))
+            func = gensym(string(i))
+            push!(
+                examples,
+                quote
+                    $func() = begin  # evaluate each example in a local scope
+                        $(PlotsBase._examples[i].exprs)
+                        $i == 1 || return  # only for one example
+                        fn = joinpath(scratch_dir, tempname())
+                        pl = current()
+                        show(devnull, pl)
+                        # FIXME: pgfplotsx requires bug
+                        backend_name() ≡ :pgfplotsx && return
+                        if backend_name() ≡ :unicodeplots
+                            savefig(pl, "$fn.txt")
+                            return
+                        end
+                        showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
+                        showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
+                        if showable(MIME"image/svg+xml"(), pl)
+                            show(IOBuffer(), MIME"image/svg+xml"(), pl)
+                        end
+                        nothing
+                    end
+                    $func()
+                end,
+            )
+        end
+        withenv("GKSwstype" => "nul") do
+            @compile_workload begin
+                default_backend()
+                eval.(imports)
+                eval.(examples)
+            end
+        end
+        PlotsBase.CURRENT_PLOT.nullableplot = nothing
     end
-    PlotsBase.CURRENT_PLOT.nullableplot = nothing
 end
 # COV_EXCL_STOP
 

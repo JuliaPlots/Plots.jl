@@ -1,5 +1,5 @@
 const TEST_PACKAGES =
-    let val = get(ENV, "PLOTSBASE_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot")
+    let val = get(ENV, "PLOTS_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot")
         strip.(split(val, ","))
     end
 using PlotsBase

@@ -1,5 +1,5 @@
 
-# NOTE:  backend should implement `html_body` and `html_head`
+# NOTE: backend should implement `html_body` and `html_head`
 
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
 
