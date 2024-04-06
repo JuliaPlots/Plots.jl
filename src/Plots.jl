@@ -26,7 +26,7 @@ end
 function default_backend()
     # environment variable preempts the `Preferences` based mechanism
     sym = get(ENV, "PLOTS_DEFAULT_BACKEND", PLOTS_DEFAULT_BACKEND) |> lowercase |> Symbol
-    PlotsBase.backend(PlotsBase.backend_type(sym))
+    PlotsBase.backend(sym)
 end
 
 function set_default_backend!(

@@ -37,6 +37,7 @@ import RecipesPipeline:
 import UnicodeFun
 import StatsBase
 import Downloads
+import Measures
 import Showoff
 import Unzip
 import JLFzf

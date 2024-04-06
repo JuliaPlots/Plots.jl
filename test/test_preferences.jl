@@ -27,7 +27,7 @@ end
     :test_invalid_backend,
 )
 
-@testset "persistent backend" begin
+@testset "persistent backend - restart" begin
     # this test mimics a restart, which is needed after a preferences change
     Plots.set_default_backend!(:unicodeplots)
     script = tempname()
@@ -40,6 +40,7 @@ end
         Pkg.add("UnicodePlots"; io)  # checked by Plots
         import UnicodePlots
         using Plots
+        unicodeplots()
         res = @testset "Preferences UnicodePlots" begin
             @test_logs (:info, r".*Preferences") Plots.diagnostics(io)
             @test backend() == Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlotsBackend()
@@ -47,13 +48,15 @@ end
         exit(res.n_passed == 2 ? 0 : 123)
         """,
     )
-    @test success(run(```$(Base.julia_cmd()) $script```))
+    @test run(```$(Base.julia_cmd()) $script```) |> success
 end
 
 is_pkgeval() || for pkg in TEST_PACKAGES
     be = Symbol(lowercase(pkg))
-    (Sys.isapple() && be ≡ :gaston) && continue  # FIXME: hangs
-    (Sys.iswindows() && be ≡ :plotlyjs && is_ci()) && continue  # FIXME: OutOfMemory
+    if is_ci()
+        (Sys.isapple() && be ≡ :gaston) && continue  # FIXME: hangs
+        (Sys.iswindows() && be ≡ :plotlyjs) && continue  # FIXME: OutOfMemory
+    end
     @test_logs Plots.set_default_backend!(be)  # test the absence of warnings
     rm.(Base.find_all_in_cache_path(Base.module_keys[Plots]))  # make sure the compiled cache is removed
     script = tempname()
@@ -69,7 +72,7 @@ is_pkgeval() || for pkg in TEST_PACKAGES
         exit(res.n_passed == 1 ? 0 : 123)
         """,
     )
-    @test success(run(```$(Base.julia_cmd()) $script```))  # test default precompilation
+    @test run(```$(Base.julia_cmd()) $script```) |> success  # test default precompilation
 end
 
 Plots.set_default_backend!()  # clear `Preferences` key
