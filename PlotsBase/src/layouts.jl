@@ -20,8 +20,8 @@ update_child_bboxes!(
 ) = nothing
 
 # pass these through to the bbox methods if there's no plotarea
-plotarea(layout::AbstractLayout) = bbox(layout)
-plotarea!(layout::AbstractLayout, bb::BoundingBox) = bbox!(layout, bb)
+Commons.plotarea(layout::AbstractLayout) = bbox(layout)
+Commons.plotarea!(layout::AbstractLayout, bb::BoundingBox) = bbox!(layout, bb)
 
 _update_min_padding!(layout::EmptyLayout) = nothing
 _update_inset_padding!(layout::EmptyLayout) = nothing

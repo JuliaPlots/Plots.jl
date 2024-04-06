@@ -39,7 +39,7 @@ export anynan,
 export istuple, isvector, ismatrix, isscalar, is_2tuple
 export default, wraptuple, merge_with_base_supported
 
-export px, pct
+export px, pct, plotarea, plotarea!
 export width, height, leftpad, toppad, bottompad, rightpad
 export origin, left, right, bottom, top, bbox, bbox!
 export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
@@ -113,6 +113,7 @@ end
 
 @generic_functions width height leftpad toppad bottompad rightpad
 @generic_functions origin left right bottom top
+@generic_functions plotarea plotarea!
 
 include("measures.jl")
 

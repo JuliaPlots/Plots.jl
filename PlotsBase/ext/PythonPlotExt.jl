@@ -39,7 +39,6 @@ function PlotsBase.extension_init(::PythonPlotBackend)
         integration update your Matplotlib library to a version ≥ 3.4.0
         """
     end
-    PythonCall.pycopy!(mpl, PythonCall.pyimport("matplotlib"))
     PythonCall.pycopy!(mpl_toolkits, PythonCall.pyimport("mpl_toolkits"))
     PythonCall.pycopy!(numpy, PythonCall.pyimport("numpy"))
     PythonCall.pyimport("mpl_toolkits.axes_grid1")

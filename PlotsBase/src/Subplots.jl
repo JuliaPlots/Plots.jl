@@ -6,21 +6,14 @@ export Subplot,
     legendtitlefont,
     titlefont,
     get_series_color,
-    needs_any_3d_axes,
-    plotarea,
-    plotarea!
-using PlotsBase:
-    PlotsBase,
-    RecipesPipeline,
-    Series,
-    AbstractBackend,
-    AbstractLayout,
-    BoundingBox,
-    DefaultsDict
+    needs_any_3d_axes
+import PlotsBase
 
-import ..Commons: convert_legend_value, like_surface
-using ..RecipesPipeline: RecipesPipeline, Surface, Volume
+import ..Commons: BoundingBox, convert_legend_value, like_surface
+using ..RecipesPipeline: RecipesPipeline, Surface, Volume, DefaultsDict
+using ..RecipesBase: AbstractLayout, AbstractBackend
 using ..PlotUtils: get_color_palette
+using ..DataSeries: Series
 using ..Commons.Frontend
 using ..Commons
 using ..Fonts
@@ -78,15 +71,15 @@ Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
 
 Return the bounding box of a subplot.
 """
-plotarea(sp::Subplot) = sp.plotarea
-plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
+Commons.plotarea(sp::Subplot) = sp.plotarea
+Commons.plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
 
 Base.size(sp::Subplot) = (1, 1)
 Base.length(sp::Subplot) = 1
 Base.getindex(sp::Subplot, r::Int, c::Int) = sp
 
+RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 PlotsBase.series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] ≡ sp, sp.plt.series_list)
-PlotsBase.RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 PlotsBase.ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
 
 Commons.get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])

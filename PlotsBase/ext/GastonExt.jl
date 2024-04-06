@@ -320,7 +320,6 @@ function gaston_multiplot_pos_size!(dat)
             sp.o ≡ nothing && continue
             # gnuplot screen coordinates: bottom left at 0,0 and top right at 1,1
             gx, gy = x, 1 - y - h
-            # @show gx, gy w, h
             sp.o.axesconf = "set origin $gx, $gy; set size $w, $h; " * sp.o.axesconf
         end
     end

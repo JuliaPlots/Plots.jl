@@ -1188,7 +1188,6 @@ function gr_add_legend(sp, leg, viewport_area)
     legend_rows, legend_cols = leg.column_layout
     if leg.w > 0 || leg.h > 0
         xpos, ypos = gr_legend_pos(sp, leg, viewport_area)  # position between the legend line and text (see ref(1))
-        #@show vertical leg.w leg.h leg.pad leg.span leg.entries (legend_rows, legend_cols) (xpos, ypos) leg.dx leg.dy leg.textw leg.texth
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
         gr_set_fillcolor(sp[:legend_background_color])
         # ymax
