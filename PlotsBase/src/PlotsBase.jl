@@ -120,25 +120,16 @@ export
 #! format: on
 import NaNMath
 
-macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
-    import_ex = Expr(
-        :import,
-        Expr(
-            :(:),
-            Expr(:., :., :., parent),
-            (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
-        ),
-    )
-    export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
-    Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
-end
+const _plots_project         = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
+const _current_plots_version = _plots_project.version
+const _plots_compats         = _plots_project.compat
+
 include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
 
 Commons.@generic_functions attr attr! rotate rotate!
 
-# ---------------------------------------------------------
 include("Fonts.jl")
 include("Ticks.jl")
 include("DataSeries.jl")
@@ -147,7 +138,6 @@ include("Axes.jl")
 include("Surfaces.jl")
 include("Colorbars.jl")
 include("Plots.jl")
-# ---------------------------------------------------------
 include("layouts.jl")
 include("utils.jl")
 include("axes_utils.jl")
@@ -165,16 +155,12 @@ include("recipes.jl")
 include("animation.jl")
 include("examples.jl")
 include("plotattr.jl")
-
-include("backends/nobackend.jl")
-include("abstract_backend.jl")
-const CURRENT_BACKEND = CurrentBackend(:none)
-
 include("alignment.jl")
 include("output.jl")
 include("shorthands.jl")
-include("backends/web.jl")
-include("backends/plotly.jl")
+include("backends.jl")
+include("web.jl")
+include("plotly.jl")
 include("init.jl")
 include("users.jl")
 

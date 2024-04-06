@@ -162,8 +162,21 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     st
 end
 
-"These should only be needed in frontend modules"
-PlotsBase.@ScopeModule(
+macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
+    import_ex = Expr(
+        :import,
+        Expr(
+            :(:),
+            Expr(:., :., :., parent),
+            (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
+        ),
+    )
+    export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
+    Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
+end
+
+"these should only be needed in frontend modules"
+@ScopeModule(
     Frontend,
     Commons,
     _subplot_defaults,

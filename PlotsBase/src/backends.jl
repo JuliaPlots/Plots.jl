@@ -1,16 +1,24 @@
-const _plots_project         = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
-const _current_plots_version = _plots_project.version
-const _plots_compats         = _plots_project.compat
+struct NoBackend <: AbstractBackend end
+
+backend_name(::NoBackend) = :none
+
+for sym in (:attr, :seriestype, :marker, :style, :scale)
+    f1 = Symbol("is_$(sym)_supported")
+    f2 = Symbol("supported_$(sym)s")
+    @eval begin
+        $f1(::NoBackend, $sym::Symbol) = true
+        $f2(::NoBackend) = $(getproperty(Commons, Symbol("_all_$(sym)s")))
+    end
+end
+
+_display(::Plot{NoBackend}) =
+    @info "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
 
 const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
 const _backend_packages     = (gaston = :Gaston, gr = :GR, unicodeplots = :UnicodePlots, pgfplotsx = :PGFPlotsX, pythonplot = :PythonPlot, plotly = nothing, plotlyjs = :PlotlyJS, hdf5 = :HDF5)
 const _initialized_backends = Set{Symbol}()
 const _supported_backends   = keys(_backend_packages)
-
-const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
-    merge(toml["deps"], toml["extras"])
-end
 
 function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = true)
     sym = Symbol(lowercase(string(backend)))
@@ -55,6 +63,10 @@ mutable struct CurrentBackend
     pkg::AbstractBackend
 end
 
+@inline backend_type(sym::Symbol) = get(_backendType, sym, NoBackend)
+@inline backend_instance(sym::Symbol) = backend_type(sym)()
+@inline backend(type::Type{<:AbstractBackend}) = backend(type())
+
 CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend_instance(sym))
 
 "returns the current plotting package name. Initializes package on first call."
@@ -63,12 +75,11 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend_instance(sym))
 "returns a list of supported backends."
 @inline backends() = _supported_backends
 
-@inline backend_name() = CURRENT_BACKEND.sym
-@inline backend_type(sym::Symbol) = get(_backendType, sym, NoBackend)
-@inline backend_instance(sym::Symbol) = backend_type(sym)()
-@inline backend(type::Type{<:AbstractBackend}) = backend(type())
 
-backend_package_name(sym::Symbol = backend_name()) = get(_backend_packages, sym, nothing)
+const CURRENT_BACKEND = CurrentBackend(:none)
+
+@inline backend_name() = CURRENT_BACKEND.sym
+@inline backend_package_name(sym::Symbol = backend_name()) = get(_backend_packages, sym, nothing)
 
 # Traits to be implemented by the extensions
 backend_name(::AbstractBackend) = @info "`backend_name(::Backend) not implemented."

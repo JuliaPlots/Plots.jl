@@ -32,12 +32,16 @@ const DEBUG = false
     # this test mimics a restart, which is needed after a preferences change
     Plots.set_default_backend!(:unicodeplots)
     script = tempname()
+    plots_dir = escape_string(pkgdir(Plots))
     write(
         script,
         """
         using Pkg, Test; io = (devnull, stdout)[1]  # toggle for debugging
         Pkg.activate(; temp = true, io)
-        Pkg.develop(; path = "$(escape_string(pkgdir(Plots)))", io)
+        Pkg.develop(; path = "$(joinpath(plots_dir, "RecipesBase"))", io)
+        Pkg.develop(; path = "$(joinpath(plots_dir, "RecipesPipeline"))", io)
+        Pkg.develop(; path = "$(joinpath(plots_dir, "PlotsBase"))", io)
+        Pkg.develop(; path = "$plots_dir", io)
         Pkg.add("UnicodePlots"; io)  # checked by Plots
         import UnicodePlots
         using Plots
