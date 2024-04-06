@@ -37,11 +37,9 @@ jobs:
         include:
           - os: ubuntu-latest
             experimental: true
-            prefix: xvfb-run
             version: '~1.11.0-0'  # upcoming julia version (`alpha`, `beta` or `rc`)
           - os: ubuntu-latest
             experimental: true
-            prefix: xvfb-run
             version: 'nightly'
 
     steps:
@@ -63,11 +61,11 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v1
 
-      - name: Develop upstream RecipesBase, RecipesPipeline, PlotsBase
+      - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase"))
+          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
 
       # - uses: julia-actions/julia-buildpkg@latest
 
@@ -95,16 +93,17 @@ jobs:
           CondaPkg.PkgREPL.add([libgcc..., "matplotlib"])
           CondaPkg.status()
 
-      - name: Run upstream RecipesBase, RecipesPipeline, PlotsBase tests
-        shell: julia --color=yes {0}
-        run: |
-          using Pkg
-          foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase"))
-
-      - uses: julia-actions/julia-runtest@latest
+      - name: Run RecipesBase, RecipesPipeline, PlotsBase, Plots tests
         timeout-minutes: 60
-        with:
-          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
+        run: |
+          cmd=(julia --color=yes)
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            cmd=(xvfb-run ${cmd[@]})
+          fi
+          ${cmd[@]} -e '
+            using Pkg
+            foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
+          '
 
       - name: Run downstream tests
         if: startsWith(matrix.os, 'ubuntu')
@@ -113,7 +112,7 @@ jobs:
           using Pkg
           foreach(("StatsPlots", "GraphRecipes")) do name
             Pkg.activate(tempdir())
-            foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "./"))
+            foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
             Pkg.add(name); Pkg.test(name; coverage=true)
           end
 
