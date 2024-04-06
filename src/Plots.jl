@@ -129,7 +129,7 @@ if PLOTS_DEFAULT_BACKEND == "gr"
                 end,
             )
         end
-        withenv("GKSwstype" => "nul") do
+        withenv("GKSwstype" => "nul", "MPLBACKEND" => "agg") do
             @compile_workload begin
                 default_backend()
                 eval.(imports)

@@ -13,6 +13,8 @@ using PlotsBase
 import GR
 gr()
 
+get!(ENV, "MPLBACKEND", "agg")
+
 # initialize all backends
 for pkg in TEST_PACKAGES
     @eval import $(Symbol(pkg))  # trigger extension
