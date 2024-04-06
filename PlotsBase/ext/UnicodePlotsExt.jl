@@ -374,11 +374,7 @@ end
 
 # ------------------------------------------------------------------------------------------
 
-function PlotsBase._show(
-    io::IO,
-    ::MIME"image/png",
-    plt::Plot{UnicodePlotsBackend},
-)
+function PlotsBase._show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
     applicable(UnicodePlots.save_image, io) ||
         "PlotsBase(UnicodePlots): saving to `.png` requires `import FreeType, FileIO`" |>
         ArgumentError |>
@@ -428,11 +424,7 @@ Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) =
     PlotsBase._show(io, MIME("text/plain"), plt)
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
-function PlotsBase._show(
-    io::IO,
-    ::MIME"text/plain",
-    plt::Plot{UnicodePlotsBackend},
-)
+function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     PlotsBase.prepare_output(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path

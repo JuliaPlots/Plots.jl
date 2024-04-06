@@ -5,13 +5,7 @@
     Aqua.test_all(
         PlotsBase;
         stale_deps = (;
-            ignore = [
-                :CondaPkg,
-                :Contour,
-                :UnitfulLatexify,
-                :LaTeXStrings,
-                :Latexify,
-            ]
+            ignore = [:CondaPkg, :Contour, :UnitfulLatexify, :LaTeXStrings, :Latexify]
         ),
         ambiguities = false,
         deps_compat = false,  # FIXME: fails `CondaPkg`
