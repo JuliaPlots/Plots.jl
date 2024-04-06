@@ -192,7 +192,7 @@ end
     end
 end
 
-is_pkgeval() || @testset "PlotlyJS" begin
+(is_pkgeval() || is_ci()) || @testset "PlotlyJS" begin
     with(:plotlyjs) do
         PlotlyJSExt = Base.get_extension(PlotsBase, :PlotlyJSExt)
         @test backend() == PlotlyJSExt.PlotlyJSBackend()
