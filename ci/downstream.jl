@@ -1,4 +1,4 @@
-using Pkg, Plots, Test
+using Pkg
 
 const LibGit2 = Pkg.GitTools.LibGit2
 const TOML = Pkg.TOML
@@ -35,22 +35,17 @@ failsafe_clone_checkout(path, url) = begin
     nothing
 end
 
+pkg_version(name) =
+    string(Pkg.Types.read_package(normpath(@__DIR__, "..", name, "Project.toml")).version)
+
 fake_supported_version!(path) = begin
     toml = joinpath(path, "Project.toml")
-    # fake the supported Plots version for testing (for `Pkg.develop`)
-    RecipesBase_version =
-        Pkg.Types.read_package(normpath(@__DIR__, "..", "RecipesBase", "Project.toml")).version
-    RecipesPipeline_version =
-        Pkg.Types.read_package(normpath(@__DIR__, "..", "RecipesPipeline", "Project.toml")).version
-    PlotsBase_version =
-        Pkg.Types.read_package(normpath(@__DIR__, "..", "PlotsBase", "Project.toml")).version
-    Plots_version =
-        Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml")).version
+    # fake supported versions for testing (for `Pkg.develop`)
     parsed_toml = TOML.parse(read(toml, String))
-    parsed_toml["compat"]["RecipesBase"] = string(RecipesBase_version)
-    parsed_toml["compat"]["RecipesPipeline"] = string(RecipesPipeline_version)
-    parsed_toml["compat"]["PlotsBase"] = string(PlotsBase_version)
-    parsed_toml["compat"]["Plots"] = string(Plots_version)
+    parsed_toml["compat"]["RecipesBase"] = pkg_version("RecipesBase")
+    parsed_toml["compat"]["RecipesPipeline"] = pkg_version("RecipesPipeline")
+    parsed_toml["compat"]["PlotsBase"] = pkg_version("PlotsBase")
+    parsed_toml["compat"]["Plots"] = pkg_version("Plots")
     open(toml, "w") do io
         TOML.print(io, parsed_toml)
     end
