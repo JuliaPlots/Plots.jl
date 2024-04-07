@@ -17,8 +17,10 @@ get!(ENV, "MPLBACKEND", "agg")
 
 # initialize all backends
 for pkg in TEST_PACKAGES
-    @eval import $(Symbol(pkg))  # trigger extension
-    getproperty(PlotsBase, Symbol(lowercase(pkg)))()
+    @eval begin
+        import $(Symbol(pkg))  # trigger extension
+        $(Symbol(lowercase(pkg)))()
+    end
 end
 
 import Unitful: m, s, cm, DimensionError
