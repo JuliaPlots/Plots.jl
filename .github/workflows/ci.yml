@@ -28,8 +28,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.9' # minimal declared julia compat in `Project.toml`
-          - '1' # latest stable
+          - '1'  # latest stable
+          - '1.9'  # minimal declared julia compat in `Project.toml`
         experimental:
           - false
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -61,32 +61,30 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v1
 
-      - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
-        shell: julia --color=yes {0}
-        run: |
-          using Pkg
-          # foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
-          # Pkg.precompile()
+      # - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
+      #   shell: julia --color=yes {0}
+      #   run: |
+      #     using Pkg
+      #     foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
+      #     Pkg.precompile()
 
-      # - uses: julia-actions/julia-buildpkg@latest
+      # - name: Install conda based matplotlib
+      #   run: julia --color=yes ci/matplotlib.jl
 
-      - name: Install conda based matplotlib
-        run: julia --color=yes ci/matplotlib.jl
+      # - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
+      #   timeout-minutes: 60
+      #   run: |
+      #     cmd=(julia --color=yes)
+      #     if [ "$RUNNER_OS" == "Linux" ]; then
+      #       cmd=(xvfb-run ${cmd[@]})
+      #     fi
+      #     echo ${cmd[@]}
+      #     ${cmd[@]} -e '
+      #       using Pkg
+      #       foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
+      #     '
 
-      - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
-        timeout-minutes: 60
-        run: |
-          cmd=(julia --color=yes)
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            cmd=(xvfb-run ${cmd[@]})
-          fi
-          echo ${cmd[@]}
-          ${cmd[@]} -e '
-            using Pkg
-            # foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
-          '
-
-      - name: Run downstream tests
+      - name: Test downstream packages
         if: startsWith(matrix.os, 'ubuntu')
         run: xvfb-run julia --color=yes ci/downstream.jl
 

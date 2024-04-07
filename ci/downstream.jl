@@ -45,7 +45,7 @@ fake_supported_version!(path) = begin
     parsed_toml["compat"]["RecipesBase"] = pkg_version("RecipesBase")
     parsed_toml["compat"]["RecipesPipeline"] = pkg_version("RecipesPipeline")
     parsed_toml["compat"]["PlotsBase"] = pkg_version("PlotsBase")
-    parsed_toml["compat"]["Plots"] = pkg_version("Plots")
+    parsed_toml["compat"]["Plots"] = pkg_version("")
     open(toml, "w") do io
         TOML.print(io, parsed_toml)
     end
