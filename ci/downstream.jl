@@ -41,7 +41,8 @@ pkg_version(name) =
 fake_supported_version!(path) = begin
     toml = joinpath(path, "Project.toml")
     # fake supported versions for testing (for `Pkg.develop`)
-    compat = TOML.parse(read(toml, String))["compat"]
+    parsed_toml = OML.parse(read(toml, String))
+    compat = parsed_toml["compat"]
     haskey(compat, "RecipesBase") && (compat["RecipesBase"] = pkg_version("RecipesBase"))
     haskey(compat, "RecipesPipeline") && (compat["RecipesPipeline"] = pkg_version("RecipesPipeline"))
     haskey(compat, "PlotsBase") && (compat["PlotsBase"] = pkg_version("PlotsBase"))
