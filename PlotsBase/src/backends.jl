@@ -39,8 +39,7 @@ function _check_installed(pkg::Union{Module,AbstractString,Symbol}; warn = true)
         return
     end
     # check installed
-    pkg_id = Base.identify_package(pkg_str)
-    version = if pkg_id ≡ nothing
+    version = if (pkg_id = Base.identify_package(pkg_str)) ≡ nothing
         nothing
     else
         get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
