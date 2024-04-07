@@ -5,7 +5,7 @@ TOML = Pkg.TOML
 
 failsafe_clone_checkout(path, url) = begin
     local repo
-    for i ∈ 1:6
+    for i in 1:6
         try
             repo = Pkg.GitTools.ensure_clone(stdout, path, url)
             break
@@ -37,7 +37,8 @@ end
 fake_supported_version!(path) = begin
     toml = joinpath(path, "Project.toml")
     # fake the supported Plots version for testing (for `Pkg.develop`)
-    Plots_version = Pkg.Types.read_package(normpath(@__DIR__, ".." "Project.toml")).version
+    Plots_version =
+        Pkg.Types.read_package(normpath(@__DIR__, "..""Project.toml")).version
     parsed_toml = TOML.parse(read(toml, String))
     parsed_toml["compat"]["Plots"] = string(Plots_version)
     open(toml, "w") do io
@@ -50,7 +51,7 @@ test_stable(pkg::String) = begin
     Pkg.activate(tempdir())
     tmpd = mktempdir()
 
-    for dn ∈ ("RecipesBase", "RecipesPipeline", "PlotsBase", "")
+    for dn in ("RecipesBase", "RecipesPipeline", "PlotsBase", "")
         Pkg.develop(; path = joinpath(@__DIR__, "..", dn))
     end
 
