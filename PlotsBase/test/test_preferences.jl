@@ -48,7 +48,7 @@ const DEBUG = false
         import UnicodePlots
         using PlotsBase
         unicodeplots()
-        res = @testset "Preferences UnicodePlots" begin
+        res = @testset "[subtest] preferences UnicodePlots" begin
             @test_logs (:info, r".*Preferences") PlotsBase.diagnostics(io)
             @test backend() == Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlotsBackend()
         end
@@ -60,28 +60,30 @@ const DEBUG = false
 end
 
 is_pkgeval() || for pkg in TEST_PACKAGES
-    be = TEST_BACKENDS[pkg]
-    if is_ci()
-        (Sys.isapple() && be ≡ :gaston) && continue  # FIXME: hangs
-        (Sys.iswindows() && be ≡ :plotlyjs) && continue  # FIXME: OutOfMemory
-    end
-    @test_logs PlotsBase.set_default_backend!(be)  # test the absence of warnings
-    rm.(Base.find_all_in_cache_path(Base.module_keys[PlotsBase]))  # make sure the compiled cache is removed
-    script = tempname()
-    write(
-        script,
-        """
-        import $pkg
-        using Test, PlotsBase
-        $be()
-        res = @testset "Persistent backend $pkg" begin
-            @test PlotsBase.backend_name() ≡ :$be
+    @testset "persistent backend $pkg" begin
+        be = TEST_BACKENDS[pkg]
+        if is_ci()
+            (Sys.isapple() && be ≡ :gaston) && continue  # FIXME: hangs
+            (Sys.iswindows() && be ≡ :plotlyjs) && continue  # FIXME: OutOfMemory
         end
-        exit(res.n_passed == 1 ? 0 : 123)
-        """,
-    )
-    DEBUG && print(read(script, String))
-    @test run(```$(Base.julia_cmd()) $script```) |> success  # test default precompilation
+        @test_logs PlotsBase.set_default_backend!(be)  # test the absence of warnings
+        rm.(Base.find_all_in_cache_path(Base.module_keys[PlotsBase]))  # make sure the compiled cache is removed
+        script = tempname()
+        write(
+            script,
+            """
+            import $pkg
+            using Test, PlotsBase
+            $be()
+            res = @testset "[subtest] persistent backend $pkg" begin
+                @test PlotsBase.backend_name() ≡ :$be
+            end
+            exit(res.n_passed == 1 ? 0 : 123)
+            """,
+        )
+        DEBUG && print(read(script, String))
+        @test run(```$(Base.julia_cmd()) $script```) |> success  # test default precompilation
+    end
 end
 
 PlotsBase.set_default_backend!()  # clear `Preferences` key
