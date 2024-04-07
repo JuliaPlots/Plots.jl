@@ -41,11 +41,11 @@ pkg_version(name) =
 fake_supported_version!(path) = begin
     toml = joinpath(path, "Project.toml")
     # fake supported versions for testing (for `Pkg.develop`)
-    parsed_toml = TOML.parse(read(toml, String))
-    parsed_toml["compat"]["RecipesBase"] = pkg_version("RecipesBase")
-    parsed_toml["compat"]["RecipesPipeline"] = pkg_version("RecipesPipeline")
-    parsed_toml["compat"]["PlotsBase"] = pkg_version("PlotsBase")
-    parsed_toml["compat"]["Plots"] = pkg_version("")
+    compat = TOML.parse(read(toml, String))["compat"]
+    haskey(compat, "RecipesBase") && (compat["RecipesBase"] = pkg_version("RecipesBase"))
+    haskey(compat, "RecipesPipeline") && (compat["RecipesPipeline"] = pkg_version("RecipesPipeline"))
+    haskey(compat, "PlotsBase") && (compat["PlotsBase"] = pkg_version("PlotsBase"))
+    haskey(compat, "Plots") && (compat["Plots"] = pkg_version(""))
     open(toml, "w") do io
         TOML.print(io, parsed_toml)
     end
