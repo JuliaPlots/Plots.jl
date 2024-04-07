@@ -45,12 +45,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Ubuntu LaTeX dependencies
-      #   if: startsWith(matrix.os, 'ubuntu')
-      #   run: |
-      #     sudo apt-get -y update
-      #     sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} 
-      #     sudo fc-cache -vr
+      - name: Ubuntu LaTeX dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} 
+          sudo fc-cache -vr
 
       - name: Set LD_PRELOAD
         if: startsWith(matrix.os, 'ubuntu')
@@ -62,29 +62,28 @@ jobs:
 
       - uses: julia-actions/cache@v1
 
-      # - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
-      #   shell: julia --color=yes {0}
-      #   run: |
-      #     using Pkg
-      #     foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
-      #     Pkg.precompile()
+      - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
+        shell: julia --color=yes {0}
+        run: |
+          using Pkg
+          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
+          Pkg.precompile()
 
-      # - name: Install conda based matplotlib
-      #   run: julia --color=yes ci/matplotlib.jl
+      - name: Install conda based matplotlib
+        run: julia --color=yes ci/matplotlib.jl
 
-      # - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
-      #   timeout-minutes: 60
-      #   run: |
-      #     cmd=(julia --color=yes)
-      #     if [ "$RUNNER_OS" == "Linux" ]; then
-      #       cmd=(xvfb-run ${cmd[@]})
-      #     fi
-      #     echo ${cmd[@]}
-      #     ${cmd[@]} -e '
-      #       using Pkg
-      #       foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
-      #     '
-
+      - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
+        timeout-minutes: 60
+        run: |
+          cmd=(julia --color=yes)
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            cmd=(xvfb-run ${cmd[@]})
+          fi
+          echo ${cmd[@]}
+          ${cmd[@]} -e '
+            using Pkg
+            foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
+          '
       - name: Test downstream packages
         if: startsWith(matrix.os, 'ubuntu')
         run: xvfb-run julia --color=yes ci/downstream.jl
