@@ -74,5 +74,4 @@ test_stable(pkg::AbstractString) = begin
     nothing
 end
 
-test_stable("GraphRecipes")
-test_stable("StatsPlots")
+test_stable.(ARGS)
