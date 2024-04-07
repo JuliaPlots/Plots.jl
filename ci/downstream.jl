@@ -36,7 +36,7 @@ failsafe_clone_checkout(path, url) = begin
 end
 
 pkg_version(name) =
-    string(Pkg.Types.read_package(normpath(@__DIR__, "..", name, "Project.toml")).version)
+    Pkg.Types.read_package(normpath(@__DIR__, "..", name, "Project.toml")).version |> string
 
 maybe_pin_version!(dict::AbstractDict, name::AbstractString, ver::AbstractString) =
     haskey(dict, name) && (compat[name] = ver)
