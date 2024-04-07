@@ -38,15 +38,18 @@ end
 pkg_version(name) =
     string(Pkg.Types.read_package(normpath(@__DIR__, "..", name, "Project.toml")).version)
 
+maybe_pin_version!(dict::AbstractDict, name::AbstractString, ver::AbstractString) =
+    haskey(dict, name) && (compat[name] = ver)
+
 fake_supported_version!(path) = begin
     toml = joinpath(path, "Project.toml")
     # fake supported versions for testing (for `Pkg.develop`)
-    parsed_toml = OML.parse(read(toml, String))
+    parsed_toml = TOML.parse(read(toml, String))
     compat = parsed_toml["compat"]
-    haskey(compat, "RecipesBase") && (compat["RecipesBase"] = pkg_version("RecipesBase"))
-    haskey(compat, "RecipesPipeline") && (compat["RecipesPipeline"] = pkg_version("RecipesPipeline"))
-    haskey(compat, "PlotsBase") && (compat["PlotsBase"] = pkg_version("PlotsBase"))
-    haskey(compat, "Plots") && (compat["Plots"] = pkg_version(""))
+    maybe_pin_version!(compat, "RecipesBase", pkg_version("RecipesBase"))
+    maybe_pin_version!(compat, "RecipesPipeline", pkg_version("RecipesPipeline"))
+    maybe_pin_version!(compat, "PlotsBase", pkg_version("PlotsBase"))
+    maybe_pin_version!(compat, "Plots", pkg_version(""))
     open(toml, "w") do io
         TOML.print(io, parsed_toml)
     end
@@ -54,7 +57,7 @@ fake_supported_version!(path) = begin
     nothing
 end
 
-test_stable(pkg::String) = begin
+test_stable(pkg::AbstractString) = begin
     Pkg.activate(; temp = true)
     mktempdir() do tmpd
         for dn in ("RecipesBase", "RecipesPipeline", "PlotsBase", "")
