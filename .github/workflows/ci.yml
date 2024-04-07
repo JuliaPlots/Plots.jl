@@ -70,7 +70,7 @@ jobs:
       # - uses: julia-actions/julia-buildpkg@latest
 
       - name: Install conda based matplotlib
-        run: julia --color=yes ci/matpllotlib.jl
+        run: julia --color=yes ci/matplotlib.jl
 
       - name: Run RecipesBase, RecipesPipeline, PlotsBase, Plots tests
         timeout-minutes: 60
