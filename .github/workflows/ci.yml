@@ -66,13 +66,14 @@ jobs:
         run: |
           using Pkg
           foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
+          Pkg.precompile()
 
       # - uses: julia-actions/julia-buildpkg@latest
 
       - name: Install conda based matplotlib
         run: julia --color=yes ci/matplotlib.jl
 
-      - name: Run RecipesBase, RecipesPipeline, PlotsBase, Plots tests
+      - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
         timeout-minutes: 60
         run: |
           cmd=(julia --color=yes)

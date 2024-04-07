@@ -27,7 +27,8 @@ failsafe_clone_checkout(path, url) = begin
     end
     @assert isfile(versions)
 
-    stable = maximum(VersionNumber.(keys(TOML.parse(read(versions, String)))))
+    version_dict = TOML.parse(read(versions, String))
+    stable = VersionNumber.(keys(version_dict)) |> maximum
     tag = LibGit2.GitObject(repo, "v$stable")
     hash = string(LibGit2.target(tag))
     LibGit2.checkout!(repo, hash)
@@ -44,6 +45,7 @@ fake_supported_version!(path) = begin
     open(toml, "w") do io
         TOML.print(io, parsed_toml)
     end
+    print(read(toml, String))
     nothing
 end
 
