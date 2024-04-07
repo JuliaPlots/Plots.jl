@@ -38,7 +38,7 @@ fake_supported_version!(path) = begin
     toml = joinpath(path, "Project.toml")
     # fake the supported Plots version for testing (for `Pkg.develop`)
     Plots_version =
-        Pkg.Types.read_package(normpath(@__DIR__, "..""Project.toml")).version
+        Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml")).version
     parsed_toml = TOML.parse(read(toml, String))
     parsed_toml["compat"]["Plots"] = string(Plots_version)
     open(toml, "w") do io
