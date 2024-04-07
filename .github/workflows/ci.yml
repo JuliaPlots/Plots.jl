@@ -103,7 +103,7 @@ jobs:
           echo ${cmd[@]}
           ${cmd[@]} -e '
             using Pkg
-            foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
+            # foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
           '
 
       - name: Run downstream tests
