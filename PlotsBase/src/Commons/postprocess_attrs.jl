@@ -1,21 +1,18 @@
 
 # add all pluralized forms to the _keyAliases dict
-for arg in _all_attrs
-    add_aliases(arg, makeplural(arg))
-end
+foreach(arg -> add_aliases(arg, makeplural(arg)), _all_attrs)
 
 # fill symbol cache
 for letter in (:x, :y, :z)
-    _attrsymbolcache[letter] = Dict{Symbol,Symbol}()
-    for k in _axis_attrs
+    new_attr_dict!(letter)
+    for keyword in _axis_attrs
         # populate attribute cache
-        lk = Symbol(letter, k)
-        _attrsymbolcache[letter][k] = lk
-        # allow the underscore version too: xguide or x_guide
-        add_aliases(lk, Symbol(letter, "_", k))
+        letter_keyword = set_attr_symbol!(letter, string(keyword))
+        # allow the underscore version too: `xguide` or `x_guide`
+        add_aliases(letter_keyword, Symbol(letter, "_", keyword))
     end
-    for k in (_magic_axis_attrs..., :(_discrete_indices))
-        _attrsymbolcache[letter][k] = Symbol(letter, k)
+    for keyword in (_magic_axis_attrs..., :(_discrete_indices))
+        _attrsymbolcache[letter][keyword] = Symbol(letter, keyword)
     end
 end
 

@@ -1,33 +1,29 @@
-module PlotsPlots
+module Plots
 
 export Plot,
     PlotOrSubplot,
-    _update_plot_attrs,
     plottitlefont,
     ignorenan_extrema,
-    protect,
-    InputWrapper
-import PlotsBase.Axes: _update_axis, scale_lims!
-import PlotsBase.Commons: ignorenan_extrema, _cycle
-import PlotsBase.Ticks: get_ticks
-using PlotsBase:
-    PlotsBase,
-    AbstractPlot,
-    AbstractBackend,
-    DefaultsDict,
-    Series,
-    AbstractLayout,
-    RecipesPipeline
-using PlotsBase.PlotMeasures
-using PlotsBase.Colorbars: _update_subplot_colorbars
-using PlotsBase.Subplots: Subplot, _update_subplot_colors, _update_margins
-using PlotsBase.Axes: Axis, get_axis
-using PlotsBase.PlotUtils: get_color_palette
-using PlotsBase.Commons
-using PlotsBase.Commons.Frontend
-using PlotsBase.Fonts: font
+    _update_plot_attrs,
+    InputWrapper,
+    protect
+
+import ..RecipesBase: AbstractLayout, AbstractBackend, AbstractPlot
+import ..RecipesPipeline: RecipesPipeline, DefaultsDict
+import ..Subplots: Subplot, _update_subplot_colors, _update_margins
+import ..Colorbars: _update_subplot_colorbars
+import ..Commons: ignorenan_extrema, _cycle
+
+using ..PlotUtils
+using ..DataSeries
+using ..Commons.Frontend
+using ..Commons
+using ..Fonts
+using ..Ticks
+using ..Axes
 
 const SubplotMap = Dict{Any,Subplot}
+
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
     n::Int                       # number of series
@@ -50,7 +46,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
             nothing,
             Subplot[],
             SubplotMap(),
-            PlotsBase.EmptyLayout(),
+            EmptyLayout(),
             Subplot[],
             false,
         )
@@ -62,14 +58,14 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         sp = deepcopy(osp)  # FIXME: fails `PlotlyJS` ?
         plt.layout.grid[1, 1] = sp
         # reset some attributes
-        sp.minpad = PlotMeasures.DEFAULT_MINPAD[]
-        sp.bbox = PlotMeasures.DEFAULT_BBOX[]
-        sp.plotarea = PlotMeasures.DEFAULT_BBOX[]
+        sp.minpad = DEFAULT_MINPAD[]
+        sp.bbox = DEFAULT_BBOX[]
+        sp.plotarea = DEFAULT_BBOX[]
         sp.plt = plt  # change the enclosing plot
         push!(plt.subplots, sp)
         plt
     end
-end # Plot
+end
 
 const PlotOrSubplot = Union{Plot,Subplot}
 # -----------------------------------------------------------
@@ -138,16 +134,16 @@ end
 
 # ---------------------------------------------------------------
 
-"Smallest x in plot"
+"smallest x in plot"
 xmin(plt::Plot) = ignorenan_minimum([
     ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
 ])
-"Largest x in plot"
+"largest x in plot"
 xmax(plt::Plot) = ignorenan_maximum([
     ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list
 ])
 
-"Extrema of x-values in plot"
+"extrema of x-values in plot"
 ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 
 # ---------------------------------------------------------------
@@ -155,7 +151,7 @@ ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 # properly retrieve from plt.attr, passing `:match` to the correct key
 
 Base.getindex(plt::Plot, k::Symbol) =
-    if (v = plt.attr[k]) === :match
+    if (v = plt.attr[k]) ≡ :match
         plt[Commons._match_map[k]]
     else
         v
@@ -175,15 +171,15 @@ Base.ndims(plt::Plot) = 2
 
 # clear out series list, but retain subplots
 Base.empty!(plt::Plot) = foreach(sp -> empty!(sp.series_list), plt.subplots)
-PlotsBase.get_subplot(plt::Plot, sp::Subplot) = sp
-PlotsBase.get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
-PlotsBase.get_subplot(plt::Plot, k) = plt.spmap[k]
-PlotsBase.series_list(plt::Plot) = plt.series_list
+Commons.get_subplot(plt::Plot, sp::Subplot) = sp
+Commons.get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
+Commons.get_subplot(plt::Plot, k) = plt.spmap[k]
+Commons.series_list(plt::Plot) = plt.series_list
 
-get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
+Commons.get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
 
-get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
-PlotsBase.RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
+get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x ≡ sp, plt.subplots)
+RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Commons.preprocess_attributes!(plotattributes)
 
 plottitlefont(p::Plot) = font(;
@@ -218,7 +214,7 @@ function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
     nothing
 end
 
-function PlotsBase.Axes._update_axis(
+function Axes._update_axis(
     plt::Plot,
     sp::Subplot,
     plotattributes_in::AKW,
@@ -228,14 +224,14 @@ function PlotsBase.Axes._update_axis(
     # get (maybe initialize) the axis
     axis = get_axis(sp, letter)
 
-    _update_axis(axis, plotattributes_in, letter, subplot_index)
+    Axes._update_axis(axis, plotattributes_in, letter, subplot_index)
 
     # convert a bool into auto or nothing
     if isa(axis[:ticks], Bool)
         axis[:ticks] = axis[:ticks] ? :auto : nothing
     end
 
-    PlotsBase.Axes._update_axis_colors(axis)
+    Axes._update_axis_colors(axis)
     _update_axis_links(plt, axis, letter)
     nothing
 end
@@ -265,7 +261,7 @@ function _update_subplot_attrs(
 
     lims_warned = false
     for letter in (:x, :y, :z)
-        _update_axis(plt, sp, plotattributes_in, letter, subplot_index)
+        Axes._update_axis(plt, sp, plotattributes_in, letter, subplot_index)
         lk = get_attr_symbol(letter, :lims)
 
         # warn against using `Range` in x,y,z lims
@@ -280,14 +276,19 @@ function _update_subplot_attrs(
     PlotsBase.Subplots._update_subplot_periphery(sp, anns)
 end
 
-function scale_lims!(plt::Plot, letter, factor)
+function Commons.scale_lims!(plt::Plot, letter, factor)
     foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
     plt
 end
-function scale_lims!(plt::Union{Plot,Subplot}, factor)
+function Commons.scale_lims!(plt::Union{Plot,Subplot}, factor)
     foreach(letter -> scale_lims!(plt, letter, factor), (:x, :y, :z))
     plt
 end
 Commons.get_size(plt::Plot) = get_size(plt.attr)
 Commons.get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
-end # PlotsPlots
+
+end  # module
+
+# -------------------------------------------------------------------
+
+using .Plots

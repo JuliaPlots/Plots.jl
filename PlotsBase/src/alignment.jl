@@ -17,7 +17,7 @@ text_size(lab::PlotText, sz::Number, rot::Number = 0) = text_size(length(lab.str
 
 # account for the size/length/rotation of tick labels
 function tick_padding(sp::Subplot, axis::Axis)
-    if (ticks = get_ticks(sp, axis)) === nothing
+    if (ticks = get_ticks(sp, axis)) ≡ nothing
         0mm
     else
         vals, labs = ticks
@@ -26,7 +26,7 @@ function tick_padding(sp::Subplot, axis::Axis)
         longest_label = maximum(length(lab) for lab in labs)
 
         # generalize by "rotating" y labels
-        rot = axis[:rotation] + (axis[:letter] === :y ? 90 : 0)
+        rot = axis[:rotation] + (axis[:letter] ≡ :y ? 90 : 0)
 
         # # we need to compute the size of the ticks generically
         # # this means computing the bounding box and then getting the width/height

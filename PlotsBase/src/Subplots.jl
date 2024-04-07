@@ -6,29 +6,19 @@ export Subplot,
     legendtitlefont,
     titlefont,
     get_series_color,
-    needs_any_3d_axes,
-    plotarea,
-    plotarea!,
-    toppad,
-    leftpad,
-    bottompad,
-    rightpad
-import PlotsBase.Ticks: get_ticks
-using PlotsBase:
-    PlotsBase,
-    RecipesPipeline,
-    Series,
-    AbstractBackend,
-    AbstractLayout,
-    BoundingBox,
-    DefaultsDict
-using PlotsBase.RecipesPipeline: RecipesPipeline, Surface, Volume
-using PlotsBase.PlotUtils: get_color_palette
-using PlotsBase.Commons
-using PlotsBase.Commons.Frontend
-using PlotsBase.Commons: convert_legend_value, like_surface
-using PlotsBase.Fonts
-using PlotsBase.PlotMeasures
+    needs_any_3d_axes
+import PlotsBase
+
+import ..Commons: BoundingBox, convert_legend_value, like_surface
+import ..RecipesPipeline: RecipesPipeline, Surface, Volume, DefaultsDict
+import ..RecipesBase: AbstractLayout, AbstractBackend
+import ..DataSeries: Series
+import ..PlotUtils
+
+using ..Commons.Frontend
+using ..Commons
+using ..Fonts
+using ..Ticks
 
 # a single subplot
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
@@ -42,7 +32,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
 
-    Subplot(::T; parent = PlotsBase.RootLayout()) where {T<:AbstractBackend} = new{T}(
+    Subplot(::T; parent = RootLayout()) where {T<:AbstractBackend} = new{T}(
         parent,
         Series[],
         0,
@@ -57,9 +47,9 @@ end
 
 # properly retrieve from sp.attr, passing `:match` to the correct key
 Base.getindex(sp::Subplot, k::Symbol) =
-    if (v = sp.attr[k]) === :match
-        if haskey(Commons.Commons._match_map2, k)
-            sp.plt[Commons.Commons._match_map2[k]]
+    if (v = sp.attr[k]) ≡ :match
+        if haskey(Commons._match_map2, k)
+            sp.plt[Commons._match_map2[k]]
         else
             sp[Commons._match_map[k]]
         end
@@ -82,41 +72,23 @@ Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
 
 Return the bounding box of a subplot.
 """
-plotarea(sp::Subplot) = sp.plotarea
-plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
+Commons.plotarea(sp::Subplot) = sp.plotarea
+Commons.plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
 
 Base.size(sp::Subplot) = (1, 1)
 Base.length(sp::Subplot) = 1
 Base.getindex(sp::Subplot, r::Int, c::Int) = sp
 
-leftpad(sp::Subplot)   = sp.minpad[1]
-toppad(sp::Subplot)    = sp.minpad[2]
-rightpad(sp::Subplot)  = sp.minpad[3]
-bottompad(sp::Subplot) = sp.minpad[4]
-
-function attr!(sp::Subplot; kw...)
-    plotattributes = KW(kw)
-    PlotsBase.Commons.preprocess_attributes!(plotattributes)
-    for (k, v) in plotattributes
-        if haskey(_subplot_defaults, k)
-            sp[k] = v
-        else
-            @warn "unused key $k in subplot attr"
-        end
-    end
-    sp
-end
-
-PlotsBase.series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)
-PlotsBase.RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
+RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
+PlotsBase.series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] ≡ sp, sp.plt.series_list)
 PlotsBase.ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
 
-get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
+Commons.get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
 get_series_color(c, sp::Subplot, n::Int, seriestype) =
-    if c === :auto
+    if c ≡ :auto
         like_surface(seriestype) ? PlotsBase.cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
         _cycle(sp[:color_palette], c)
@@ -174,7 +146,7 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # handle legend/colorbar
     sp.attr[:legend_position] = convert_legend_value(sp.attr[:legend_position])
     sp.attr[:colorbar] = convert_legend_value(sp.attr[:colorbar])
-    if sp.attr[:colorbar] === :legend
+    if sp.attr[:colorbar] ≡ :legend
         sp.attr[:colorbar] = sp.attr[:legend_position]
     end
     nothing
@@ -183,7 +155,7 @@ end
 function _update_subplot_colors(sp::Subplot)
     # background colors
     color_or_nothing!(sp.attr, :background_color_subplot)
-    sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], 30)
+    sp.attr[:color_palette] = PlotUtils.get_color_palette(sp.attr[:color_palette], 30)
     color_or_nothing!(sp.attr, :legend_background_color)
     color_or_nothing!(sp.attr, :background_color_inside)
 
@@ -214,9 +186,9 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
     for letter in (:x, :y, :z)
         data = plotattributes[letter]
         if (
-            letter !== :z &&
-            plotattributes[:seriestype] === :straightline &&
-            any(series[:seriestype] !== :straightline for series in series_list(sp)) &&
+            letter ≢ :z &&
+            plotattributes[:seriestype] ≡ :straightline &&
+            any(series[:seriestype] ≢ :straightline for series in series_list(sp)) &&
             length(data) > 1 &&
             data[1] != data[2]
         )
@@ -235,7 +207,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
                 data = plotattributes[letter] = Surface(Matrix{Float64}(data.surf))
             end
             expand_extrema!(axis, data)
-        elseif data !== nothing
+        elseif data ≢ nothing
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
@@ -248,10 +220,10 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # expand for fillrange
     fr = plotattributes[:fillrange]
-    if fr === nothing && plotattributes[:seriestype] === :bar
+    if fr ≡ nothing && plotattributes[:seriestype] ≡ :bar
         fr = 0.0
     end
-    if fr !== nothing && !RecipesPipeline.is3d(plotattributes)
+    if fr ≢ nothing && !RecipesPipeline.is3d(plotattributes)
         axis = sp.attr[:yaxis]
         if typeof(fr) <: Tuple
             foreach(x -> expand_extrema!(axis, x), fr)
@@ -261,11 +233,11 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
     end
 
     # expand for bar_width
-    if plotattributes[:seriestype] === :bar
+    if plotattributes[:seriestype] ≡ :bar
         dsym = :x
         data = plotattributes[dsym]
 
-        if (bw = plotattributes[:bar_width]) === nothing
+        if (bw = plotattributes[:bar_width]) ≡ nothing
             pos = filter(>(0), diff(sort(data)))
             plotattributes[:bar_width] = bw = Commons._bar_width * ignorenan_minimum(pos)
         end
@@ -275,7 +247,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
     end
 
     # expand for heatmaps
-    if plotattributes[:seriestype] === :heatmap
+    if plotattributes[:seriestype] ≡ :heatmap
         for letter in (:x, :y)
             data = plotattributes[letter]
             axis = sp[get_attr_symbol(letter, :axis)]
@@ -290,6 +262,29 @@ function PlotsBase.expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
     expand_extrema!(sp[:yaxis], (ymin, ymax))
 end
 
-Commons.get_size(sp::Subplot) = Commons.get_size(sp.plt)
-Commons.get_thickness_scaling(sp::Subplot) = Commons.get_thickness_scaling(sp.plt)
-end # Subplots
+Commons.get_size(sp::Subplot) = get_size(sp.plt)
+Commons.get_thickness_scaling(sp::Subplot) = get_thickness_scaling(sp.plt)
+
+end  # module
+
+# -------------------------------------------------------------------
+
+using .Subplots
+
+Commons.leftpad(sp::Subplot)   = sp.minpad[1]
+Commons.toppad(sp::Subplot)    = sp.minpad[2]
+Commons.rightpad(sp::Subplot)  = sp.minpad[3]
+Commons.bottompad(sp::Subplot) = sp.minpad[4]
+
+function attr!(sp::Subplot; kw...)
+    plotattributes = KW(kw)
+    PlotsBase.Commons.preprocess_attributes!(plotattributes)
+    for (k, v) in plotattributes
+        if haskey(_subplot_defaults, k)
+            sp[k] = v
+        else
+            @warn "unused key $k in subplot attr"
+        end
+    end
+    sp
+end

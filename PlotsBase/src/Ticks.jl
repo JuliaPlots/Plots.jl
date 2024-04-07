@@ -1,24 +1,31 @@
 module Ticks
 
-export get_ticks, _has_ticks, _transform_ticks, get_minor_ticks, no_minor_intervals
-using PlotsBase.Commons
-using PlotsBase.Dates
+export _has_ticks, _transform_ticks, get_minor_ticks
+export no_minor_intervals, num_minor_intervals, ticks_type
+
+using ..Commons
+using ..Dates
 
 const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
 
+ticks_type(ticks::AVec{<:Real}) = :ticks
+ticks_type(ticks::AVec{<:AbstractString}) = :labels
+ticks_type(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
+ticks_type(ticks) = :invalid
+
 # get_ticks from axis symbol :x, :y, or :z
 
-get_ticks(ticks::NTuple{2,Any}, args...) = ticks
-get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
-get_ticks(ticks::Bool, args...) =
+Commons.get_ticks(ticks::NTuple{2,Any}, args...) = ticks
+Commons.get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
+Commons.get_ticks(ticks::Bool, args...) =
     ticks ? get_ticks(:auto, args...) : get_ticks(nothing, args...)
-get_ticks(::T, args...) where {T} =
+Commons.get_ticks(::T, args...) where {T} =
     throw(ArgumentError("Unknown ticks type in get_ticks: $T"))
 
 # do not specify array item type to also catch e.g. "xlabel=[]" and "xlabel=([],[])"
 _has_ticks(v::AVec) = !isempty(v)
 _has_ticks(t::Tuple{AVec,AVec}) = !isempty(t[1])
-_has_ticks(s::Symbol) = s !== :none
+_has_ticks(s::Symbol) = s ≢ :none
 _has_ticks(b::Bool) = b
 _has_ticks(::Nothing) = false
 _has_ticks(::Any) = true
@@ -44,11 +51,11 @@ function num_minor_intervals(axis)
 end
 
 no_minor_intervals(axis) =
-    if (n_intervals = axis[:minorticks]) === false
+    if (n_intervals = axis[:minorticks]) ≡ false
         true  # must be tested with `===` since Bool <: Integer
     elseif n_intervals ∈ (:none, nothing)
         true
-    elseif (n_intervals === :auto && !axis[:minorgrid])
+    elseif (n_intervals ≡ :auto && !axis[:minorgrid])
         true
     else
         false
@@ -97,4 +104,8 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
     minorticks[amin .≤ minorticks .≤ amax]
 end
 
-end # Ticks
+end  # module
+
+# -------------------------------------------------------------------
+
+using .Ticks

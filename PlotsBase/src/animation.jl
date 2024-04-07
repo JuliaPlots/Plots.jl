@@ -235,9 +235,9 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     push!(block.args, :($countersym += 1))
 
     # add a final call to `gif(anim)`?
-    retval = if type === :gif
+    retval = if type ≡ :gif
         :(PlotsBase.gif($animsym; $(animationsKwargs...)))
-    elseif type === :apng
+    elseif type ≡ :apng
         :(PlotsBase.apng($animsym; $(animationsKwargs...)))
     else
         animsym

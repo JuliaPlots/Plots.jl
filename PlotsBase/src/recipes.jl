@@ -13,7 +13,7 @@ function seriestype_supported(pkg::AbstractBackend, st::Symbol)
 
     supported = true
     for dep in _series_recipe_deps[st]
-        if seriestype_supported(pkg, dep) === :no
+        if seriestype_supported(pkg, dep) ≡ :no
             supported = false
             break
         end
@@ -29,7 +29,7 @@ end
 function all_seriestypes()
     sts = Set{Symbol}(keys(_series_recipe_deps))
     for bsym in _initialized_backends
-        be = _backend_instance(bsym)
+        be = backend_instance(bsym)
         sts = union(sts, Set{Symbol}(supported_seriestypes(be)))
     end
     sts |> collect |> sort
@@ -199,11 +199,11 @@ function make_steps(x::AbstractArray, st, even)
     for i in 2:n
         xindex = xstartindex - 1 + i
         idx = 2i - 1
-        if st === :mid
+        if st ≡ :mid
             newx[idx] = newx[idx - 1] = (x[xindex] + x[xindex - 1]) / 2
         else
             newx[idx] = x[xindex]
-            newx[idx - 1] = x[st === :pre ? xindex : xindex - 1]
+            newx[idx - 1] = x[st ≡ :pre ? xindex : xindex - 1]
         end
     end
     even && (newx[end] = x[end])
@@ -223,7 +223,7 @@ make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         @series begin
             seriestype := :scatter
             x := x
@@ -248,7 +248,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, true)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         @series begin
             seriestype := :scatter
             x := x
@@ -273,7 +273,7 @@ end
     plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, false)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         @series begin
             seriestype := :scatter
             x := x
@@ -294,19 +294,19 @@ end
 # create vertical line segments from fill
 @recipe function f(::Type{Val{:sticks}}, x, y, z)  # COV_EXCL_LINE
     n = length(x)
-    if (fr = plotattributes[:fillrange]) === nothing
+    if (fr = plotattributes[:fillrange]) ≡ nothing
         sp = plotattributes[:subplot]
-        fr = if sp[:yaxis][:scale] === :identity
+        fr = if sp[:yaxis][:scale] ≡ :identity
             0.0
         else
             NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
         end
     end
-    newx, newy, newz = zeros(3n), zeros(3n), z !== nothing ? zeros(3n) : nothing
-    for (i, (xi, yi, zi)) in enumerate(zip(x, y, z !== nothing ? z : 1:n))
+    newx, newy, newz = zeros(3n), zeros(3n), z ≢ nothing ? zeros(3n) : nothing
+    for (i, (xi, yi, zi)) in enumerate(zip(x, y, z ≢ nothing ? z : 1:n))
         rng = (3i - 2):(3i)
         newx[rng] = [xi, xi, NaN]
-        if z !== nothing
+        if z ≢ nothing
             newy[rng] = [yi, yi, NaN]
             newz[rng] = [_cycle(fr, i), zi, NaN]
         else
@@ -315,27 +315,27 @@ end
     end
     x := newx
     y := newy
-    if z !== nothing
+    if z ≢ nothing
         z := newz
     end
     fillrange := nothing
     seriestype := :path
     if (
-        plotattributes[:linecolor] === :auto &&
-        plotattributes[:marker_z] !== nothing &&
-        plotattributes[:line_z] === nothing
+        plotattributes[:linecolor] ≡ :auto &&
+        plotattributes[:marker_z] ≢ nothing &&
+        plotattributes[:line_z] ≡ nothing
     )
         line_z := plotattributes[:marker_z]
     end
 
     # create a primary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         primary := false
         @series begin
             seriestype := :scatter
             x := x
             y := y
-            if z !== nothing
+            if z ≢ nothing
                 z := z
             end
             primary := true
@@ -366,35 +366,35 @@ end
 
 # create segmented bezier curves in place of line segments
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)  # COV_EXCL_LINE
-    args = z !== nothing ? (x, y, z) : (x, y)
+    args = z ≢ nothing ? (x, y, z) : (x, y)
     newx, newy = zeros(0), zeros(0)
-    newfr = (fr = plotattributes[:fillrange]) !== nothing ? zeros(0) : nothing
-    newz = z !== nothing ? zeros(0) : nothing
+    newfr = (fr = plotattributes[:fillrange]) ≢ nothing ? zeros(0) : nothing
+    newz = z ≢ nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
-    for rng in PlotsSeries.iter_segments(args...)
+    for rng in DataSeries.iter_segments(args...)
         length(rng) < 2 && continue
         ts = range(0, stop = 1, length = npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x, rng), t), ts))
         nanappend!(newy, map(t -> bezier_value(_cycle(y, rng), t), ts))
-        if z !== nothing
+        if z ≢ nothing
             nanappend!(newz, map(t -> bezier_value(_cycle(z, rng), t), ts))
         end
-        if fr !== nothing
+        if fr ≢ nothing
             nanappend!(newfr, map(t -> bezier_value(_cycle(fr, rng), t), ts))
         end
     end
 
     x := newx
     y := newy
-    if z === nothing
+    if z ≡ nothing
         seriestype := :path
     else
         seriestype := :path3d
         z := newz
     end
-    if fr !== nothing
+    if fr ≢ nothing
         fillrange := newfr
     end
     ()
@@ -422,7 +422,7 @@ end
 
     # compute half-width of bars
     bw = plotattributes[:bar_width]
-    hw = if bw === nothing
+    hw = if bw ≡ nothing
         0.5Commons._bar_width * if nx > 1
             ignorenan_minimum(filter(x -> x > 0, diff(sort(procx))))
         else
@@ -433,7 +433,7 @@ end
     end
 
     # make fillto a vector... default fills to 0
-    if (fillto = plotattributes[:fillrange]) === nothing
+    if (fillto = plotattributes[:fillrange]) ≡ nothing
         fillto = 0
     end
     if yscale in _log_scales && !all(_is_positive, fillto)
@@ -587,7 +587,7 @@ end
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)  # COV_EXCL_LINE
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
-    if plotattributes[:bar_width] === nothing
+    if plotattributes[:bar_width] ≡ nothing
         bar_width := diff(edge)
     end
     x := _bin_centers(edge)
@@ -634,7 +634,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
 
     last_w = eltype(weights)(NaN)
 
-    while it_tuple_e !== nothing && it_tuple_w !== nothing
+    while it_tuple_e ≢ nothing && it_tuple_w ≢ nothing
         b, it_state_e = it_tuple_e
         w, it_state_w = it_tuple_w
 
@@ -678,7 +678,7 @@ end
     xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
 
     # create a secondary series for the markers
-    if plotattributes[:markershape] !== :none
+    if plotattributes[:markershape] ≢ :none
         @series begin
             seriestype := :scatter
             x := _bin_centers(edge)
@@ -729,19 +729,19 @@ function _auto_binning_nbins(
     end
 
     v = vs[dim]
-    mode === :auto && (mode = :fd)
+    mode ≡ :auto && (mode = :fd)
 
-    if mode === :sqrt  # Square-root choice
+    if mode ≡ :sqrt  # Square-root choice
         _cl(sqrt(n_samples))
-    elseif mode === :sturges  # Sturges' formula
+    elseif mode ≡ :sturges  # Sturges' formula
         _cl(log2(n_samples) + 1)
-    elseif mode === :rice  # Rice Rule
+    elseif mode ≡ :rice  # Rice Rule
         _cl(2 * nd)
-    elseif mode === :scott  # Scott's normal reference rule
+    elseif mode ≡ :scott  # Scott's normal reference rule
         _cl(_span(v) / (3.5 * std(v) / nd))
-    elseif mode === :fd  # Freedman–Diaconis rule
+    elseif mode ≡ :fd  # Freedman–Diaconis rule
         _cl(_span(v) / (2 * _iqr(v) / nd))
-    elseif mode === :wand
+    elseif mode ≡ :wand
         wand_edges(v)  # this makes this function not type stable, but the type instability does not propagate
     else
         error("Unknown auto-binning mode $mode")
@@ -782,7 +782,7 @@ function _make_hist(
     localvs = _filternans(vs)
     edges = _hist_edges(localvs, binning)
     h = float(
-        weights === nothing ?
+        weights ≡ nothing ?
         StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
         StatsBase.fit(
             StatsBase.Histogram,
@@ -856,7 +856,7 @@ end
     )
     seriestype := get(st_map, plotattributes[:seriestype], plotattributes[:seriestype])
 
-    if plotattributes[:seriestype] === :scatterbins
+    if plotattributes[:seriestype] ≡ :scatterbins
         # Workaround, error bars currently not set correctly by scatterbins
         edge, weights, xscale, yscale, baseline =
             _preprocess_binlike(plotattributes, h.edges[1], h.weights)
@@ -883,7 +883,7 @@ end
 
     float_weights = float(weights)
     if !plotattributes[:show_empty_bins]
-        if float_weights === weights
+        if float_weights ≡ weights
             float_weights = deepcopy(float_weights)
         end
         for (i, c) in enumerate(float_weights)
@@ -948,7 +948,7 @@ end
 @recipe function f(::Type{Val{:mesh3d}}, x, y, z)  # COV_EXCL_LINE
     # As long as no i,j,k are supplied this should work with PyPlot and GR
     seriestype := :surface
-    if plotattributes[:connections] !== nothing
+    if plotattributes[:connections] ≢ nothing
         "Giving triangles using the connections argument is only supported on Plotly backend." |>
         ArgumentError |>
         throw
@@ -961,7 +961,7 @@ end
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)  # COV_EXCL_LINE
     seriestype := :path3d
-    if plotattributes[:markershape] === :none
+    if plotattributes[:markershape] ≡ :none
         markershape := :circle
     end
     linewidth := 0
@@ -977,7 +977,7 @@ lens!(args...; kwargs...) = plot!(args...; seriestype = :lens, kwargs...)
 export lens!
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)  # COV_EXCL_LINE
     sp_index, inset_bbox = plotattributes[:inset_subplots]
-    width(inset_bbox) isa Measures.Length{:w,<:Real} ||
+    width(inset_bbox) isa Commons.Length{:w,<:Real} ||
         throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
     sp = plt.subplots[sp_index]
     xscale = sp[:xaxis][:scale]
@@ -1084,9 +1084,9 @@ Commons.@attributes function error_style!(plotattributes::AKW)
         RecipesPipeline.reset_kw!(plotattributes, :marker_z)
     haskey(plotattributes, :line_z) && RecipesPipeline.reset_kw!(plotattributes, :line_z)
 
-    msc = if (msc = plotattributes[:markerstrokecolor]) === :match
+    msc = if (msc = plotattributes[:markerstrokecolor]) ≡ :match
         plotattributes[:subplot][:foreground_color_subplot]
-    elseif msc === :auto
+    elseif msc ≡ :auto
         get_series_color(
             plotattributes[:linecolor],
             plotattributes[:subplot],
@@ -1137,13 +1137,13 @@ clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); noth
     Commons.error_style!(plotattributes)
     markershape := :vline
     xerr = error_zipit(plotattributes[:xerror])
-    if z === nothing
+    if z ≡ nothing
         plotattributes[:x], plotattributes[:y] = error_coords(xerr, x, y)
     else
         plotattributes[:x], plotattributes[:y], plotattributes[:z] =
             error_coords(xerr, x, y, z)
     end
-    if :xscale ∈ keys(plotattributes) && plotattributes[:xscale] === :log10
+    if :xscale ∈ keys(plotattributes) && plotattributes[:xscale] ≡ :log10
         clamp_to_eps!(plotattributes[:x])
     end
     ()
@@ -1154,13 +1154,13 @@ end
     Commons.error_style!(plotattributes)
     markershape := :hline
     yerr = error_zipit(plotattributes[:yerror])
-    if z === nothing
+    if z ≡ nothing
         plotattributes[:y], plotattributes[:x] = error_coords(yerr, y, x)
     else
         plotattributes[:y], plotattributes[:x], plotattributes[:z] =
             error_coords(yerr, y, x, z)
     end
-    if :yscale ∈ keys(plotattributes) && plotattributes[:yscale] === :log10
+    if :yscale ∈ keys(plotattributes) && plotattributes[:yscale] ≡ :log10
         clamp_to_eps!(plotattributes[:y])
     end
     ()
@@ -1170,12 +1170,12 @@ end
 @recipe function f(::Type{Val{:zerror}}, x, y, z)  # COV_EXCL_LINE
     Commons.error_style!(plotattributes)
     markershape := :hline
-    if z !== nothing
+    if z ≢ nothing
         zerr = error_zipit(plotattributes[:zerror])
         plotattributes[:z], plotattributes[:x], plotattributes[:y] =
             error_coords(zerr, z, x, y)
     end
-    if :zscale ∈ keys(plotattributes) && plotattributes[:zscale] === :log10
+    if :zscale ∈ keys(plotattributes) && plotattributes[:zscale] ≡ :log10
         clamp_to_eps!(plotattributes[:z])
     end
     ()
@@ -1456,7 +1456,7 @@ end
 @recipe f(x::AVec, ohlc::AVec{NTuple{N,<:Number}}) where {N} = x, map(t -> OHLC(t...), ohlc)
 
 @recipe f(xyuv::AVec{NTuple}) =
-    get(plotattributes, :seriestype, :path) === :ohlc ? map(t -> OHLC(t...), xyuv) :
+    get(plotattributes, :seriestype, :path) ≡ :ohlc ? map(t -> OHLC(t...), xyuv) :
     RecipesPipeline.unzip(xyuv)
 
 @recipe function f(x::AVec, v::AVec{OHLC})  # COV_EXCL_LINE

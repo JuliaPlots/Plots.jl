@@ -9,7 +9,7 @@ function aliases_and_autopick(
     options::AVec,
     plotIndex::Int,
 )
-    if plotattributes[sym] === :auto
+    if plotattributes[sym] ≡ :auto
         plotattributes[sym] = autopick_ignore_none_auto(options, plotIndex)
     elseif haskey(aliases, plotattributes[sym])
         plotattributes[sym] = aliases[plotattributes[sym]]

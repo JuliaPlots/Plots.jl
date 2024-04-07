@@ -1,11 +1,12 @@
 module Fonts
 
-using PlotsBase.Colors
-using PlotsBase.Commons
-using PlotsBase.Commons:
+using ..Colors
+using ..Commons
+using ..Commons:
     _initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes, _initial_fontsizes
+
 # keep in mind: these will be reexported and are public API
-export font, scalefontsizes, resetfontsizes, text, is_horizontal, Font, PlotText
+export Font, PlotText, font, scalefontsizes, resetfontsizes, text, is_horizontal
 
 mutable struct Font
     family::AbstractString
@@ -44,7 +45,7 @@ function font(args...; kw...)
 
     for arg in args
         T = typeof(arg)
-        @assert arg !== :match
+        @assert arg ≢ :match
 
         if T == Font
             family = arg.family
@@ -53,7 +54,7 @@ function font(args...; kw...)
             valign = arg.valign
             rotation = arg.rotation
             color = arg.color
-        elseif arg === :center
+        elseif arg ≡ :center
             halign = :hcenter
             valign = :vcenter
         elseif arg ∈ _haligns
@@ -78,21 +79,21 @@ function font(args...; kw...)
     end
 
     for sym in keys(kw)
-        if sym === :family
+        if sym ≡ :family
             family = string(kw[sym])
-        elseif sym === :pointsize
+        elseif sym ≡ :pointsize
             pointsize = kw[sym]
-        elseif sym === :halign
+        elseif sym ≡ :halign
             halign = kw[sym]
-            halign === :center && (halign = :hcenter)
+            halign ≡ :center && (halign = :hcenter)
             @assert halign ∈ _haligns
-        elseif sym === :valign
+        elseif sym ≡ :valign
             valign = kw[sym]
-            valign === :center && (valign = :vcenter)
+            valign ≡ :center && (valign = :vcenter)
             @assert valign ∈ _valigns
-        elseif sym === :rotation
+        elseif sym ≡ :rotation
             rotation = kw[sym]
-        elseif sym === :color
+        elseif sym ≡ :color
             col = kw[sym]
             color = col isa Colorant ? col : parse(Colorant, col)
         else
@@ -174,4 +175,9 @@ text(str, args...; kw...) = PlotText(string(str), font(args...; kw...))
 Base.length(t::PlotText) = length(t.str)
 
 is_horizontal(t::PlotText) = abs(sind(t.font.rotation)) ≤ sind(45)
-end # Fonts
+
+end  # module
+
+# -------------------------------------------------------------------
+
+@reexport using .Fonts

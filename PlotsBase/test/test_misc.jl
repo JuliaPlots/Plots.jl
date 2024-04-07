@@ -21,7 +21,7 @@ end
 
 @testset "NoFail" begin
     with(:unicodeplots) do
-        @test backend() == PlotsBase._backend_instance(:unicodeplots)
+        @test backend() == PlotsBase.backend_instance(:unicodeplots)
 
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 
@@ -124,7 +124,7 @@ end
     value(m::MyType) = m.val
     data = MyType.(sort(randn(20)))
 
-    # A recipe that puts the axis letter in the title
+    # a recipe that puts the axis letter in the title
     @recipe function f(::Type{T}, m::T) where {T<:AbstractArray{<:MyType}}
         title --> string(plotattributes[:letter])
         value.(m)

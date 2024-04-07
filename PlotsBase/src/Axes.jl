@@ -1,13 +1,15 @@
 module Axes
 
 export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
-export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks
-import PlotsBase: get_ticks
-using PlotsBase: PlotsBase, RecipesPipeline, Subplot, DefaultsDict, TimeType
-using PlotsBase.Commons: _axis_defaults_byletter, _all_axis_attrs, dumpdict
-using PlotsBase.Commons
-using PlotsBase.Ticks
-using PlotsBase.Fonts
+export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis
+
+import ..PlotsBase
+import ..PlotsBase: Subplot, DefaultsDict, TimeType, attr!
+
+using ..RecipesPipeline
+using ..Commons
+using ..Ticks
+using ..Fonts
 
 const default_widen_factor = Ref(1.06)
 const _widen_seriestypes = (
@@ -49,7 +51,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
 
-    attr = DefaultsDict(explicit, _axis_defaults_byletter[letter])
+    attr = DefaultsDict(explicit, Commons._axis_defaults_byletter[letter])
 
     # update the defaults
     attr!(Axis([sp], attr), args...; kw...)
@@ -57,9 +59,9 @@ end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
 Base.getindex(axis::Axis, k::Symbol) =
-    if (v = axis.plotattributes[k]) === :match
-        if haskey(Commons.Commons._match_map2, k)
-            axis.sps[1][Commons.Commons._match_map2[k]]
+    if (v = axis.plotattributes[k]) ≡ :match
+        if haskey(Commons._match_map2, k)
+            axis.sps[1][Commons._match_map2[k]]
         else
             axis[Commons._match_map[k]]
         end
@@ -77,9 +79,9 @@ end
 Extrema() = Extrema(Inf, -Inf)
 # -------------------------------------------------------------------------
 sort_3d_axes(x, y, z, letter) =
-    if letter === :x
+    if letter ≡ :x
         x, y, z
-    elseif letter === :y
+    elseif letter ≡ :y
         y, x, z
     else
         z, y, x
@@ -89,13 +91,13 @@ axes_letters(sp, letter) =
     if RecipesPipeline.is3d(sp)
         sort_3d_axes(:x, :y, :z, letter)
     else
-        letter === :x ? (:x, :y) : (:y, :x)
+        letter ≡ :x ? (:x, :y) : (:y, :x)
     end
 
 scale_inverse_scale_func(scale::Symbol) = (
     RecipesPipeline.scale_func(scale),
     RecipesPipeline.inverse_scale_func(scale),
-    scale === :identity,
+    scale ≡ :identity,
 )
 function get_axis(sp::Subplot, letter::Symbol)
     axissym = get_attr_symbol(letter, :axis)
@@ -116,22 +118,22 @@ function Commons.axis_limits(
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = process_limits(axis[:lims], axis)
-    lims === nothing && warn_invalid_limits(axis[:lims], letter)
+    lims ≡ nothing && warn_invalid_limits(axis[:lims], letter)
 
     if (has_user_lims = lims isa Tuple)
         lmin, lmax = lims
         if lmin isa Number && isfinite(lmin)
             amin = lmin
         elseif lmin isa Symbol
-            lmin === :auto || @warn "Invalid min $(letter)limit" lmin
+            lmin ≡ :auto || @warn "Invalid min $(letter)limit" lmin
         end
         if lmax isa Number && isfinite(lmax)
             amax = lmax
         elseif lmax isa Symbol
-            lmax === :auto || @warn "Invalid max $(letter)limit" lmax
+            lmax ≡ :auto || @warn "Invalid max $(letter)limit" lmax
         end
     end
-    if lims === :symmetric
+    if lims ≡ :symmetric
         amax = max(abs(amin), abs(amax))
         amin = -amax
     end
@@ -142,15 +144,15 @@ function Commons.axis_limits(
         amin, amax = zero(amin), one(amax)
     end
     if ispolar(axis.sps[1])
-        if axis[:letter] === :x
+        if axis[:letter] ≡ :x
             amin, amax = 0, 2π
-        elseif lims === :auto
+        elseif lims ≡ :auto
             # widen max radius so ticks dont overlap with theta axis
             amin, amax = 0, amax + 0.1abs(amax - amin)
         end
-    elseif lims_factor !== nothing
+    elseif lims_factor ≢ nothing
         amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
-    elseif lims === :round
+    elseif lims ≡ :round
         amin, amax = round_limits(amin, amax, axis[:scale])
     end
 
@@ -159,14 +161,14 @@ function Commons.axis_limits(
         !has_user_lims &&
         consider_aspect &&
         letter in (:x, :y) &&
-        !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
+        !(aspect_ratio ≡ :none || RecipesPipeline.is3d(:sp))
     )
         aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
         area = PlotsBase.plotarea(sp)
         plot_ratio = PlotsBase.height(area) / PlotsBase.width(area)
         dist = amax - amin
 
-        factor = if letter === :x
+        factor = if letter ≡ :x
             ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * ydist / dist
             axis_ratio / plot_ratio
@@ -195,12 +197,12 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     elseif widen isa Number
         return widen
     else
-        widen === :auto || @warn "Invalid value specified for `widen`: $widen"
+        widen ≡ :auto || @warn "Invalid value specified for `widen`: $widen"
     end
 
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims === :round) && return
+    (lims isa Tuple || lims ≡ :round) && return
     for sp in axis.sps, series in series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end
@@ -249,13 +251,15 @@ Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by 
 given `factor` around the limits' middle point.
 If `letter` is omitted, all axes are affected.
 """
-function scale_lims!(sp::Subplot, letter, factor)
+function Commons.scale_lims!(sp::Subplot, letter, factor)
     axis = get_axis(sp, letter)
     from, to = PlotsBase.get_sp_lims(sp, letter)
     axis[:lims] = scale_lims(from, to, factor, axis[:scale])
 end
-scale_lims!(factor::Number) = scale_lims!(PlotsBase.current(), factor)
-scale_lims!(letter::Symbol, factor) = scale_lims!(PlotsBase.current(), letter, factor)
+Commons.scale_lims!(factor::Number) = scale_lims!(PlotsBase.current(), factor)
+Commons.scale_lims!(letter::Symbol, factor) =
+    scale_lims!(PlotsBase.current(), letter, factor)
+
 #----------------------------------------------------------------------
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
@@ -282,7 +286,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     elseif T <: AVec
         plotattributes[get_attr_symbol(letter, :ticks)] = arg
 
-    elseif arg === nothing
+    elseif arg ≡ nothing
         plotattributes[get_attr_symbol(letter, :ticks)] = []
 
     elseif T <: Bool || arg in Commons._all_showaxis_attrs
@@ -303,10 +307,10 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     end
 end
 
-has_ticks(axis::Axis) = get(axis, :ticks, nothing) |> PlotsBase.Ticks._has_ticks
+has_ticks(axis::Axis) = _has_ticks(get(axis, :ticks, nothing))
 
 # update an Axis object with magic args and keywords
-function attr!(axis::Axis, args...; kw...)
+function PlotsBase.attr!(axis::Axis, args...; kw...)
     # first process args
     plotattributes = axis.plotattributes
     foreach(arg -> process_axis_arg!(plotattributes, arg), args)
@@ -317,9 +321,9 @@ function attr!(axis::Axis, args...; kw...)
     # then override for any keywords... only those keywords that already exists in plotattributes
     for (k, v) in kw
         haskey(plotattributes, k) || continue
-        if k === :discrete_values
+        if k ≡ :discrete_values
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
-        elseif k === :lims && isa(v, NTuple{2,TimeType})
+        elseif k ≡ :lims && isa(v, NTuple{2,TimeType})
             plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
         else
             plotattributes[k] = v
@@ -336,7 +340,7 @@ end
 
 # -------------------------------------------------------------------------
 
-Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
+Base.show(io::IO, axis::Axis) = Commons.dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 tickfont(ax::Axis) = font(;
@@ -365,7 +369,7 @@ function _update_axis(
 )
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
-    for k in _all_axis_attrs
+    for k in Commons._all_axis_attrs
         # first get the args without the letter: `tickfont = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
         if haskey(plotattributes_in, k)
@@ -399,15 +403,20 @@ end
 """
 returns (continuous_values, discrete_values) for the ticks on this axis
 """
-function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:formatter])
+function Commons.get_ticks(
+    sp::Subplot,
+    axis::Axis;
+    update = true,
+    formatter = axis[:formatter],
+)
     if update || !haskey(axis.plotattributes, :optimized_ticks)
         dvals = axis[:discrete_values]
         ticks = _transform_ticks(axis[:ticks], axis)
         axis.plotattributes[:optimized_ticks] =
             if (
-                axis[:letter] === :x &&
+                axis[:letter] ≡ :x &&
                 ticks isa Symbol &&
-                ticks !== :none &&
+                ticks ≢ :none &&
                 !isempty(dvals) &&
                 ispolar(sp)
             )
@@ -415,7 +424,7 @@ function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:for
             else
                 cvals = axis[:continuous_values]
                 alims = axis_limits(sp, axis[:letter])
-                get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
+                Commons.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
             end
     end
     axis.plotattributes[:optimized_ticks]
@@ -457,6 +466,8 @@ function PlotsBase.expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
     ex
 end
 
+end # Axes
+
 # -------------------------------------------------------------------------
 
-end # Axes
+using .Axes

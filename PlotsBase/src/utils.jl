@@ -76,11 +76,11 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 
     # update alphas
     for asym in (:linealpha, :markeralpha, :fillalpha)
-        if plotattributes[asym] === nothing
+        if plotattributes[asym] ≡ nothing
             plotattributes[asym] = plotattributes[:seriesalpha]
         end
     end
-    if plotattributes[:markerstrokealpha] === nothing
+    if plotattributes[:markerstrokealpha] ≡ nothing
         plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
     end
 
@@ -92,13 +92,13 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
-        plotattributes[csym] = if plotattributes[csym] === :auto
-            plot_color(if Commons.has_black_border_for_default(stype) && s === :line
-                    sp[:foreground_color_subplot]
-                else
-                    scolor
-                end)
-        elseif plotattributes[csym] === :match
+        plotattributes[csym] = if plotattributes[csym] ≡ :auto
+            plot_color(if Commons.has_black_border_for_default(stype) && s ≡ :line
+                sp[:foreground_color_subplot]
+            else
+                scolor
+            end)
+        elseif plotattributes[csym] ≡ :match
             plot_color(scolor)
         else
             get_series_color(plotattributes[csym], sp, plotIndex, stype)
@@ -106,29 +106,29 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     end
 
     # update markerstrokecolor
-    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] === :match
+    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] ≡ :match
         plot_color(sp[:foreground_color_subplot])
-    elseif plotattributes[:markerstrokecolor] === :auto
+    elseif plotattributes[:markerstrokecolor] ≡ :auto
         get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
     else
         get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
-    if plotattributes[:marker_z] !== nothing
+    if plotattributes[:marker_z] ≢ nothing
         Commons.ensure_gradient!(plotattributes, :markercolor, :markeralpha)
     end
-    if plotattributes[:line_z] !== nothing
+    if plotattributes[:line_z] ≢ nothing
         Commons.ensure_gradient!(plotattributes, :linecolor, :linealpha)
     end
-    if plotattributes[:fill_z] !== nothing
+    if plotattributes[:fill_z] ≢ nothing
         Commons.ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     end
 
     # scatter plots don't have a line, but must have a shape
     if plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
         plotattributes[:linewidth] = 0
-        if plotattributes[:markershape] === :none
+        if plotattributes[:markershape] ≡ :none
             plotattributes[:markershape] = :circle
         end
     end
@@ -215,7 +215,7 @@ heatmap_edges(
     scale::Symbol = :identity,
     isedges::Bool = false,
     ispolar::Bool = false,
-) = _heatmap_edges(Val(scale === :identity), v, scale, isedges, ispolar)
+) = _heatmap_edges(Val(scale ≡ :identity), v, scale, isedges, ispolar)
 
 function heatmap_edges(
     x::AVec,
@@ -239,8 +239,8 @@ function heatmap_edges(
         ArgumentError |>
         throw
     (
-        _heatmap_edges(Val(xscale === :identity), x, xscale, isedges, false),
-        _heatmap_edges(Val(yscale === :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
+        _heatmap_edges(Val(xscale ≡ :identity), x, xscale, isedges, false),
+        _heatmap_edges(Val(yscale ≡ :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
     )
 end
 
@@ -270,27 +270,11 @@ end
 isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
 isatom() = :Atom in nameof.(collect(values(Base.loaded_modules)))
 
-istuple(::Tuple) = true
-istuple(::Any)   = false
-isvector(::AVec) = true
-isvector(::Any)  = false
-ismatrix(::AMat) = true
-ismatrix(::Any)  = false
-isscalar(::Real) = true
-isscalar(::Any)  = false
-
-is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
-
-ticks_type(ticks::AVec{<:Real}) = :ticks
-ticks_type(ticks::AVec{<:AbstractString}) = :labels
-ticks_type(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
-ticks_type(ticks) = :invalid
-
 limsType(lims::Tuple{<:Real,<:Real}) = :limits
-limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
+limsType(lims::Symbol) = lims ≡ :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
-isautop(sp::Subplot) = sp[:projection_type] === :auto
+isautop(sp::Subplot) = sp[:projection_type] ≡ :auto
 isortho(sp::Subplot) = sp[:projection_type] ∈ (:ortho, :orthographic)
 ispersp(sp::Subplot) = sp[:projection_type] ∈ (:persp, :perspective)
 
@@ -305,7 +289,7 @@ nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b); nothing)
 function nansplit(v::AVec)
     vs = Vector{eltype(v)}[]
     while true
-        if (idx = findfirst(isnan, v)) === nothing
+        if (idx = findfirst(isnan, v)) ≡ nothing
             # no nans
             push!(vs, v)
             break
@@ -339,7 +323,7 @@ function make_fillrange_from_ribbon(kw::AKW)
     rib1, rib2 = -first(rib), last(rib)
     # kw[:ribbon] = nothing
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
-    (get(kw, :fillalpha, nothing) === nothing) && (kw[:fillalpha] = 0.5)
+    (get(kw, :fillalpha, nothing) ≡ nothing) && (kw[:fillalpha] = 0.5)
 end
 
 #turn tuple of fillranges to one path
@@ -406,8 +390,8 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     if treats_y_as_x(get(plotattributes, :seriestype, :path))
         xformatter = get(plotattributes, :xformatter, :auto)
         yformatter = get(plotattributes, :yformatter, :auto)
-        yformatter !== :auto && (plotattributes[:xformatter] = yformatter)
-        xformatter === :auto &&
+        yformatter ≢ :auto && (plotattributes[:xformatter] = yformatter)
+        xformatter ≡ :auto &&
             haskey(plotattributes, :yformatter) &&
             pop!(plotattributes, :yformatter)
     end
@@ -475,7 +459,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
     # handle axes args
     for k in Commons._axis_attrs
-        if haskey(plotattributes, k) && k !== :link
+        if haskey(plotattributes, k) && k ≢ :link
             v = plotattributes[k]
             for letter in (:x, :y, :z)
                 lk = get_attr_symbol(letter, k)
@@ -515,7 +499,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     if haskey(plotattributes, :markershape)
         plotattributes[:markershape] =
             Commons._replace_markershape(plotattributes[:markershape])
-        if plotattributes[:markershape] === :none &&
+        if plotattributes[:markershape] ≡ :none &&
            get(plotattributes, :seriestype, :path) in
            (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
             plotattributes[:markershape] = :circle
@@ -594,33 +578,31 @@ end
 ```
 """
 function with(f::Function, args...; scalefonts = nothing, kw...)
-    newdefs = KW(kw)
+    new_defs = KW(kw)
 
     if :canvas in args
-        newdefs[:xticks] = nothing
-        newdefs[:yticks] = nothing
-        newdefs[:grid] = false
-        newdefs[:legend_position] = false
+        new_defs[:xticks] = nothing
+        new_defs[:yticks] = nothing
+        new_defs[:grid] = false
+        new_defs[:legend_position] = false
     end
 
     # dict to store old and new keyword args for anything that changes
-    olddefs = KW()
-    for k in keys(newdefs)
-        olddefs[k] = default(k)
+    old_defs = KW()
+    for k in keys(new_defs)
+        old_defs[k] = default(k)
     end
 
     # save the backend
-    oldbackend = CURRENT_BACKEND.sym
+    old_backend = backend_name()
 
     for arg in args
-        # change backend?
-        if arg isa Symbol
-            if arg ∈ backends()
-                if (pkg = backend_package_name(arg)) ≢ nothing  # :plotly
-                    @eval Main import $pkg
-                end
-                backend(arg)
+        # change backend ?
+        arg isa Symbol && if arg ∈ backends()
+            if (pkg = backend_package_name(arg)) ≢ nothing  # :plotly
+                @eval Main import $pkg
             end
+            Base.invokelatest(backend, arg)
         end
 
         # TODO: generalize this strategy to allow args as much as possible
@@ -629,57 +611,57 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
 
         k = :legend
         if arg in (k, :leg)
-            olddefs[k] = default(k)
-            newdefs[k] = true
+            old_defs[k] = default(k)
+            new_defs[k] = true
         end
 
         k = :grid
         if arg == k
-            olddefs[k] = default(k)
-            newdefs[k] = true
+            old_defs[k] = default(k)
+            new_defs[k] = true
         end
     end
 
     # now set all those defaults
-    default(; newdefs...)
+    default(; new_defs...)
     scalefonts ≡ nothing || scalefontsizes(scalefonts)
 
     # call the function
-    ret = f()
+    ret = Base.invokelatest(f)
 
     # put the defaults back
     scalefonts ≡ nothing || resetfontsizes()
-    default(; olddefs...)
+    default(; old_defs...)
 
     # revert the backend
-    CURRENT_BACKEND.sym != oldbackend && backend(oldbackend)
+    old_backend != backend_name() && backend(old_backend)
 
     # return the result of the function
     ret
 end
 
 # ---------------------------------------------------------------
+const _convert_sci_unicode_dict = Dict(
+    '⁰' => "0",
+    '¹' => "1",
+    '²' => "2",
+    '³' => "3",
+    '⁴' => "4",
+    '⁵' => "5",
+    '⁶' => "6",
+    '⁷' => "7",
+    '⁸' => "8",
+    '⁹' => "9",
+    '⁻' => "-",
+    "×10" => "×10^{",
+)
 
 # converts unicode scientific notation, as returned by Showoff,
 # to a tex-like format (supported by gr, pyplot, and pgfplots).
 
 function convert_sci_unicode(label::AbstractString)
-    unicode_dict = Dict(
-        '⁰' => "0",
-        '¹' => "1",
-        '²' => "2",
-        '³' => "3",
-        '⁴' => "4",
-        '⁵' => "5",
-        '⁶' => "6",
-        '⁷' => "7",
-        '⁸' => "8",
-        '⁹' => "9",
-        '⁻' => "-",
-        "×10" => "×10^{",
-    )
-    for key in keys(unicode_dict)
-        label = replace(label, key => unicode_dict[key])
+    for key in keys(_convert_sci_unicode_dict)
+        label = replace(label, key => _convert_sci_unicode_dict[key])
     end
     if occursin("×10^{", label)
         label = string(label, "}")
@@ -947,7 +929,7 @@ Computes the distances of the plot limits to a sample of points at the extremes 
 the ranges, and places the legend at the corner where the maximum distance to the limits is found.
 """
 function _guess_best_legend_position(lp::Symbol, plt)
-    lp === :best || return lp
+    lp ≡ :best || return lp
     _guess_best_legend_position(xlims(plt), ylims(plt), plt)
 end
 

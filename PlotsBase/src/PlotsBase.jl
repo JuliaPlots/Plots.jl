@@ -8,7 +8,7 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
 end
 
 using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
-using Reexport, RelocatableFolders
+using PrecompileTools, Preferences, Reexport, RelocatableFolders
 using Base.Meta
 @reexport using RecipesBase
 @reexport using PlotThemes
@@ -37,6 +37,7 @@ import RecipesPipeline:
 import UnicodeFun
 import StatsBase
 import Downloads
+import Measures
 import Showoff
 import Unzip
 import JLFzf
@@ -115,72 +116,37 @@ export
     plotattr,
     scalefontsizes,
     resetfontsizes
+
 #! format: on
-import Measures
-include("PlotMeasures.jl")
-using .PlotMeasures
-import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
-# ---------------------------------------------------------
-macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
-    Expr(
-        :module,
-        true,
-        mod,
-        Expr(
-            :block,
-            Expr(
-                :import,
-                Expr(
-                    :(:),
-                    Expr(:., :., :., parent),
-                    (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
-                ),
-            ),
-            Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...),
-        ),
-    ) |> esc
-end
 import NaNMath
+
+const _project = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
+const _version = _project.version
+const _compat  = _project.compat
+
 include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
-# ---------------------------------------------------------
+
+Commons.@generic_functions attr attr! rotate rotate!
+
 include("Fonts.jl")
-@reexport using .Fonts
-using .Fonts: Font, PlotText
 include("Ticks.jl")
-using .Ticks
-include("Series.jl")
-using .PlotsSeries
+include("DataSeries.jl")
 include("Subplots.jl")
-using .Subplots
-import .Subplots: plotarea, plotarea!, leftpad, toppad, bottompad, rightpad
 include("Axes.jl")
-using .Axes
 include("Surfaces.jl")
 include("Colorbars.jl")
-using .Colorbars
-include("PlotsPlots.jl")
-using .PlotsPlots
+include("Plots.jl")
 include("layouts.jl")
-# ---------------------------------------------------------
 include("utils.jl")
-using .Surfaces
 include("axes_utils.jl")
 include("legend.jl")
 include("Shapes.jl")
-using .Shapes
-using .Shapes: Shape, _shapes, rotate!
 include("Annotations.jl")
-using .Annotations
-using .Annotations: SeriesAnnotations, process_annotation
 include("Arrows.jl")
-using .Arrows
 include("Strokes.jl")
-using .Strokes
-using .Strokes: Stroke, Brush
 include("BezierCurves.jl")
-using .BezierCurves
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
@@ -189,16 +155,45 @@ include("recipes.jl")
 include("animation.jl")
 include("examples.jl")
 include("plotattr.jl")
-include("backends/nobackend.jl")
-include("abstract_backend.jl")
 include("alignment.jl")
-const CURRENT_BACKEND = CurrentBackend(:none)
 include("output.jl")
 include("shorthands.jl")
-include("backends/web.jl")
-include("backends/plotly.jl")
-using .Plotly
+include("backends.jl")
+include("web.jl")
+include("plotly.jl")
+include("preferences.jl")
 include("init.jl")
 include("users.jl")
+
+# COV_EXCL_START
+@setup_workload begin
+    backend(:none)
+    n = length(_examples)
+    imports = sizehint!(Expr[], n)
+    examples = sizehint!(Expr[], 10n)
+    scratch_dir = mktempdir()
+    for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
+        _examples[i].external && continue
+        (imp = _examples[i].imports) ≡ nothing || push!(imports, imp)
+        func = gensym(string(i))
+        push!(examples, quote
+            $func() = begin  # evaluate each example in a local scope
+                $(_examples[i].exprs)
+                $i == 1 || return  # trigger display only for one example
+                fn = joinpath(scratch_dir, tempname())
+                show(devnull, current())
+                nothing
+            end
+            $func()
+        end)
+    end
+    @compile_workload begin
+        backend(:none)
+        eval.(imports)
+        eval.(examples)
+    end
+    CURRENT_PLOT.nullableplot = nothing
+end
+# COV_EXCL_STOP
 
 end

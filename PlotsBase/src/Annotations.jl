@@ -1,20 +1,21 @@
 # internal module
 module Annotations
 
-using ..PlotsBase.Commons
-using ..PlotsBase.Dates
-using ..PlotsBase.Fonts: Font, PlotText, text, font
-using ..PlotsBase.Shapes: Shape, _shapes
-using ..PlotsBase.PlotMeasures: pct
-using ..PlotsBase: Series, Subplot, TimeType, Length
-using ..PlotsBase: is_2tuple, is3d, discrete_value!
-export EachAnn,
+export SeriesAnnotations,
+    EachAnn,
     series_annotations,
     series_annotations_shapes!,
     process_annotation,
     locate_annotation,
     annotations,
     assign_annotation_coord!
+
+import ..PlotsBase: Series, Subplot, TimeType, is3d, discrete_value!
+
+using ..Commons
+using ..Shapes
+using ..Dates
+using ..Fonts
 
 mutable struct SeriesAnnotations
     strs::AVec  # the labels/names
@@ -69,8 +70,8 @@ function series_annotations(strs::AVec, args...)
             shp = arg
         elseif isa(arg, Font)
             fnt = arg
-        elseif isa(arg, Symbol) && haskey(_shapes, arg)
-            shp = _shapes[arg]
+        elseif isa(arg, Symbol) && haskey(Shapes._shapes, arg)
+            shp = Shapes._shapes[arg]
         elseif isa(arg, Number)
             scalefactor = arg, arg
         elseif is_2tuple(arg)
@@ -87,7 +88,7 @@ end
 function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     anns = series[:series_annotations]
 
-    if anns !== nothing && anns.baseshape !== nothing
+    if anns ≢ nothing && anns.baseshape ≢ nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
         msw, msh = anns.scalefactor
@@ -127,7 +128,7 @@ mutable struct EachAnn
 end
 
 function Base.iterate(ea::EachAnn, i = 1)
-    (ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)) && return
+    (ea.anns ≡ nothing || isempty(ea.anns.strs) || i > length(ea.y)) && return
 
     tmp = _cycle(ea.anns.strs, i)
     str, fnt = if isa(tmp, PlotText)
@@ -156,8 +157,7 @@ _annotationfont(sp::Subplot) = font(;
 
 _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwxyz") = (
     pos...,
-    lab === :auto ? text("($(alphabet[sp[:subplot_index]]))", font) :
-    _text_label(lab, font),
+    lab ≡ :auto ? text("($(alphabet[sp[:subplot_index]]))", font) : _text_label(lab, font),
 )
 
 assign_annotation_coord!(axis, x) = discrete_value!(axis, x)[1]
@@ -205,11 +205,11 @@ process_annotation(sp::Subplot, ann) =
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     # !TODO Add more scales in the future (asinh, sqrt) ?
-    if scale === :log || scale === :ln
+    if scale ≡ :log || scale ≡ :ln
         exp(log(xmin) + pos.value * log(xmax / xmin))
-    elseif scale === :log10
+    elseif scale ≡ :log10
         exp10(log10(xmin) + pos.value * log10(xmax / xmin))
-    elseif scale === :log2
+    elseif scale ≡ :log2
         exp2(log2(xmin) + pos.value * log2(xmax / xmin))
     else  # :identity (linear scale)
         xmin + pos.value * (xmax - xmin)
@@ -251,4 +251,8 @@ locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
 locate_annotation(sp::Subplot, pos::Symbol, label::PlotText) =
     locate_annotation(sp, position_multiplier[pos], label)
 
-end # Annotations
+end  # module
+
+# -------------------------------------------------------------------
+
+using .Annotations

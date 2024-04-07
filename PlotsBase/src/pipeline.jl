@@ -10,7 +10,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
 )
     pkeys = keys(plotattributes)
     for k in pkeys
-        if (dk = get(Commons._keyAliases, k, nothing)) !== nothing
+        if (dk = get(Commons._keyAliases, k, nothing)) ≢ nothing
             kv = RecipesPipeline.pop_kw!(plotattributes, k)
             dk ∈ pkeys || (plotattributes[dk] = kv)
         end
@@ -63,7 +63,7 @@ end
 function _preprocess_userrecipe(kw::AKW)
     Commons._add_markershape(kw)
 
-    if get(kw, :permute, default(:permute)) !== :none
+    if get(kw, :permute, default(:permute)) ≢ :none
         l1, l2 = kw[:permute]
         for k in Commons._axis_attrs
             k1 = Commons._attrsymbolcache[l1][k]
@@ -99,7 +99,7 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     errors = (:xerror, :yerror, :zerror)
     if st ∉ errors
         for esym in errors
-            if get(kw, esym, nothing) !== nothing
+            if get(kw, esym, nothing) ≢ nothing
                 # we make a copy of the KW and apply an errorbar recipe
                 errkw = copy(kw)
                 errkw[:seriestype] = esym
@@ -162,7 +162,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::PlotsBase.Plot, 
     err_inds =
         findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
     for ind in err_inds
-        if ind > 1 && get(kw_list[ind - 1], :seriestype, :path) === :scatter
+        if ind > 1 && get(kw_list[ind - 1], :seriestype, :path) ≡ :scatter
             tmp = copy(kw_list[ind])
             kw_list[ind] = copy(kw_list[ind - 1])
             kw_list[ind - 1] = tmp
@@ -181,10 +181,10 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::PlotsBase.Plot, 
             kw[:ribbon] = map(rib, kw[:x])
         end
         # convert a ribbon into a fillrange
-        if rib !== nothing
+        if rib ≢ nothing
             make_fillrange_from_ribbon(kw)
             # map fillrange if it's a Function
-        elseif fr !== nothing && fr isa Function
+        elseif fr ≢ nothing && fr isa Function
             kw[:fillrange] = map(fr, kw[:x])
         end
     end
@@ -214,7 +214,7 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     end
 
     # handle inset subplots
-    if (insets = plt[:inset_subplots]) !== nothing
+    if (insets = plt[:inset_subplots]) ≢ nothing
         typeof(insets) <: AVec || (insets = [insets])
         for inset in insets
             parent, bb = is_2tuple(inset) ? inset : (nothing, inset)
@@ -247,10 +247,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         sps = get(kw, :subplot, :auto)
         sp = get_subplot(
             plt,
-            _cycle(
-                sps === :auto ? plt.subplots : plt.subplots[sps],
-                series_idx(kw_list, kw),
-            ),
+            _cycle(sps ≡ :auto ? plt.subplots : plt.subplots[sps], series_idx(kw_list, kw)),
         )
         kw[:subplot] = sp
 
@@ -290,7 +287,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         else
             get(sp_attrs, sp, KW())
         end
-        PlotsPlots._update_subplot_attrs(plt, sp, attr, idx, false)
+        Plots._update_subplot_attrs(plt, sp, attr, idx, false)
     end
 
     # do we need to link any axes together?
@@ -353,15 +350,15 @@ RecipesPipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported
 
 function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
-    if (perm = plotattributes[:permute]) !== :none
+    if (perm = plotattributes[:permute]) ≢ :none
         letter1, letter2 = perm
         ms = plotattributes[:markershape]
-        if ms === :hline && (perm == (:x, :y) || perm == (:y, :x))
+        if ms ≡ :hline && (perm == (:x, :y) || perm == (:y, :x))
             plotattributes[:markershape] = :vline
-        elseif ms === :vline && (perm == (:x, :y) || perm == (:y, :x))
+        elseif ms ≡ :vline && (perm == (:x, :y) || perm == (:y, :x))
             plotattributes[:markershape] = :hline
         end
-        if plotattributes[:seriestype] === :bar # bar calls expand_extrema! in its recipe...
+        if plotattributes[:seriestype] ≡ :bar # bar calls expand_extrema! in its recipe...
             sp = plotattributes[:subplot]
             sp[get_attr_symbol(letter1, :axis)][:lims],
             sp[get_attr_symbol(letter2, :axis)][:lims] =
@@ -381,16 +378,13 @@ end
 function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st::Symbol = plotattributes[:seriestype]
     sp::Subplot{T} = plotattributes[:subplot]
-    sp_idx = PlotsPlots.get_subplot_index(plt, sp)
-    PlotsPlots._update_subplot_attrs(plt, sp, plotattributes, sp_idx, true)
+    sp_idx = Plots.get_subplot_index(plt, sp)
+    Plots._update_subplot_attrs(plt, sp, plotattributes, sp_idx, true)
 
     st = _override_seriestype_check(plotattributes, st)
 
     # change to a 3d projection for this subplot?
-    if (
-        RecipesPipeline.needs_3d_axes(st) ||
-        (st === :quiver && plotattributes[:z] !== nothing)
-    )
+    if (RecipesPipeline.needs_3d_axes(st) || (st ≡ :quiver && plotattributes[:z] ≢ nothing))
         sp.attr[:projection] = "3d"
     end
 
@@ -404,7 +398,7 @@ end
 
 function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
     # adjust extrema and discrete info
-    if st === :image
+    if st ≡ :image
         xmin, xmax = ignorenan_extrema(plotattributes[:x])
         ymin, ymax = ignorenan_extrema(plotattributes[:y])
         expand_extrema!(sp[:xaxis], (xmin, xmax))
@@ -426,11 +420,11 @@ function _add_the_series(plt, sp, plotattributes)
         plt[:extra_plot_kwargs] = get(kw, :plot, KW())
         sp[:extra_kwargs] = get(kw, :subplot, KW())
         plotattributes[:extra_kwargs] = get(kw, :series, KW())
-    elseif kw === :plot
+    elseif kw ≡ :plot
         plt[:extra_plot_kwargs] = extra_kwargs
-    elseif kw === :subplot
+    elseif kw ≡ :subplot
         sp[:extra_kwargs] = extra_kwargs
-    elseif kw === :series
+    elseif kw ≡ :series
         plotattributes[:extra_kwargs] = extra_kwargs
     else
         throw(ArgumentError("Unsupported type for extra keyword arguments"))
@@ -438,9 +432,9 @@ function _add_the_series(plt, sp, plotattributes)
     warn_on_unsupported(plt.backend, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
-    if (z_order = plotattributes[:z_order]) === :front
+    if (z_order = plotattributes[:z_order]) ≡ :front
         push!(sp.series_list, series)
-    elseif z_order === :back
+    elseif z_order ≡ :back
         pushfirst!(sp.series_list, series)
     elseif z_order isa Integer
         insert!(sp.series_list, z_order, series)

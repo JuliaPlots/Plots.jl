@@ -17,10 +17,10 @@ jobs:
   ci:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
-      GKS_ENCODING: "utf8"
-      GKSwstype: "nul"
-      JULIA_CONDAPKG_BACKEND: "MicroMamba"
-      MPLBACKEND: "agg"
+      JULIA_CONDAPKG_BACKEND: MicroMamba
+      MPLBACKEND: agg
+      GKS_ENCODING: utf8
+      GKSwstype: nul
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     runs-on: ${{ matrix.os }}
@@ -28,35 +28,18 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
-          - '1' # latest stable
+          - '1'  # latest stable
+          - '1.9'  # minimal declared julia compat in `Project.toml`
         experimental:
           - false
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
         include:
           - os: ubuntu-latest
-            experimental: false
-            prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-          - os: ubuntu-latest
-            experimental: false
-            prefix: xvfb-run
-            version:  '1.7' # only test intermediate release on `ubuntu` to spare resources
-          - os: ubuntu-latest
-            experimental: false
-            prefix: xvfb-run
-            version:  '1.8' # only test intermediate release on `ubuntu` to spare resources
-          - os: ubuntu-latest
-            experimental: false
-            prefix: xvfb-run
-            version:  '1.9' # only test intermediate release on `ubuntu` to spare resources
+            experimental: true
+            version: '~1.11.0-0'  # upcoming julia version (`alpha`, `beta` or `rc`)
           - os: ubuntu-latest
             experimental: true
-            prefix: xvfb-run
-            version: '~1.11.0-0'  # upcoming julia version, next `rc`
-          - os: ubuntu-latest
-            experimental: true
-            prefix: xvfb-run
             version: 'nightly'
 
     steps:
@@ -66,7 +49,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get -y update
-          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} g++
+          sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} 
           sudo fc-cache -vr
 
       - name: Set LD_PRELOAD
@@ -76,69 +59,42 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
-      - uses: julia-actions/cache@v1
-      - uses: julia-actions/julia-buildpkg@latest
 
-      - name: Run upstream RecipesBase, RecipesPipeline tests
-        shell: julia --project=@. --color=yes {0}
+      - uses: julia-actions/cache@v1
+
+      - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
+        shell: julia --color=yes {0}
         run: |
           using Pkg
-          foreach(("RecipesBase", "RecipesPipeline")) do name
-            Pkg.develop(path=name); Pkg.test(name; coverage=true)
-          end
+          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
 
       - name: Install conda based matplotlib
-        shell: julia --project=@. --color=yes {0}
-        run: |
-          using Pkg; Pkg.add("CondaPkg")
-          using CondaPkg; CondaPkg.resolve()
-          libgcc = if Sys.islinux()
-            # see discourse.julialang.org/t/glibcxx-version-not-found/82209/8
-            # julia 1.8.3 is built with libstdc++.so.6.0.29, so we must restrict to this version (gcc 11.3.0, not gcc 12.2.0)
-            # see gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html
-            specs = Dict(
-              v"3.4.29" => ">=11.1,<12.1",
-              v"3.4.30" => ">=12.1,<13.1",
-              v"3.4.31" => ">=13.1,<14.1",
-              v"3.4.32" => ">=14.1,<15.1",
-              v"3.4.33" => ">=15.1,<16.1",
-              # ... keep this up-to-date with gcc 16
-            )[Base.BinaryPlatforms.detect_libstdcxx_version()]
-            ("libgcc-ng$specs", "libstdcxx-ng$specs")
-          else
-            ()
-          end
-          CondaPkg.PkgREPL.add([libgcc..., "matplotlib"])
-          CondaPkg.status()
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
+        run: julia --color=yes ci/matplotlib.jl
 
-      - name: Run upstream PlotsBase tests
-        shell: julia --project=@. --color=yes {0}
-        run: |
-          using Pkg
-          foreach(("PlotsBase",)) do name
-            Pkg.develop(path=name); Pkg.test(name; coverage=true)
-          end
-
-      - uses: julia-actions/julia-runtest@latest
+      - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
         timeout-minutes: 60
-        with:
-          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
-
-      - name: Run downstream tests
-        if: startsWith(matrix.os, 'ubuntu')
-        shell: xvfb-run julia --project=@. --color=yes {0}
         run: |
-          using Pkg
-          foreach(("StatsPlots", "GraphRecipes")) do name
-            Pkg.activate(tempdir())
-            foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline", "."))
-            Pkg.add(name); Pkg.test(name; coverage=true)
-          end
+          cmd=(julia --color=yes)
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            cmd=(xvfb-run ${cmd[@]})
+          fi
+          echo ${cmd[@]}
+          ${cmd[@]} -e '
+            using Pkg
+            foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
+          '
+      - name: Test downstream packages
+        if: startsWith(matrix.os, 'ubuntu')
+        run: xvfb-run julia --color=yes ci/downstream.jl
 
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          directories: RecipesBase/src,RecipesPipeline/src,src
+          directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,src
       - uses: codecov/codecov-action@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:

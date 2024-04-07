@@ -460,7 +460,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 29
         "Layouts, margins, label rotation, title location",
-        :(using PlotsBase.PlotMeasures),  # for Measures, e.g. mm and px
+        :(using PlotsBase.Commons),  # for Measures, e.g. mm and px
         quote
             plot(
                 rand(100, 6),
@@ -964,9 +964,9 @@ const _examples = PlotExample[
                         wireframe(
                             args...,
                             title = "wire-flip-$ax",
-                            xflip = ax === :x,
-                            yflip = ax === :y,
-                            zflip = ax === :z;
+                            xflip = ax ≡ :x,
+                            yflip = ax ≡ :y,
+                            zflip = ax ≡ :z;
                             kw...,
                         ),
                     )
@@ -978,9 +978,9 @@ const _examples = PlotExample[
                         wireframe(
                             args...,
                             title = "wire-mirror-$ax",
-                            xmirror = ax === :x,
-                            ymirror = ax === :y,
-                            zmirror = ax === :z;
+                            xmirror = ax ≡ :x,
+                            ymirror = ax ≡ :y,
+                            zmirror = ax ≡ :z;
                             kw...,
                         ),
                     )
@@ -1254,9 +1254,11 @@ const _examples = PlotExample[
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
-_animation_examples = [2, 31]
+_animation_examples = [02, 31]
 _backend_skips = Dict(
-    :gr => [25, 30], # TODO: add back when StatsPlots is available
+    :none => Int[],
+    :pythonplot => Int[],
+    :gr => [25, 30],  # TODO: add back when StatsPlots is available
     :plotlyjs => [
         21,
         24,
@@ -1274,7 +1276,7 @@ _backend_skips = Dict(
         66,  # bar: vector-valued `color` unsupported
     ],
     :pgfplotsx => [
-        6,  # images
+        06,  # images
         16,  # pgfplots thinks the upper panel is too small
         32,  # spy
         49,  # polar heatmap
@@ -1283,8 +1285,8 @@ _backend_skips = Dict(
         62,  # fillstyle unsupported
     ],
     :unicodeplots => [
-        5,  # limits issue
-        6,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
+        05,  # limits issue
+        06,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
         16,  # nested layout unsupported
         21,  # custom markers unsupported
         26,  # nested layout unsupported
@@ -1312,8 +1314,6 @@ _backend_skips = Dict(
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
-
-_backend_skips[:pythonplot] = Int[]
 
 # ---------------------------------------------------------------------------------
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
@@ -1371,16 +1371,16 @@ function test_examples(
         PlotsBase.Commons.debug!($debug)
         backend($(QuoteNode(pkgname)))
         rng = $rng
-        rng === nothing || Random.seed!(rng, PlotsBase.PLOTS_SEED)
+        rng ≡ nothing || Random.seed!(rng, PlotsBase.PLOTS_SEED)
         theme(:default)
     end)
-    (imp = _examples[i].imports) === nothing || Base.eval(m, imp)
+    (imp = _examples[i].imports) ≡ nothing || Base.eval(m, imp)
     exprs = _examples[i].exprs
-    rng === nothing || (exprs = PlotsBase.replace_rand(exprs))
+    rng ≡ nothing || (exprs = PlotsBase.replace_rand(exprs))
     Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))
-    callback === nothing || callback(m, pkgname, i)
+    callback ≡ nothing || callback(m, pkgname, i)
     m.PlotsBase.current()
 end
 
@@ -1415,7 +1415,7 @@ function test_examples(
             end
             # COV_EXCL_STOP
         end
-        sleep === nothing || Base.sleep(sleep)
+        sleep ≡ nothing || Base.sleep(sleep)
     end
     plts
 end

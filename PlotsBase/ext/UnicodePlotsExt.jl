@@ -4,38 +4,21 @@ import PlotsBase: PlotsBase, texmath2unicode
 import RecipesPipeline
 import UnicodePlots
 
-using PlotsBase.PlotMeasures
-using PlotsBase.PlotsSeries
 using PlotsBase.Annotations
-using PlotsBase.PlotsPlots
+using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Commons
 using PlotsBase.Shapes
 using PlotsBase.Arrows
 using PlotsBase.Colors
+using PlotsBase.Plots
 using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
 
-const package_str = "UnicodePlots"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct UnicodePlotsBackend <: PlotsBase.AbstractBackend end
-const T = UnicodePlotsBackend
-
-get_concrete_backend() = UnicodePlotsBackend  # opposite to abstract
-
-function __init__()
-    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[T] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-end
-PlotsBase.backend_name(::UnicodePlotsBackend) = sym
-PlotsBase.backend_package_name(::UnicodePlotsBackend) = PlotsBase.backend_package_name(sym)
+PlotsBase.@extension_static UnicodePlotsBackend unicodeplots
 
 const _unicodeplots_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -112,27 +95,6 @@ const _unicodeplots_markers = [
     :x,
 ]
 const _unicodeplots_scales = [:identity, :ln, :log2, :log10]
-# -----------------------------------------------------------------------------
-# Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
-# defined in abstract_backend.jl
-
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::UnicodePlotsBackend, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::UnicodePlotsBackend) = sort(collect($v))
-    end |> eval
-end
-
-## results in:
-# PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
 
 # https://github.com/JuliaPlots/UnicodePlots.jl
 
@@ -148,7 +110,7 @@ const _canvas_map = (
 
 PlotsBase.should_warn_on_unsupported(::UnicodePlotsBackend) = false
 
-function PlotsBase._before_layout_calcs(plt::PlotsBase.Plot{UnicodePlotsBackend})
+function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
     plt.o = UnicodePlots.Plot[]
     up_width = UnicodePlots.DEFAULT_WIDTH[]
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
@@ -412,11 +374,7 @@ end
 
 # ------------------------------------------------------------------------------------------
 
-function PlotsBase._show(
-    io::IO,
-    ::MIME"image/png",
-    plt::PlotsBase.Plot{UnicodePlotsBackend},
-)
+function PlotsBase._show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
     applicable(UnicodePlots.save_image, io) ||
         "PlotsBase(UnicodePlots): saving to `.png` requires `import FreeType, FileIO`" |>
         ArgumentError |>
@@ -428,7 +386,7 @@ function PlotsBase._show(
     imgs = []
     sps = 0
     for r in 1:nr, c in 1:nc
-        if (l = plt.layout[r, c]) isa PlotsBase.GridLayout && size(l) != (1, 1)
+        if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
             unsupported_layout_error()
         else
             img = UnicodePlots.png_image(plt.o[sps += 1]; pixelsize = 32)
@@ -461,16 +419,12 @@ function PlotsBase._show(
     nothing
 end
 
-Base.show(plt::PlotsBase.Plot{UnicodePlotsBackend}) = show(stdout, plt)
-Base.show(io::IO, plt::PlotsBase.Plot{UnicodePlotsBackend}) =
+Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
+Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) =
     PlotsBase._show(io, MIME("text/plain"), plt)
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
-function PlotsBase._show(
-    io::IO,
-    ::MIME"text/plain",
-    plt::PlotsBase.Plot{UnicodePlotsBackend},
-)
+function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     PlotsBase.prepare_output(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
@@ -490,7 +444,7 @@ function PlotsBase._show(
         for r in 1:nr
             lmax = 0
             for c in 1:nc
-                if (l = plt.layout[r, c]) isa PlotsBase.GridLayout && size(l) != (1, 1)
+                if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
                     unsupported_layout_error()
                 else
                     if get(l.attr, :blank, false)
@@ -531,9 +485,9 @@ function PlotsBase._show(
 end
 
 # we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
-function PlotsBase._display(plt::PlotsBase.Plot{UnicodePlotsBackend})
+function PlotsBase._display(plt::Plot{UnicodePlotsBackend})
     show(stdout, plt)
     println(stdout)
 end
 
-end # module
+end  # module

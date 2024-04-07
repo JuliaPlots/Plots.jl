@@ -1,16 +1,18 @@
 module Colorbars
 
-export colorbar_style,
-    get_clims, update_clims, hascolorbar, get_colorbar_ticks, _update_subplot_colorbars
-using PlotsBase.Commons: Commons, NaNMath, ignorenan_extrema
-using PlotsBase.PlotsSeries
-using PlotsBase.Subplots: Subplot, series_list
-using PlotsBase.Surfaces: AbstractSurface
-using PlotsBase.Ticks
-using PlotsBase.Ticks: _transform_ticks
-import PlotsBase.Commons.get_clims
+export colorbar_style, get_clims, update_clims, hascolorbar
+export get_colorbar_ticks, _update_subplot_colorbars
 
-# These functions return an operator for use in `get_clims(::Seres, op)`
+import ..Commons: NaNMath, ignorenan_extrema, get_clims
+
+using ..Subplots: Subplot, series_list
+using ..Surfaces: AbstractSurface
+using ..Ticks: _transform_ticks
+using ..DataSeries
+using ..Commons
+using ..Ticks
+
+# these functions return an operator for use in `get_clims(::Seres, op)`
 process_clims(lims::Tuple{<:Number,<:Number}) =
     (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
 process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
@@ -31,13 +33,10 @@ function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float6
     for series in series_list(sp)
         if series[:colorbar_entry]::Bool
             # Avoid calling the inner `update_clims` if at all possible; dynamic dispatch hell
-            if (
-                   series[:seriestype] ∈ Commons._z_colored_series &&
-                   series[:z] !== nothing
-               ) ||
-               series[:line_z] !== nothing ||
-               series[:marker_z] !== nothing ||
-               series[:fill_z] !== nothing
+            if (series[:seriestype] ∈ Commons._z_colored_series && series[:z] ≢ nothing) ||
+               series[:line_z] ≢ nothing ||
+               series[:marker_z] ≢ nothing ||
+               series[:fill_z] ≢ nothing
                 zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
             else
                 zmin, zmax = _update_clims(zmin, zmax, NaN, NaN)
@@ -77,16 +76,16 @@ function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64,Flo
     zmin, zmax = Inf, -Inf
 
     # keeping this unrolled has higher performance
-    if series[:seriestype] ∈ Commons._z_colored_series && series[:z] !== nothing
+    if series[:seriestype] ∈ Commons._z_colored_series && series[:z] ≢ nothing
         zmin, zmax = update_clims(zmin, zmax, series[:z], op)
     end
-    if series[:line_z] !== nothing
+    if series[:line_z] ≢ nothing
         zmin, zmax = update_clims(zmin, zmax, series[:line_z], op)
     end
-    if series[:marker_z] !== nothing
+    if series[:marker_z] ≢ nothing
         zmin, zmax = update_clims(zmin, zmax, series[:marker_z], op)
     end
-    if series[:fill_z] !== nothing
+    if series[:fill_z] ≢ nothing
         zmin, zmax = update_clims(zmin, zmax, series[:fill_z], op)
     end
     return series[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
@@ -116,16 +115,16 @@ function colorbar_style(series::Series)
     elseif iscontour(series)
         cbar_lines
     elseif series[:seriestype] ∈ (:heatmap, :surface) ||
-           any(series[z] !== nothing for z in (:marker_z, :line_z, :fill_z))
+           any(series[z] ≢ nothing for z in (:marker_z, :line_z, :fill_z))
         cbar_gradient
     else
         nothing
     end
 end
 
-hascolorbar(series::Series) = colorbar_style(series) !== nothing
+hascolorbar(series::Series) = colorbar_style(series) ≢ nothing
 hascolorbar(sp::Subplot) =
-    sp[:colorbar] !== :none && any(hascolorbar(s) for s in series_list(sp))
+    sp[:colorbar] ≢ :none && any(hascolorbar(s) for s in series_list(sp))
 
 function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar_formatter])
     if update || !haskey(sp.attr, :colorbar_optimized_ticks)
@@ -140,7 +139,12 @@ function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar
     return sp.attr[:colorbar_optimized_ticks]
 end
 
-# Dynamic callback from the pipeline if needed
+# dynamic callback from the pipeline if needed
 _update_subplot_colorbars(sp::Subplot) = update_clims(sp)
 _update_subplot_colorbars(sp::Subplot, series::Series) = update_clims(sp, series)
-end # Colorbars
+
+end  # module
+
+# -------------------------------------------------------------------
+
+using .Colorbars

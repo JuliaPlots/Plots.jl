@@ -21,13 +21,15 @@
     @test PlotsBase.labelfunc_tex(:log2)(1) == "2^{1}"
     @test PlotsBase.labelfunc_tex(:ln)(1) == "e^{1}"
 
-    @test PlotsBase.get_labels(:auto, 1:3, :identity) == ["1", "2", "3"]
-    @test PlotsBase.get_labels(:scientific, float.(500:500:1500), :identity) ==
-          ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
-    @test PlotsBase.get_labels(:engineering, float.(500:500:1500), :identity) ==
-          ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
-    @test PlotsBase.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
-    # GR is used during tests and it correctly overrides labelfunc(), but PGFPlotsX did not
+    with(:gr) do  # NOTE: GR overrides `labelfunc`
+        @test PlotsBase.get_labels(:auto, 1:3, :identity) == ["1", "2", "3"]
+        @test PlotsBase.get_labels(:scientific, float.(500:500:1500), :identity) ==
+              ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
+        @test PlotsBase.get_labels(:engineering, float.(500:500:1500), :identity) ==
+              ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
+        @test PlotsBase.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
+    end
+    # GR is used during tests and it correctly overrides `labelfunc`, but PGFPlotsX did not
     with(:pgfplotsx) do
         @test PlotsBase.get_labels(:auto, 1:3, :log10) == ["10^{1}", "10^{2}", "10^{3}"]
     end
@@ -155,9 +157,9 @@ end
     @test haskey(PlotsBase.Commons._keyAliases, :x_guide_position)
     @test !haskey(PlotsBase.Commons._keyAliases, :xguide_position)
     pl = plot(1:2, xl = "x label")
-    @test pl[1][:xaxis][:guide] === "x label"
+    @test pl[1][:xaxis][:guide] ≡ "x label"
     pl = plot(1:2, xrange = (0, 3))
-    @test xlims(pl) === (0, 3)
+    @test xlims(pl) ≡ (0, 3)
     pl = plot(1:2, xtick = [1.25, 1.5, 1.75])
     @test pl[1][:xaxis][:ticks] == [1.25, 1.5, 1.75]
     pl = plot(1:2, xlabelfontsize = 4)
@@ -165,17 +167,17 @@ end
     pl = plot(1:2, xgα = 0.07)
     @test pl[1][:xaxis][:gridalpha] ≈ 0.07
     pl = plot(1:2, xgridls = :dashdot)
-    @test pl[1][:xaxis][:gridstyle] === :dashdot
+    @test pl[1][:xaxis][:gridstyle] ≡ :dashdot
     pl = plot(1:2, xgridcolor = :red)
-    @test pl[1][:xaxis][:foreground_color_grid] === RGBA{Float64}(1.0, 0.0, 0.0, 1.0)
+    @test pl[1][:xaxis][:foreground_color_grid] ≡ RGBA{Float64}(1.0, 0.0, 0.0, 1.0)
     pl = plot(1:2, xminorgridcolor = :red)
-    @test pl[1][:xaxis][:foreground_color_minor_grid] === RGBA{Float64}(1.0, 0.0, 0.0, 1.0)
+    @test pl[1][:xaxis][:foreground_color_minor_grid] ≡ RGBA{Float64}(1.0, 0.0, 0.0, 1.0)
     pl = plot(1:2, xgrid_lw = 0.01)
     @test pl[1][:xaxis][:gridlinewidth] ≈ 0.01
     pl = plot(1:2, xminorgrid_lw = 0.01)
     @test pl[1][:xaxis][:minorgridlinewidth] ≈ 0.01
     pl = plot(1:2, xtickor = :out)
-    @test pl[1][:xaxis][:tick_direction] === :out
+    @test pl[1][:xaxis][:tick_direction] ≡ :out
 end
 
 @testset "Aliases" begin
@@ -186,7 +188,7 @@ end
     pl = plot(1:2, label = "test")
     @test compare(pl, :guide, "", ===)
     pl = plot(1:2, lim = (0, 3))
-    @test xlims(pl) === ylims(pl) === zlims(pl) === (0, 3)
+    @test xlims(pl) ≡ ylims(pl) ≡ zlims(pl) ≡ (0, 3)
     pl = plot(1:2, tick = [1.25, 1.5, 1.75])
     @test compare(pl, :ticks, [1.25, 1.5, 1.75], ==)
     pl = plot(1:2, labelfontsize = 4)
@@ -218,7 +220,7 @@ end
 
     let pl = plot(1:2)
         xl, yl = xlims(pl), ylims(pl)
-        PlotsBase.PlotsPlots.scale_lims!(pl, 1.1)
+        PlotsBase.scale_lims!(pl, 1.1)
         @test first(xlims(pl)) < first(xl)
         @test last(xlims(pl)) > last(xl)
         @test first(ylims(pl)) < first(yl)
@@ -237,7 +239,7 @@ end
 @testset "no labels" begin
     # github.com/JuliaPlots/Plots.jl/issues/4475
     pl = plot(100:100:300, hcat([1, 2, 4], [-1, -2, -4]); yformatter = :none)
-    @test pl[1][:yaxis][:formatter] === :none
+    @test pl[1][:yaxis][:formatter] ≡ :none
 end
 
 @testset "minor ticks" begin
@@ -245,9 +247,9 @@ end
     for minor_intervals in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
         n_minor_ticks_per_major = if minor_intervals isa Bool
             minor_intervals ? PlotsBase.Ticks.DEFAULT_MINOR_INTERVALS[] - 1 : 0
-        elseif minor_intervals === :auto
+        elseif minor_intervals ≡ :auto
             PlotsBase.Ticks.DEFAULT_MINOR_INTERVALS[] - 1
-        elseif minor_intervals === :none || minor_intervals isa Nothing
+        elseif minor_intervals ≡ :none || minor_intervals isa Nothing
             0
         else
             max(0, minor_intervals - 1)
@@ -265,9 +267,9 @@ end
                     @test minor_ticks isa Nothing
                     0
                 end
-            elseif minor_intervals === :auto
+            elseif minor_intervals ≡ :auto
                 length(minor_ticks)
-            elseif minor_intervals === :none || minor_intervals isa Nothing
+            elseif minor_intervals ≡ :none || minor_intervals isa Nothing
                 @test minor_ticks isa Nothing
                 0
             else

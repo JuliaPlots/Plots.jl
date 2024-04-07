@@ -1,8 +1,10 @@
 module Strokes
 
-export stroke, brush, Stroke, Brush
-using PlotsBase.Colors: Colorant
-using PlotsBase.Commons: all_alphas, all_reals, all_styles
+export Stroke, Brush, stroke, brush
+
+using ..Colors: Colorant
+using ..Commons: all_alphas, all_reals, all_styles
+
 struct Stroke
     width
     color
@@ -77,6 +79,8 @@ function brush(args...; alpha = nothing)
     Brush(size, color, alpha)
 end
 
-# -----------------------------------------------------------------------
+end  # module
 
-end # Strokes
+# -------------------------------------------------------------------
+
+using .Strokes

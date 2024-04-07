@@ -27,4 +27,4 @@ for (mime, fmt) in (
         )
 end
 
-end # module
+end  # module

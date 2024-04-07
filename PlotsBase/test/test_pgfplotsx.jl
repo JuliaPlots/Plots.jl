@@ -20,7 +20,7 @@ with(:pgfplotsx) do
     pl = plot(1:5)
     axis = first(get_pgf_axes(pl))
     @test pl.o.the_plot isa PGFPlotsX.TikzDocument
-    @test pl.series_list[1].plotattributes[:quiver] === nothing
+    @test pl.series_list[1].plotattributes[:quiver] ≡ nothing
     @test count(x -> x isa PGFPlotsX.Plot, axis.contents) == 1
     @test !haskey(axis.contents[1].options.dict, "fill")
     @test occursin("documentclass", PlotsBase.pgfx_preamble(pl))
@@ -60,7 +60,7 @@ with(:pgfplotsx) do
         pl = plot!(pl, zeros(n), zeros(n), 1:n, w = 10)
         axis = first(get_pgf_axes(pl))
         if @test_nowarn(haskey(axis.options.dict, "colorbar"))
-            @test axis["colorbar"] === nothing
+            @test axis["colorbar"] ≡ nothing
         end
     end
 
@@ -190,7 +190,7 @@ with(:pgfplotsx) do
         pl = heatmap(xs, ys, z, aspect_ratio = 1)
         axis = first(get_pgf_axes(pl))
         if @test_nowarn(haskey(axis.options.dict, "colorbar"))
-            @test axis["colorbar"] === nothing
+            @test axis["colorbar"] ≡ nothing
             @test axis["colormap name"] == "plots1"
         end
 
@@ -336,8 +336,8 @@ with(:pgfplotsx) do
         @test haskey(plots[1].options.dict, "fill")
         @test haskey(plots[2].options.dict, "fill")
         @test !haskey(plots[3].options.dict, "fill")
-        @test pl.o !== nothing
-        @test pl.o.the_plot !== nothing
+        @test pl.o ≢ nothing
+        @test pl.o.the_plot ≢ nothing
     end
 
     @testset "Markers and Paths" begin
@@ -414,14 +414,14 @@ with(:pgfplotsx) do
         pl = plot(1:5, title = "Test me", titlefont = (2, :left))
         @test pl[1][:title] == "Test me"
         @test pl[1][:titlefontsize] == 2
-        @test pl[1][:titlefonthalign] === :left
+        @test pl[1][:titlefonthalign] ≡ :left
         ax_opt = first(get_pgf_axes(pl)).options
         @test ax_opt["title"] == "Test me"
         @test(haskey(ax_opt.dict, "title style")) isa Test.Pass
         pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
         @test pl[:plot_title] == "Test me"
         @test pl[:plot_titlefontsize] == 2
-        @test pl[:plot_titlefonthalign] === :left
+        @test pl[:plot_titlefonthalign] ≡ :left
         pl = heatmap(
             rand(3, 3),
             colorbar_title = "Test me",
@@ -429,7 +429,7 @@ with(:pgfplotsx) do
         )
         @test pl[1][:colorbar_title] == "Test me"
         @test pl[1][:colorbar_titlefontsize] == 12
-        @test pl[1][:colorbar_titlefonthalign] === :right
+        @test pl[1][:colorbar_titlefonthalign] ≡ :right
     end
 
     @testset "Latexify - LaTeXStrings" begin
@@ -455,7 +455,7 @@ with(:pgfplotsx) do
         plt1 = plot(rand(10, 5))
         plt2 = plot(rand(10))
 
-        @test plot(plt1, plt2, layout = (1, 2), plot_titles = ["(a)" "(b)"]) !== nothing
+        @test plot(plt1, plt2, layout = (1, 2), plot_titles = ["(a)" "(b)"]) ≢ nothing
     end
 
     if Sys.islinux() && Sys.which("pdflatex") ≢ nothing

@@ -49,12 +49,12 @@
     @test PlotsBase.nansplit([1, 2, NaN, 3, 4]) == [[1.0, 2.0], [3.0, 4.0]]
     @test PlotsBase.nanvcat([1, NaN]) |> length == 4
 
-    @test PlotsBase.PlotMeasures.inch2px(1) isa AbstractFloat
-    @test PlotsBase.PlotMeasures.px2inch(1) isa AbstractFloat
-    @test PlotsBase.PlotMeasures.inch2mm(1) isa AbstractFloat
-    @test PlotsBase.PlotMeasures.mm2inch(1) isa AbstractFloat
-    @test PlotsBase.PlotMeasures.px2mm(1) isa AbstractFloat
-    @test PlotsBase.PlotMeasures.mm2px(1) isa AbstractFloat
+    @test PlotsBase.Commons.inch2px(1) isa AbstractFloat
+    @test PlotsBase.Commons.px2inch(1) isa AbstractFloat
+    @test PlotsBase.Commons.inch2mm(1) isa AbstractFloat
+    @test PlotsBase.Commons.mm2inch(1) isa AbstractFloat
+    @test PlotsBase.Commons.px2mm(1) isa AbstractFloat
+    @test PlotsBase.Commons.mm2px(1) isa AbstractFloat
 
     pl = plot()
     @test xlims() isa Tuple
@@ -102,25 +102,25 @@
     push!(pl, 1:2, 2:3, 3:4)
 
     pl = plot([1, 2, 3], [4, 5, 6])
-    @test PlotsBase.PlotsPlots.xmin(pl) == 1
-    @test PlotsBase.PlotsPlots.xmax(pl) == 3
+    @test PlotsBase.Plots.xmin(pl) == 1
+    @test PlotsBase.Plots.xmax(pl) == 3
     @test PlotsBase.Commons.ignorenan_extrema(pl) == (1, 3)
 
-    @test PlotsBase.Commons.get_attr_symbol(:x, "lims") === :xlims
-    @test PlotsBase.Commons.get_attr_symbol(:x, :lims) === :xlims
+    @test PlotsBase.Commons.get_attr_symbol(:x, "lims") ≡ :xlims
+    @test PlotsBase.Commons.get_attr_symbol(:x, :lims) ≡ :xlims
 
     @test contains(PlotsBase._document_argument(:bar_position), "bar_position")
 
-    @test PlotsBase.limsType((1, 1)) === :limits
-    @test PlotsBase.limsType(:undefined) === :invalid
-    @test PlotsBase.limsType(:auto) === :auto
-    @test PlotsBase.limsType(NaN) === :invalid
+    @test PlotsBase.limsType((1, 1)) ≡ :limits
+    @test PlotsBase.limsType(:undefined) ≡ :invalid
+    @test PlotsBase.limsType(:auto) ≡ :auto
+    @test PlotsBase.limsType(NaN) ≡ :invalid
 
-    @test PlotsBase.ticks_type([1, 2]) === :ticks
-    @test PlotsBase.ticks_type(["1", "2"]) === :labels
-    @test PlotsBase.ticks_type(([1, 2], ["1", "2"])) === :ticks_and_labels
-    @test PlotsBase.ticks_type(((1, 2), ("1", "2"))) === :ticks_and_labels
-    @test PlotsBase.ticks_type(:undefined) === :invalid
+    @test PlotsBase.ticks_type([1, 2]) ≡ :ticks
+    @test PlotsBase.ticks_type(["1", "2"]) ≡ :labels
+    @test PlotsBase.ticks_type(([1, 2], ["1", "2"])) ≡ :ticks_and_labels
+    @test PlotsBase.ticks_type(((1, 2), ("1", "2"))) ≡ :ticks_and_labels
+    @test PlotsBase.ticks_type(:undefined) ≡ :invalid
 
     pl = plot(1:2, 1:2, 1:2, proj_type = :ortho)
     @test PlotsBase.isortho(first(pl.subplots))
@@ -130,23 +130,23 @@
     let pl = plot(1:2)
         series = first(pl.series_list)
         label = "fancy label"
-        PlotsBase.PlotsSeries.attr!(series; label)
+        PlotsBase.attr!(series; label)
         @test series[:label] == label
-        @test PlotsBase.PlotsSeries.attr(series, :label) == label
+        @test PlotsBase.attr(series, :label) == label
 
         label = "another label"
-        PlotsBase.PlotsSeries.attr!(series, label, :label)
-        @test PlotsBase.PlotsSeries.attr(series, :label) == label
+        PlotsBase.attr!(series, label, :label)
+        @test PlotsBase.attr(series, :label) == label
 
         sp = first(pl.subplots)
         title = "fancy title"
-        PlotsBase.Subplots.attr!(sp; title)
+        PlotsBase.attr!(sp; title)
         @test sp[:title] == title
     end
 end
 
 @testset "NaN-separated Segments" begin
-    segments(args...) = collect(PlotsBase.PlotsSeries.iter_segments(args...))
+    segments(args...) = collect(PlotsBase.DataSeries.iter_segments(args...))
 
     nan10 = fill(NaN, 10)
     @test segments(11:20) == [1:10]
@@ -195,45 +195,45 @@ end
     pl = plot(x, x, label = "linear")
     pl = plot!(x, x .^ 2, label = "quadratic")
     pl = plot!(x, x .^ 3, label = "cubic")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topleft
 
     x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
     pl = plot(x, x, label = "linear")
     pl = plot!(x, x .^ 2, label = "quadratic")
     pl = plot!(x, x .^ 3, label = "cubic")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topleft
 
     x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(+3))
     pl = plot(x, x, label = "linear")
     pl = plot!(x, x .^ 2, label = "quadratic")
     pl = plot!(x, x .^ 3, label = "cubic")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topleft
 
     x = 0:0.01:2
     pl = plot(x, -x, label = "linear")
     pl = plot!(x, -x .^ 2, label = "quadratic")
     pl = plot!(x, -x .^ 3, label = "cubic")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :bottomleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :bottomleft
 
     x = OffsetArrays.OffsetArray(0:0.01:2, OffsetArrays.Origin(-3))
     pl = plot(x, -x, label = "linear")
     pl = plot!(x, -x .^ 2, label = "quadratic")
     pl = plot!(x, -x .^ 3, label = "cubic")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :bottomleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :bottomleft
 
     x = [0, 1, 0, 1]
     y = [0, 0, 1, 1]
     pl = scatter(x, y, xlims = [0.0, 1.3], ylims = [0.0, 1.3], label = "test")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
 
     pl = scatter(x, y, xlims = [-0.3, 1.0], ylims = [-0.3, 1.0], label = "test")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :bottomleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :bottomleft
 
     pl = scatter(x, y, xlims = [0.0, 1.3], ylims = [-0.3, 1.0], label = "test")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :bottomright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :bottomright
 
     pl = scatter(x, y, xlims = [-0.3, 1.0], ylims = [0.0, 1.3], label = "test")
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topleft
 
     y1 = [
         0.6640202072697099,
@@ -250,48 +250,48 @@ end
     y2 = [0.40089741940615464, 0.6687326060649715, 0.6844117863127116]
     pl = plot(1:10, y1)
     pl = plot!(1:3, y2, xlims = (0, 10), ylims = (0, 1))
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
 
     # test empty plot
     pl = plot([])
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
 
     # test that we didn't overlap other placements
-    @test PlotsBase._guess_best_legend_position(:bottomleft, pl) === :bottomleft
+    @test PlotsBase._guess_best_legend_position(:bottomleft, pl) ≡ :bottomleft
 
     # test singleton
     pl = plot(1:1)
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
 
     # test cycling indexes
     x = 0.0:0.1:1
     y = [1, 2, 3]
     pl = scatter(x, y)
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
 
     # Test step plot with variable limits
     x = 0:0.001:1
     y = vcat([0.0 for _ in 1:100], [1.0 for _ in 101:200], [0.5 for _ in 201:1001])
     pl = scatter(x, y)
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
     pl = scatter(x, y, xlims = [0, 0.25])
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topleft
     pl = scatter(x, y, xlims = [0.1, 0.25])
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
     pl = scatter(x, y, xlims = [0.18, 0.25])
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
     pl = scatter(x, y, ylims = [-1, 0.75])
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :bottomright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :bottomright
     pl = scatter(x, y, ylims = [0.25, 0.75])
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
     pl = scatter(-x, y, ylims = [0.25, 0.75])
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
     pl = scatter(-x, y)
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topleft
     pl = scatter(-x, -y)
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topleft
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topleft
     pl = scatter(x, -y)
-    @test PlotsBase._guess_best_legend_position(:best, pl) === :topright
+    @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
 end
 
 @testset "dispatch" begin

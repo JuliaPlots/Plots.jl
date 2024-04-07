@@ -1,8 +1,8 @@
 @testset "check_contour_levels" begin
     let check_contour_levels = PlotsBase.Commons.check_contour_levels
-        @test check_contour_levels(2) === nothing
-        @test check_contour_levels(-1.0:0.2:10.0) === nothing
-        @test check_contour_levels([-100, -2, -1, 0, 1, 2, 100]) === nothing
+        @test check_contour_levels(2) ≡ nothing
+        @test check_contour_levels(-1.0:0.2:10.0) ≡ nothing
+        @test check_contour_levels([-100, -2, -1, 0, 1, 2, 100]) ≡ nothing
         @test_throws ArgumentError check_contour_levels(1.0)
         @test_throws ArgumentError check_contour_levels((1, 2, 3))
         @test_throws ArgumentError check_contour_levels(-3)
@@ -46,7 +46,7 @@ end
         @testset "$n contours" for n in (2, 5, 100)
             p = contour(x, y, z, levels = n)
             attr = p[1][1].plotattributes
-            @test attr[:seriestype] === :contour
+            @test attr[:seriestype] ≡ :contour
             @test attr[:levels] == n
         end
     end

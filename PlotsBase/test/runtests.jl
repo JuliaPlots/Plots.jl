@@ -1,24 +1,28 @@
 const TEST_PACKAGES =
-    strip.(
-        split(
-            get(
-                ENV,
-                "PLOTSBASE_TEST_PACKAGES",
-                "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",
-            ),
-            ",",
+    let val = get(
+            ENV,
+            "PLOTSBASE_TEST_PACKAGES",
+            "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",
         )
-    )
-const TEST_BACKENDS = Symbol.(lowercase.(TEST_PACKAGES))
+        Symbol.(strip.(split(val, ",")))
+    end
+const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p in TEST_PACKAGES)
+
+get!(ENV, "MPLBACKEND", "agg")
 
 using PlotsBase
 
+# always initialize GR
+import GR
+gr()
+
 # initialize all backends
 for pkg in TEST_PACKAGES
-    @eval import $(Symbol(pkg))  # trigger extension
-    getproperty(PlotsBase, Symbol(lowercase(pkg)))()
+    @eval begin
+        import $pkg  # trigger extension
+        $(TEST_BACKENDS[pkg])()
+    end
 end
-gr()
 
 import Unitful: m, s, cm, DimensionError
 import PlotsBase: PLOTS_SEED, Plot, with
@@ -35,6 +39,7 @@ using RecipesPipeline
 using FilePathsBase
 using LaTeXStrings
 using RecipesBase
+using Preferences
 using TestImages
 using Unitful
 using FileIO
@@ -47,8 +52,19 @@ is_ci() = PlotsBase.bool_env("CI")
 
 is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
+ref_name(i) = "ref" * lpad(i, 3, '0')
+
+const blacklist = if VERSION.major == 1 && VERSION.minor ≥ 9
+    [
+        25,
+        30, # FIXME: remove, when StatsPlots supports Plots v2
+        41,
+    ]  # FIXME: github.com/JuliaLang/julia/issues/47261
+else
+    []
+end
+
 for name in (
-    "quality",
     "misc",
     "utils",
     "args",
@@ -61,12 +77,15 @@ for name in (
     "shorthands",
     "recipes",
     "unitful",
-    "hdf5plots",  # broken ?
+    "hdf5plots",
     "pgfplotsx",
     "plotly",
     "animations",
     "output",
+    "reference",
     "backends",
+    "preferences",
+    "quality",
 )
     @testset "$name" begin
         # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)

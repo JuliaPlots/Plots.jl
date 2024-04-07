@@ -1,7 +1,9 @@
 module Shapes
 
-using PlotsBase: PlotsBase, RecipesPipeline
-using PlotsBase.Commons
+import ..PlotsBase
+
+using ..RecipesPipeline
+using ..Commons
 
 # keep in mind: these will be reexported and are public API
 export Shape,
@@ -16,9 +18,7 @@ export Shape,
     scale!,
     scale,
     translate,
-    translate!,
-    rotate,
-    rotate!
+    translate!
 
 const P2 = NTuple{2,Float64}
 const P3 = NTuple{3,Float64}
@@ -205,13 +205,20 @@ rotate_x(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
 rotate_y(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
     ((y - centery) * cos(θ) + (x - centerx) * sin(θ) + centery)
 
-rotate(x::Real, y::Real, θ::Real, c) = (rotate_x(x, y, θ, c...), rotate_y(x, y, θ, c...))
+end  # module
+
+# -------------------------------------------------------------------
+
+using .Shapes
+
+rotate(x::Real, y::Real, θ::Real, c) =
+    (Shapes.rotate_x(x, y, θ, c...), Shapes.rotate_y(x, y, θ, c...))
 
 function rotate!(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
     for i in eachindex(x)
-        xi = rotate_x(x[i], y[i], θ, c...)
-        yi = rotate_y(x[i], y[i], θ, c...)
+        xi = Shapes.rotate_x(x[i], y[i], θ, c...)
+        yi = Shapes.rotate_y(x[i], y[i], θ, c...)
         x[i], y[i] = xi, yi
     end
     shape
@@ -220,9 +227,7 @@ end
 "rotate an object in space"
 function rotate(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
-    x_new = rotate_x.(x, y, θ, c...)
-    y_new = rotate_y.(x, y, θ, c...)
+    x_new = Shapes.rotate_x.(x, y, θ, c...)
+    y_new = Shapes.rotate_y.(x, y, θ, c...)
     Shape(x_new, y_new)
 end
-
-end # Shapes

@@ -1,19 +1,18 @@
 module PGFPlotsXExt
 
 import PlotsBase: PlotsBase, pgfx_sanitize_string
-import PlotUtils: PlotUtils, ColorGradient
 import LaTeXStrings: LaTeXString
 import Printf: @sprintf
 import UUIDs: uuid4
+
 import RecipesPipeline
+import PlotUtils
 import PGFPlotsX
 import Latexify
 import Contour
 
-using PlotsBase.PlotMeasures
 using PlotsBase.Annotations
-using PlotsBase.PlotsSeries
-using PlotsBase.PlotsPlots
+using PlotsBase.DataSeries
 using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Surfaces
@@ -21,29 +20,13 @@ using PlotsBase.Commons
 using PlotsBase.Colors
 using PlotsBase.Shapes
 using PlotsBase.Arrows
+using PlotsBase.Plots
 using PlotsBase.Fonts
 using PlotsBase.Ticks
 using PlotsBase.Axes
 
-const package_str = "PGFPlotsX"
-const str = lowercase(package_str)
-const sym = Symbol(str)
-
 struct PGFPlotsXBackend <: PlotsBase.AbstractBackend end
-const T = PGFPlotsXBackend
-
-get_concrete_backend() = T  # opposite to abstract
-
-function __init__()
-    @debug "Initializing $package_str backend in PlotsBase; run `$str()` to activate it."
-    PlotsBase._backendType[sym] = get_concrete_backend()
-    PlotsBase._backendSymbol[T] = sym
-
-    push!(PlotsBase._initialized_backends, sym)
-end
-
-PlotsBase.backend_name(::T) = sym
-PlotsBase.backend_package_name(::T) = PlotsBase.backend_package_name(sym)
+PlotsBase.@extension_static PGFPlotsXBackend pgfplotsx
 
 const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
@@ -216,28 +199,6 @@ PlotsBase.is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
 # additional constants
 const _pgfplotsx_series_ids = KW()
 
-# -----------------------------------------------------------------------------
-# Overload (dispatch) abstract `is_xxx_supported` and `supported_xxxs` methods
-# defined in abstract_backend.jl
-
-for s in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_", s, "_supported")
-    f2 = Symbol("supported_", s, "s")
-    v = Symbol("_$(str)_", s, "s")
-    quote
-        PlotsBase.$f1(::T, $s::Symbol) = $s in $v
-        PlotsBase.$f2(::T) = sort(collect($v))
-    end |> eval
-end
-
-## results in:
-# PlotsBase.is_attr_supported(::GRbackend, attrname) -> Bool
-# ...
-# PlotsBase.supported_attrs(::GRbackend) -> ::Vector{Symbol}
-# ...
-# PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
-# -----------------------------------------------------------------------------
-
 const Options = PGFPlotsX.Options
 const Table   = PGFPlotsX.Table
 
@@ -313,7 +274,7 @@ surface_to_vecs(x::AVec, y::AVec, z::AVec) = x, y, z
 Base.push!(pgfx_plot::PGFPlotsXPlot, item) = push!(pgfx_plot.the_plot, item)
 
 pgfx_split_extra_kw(extra) =
-    (get(extra, :add, nothing), filter(x -> first(x) !== :add, extra))
+    (get(extra, :add, nothing), filter(x -> first(x) ≢ :add, extra))
 
 curly(obj) = "{$(string(obj))}"
 
@@ -332,8 +293,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         # extract extra kwargs
         extra_plot, extra_plot_opt = pgfx_split_extra_kw(plt[:extra_plot_kwargs])
         the_plot = PGFPlotsX.TikzPicture(Options(extra_plot_opt...))
-        extra_plot !== nothing && push!(the_plot, wraptuple(extra_plot)...)
-        bgc = plt.attr[if plt.attr[:background_color_outside] === :match
+        extra_plot ≢ nothing && push!(the_plot, wraptuple(extra_plot)...)
+        bgc = plt.attr[if plt.attr[:background_color_outside] ≡ :match
             :background_color
         else
             :background_color_outside
@@ -353,9 +314,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         for sp in plt.subplots
-            bb2 = PlotsBase.bbox(sp)
+            bb2 = bbox(sp)
             dx, dy = bb2.x0
-            sp_w, sp_h = PlotsBase.width(bb2), PlotsBase.height(bb2)
+            sp_w, sp_h = width(bb2), height(bb2)
             if sp[:subplot_index] == plt[:plot_titleindex]
                 x = dx + sp_w / 2 - 10mm  # FIXME: get rid of magic constant
                 y = dy + sp_h / 2
@@ -404,7 +365,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             sp_w > 0mm && push!(axis_opt, "width" => string(sp_w - (rpad + lpad)))
             sp_h > 0mm && push!(axis_opt, "height" => string(sp_h - (tpad + bpad)))
             for letter in (:x, :y, :z)
-                if letter !== :z || RecipesPipeline.is3d(sp)
+                if letter ≢ :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
                 end
             end
@@ -437,7 +398,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             if hascolorbar(sp)
                 formatter = latex_formatter(sp[:colorbar_formatter])
                 cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
-                letter = sp[:colorbar] === :top ? :x : :y
+                letter = sp[:colorbar] ≡ :top ? :x : :y
 
                 colorbar_style = push!(
                     Options("$(letter)label" => sp[:colorbar_title]),
@@ -446,7 +407,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                 )
 
-                if sp[:colorbar] === :top
+                if sp[:colorbar] ≡ :top
                     push!(
                         colorbar_style,
                         "at" => "(0.5, 1.05)",
@@ -472,15 +433,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 push!(axis_opt, "colorbar" => "false")
             end
             if RecipesPipeline.is3d(sp)
-                if (ar = sp[:aspect_ratio]) !== :auto
-                    push!(
-                        axis_opt,
-                        "unit vector ratio" => ar === :equal ? 1 : join(ar, ' '),
-                    )
+                if (ar = sp[:aspect_ratio]) ≢ :auto
+                    push!(axis_opt, "unit vector ratio" => ar ≡ :equal ? 1 : join(ar, ' '))
                 end
                 push!(axis_opt, "view" => tuple(sp[:camera]))
             end
-            axisf = if sp[:projection] === :polar
+            axisf = if sp[:projection] ≡ :polar
                 # push!(axis_opt, "xmin" => 90)
                 # push!(axis_opt, "xmax" => 450)
                 PGFPlotsX.PolarAxis
@@ -489,8 +447,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
             extra_sp, extra_sp_opt = pgfx_split_extra_kw(sp[:extra_kwargs])
             axis = axisf(merge(axis_opt, Options(extra_sp_opt...)))
-            extra_sp !== nothing && push!(axis, wraptuple(extra_sp)...)
-            if sp[:legend_title] !== nothing
+            extra_sp ≢ nothing && push!(axis, wraptuple(extra_sp)...)
+            if sp[:legend_title] ≢ nothing
                 legtfont = legendtitlefont(sp)
                 leg_opt = Options(
                     "font" => pgfx_font(legtfont.pointsize, pgfx_thickness_scaling(sp)),
@@ -521,15 +479,15 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     if (
                         RecipesPipeline.is3d(series) ||
                         st in (:heatmap, :contour) ||
-                        (st === :quiver && opt[:z] !== nothing)
+                        (st ≡ :quiver && opt[:z] ≢ nothing)
                     )
                         PGFPlotsX.Plot3
                     else
                         PGFPlotsX.Plot
                     end
                 if (
-                    series[:fillrange] !== nothing &&
-                    series[:ribbon] === nothing &&
+                    series[:fillrange] ≢ nothing &&
+                    series[:ribbon] ≡ nothing &&
                     !isfilledcontour(series)
                 )
                     push!(series_opt, "area legend" => nothing)
@@ -539,7 +497,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     axis.contents[end] isa PGFPlotsX.LegendEntry ? axis.contents[end - 1] :
                     axis.contents[end]
                 merge!(last_plot.options, Options(extra_series_opt...))
-                if extra_series !== nothing
+                if extra_series ≢ nothing
                     push!(axis.contents[end], wraptuple(extra_series)...)
                 end
                 # add series annotations
@@ -589,7 +547,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     for (k, segment) in enumerate(segments)
         i, rng = segment.attr_index, segment.range
         segment_opt = pgfx_linestyle(opt, i)
-        if opt[:markershape] !== :none
+        if opt[:markershape] ≢ :none
             if (marker = _cycle(opt[:markershape], i)) isa Shape
                 scale_factor = 0.00125
                 msize = opt[:markersize] * scale_factor
@@ -610,10 +568,10 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
             segment_opt = merge(segment_opt, pgfx_marker(opt, i))
         end
         # add fillrange
-        if (sf = opt[:fillrange]) !== nothing && !isfilledcontour(series)
+        if (sf = opt[:fillrange]) ≢ nothing && !isfilledcontour(series)
             if sf isa Number || sf isa AVec
                 pgfx_fillrange_series!(axis, series, series_func, i, _cycle(sf, rng), rng)
-            elseif sf isa Tuple && series[:ribbon] !== nothing
+            elseif sf isa Tuple && series[:ribbon] ≢ nothing
                 for sfi in sf
                     pgfx_fillrange_series!(
                         axis,
@@ -627,7 +585,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
             end
             if (
                 i == 1 &&
-                series[:subplot][:legend_position] !== :none &&
+                series[:subplot][:legend_position] ≢ :none &&
                 pgfx_should_add_to_legend(series)
             )
                 pgfx_filllegend!(series_opt, opt)
@@ -648,11 +606,11 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
             isempty(opt[:label]) && push!(arrow_opt, "forget plot" => nothing)
             rx, ry = opt[:x][rng], opt[:y][rng]
             nx, ny = length(rx), length(ry)
-            x_arrow, y_arrow, x_path, y_path = if arrow.side === :head
+            x_arrow, y_arrow, x_path, y_path = if arrow.side ≡ :head
                 rx[(nx - 1):nx], ry[(ny - 1):ny], rx[1:(nx - 1)], ry[1:(ny - 1)]
-            elseif arrow.side === :tail
+            elseif arrow.side ≡ :tail
                 rx[2:-1:1], ry[2:-1:1], rx[2:nx], ry[2:ny]
-            elseif arrow.side === :both
+            elseif arrow.side ≡ :both
                 rx[[2, 1, nx - 1, nx]], ry[[2, 1, ny - 1, ny]], rx[2:(nx - 1)], ry[2:(ny - 1)]
             end
             coords = Table([
@@ -670,7 +628,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
         end
         push!(axis, series_func(merge(series_opt, segment_opt), coordinates))
         # fill between functions
-        if sf isa Tuple && series[:ribbon] === nothing
+        if sf isa Tuple && series[:ribbon] ≡ nothing
             sf1, sf2 = sf
             @assert sf1 == series_index "First index of the tuple has to match the current series index."
             push!(
@@ -814,7 +772,7 @@ function pgfx_add_series!(::Val{:contour3d}, axis, series_opt, series, series_fu
 end
 
 function pgfx_add_series!(::Val{:quiver}, axis, series_opt, series, series_func, opt)
-    if (quiver = opt[:quiver]) !== nothing
+    if (quiver = opt[:quiver]) ≢ nothing
         push!(
             series_opt,
             "quiver" => Options(
@@ -824,7 +782,7 @@ function pgfx_add_series!(::Val{:quiver}, axis, series_opt, series, series_func,
             ),
         )
         x, y, z = opt[:x], opt[:y], opt[:z]
-        table = if z !== nothing
+        table = if z ≢ nothing
             push!(series_opt["quiver"], "w" => "\\thisrow{w}")
             pgfx_axis!(axis.options, series[:subplot], :z)
             [:x => x, :y => y, :z => z, :u => quiver[1], :v => quiver[2], :w => quiver[3]]
@@ -867,7 +825,7 @@ function pgfx_add_series!(::Val{:xsticks}, axis, series_opt, args...)
 end
 
 function pgfx_add_legend!(axis, series, opt, i = 1)
-    if series[:subplot][:legend_position] !== :none
+    if series[:subplot][:legend_position] ≢ :none
         leg_entry = if (lab = opt[:label]) isa AVec
             get(lab, i, "")
         elseif lab isa AbstractString
@@ -893,9 +851,9 @@ pgfx_series_arguments(series, opt) =
         surface_to_vecs(opt[:x], opt[:y], opt[:z])
     elseif RecipesPipeline.is3d(st)
         opt[:x], opt[:y], opt[:z]
-    elseif st === :straightline
+    elseif st ≡ :straightline
         PlotsBase.straightline_data(series)
-    elseif st === :shape
+    elseif st ≡ :shape
         PlotsBase.shape_data(series)
     elseif ispolar(series)
         theta, r = opt[:x], opt[:y]
@@ -998,12 +956,13 @@ function pgfx_get_legend_pos(v::Tuple{<:Real,Symbol})
         "north west" "north" "north east"
     ]
     I = legend_anchor_index(s)
-    rect, anchor = if v[2] === :inner
+    rect, anchor = if v[2] ≡ :inner
         (0.07, 0.5, 1.0, 0.07, 0.52, 1.0), anchors[I, I]
     else
         (-0.15, 0.5, 1.05, -0.15, 0.52, 1.1), anchors[4 - I, 4 - I]
     end
-    return "at" => string(legend_pos_from_angle(v[1], rect...)), "anchor" => anchor
+    return "at" => string(PlotsBase.legend_pos_from_angle(v[1], rect...)),
+    "anchor" => anchor
 end
 
 function pgfx_get_legend_style(sp)
@@ -1060,9 +1019,9 @@ function pgfx_get_ticklabel_style(sp, axis)
     )
     # aligning rotated tick labels to ticks
     if RecipesPipeline.is3d(sp)
-        if axis === sp[:xaxis]
+        if axis ≡ sp[:xaxis]
             push!(opt, "anchor" => axis[:rotation] < 60 ? "north east" : "east")
-        elseif axis === sp[:yaxis]
+        elseif axis ≡ sp[:yaxis]
             push!(opt, "anchor" => axis[:rotation] < 45 ? "north west" : "north east")
         else
             push!(
@@ -1074,7 +1033,7 @@ function pgfx_get_ticklabel_style(sp, axis)
         end
     else
         if mod(axis[:rotation], 90) > 0 # 0 and ±90 already look good with the default anchor
-            push!(opt, "anchor" => axis === sp[:xaxis] ? "north east" : "south east")
+            push!(opt, "anchor" => axis ≡ sp[:xaxis] ? "north east" : "south east")
         end
     end
     return opt
@@ -1104,11 +1063,11 @@ pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
 function pgfx_arrow(arr::Arrow, side = arr.side)
     components = ""
     arrow_head = "{Stealth[length = $(arr.headlength)pt, width = $(arr.headwidth)pt"
-    arr.style === :open && (arrow_head *= ", open")
+    arr.style ≡ :open && (arrow_head *= ", open")
     arrow_head *= "]}"
-    (side === :both || side === :tail) && (components *= arrow_head)
+    (side ≡ :both || side ≡ :tail) && (components *= arrow_head)
     components *= "-"
-    (side === :both || side === :head) && (components *= arrow_head)
+    (side ≡ :both || side ≡ :head) && (components *= arrow_head)
     return "every arrow/.append style={$components}"
 end
 
@@ -1124,7 +1083,7 @@ end
 pgfx_colormap(cl::PlotUtils.AbstractColorList) = pgfx_colormap(PlotUtils.color_list(cl))
 pgfx_colormap(v::Vector{<:Colorant}) =
     join(map(c -> @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c)), v), '\n')
-pgfx_colormap(cg::ColorGradient) = join(
+pgfx_colormap(cg::PlotUtils.ColorGradient) = join(
     map(1:length(cg)) do i
         @sprintf(
             "rgb(%.8f)=(%.8f,%.8f,%.8f)",
@@ -1141,7 +1100,7 @@ pgfx_framestyle(style::Symbol) =
     if style in (:box, :axes, :origin, :zerolines, :grid, :none)
         style
     else
-        default_style = style === :semi ? :box : :axes
+        default_style = style ≡ :semi ? :box : :axes
         @warn "Framestyle :$style is not (yet) supported by the PGFPlotsX backend. :$default_style was chosen instead."
         default_style
     end
@@ -1151,7 +1110,7 @@ pgfx_thickness_scaling(sp::Subplot) = pgfx_thickness_scaling(sp.plt)
 pgfx_thickness_scaling(series) = pgfx_thickness_scaling(series[:subplot])
 
 function pgfx_fillstyle(plotattributes, i = 1)
-    if (a = get_fillalpha(plotattributes, i)) === nothing
+    if (a = get_fillalpha(plotattributes, i)) ≡ nothing
         a = alpha(single_color(get_fillcolor(plotattributes, i)))
     end
     Options("fill" => get_fillcolor(plotattributes, i), "fill opacity" => a)
@@ -1167,7 +1126,7 @@ function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = :solid)
     )
 end
 
-pgfx_legend_col(s::Symbol) = s === :horizontal ? -1 : 1
+pgfx_legend_col(s::Symbol) = s ≡ :horizontal ? -1 : 1
 pgfx_legend_col(n) = n
 
 function pgfx_linestyle(plotattributes, i = 1)
@@ -1233,11 +1192,11 @@ function pgfx_marker(plotattributes, i = 1)
                 pgfx_thickness_scaling(plotattributes) *
                 0.75 *
                 _cycle(plotattributes[:markerstrokewidth], i),
-            "rotate" => if shape === :dtriangle
+            "rotate" => if shape ≡ :dtriangle
                 180
-            elseif shape === :rtriangle
+            elseif shape ≡ :rtriangle
                 270
-            elseif shape === :ltriangle
+            elseif shape ≡ :ltriangle
                 90
             else
                 0
@@ -1290,7 +1249,7 @@ function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
         opt[:x][rng], opt[:y][rng], opt[:z][rng]
     elseif ispolar(series)
         rad2deg.(opt[:x][rng]), opt[:y][rng]
-    elseif series[:seriestype] === :straightline
+    elseif series[:seriestype] ≡ :straightline
         PlotsBase.straightline_data(series)
     else
         opt[:x][rng], opt[:y][rng]
@@ -1335,7 +1294,7 @@ function pgfx_sanitize_plot!(plt)
     end
     for subplot in plt.subplots
         for (key, value) in subplot.attr
-            if key === :annotations && subplot.attr[:annotations] !== nothing
+            if key ≡ :annotations && subplot.attr[:annotations] ≢ nothing
                 old_ann = subplot.attr[key]
                 for i in eachindex(old_ann)
                     # [1:end-1] is a tuple of coordinates, [end] - text
@@ -1355,8 +1314,8 @@ function pgfx_sanitize_plot!(plt)
     end
     for series in plt.series_list
         for (key, value) in series.plotattributes
-            if key === :series_annotations &&
-               series.plotattributes[:series_annotations] !== nothing
+            if key ≡ :series_annotations &&
+               series.plotattributes[:series_annotations] ≢ nothing
                 old_ann = series.plotattributes[key].strs
                 for i in eachindex(old_ann)
                     series.plotattributes[key].strs[i] = pgfx_sanitize_string(old_ann[i])
@@ -1413,9 +1372,9 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
     framestyle = pgfx_framestyle(sp[:framestyle] == false ? :none : sp[:framestyle])
 
     # axis label position
-    labelpos = if letter === :x
+    labelpos = if letter ≡ :x
         pgfx_get_xguide_pos(axis[:guide_position])
-    elseif letter === :y
+    elseif letter ≡ :y
         pgfx_get_yguide_pos(axis[:guide_position])
     else
         ""
@@ -1443,38 +1402,38 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
     scale = axis[:scale]
     if (is_log_scale = scale in (:ln, :log2, :log10))
         push!(opt, "$(letter)mode" => "log")
-        scale === :ln || push!(opt, "log basis $letter" => "$(scale === :log2 ? 2 : 10)")
+        scale ≡ :ln || push!(opt, "log basis $letter" => "$(scale ≡ :log2 ? 2 : 10)")
     end
 
     # ticks on or off
-    if axis[:ticks] in (nothing, false, :none) || framestyle === :none
+    if axis[:ticks] in (nothing, false, :none) || framestyle ≡ :none
         push!(opt, "$(letter)majorticks" => "false")
     elseif framestyle in (:grid, :zerolines)
         push!(opt, "$letter tick style" => Options("draw" => "none"))
     end
 
     # grid on or off
-    push!(opt, "$(letter)majorgrids" => string(axis[:grid] && framestyle !== :none))
+    push!(opt, "$(letter)majorgrids" => string(axis[:grid] && framestyle ≢ :none))
 
     # limits
-    lims = if ispolar(sp) && letter === :x
+    lims = if ispolar(sp) && letter ≡ :x
         rad2deg.(axis_limits(sp, :x))
     else
         axis_limits(sp, letter)
     end
     push!(opt, "$(letter)min" => lims[1], "$(letter)max" => lims[2])
 
-    if axis[:ticks] ∉ (nothing, false, :none, :native) && framestyle !== :none
+    if axis[:ticks] ∉ (nothing, false, :none, :native) && framestyle ≢ :none
         vals, labs =
             ticks = get_ticks(sp, axis, formatter = latex_formatter(axis[:formatter]))
         # pgfplot ignores ticks with angles below `90` when `xmin = 90`, so shift values
-        tick_values = if ispolar(sp) && letter === :x
+        tick_values = if ispolar(sp) && letter ≡ :x
             vcat(rad2deg.(vals[3:end]), 360, 405)
         else
             vals
         end
         tick_labels = if axis[:showaxis]
-            if is_log_scale && axis[:ticks] === :auto
+            if is_log_scale && axis[:ticks] ≡ :auto
                 labels = wrap_power_labels(labs)
                 if (lab = first(labels)) isa LaTeXString || pgfx_is_inline_math(lab)
                     join(labels, ',')
@@ -1482,7 +1441,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
                     "\\(" * join(labels, "\\),\\(") * "\\)"
                 end
             else
-                labels = if ispolar(sp) && letter === :x
+                labels = if ispolar(sp) && letter ≡ :x
                     vcat(labs[3:end], "0", "45")
                 else
                     labs
@@ -1496,7 +1455,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
             opt,
             "$(letter)ticklabels" => curly(tick_labels),
             "$(letter)tick" => curly(join(tick_values, ',')),
-            if (tick_dir = axis[:tick_direction]) === :none || axis[:showaxis] === false
+            if (tick_dir = axis[:tick_direction]) ≡ :none || axis[:showaxis] ≡ false
                 "$(letter)tick style" => "draw=none"
             else
                 "$(letter)tick align" => "$(tick_dir)side"
@@ -1516,8 +1475,8 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
         #       Hence, we hack around with extra ticks.
         #       Unfortunately this conflicts with `:zerolines` framestyle hack.
         #       So minor ticks are not working with `:zerolines`.
-        if (minor_ticks = get_minor_ticks(sp, axis, ticks)) !== nothing
-            if ispolar(sp) && letter === :x
+        if (minor_ticks = get_minor_ticks(sp, axis, ticks)) ≢ nothing
+            if ispolar(sp) && letter ≡ :x
                 minor_ticks = vcat(rad2deg.(minor_ticks[3:end]), 360, 405)
             end
             push!(
@@ -1547,7 +1506,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
         push!(
             opt,  # the * after line disables the arrow at the axis
             "axis $letter line$(axis[:draw_arrow] ? "" : "*")" =>
-                (axis[:mirror] ? "right" : framestyle === :axes ? "left" : "middle"),
+                (axis[:mirror] ? "right" : framestyle ≡ :axes ? "left" : "middle"),
         )
     end
 
@@ -1556,7 +1515,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
         push!(opt, "$(letter)ticklabel pos" => (axis[:mirror] ? "right" : "left"))
     end
 
-    if framestyle === :zerolines
+    if framestyle ≡ :zerolines
         gs = pgfx_linestyle(pgfx_thickness_scaling(sp), axis[:foreground_color_border], 1)
         push!(
             opt,
@@ -1636,4 +1595,4 @@ function PlotsBase._display(plt::Plot{PGFPlotsXBackend})
     display(PGFPlotsX.PGFPlotsXDisplay(), plt.o.the_plot)
 end
 
-end # module
+end  # module

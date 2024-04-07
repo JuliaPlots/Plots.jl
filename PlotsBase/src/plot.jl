@@ -5,7 +5,7 @@ mutable struct CurrentPlot
 end
 const CURRENT_PLOT = CurrentPlot(nothing)
 
-isplotnull() = CURRENT_PLOT.nullableplot === nothing
+isplotnull() = CURRENT_PLOT.nullableplot ≡ nothing
 
 """
     current()
@@ -182,7 +182,7 @@ function plot!(
 
     # first apply any args for the subplots
     for (idx, sp) in enumerate(plt.subplots)
-        PlotsPlots._update_subplot_attrs(
+        Plots._update_subplot_attrs(
             plt,
             sp,
             idx == ttl_idx ? KW() : plotattributes,
@@ -254,8 +254,7 @@ function prepare_output(plt::Plot)
     force_minpad = get(plt, :force_minpad, ())
     isempty(force_minpad) || for i in eachindex(plt.layout.grid)
         plt.layout.grid[i].minpad = Tuple(
-            i === nothing ? j : i for
-            (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
+            i ≡ nothing ? j : i for (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
         )
     end
 

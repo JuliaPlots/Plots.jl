@@ -1,4 +1,4 @@
-module PlotsSeries
+module DataSeries
 
 export Series,
     should_add_to_legend,
@@ -20,11 +20,13 @@ export get_linestyle,
     get_fillalpha,
     get_markercolor,
     get_markeralpha
-import PlotsBase.Commons: get_subplot, _series_defaults
-using PlotsBase.Commons
-using PlotsBase.Commons: get_gradient
-using PlotsBase.PlotUtils: ColorGradient, plot_color
-using PlotsBase: PlotsBase, DefaultsDict, RecipesPipeline, get_attr_symbol, KW
+
+import ..Commons: get_gradient, get_subplot, _series_defaults
+import ..PlotsBase
+
+using ..PlotsBase: DefaultsDict, RecipesPipeline, get_attr_symbol, KW
+using ..PlotUtils: ColorGradient, plot_color
+using ..Commons
 
 mutable struct Series
     plotattributes::DefaultsDict
@@ -35,23 +37,6 @@ Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 Base.push!(series::Series, args...) = extend_series!(series, args...)
 Base.append!(series::Series, args...) = extend_series!(series, args...)
-
-# TODO: consider removing
-attr(series::Series, k::Symbol) = series.plotattributes[k]
-attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
-function attr!(series::Series; kw...)
-    plotattributes = KW(kw)
-    PlotsBase.Commons.preprocess_attributes!(plotattributes)
-    for (k, v) in plotattributes
-        if haskey(_series_defaults, k)
-            series[k] = v
-        else
-            @warn "unused key $k in series attr"
-        end
-    end
-    PlotsBase._series_updated(series[:subplot].plt, series)
-    series
-end
 
 should_add_to_legend(series::Series) =
     series.plotattributes[:primary] &&
@@ -103,7 +88,7 @@ end
 function copy_series!(series, letter)
     plt = series[:plot_object]
     for s in plt.series_list, l in (:x, :y, :z)
-        if (s !== series || l !== letter) && s[l] === series[letter]
+        if (s ≢ series || l ≢ letter) && s[l] ≡ series[letter]
             series[letter] = copy(series[letter])
         end
     end
@@ -137,11 +122,11 @@ for comp in (:line, :fill, :marker)
         )
             c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
-            if z === nothing
+            if z ≡ nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
                 grad = get_gradient(c)
-                if s === :identity
+                if s ≡ :identity
                     get(grad, z[i], (cmin, cmax))
                 else
                     base = _log_scale_bases[s]
@@ -151,7 +136,7 @@ for comp in (:line, :fill, :marker)
         end
 
         function $get_compcolor(series, i::Integer = 1, s::Symbol = :identity)
-            if series[$Symbol($comp_z)] === nothing
+            if series[$Symbol($comp_z)] ≡ nothing
                 $get_compcolor(series, 0, 1, i, s)
             else
                 $get_compcolor(series, get_clims(series[:subplot]), i, s)
@@ -182,17 +167,17 @@ function get_colorgradient(series::Series)
         series[:fillcolor]
     elseif st in (:contour, :wireframe, :contour3d)
         series[:linecolor]
-    elseif series[:marker_z] !== nothing
+    elseif series[:marker_z] ≢ nothing
         series[:markercolor]
-    elseif series[:line_z] !== nothing
+    elseif series[:line_z] ≢ nothing
         series[:linecolor]
-    elseif series[:fill_z] !== nothing
+    elseif series[:fill_z] ≢ nothing
         series[:fillcolor]
     end
 end
 
 iscontour(series::Series) = series[:seriestype] in (:contour, :contour3d)
-isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
+isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] ≢ nothing
 
 function contour_levels(series::Series, clims)
     iscontour(series) || error("Not a contour series")
@@ -225,12 +210,12 @@ struct NaNSegmentsIterator
 end
 
 function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
-    (i = findfirst(!PlotsBase.Commons.anynan(itr.args), nextidx:(itr.n2))) === nothing &&
+    (i = findfirst(!PlotsBase.Commons.anynan(itr.args), nextidx:(itr.n2))) ≡ nothing &&
         return
     nextval = nextidx + i - 1
 
     j = findfirst(PlotsBase.Commons.anynan(itr.args), nextval:(itr.n2))
-    nextnan = j === nothing ? itr.n2 + 1 : nextval + j - 1
+    nextnan = j ≡ nothing ? itr.n2 + 1 : nextval + j - 1
 
     nextval:(nextnan - 1), nextnan
 end
@@ -258,7 +243,7 @@ has_attribute_segments(series::Series) =
 
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
     x, y, z = series[:x], series[:y], series[:z]
-    (x === nothing || isempty(x)) && return UnitRange{Int}[]
+    (x ≡ nothing || isempty(x)) && return UnitRange{Int}[]
 
     args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
     nan_segments = collect(iter_segments(args...))
@@ -280,7 +265,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
 
     segments = if has_attribute_segments(series)
         map(nan_segments) do r
-            if seriestype === :shape
+            if seriestype ≡ :shape
                 warn_on_inconsistent_shape_attrs(series, x, y, z, r)
                 (SeriesSegment(r, first(r)),)
             elseif seriestype in (:scatter, :scatter3d)
@@ -329,4 +314,26 @@ function warn_on_inconsistent_shape_attrs(series, x, y, z, r)
         end
     end
 end
-end # PlotsSeries
+
+end  # module
+
+# -------------------------------------------------------------------
+
+using .DataSeries
+
+# TODO: consider removing
+attr(series::Series, k::Symbol) = series.plotattributes[k]
+attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
+function attr!(series::Series; kw...)
+    plotattributes = KW(kw)
+    Commons.preprocess_attributes!(plotattributes)
+    for (k, v) in plotattributes
+        if haskey(_series_defaults, k)
+            series[k] = v
+        else
+            @warn "unused key $k in series attr"
+        end
+    end
+    _series_updated(series[:subplot].plt, series)
+    series
+end

@@ -163,8 +163,6 @@ Display a plot using the backends' gui window
 """
 gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
-function inline end  # for IJulia
-
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
     _display(plt)
@@ -172,7 +170,7 @@ end
 
 _do_plot_show(plt, showval::Bool) = showval && gui(plt)
 function _do_plot_show(plt, showval::Symbol)
-    showval === :gui && gui(plt)
+    showval ≡ :gui && gui(plt)
     showval in (:inline, :ijulia) && inline(plt)
 end
 
@@ -184,10 +182,10 @@ const _best_html_output_type =
 # a backup for html... passes to svg or png depending on the html_output_format arg
 function _show(io::IO, ::MIME"text/html", plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
-    if output_type === :auto
+    if output_type ≡ :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
     end
-    if output_type === :png
+    if output_type ≡ :png
         # @info "writing png to html output"
         print(
             io,
@@ -195,10 +193,10 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
             base64encode(show, MIME("image/png"), plt),
             "\" />",
         )
-    elseif output_type === :svg
+    elseif output_type ≡ :svg
         # @info "writing svg to html output"
         show(io, MIME("image/svg+xml"), plt)
-    elseif output_type === :txt
+    elseif output_type ≡ :txt
         show(io, MIME("text/plain"), plt)
     else
         error("only png or svg allowed. got: $(repr(output_type))")
@@ -246,6 +244,20 @@ closeall() = closeall(backend())
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)
 
+function inline end  # for IJulia
+
+function hdf5plot_write end
+function hdf5plot_read end
+
+"""
+Add extra jupyter mimetypes to display_dict based on the plot backed.
+
+The default is nothing, except for plotly based backends, where it
+adds data for `application/vnd.plotly.v1+json` that is used in
+frontends like jupyterlab and nteract.
+"""
+_ijulia__extra_mime_info!(::Plot, out::Dict) = out
+
 # Atom PlotPane
 function showjuno(io::IO, m, plt)
     dpi = plt[:dpi]
@@ -270,4 +282,5 @@ _showjuno(io::IO, m::MIME"image/svg+xml", plt) =
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot) = false
 
 _showjuno(io::IO, m, plt) = _show(io, m, plt)
+
 # COV_EXCL_STOP

@@ -11,10 +11,10 @@ end
         layout = 4,
         yscale = [:identity :identity :log10 :log10],
     )
-    @test pl[1][:yaxis][:scale] === :identity
-    @test pl[2][:yaxis][:scale] === :identity
-    @test pl[3][:yaxis][:scale] === :log10
-    @test pl[4][:yaxis][:scale] === :log10
+    @test pl[1][:yaxis][:scale] ≡ :identity
+    @test pl[2][:yaxis][:scale] ≡ :identity
+    @test pl[3][:yaxis][:scale] ≡ :log10
+    @test pl[4][:yaxis][:scale] ≡ :log10
 end
 
 @testset "Plot title" begin
@@ -41,9 +41,9 @@ end
 
 @testset "Plots.jl/issues/4083" begin
     pl = plot(plot(1:2), plot(1:2); border = :grid, plot_title = "abc")
-    @test pl[1][:framestyle] === :grid
-    @test pl[2][:framestyle] === :grid
-    @test pl[3][:framestyle] === :none
+    @test pl[1][:framestyle] ≡ :grid
+    @test pl[2][:framestyle] ≡ :grid
+    @test pl[3][:framestyle] ≡ :none
 end
 
 @testset "Allowed subplot counts" begin
@@ -108,16 +108,16 @@ end
     show(io, PlotsBase.DEFAULT_BBOX[])
     show(io, pl.layout)
 
-    @test PlotsBase.make_measure_hor(1PlotsBase.mm) == 1PlotsBase.mm
-    @test PlotsBase.make_measure_vert(1PlotsBase.mm) == 1PlotsBase.mm
+    @test PlotsBase.Commons.make_measure_hor(1PlotsBase.mm) == 1PlotsBase.mm
+    @test PlotsBase.Commons.make_measure_vert(1PlotsBase.mm) == 1PlotsBase.mm
 
     @test PlotsBase.parent(pl.layout) isa PlotsBase.RootLayout
-    show(io, PlotsBase.parent_bbox(pl.layout))
+    show(io, PlotsBase.Commons.parent_bbox(pl.layout))
 
     rl = PlotsBase.RootLayout()
     show(io, rl)
-    @test parent(rl) === nothing
-    @test PlotsBase.parent_bbox(rl) == PlotsBase.DEFAULT_BBOX[]
+    @test parent(rl) ≡ nothing
+    @test PlotsBase.Commons.parent_bbox(rl) == PlotsBase.DEFAULT_BBOX[]
     @test PlotsBase.bbox(rl) == PlotsBase.DEFAULT_BBOX[]
     @test PlotsBase.origin(PlotsBase.DEFAULT_BBOX[]) == (0PlotsBase.mm, 0PlotsBase.mm)
     for h_anchor in (:left, :right, :hcenter), v_anchor in (:top, :bottom, :vcenter)
@@ -125,10 +125,10 @@ end
     end
 
     el = PlotsBase.EmptyLayout()
-    @test PlotsBase.update_position!(el) === nothing
+    @test PlotsBase.update_position!(el) ≡ nothing
     @test size(el) == (0, 0)
     @test length(el) == 0
-    @test el[1, 1] === nothing
+    @test el[1, 1] ≡ nothing
 
     @test PlotsBase.left(el) == 0PlotsBase.mm
     @test PlotsBase.top(el) == 0PlotsBase.mm

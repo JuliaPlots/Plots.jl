@@ -1,10 +1,8 @@
 "Things that should be common to all backends and frontend modules"
 module Commons
 
-export AVec, AMat, KW, AKW, TicksArgs
-export PlotsBase, PLOTS_SEED
-export _haligns, _valigns, _cbar_width
-# Functions
+export AVec,
+    AMat, KW, AKW, TicksArgs, PlotsBase, PLOTS_SEED, _haligns, _valigns, _cbar_width
 export get_subplot,
     coords,
     ispolar,
@@ -38,18 +36,35 @@ export anynan,
     ignorenan_maximum,
     ignorenan_mean,
     ignorenan_minimum
-#exports from args.jl
+export istuple, isvector, ismatrix, isscalar, is_2tuple
 export default, wraptuple, merge_with_base_supported
 
-using PlotsBase: PlotsBase, Printf, NaNMath, cgrad
-import PlotsBase: RecipesPipeline
-using PlotsBase.Colors: Colorant, @colorant_str
-using PlotsBase.ColorTypes: alpha
-using PlotsBase.Measures: mm, BoundingBox
-using PlotsBase.PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
-using PlotsBase.RecipesBase
-using PlotsBase: DEFAULT_LINEWIDTH
-using PlotsBase: Statistics
+export px, pct, plotarea, plotarea!
+export width, height, leftpad, toppad, bottompad, rightpad
+export origin, left, right, bottom, top, bbox, bbox!
+export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
+export MM_PER_PX, MM_PER_INCH, DPI, PX_PER_INCH
+
+export GridLayout, EmptyLayout, RootLayout
+export BBox, BoundingBox, mm, cm, inch, pt, w, h
+export bbox_to_pcts, xy_mm_to_pcts
+export Length, AbsoluteLength, Measure
+export to_pixels, ispositive, get_ticks, scale_lims!
+
+import Measures:
+    Measures, Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, w, h
+import PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
+import PlotsBase: PlotsBase, RecipesPipeline, cgrad
+
+using ..Colors: Colorant, @colorant_str
+using ..ColorTypes: alpha
+using ..RecipesBase
+using ..Statistics
+using ..NaNMath
+using ..Printf
+
+const width = Measures.width
+const height = Measures.height
 
 const AVec = AbstractVector
 const AMat = AbstractMatrix
@@ -57,14 +72,9 @@ const KW = Dict{Symbol,Any}
 const AKW = AbstractDict{Symbol,Any}
 const TicksArgs =
     Union{AVec{T},Tuple{AVec{T},AVec{S}},Symbol} where {T<:Real,S<:AbstractString}
-const PLOTS_SEED = 1234
-const PX_PER_INCH = 100
-const DPI = PX_PER_INCH
-const MM_PER_INCH = 25.4
-const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
+
 const _haligns = :hcenter, :left, :right
 const _valigns = :vcenter, :top, :bottom
-const _cbar_width = 5mm
 const _all_scales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _log_scales = [:ln, :log2, :log10]
 const _log_scale_bases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
@@ -90,14 +100,26 @@ const _segmenting_vector_attributes = (
 const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 const _debug = Ref(false)
 
-function get_subplot end
-function get_clims end
-function series_list end
-function coords end
-function ispolar end
-function expand_extrema! end
-function axis_limits end
-function preprocess_attributes! end
+# docs.julialang.org/en/v1/manual/methods/#Empty-generic-functions
+macro generic_functions(args...)
+    blk = Expr(:block)
+    foreach(arg -> push!(blk.args, :(function $arg end)), args)
+    blk |> esc
+end
+
+@generic_functions get_ticks get_subplot get_clims
+@generic_functions series_list coords ispolar axis_limits
+@generic_functions expand_extrema! preprocess_attributes! scale_lims!
+
+@generic_functions width height leftpad toppad bottompad rightpad
+@generic_functions origin left right bottom top
+@generic_functions plotarea plotarea!
+
+include("measures.jl")
+
+using ..RecipesBase: AbstractLayout
+include("layouts.jl")
+
 # ---------------------------------------------------------------
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
@@ -109,12 +131,12 @@ all_lineLtypes(arg) =
     true_or_all_true(a -> get(Commons._typeAliases, a, a) in Commons._all_seriestypes, arg)
 all_styles(arg) =
     true_or_all_true(a -> get(Commons._styleAliases, a, a) in Commons._all_styles, arg)
-all_shapes(arg) = (true_or_all_true(
+all_shapes(arg) = true_or_all_true(
     a ->
         get(Commons._marker_aliases, a, a) in Commons._all_markers ||
             a isa PlotsBase.Shape,
     arg,
-))
+)
 all_alphas(arg) = true_or_all_true(
     a ->
         (typeof(a) <: Real && a > 0 && a < 1) || (
@@ -131,17 +153,30 @@ include("attrs.jl")
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
     if !RecipesPipeline.is3d(st) && st ∉ (:contour, :contour3d, :quiver)
-        if (z = plotattributes[:z]) !== nothing &&
+        if (z = plotattributes[:z]) ≢ nothing &&
            size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)
-            st = st === :scatter ? :scatter3d : :path3d
+            st = st ≡ :scatter ? :scatter3d : :path3d
             plotattributes[:seriestype] = st
         end
     end
     st
 end
 
-"These should only be needed in frontend modules"
-PlotsBase.@ScopeModule(
+macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
+    import_ex = Expr(
+        :import,
+        Expr(
+            :(:),
+            Expr(:., :., :., parent),
+            (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
+        ),
+    )
+    export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
+    Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
+end
+
+"these should only be needed in frontend modules"
+@ScopeModule(
     Frontend,
     Commons,
     _subplot_defaults,
@@ -157,7 +192,7 @@ PlotsBase.@ScopeModule(
 
 function fg_color(plotattributes::AKW)
     fg = get(plotattributes, :foreground_color, :auto)
-    if fg === :auto
+    if fg ≡ :auto
         bg = plot_color(get(plotattributes, :background_color, :white))
         fg = alpha(bg) > 0 && isdark(bg) ? colorant"white" : colorant"black"
     else
@@ -165,15 +200,36 @@ function fg_color(plotattributes::AKW)
     end
 end
 function color_or_nothing!(plotattributes, k::Symbol)
-    plotattributes[k] = (v = plotattributes[k]) === :match ? v : plot_color(v)
+    plotattributes[k] = (v = plotattributes[k]) ≡ :match ? v : plot_color(v)
     nothing
 end
+
+istuple(::Tuple) = true
+istuple(::Any)   = false
+isvector(::AVec) = true
+isvector(::Any)  = false
+ismatrix(::AMat) = true
+ismatrix(::Any)  = false
+isscalar(::Real) = true
+isscalar(::Any)  = false
+
+is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
 # cache joined symbols so they can be looked up instead of constructed each time
 const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
 
-get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
 get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
+get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
+
+new_attr_dict!(letter::Symbol)::Dict{Symbol,Symbol} =
+    get!(() -> Dict{Symbol,Symbol}(), _attrsymbolcache, letter)
+
+# NOTE: using `keyword::String` allows to disambiguate argument order
+set_attr_symbol!(letter::Symbol, keyword::String) =
+    let letter_keyword = Symbol(letter, keyword)
+        _attrsymbolcache[letter][Symbol(keyword)] = letter_keyword
+    end
+
 # ------------------------------------------------------------------------------------
 _cycle(v::AVec, idx::Int) = v[mod(idx, axes(v, 1))]
 _cycle(v::AMat, idx::Int) = size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]
@@ -260,10 +316,10 @@ reverse_if(x, cond) = cond ? reverse(x) : x
 function get_aspect_ratio(sp)
     ar = sp[:aspect_ratio]
     check_aspect_ratio(ar)
-    if ar === :auto
+    if ar ≡ :auto
         ar = :none
         for series in series_list(sp)
-            if series[:seriestype] === :image
+            if series[:seriestype] ≡ :image
                 ar = :equal
             end
         end

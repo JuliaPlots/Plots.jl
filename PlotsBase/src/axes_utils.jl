@@ -1,6 +1,6 @@
 const _label_func =
     Dict{Symbol,Function}(:log10 => x -> "10^$x", :log2 => x -> "2^$x", :ln => x -> "e^$x")
-labelfunc(scale::Symbol, backend::AbstractBackend) = get(_label_func, scale, string)
+labelfunc(scale::Symbol, ::AbstractBackend) = get(_label_func, scale, string)
 
 const _label_func_tex = Dict{Symbol,Function}(
     :log10 => x -> "10^{$x}",
@@ -23,7 +23,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
 
-    if ticks === nothing && noop
+    if ticks ≡ nothing && noop
         if formatter == RecipesPipeline.dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
@@ -41,7 +41,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     end
 
     # get a list of well-laid-out ticks
-    scaled_ticks = if ticks === nothing
+    scaled_ticks = if ticks ≡ nothing
         optimize_ticks(
             sf(amin),
             sf(amax);
@@ -75,12 +75,12 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     unscaled_ticks, labels
 end
 
-Ticks.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
-    if ticks === :none
+Commons.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
+    if ticks ≡ :none
         T[], String[]
     elseif !isempty(dvals)
         n = length(dvals)
-        if ticks === :all || n < 16
+        if ticks ≡ :all || n < 16
             cvals, string.(dvals)
         else
             Δ = ceil(Int, n / 10)
@@ -91,9 +91,9 @@ Ticks.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
         optimal_ticks_and_labels(nothing, args...)
     end
 
-Ticks.get_ticks(ticks::AVec, cvals, dvals, args...) =
+Commons.get_ticks(ticks::AVec, cvals, dvals, args...) =
     optimal_ticks_and_labels(ticks, args...)
-Ticks.get_ticks(ticks::Int, dvals, cvals, args...) =
+Commons.get_ticks(ticks::Int, dvals, cvals, args...) =
     if isempty(dvals)
         optimal_ticks_and_labels(ticks, args...)
     else
@@ -101,18 +101,18 @@ Ticks.get_ticks(ticks::Int, dvals, cvals, args...) =
         cvals[rng], string.(dvals[rng])
     end
 
-function get_labels(formatter::Symbol, scaled_ticks, scale)
+get_labels(formatter::Symbol, scaled_ticks, scale) =
     if formatter in (:auto, :plain, :scientific, :engineering)
-        return map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
-    elseif formatter === :latex
-        return map(
+        map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
+    elseif formatter ≡ :latex
+        map(
             l -> string("\$", replace(convert_sci_unicode(l), '×' => "\\times"), "\$"),
             get_labels(:auto, scaled_ticks, scale),
         )
-    elseif formatter === :none
-        return String[]
+    elseif formatter ≡ :none
+        String[]
     end
-end
+
 function get_labels(formatter::Function, scaled_ticks, scale)
     sf, invsf, _ = scale_inverse_scale_func(scale)
     fticks = map(formatter ∘ invsf, scaled_ticks)
@@ -120,7 +120,7 @@ function get_labels(formatter::Function, scaled_ticks, scale)
     #   CategoricalArrays's recipe gives "missing" label to those
     filter!(!ismissing, fticks)
     eltype(fticks) <: Number && return get_labels(:auto, map(sf, fticks), scale)
-    return fticks
+    fticks
 end
 
 # Ticks getter functions
@@ -190,7 +190,7 @@ end
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
 discrete_value!(plotattributes, letter::Symbol, dv) =
-    let l = if plotattributes[:permute] !== :none
+    let l = if plotattributes[:permute] ≢ :none
             filter(!=(letter), plotattributes[:permute]) |> only
         else
             letter
@@ -256,21 +256,21 @@ function add_major_or_minor_segments_2d(
     factor,
     cond,
 )
-    ticks === nothing && return
+    ticks ≡ nothing && return
     if cond
         f, invf = scale_inverse_scale_func(oax[:scale])
-        tick_start, tick_stop = if sp[:framestyle] === :origin
+        tick_start, tick_stop = if sp[:framestyle] ≡ :origin
             oamin, oamax = oamM
             t = invf(f(0) + factor * (f(oamax) - f(oamin)))
             (-t, t)
         else
-            ticks_in = ax[:tick_direction] === :out ? -1 : 1
+            ticks_in = ax[:tick_direction] ≡ :out ? -1 : 1
             oa1, oa2 = oas
             t = invf(f(oa1) + factor * (f(oa2) - f(oa1)) * ticks_in)
             (oa1, t)
         end
     end
-    isy = ax[:letter] === :y
+    isy = ax[:letter] ≡ :y
     for tick in ticks
         (ax[:showaxis] && cond) && push!(
             tick_segments,
@@ -299,23 +299,23 @@ function axis_drawing_info(sp, letter)
     segments, tick_segments, grid_segments, minorgrid_segments, border_segments =
         map(_ -> Segments(2), 1:5)
 
-    if sp[:framestyle] !== :none
-        isy = letter === :y
+    if sp[:framestyle] ≢ :none
+        isy = letter ≡ :y
         oa1, oa2 = oas = if sp[:framestyle] in (:origin, :zerolines)
             0, 0
         else
             xor(ax[:mirror], oax[:flip]) ? reverse(oamM) : oamM
         end
         if ax[:showaxis]
-            if sp[:framestyle] !== :grid
+            if sp[:framestyle] ≢ :grid
                 push!(segments, reverse_if((amin, oa1), isy), reverse_if((amax, oa1), isy))
                 # don't show the 0 tick label for the origin framestyle
                 if (
-                    sp[:framestyle] === :origin &&
+                    sp[:framestyle] ≡ :origin &&
                     ticks ∉ (:none, nothing, false) &&
                     length(ticks) > 1
                 )
-                    if (i = findfirst(==(0), ticks[1])) !== nothing
+                    if (i = findfirst(==(0), ticks[1])) ≢ nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
                     end
@@ -329,7 +329,7 @@ function axis_drawing_info(sp, letter)
             )
         end
         if ax[:ticks] ∉ (:none, nothing, false)
-            ax_length = letter === :x ? height(sp.plotarea).value : width(sp.plotarea).value
+            ax_length = letter ≡ :x ? height(sp.plotarea).value : width(sp.plotarea).value
 
             # add major grid segments
             add_major_or_minor_segments_2d(
@@ -343,9 +343,9 @@ function axis_drawing_info(sp, letter)
                 tick_segments,
                 grid_segments,
                 grid_factor_2d[] / ax_length,
-                ax[:tick_direction] !== :none,
+                ax[:tick_direction] ≢ :none,
             )
-            if sp[:framestyle] === :box
+            if sp[:framestyle] ≡ :box
                 add_major_or_minor_segments_2d(
                     sp,
                     ax,
@@ -357,7 +357,7 @@ function axis_drawing_info(sp, letter)
                     tick_segments,
                     grid_segments,
                     grid_factor_2d[] / ax_length,
-                    ax[:tick_direction] !== :none,
+                    ax[:tick_direction] ≢ :none,
                 )
             end
 
@@ -376,7 +376,7 @@ function axis_drawing_info(sp, letter)
                     grid_factor_2d[] / 2ax_length,
                     true,
                 )
-                if sp[:framestyle] === :box
+                if sp[:framestyle] ≡ :box
                     add_major_or_minor_segments_2d(
                         sp,
                         ax,
@@ -419,16 +419,16 @@ function add_major_or_minor_segments_3d(
     factor,
     cond,
 )
-    ticks === nothing && return
+    ticks ≡ nothing && return
     if cond
         f, invf = scale_inverse_scale_func(nax[:scale])
-        tick_start, tick_stop = if sp[:framestyle] === :origin
+        tick_start, tick_stop = if sp[:framestyle] ≡ :origin
             namin, namax = namM
             t = invf(f(0) + factor * (f(namax) - f(namin)))
             (-t, t)
         else
             na0, na1 = nas
-            ticks_in = ax[:tick_direction] === :out ? -1 : 1
+            ticks_in = ax[:tick_direction] ≡ :out ? -1 : 1
             t = invf(f(na0) + factor * (f(na1) - f(na0)) * ticks_in)
             (na0, t)
         end
@@ -467,12 +467,12 @@ function axis_drawing_info_3d(sp, letter)
     segments, tick_segments, grid_segments, minorgrid_segments, border_segments =
         map(_ -> Segments(3), 1:5)
 
-    if sp[:framestyle] !== :none  # && letter === :x
+    if sp[:framestyle] ≢ :none  # && letter ≡ :x
         na0, na1 =
             nas = if sp[:framestyle] in (:origin, :zerolines)
                 0, 0
             else
-                reverse_if(reverse_if(namM, letter === :y), xor(ax[:mirror], nax[:flip]))
+                reverse_if(reverse_if(namM, letter ≡ :y), xor(ax[:mirror], nax[:flip]))
             end
         fa0, fa1 = fas = if sp[:framestyle] in (:origin, :zerolines)
             0, 0
@@ -480,7 +480,7 @@ function axis_drawing_info_3d(sp, letter)
             reverse_if(famM, xor(ax[:mirror], fax[:flip]))
         end
         if ax[:showaxis]
-            if sp[:framestyle] !== :grid
+            if sp[:framestyle] ≢ :grid
                 push!(
                     segments,
                     sort_3d_axes(amin, na0, fa0, letter),
@@ -488,11 +488,11 @@ function axis_drawing_info_3d(sp, letter)
                 )
                 # don't show the 0 tick label for the origin framestyle
                 if (
-                    sp[:framestyle] === :origin &&
+                    sp[:framestyle] ≡ :origin &&
                     ticks ∉ (:none, nothing, false) &&
                     length(ticks) > 1
                 )
-                    if (i = findfirst(==(0), ticks[1])) !== nothing
+                    if (i = findfirst(==(0), ticks[1])) ≢ nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
                     end
@@ -519,7 +519,7 @@ function axis_drawing_info_3d(sp, letter)
                 tick_segments,
                 grid_segments,
                 grid_factor_3d[],
-                ax[:tick_direction] !== :none,
+                ax[:tick_direction] ≢ :none,
             )
 
             # add minor grid segments
