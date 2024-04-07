@@ -60,7 +60,7 @@ test_stable(pkg::String) = begin
     fake_supported_version!(pkg_dir)
 
     Pkg.develop(; path = pkg_dir)
-    Pkg.test(pkg; coverage = true)
+    Pkg.test(pkg)
     nothing
 end
 

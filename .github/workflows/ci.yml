@@ -113,7 +113,7 @@ jobs:
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          directories: RecipesBase/src,RecipesPipeline/src,src
+          directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,src
       - uses: codecov/codecov-action@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
