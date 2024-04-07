@@ -108,14 +108,7 @@ jobs:
 
       - name: Run downstream tests
         if: startsWith(matrix.os, 'ubuntu')
-        shell: xvfb-run julia --color=yes {0}
-        run: |
-          using Pkg
-          foreach(("StatsPlots", "GraphRecipes")) do name
-            Pkg.activate(tempdir())
-            foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
-            Pkg.add(name); Pkg.test(name; coverage=true)
-          end
+        run: xvfb-run julia --color=yes ci/downstream.jl
 
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')

@@ -12,8 +12,8 @@ import PlotsBase
 import ..Commons: BoundingBox, convert_legend_value, like_surface
 import ..RecipesPipeline: RecipesPipeline, Surface, Volume, DefaultsDict
 import ..RecipesBase: AbstractLayout, AbstractBackend
-import ..PlotUtils: get_color_palette
 import ..DataSeries: Series
+import ..PlotUtils
 
 using ..Commons.Frontend
 using ..Commons
@@ -155,7 +155,7 @@ end
 function _update_subplot_colors(sp::Subplot)
     # background colors
     color_or_nothing!(sp.attr, :background_color_subplot)
-    sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], 30)
+    sp.attr[:color_palette] = PlotUtils.get_color_palette(sp.attr[:color_palette], 30)
     color_or_nothing!(sp.attr, :legend_background_color)
     color_or_nothing!(sp.attr, :background_color_inside)
 
