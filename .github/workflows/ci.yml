@@ -49,7 +49,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get -y update
-          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} g++
+          sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} 
           sudo fc-cache -vr
 
       - name: Set LD_PRELOAD
@@ -65,8 +65,8 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
-          Pkg.precompile()
+          # foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
+          # Pkg.precompile()
 
       # - uses: julia-actions/julia-buildpkg@latest
 
