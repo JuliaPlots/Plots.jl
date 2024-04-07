@@ -74,9 +74,9 @@ struct InputWrapper{T}
     obj::T
 end
 protect(obj::T) where {T} = InputWrapper{T}(obj)
-Base.isempty(wrapper::InputWrapper) = false
-_cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
-_cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
+Base.isempty(::InputWrapper) = false
+_cycle(wrapper::InputWrapper, ::Int) = wrapper.obj
+_cycle(wrapper::InputWrapper, ::AVec{Int}) = wrapper.obj
 
 # -----------------------------------------------------------
 
@@ -178,12 +178,12 @@ Commons.series_list(plt::Plot) = plt.series_list
 Commons.get_ticks(plt::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), plt.subplots)
 
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x ≡ sp, plt.subplots)
-RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
+RecipesPipeline.preprocess_attributes!(::Plot, plotattributes::AKW) =
     Commons.preprocess_attributes!(plotattributes)
 
 plottitlefont(plt::Plot) = font(;
     family = plt[:plot_titlefontfamily],
-    pointsize = v[:plot_titlefontsize],
+    pointsize = plt[:plot_titlefontsize],
     valign = plt[:plot_titlefontvalign],
     halign = plt[:plot_titlefonthalign],
     rotation = plt[:plot_titlefontrotation],
