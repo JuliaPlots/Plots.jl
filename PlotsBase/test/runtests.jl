@@ -4,22 +4,23 @@ const TEST_PACKAGES =
             "PLOTSBASE_TEST_PACKAGES",
             "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",
         )
-        strip.(split(val, ","))
+        Symbol.(strip.(split(val, ",")))
     end
-const TEST_BACKENDS = Symbol.(lowercase.(TEST_PACKAGES))
+const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p in TEST_PACKAGES)
+
+get!(ENV, "MPLBACKEND", "agg")
 
 using PlotsBase
 
+# always initialize GR
 import GR
 gr()
-
-get!(ENV, "MPLBACKEND", "agg")
 
 # initialize all backends
 for pkg in TEST_PACKAGES
     @eval begin
-        import $(Symbol(pkg))  # trigger extension
-        $(Symbol(lowercase(pkg)))()
+        import $pkg  # trigger extension
+        $(TEST_BACKENDS[pkg])()
     end
 end
 

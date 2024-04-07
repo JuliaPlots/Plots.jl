@@ -24,28 +24,28 @@ const _backend_packages     = (unicodeplots = :UnicodePlots, pythonplot = :Pytho
 const _supported_backends   = keys(_backend_packages)
 const _initialized_backends = Set([:none])
 
-function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = true)
-    sym = Symbol(lowercase(string(backend)))
+function _check_installed(pkg::Union{Module,AbstractString,Symbol}; warn = true)
+    name = Symbol(lowercase(string(pkg)))
     if warn && !haskey(_backend_packages, sym)
-        @warn "backend `$sym` is not compatible with `PlotsBase`."
+        @warn "backend `$name` is not compatible with `PlotsBase`."
         return
     end
     # lowercase -> CamelCase, falling back to the given input for `PlotlyBase` ...
-    str = string(get(_backend_packages, sym, backend))
-    str == "Plotly" && (str *= "Base")  # FIXME: `PlotsBase` inconsistency, `plotly` should be named `plotlybase`
+    pkg_str = string(get(_backend_packages, name, pkg))
+    pkg_str == "Plotly" && (pkg_str *= "Base")  # FIXME: `PlotsBase` inconsistency, `plotly` should be named `plotlybase`
     # check supported
-    if warn && !haskey(_compat, str)
-        @warn "backend `$str` is not compatible with `PlotsBase`."
+    if warn && !haskey(_compat, pkg_str)
+        @warn "package `$pkg_str` is not compatible with `PlotsBase`."
         return
     end
     # check installed
-    pkg_id = Base.identify_package(str)
+    pkg_id = Base.identify_package(pkg_str)
     version = if pkg_id ≡ nothing
         nothing
     else
         get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
     end
-    version ≡ nothing && @warn "backend `$str` is not installed."
+    version ≡ nothing && @warn "`package $pkg_str` is not installed."
     version
 end
 
@@ -63,66 +63,67 @@ guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefontsize] * pt
 closeall(::AbstractBackend) = nothing
 
 mutable struct CurrentBackend
-    sym::Symbol
-    pkg::AbstractBackend
+    name::Symbol
+    instance::AbstractBackend
 end
 
-@inline backend_type(sym::Symbol) = get(_backendType, sym, NoBackend)
-@inline backend_instance(sym::Symbol) = backend_type(sym)()
+@inline backend_type(name::Symbol) = _backendType[name]
+@inline backend_instance(name::Symbol) = backend_type(name)()
 @inline backend(type::Type{<:AbstractBackend}) = backend(type())
 
-CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend_instance(sym))
+CurrentBackend(name::Symbol) = CurrentBackend(name, backend_instance(name))
 
-"returns the current plotting package name. Initializes package on first call."
-@inline backend() = CURRENT_BACKEND.pkg
+const CURRENT_BACKEND = CurrentBackend(:none)
+
+"returns the current plotting package backend. Initializes package on first call."
+@inline backend() = CURRENT_BACKEND.instance
 
 "returns a list of supported backends."
 @inline backends() = _supported_backends
 
-const CURRENT_BACKEND = CurrentBackend(:none)
-
-@inline backend_name() = CURRENT_BACKEND.sym
-@inline backend_package_name(sym::Symbol = backend_name()) =
-    get(_backend_packages, sym, nothing)
+@inline backend_name() = CURRENT_BACKEND.name
+@inline backend_package_name(name::Symbol = backend_name()) =
+    get(_backend_packages, name, nothing)
 
 # Traits to be implemented by the extensions
 backend_name(::AbstractBackend) = @info "`backend_name(::Backend) not implemented."
 backend_package_name(::AbstractBackend) =
     @info "`backend_package_name(::Backend) not implemented."
 
-initialized(sym::Symbol) = sym ∈ _initialized_backends
+initialized(name::Symbol) = name ∈ _initialized_backends
 
 "set the plot backend."
-function backend(pkg::AbstractBackend)
-    sym = backend_name(pkg)
-    if sym ∈ _supported_backends
-        CURRENT_BACKEND.sym = sym
-        CURRENT_BACKEND.pkg = pkg
+function backend(backend::AbstractBackend)
+    name = backend_name(backend)
+    instance = backend_instance(name)
+    if name ∈ _supported_backends
+        CURRENT_BACKEND.name = name
+        CURRENT_BACKEND.instance = instance
     else
-        @error "Unsupported backend $sym"
+        @error "Unsupported backend $name"
     end
-    pkg
+    instance
 end
 
-backend(sym::Symbol) =
-    if sym ∈ _supported_backends
-        if initialized(sym)
-            backend(backend_type(sym))
+backend(name::Symbol) =
+    if name ∈ _supported_backends
+        if initialized(name)
+            backend(backend_type(name))
         else
-            name = backend_package_name(sym)
-            @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. `$(name ≡ nothing ? "" : "import $name; ")$sym()`."
+            pkg_name = backend_package_name(name)
+            @warn "`:$name` is not initialized, import it first to trigger the extension --- e.g. `$(pkg_name ≡ nothing ? "" : "import $pkg_name; ")$name()`."
             backend()
         end
     else
-        @error "Unsupported backend $sym"
+        @error "Unsupported backend $name"
     end
 
-function get_backend_module(name::Symbol)
-    ext = Base.get_extension(@__MODULE__, Symbol(name, "Ext"))
+function get_backend_module(pkg_name::Symbol)
+    ext = Base.get_extension(@__MODULE__, Symbol("$(pkg_name)Ext"))
     if !isnothing(ext)
         return ext, ext.get_concrete_backend()
     else
-        @error "Extension $name is not loaded yet, run `import $name` to load it"
+        @error "Extension $pkg_name is not loaded yet, run `import $pkg_name` to load it"
         return nothing
     end
 end

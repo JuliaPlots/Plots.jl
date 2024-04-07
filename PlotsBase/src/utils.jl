@@ -594,7 +594,7 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
     end
 
     # save the backend
-    old_backend = CURRENT_BACKEND.sym
+    old_backend = backend_name()
 
     for arg in args
         # change backend ?
@@ -634,7 +634,7 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
     default(; old_defs...)
 
     # revert the backend
-    CURRENT_BACKEND.sym != old_backend && backend(old_backend)
+    old_backend != backend_name() && backend(old_backend)
 
     # return the result of the function
     ret
