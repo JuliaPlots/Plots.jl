@@ -222,7 +222,7 @@ get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyw
 get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
 
 new_attr_dict!(letter::Symbol)::Dict{Symbol,Symbol} =
-    get!(_attrsymbolcache, letter, Dict{Symbol,Symbol}())
+    get!(() -> Dict{Symbol,Symbol}(), _attrsymbolcache, letter)
 
 # NOTE: using `keyword::String` allows to disambiguate argument order
 set_attr_symbol!(letter::Symbol, keyword::String) =

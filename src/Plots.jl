@@ -17,8 +17,7 @@ function __init__()
 end
 
 # COV_EXCL_START
-# FIXME: Creating a new global in closed module `Main` (`UnicodePlots`) breaks incremental compilation because the side effects will not be permanent.
-if PlotsBase.DEFAULT_BACKEND == "gr"
+if PlotsBase.DEFAULT_BACKEND == "gr"  # FIXME: Creating a new global in closed module `Main` (`UnicodePlots`) breaks incremental compilation because the side effects will not be permanent.
     @setup_workload begin
         #=
         if PlotsBase.DEFAULT_BACKEND == "gr"
@@ -57,7 +56,7 @@ if PlotsBase.DEFAULT_BACKEND == "gr"
                 quote
                     $func() = begin  # evaluate each example in a local scope
                         $(PlotsBase._examples[i].exprs)
-                        $i == 1 || return  # only for one example
+                        $i == 1 || return  # trigger display only for one example
                         fn = joinpath(scratch_dir, tempname())
                         pl = current()
                         show(devnull, pl)
@@ -70,7 +69,7 @@ if PlotsBase.DEFAULT_BACKEND == "gr"
                         showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
                         showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
                         if showable(MIME"image/svg+xml"(), pl)
-                            show(IOBuffer(), MIME"image/svg+xml"(), pl)
+                            show(PipeBuffer(), MIME"image/svg+xml"(), pl)
                         end
                         nothing
                     end

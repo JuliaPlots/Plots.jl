@@ -1254,9 +1254,11 @@ const _examples = PlotExample[
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
-_animation_examples = [2, 31]
+_animation_examples = [02, 31]
 _backend_skips = Dict(
-    :gr => [25, 30], # TODO: add back when StatsPlots is available
+    :none => Int[],
+    :pythonplot => Int[],
+    :gr => [25, 30],  # TODO: add back when StatsPlots is available
     :plotlyjs => [
         21,
         24,
@@ -1274,7 +1276,7 @@ _backend_skips = Dict(
         66,  # bar: vector-valued `color` unsupported
     ],
     :pgfplotsx => [
-        6,  # images
+        06,  # images
         16,  # pgfplots thinks the upper panel is too small
         32,  # spy
         49,  # polar heatmap
@@ -1283,8 +1285,8 @@ _backend_skips = Dict(
         62,  # fillstyle unsupported
     ],
     :unicodeplots => [
-        5,  # limits issue
-        6,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
+        05,  # limits issue
+        06,  # embedded images supported, but requires `using ImageInTerminal`, disable for docs
         16,  # nested layout unsupported
         21,  # custom markers unsupported
         26,  # nested layout unsupported
@@ -1312,8 +1314,6 @@ _backend_skips = Dict(
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
-
-_backend_skips[:pythonplot] = Int[]
 
 # ---------------------------------------------------------------------------------
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`

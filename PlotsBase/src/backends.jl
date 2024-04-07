@@ -1,24 +1,28 @@
+const _default_supported_syms = :attr, :seriestype, :marker, :style, :scale
+
+_f1_sym(sym::Symbol) = Symbol("is_$(sym)_supported")
+_f2_sym(sym::Symbol) = Symbol("supported_$(sym)s")
+
 struct NoBackend <: AbstractBackend end
 
 backend_name(::NoBackend) = :none
+should_warn_on_unsupported(::NoBackend) = false
 
-for sym in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_$(sym)_supported")
-    f2 = Symbol("supported_$(sym)s")
+for sym in _default_supported_syms
     @eval begin
-        $f1(::NoBackend, $sym::Symbol) = true
-        $f2(::NoBackend) = $(getproperty(Commons, Symbol("_all_$(sym)s")))
+        $(_f1_sym(sym))(::NoBackend, $sym::Symbol) = true
+        $(_f2_sym(sym))(::NoBackend) = Commons.$(Symbol("_all_$(sym)s"))
     end
 end
 
 _display(::Plot{NoBackend}) =
-    @info "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
+    @warn "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
 
 const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
-const _backend_packages     = (gaston = :Gaston, gr = :GR, unicodeplots = :UnicodePlots, pgfplotsx = :PGFPlotsX, pythonplot = :PythonPlot, plotly = nothing, plotlyjs = :PlotlyJS, hdf5 = :HDF5)
-const _initialized_backends = Set{Symbol}()
+const _backend_packages     = (unicodeplots = :UnicodePlots, pythonplot = :PythonPlot, pgfplotsx = :PGFPlotsX, plotlyjs = :PlotlyJS, gaston = :Gaston, plotly = nothing, none = nothing, hdf5 = :HDF5, gr = :GR)
 const _supported_backends   = keys(_backend_packages)
+const _initialized_backends = Set([:none])
 
 function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = true)
     sym = Symbol(lowercase(string(backend)))
@@ -106,7 +110,7 @@ backend(sym::Symbol) =
             backend(backend_type(sym))
         else
             name = backend_package_name(sym)
-            @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. $(name ≡ nothing ? '`' : string("`import ", name, ";")) $sym()`."
+            @warn "`:$sym` is not initialized, import it first to trigger the extension --- e.g. `$(name ≡ nothing ? "" : "import $name; ")$sym()`."
             backend()
         end
     else
@@ -136,9 +140,9 @@ end
 
 # create the various `is_xxx_supported` and `supported_xxxs` methods
 # these methods should be overloaded (dispatched) by each backend in its init_code
-for sym in (:attr, :seriestype, :marker, :style, :scale)
-    f1 = Symbol("is_$(sym)_supported")
-    f2 = Symbol("supported_$(sym)s")
+for sym in _default_supported_syms
+    f1 = _f1_sym(sym)
+    f2 = _f2_sym(sym)
     @eval begin
         $f1(::AbstractBackend, $sym) = false
         $f1(be::AbstractBackend, $sym::AbstractVector) = all(v -> $f1(be, v), $sym)
@@ -167,29 +171,21 @@ function backend_defines(be_type::Symbol, be::Symbol)
         ...
         PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
     =#
-    for sym in (:attr, :seriestype, :marker, :style, :scale)
+    for sym in _default_supported_syms
         be_syms = Symbol("_$(be)_$(sym)s")
-        f1 = Symbol("is_$(sym)_supported")
-        f2 = Symbol("supported_$(sym)s")
         push!(
             blk.args,
-            :(PlotsBase.$f1(::$be_type, $sym::Symbol)::Bool = $sym in $be_syms),
-            :(PlotsBase.$f2(::$be_type)::Vector = sort!(collect($be_syms))),
+            :(PlotsBase.$(_f1_sym(sym))(::$be_type, $sym::Symbol)::Bool = $sym in $be_syms),
+            :(PlotsBase.$(_f2_sym(sym))(::$be_type)::Vector = sort!(collect($be_syms))),
         )
     end
     blk
 end
 
+"extra init step for an extension"
 extension_init(::AbstractBackend) = nothing
 
-"""
-function __init__()
-    PlotsBase._backendType[sym] = GRBackend
-    PlotsBase._backendSymbol[GRBackend] = sym
-    push!(PlotsBase._initialized_backends, sym)
-    @debug "Initializing GR backend in PlotsBase; run `gr()` to activate it."
-end
-"""
+"generate extension `__init__` function, and common defines"
 macro extension_static(be_type, be)
     be_sym = QuoteNode(be)
     quote
@@ -211,9 +207,7 @@ const _already_warned = Dict{Symbol,Set{Symbol}}()
 function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
     _to_warn = Set{Symbol}()
     bend = backend_name(pkg)
-    already_warned = get!(_already_warned, bend) do
-        Set{Symbol}()
-    end
+    already_warned = get!(() -> Set{Symbol}(), _already_warned, bend)
     extra_kwargs = Dict{Symbol,Any}()
     for k in PlotsBase.explicitkeys(plotattributes)
         (is_attr_supported(pkg, k) && k ∉ keys(Commons._deprecated_attributes)) && continue
@@ -227,7 +221,7 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
 
     if !isempty(_to_warn) &&
        get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
-        for k in sort(collect(_to_warn))
+        for k in sort!(collect(_to_warn))
             push!(already_warned, k)
             if k in keys(Commons._deprecated_attributes)
                 @warn """
@@ -255,14 +249,13 @@ end
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
     get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
     for k in (:xscale, :yscale, :zscale, :scale)
-        if haskey(plotattributes, k)
-            v = plotattributes[k]
-            if !all(is_scale_supported.(Ref(pkg), v))
-                @warn """
-                scale $v is unsupported with $pkg.
-                Choose from: $(supported_scales(pkg))
-                """
-            end
+        haskey(plotattributes, k) || continue
+        v = plotattributes[k]
+        if !all(is_scale_supported.(Ref(pkg), v))
+            @warn """
+            scale $v is unsupported with $pkg.
+            Choose from: $(supported_scales(pkg))
+            """
         end
     end
 end
