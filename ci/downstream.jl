@@ -1,7 +1,7 @@
 using Pkg, Plots, Test
 
-LibGit2 = Pkg.GitTools.LibGit2
-TOML = Pkg.TOML
+const LibGit2 = Pkg.GitTools.LibGit2
+const TOML = Pkg.TOML
 
 failsafe_clone_checkout(path, url) = begin
     local repo
@@ -51,7 +51,7 @@ end
 
 test_stable(pkg::String) = begin
     Pkg.activate(; temp = true)
-    mktempdir() do
+    mktempdir() do tmpd
         for dn in ("RecipesBase", "RecipesPipeline", "PlotsBase", "")
             Pkg.develop(; path = joinpath(@__DIR__, "..", dn))
         end
