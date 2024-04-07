@@ -41,9 +41,9 @@ pkg_version(name) =
 maybe_pin_version!(dict::AbstractDict, name::AbstractString, ver::AbstractString) =
     haskey(dict, name) && (dict[name] = "=$ver")
 
-fake_supported_version!(path) = begin
+"fake supported Plots ecosystem versions for using `Pkg.develop`"
+fake_supported_versions!(path) = begin
     toml = joinpath(path, "Project.toml")
-    # fake supported versions for testing (for `Pkg.develop`)
     parsed_toml = TOML.parse(read(toml, String))
     compat = parsed_toml["compat"]
     maybe_pin_version!(compat, "RecipesBase", pkg_version("RecipesBase"))
@@ -53,7 +53,7 @@ fake_supported_version!(path) = begin
     open(toml, "w") do io
         TOML.print(io, parsed_toml)
     end
-    print(read(toml, String))
+    # print(read(toml, String))  # debug
     nothing
 end
 
@@ -66,7 +66,7 @@ test_stable(pkg::AbstractString) = begin
 
         pkg_dir = joinpath(tmpd, "$pkg.jl")
         failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl")
-        fake_supported_version!(pkg_dir)
+        fake_supported_versions!(pkg_dir)
 
         Pkg.develop(; path = pkg_dir)
         Pkg.test(pkg)

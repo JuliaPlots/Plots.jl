@@ -17,10 +17,10 @@ jobs:
   ci:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
-      JULIA_CONDAPKG_BACKEND: "MicroMamba"
-      MPLBACKEND: "agg"
-      GKS_ENCODING: "utf8"
-      GKSwstype: "nul"
+      JULIA_CONDAPKG_BACKEND: MicroMamba
+      MPLBACKEND: agg
+      GKS_ENCODING: utf8
+      GKSwstype: nul
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     runs-on: ${{ matrix.os }}
@@ -63,13 +63,16 @@ jobs:
       - uses: julia-actions/cache@v1
 
       - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
         shell: julia --color=yes {0}
         run: |
           using Pkg
           foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
-          Pkg.precompile()
 
       - name: Install conda based matplotlib
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
         run: julia --color=yes ci/matplotlib.jl
 
       - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
