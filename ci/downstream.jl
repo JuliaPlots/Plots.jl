@@ -50,19 +50,19 @@ fake_supported_version!(path) = begin
 end
 
 test_stable(pkg::String) = begin
-    Pkg.activate(tempdir())
-    tmpd = mktempdir()
+    Pkg.activate(; temp = true)
+    mktempdir() do
+        for dn in ("RecipesBase", "RecipesPipeline", "PlotsBase", "")
+            Pkg.develop(; path = joinpath(@__DIR__, "..", dn))
+        end
 
-    for dn in ("RecipesBase", "RecipesPipeline", "PlotsBase", "")
-        Pkg.develop(; path = joinpath(@__DIR__, "..", dn))
+        pkg_dir = joinpath(tmpd, "$pkg.jl")
+        failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl")
+        fake_supported_version!(pkg_dir)
+
+        Pkg.develop(; path = pkg_dir)
+        Pkg.test(pkg)
     end
-
-    pkg_dir = joinpath(tmpd, "$pkg.jl")
-    failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl")
-    fake_supported_version!(pkg_dir)
-
-    Pkg.develop(; path = pkg_dir)
-    Pkg.test(pkg)
     nothing
 end
 
