@@ -161,7 +161,6 @@ include("shorthands.jl")
 include("backends.jl")
 include("web.jl")
 include("plotly.jl")
-include("preferences.jl")
 include("init.jl")
 include("users.jl")
 

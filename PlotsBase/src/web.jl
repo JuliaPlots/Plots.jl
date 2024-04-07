@@ -36,7 +36,7 @@ end
 
 function write_temp_html(plt::AbstractPlot)
     html = standalone_html(plt; title = plt.attr[:window_title])
-    filename = string(tempname(), ".html")
+    filename = tempname() * ".html"
     write(filename, html)
     filename
 end

@@ -159,7 +159,7 @@ savefig(fn) = savefig(current(), fn)
 """
     gui([plot])
 
-Display a plot using the backends' gui window
+Display a plot using the backends' gui window.
 """
 gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
@@ -239,7 +239,7 @@ closeall() = closeall(backend())
 
 # COV_EXCL_START
 
-# Base.showable(::MIME"text/html", plt::Plot{UnicodePlotsBackend}) = false  # Pluto
+# Base.showable(::MIME"text/html", ::Plot{UnicodePlotsBackend}) = false  # Pluto
 
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)
@@ -279,7 +279,7 @@ _showjuno(io::IO, m::MIME"image/svg+xml", plt) =
         _show(io, m, plt)
     end
 
-Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot) = false
+Base.showable(::MIME"application/prs.juno.plotpane+html", ::Plot) = false
 
 _showjuno(io::IO, m, plt) = _show(io, m, plt)
 

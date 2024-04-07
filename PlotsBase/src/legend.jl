@@ -1,5 +1,3 @@
-### Legend
-
 @add_attributes subplot struct Legend
     background_color = :match
     foreground_color = :match
@@ -31,13 +29,11 @@ function legend_pos_from_angle(theta, xmin, xcenter, xmax, ymin, ycenter, ymax)
     return (xcenter + A * c, ycenter + A * s)
 end
 
-"""
-Split continuous range `[-1,1]` evenly into an integer `[1,2,3]`
-"""
+"Split continuous range `[-1,1]` evenly into an integer `[1,2,3]`."
 function legend_anchor_index(x)
     x < -1 // 3 && return 1
     x < 1 // 3 && return 2
-    return 3
+    3
 end
 
 """

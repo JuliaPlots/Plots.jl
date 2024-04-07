@@ -1,5 +1,6 @@
 
 struct PlaceHolder end
+
 mutable struct CurrentPlot
     nullableplot::Union{AbstractPlot,Nothing}
 end
@@ -20,7 +21,9 @@ current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
 # ---------------------------------------------------------
 
 Base.string(plt::Plot) = "Plot{$(plt.backend) n=$(plt.n)}"
+
 Base.print(io::IO, plt::Plot) = print(io, string(plt))
+
 function Base.show(io::IO, plt::Plot)
     print(io, string(plt))
     sp_ekwargs = getindex.(plt.subplots, :extra_kwargs)
@@ -57,7 +60,7 @@ function Base.show(io::IO, plt::Plot)
 end
 
 getplot(plt::Plot) = plt
-getattr(plt::Plot, idx::Int = 1) = plt.attr
+getattr(plt::Plot, ::Int = 1) = plt.attr
 
 # ---------------------------------------------------------
 

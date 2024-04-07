@@ -30,8 +30,6 @@ nanappend!(a::AVec{P3}, b) = (push!(a, (NaN, NaN, NaN)); append!(a, b); nothing)
 
 compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angle)
 
-# -------------------------------------------------------------
-
 struct Shape{X<:Number,Y<:Number}
     x::Vector{X}
     y::Vector{Y}
@@ -59,8 +57,8 @@ PlotsBase.coords(shape::Shape) = shape.x, shape.y
 PlotsBase.coords(shapes::AVec{<:Shape}) = RecipesPipeline.unzip(map(coords, shapes))
 
 "get an array of tuples of points on a circle with radius `r`"
-partialcircle(start_θ, end_θ, n = 20, r = 1) =
-    [(r * cos(u), r * sin(u)) for u in range(start_θ, stop = end_θ, length = n)]
+partialcircle(start_angle, end_angle, n = 20, r = 1) =
+    [(r * cos(u), r * sin(u)) for u in range(start_angle, end_angle, n)]
 
 "interleave 2 vectors into each other (like a zipper's teeth)"
 function weave(x, y; ordering = Vector[x, y])
@@ -207,7 +205,7 @@ rotate_y(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
 
 end  # module
 
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 using .Shapes
 

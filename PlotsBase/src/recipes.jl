@@ -424,7 +424,7 @@ end
     bw = plotattributes[:bar_width]
     hw = if bw ≡ nothing
         0.5Commons._bar_width * if nx > 1
-            ignorenan_minimum(filter(x -> x > 0, diff(sort(procx))))
+            ignorenan_minimum(filter(>(0), diff(sort(procx))))
         else
             1
         end

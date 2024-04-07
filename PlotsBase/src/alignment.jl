@@ -15,7 +15,7 @@ text_size(lab::AbstractString, sz::Number, rot::Number = 0) =
     text_size(length(lab), sz, rot)
 text_size(lab::PlotText, sz::Number, rot::Number = 0) = text_size(length(lab.str), sz, rot)
 
-# account for the size/length/rotation of tick labels
+"account for the size/length/rotation of tick labels"
 function tick_padding(sp::Subplot, axis::Axis)
     if (ticks = get_ticks(sp, axis)) ≡ nothing
         0mm
@@ -28,21 +28,24 @@ function tick_padding(sp::Subplot, axis::Axis)
         # generalize by "rotating" y labels
         rot = axis[:rotation] + (axis[:letter] ≡ :y ? 90 : 0)
 
-        # # we need to compute the size of the ticks generically
-        # # this means computing the bounding box and then getting the width/height
-        # labelwidth = 0.8longest_label * ptsz
-        #
-        #
-        # # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
-        # hgt = abs(sind(rot)) * labelwidth + abs(cosd(rot)) * ptsz + 1mm
+        #=
+        # we need to compute the size of the ticks generically
+        # this means computing the bounding box and then getting the width/height
+        labelwidth = 0.8longest_label * ptsz
+
+        # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
+        hgt = abs(sind(rot)) * labelwidth + abs(cosd(rot)) * ptsz + 1mm
+        =#
 
         # get the height of the rotated label
         text_size(longest_label, axis[:tickfontsize], rot)[2]
     end
 end
 
-# Set the (left, top, right, bottom) minimum padding around the plot area
-# to fit ticks, tick labels, guides, colorbars, etc.
+"""
+Set the (left, top, right, bottom) minimum padding around the plot area
+to fit ticks, tick labels, guides, colorbars, etc.
+"""
 function _update_min_padding!(sp::Subplot)
     # TODO: something different when `RecipesPipeline.is3d(sp) == true`
     leftpad   = tick_padding(sp, sp[:yaxis]) + sp[:left_margin] + guide_padding(sp[:yaxis])

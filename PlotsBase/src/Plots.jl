@@ -27,7 +27,7 @@ const SubplotMap = Dict{Any,Subplot}
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
     n::Int                       # number of series
-    attr::DefaultsDict            # arguments for the whole plot
+    attr::DefaultsDict           # arguments for the whole plot
     series_list::Vector{Series}  # arguments for each series
     o                            # the backend's plot object
     subplots::Vector{Subplot}
@@ -107,8 +107,7 @@ function Base.push!(plt::Plot, y::AVec)
     plt
 end
 
-# push y[i] to the ith series
-# same x for each series
+"push y[i] to the ith series, same x for each series"
 Base.push!(plt::Plot, x::Real, y::AVec) = push!(plt, [x], y)
 
 # push (x[i], y[i]) to the ith series
@@ -121,7 +120,7 @@ function Base.push!(plt::Plot, x::AVec, y::AVec)
     plt
 end
 
-# push (x[i], y[i], z[i]) to the ith series
+"push (x[i], y[i], z[i]) to the ith series"
 function Base.push!(plt::Plot, x::AVec, y::AVec, z::AVec)
     nx = length(x)
     ny = length(y)
@@ -167,28 +166,28 @@ Base.get(plt::Plot, k::Symbol, v) = get(plt.attr, k, v)
 
 Base.size(plt::Plot) = size(plt.layout)
 Base.size(plt::Plot, i::Integer) = size(plt.layout)[i]
-Base.ndims(plt::Plot) = 2
+Base.ndims(::Plot) = 2
 
 # clear out series list, but retain subplots
 Base.empty!(plt::Plot) = foreach(sp -> empty!(sp.series_list), plt.subplots)
-Commons.get_subplot(plt::Plot, sp::Subplot) = sp
+Commons.get_subplot(::Plot, sp::Subplot) = sp
 Commons.get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
 Commons.get_subplot(plt::Plot, k) = plt.spmap[k]
 Commons.series_list(plt::Plot) = plt.series_list
 
-Commons.get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
+Commons.get_ticks(plt::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), plt.subplots)
 
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x ≡ sp, plt.subplots)
 RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes::AKW) =
     Commons.preprocess_attributes!(plotattributes)
 
-plottitlefont(p::Plot) = font(;
-    family = p[:plot_titlefontfamily],
-    pointsize = p[:plot_titlefontsize],
-    valign = p[:plot_titlefontvalign],
-    halign = p[:plot_titlefonthalign],
-    rotation = p[:plot_titlefontrotation],
-    color = p[:plot_titlefontcolor],
+plottitlefont(plt::Plot) = font(;
+    family = plt[:plot_titlefontfamily],
+    pointsize = v[:plot_titlefontsize],
+    valign = plt[:plot_titlefontvalign],
+    halign = plt[:plot_titlefonthalign],
+    rotation = plt[:plot_titlefontrotation],
+    color = plt[:plot_titlefontcolor],
 )
 
 # update attr from an input dictionary
@@ -289,6 +288,6 @@ Commons.get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
 
 end  # module
 
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 using .Plots

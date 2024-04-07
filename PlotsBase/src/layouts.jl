@@ -69,7 +69,7 @@ end
 
 update_position!(layout::GridLayout) = map(update_position!, layout.grid)
 
-# some lengths are fixed... we have to split up the free space among the list v
+"some lengths are fixed... we have to split up the free space among the list v"
 function recompute_lengths(v)
     # dump(v)
     tot = 0pct
@@ -88,8 +88,7 @@ function recompute_lengths(v)
         )
     end
 
-    # now fill in the blanks
-    map(x -> x == 0pct ? leftover / cnt : x, v)
+    map(x -> x == 0pct ? leftover / cnt : x, v)  # fill in the blanks
 end
 
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
@@ -163,8 +162,10 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
     end
 end
 
-# for each inset (floating) subplot, resolve the relative position
-# to absolute canvas coordinates, relative to the parent's plotarea
+"""
+For each inset (floating) subplot, resolve the relative position
+to absolute canvas coordinates, relative to the parent's plotarea.
+"""
 update_inset_bboxes!(plt::Plot) =
     for sp in plt.inset_subplots
         p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
@@ -374,23 +375,17 @@ function link_axes!(l::AbstractLayout, link::Symbol) end
 # process a GridLayout, recursively linking axes according to the link symbol
 function link_axes!(layout::GridLayout, link::Symbol)
     nr, nc = size(layout)
-    if link in (:x, :both)
-        for c in 1:nc
-            link_axes!(layout.grid[:, c], :xaxis)
-        end
+    link in (:x, :both) && for c in 1:nc
+        link_axes!(layout.grid[:, c], :xaxis)
     end
-    if link in (:y, :both)
-        for r in 1:nr
-            link_axes!(layout.grid[r, :], :yaxis)
-        end
+    link in (:y, :both) && for r in 1:nr
+        link_axes!(layout.grid[r, :], :yaxis)
     end
-    if link ≡ :square
-        if (sps = filter(l -> isa(l, Subplot), layout.grid)) |> !isempty
-            base_axis = sps[1][:xaxis]
-            for sp in sps
-                link_axes!(base_axis, sp[:xaxis])
-                link_axes!(base_axis, sp[:yaxis])
-            end
+    link ≡ :square && if (sps = filter(l -> isa(l, Subplot), layout.grid)) |> !isempty
+        base_axis = sps[1][:xaxis]
+        for sp in sps
+            link_axes!(base_axis, sp[:xaxis])
+            link_axes!(base_axis, sp[:yaxis])
         end
     end
     if link ≡ :all

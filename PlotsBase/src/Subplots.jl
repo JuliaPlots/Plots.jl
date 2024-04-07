@@ -63,7 +63,7 @@ Base.lastindex(sp::Subplot) = length(series_list(sp))
 Base.empty!(sp::Subplot) = empty!(sp.series_list)
 Base.get(sp::Subplot, k::Symbol, v) = get(sp.attr, k, v)
 
-# -----------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
 
@@ -219,8 +219,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
     end
 
     # expand for fillrange
-    fr = plotattributes[:fillrange]
-    if fr ≡ nothing && plotattributes[:seriestype] ≡ :bar
+    if (fr = plotattributes[:fillrange]) ≡ nothing && plotattributes[:seriestype] ≡ :bar
         fr = 0.0
     end
     if fr ≢ nothing && !RecipesPipeline.is3d(plotattributes)
@@ -267,7 +266,7 @@ Commons.get_thickness_scaling(sp::Subplot) = get_thickness_scaling(sp.plt)
 
 end  # module
 
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 using .Subplots
 

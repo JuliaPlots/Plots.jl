@@ -48,11 +48,11 @@ function _check_installed(pkg::Union{Module,AbstractString,Symbol}; warn = true)
     version
 end
 
-_create_backend_figure(plt::Plot) = nothing
-_initialize_subplot(plt::Plot, sp::Subplot) = nothing
+_create_backend_figure(::Plot) = nothing
+_initialize_subplot(::Plot, ::Subplot) = nothing
 
-_series_added(plt::Plot, series::Series) = nothing
-_series_updated(plt::Plot, series::Series) = nothing
+_series_added(::Plot, ::Series) = nothing
+_series_updated(::Plot, ::Series) = nothing
 
 _before_layout_calcs(plt::Plot) = nothing
 

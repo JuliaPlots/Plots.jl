@@ -52,13 +52,13 @@ function plotattr()
     end
 
     d = default(attr)
-    print("""
+    """
     # $letter$attr
 
     - $attrtype attribute
     - Default: `$(d isa Symbol ? string(':', d) : d)`.
     - $(_argument_description(attr))
-    """)
+    """ |> print
 end
 # COV_EXCL_STOP
 

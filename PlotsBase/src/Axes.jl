@@ -35,11 +35,12 @@ const _widen_seriestypes = (
     :scatter3d,
 )
 
-# simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
+"simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place"
 mutable struct Axis
     sps::Vector{Subplot}
     plotattributes::DefaultsDict
 end
+
 function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     explicit = KW(
         :letter => letter,
@@ -57,7 +58,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     attr!(Axis([sp], attr), args...; kw...)
 end
 
-# properly retrieve from axis.attr, passing `:match` to the correct key
+"properly retrieve from axis.attr, passing `:match` to the correct key"
 Base.getindex(axis::Axis, k::Symbol) =
     if (v = axis.plotattributes[k]) ≡ :match
         if haskey(Commons._match_map2, k)
@@ -77,7 +78,7 @@ mutable struct Extrema
 end
 
 Extrema() = Extrema(Inf, -Inf)
-# -------------------------------------------------------------------------
+
 sort_3d_axes(x, y, z, letter) =
     if letter ≡ :x
         x, y, z
@@ -338,7 +339,7 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
     axis
 end
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 Base.show(io::IO, axis::Axis) = Commons.dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
@@ -466,8 +467,8 @@ function PlotsBase.expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
     ex
 end
 
-end # Axes
+end  # module
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 using .Axes

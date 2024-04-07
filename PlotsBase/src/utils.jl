@@ -1,5 +1,4 @@
 
-# ---------------------------------------------------------------
 bool_env(x, default::String = "0")::Bool = tryparse(Bool, get(ENV, x, default))
 
 treats_y_as_x(seriestype) =
@@ -10,8 +9,6 @@ function replace_image_with_heatmap(z::AbstractMatrix{<:Colorant})
     colors = palette(vec(z))
     reshape(1:(n * m), n, m), colors
 end
-
-# ---------------------------------------------------------------
 
 "Build line segments for plotting"
 mutable struct Segments{T}
@@ -521,7 +518,6 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
 
     # convert into strokes and brushes
-
     if haskey(plotattributes, :arrow)
         a = plotattributes[:arrow]
         plotattributes[:arrow] = if a == true
@@ -640,7 +636,6 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
     ret
 end
 
-# ---------------------------------------------------------------
 const _convert_sci_unicode_dict = Dict(
     '⁰' => "0",
     '¹' => "1",
@@ -663,9 +658,7 @@ function convert_sci_unicode(label::AbstractString)
     for key in keys(_convert_sci_unicode_dict)
         label = replace(label, key => _convert_sci_unicode_dict[key])
     end
-    if occursin("×10^{", label)
-        label = string(label, "}")
-    end
+    occursin("×10^{", label) && (label = string(label, "}"))
     label
 end
 
@@ -921,7 +914,7 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
     u[ibest] ≈ u[4] && return :topright
     u[ibest] ≈ u[3] && return :topleft
     u[ibest] ≈ u[2] && return :bottomright
-    return :bottomleft
+    :bottomleft
 end
 
 """
@@ -953,7 +946,7 @@ julia> plot([0,1]u"m", [1,2]u"m/s^2", xlabel="This label will display units")
 ```
 """
 macro P_str(s)
-    return protectedstring(s)
+    protectedstring(s)
 end
 
 # for `PGFPlotsx` together with `UnitfulExt`

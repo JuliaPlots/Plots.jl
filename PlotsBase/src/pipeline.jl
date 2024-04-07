@@ -33,9 +33,7 @@ RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
 ## Preprocessing attributes
 function RecipesPipeline.preprocess_axis_attrs!(plt::Plot, plotattributes, letter)
     # Fix letter for seriestypes that are x only but data gets passed as y
-    if treats_y_as_x(get(plotattributes, :seriestype, :path))
-        letter = :x
-    end
+    treats_y_as_x(get(plotattributes, :seriestype, :path)) && (letter = :x)
 
     plotattributes[:letter] = letter
     RecipesPipeline.preprocess_axis_attrs!(plt, plotattributes)
@@ -139,7 +137,7 @@ RecipesPipeline.get_axis_limits(plt::Plot, letter) = axis_limits(plt[1], letter,
 
 ## Plot recipes
 
-RecipesPipeline.type_alias(plt::Plot, st) = get(Commons._typeAliases, st, st)
+RecipesPipeline.type_alias(::Plot, st) = get(Commons._typeAliases, st, st)
 
 ## Plot setup
 
@@ -149,7 +147,7 @@ function RecipesPipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
     nothing
 end
 
-function RecipesPipeline.process_sliced_series_attributes!(plt::PlotsBase.Plot, kw_list)
+function RecipesPipeline.process_sliced_series_attributes!(::Plot, kw_list)
     # determine global extrema
     xe = ye = ze = NaN, NaN
     for kw in kw_list
@@ -177,9 +175,8 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::PlotsBase.Plot, 
         rib = get(kw, :ribbon, default(:ribbon))
         fr = get(kw, :fillrange, default(:fillrange))
         # map ribbon if it's a Function
-        if rib isa Function
-            kw[:ribbon] = map(rib, kw[:x])
-        end
+        rib isa Function && (kw[:ribbon] = map(rib, kw[:x]))
+
         # convert a ribbon into a fillrange
         if rib ≢ nothing
             make_fillrange_from_ribbon(kw)
@@ -191,7 +188,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::PlotsBase.Plot, 
     nothing
 end
 
-# TODO: Should some of this logic be moved to RecipesPipeline?
+# TODO: Should some of this logic be moved to RecipesPipeline ?
 function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # merge in anything meant for the Plot
     for kw in kw_list, (k, v) in kw
@@ -344,9 +341,9 @@ function RecipesPipeline.slice_series_attributes!(plt::Plot, kw_list, kw)
     nothing
 end
 
-RecipesPipeline.series_defaults(plt::Plot) = _series_defaults # in args.jl
+RecipesPipeline.series_defaults(::Plot) = _series_defaults # in args.jl
 
-RecipesPipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported(st)
+RecipesPipeline.is_seriestype_supported(::Plot, st) = is_seriestype_supported(st)
 
 function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
