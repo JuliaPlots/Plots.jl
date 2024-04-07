@@ -45,12 +45,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ubuntu LaTeX dependencies
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get -y update
-          sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} 
-          sudo fc-cache -vr
+      # - name: Ubuntu LaTeX dependencies
+      #   if: startsWith(matrix.os, 'ubuntu')
+      #   run: |
+      #     sudo apt-get -y update
+      #     sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} 
+      #     sudo fc-cache -vr
 
       - name: Set LD_PRELOAD
         if: startsWith(matrix.os, 'ubuntu')
@@ -59,6 +59,7 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
+
       - uses: julia-actions/cache@v1
 
       # - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots

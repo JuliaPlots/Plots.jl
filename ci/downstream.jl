@@ -39,7 +39,7 @@ pkg_version(name) =
     Pkg.Types.read_package(normpath(@__DIR__, "..", name, "Project.toml")).version |> string
 
 maybe_pin_version!(dict::AbstractDict, name::AbstractString, ver::AbstractString) =
-    haskey(dict, name) && (dict[name] = ver)
+    haskey(dict, name) && (dict[name] = "=$ver")
 
 fake_supported_version!(path) = begin
     toml = joinpath(path, "Project.toml")
@@ -74,5 +74,5 @@ test_stable(pkg::AbstractString) = begin
     nothing
 end
 
-test_stable("StatsPlots")
 test_stable("GraphRecipes")
+test_stable("StatsPlots")
