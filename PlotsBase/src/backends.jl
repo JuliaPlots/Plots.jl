@@ -75,11 +75,11 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend_instance(sym))
 "returns a list of supported backends."
 @inline backends() = _supported_backends
 
-
 const CURRENT_BACKEND = CurrentBackend(:none)
 
 @inline backend_name() = CURRENT_BACKEND.sym
-@inline backend_package_name(sym::Symbol = backend_name()) = get(_backend_packages, sym, nothing)
+@inline backend_package_name(sym::Symbol = backend_name()) =
+    get(_backend_packages, sym, nothing)
 
 # Traits to be implemented by the extensions
 backend_name(::AbstractBackend) = @info "`backend_name(::Backend) not implemented."
