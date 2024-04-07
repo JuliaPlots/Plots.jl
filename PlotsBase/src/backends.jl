@@ -26,7 +26,7 @@ const _initialized_backends = Set([:none])
 
 function _check_installed(pkg::Union{Module,AbstractString,Symbol}; warn = true)
     name = Symbol(lowercase(string(pkg)))
-    if warn && !haskey(_backend_packages, sym)
+    if warn && !haskey(_backend_packages, name)
         @warn "backend `$name` is not compatible with `PlotsBase`."
         return
     end
@@ -90,12 +90,9 @@ backend_name(::AbstractBackend) = @info "`backend_name(::Backend) not implemente
 backend_package_name(::AbstractBackend) =
     @info "`backend_package_name(::Backend) not implemented."
 
-initialized(name::Symbol) = name ∈ _initialized_backends
-
 "set the plot backend."
-function backend(backend::AbstractBackend)
-    name = backend_name(backend)
-    instance = backend_instance(name)
+function backend(instance::AbstractBackend)
+    name = backend_name(instance)
     if name ∈ _supported_backends
         CURRENT_BACKEND.name = name
         CURRENT_BACKEND.instance = instance
@@ -107,7 +104,7 @@ end
 
 backend(name::Symbol) =
     if name ∈ _supported_backends
-        if initialized(name)
+        if name ∈ _initialized_backends
             backend(backend_type(name))
         else
             pkg_name = backend_package_name(name)
@@ -120,12 +117,13 @@ backend(name::Symbol) =
 
 function get_backend_module(pkg_name::Symbol)
     ext = Base.get_extension(@__MODULE__, Symbol("$(pkg_name)Ext"))
-    if !isnothing(ext)
-        return ext, ext.get_concrete_backend()
-    else
+    concrete_backend = if ext ≡ nothing
         @error "Extension $pkg_name is not loaded yet, run `import $pkg_name` to load it"
-        return nothing
+        nothing
+    else
+        ext.get_concrete_backend()
     end
+    ext, concrete_backend
 end
 
 # create backend init functions by hand as the corresponding structs do not exist yet

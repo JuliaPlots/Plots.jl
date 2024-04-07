@@ -24,7 +24,7 @@ end
 @test_logs (:info, r".*fallback") PlotsBase.diagnostics(devnull)
 
 @test PlotsBase.merge_with_base_supported([:annotations, :guide]) isa Set
-@test PlotsBase.CurrentBackend(:gr).sym ≡ :gr
+@test PlotsBase.CurrentBackend(:gr).name ≡ :gr
 
 @test_logs (:warn, r".*is not compatible with") PlotsBase.set_default_backend!(
     :test_invalid_backend,
@@ -60,7 +60,7 @@ const DEBUG = false
 end
 
 is_pkgeval() || for pkg in TEST_PACKAGES
-    be = Symbol(lowercase(pkg))
+    be = TEST_BACKENDS[pkg]
     if is_ci()
         (Sys.isapple() && be ≡ :gaston) && continue  # FIXME: hangs
         (Sys.iswindows() && be ≡ :plotlyjs) && continue  # FIXME: OutOfMemory

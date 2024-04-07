@@ -6,8 +6,8 @@ const DEFAULT_BACKEND = lowercase(load_preference(PlotsBase, "default_backend", 
 
 function default_backend()
     # environment variable preempts the `Preferences` based mechanism
-    sym = get(ENV, "PLOTSBASE_DEFAULT_BACKEND", DEFAULT_BACKEND) |> lowercase |> Symbol
-    backend(PlotsBase.backend_type(sym))
+    name = get(ENV, "PLOTSBASE_DEFAULT_BACKEND", DEFAULT_BACKEND) |> lowercase |> Symbol
+    backend(name)
 end
 
 function set_default_backend!(
@@ -37,10 +37,10 @@ function diagnostics(io::IO = stdout)
     if (be = backend_name()) ≡ :none
         @info "no `PlotsBase` backends currently initialized"
     else
-        be_name = string(PlotsBase.backend_package_name(be))
-        @info "selected `PlotsBase` backend: $be_name, from $origin"
+        pkg_name = string(PlotsBase.backend_package_name(be))
+        @info "selected `PlotsBase` backend: $pkg_name, from $origin"
         Pkg.status(
-            ["PlotsBase", "RecipesBase", "RecipesPipeline", be_name];
+            ["PlotsBase", "RecipesBase", "RecipesPipeline", pkg_name];
             mode = Pkg.PKGMODE_MANIFEST,
             io,
         )
