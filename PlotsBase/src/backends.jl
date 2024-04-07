@@ -23,15 +23,15 @@ const _supported_backends   = keys(_backend_packages)
 function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = true)
     sym = Symbol(lowercase(string(backend)))
     if warn && !haskey(_backend_packages, sym)
-        @warn "backend `$sym` is not compatible with `Plots`."
+        @warn "backend `$sym` is not compatible with `PlotsBase`."
         return
     end
     # lowercase -> CamelCase, falling back to the given input for `PlotlyBase` ...
     str = string(get(_backend_packages, sym, backend))
-    str == "Plotly" && (str *= "Base")  # FIXME: `Plots` inconsistency, `plotly` should be named `plotlybase`
+    str == "Plotly" && (str *= "Base")  # FIXME: `PlotsBase` inconsistency, `plotly` should be named `plotlybase`
     # check supported
-    if warn && !haskey(_plots_compats, str)
-        @warn "backend `$str` is not compatible with `Plots`."
+    if warn && !haskey(_compat, str)
+        @warn "backend `$str` is not compatible with `PlotsBase`."
         return
     end
     # check installed

@@ -571,7 +571,7 @@ PlotsBase.hdf5plot_write(
     name::String = "_unnamed",
 ) =
     HDF5.h5open(path, "w") do file
-        HDF5.write_dataset(file, "VERSION_INFO", string(PlotsBase._current_plots_version))
+        HDF5.write_dataset(file, "VERSION_INFO", string(PlotsBase._version))
         _write(HDF5.create_group(file, h5plotpath(name)), plt)
     end
 

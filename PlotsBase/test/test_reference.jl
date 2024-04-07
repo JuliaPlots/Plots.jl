@@ -35,7 +35,7 @@ function checkout_reference_dir(dn::AbstractString)
             sleep(20i)
         end
     end
-    if (ver = PlotsBase._current_plots_version).prerelease |> isempty
+    if (ver = PlotsBase._version).prerelease |> isempty
         try
             tag = LibGit2.GitObject(repo, "v$ver")
             hash = string(LibGit2.target(tag))
@@ -77,7 +77,7 @@ function image_comparison_tests(
     example = PlotsBase._examples[idx]
     @info "Testing plot: $pkg:$idx:$(example.header)"
 
-    ver = PlotsBase._current_plots_version
+    ver = PlotsBase._version
     ver = VersionNumber(ver.major, ver.minor, ver.patch)
     reffn = reference_file(pkg, ver, idx)
     newfn = joinpath(reference_path(pkg, ver), ref_name(idx) * ".png")

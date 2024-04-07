@@ -8,7 +8,7 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
 end
 
 using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
-using Reexport, RelocatableFolders
+using PrecompileTools, Preferences, Reexport, RelocatableFolders
 using Base.Meta
 @reexport using RecipesBase
 @reexport using PlotThemes
@@ -120,9 +120,9 @@ export
 #! format: on
 import NaNMath
 
-const _plots_project         = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
-const _current_plots_version = _plots_project.version
-const _plots_compats         = _plots_project.compat
+const _project = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
+const _version = _project.version
+const _compat  = _project.compat
 
 include("Commons/Commons.jl")
 using .Commons
@@ -161,7 +161,16 @@ include("shorthands.jl")
 include("backends.jl")
 include("web.jl")
 include("plotly.jl")
+include("preferences.jl")
 include("init.jl")
 include("users.jl")
+
+# COV_EXCL_START
+@setup_workload begin
+    @compile_workload begin
+        # TODO: backend agnostic statements
+    end
+end
+# COV_EXCL_STOP
 
 end

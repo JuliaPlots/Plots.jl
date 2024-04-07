@@ -36,6 +36,7 @@ using RecipesPipeline
 using FilePathsBase
 using LaTeXStrings
 using RecipesBase
+using Preferences
 using TestImages
 using Unitful
 using FileIO
@@ -80,6 +81,7 @@ for name in (
     "output",
     "reference",
     "backends",
+    "preferences",
     "quality",
 )
     @testset "$name" begin
