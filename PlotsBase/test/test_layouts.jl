@@ -1,4 +1,3 @@
-using Plots, Test
 @testset "Plotting plots" begin
     pl = @test_nowarn plot(plot(1:2), plot(1:2, size = (1_200, 400)))
     @test pl[:size] == (1_200, 400)
