@@ -141,17 +141,17 @@ function GridLayout(
     kw...,
 )
     # Check the values for heights and widths if values are provided
-    if heights ≢ nothing && widths ≢ nothing
-        sum(heights) == 1 || error("The sum of heights must be 1!")
+    if heights ≢ nothing
+        sum(heights) == 1 || error("The sum of heights must be 1 !")
         all(x -> 0 < x < 1, heights) ||
-            error("Values for heights must be in the range (0, 1)!")
+            error("Values for heights must be in the range (0, 1) !")
     else
         heights = zeros(dims[1])
     end
-    if heights ≢ nothing && widths ≢ nothing
-        sum(widths) == 1 || error("The sum of widths must be 1!")
+    if widths ≢ nothing
+        sum(widths) == 1 || error("The sum of widths must be 1 !")
         all(x -> 0 < x < 1, widths) ||
-            error("Values for widths must be in the range (0, 1)!")
+            error("Values for widths must be in the range (0, 1) !")
     else
         widths = zeros(dims[2])
     end
