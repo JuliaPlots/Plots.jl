@@ -1,7 +1,7 @@
-make_measure_hor(n::Number) = n * w
+make_measure_hor(n::Number) = n * Measures.w
 make_measure_hor(m::Measure) = m
 
-make_measure_vert(n::Number) = n * h
+make_measure_vert(n::Number) = n * Measures.h
 make_measure_vert(m::Measure) = m
 
 """
@@ -30,10 +30,8 @@ end
 
 # create a new bbox
 function bbox(x, y, width, height; h_anchor = :left, v_anchor = :top)
-    x = make_measure_hor(x)
-    y = make_measure_vert(y)
-    width = make_measure_hor(width)
-    height = make_measure_vert(height)
+    x, y = make_measure_hor(x), make_measure_vert(y)
+    width, height = make_measure_hor(width), make_measure_vert(height)
     left = if h_anchor ≡ :left
         x
     elseif h_anchor in (:center, :hcenter)
@@ -69,10 +67,10 @@ bottom(layout::AbstractLayout) = bottom(bbox(layout))
 width(layout::AbstractLayout) = width(bbox(layout))
 height(layout::AbstractLayout) = height(bbox(layout))
 
-leftpad(layout::AbstractLayout)   = 0mm
-toppad(layout::AbstractLayout)    = 0mm
-rightpad(layout::AbstractLayout)  = 0mm
-bottompad(layout::AbstractLayout) = 0mm
+leftpad(::AbstractLayout)   = 0mm
+toppad(::AbstractLayout)    = 0mm
+rightpad(::AbstractLayout)  = 0mm
+bottompad(::AbstractLayout) = 0mm
 
 leftpad(pad)   = pad[1]
 toppad(pad)    = pad[2]
@@ -83,7 +81,7 @@ Base.show(io::IO, layout::AbstractLayout) = print(io, "$(typeof(layout))$(size(l
 
 # this is the available area for drawing everything in this layout... as percentages of total canvas
 bbox(layout::AbstractLayout) = layout.bbox
-bbox!(layout::AbstractLayout, bb::BoundingBox) = (layout.bbox = bb)
+bbox!(layout::AbstractLayout, bb::BoundingBox) = layout.bbox = bb
 
 # layouts are recursive, tree-like structures, and most will have a parent field
 Base.parent(layout::AbstractLayout) = layout.parent
@@ -112,9 +110,9 @@ mutable struct EmptyLayout <: AbstractLayout
 end
 EmptyLayout(parent = RootLayout(); kw...) = EmptyLayout(parent, DEFAULT_BBOX[], KW(kw))
 
-Base.size(layout::EmptyLayout) = (0, 0)
-Base.length(layout::EmptyLayout) = 0
-Base.getindex(layout::EmptyLayout, r::Int, c::Int) = nothing
+Base.size(::EmptyLayout) = (0, 0)
+Base.length(::EmptyLayout) = 0
+Base.getindex(::EmptyLayout, ::Int, ::Int) = nothing
 
 # -----------------------------------------------------------
 # GridLayout
@@ -122,9 +120,9 @@ Base.getindex(layout::EmptyLayout, r::Int, c::Int) = nothing
 # nested, gridded layout with optional size percentages
 mutable struct GridLayout <: AbstractLayout
     parent::AbstractLayout
-    minpad::Tuple # leftpad, toppad, rightpad, bottompad
+    minpad::Tuple  # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox
-    grid::Matrix{AbstractLayout} # Nested layouts. Each position is a AbstractLayout, which allows for arbitrary recursion
+    grid::Matrix{AbstractLayout}  # nested layouts. Each position is a AbstractLayout, which allows for arbitrary recursion
     widths::Vector{Measure}
     heights::Vector{Measure}
     attr::KW
@@ -138,8 +136,8 @@ bottompad(layout::GridLayout) = bottompad(layout.minpad)
 function GridLayout(
     dims...;
     parent = RootLayout(),
-    widths = zeros(dims[2]),
-    heights = zeros(dims[1]),
+    heights = nothing,
+    widths = nothing,
     kw...,
 )
     # Check the values for heights and widths if values are provided
@@ -150,7 +148,7 @@ function GridLayout(
     else
         heights = zeros(dims[1])
     end
-    if widths ≢ nothing
+    if heights ≢ nothing && widths ≢ nothing
         sum(widths) == 1 || error("The sum of widths must be 1!")
         all(x -> 0 < x < 1, widths) ||
             error("Values for widths must be in the range (0, 1)!")
@@ -165,8 +163,6 @@ function GridLayout(
         grid,
         Measure[w * pct for w in widths],
         Measure[h * pct for h in heights],
-        # convert(Vector{Float64}, widths),
-        # convert(Vector{Float64}, heights),
         KW(kw),
     )
     for i in eachindex(grid)
