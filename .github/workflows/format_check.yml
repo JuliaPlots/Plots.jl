@@ -18,10 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           using Pkg
-          Pkg.add([
-              PackageSpec("JuliaFormatter"),
-              PackageSpec(url = "https://github.com/tkf/JuliaProjectFormatter.jl.git"),
-          ])
+          Pkg.add("JuliaFormatter")
         shell: julia --color=yes {0}
 
       - name: Format Julia files
@@ -29,7 +26,9 @@ jobs:
           using JuliaFormatter
           format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test"])
         shell: julia --color=yes --compile=min -O0 {0}
+
       - name: suggester / JuliaFormatter
+        if: success() && github.ref == 'refs/heads/master'
         uses: reviewdog/action-suggester@v1
         with:
           tool_name: JuliaFormatter
@@ -42,17 +41,3 @@ jobs:
           git checkout -- .
           git clean --force
         shell: bash
-
-      # temporarily disable `JuliaProjectFormatter` until github.com/tkf/JuliaProjectFormatter.jl/pull/7 is merged
-      # - name: Format Julia project files
-      #   if: success() || failure()
-      #   run: |
-      #     using JuliaProjectFormatter
-      #     format_projects()
-      #   shell: julia --color=yes --compile=min -O0 {0}
-      # - name: suggester / JuliaProjectFormatter
-      #   if: success() || failure()
-      #   uses: reviewdog/action-suggester@v1
-      #   with:
-      #     tool_name: JuliaProjectFormatter
-      #     fail_on_error: true
