@@ -5,8 +5,11 @@ import PythonPlot
 import NaNMath
 
 const PythonCall = PythonPlot.PythonCall
-const pyisnone =
-    isdefined(PythonCall, :pyisnone) ? PythonCall.pyisnone : PythonCall.Core.pyisnone
+const pyisnone = @static if isdefined(PythonCall, :pyisnone)
+    PythonCall.pyisnone
+else
+    PythonCall.Core.pyisnone
+end
 
 const mpl_toolkits = PythonCall.pynew()
 const numpy = PythonCall.pynew()
