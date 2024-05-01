@@ -26,7 +26,7 @@ end
         background_color = :darkgray,
         background_color_inside = :lightgray,
     )
-    @test pl.layout.heights ==  [0.05Plots.pct, 0.95Plots.pct]
+    @test pl.layout.heights == [0.05Plots.pct, 0.95Plots.pct]
     @test pl[:plot_title] == "My title"
     @test pl[:plot_titleindex] == 5
 
