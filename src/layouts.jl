@@ -227,7 +227,6 @@ function GridLayout(
         heights = zeros(dims[1])
     end
     if widths !== nothing
-
         if sum(widths) != 1
             error("The sum of widths must be 1!")
         end
