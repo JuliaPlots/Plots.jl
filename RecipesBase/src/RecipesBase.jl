@@ -73,10 +73,10 @@ _is_arrow_tuple(expr::Expr) =
     expr.head ≡ :tuple &&
     !isempty(expr.args) &&
     isa(expr.args[1], Expr) &&
-    expr.args[1].head === :(-->)
+    expr.args[1].head ≡ :(-->)
 
-_equals_symbol(x::Symbol, sym::Symbol) = x === sym
-_equals_symbol(x::QuoteNode, sym::Symbol) = x.value === sym
+_equals_symbol(x::Symbol, sym::Symbol) = x ≡ sym
+_equals_symbol(x::QuoteNode, sym::Symbol) = x.value ≡ sym
 _equals_symbol(x, sym::Symbol) = false
 
 # build an apply_recipe function header from the recipe function header
@@ -112,7 +112,7 @@ function create_kw_body(func_signature::Expr)
     if isa(arg1, Expr) && arg1.head ≡ :parameters
         for kwpair in arg1.args
             k, v = kwpair.args
-            if isa(k, Expr) && k.head === :(::)
+            if isa(k, Expr) && k.head ≡ :(::)
                 k = k.args[1]
                 @warn """
                 Type annotations on keyword arguments not currently supported in recipes.
@@ -163,14 +163,14 @@ function process_recipe_body!(expr::Expr)
 
             # the unused operator `:=` will mean force: `x := 5` is equivalent to `x --> 5, force`
             # note: this means "x is defined as 5"
-            if e.head === :(:=)
+            if e.head ≡ :(:=)
                 force = true
                 e.head = :(-->)
             end
 
             # we are going to recursively swap out `a --> b, flags...` commands
             # note: this means "x may become 5"
-            if e.head === :(-->)
+            if e.head ≡ :(-->)
                 k, v = e.args
                 if isa(k, Symbol)
                     k = QuoteNode(k)
@@ -298,7 +298,7 @@ macro recipe(funcexpr::Expr)
             $cleanup_body
             series_list = $RecipesBase.RecipeData[]
             func_return = $func_body
-            func_return === nothing || push!(
+            func_return ≡ nothing || push!(
                 series_list,
                 $RecipesBase.RecipeData(
                     plotattributes,

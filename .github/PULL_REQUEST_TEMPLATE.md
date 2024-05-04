@@ -1,4 +1,3 @@
-<!-- Plots is in a 2.0 transition phase. Consider (also) targeting the v2 branch with this change -->
 ## Description
 
 ## Attribution

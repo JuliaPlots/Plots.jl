@@ -1,178 +1,92 @@
 module Plots
 
-if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@optlevel"))
-    @eval Base.Experimental.@optlevel 1
+using PrecompileTools
+using Reexport
+@reexport using PlotsBase
+
+if PlotsBase.DEFAULT_BACKEND == "gr"
+    @debug "loading default GR"
+    import GR
 end
-if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_methods"))
-    @eval Base.Experimental.@max_methods 1
+
+function __init__()
+    ccall(:jl_generating_output, Cint, ()) == 1 && return
+    PlotsBase.default_backend()
+
+    nothing
 end
 
-using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
-using PrecompileTools, Reexport, RelocatableFolders
-using Base.Meta
-@reexport using RecipesBase
-@reexport using PlotThemes
-@reexport using PlotUtils
-
-import RecipesBase: plot, plot!, animate, is_explicit, grid
-import RecipesPipeline
-import Requires: @require
-import RecipesPipeline:
-    inverse_scale_func,
-    datetimeformatter,
-    AbstractSurface,
-    group_as_matrix, # for StatsPlots
-    dateformatter,
-    timeformatter,
-    needs_3d_axes,
-    DefaultsDict,
-    explicitkeys,
-    scale_func,
-    is_surface,
-    Formatted,
-    reset_kw!,
-    SliceIt,
-    Surface,
-    pop_kw!,
-    Volume,
-    is3d
-import UnicodeFun
-import StatsBase
-import Downloads
-import Showoff
-import Unzip
-import JLFzf
-import JSON
-
-#! format: off
-export
-    grid,
-    bbox,
-    plotarea,
-    KW,
-
-    wrap,
-    theme,
-
-    plot,
-    plot!,
-    attr!,
-
-    current,
-    default,
-    with,
-    twinx,
-    twiny,
-
-    pie,
-    pie!,
-    plot3d,
-    plot3d!,
-
-    title!,
-    annotate!,
-
-    xlims,
-    ylims,
-    zlims,
-
-    savefig,
-    png,
-    gui,
-    inline,
-    closeall,
-
-    backend,
-    backends,
-    backend_name,
-    backend_object,
-    aliases,
-
-    Shape,
-    text,
-    font,
-    stroke,
-    brush,
-    Surface,
-    OHLC,
-    arrow,
-    Segments,
-    Formatted,
-
-    Animation,
-    frame,
-    gif,
-    mov,
-    mp4,
-    webm,
-    animate,
-    @animate,
-    @gif,
-    @P_str,
-
-    test_examples,
-    iter_segments,
-    coords,
-
-    translate,
-    translate!,
-    rotate,
-    rotate!,
-    center,
-    BezierCurve,
-
-    plotattr,
-    scalefontsize,
-    scalefontsizes,
-    resetfontsizes
-#! format: on
-# ---------------------------------------------------------
-
-import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
-ignorenan_minimum(x::AbstractArray{<:AbstractFloat}) = NaNMath.minimum(x)
-ignorenan_minimum(x) = Base.minimum(x)
-ignorenan_maximum(x::AbstractArray{<:AbstractFloat}) = NaNMath.maximum(x)
-ignorenan_maximum(x) = Base.maximum(x)
-ignorenan_mean(x::AbstractArray{<:AbstractFloat}) = NaNMath.mean(x)
-ignorenan_mean(x) = Statistics.mean(x)
-ignorenan_extrema(x::AbstractArray{<:AbstractFloat}) = NaNMath.extrema(x)
-ignorenan_extrema(x) = Base.extrema(x)
-
-# ---------------------------------------------------------
-import Measures
-include("plotmeasures.jl")
-using .PlotMeasures
-import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
-# ---------------------------------------------------------
-
-const PLOTS_SEED  = 1234
-const PX_PER_INCH = 100
-const DPI         = PX_PER_INCH
-const MM_PER_INCH = 25.4
-const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
-
-include("types.jl")
-include("utils.jl")
-include("colorbars.jl")
-include("axes.jl")
-include("args.jl")
-include("components.jl")
-include("legend.jl")
-include("consts.jl")
-include("themes.jl")
-include("plot.jl")
-include("pipeline.jl")
-include("layouts.jl")
-include("arg_desc.jl")
-include("recipes.jl")
-include("animation.jl")
-include("examples.jl")
-include("plotattr.jl")
-include("backends.jl")
-const CURRENT_BACKEND = CurrentBackend(:none)
-include("output.jl")
-include("shorthands.jl")
-include("backends/web.jl")
-include("init.jl")
-
+# COV_EXCL_START
+if PlotsBase.DEFAULT_BACKEND == "gr"  # FIXME: Creating a new global in closed module `Main` (`UnicodePlots`) breaks incremental compilation because the side effects will not be permanent.
+    @setup_workload begin
+        #=
+        if PlotsBase.DEFAULT_BACKEND == "gr"
+            import GR
+        elseif PlotsBase.DEFAULT_BACKEND == "unicodeplots"
+            @eval Main import UnicodePlots
+        elseif PlotsBase.DEFAULT_BACKEND == "pythonplot"
+            @eval Main import PythonPlot
+        elseif PlotsBase.DEFAULT_BACKEND == "pgfplotsx"
+            @eval Main import PGFPlotsX
+        elseif PlotsBase.DEFAULT_BACKEND == "plotlyjs"
+            @eval Main import PlotlyJS
+        elseif PlotsBase.DEFAULT_BACKEND == "gaston"
+            @eval Main import Gaston
+        elseif PlotsBase.DEFAULT_BACKEND == "hdf5"
+            @eval Main import HDF5
+        end
+        =#
+        PlotsBase.default_backend()
+        @debug PlotsBase.backend_package_name()
+        n = length(PlotsBase._examples)
+        imports = sizehint!(Expr[], n)
+        examples = sizehint!(Expr[], 10n)
+        scratch_dir = mktempdir()
+        for i ∈ setdiff(
+            1:n,
+            PlotsBase._backend_skips[backend_name()],
+            PlotsBase._animation_examples,
+        )
+            PlotsBase._examples[i].external && continue
+            (imp = PlotsBase._examples[i].imports) ≡ nothing ||
+                push!(imports, PlotsBase.replace_module(imp))
+            func = gensym(string(i))
+            push!(
+                examples,
+                quote
+                    $func() = begin  # evaluate each example in a local scope
+                        $(PlotsBase._examples[i].exprs)
+                        $i == 1 || return  # trigger display only for one example
+                        fn = joinpath(scratch_dir, tempname())
+                        pl = current()
+                        show(devnull, pl)
+                        # FIXME: pgfplotsx requires bug
+                        backend_name() ≡ :pgfplotsx && return
+                        if backend_name() ≡ :unicodeplots
+                            savefig(pl, "$fn.txt")
+                            return
+                        end
+                        showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
+                        showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
+                        if showable(MIME"image/svg+xml"(), pl)
+                            show(PipeBuffer(), MIME"image/svg+xml"(), pl)
+                        end
+                        nothing
+                    end
+                    $func()
+                end,
+            )
+        end
+        withenv("GKSwstype" => "nul", "MPLBACKEND" => "agg") do
+            @compile_workload begin
+                PlotsBase.default_backend()
+                eval.(imports)
+                eval.(examples)
+            end
+        end
+        PlotsBase.CURRENT_PLOT.nullableplot = nothing
+    end
 end
+# COV_EXCL_STOP
+
+end  # module
