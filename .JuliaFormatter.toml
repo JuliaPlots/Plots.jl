@@ -1,4 +1,5 @@
 always_for_in = true
+for_in_replacement = "∈"
 import_to_using = false
 align_pair_arrow = true
 align_assignment = true
