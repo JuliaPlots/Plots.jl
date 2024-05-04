@@ -116,7 +116,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
 
     has_layout = prod(size(plt.layout)) > 1
-    for sp in plt.subplots
+    for sp ∈ plt.subplots
         sp_kw = sp[:extra_kwargs]
         xaxis = sp[:xaxis]
         yaxis = sp[:yaxis]
@@ -160,7 +160,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         blend = get(sp_kw, :blend, true)
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
-        for series in series_list(sp)
+        for series ∈ series_list(sp)
             st = series[:seriestype]
             blend &= get(series[:extra_kwargs], :blend, true)
             quiver |= series[:arrow] isa Arrow  # post-pipeline detection (:quiver -> :path)
@@ -220,11 +220,11 @@ function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         )
 
         o = UnicodePlots.Plot(x, y, plot_3d ? z : nothing, _canvas_map[canvas]; kw...)
-        for series in series_list(sp)
+        for series ∈ series_list(sp)
             o = addUnicodeSeries!(sp, o, kw, series, sp[:legend_position] ≢ :none, plot_3d)
         end
 
-        for ann in sp[:annotations]
+        for ann ∈ sp[:annotations]
             x, y, val = locate_annotation(sp, ann...)
             o = UnicodePlots.annotate!(
                 o,
@@ -333,7 +333,7 @@ function addUnicodeSeries!(
 
     label = addlegend ? series[:label] : ""
 
-    for (n, segment) in enumerate(series_segments(series, st; check = true))
+    for (n, segment) ∈ enumerate(series_segments(series, st; check = true))
         i, rng = segment.attr_index, segment.range
         lc = get_linecolor(series, i)
         up = func(
@@ -347,7 +347,7 @@ function addUnicodeSeries!(
         )
     end
 
-    for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
+    for (xi, yi, str, fnt) ∈ EachAnn(series[:series_annotations], x, y)
         up = UnicodePlots.annotate!(
             up,
             xi,
@@ -385,7 +385,7 @@ function PlotsBase._show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBacken
     canvas_type = nothing
     imgs = []
     sps = 0
-    for r in 1:nr, c in 1:nc
+    for r ∈ 1:nr, c ∈ 1:nc
         if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
             unsupported_layout_error()
         else
@@ -405,9 +405,9 @@ function PlotsBase._show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBacken
         length(img) == 0 && return  # early return on failing fonts
         sps = 0
         n1 = 1
-        for r in 1:nr
+        for r ∈ 1:nr
             n2 = 1
-            for c in 1:nc
+            for c ∈ 1:nc
                 h, w = (sp = imgs[sps += 1]) |> size
                 img[n1:(n1 + (h - 1)), n2:(n2 + (w - 1))] = sp
                 n2 += m2[c]
@@ -429,7 +429,7 @@ function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBacke
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
         n = length(plt.o)
-        for (i, p) in enumerate(plt.o)
+        for (i, p) ∈ enumerate(plt.o)
             show(io, p)
             i < n && println(io)
         end
@@ -441,9 +441,9 @@ function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBacke
         w_max = zeros(Int, nc)
         nsp = length(plt.o)
         sps = 0
-        for r in 1:nr
+        for r ∈ 1:nr
             lmax = 0
-            for c in 1:nc
+            for c ∈ 1:nc
                 if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
                     unsupported_layout_error()
                 else
@@ -465,9 +465,9 @@ function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBacke
             l_max[r] = lmax
         end
         empty = map(w -> ' '^w, w_max)
-        for r in 1:nr
-            for n in 1:l_max[r]
-                for c in 1:nc
+        for r ∈ 1:nr
+            for n ∈ 1:l_max[r]
+                for c ∈ 1:nc
                     pre = c == 1 ? '\0' : ' '
                     if (lc = lines_colored[r, c]) ≡ nothing || length(lc) < n
                         print(io, pre, empty[c])

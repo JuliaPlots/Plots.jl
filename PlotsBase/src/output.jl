@@ -108,7 +108,7 @@ const _savemap = Dict(
     "txt" => txt,
 )
 
-for out in Symbol.(unique(values(_savemap)))
+for out ∈ Symbol.(unique(values(_savemap)))
     @eval @doc """
         $($out)([plot,], filename)
     Save plot as $($out)-file.
@@ -211,7 +211,7 @@ _display(plt::Plot) = @warn "_display is not defined for this backend."
 
 Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback
-for mime in (
+for mime ∈ (
     "text/html",
     "text/latex",
     "image/png",

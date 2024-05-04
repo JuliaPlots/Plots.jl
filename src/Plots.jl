@@ -42,7 +42,7 @@ if PlotsBase.DEFAULT_BACKEND == "gr"  # FIXME: Creating a new global in closed m
         imports = sizehint!(Expr[], n)
         examples = sizehint!(Expr[], 10n)
         scratch_dir = mktempdir()
-        for i in setdiff(
+        for i ∈ setdiff(
             1:n,
             PlotsBase._backend_skips[backend_name()],
             PlotsBase._animation_examples,

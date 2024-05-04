@@ -22,7 +22,7 @@ function arrow(args...)
     style, side = :simple, :head
     headlength = headwidth = 0.3
     setlength = false
-    for arg in args
+    for arg ∈ args
         T = typeof(arg)
         if T == Symbol
             if arg in (:head, :tail, :both)
@@ -49,7 +49,7 @@ end
 # allow for do-block notation which gets called on every valid start/end pair which
 # we need to draw an arrow
 function add_arrows(func::Function, x::AVec, y::AVec)
-    for i in 2:length(x)
+    for i ∈ 2:length(x)
         xyprev = (x[i - 1], y[i - 1])
         xy = (x[i], y[i])
         if ok(xyprev) && ok(xy)

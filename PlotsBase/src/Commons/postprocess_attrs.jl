@@ -3,15 +3,15 @@
 foreach(arg -> add_aliases(arg, makeplural(arg)), _all_attrs)
 
 # fill symbol cache
-for letter in (:x, :y, :z)
+for letter ∈ (:x, :y, :z)
     new_attr_dict!(letter)
-    for keyword in _axis_attrs
+    for keyword ∈ _axis_attrs
         # populate attribute cache
         letter_keyword = set_attr_symbol!(letter, string(keyword))
         # allow the underscore version too: `xguide` or `x_guide`
         add_aliases(letter_keyword, Symbol(letter, "_", keyword))
     end
-    for keyword in (_magic_axis_attrs..., :(_discrete_indices))
+    for keyword ∈ (_magic_axis_attrs..., :(_discrete_indices))
         _attrsymbolcache[letter][keyword] = Symbol(letter, keyword)
     end
 end

@@ -4,7 +4,7 @@ make_non_underscore(s::Symbol) = Symbol(replace(string(s), "_" => ""))
 const _keyAliases = Dict{Symbol,Symbol}()
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
-    for alias in aliases
+    for alias ∈ aliases
         (haskey(_keyAliases, alias) || alias ≡ sym) && return
         _keyAliases[alias] = sym
     end
@@ -14,13 +14,13 @@ end
 function add_axes_aliases(sym::Symbol, aliases::Symbol...; generic::Bool = true)
     sym in keys(_axis_defaults) || throw(ArgumentError("Invalid `$sym`"))
     generic && add_aliases(sym, aliases...)
-    for letter in (:x, :y, :z)
-        add_aliases(Symbol(letter, sym), (Symbol(letter, a) for a in aliases)...)
+    for letter ∈ (:x, :y, :z)
+        add_aliases(Symbol(letter, sym), (Symbol(letter, a) for a ∈ aliases)...)
     end
 end
 
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
-    for (k, v) in aliases
+    for (k, v) ∈ aliases
         if '_' in string(k)
             aliases[make_non_underscore(k)] = v
         end
@@ -523,9 +523,9 @@ const _axis_defaults = KW(
 const _axis_defaults_byletter = KW()
 
 reset_axis_defaults_byletter!() =
-    for letter in (:x, :y, :z)
+    for letter ∈ (:x, :y, :z)
         _axis_defaults_byletter[letter] = KW()
-        for (k, v) in _axis_defaults
+        for (k, v) ∈ _axis_defaults
             _axis_defaults_byletter[letter][k] = v
         end
     end
@@ -573,7 +573,7 @@ const _all_magic_attrs =
 
 const _all_axis_attrs = union(_axis_attrs, _magic_axis_attrs)
 const _lettered_all_axis_attrs =
-    Set([Symbol(letter, kw) for letter in (:x, :y, :z) for kw in _all_axis_attrs])
+    Set([Symbol(letter, kw) for letter ∈ (:x, :y, :z) for kw ∈ _all_axis_attrs])
 const _all_subplot_attrs = union(_subplot_attrs, _magic_subplot_attrs)
 const _all_series_attrs = union(_series_attrs, _magic_series_attrs)
 const _all_plot_attrs = _plot_attrs
@@ -647,9 +647,9 @@ const _base_supported_attrs = [
 
 function merge_with_base_supported(v::AVec)
     v = vcat(v, _base_supported_attrs)
-    for vi in v
+    for vi ∈ v
         if haskey(_axis_defaults, vi)
-            for letter in (:x, :y, :z)
+            for letter ∈ (:x, :y, :z)
                 push!(v, get_attr_symbol(letter, vi))
             end
         end
@@ -670,7 +670,7 @@ include("aliases.jl")
 
 function parse_axis_kw(s::Symbol)
     s = string(s)
-    for letter in ('x', 'y', 'z')
+    for letter ∈ ('x', 'y', 'z')
         startswith(s, letter) &&
             return (Symbol(letter), Symbol(chop(s, head = 1, tail = 0)))
     end
@@ -691,7 +691,7 @@ end
 """
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
-    for defaults in _all_defaults
+    for defaults ∈ _all_defaults
         haskey(defaults, k) && return defaults[k]
     end
     haskey(_axis_defaults, k) && return _axis_defaults[k]
@@ -705,7 +705,7 @@ end
 
 function default(k::Symbol, v)
     k = get(_keyAliases, k, k)
-    for defaults in _all_defaults
+    for defaults ∈ _all_defaults
         if haskey(defaults, k)
             defaults[k] = v
             return v
@@ -727,7 +727,7 @@ function default(; reset = true, kw...)
     (reset && isempty(kw)) && reset_defaults()
     kw = KW(kw)
     preprocess_attributes!(kw)
-    for (k, v) in kw
+    for (k, v) ∈ kw
         default(k, v)
     end
 end
@@ -1195,7 +1195,7 @@ macro add_attributes(level, expr, match_table)
     _splitdef!(expr.args[3], key_dict)
 
     insert_block = Expr(:block)
-    for (key, value) in key_dict
+    for (key, value) ∈ key_dict
         # e.g. _series_defaults[key] = value
         exp_key = Symbol(lowercase(string(T)), "_", key)
         pl_key = makeplural(exp_key)
@@ -1228,7 +1228,7 @@ macro add_attributes(level, expr, match_table)
 end
 
 function _splitdef!(blk, key_dict)
-    for i in eachindex(blk.args)
+    for i ∈ eachindex(blk.args)
         if (ei = blk.args[i]) isa Symbol
             #  var
             continue
@@ -1243,7 +1243,7 @@ function _splitdef!(blk, key_dict)
                     var = lhs.args[1]
                     type = lhs.args[2]
                     if @isdefined type
-                        for field in fieldnames(getproperty(PlotsBase, type))
+                        for field ∈ fieldnames(getproperty(PlotsBase, type))
                             key_dict[Symbol(var, "_", field)] =
                                 :(getfield($(ei.args[2]), $(QuoteNode(field))))
                         end

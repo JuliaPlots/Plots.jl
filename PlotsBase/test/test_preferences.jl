@@ -59,7 +59,7 @@ const DEBUG = false
     @test run(```$(Base.julia_cmd()) $script```) |> success
 end
 
-is_pkgeval() || for pkg in TEST_PACKAGES
+is_pkgeval() || for pkg ∈ TEST_PACKAGES
     @testset "persistent backend $pkg" begin
         be = TEST_BACKENDS[pkg]
         if is_ci()

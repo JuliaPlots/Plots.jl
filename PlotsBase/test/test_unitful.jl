@@ -179,7 +179,7 @@ end
 end
 
 @testset "More plots" begin
-    @testset "data as $dtype" for dtype in
+    @testset "data as $dtype" for dtype ∈
                                   [:Vectors, :Matrices, Symbol("Vectors of vectors")]
         if dtype == :Vectors
             x, y, z = randn(10), randn(10), randn(10)
@@ -237,21 +237,19 @@ end
         @testset "Unitful/unitless combinations" begin
             mystr(x::Array{<:Quantity}) = "Q"
             mystr(x::Array) = "A"
-            @testset "plot($(mystr(xs)), $(mystr(ys)))" for xs in [x, x * m],
-                ys in [y, y * s]
-
+            @testset "plot($(mystr(xs)), $(mystr(ys)))" for xs ∈ [x, x * m], ys ∈ [y, y * s]
                 @test plot(xs, ys) isa PlotsBase.Plot
             end
-            @testset "plot($(mystr(xs)), $(mystr(ys)), $(mystr(zs)))" for xs in [x, x * m],
-                ys in [y, y * s],
-                zs in [z, z * (m / s)]
+            @testset "plot($(mystr(xs)), $(mystr(ys)), $(mystr(zs)))" for xs ∈ [x, x * m],
+                ys ∈ [y, y * s],
+                zs ∈ [z, z * (m / s)]
 
                 @test plot(xs, ys, zs) isa PlotsBase.Plot
             end
         end
     end
 
-    @testset "scatter(x::$(us[1]), y::$(us[2]))" for us in collect(
+    @testset "scatter(x::$(us[1]), y::$(us[2]))" for us ∈ collect(
         Iterators.product(fill([1, u"m", u"s"], 2)...),
     )
         x, y = rand(10) * us[1], rand(10) * us[2]
@@ -260,7 +258,7 @@ end
         @test scatter(x, y, line_z = x) isa PlotsBase.Plot
     end
 
-    @testset "contour(x::$(us[1]), y::$(us[2]))" for us in collect(
+    @testset "contour(x::$(us[1]), y::$(us[2]))" for us ∈ collect(
         Iterators.product(fill([1, u"m", u"s"], 2)...),
     )
         x, y = (1:0.01:2) * us[1], (1:0.02:2) * us[2]

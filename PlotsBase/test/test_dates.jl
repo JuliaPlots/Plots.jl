@@ -1,6 +1,6 @@
 @testset "Limits" begin
-    y = [1.0 * i * i for i in 1:10]
-    x = [Date(2019, 11, i) for i in 1:10]
+    y = [1.0 * i * i for i ∈ 1:10]
+    x = [Date(2019, 11, i) for i ∈ 1:10]
 
     rx = [x[3], x[5]]
 
@@ -14,8 +14,8 @@
 end
 
 @testset "Date xlims" begin
-    y = [1.0 * i * i for i in 1:10]
-    x = [Date(2019, 11, i) for i in 1:10]
+    y = [1.0 * i * i for i ∈ 1:10]
+    x = [Date(2019, 11, i) for i ∈ 1:10]
     span = (Date(2019, 10, 31), Date(2019, 11, 11))
 
     ref_xlims = map(date -> date.instant.periods.value, span)
@@ -24,8 +24,8 @@ end
 end
 
 @testset "DateTime xlims" begin
-    y = [1.0 * i * i for i in 1:10]
-    x = [DateTime(2019, 11, i, 11) for i in 1:10]
+    y = [1.0 * i * i for i ∈ 1:10]
+    x = [DateTime(2019, 11, i, 11) for i ∈ 1:10]
     span = (DateTime(2019, 10, 31, 11, 59, 59), DateTime(2019, 11, 11, 12, 01, 15))
 
     ref_xlims = map(date -> date.instant.periods.value, span)

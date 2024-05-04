@@ -20,7 +20,7 @@ function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     plt[:overwrite_figure] && PlotsBase.closeall()
     plt.o = PlotlyJS.plot()
     traces = PlotlyJS.GenericTrace[]
-    for series_dict in plotly_series(plt)
+    for series_dict ∈ plotly_series(plt)
         plotly_type = pop!(series_dict, :type)
         series_dict[:transpose] = false
         push!(traces, PlotlyJS.GenericTrace(plotly_type; series_dict...))
@@ -34,7 +34,7 @@ end
 
 # ------------------------------------------------------------------------------
 
-for (mime, fmt) in (
+for (mime, fmt) ∈ (
     "application/pdf" => "pdf",
     "image/png"       => "png",
     "image/svg+xml"   => "svg",

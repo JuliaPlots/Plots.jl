@@ -30,7 +30,7 @@ get_clims(sp::Subplot, series::Series)::Tuple{Float64,Float64} =
 
 function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float64,Float64}
     zmin, zmax = Inf, -Inf
-    for series in series_list(sp)
+    for series ∈ series_list(sp)
         if series[:colorbar_entry]::Bool
             # Avoid calling the inner `update_clims` if at all possible; dynamic dispatch hell
             if (series[:seriestype] ∈ Commons._z_colored_series && series[:z] ≢ nothing) ||
@@ -115,7 +115,7 @@ function colorbar_style(series::Series)
     elseif iscontour(series)
         cbar_lines
     elseif series[:seriestype] ∈ (:heatmap, :surface) ||
-           any(series[z] ≢ nothing for z in (:marker_z, :line_z, :fill_z))
+           any(series[z] ≢ nothing for z ∈ (:marker_z, :line_z, :fill_z))
         cbar_gradient
     else
         nothing
@@ -124,7 +124,7 @@ end
 
 hascolorbar(series::Series) = colorbar_style(series) ≢ nothing
 hascolorbar(sp::Subplot) =
-    sp[:colorbar] ≢ :none && any(hascolorbar(s) for s in series_list(sp))
+    sp[:colorbar] ≢ :none && any(hascolorbar(s) for s ∈ series_list(sp))
 
 function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar_formatter])
     if update || !haskey(sp.attr, :colorbar_optimized_ticks)

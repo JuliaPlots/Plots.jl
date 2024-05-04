@@ -50,9 +50,9 @@ function PlotsBase.extension_init(::PythonPlotBackend)
     PythonPlot.ioff()  # we don't want every command to update the figure
 
     # WARNING: matplotlib uses a reverse convention: `labeltop` instead of `toplabel`
-    for keyword in (:linthresh, :base, :label)
+    for keyword ∈ (:linthresh, :base, :label)
         Commons.new_attr_dict!(keyword)
-        for letter in (:x, :y, :z, Symbol(), :top, :bottom, :left, :right)
+        for letter ∈ (:x, :y, :z, Symbol(), :top, :bottom, :left, :right)
             Commons.set_attr_symbol!(keyword, string(letter))
         end
     end
@@ -251,7 +251,7 @@ function _py_marker(marker::Shape)
     x, y = coords(marker)
     n = length(x)
     mat = zeros(n + 1, 2)
-    @inbounds for i in eachindex(x)
+    @inbounds for i ∈ eachindex(x)
         mat[i, 1] = x[i]
         mat[i, 2] = y[i]
     end
@@ -413,7 +413,7 @@ _py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
 # get the bounding box of the union of the objects
 function _py_bbox(v::AVec)
     bbox_union = DEFAULT_BBOX[]
-    for obj in v
+    for obj ∈ v
         bbox_union += _py_bbox(obj)
     end
     bbox_union
@@ -444,7 +444,7 @@ end
 # bounding box: axis title
 function _py_bbox_title(ax)
     bb = DEFAULT_BBOX[]
-    for s in (:title, :_left_title, :_right_title)
+    for s ∈ (:title, :_left_title, :_right_title)
         bb += _py_bbox(getproperty(ax, s))
     end
     bb
@@ -505,7 +505,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     fix_xy_lengths!(plt, series)
 
     # ax = getAxis(plt, series)
-    x, y, z = (_py_handle_surface(series[letter]) for letter in (:x, :y, :z))
+    x, y, z = (_py_handle_surface(series[letter]) for letter ∈ (:x, :y, :z))
     if st ≡ :straightline
         x, y = PlotsBase.straightline_data(series)
     elseif st ≡ :shape
@@ -513,7 +513,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     end
 
     # make negative radii positive and flip the angle (PythonPlot ignores negative radii)
-    ispolar(series) && for i in eachindex(y)
+    ispolar(series) && for i ∈ eachindex(y)
         if y[i] < 0
             y[i] = -y[i]
             x[i] -= π
@@ -559,7 +559,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
     # add lines ?
     if st ∈ _py_line_series && maximum(series[:linewidth]) > 0
-        for (k, segment) in enumerate(series_segments(series, st; check = true))
+        for (k, segment) ∈ enumerate(series_segments(series, st; check = true))
             i, rng = segment.attr_index, segment.range
             ax.plot(
                 map(arg -> arg[rng], xyargs)...;
@@ -605,7 +605,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
     # add markers ?
     if series[:markershape] ≢ :none && st ∈ _py_marker_series
-        for segment in series_segments(series, :scatter)
+        for segment ∈ series_segments(series, :scatter)
             i, rng = segment.attr_index, segment.range
             args = x[rng], y[rng]
             RecipesPipeline.is3d(sp) && (args = (args..., z[rng]))
@@ -630,7 +630,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     end
 
     if st ≡ :shape
-        for segment in series_segments(series)
+        for segment ∈ series_segments(series)
             i, rng = segment.attr_index, segment.range
             if length(rng) > 1
                 lc = get_linecolor(series, clims, i, cbar_scale)
@@ -734,7 +734,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             X, Y, Z = PlotsBase.mesh3d_triangles(x, y, z, cns)
             ntris = length(cns[1])
             polys = sizehint!(Matrix{eltype(x)}[], ntris)
-            for n in 1:ntris
+            for n ∈ 1:ntris
                 m = 4(n - 1) + 1
                 push!(
                     polys,
@@ -845,7 +845,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             ) |> push_h
 
             # contours on the axis planes
-            series[:contours] && for (zdir, mat) in (("x", x), ("y", y), ("z", z))
+            series[:contours] && for (zdir, mat) ∈ (("x", x), ("y", y), ("z", z))
                 offset = zdir == "y" ? ignorenan_maximum(mat) : ignorenan_minimum(mat)
                 ax.contourf(
                     x,
@@ -882,7 +882,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
     # handle area filling
     if (fillrange = series[:fillrange]) ≢ nothing && st ≢ :contour
-        for segment in series_segments(series)
+        for segment ∈ series_segments(series)
             i, rng = segment.attr_index, segment.range
             f, dim1, dim2 = :fill_between, x[rng], y[rng]
             n = length(dim1)
@@ -915,7 +915,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     end
 
     # this is all we need to add the series_annotations text
-    for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
+    for (xi, yi, str, fnt) ∈ EachAnn(series[:series_annotations], x, y)
         _py_add_annotations(sp, xi, yi, PlotText(str, fnt))
     end
 end
@@ -932,7 +932,7 @@ function _py_set_ticks(sp, ax, ticks, letter)
     axis = getproperty(ax, get_attr_symbol(letter, :axis))
     if ticks ≡ :none || ticks ≡ nothing || ticks == false
         kw = KW()
-        for dir in (:top, :bottom, :left, :right)
+        for dir ∈ (:top, :bottom, :left, :right)
             kw[dir] = kw[get_attr_symbol(:label, dir)] = false
         end
         axis.set_tick_params(; which = "both", kw...)
@@ -954,7 +954,7 @@ end
 function _py_compute_axis_minval(sp::Subplot, axis::Axis)
     # compute the smallest absolute value for the log scale's linear threshold
     minval = 1.0
-    for sp in axis.sps, series in series_list(sp)
+    for sp ∈ axis.sps, series ∈ series_list(sp)
         (v = series.plotattributes[axis[:letter]]) |> isempty && continue
         minval = NaNMath.min(minval, ignorenan_minimum(abs.(v)))
     end
@@ -1031,7 +1031,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
     foreach(series -> _py_add_series(plt, series), plt.series_list)
 
     # update subplots
-    for sp in plt.subplots
+    for sp ∈ plt.subplots
         (ax = sp.o) ≡ nothing && continue
         xaxis, yaxis = sp[:xaxis], sp[:yaxis]
 
@@ -1075,7 +1075,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                     kw[:boundaries] = vcat(0, kw[:values] + 0.5)
                     cbar_series[:serieshandle][end]
                 elseif any(
-                    cbar_series[attr] ≢ nothing for attr in (:line_z, :fill_z, :marker_z)
+                    cbar_series[attr] ≢ nothing for attr ∈ (:line_z, :fill_z, :marker_z)
                 )
                     cmin, cmax = get_clims(sp)
                     norm = if cbar_scale ≡ :identity
@@ -1084,7 +1084,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                         mpl.colors.LogNorm(vmin = cmin, vmax = cmax)
                     end
                     cmap = nothing
-                    for func in (_py_linecolormap, _py_fillcolormap, _py_markercolormap)
+                    for func ∈ (_py_linecolormap, _py_fillcolormap, _py_markercolormap)
                         (cmap = func(cbar_series)) ≡ nothing || break
                     end
                     c_map = mpl.cm.ScalarMappable(; cmap, norm)
@@ -1147,7 +1147,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             _py_set_scale(cbar.ax, sp, sp[:colorbar_scale], ticks_letter)
             sp[:colorbar_ticks] ≡ :native || _py_set_ticks(sp, cbar.ax, ticks, ticks_letter)
 
-            for lab in cbar_axis.get_ticklabels()
+            for lab ∈ cbar_axis.get_ticklabels()
                 lab.set_fontsize(_py_thickness_scale(plt, sp[:colorbar_tickfontsize]))
                 lab.set_family(sp[:colorbar_tickfontfamily])
                 lab.set_math_fontfamily(
@@ -1173,7 +1173,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
 
         framestyle = sp[:framestyle]
         if !ispolar(sp) && !RecipesPipeline.is3d(sp)
-            for pos in ("left", "right", "top", "bottom")
+            for pos ∈ ("left", "right", "top", "bottom")
                 # Scale all axes by default first
                 getproperty(ax.spines, pos).set_linewidth(_py_thickness_scale(plt, 1))
             end
@@ -1193,7 +1193,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 ax.tick_params(top = true)   # Add ticks too
                 ax.tick_params(right = true) # Add ticks too
             elseif framestyle ∈ (:axes, :origin)
-                for loc in
+                for loc ∈
                     (xaxis[:mirror] ? "bottom" : "top", yaxis[:mirror] ? "left" : "right")
                     getproperty(ax.spines, loc).set_visible(false)
                 end
@@ -1229,7 +1229,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
         end
 
         # axis attributes
-        for letter in (:x, :y, :z)
+        for letter ∈ (:x, :y, :z)
             axis_sym = get_attr_symbol(letter, :axis)
             hasproperty(ax, axis_sym) || continue
             axis = sp[axis_sym]
@@ -1276,7 +1276,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 positions = getproperty(ax, get_axis(letter, :ticks))()
                 pyaxis.set_major_locator(mpl.ticker.FixedLocator(positions))
                 kw = if RecipesPipeline.is3d(sp)
-                    NamedTuple(Symbol(k) => v for (k, v) in fontProperties)
+                    NamedTuple(Symbol(k) => v for (k, v) ∈ fontProperties)
                 else
                     (; fontdict = PythonPlot.PyDict(fontProperties))
                 end
@@ -1358,7 +1358,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
         if !xaxis[:showaxis]
             kw = KW()
             ispolar(sp) && ax.spines.polar.set_visible(false)
-            for dir in (:top, :bottom)
+            for dir ∈ (:top, :bottom)
                 ispolar(sp) || getproperty(ax.spines, string(dir)).set_visible(false)
                 kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
@@ -1366,7 +1366,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
         end
         if !yaxis[:showaxis]
             kw = KW()
-            for dir in (:left, :right)
+            for dir ∈ (:left, :right)
                 ispolar(sp) || getproperty(ax.spines, string(dir)).set_visible(false)
                 kw[dir] = kw[get_attr_symbol(:label, dir)] = false
             end
@@ -1431,7 +1431,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{PythonPlotBackend})
     # figure out how much the axis components and title "stick out" from the plot area
     padding = [0mm, 0mm, 0mm, 0mm]  # leftpad, toppad, rightpad, bottompad
 
-    for bb in (
+    for bb ∈ (
         _py_bbox_axis(ax, :x),
         _py_bbox_axis(ax, :y),
         _py_bbox_title(ax),
@@ -1441,7 +1441,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{PythonPlotBackend})
     end
     if haskey(sp.attr, :cbar_ax) # Treat colorbar the same way
         cbar_ax = sp.attr[:cbar_handle].ax
-        for bb in (
+        for bb ∈ (
             _py_bbox_axis(cbar_ax, :x),
             _py_bbox_axis(cbar_ax, :y),
             _py_bbox_title(cbar_ax),
@@ -1522,7 +1522,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
     push_h(x) = push!(handles, x)
 
     nseries = 0
-    for series in series_list(sp)
+    for series ∈ series_list(sp)
         should_add_to_legend(series) || continue
         clims = get_clims(sp, series)
         nseries += 1
@@ -1638,7 +1638,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
         )
     end
 
-    for txt in leg.get_texts()
+    for txt ∈ leg.get_texts()
         PythonPlot.setp(
             txt,
             color = _py_color(sp[:legend_font_color]),
@@ -1654,7 +1654,7 @@ end
 # Use the bounding boxes (and methods left/top/right/bottom/width/height) `sp.bbox` and `sp.plotarea` to
 # position the subplot in the backend.
 function PlotsBase._update_plot_object(plt::Plot{PythonPlotBackend})
-    for sp in plt.subplots
+    for sp ∈ plt.subplots
         (ax = sp.o) ≡ nothing && return
         figw, figh = sp.plt[:size] .* px
 
@@ -1683,7 +1683,7 @@ end
 
 PlotsBase._display(plt::Plot{PythonPlotBackend}) = plt.o.show()
 
-for (mime, fmt) in (
+for (mime, fmt) ∈ (
     "application/eps"        => "eps",
     "image/eps"              => "eps",
     "application/pdf"        => "pdf",

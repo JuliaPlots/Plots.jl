@@ -171,7 +171,7 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
     merge!(HDF5PLOT_MAP_STR2TELEM, _telem2str)  # Faster to create than push!()??
     merge!(
         HDF5PLOT_MAP_TELEM2STR,
-        Dict{Type,String}(v => k for (k, v) in HDF5PLOT_MAP_STR2TELEM),
+        Dict{Type,String}(v => k for (k, v) ∈ HDF5PLOT_MAP_STR2TELEM),
     )
 end
 
@@ -180,7 +180,7 @@ end
 h5plotpath(name::String) = "plots/$name"
 
 _hdf5_merge!(dest::AKW, src::AKW) =
-    for (k, v) in src
+    for (k, v) ∈ src
         if isa(v, Axis)
             _hdf5_merge!(dest[k].plotattributes, v.plotattributes)
         else
@@ -259,7 +259,7 @@ function _write_harray(grp::Group, name::String, v::Array)
     sgrp = HDF5.create_group(grp, name)
     lidx = LinearIndices(size(v))
 
-    for iter in eachindex(v)
+    for iter ∈ eachindex(v)
         coord = lidx[iter]
         elem = v[iter]
         idxstr = join(coord, "_")
@@ -272,7 +272,7 @@ end
 # Write Dict without tagging with type:
 _write(grp::Group, name::String, d::AbstractDict) =
     let sgrp = HDF5.create_group(grp, name)
-        for (k, v) in d
+        for (k, v) ∈ d
             kstr = string(k)
             _write_typed(sgrp, kstr, v)
         end
@@ -280,7 +280,7 @@ _write(grp::Group, name::String, d::AbstractDict) =
 
 # Write out arbitrary `struct`s:
 _writestructgeneric(grp::Group, obj::T) where {T} =
-    for fname in fieldnames(T)
+    for fname ∈ fieldnames(T)
         v = getfield(obj, fname)
         _write_typed(grp, String(fname), v)
     end
@@ -351,7 +351,7 @@ function _write(grp::Group, sp::Subplot{HDF5Backend})
 
     listgrp = HDF5.create_group(grp, "series_list")
     _write_length_attrs(listgrp, sp.series_list)
-    for (i, series) in enumerate(sp.series_list)
+    for (i, series) ∈ enumerate(sp.series_list)
         # Just write .plotattributes part:
         _write(listgrp, "$i", series.plotattributes)
     end
@@ -362,7 +362,7 @@ function _write(grp::Group, plt::Plot{HDF5Backend})
 
     listgrp = HDF5.create_group(grp, "subplots")
     _write_length_attrs(listgrp, plt.subplots)
-    for (i, sp) in enumerate(plt.subplots)
+    for (i, sp) ∈ enumerate(plt.subplots)
         sgrp = HDF5.create_group(listgrp, "$i")
         _write(sgrp, sp)
     end
@@ -406,7 +406,7 @@ end
 # _readstructgeneric: Needs object values to be written out with _write_typed():
 function _readstructgeneric(::Type{T}, grp::Group) where {T}
     vlist = Array{Any}(nothing, fieldcount(T))
-    for (i, fname) in enumerate(fieldnames(T))
+    for (i, fname) ∈ enumerate(fieldnames(T))
         vlist[i] = _read_typed(grp, String(fname))
     end
     T(vlist...)
@@ -416,7 +416,7 @@ end
 function _read(::Type{KW}, grp::Group)
     d = KW()
     gkeys = keys(grp)
-    for k in gkeys
+    for k ∈ gkeys
         try
             v = _read_typed(grp, k)
             d[Symbol(k)] = v
@@ -438,7 +438,7 @@ function _read(::Type{Array}, grp::Group) # Array{Any}
     result = Array{Any}(undef, sz)
     lidx = LinearIndices(sz)
 
-    for iter in eachindex(result)
+    for iter ∈ eachindex(result)
         coord = lidx[iter]
         idxstr = join(coord, "_")
         result[iter] = _read_typed(grp, "v$idxstr")
@@ -446,7 +446,7 @@ function _read(::Type{Array}, grp::Group) # Array{Any}
 
     # Hack: Implicitly make Julia detect element type.
     #       (Should probably write it explicitly to file)
-    result = [elem for elem in result]  # Potentially make more specific
+    result = [elem for elem ∈ result]  # Potentially make more specific
     reshape(result, sz)
 end
 
@@ -486,7 +486,7 @@ function _read(grp::Group, sp::Subplot)
     listgrp = HDF5.open_group(grp, "series_list")
     nseries = _read_length_attrs(Vector, listgrp)
 
-    for i in 1:nseries
+    for i ∈ 1:nseries
         sgrp = HDF5.open_group(listgrp, "$i")
         seriesinfo = _read(KW, sgrp)
 
@@ -512,7 +512,7 @@ function _read_plot(grp::Group)
     agrp = HDF5.open_group(grp, "attr")
     _hdf5_merge!(plt.attr, _read(KW, agrp))
 
-    for (i, sp) in enumerate(plt.subplots)
+    for (i, sp) ∈ enumerate(plt.subplots)
         sgrp = HDF5.open_group(listgrp, "$i")
         _read(sgrp, sp)
     end

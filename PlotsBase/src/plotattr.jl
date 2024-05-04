@@ -70,7 +70,7 @@ end
 function plotattr(attribute::AbstractString)
     attribute = Symbol(attribute)
     attribute = get(Commons._keyAliases, attribute, attribute)
-    for (k, v) in _attribute_defaults
+    for (k, v) ∈ _attribute_defaults
         attribute ∈ keys(v) && return plotattr(k, attribute)
     end
     error("There is no attribute named $attribute")

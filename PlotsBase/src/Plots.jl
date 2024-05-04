@@ -101,7 +101,7 @@ Base.append!(plt::Plot, i::Integer, t::Tuple) = append!(plt, i, t...)
 # push y[i] to the ith series
 function Base.push!(plt::Plot, y::AVec)
     ny = length(y)
-    for i in 1:(plt.n)
+    for i ∈ 1:(plt.n)
         push!(plt, i, y[mod1(i, ny)])
     end
     plt
@@ -114,7 +114,7 @@ Base.push!(plt::Plot, x::Real, y::AVec) = push!(plt, [x], y)
 function Base.push!(plt::Plot, x::AVec, y::AVec)
     nx = length(x)
     ny = length(y)
-    for i in 1:(plt.n)
+    for i ∈ 1:(plt.n)
         push!(plt, i, x[mod1(i, nx)], y[mod1(i, ny)])
     end
     plt
@@ -125,7 +125,7 @@ function Base.push!(plt::Plot, x::AVec, y::AVec, z::AVec)
     nx = length(x)
     ny = length(y)
     nz = length(z)
-    for i in 1:(plt.n)
+    for i ∈ 1:(plt.n)
         push!(plt, i, x[mod1(i, nx)], y[mod1(i, ny)], z[mod1(i, nz)])
     end
     plt
@@ -135,11 +135,11 @@ end
 
 "smallest x in plot"
 xmin(plt::Plot) = ignorenan_minimum([
-    ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
+    ignorenan_minimum(series.plotattributes[:x]) for series ∈ plt.series_list
 ])
 "largest x in plot"
 xmax(plt::Plot) = ignorenan_maximum([
-    ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list
+    ignorenan_maximum(series.plotattributes[:x]) for series ∈ plt.series_list
 ])
 
 "extrema of x-values in plot"
@@ -192,7 +192,7 @@ plottitlefont(plt::Plot) = font(;
 
 # update attr from an input dictionary
 function _update_plot_attrs(plt::Plot, plotattributes_in::AKW)
-    for (k, v) in PlotsBase._plot_defaults
+    for (k, v) ∈ PlotsBase._plot_defaults
         PlotsBase.slice_arg!(plotattributes_in, plt.attr, k, 1, true)
     end
 
@@ -206,7 +206,7 @@ function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
     # handle linking here.  if we're passed a list of
     # other subplots to link to, link them together
     (link = axis[:link]) |> isempty && return
-    for other_sp in link
+    for other_sp ∈ link
         link_axes!(axis, get_axis(get_subplot(plt, other_sp), letter))
     end
     axis.plotattributes[:link] = []
@@ -246,7 +246,7 @@ function _update_subplot_attrs(
     anns = RecipesPipeline.pop_kw!(sp.attr, :annotations)
 
     # grab those args which apply to this subplot
-    for k in keys(_subplot_defaults)
+    for k ∈ keys(_subplot_defaults)
         PlotsBase.slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
     end
 
@@ -259,7 +259,7 @@ function _update_subplot_attrs(
     end
 
     lims_warned = false
-    for letter in (:x, :y, :z)
+    for letter ∈ (:x, :y, :z)
         Axes._update_axis(plt, sp, plotattributes_in, letter, subplot_index)
         lk = get_attr_symbol(letter, :lims)
 

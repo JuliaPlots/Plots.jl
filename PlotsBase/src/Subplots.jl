@@ -138,7 +138,7 @@ legendtitlefont(sp::Subplot) = font(;
 function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # extend annotations, and ensure we always have a (x,y,PlotText) tuple
     newanns = []
-    for ann in vcat(anns, sp[:annotations])
+    for ann ∈ vcat(anns, sp[:annotations])
         append!(newanns, PlotsBase.process_annotation(sp, ann))
     end
     sp.attr[:annotations] = newanns
@@ -167,7 +167,7 @@ function _update_subplot_colors(sp::Subplot)
 end
 
 _update_margins(sp::Subplot) =
-    for sym in (:margin, :left_margin, :top_margin, :right_margin, :bottom_margin)
+    for sym ∈ (:margin, :left_margin, :top_margin, :right_margin, :bottom_margin)
         if (margin = get(sp.attr, sym, nothing)) isa Tuple
             # transform e.g. (1, :mm) => 1 * PlotsBase.mm
             sp.attr[sym] = margin[1] * getfield(@__MODULE__, margin[2])
@@ -177,18 +177,18 @@ _update_margins(sp::Subplot) =
 needs_any_3d_axes(sp::Subplot) = any(
     RecipesPipeline.needs_3d_axes(
         _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
-    ) for s in series_list(sp)
+    ) for s ∈ series_list(sp)
 )
 
 function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # first expand for the data
-    for letter in (:x, :y, :z)
+    for letter ∈ (:x, :y, :z)
         data = plotattributes[letter]
         if (
             letter ≢ :z &&
             plotattributes[:seriestype] ≡ :straightline &&
-            any(series[:seriestype] ≢ :straightline for series in series_list(sp)) &&
+            any(series[:seriestype] ≢ :straightline for series ∈ series_list(sp)) &&
             length(data) > 1 &&
             data[1] != data[2]
         )
@@ -247,7 +247,7 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # expand for heatmaps
     if plotattributes[:seriestype] ≡ :heatmap
-        for letter in (:x, :y)
+        for letter ∈ (:x, :y)
             data = plotattributes[letter]
             axis = sp[get_attr_symbol(letter, :axis)]
             scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
@@ -278,7 +278,7 @@ Commons.bottompad(sp::Subplot) = sp.minpad[4]
 function attr!(sp::Subplot; kw...)
     plotattributes = KW(kw)
     PlotsBase.Commons.preprocess_attributes!(plotattributes)
-    for (k, v) in plotattributes
+    for (k, v) ∈ plotattributes
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else

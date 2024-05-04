@@ -45,7 +45,7 @@ Animate from an iterator which returns the plot args each iteration.
 """
 function animate(fitr::FrameIterator, fn = giffn(); kw...)
     anim = Animation()
-    for (i, plotargs) in enumerate(fitr.itr)
+    for (i, plotargs) ∈ enumerate(fitr.itr)
         if mod1(i, fitr.every) == 1
             plot(wraptuple(plotargs)...; fitr.kw...)
             frame(anim)

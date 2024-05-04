@@ -5,7 +5,7 @@ import PlotsBase
 
 if ImageInTerminal.ENCODER_BACKEND[] == :Sixel
     get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
-    for be in (
+    for be ∈ (
         PlotsBase.GRBackend,
         PlotsBase.PythonPlotBackend,
         # PlotsBase.UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal

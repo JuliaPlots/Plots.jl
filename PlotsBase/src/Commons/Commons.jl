@@ -168,10 +168,10 @@ macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
         Expr(
             :(:),
             Expr(:., :., :., parent),
-            (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
+            (Expr(:., s isa Expr ? s.args[1] : s) for s ∈ symbols)...,
         ),
     )
-    export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
+    export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s ∈ symbols)...)
     Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
 end
 
@@ -318,7 +318,7 @@ function get_aspect_ratio(sp)
     check_aspect_ratio(ar)
     if ar ≡ :auto
         ar = :none
-        for series in series_list(sp)
+        for series ∈ series_list(sp)
             if series[:seriestype] ≡ :image
                 ar = :equal
             end
@@ -339,7 +339,7 @@ function dumpdict(io::IO, plotattributes::AKW, prefix = "")
     _debug[] || return
     println(io)
     prefix == "" || println(io, prefix, ":")
-    for k in sort(collect(keys(plotattributes)))
+    for k ∈ sort(collect(keys(plotattributes)))
         Printf.@printf(io, "%14s: ", k)
         debugshow(io, plotattributes[k])
         println(io)

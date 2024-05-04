@@ -84,12 +84,12 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
 
     n_minor_intervals = num_minor_intervals(axis)
     minorticks = sizehint!(eltype(ticks)[], n_minor_intervals * sub * length(ticks))
-    for i in 2:length(ticks)
+    for i ∈ 2:length(ticks)
         lo = ticks[i - 1]
         hi = ticks[i]
         (isfinite(lo) && isfinite(hi) && hi > lo) || continue
         if log_scaled
-            for e in 1:sub
+            for e ∈ 1:sub
                 lo_ = lo * base^(e - 1)
                 hi_ = lo_ * base
                 step = (hi_ - lo_) / n_minor_intervals

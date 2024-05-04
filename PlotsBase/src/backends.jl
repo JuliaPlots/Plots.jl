@@ -8,7 +8,7 @@ struct NoBackend <: AbstractBackend end
 backend_name(::NoBackend) = :none
 should_warn_on_unsupported(::NoBackend) = false
 
-for sym in _default_supported_syms
+for sym ∈ _default_supported_syms
     @eval begin
         $(_f1_sym(sym))(::NoBackend, $sym::Symbol) = true
         $(_f2_sym(sym))(::NoBackend) = Commons.$(Symbol("_all_$(sym)s"))
@@ -126,7 +126,7 @@ function get_backend_module(pkg_name::Symbol)
 end
 
 # create backend init functions by hand as the corresponding structs do not exist yet
-for be in _supported_backends
+for be ∈ _supported_backends
     @eval begin
         function $be(; kw...)
             default(; reset = false, kw...)
@@ -138,7 +138,7 @@ end
 
 # create the various `is_xxx_supported` and `supported_xxxs` methods
 # these methods should be overloaded (dispatched) by each backend in its init_code
-for sym in _default_supported_syms
+for sym ∈ _default_supported_syms
     f1 = _f1_sym(sym)
     f2 = _f2_sym(sym)
     @eval begin
@@ -169,7 +169,7 @@ function backend_defines(be_type::Symbol, be::Symbol)
         ...
         PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
     =#
-    for sym in _default_supported_syms
+    for sym ∈ _default_supported_syms
         be_syms = Symbol("_$(be)_$(sym)s")
         push!(
             blk.args,
@@ -207,7 +207,7 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
     bend = backend_name(pkg)
     already_warned = get!(() -> Set{Symbol}(), _already_warned, bend)
     extra_kwargs = Dict{Symbol,Any}()
-    for k in PlotsBase.explicitkeys(plotattributes)
+    for k ∈ PlotsBase.explicitkeys(plotattributes)
         (is_attr_supported(pkg, k) && k ∉ keys(Commons._deprecated_attributes)) && continue
         k in Commons._suppress_warnings && continue
         if ismissing(default(k))
@@ -219,7 +219,7 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
 
     if !isempty(_to_warn) &&
        get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
-        for k in sort!(collect(_to_warn))
+        for k ∈ sort!(collect(_to_warn))
             push!(already_warned, k)
             if k in keys(Commons._deprecated_attributes)
                 @warn """
@@ -246,7 +246,7 @@ end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
     get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
-    for k in (:xscale, :yscale, :zscale, :scale)
+    for k ∈ (:xscale, :yscale, :zscale, :scale)
         haskey(plotattributes, k) || continue
         v = plotattributes[k]
         if !all(is_scale_supported.(Ref(pkg), v))

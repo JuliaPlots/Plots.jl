@@ -259,7 +259,7 @@ function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat,Surface})
     xn = Vector{eltype(x)}(undef, length(a))
     yn = Vector{eltype(y)}(undef, length(a))
     zn = Vector{eltype(s)}(undef, length(a))
-    for (n, (i, j)) in enumerate(Tuple.(CartesianIndices(a)))
+    for (n, (i, j)) ∈ enumerate(Tuple.(CartesianIndices(a)))
         if length(x) == size(s, 1)
             i, j = j, i
         end
@@ -313,7 +313,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             )
         end
 
-        for sp in plt.subplots
+        for sp ∈ plt.subplots
             bb2 = bbox(sp)
             dx, dy = bb2.x0
             sp_w, sp_h = width(bb2), height(bb2)
@@ -364,7 +364,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             )
             sp_w > 0mm && push!(axis_opt, "width" => string(sp_w - (rpad + lpad)))
             sp_h > 0mm && push!(axis_opt, "height" => string(sp_h - (tpad + bpad)))
-            for letter in (:x, :y, :z)
+            for letter ∈ (:x, :y, :z)
                 if letter ≢ :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
                 end
@@ -375,7 +375,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             # It's also possible to assign the colormap to the series itself but
             # then the colormap needs to be added twice, once for the axis and once for the series.
             # As it is likely that all series within the same axis use the same colormap this should not cause any problem.
-            for series in series_list(sp)
+            for series ∈ series_list(sp)
                 if hascolorbar(series)
                     cg = get_colorgradient(series)
                     cm = pgfx_colormap(cg)
@@ -464,7 +464,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     ),
                 )
             end
-            for (series_index, series) in enumerate(series_list(sp))
+            for (series_index, series) ∈ enumerate(series_list(sp))
                 # give each series a uuid for fillbetween
                 series_id = uuid4()
                 _pgfplotsx_series_ids[Symbol("$series_index")] = series_id
@@ -502,7 +502,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 end
                 # add series annotations
                 anns = series[:series_annotations]
-                for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
+                for (xi, yi, str, fnt) ∈ EachAnn(anns, series[:x], series[:y])
                     pgfx_add_annotation!(
                         axis,
                         (xi, yi),
@@ -512,7 +512,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 end
             end  # for series
             # add subplot annotations
-            for ann in sp[:annotations]
+            for ann ∈ sp[:annotations]
                 # [1:end-1] -> coordinates, [end] is string
                 loc_val = locate_annotation(sp, ann...)
                 pgfx_add_annotation!(
@@ -544,7 +544,7 @@ end
 function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, opt)
     # treat segments
     segments = collect(series_segments(series, series[:seriestype]; check = true))
-    for (k, segment) in enumerate(segments)
+    for (k, segment) ∈ enumerate(segments)
         i, rng = segment.attr_index, segment.range
         segment_opt = pgfx_linestyle(opt, i)
         if opt[:markershape] ≢ :none
@@ -572,7 +572,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
             if sf isa Number || sf isa AVec
                 pgfx_fillrange_series!(axis, series, series_func, i, _cycle(sf, rng), rng)
             elseif sf isa Tuple && series[:ribbon] ≢ nothing
-                for sfi in sf
+                for sfi ∈ sf
                     pgfx_fillrange_series!(
                         axis,
                         series,
@@ -616,8 +616,8 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
             coords = Table([
                 :x => x_arrow[1:2:(end - 1)],
                 :y => y_arrow[1:2:(end - 1)],
-                :u => [x_arrow[i] - x_arrow[i - 1] for i in 2:2:lastindex(x_arrow)],
-                :v => [y_arrow[i] - y_arrow[i - 1] for i in 2:2:lastindex(y_arrow)],
+                :u => [x_arrow[i] - x_arrow[i - 1] for i ∈ 2:2:lastindex(x_arrow)],
+                :v => [y_arrow[i] - y_arrow[i - 1] for i ∈ 2:2:lastindex(y_arrow)],
             ])
             arrow_plot = series_func(merge(series_opt, arrow_opt), coords)
             push!(series_opt, "forget plot" => nothing)
@@ -700,7 +700,7 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
     )
     args = pgfx_series_arguments(series, opt)
     meta = map(r -> any(!isfinite, r) ? NaN : r[3], zip(args...))
-    for arg in args
+    for arg ∈ args
         arg[(!isfinite).(arg)] .= 0
     end
     table = Table([
@@ -1287,16 +1287,16 @@ function pgfx_sanitize_string(s::AbstractString)
 end
 
 function pgfx_sanitize_plot!(plt)
-    for (key, value) in plt.attr
+    for (key, value) ∈ plt.attr
         if value isa Union{AbstractString,AVec{<:AbstractString}}
             plt.attr[key] = pgfx_sanitize_string.(value)
         end
     end
-    for subplot in plt.subplots
-        for (key, value) in subplot.attr
+    for subplot ∈ plt.subplots
+        for (key, value) ∈ subplot.attr
             if key ≡ :annotations && subplot.attr[:annotations] ≢ nothing
                 old_ann = subplot.attr[key]
-                for i in eachindex(old_ann)
+                for i ∈ eachindex(old_ann)
                     # [1:end-1] is a tuple of coordinates, [end] - text
                     subplot.attr[key][i] =
                         (old_ann[i][1:(end - 1)]..., pgfx_sanitize_string(old_ann[i][end]))
@@ -1304,7 +1304,7 @@ function pgfx_sanitize_plot!(plt)
             elseif value isa Union{AbstractString,AVec{<:AbstractString}}
                 subplot.attr[key] = pgfx_sanitize_string.(value)
             elseif value isa Axis
-                for (k, v) in value.plotattributes
+                for (k, v) ∈ value.plotattributes
                     if v isa Union{AbstractString,AVec{<:AbstractString}}
                         value.plotattributes[k] = pgfx_sanitize_string.(v)
                     end
@@ -1312,12 +1312,12 @@ function pgfx_sanitize_plot!(plt)
             end
         end
     end
-    for series in plt.series_list
-        for (key, value) in series.plotattributes
+    for series ∈ plt.series_list
+        for (key, value) ∈ series.plotattributes
             if key ≡ :series_annotations &&
                series.plotattributes[:series_annotations] ≢ nothing
                 old_ann = series.plotattributes[key].strs
-                for i in eachindex(old_ann)
+                for i ∈ eachindex(old_ann)
                     series.plotattributes[key].strs[i] = pgfx_sanitize_string(old_ann[i])
                 end
             elseif value isa Union{AbstractString,AVec{<:AbstractString}}
@@ -1343,7 +1343,7 @@ end
 wrap_power_labels(labels::AVec{LaTeXString}) = labels
 function wrap_power_labels(labels::AVec{<:AbstractString})
     new_labels = similar(labels)
-    for (i, label) in enumerate(labels)
+    for (i, label) ∈ enumerate(labels)
         new_labels[i] = wrap_power_label(label)
     end
     new_labels
@@ -1566,7 +1566,7 @@ PlotsBase._series_added(plt::Plot{PGFPlotsXBackend}, series::Series) =
 
 PlotsBase._update_plot_object(plt::Plot{PGFPlotsXBackend}) = plt.o(plt)
 
-for mime in ("application/pdf", "image/svg+xml", "image/png")
+for mime ∈ ("application/pdf", "image/svg+xml", "image/png")
     @eval function PlotsBase._show(
         io::IO,
         mime::MIME{Symbol($mime)},

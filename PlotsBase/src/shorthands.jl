@@ -455,7 +455,7 @@ plot3d!(args...; kw...) = plot!(args...; kw..., seriestype = :path3d)
 title!(plt::PlotOrSubplot, s::AbstractString; kw...) = plot!(plt; title = s, kw...)
 title!(s::AbstractString; kw...) = plot!(; title = s, kw...)
 
-for letter in ("x", "y", "z")
+for letter ∈ ("x", "y", "z")
     @eval begin
         """Add $($(letter))label to an existing plot"""
         $(Symbol(letter, :label!))(s::AbstractString; kw...) =

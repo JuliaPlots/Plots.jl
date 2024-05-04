@@ -43,7 +43,7 @@ function series_annotations(anns::AMat, outer_attrs...)
 
     # whole_series types can only be in a row vector
     if size(anns, 1) > 1
-        for ann in Iterators.filter(ann -> ann isa whole_series, anns)
+        for ann ∈ Iterators.filter(ann -> ann isa whole_series, anns)
             "Given series annotation must be the only element in its column:\n$ann" |>
             ArgumentError |>
             throw
@@ -65,7 +65,7 @@ function series_annotations(strs::AVec, args...)
     fnt = font()
     shp = nothing
     scalefactor = 1, 1
-    for arg in args
+    for arg ∈ args
         if isa(arg, Shape) || (isa(arg, AVec) && eltype(arg) == Shape)
             shp = arg
         elseif isa(arg, Font)
@@ -94,7 +94,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         msw, msh = anns.scalefactor
         msize = Float64[]
         shapes = Vector{Shape}(undef, length(anns.strs))
-        for i in eachindex(anns.strs)
+        for i ∈ eachindex(anns.strs)
             str = _cycle(anns.strs, i)
 
             # get the width and height of the string (in mm)
@@ -195,7 +195,7 @@ _process_annotation_3d(
 
 function _process_annotation(sp::Subplot, ann, annotation_processor::Function)
     ann = makevec.(ann)
-    [annotation_processor(sp, _cycle.(ann, i)...) for i in 1:maximum(length.(ann))]
+    [annotation_processor(sp, _cycle.(ann, i)...) for i ∈ 1:maximum(length.(ann))]
 end
 
 # Expand arrays of coordinates, positions and labels into individual annotations

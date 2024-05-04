@@ -23,7 +23,7 @@ function tick_padding(sp::Subplot, axis::Axis)
         vals, labs = ticks
         isempty(labs) && return 0mm
         # ptsz = axis[:tickfont].pointsize * pt
-        longest_label = maximum(length(lab) for lab in labs)
+        longest_label = maximum(length(lab) for lab ∈ labs)
 
         # generalize by "rotating" y labels
         rot = axis[:rotation] + (axis[:letter] ≡ :y ? 90 : 0)

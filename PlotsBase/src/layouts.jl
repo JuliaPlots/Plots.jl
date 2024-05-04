@@ -48,7 +48,7 @@ compute_minpad(args...) = map(maximum, paddings(args...))
 
 _update_inset_padding!(layout::GridLayout) = map(_update_inset_padding!, layout.grid)
 _update_inset_padding!(sp::Subplot) =
-    for isp in sp.plt.inset_subplots
+    for isp ∈ sp.plt.inset_subplots
         parent(isp) == sp || continue
         _update_min_padding!(isp)
         sp.minpad = max.(sp.minpad, isp.minpad)
@@ -74,7 +74,7 @@ function recompute_lengths(v)
     # dump(v)
     tot = 0pct
     cnt = 0
-    for vi in v
+    for vi ∈ v
         if vi == 0pct
             cnt += 1
         else
@@ -128,7 +128,7 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
     layout.heights = recompute_lengths(layout.heights)
 
     # we have all the data we need... lets compute the plot areas and set the bounding boxes
-    for r in 1:nr, c in 1:nc
+    for r ∈ 1:nr, c ∈ 1:nc
         child = layout[r, c]
 
         # get the top-left corner of this child... the first one is top-left of the parent (i.e. layout)
@@ -167,7 +167,7 @@ For each inset (floating) subplot, resolve the relative position
 to absolute canvas coordinates, relative to the parent's plotarea.
 """
 update_inset_bboxes!(plt::Plot) =
-    for sp in plt.inset_subplots
+    for sp ∈ plt.inset_subplots
         p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
         plotarea!(sp, p_area)
         # NOTE: `lens` example, `pgfplotsx` for non-regression
@@ -255,7 +255,7 @@ function layout_attrs(m::AbstractVecOrMat)
     nr = first(sz)
     nc = get(sz, 2, 1)
     gl = GridLayout(nr, nc)
-    for ci in CartesianIndices(m)
+    for ci ∈ CartesianIndices(m)
         gl[ci] = layout_attrs(m[ci])[1]
     end
     layout_attrs(gl)
@@ -281,7 +281,7 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
     spmap = Plots.SubplotMap()
     empty = isempty(plts)
     i = 0
-    for r in 1:nr, c in 1:nc
+    for r ∈ 1:nr, c ∈ 1:nc
         l = layout[r, c]
         if isa(l, EmptyLayout) && !get(l.attr, :blank, false)
             if empty
@@ -333,16 +333,16 @@ end
 # merge subplot lists.
 function link_axes!(axes::Axis...)
     a1 = axes[1]
-    for i in 2:length(axes)
+    for i ∈ 2:length(axes)
         a2 = axes[i]
         expand_extrema!(a1, Axes.ignorenan_extrema(a2))
-        for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
+        for k ∈ (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
         end
 
         # make a2's subplot list refer to a1's and add any missing values
         sps2 = a2.sps
-        for sp in sps2
+        for sp ∈ sps2
             sp in a1.sps || push!(a1.sps, sp)
         end
         a2.sps = a1.sps
@@ -352,7 +352,7 @@ end
 # figure out which subplots to link
 function link_subplots(a::AbstractArray{AbstractLayout}, axissym::Symbol)
     subplots = []
-    for l in a
+    for l ∈ a
         if isa(l, Subplot)
             push!(subplots, l)
         elseif isa(l, GridLayout) && size(l) == (1, 1)
@@ -365,7 +365,7 @@ end
 # for some vector or matrix of layouts, filter only the Subplots and link those axes
 function link_axes!(a::AbstractArray{AbstractLayout}, axissym::Symbol)
     subplots = link_subplots(a, axissym)
-    axes = [sp.attr[axissym] for sp in subplots]
+    axes = [sp.attr[axissym] for sp ∈ subplots]
     length(axes) > 0 && link_axes!(axes...)
 end
 
@@ -375,15 +375,15 @@ function link_axes!(l::AbstractLayout, link::Symbol) end
 # process a GridLayout, recursively linking axes according to the link symbol
 function link_axes!(layout::GridLayout, link::Symbol)
     nr, nc = size(layout)
-    link in (:x, :both) && for c in 1:nc
+    link in (:x, :both) && for c ∈ 1:nc
         link_axes!(layout.grid[:, c], :xaxis)
     end
-    link in (:y, :both) && for r in 1:nr
+    link in (:y, :both) && for r ∈ 1:nr
         link_axes!(layout.grid[r, :], :yaxis)
     end
     link ≡ :square && if (sps = filter(l -> isa(l, Subplot), layout.grid)) |> !isempty
         base_axis = sps[1][:xaxis]
-        for sp in sps
+        for sp ∈ sps
             link_axes!(base_axis, sp[:xaxis])
             link_axes!(base_axis, sp[:yaxis])
         end
@@ -400,7 +400,7 @@ end
 function twin(sp, letter)
     plt = sp.plt
     orig_sp = first(plt.subplots)
-    for letter in filter(!=(letter), axes_letters(orig_sp, letter))
+    for letter ∈ filter(!=(letter), axes_letters(orig_sp, letter))
         ax = orig_sp[get_attr_symbol(letter, :axis)]
         ax[:grid] = false  # disable the grid (overlaps with twin axis)
     end

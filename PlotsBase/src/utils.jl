@@ -72,7 +72,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     )
 
     # update alphas
-    for asym in (:linealpha, :markeralpha, :fillalpha)
+    for asym ∈ (:linealpha, :markeralpha, :fillalpha)
         if plotattributes[asym] ≡ nothing
             plotattributes[asym] = plotattributes[:seriesalpha]
         end
@@ -87,7 +87,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
     # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
-    for s in (:line, :marker, :fill)
+    for s ∈ (:line, :marker, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] ≡ :auto
             plot_color(if Commons.has_black_border_for_default(stype) && s ≡ :line
@@ -179,7 +179,7 @@ function _slice_series_attrs!(
     sp::Subplot,
     commandIndex::Int,
 )
-    for k in keys(_series_defaults)
+    for k ∈ keys(_series_defaults)
         haskey(plotattributes, k) &&
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
     end
@@ -258,7 +258,7 @@ fakedata(sz::Int...) = fakedata(Random.seed!(PLOTS_SEED), sz...)
 
 function fakedata(rng::AbstractRNG, sz...)
     y = zeros(sz...)
-    for r in 2:size(y, 1)
+    for r ∈ 2:size(y, 1)
         y[r, :] = 0.95vec(y[r - 1, :]) + randn(rng, size(y, 2))
     end
     y
@@ -307,7 +307,7 @@ end
 # compute one side of a fill range from a ribbon
 function make_fillrange_side(y::AVec, rib)
     frs = zeros(axes(y))
-    for (i, yi) in pairs(y)
+    for (i, yi) ∈ pairs(y)
         frs[i] = yi + _cycle(rib, i)
     end
     frs
@@ -366,17 +366,17 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # handle axis args common to all axis
     args = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :axis, ()))
     showarg = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :showaxis, ()))
-    for arg in wraptuple((args..., showarg...))
-        for letter in (:x, :y, :z)
+    for arg ∈ wraptuple((args..., showarg...))
+        for letter ∈ (:x, :y, :z)
             process_axis_arg!(plotattributes, arg, letter)
         end
     end
     # handle axis args
-    for letter in (:x, :y, :z)
+    for letter ∈ (:x, :y, :z)
         asym = get_attr_symbol(letter, :axis)
         args = RecipesPipeline.pop_kw!(plotattributes, asym, ())
         if !(typeof(args) <: Axis)
-            for arg in wraptuple(args)
+            for arg ∈ wraptuple(args)
                 process_axis_arg!(plotattributes, arg, letter)
             end
         end
@@ -396,39 +396,39 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # handle grid args common to all axes
     processGridArg! = Commons.process_grid_attr!
     args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
-    for arg in wraptuple(args)
-        for letter in (:x, :y, :z)
+    for arg ∈ wraptuple(args)
+        for letter ∈ (:x, :y, :z)
             processGridArg!(plotattributes, arg, letter)
         end
     end
     # handle individual axes grid args
-    for letter in (:x, :y, :z)
+    for letter ∈ (:x, :y, :z)
         gridsym = get_attr_symbol(letter, :grid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
-        for arg in wraptuple(args)
+        for arg ∈ wraptuple(args)
             processGridArg!(plotattributes, arg, letter)
         end
     end
     # handle minor grid args common to all axes
     args = RecipesPipeline.pop_kw!(plotattributes, :minorgrid, ())
-    for arg in wraptuple(args)
-        for letter in (:x, :y, :z)
+    for arg ∈ wraptuple(args)
+        for letter ∈ (:x, :y, :z)
             Commons.process_minor_grid_attr!(plotattributes, arg, letter)
         end
     end
     # handle individual axes grid args
-    for letter in (:x, :y, :z)
+    for letter ∈ (:x, :y, :z)
         gridsym = get_attr_symbol(letter, :minorgrid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
-        for arg in wraptuple(args)
+        for arg ∈ wraptuple(args)
             Commons.process_minor_grid_attr!(plotattributes, arg, letter)
         end
     end
     # handle font args common to all axes
-    for fontname in (:tickfont, :guidefont)
+    for fontname ∈ (:tickfont, :guidefont)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
-        for arg in wraptuple(args)
-            for letter in (:x, :y, :z)
+        for arg ∈ wraptuple(args)
+            for letter ∈ (:x, :y, :z)
                 Commons.process_font_attr!(
                     plotattributes,
                     get_attr_symbol(letter, fontname),
@@ -438,14 +438,14 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
     # handle individual axes font args
-    for letter in (:x, :y, :z)
-        for fontname in (:tickfont, :guidefont)
+    for letter ∈ (:x, :y, :z)
+        for fontname ∈ (:tickfont, :guidefont)
             args = RecipesPipeline.pop_kw!(
                 plotattributes,
                 get_attr_symbol(letter, fontname),
                 (),
             )
-            for arg in wraptuple(args)
+            for arg ∈ wraptuple(args)
                 Commons.process_font_attr!(
                     plotattributes,
                     get_attr_symbol(letter, fontname),
@@ -455,10 +455,10 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
     # handle axes args
-    for k in Commons._axis_attrs
+    for k ∈ Commons._axis_attrs
         if haskey(plotattributes, k) && k ≢ :link
             v = plotattributes[k]
-            for letter in (:x, :y, :z)
+            for letter ∈ (:x, :y, :z)
                 lk = get_attr_symbol(letter, k)
                 if !is_explicit(plotattributes, lk)
                     plotattributes[lk] = v
@@ -468,16 +468,16 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
 
     # fonts
-    for fontname in
+    for fontname ∈
         (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
-        for arg in wraptuple(args)
+        for arg ∈ wraptuple(args)
             Commons.process_font_attr!(plotattributes, fontname, arg)
         end
     end
 
     # handle line args
-    for arg in wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
+    for arg ∈ wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
         Commons.process_line_attr(plotattributes, arg)
     end
 
@@ -488,7 +488,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
 
     # handle marker args... default to ellipse if shape not set
     anymarker = false
-    for arg in wraptuple(get(plotattributes, :marker, ()))
+    for arg ∈ wraptuple(get(plotattributes, :marker, ()))
         Commons.process_marker_attr(plotattributes, arg)
         anymarker = true
     end
@@ -506,7 +506,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
 
     # handle fill
-    for arg in wraptuple(get(plotattributes, :fill, ()))
+    for arg ∈ wraptuple(get(plotattributes, :fill, ()))
         Commons.process_fill_attr(plotattributes, arg)
     end
     RecipesPipeline.reset_kw!(plotattributes, :fill)
@@ -585,14 +585,14 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
 
     # dict to store old and new keyword args for anything that changes
     old_defs = KW()
-    for k in keys(new_defs)
+    for k ∈ keys(new_defs)
         old_defs[k] = default(k)
     end
 
     # save the backend
     old_backend = backend_name()
 
-    for arg in args
+    for arg ∈ args
         # change backend ?
         arg isa Symbol && if arg ∈ backends()
             if (pkg = backend_package_name(arg)) ≢ nothing  # :plotly
@@ -655,7 +655,7 @@ const _convert_sci_unicode_dict = Dict(
 # to a tex-like format (supported by gr, pyplot, and pgfplots).
 
 function convert_sci_unicode(label::AbstractString)
-    for key in keys(_convert_sci_unicode_dict)
+    for key ∈ keys(_convert_sci_unicode_dict)
         label = replace(label, key => _convert_sci_unicode_dict[key])
     end
     occursin("×10^{", label) && (label = string(label, "}"))
@@ -678,8 +678,7 @@ function ___straightline_data(xl, yl, x, y, exp_fact)
         a = (y[1] - y[2]) / (x[1] - x[2])
         # get the data values
         xdata = [
-            clamp(x[1] + (x[1] - x[2]) * (ylim - y[1]) / (y[1] - y[2]), xl...) for
-            ylim in yl
+            clamp(x[1] + (x[1] - x[2]) * (ylim - y[1]) / (y[1] - y[2]), xl...) for ylim ∈ yl
         ]
 
         xdata, a .* xdata .+ b
@@ -699,7 +698,7 @@ __straightline_data(xl, yl, x, y, exp_fact) =
         k, r = divrem(n, 3)
         @assert r == 0 "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
         xdata, ydata = fill(NaN, n), fill(NaN, n)
-        for i in 1:k
+        for i ∈ 1:k
             inds = (3i - 2):(3i - 1)
             xdata[inds], ydata[inds] =
                 ___straightline_data(xl, yl, x[inds], y[inds], exp_fact)
@@ -749,7 +748,7 @@ function straightline_data(series, expansion_factor = 1)
 end
 
 function _shape_data!(::Val{false}, xf::Function, xinvf::Function, x, xl, exp_fact)
-    @inbounds for i in eachindex(x)
+    @inbounds for i ∈ eachindex(x)
         if x[i] == -Inf
             x[i] = xinvf(xf(xl[1]) - exp_fact * (xf(xl[2]) - xf(xl[1])))
         elseif x[i] == +Inf
@@ -760,7 +759,7 @@ function _shape_data!(::Val{false}, xf::Function, xinvf::Function, x, xl, exp_fa
 end
 
 function _shape_data!(::Val{true}, ::Function, ::Function, x, xl, exp_fact)
-    @inbounds for i in eachindex(x)
+    @inbounds for i ∈ eachindex(x)
         if x[i] == -Inf
             x[i] = xl[1] - exp_fact * (xl[2] - xl[1])
         elseif x[i] == +Inf
@@ -808,7 +807,7 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     X = zeros(eltype(x), 4length(ci))
     Y = zeros(eltype(y), 4length(cj))
     Z = zeros(eltype(z), 4length(ck))
-    @inbounds for I in eachindex(ci)  # connections are 0-based
+    @inbounds for I ∈ eachindex(ci)  # connections are 0-based
         _add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
     end
     X, Y, Z
@@ -818,7 +817,7 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
-    @inbounds for I in eachindex(cns)  # connections are 1-based
+    @inbounds for I ∈ eachindex(cns)  # connections are 1-based
         _add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
     end
     X, Y, Z
@@ -892,13 +891,13 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
         ((0.00, 0.25), (0.75, 1.00)),   # topleft
         ((0.75, 1.00), (0.75, 1.00)),   # topright
     )
-    for series in plt.series_list
+    for series ∈ plt.series_list
         x = series[:x]
         y = series[:y]
         yoffset = firstindex(y) - firstindex(x)
-        for (i, lim) in enumerate(Iterators.product(xl, yl))
+        for (i, lim) ∈ enumerate(Iterators.product(xl, yl))
             lim = lim ./ scale
-            for ix in eachindex(x)
+            for ix ∈ eachindex(x)
                 xi, yi = x[ix], _cycle(y, ix + yoffset)
                 # ignore y points outside quadrant visible quadrant
                 xi < xl[1] + quadrants[i][1][1] * (xl[2] - xl[1]) && continue

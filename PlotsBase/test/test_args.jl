@@ -48,7 +48,7 @@ end
 
 @testset "Axis Attributes" begin
     pl = @test_nowarn plot(; tickfont = font(10, "Times"))
-    for axis in (:xaxis, :yaxis, :zaxis)
+    for axis ∈ (:xaxis, :yaxis, :zaxis)
         @test pl[1][axis][:tickfontsize] == 10
         @test pl[1][axis][:tickfontfamily] == "Times"
     end
@@ -84,7 +84,7 @@ end
 
 @testset "aspect_ratio" begin
     fn = tempname()
-    for aspect_ratio in (1, 1.0, 1 // 10, :auto, :none, true)
+    for aspect_ratio ∈ (1, 1.0, 1 // 10, :auto, :none, true)
         @test_nowarn png(plot(1:2; aspect_ratio), fn)
     end
     @test_throws ArgumentError png(plot(1:2; aspect_ratio = :invalid_ar), fn)

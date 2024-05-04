@@ -11,7 +11,7 @@ function __init__()
     end
 end
 
-for (mime, fmt) in (
+for (mime, fmt) ∈ (
     "application/pdf" => "pdf",
     "image/png" => "png",
     "image/svg+xml" => "svg",

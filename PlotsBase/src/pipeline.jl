@@ -9,7 +9,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
     @nospecialize(args)
 )
     pkeys = keys(plotattributes)
-    for k in pkeys
+    for k ∈ pkeys
         if (dk = get(Commons._keyAliases, k, nothing)) ≢ nothing
             kv = RecipesPipeline.pop_kw!(plotattributes, k)
             dk ∈ pkeys || (plotattributes[dk] = kv)
@@ -63,7 +63,7 @@ function _preprocess_userrecipe(kw::AKW)
 
     if get(kw, :permute, default(:permute)) ≢ :none
         l1, l2 = kw[:permute]
-        for k in Commons._axis_attrs
+        for k ∈ Commons._axis_attrs
             k1 = Commons._attrsymbolcache[l1][k]
             k2 = Commons._attrsymbolcache[l2][k]
             kwk = keys(kw)
@@ -96,7 +96,7 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     st = get(kw, :seriestype, :none)
     errors = (:xerror, :yerror, :zerror)
     if st ∉ errors
-        for esym in errors
+        for esym ∈ errors
             if get(kw, esym, nothing) ≢ nothing
                 # we make a copy of the KW and apply an errorbar recipe
                 errkw = copy(kw)
@@ -150,7 +150,7 @@ end
 function RecipesPipeline.process_sliced_series_attributes!(::Plot, kw_list)
     # determine global extrema
     xe = ye = ze = NaN, NaN
-    for kw in kw_list
+    for kw ∈ kw_list
         xe = ignorenan_min_max(get(kw, :x, nothing), xe)
         ye = ignorenan_min_max(get(kw, :y, nothing), ye)
         ze = ignorenan_min_max(get(kw, :z, nothing), ze)
@@ -159,7 +159,7 @@ function RecipesPipeline.process_sliced_series_attributes!(::Plot, kw_list)
     # swap errors
     err_inds =
         findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
-    for ind in err_inds
+    for ind ∈ err_inds
         if ind > 1 && get(kw_list[ind - 1], :seriestype, :path) ≡ :scatter
             tmp = copy(kw_list[ind])
             kw_list[ind] = copy(kw_list[ind - 1])
@@ -167,7 +167,7 @@ function RecipesPipeline.process_sliced_series_attributes!(::Plot, kw_list)
         end
     end
 
-    for kw in kw_list
+    for kw ∈ kw_list
         kw[:x_extrema] = xe
         kw[:y_extrema] = ye
         kw[:z_extrema] = ze
@@ -191,7 +191,7 @@ end
 # TODO: Should some of this logic be moved to RecipesPipeline ?
 function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # merge in anything meant for the Plot
-    for kw in kw_list, (k, v) in kw
+    for kw ∈ kw_list, (k, v) ∈ kw
         haskey(_plot_defaults, k) && (plotattributes[k] = pop!(kw, k))
     end
 
@@ -202,7 +202,7 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
 
         # create the layout and subplots from the inputs
         plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
-        for (idx, sp) in enumerate(plt.subplots)
+        for (idx, sp) ∈ enumerate(plt.subplots)
             sp.plt = plt
             sp.attr[:subplot_index] = idx
         end
@@ -213,7 +213,7 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # handle inset subplots
     if (insets = plt[:inset_subplots]) ≢ nothing
         typeof(insets) <: AVec || (insets = [insets])
-        for inset in insets
+        for inset ∈ insets
             parent, bb = is_2tuple(inset) ? inset : (nothing, inset)
             parent = if (P = typeof(parent)) <: Integer
                 plt.subplots[parent]
@@ -239,7 +239,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # Subplot object which they belong to.
     # TODO: allow matrices to still apply to all subplots
     sp_attrs = Dict{Subplot,Any}()
-    for kw in kw_list
+    for kw ∈ kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
         sp = get_subplot(
@@ -250,7 +250,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
 
         # extract subplot/axis attributes from kw and add to sp_attr
         attr = KW()
-        for (k, v) in collect(kw)
+        for (k, v) ∈ collect(kw)
             if Commons.is_subplot_attrs(k) || Commons.is_axis_attrs(k)
                 v = pop!(kw, k)
                 if sps isa AbstractArray && v isa AbstractArray && length(v) == length(sps)
@@ -263,12 +263,12 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
                 if sps isa AbstractArray && v isa AbstractArray && length(v) == length(sps)
                     v = v[series_idx(kw_list, kw)]
                 end
-                for letter in (:x, :y, :z)
+                for letter ∈ (:x, :y, :z)
                     attr[get_attr_symbol(letter, k)] = v
                 end
             end
         end
-        for k in (:scale,), letter in (:x, :y, :z)
+        for k ∈ (:scale,), letter ∈ (:x, :y, :z)
             # Series recipes may need access to this information
             lk = get_attr_symbol(letter, k)
             haskey(attr, lk) && (kw[lk] = attr[lk])
@@ -278,7 +278,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
 
     _add_plot_title!(plt)
     # override subplot/axis args.  `sp_attrs` take precedence
-    for (idx, sp) in enumerate(plt.subplots)
+    for (idx, sp) ∈ enumerate(plt.subplots)
         attr = if !haskey(plotattributes, :subplot) || plotattributes[:subplot] == idx
             merge(plotattributes, get(sp_attrs, sp, KW()))
         else
@@ -323,7 +323,7 @@ function _add_plot_title!(plt)
         # propagate arguments plt[:plot_titleXXX] --> subplot[:titleXXX]
         plot_titleindex = plt[:plot_titleindex]
         subplot = plt.subplots[plot_titleindex]
-        for sym in filter(x -> startswith(string(x), "plot_title"), keys(_plot_defaults))
+        for sym ∈ filter(x -> startswith(string(x), "plot_title"), keys(_plot_defaults))
             subplot[Symbol(string(sym)[(length("plot_") + 1):end])] = plt[sym]
         end
     end

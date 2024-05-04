@@ -124,7 +124,7 @@ function get_labels(formatter::Function, scaled_ticks, scale)
 end
 
 # Ticks getter functions
-for l in (:x, :y, :z)
+for l ∈ (:x, :y, :z)
     axis = string(l, "-axis")  # "x-axis"
     ticks = string(l, "ticks") # "xticks"
     f = Symbol(ticks)          # :xticks
@@ -220,7 +220,7 @@ discrete_value!(axis::Axis, cv::Number) = (cv, -1)
 function discrete_value!(axis::Axis, v::AVec)
     cvec = zeros(axes(v))
     discrete_indices = similar(Array{Int}, axes(v))
-    for i in eachindex(v)
+    for i ∈ eachindex(v)
         cvec[i], discrete_indices[i] = discrete_value!(axis, v[i])
     end
     cvec, discrete_indices
@@ -230,7 +230,7 @@ end
 function discrete_value!(axis::Axis, v::AMat)
     cmat = zeros(axes(v))
     discrete_indices = similar(Array{Int}, axes(v))
-    for I in eachindex(v)
+    for I ∈ eachindex(v)
         cmat[I], discrete_indices[I] = discrete_value!(axis, v[I])
     end
     cmat, discrete_indices
@@ -271,7 +271,7 @@ function add_major_or_minor_segments_2d(
         end
     end
     isy = ax[:letter] ≡ :y
-    for tick in ticks
+    for tick ∈ ticks
         (ax[:showaxis] && cond) && push!(
             tick_segments,
             reverse_if((tick, tick_start), isy),
@@ -439,7 +439,7 @@ function add_major_or_minor_segments_3d(
         ga0_, ga1_ = reverse_if(gas, ax[:mirror])
     end
     letter = ax[:letter]
-    for tick in ticks
+    for tick ∈ ticks
         (ax[:showaxis] && cond) && push!(
             tick_segments,
             sort_3d_axes(tick, tick_start, first(fas), letter),

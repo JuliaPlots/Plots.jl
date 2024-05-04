@@ -80,8 +80,8 @@ end
     pl = plot(-1:1, -1:1, -1:1)
     sp = pl.subplots[1]
     defaultret = PlotsBase.axis_drawing_info_3d(sp, :x)
-    for letter in (:x, :y, :z)
-        for framestyle in [:box :semi :origin :zerolines :grid :none]
+    for letter ∈ (:x, :y, :z)
+        for framestyle ∈ [:box :semi :origin :zerolines :grid :none]
             prevha = UInt64(0)
             push!(sp.attr, :framestyle => framestyle)
             ret = PlotsBase.axis_drawing_info_3d(sp, letter)

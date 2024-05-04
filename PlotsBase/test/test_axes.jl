@@ -12,7 +12,7 @@
     @test PlotsBase.Axes.ignorenan_extrema(axis) == (0.5, 7.5)
 
     # github.com/JuliaPlots/Plots.jl/issues/4375
-    for lab in ("foo", :foo)
+    for lab ∈ ("foo", :foo)
         pl = plot(1:2, xlabel = lab, ylabel = lab, title = lab)
         show(devnull, pl)
     end
@@ -53,7 +53,7 @@
 end
 
 @testset "Showaxis" begin
-    for value in PlotsBase.Commons._all_showaxis_attrs
+    for value ∈ PlotsBase.Commons._all_showaxis_attrs
         @test plot(1:5, showaxis = value)[1][:yaxis][:showaxis] isa Bool
     end
     @test plot(1:5, showaxis = :y)[1][:yaxis][:showaxis]
@@ -97,7 +97,7 @@ end
     pl = plot([1.05, 2.0, 2.95], ylims = :round)
     @test PlotsBase.ylims(pl) == (1, 3)
 
-    for x in (1:3, -10:10), xlims in ((1, 5), [1, 5])
+    for x ∈ (1:3, -10:10), xlims ∈ ((1, 5), [1, 5])
         pl = plot(x; xlims)
         @test PlotsBase.xlims(pl) == (1, 5)
         pl = plot(x; xlims, widen = true)
@@ -107,7 +107,7 @@ end
     pl = plot(1:5, lims = :symmetric, widen = false)
     @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5, 5)
 
-    for xlims in (0, 0.0, false, true, plot())
+    for xlims ∈ (0, 0.0, false, true, plot())
         pl = plot(1:5; xlims)
         plims =
             @test_logs (:warn, r"Invalid limits for x axis") match_mode = :any PlotsBase.xlims(
@@ -117,20 +117,20 @@ end
     end
 
     @testset "#4379" begin
-        for ylims in ((-5, :auto), [-5, :auto])
+        for ylims ∈ ((-5, :auto), [-5, :auto])
             pl = plot([-2, 3], ylims = ylims, widen = false)
             @test PlotsBase.ylims(pl) == (-5.0, 3.0)
         end
-        for ylims in ((:auto, 4), [:auto, 4])
+        for ylims ∈ ((:auto, 4), [:auto, 4])
             pl = plot([-2, 3], ylims = ylims, widen = false)
             @test PlotsBase.ylims(pl) == (-2.0, 4.0)
         end
 
-        for xlims in ((-3, :auto), [-3, :auto])
+        for xlims ∈ ((-3, :auto), [-3, :auto])
             pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
             @test PlotsBase.xlims(pl) == (-3.0, 3.0)
         end
-        for xlims in ((:auto, 4), [:auto, 4])
+        for xlims ∈ ((:auto, 4), [:auto, 4])
             pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
             @test PlotsBase.xlims(pl) == (-2.0, 4.0)
         end
@@ -244,7 +244,7 @@ end
 
 @testset "minor ticks" begin
     # FIXME in 2.0: this is awful to read, because `minorticks` represent the number of `intervals`
-    for minor_intervals in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
+    for minor_intervals ∈ (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
         n_minor_ticks_per_major = if minor_intervals isa Bool
             minor_intervals ? PlotsBase.Ticks.DEFAULT_MINOR_INTERVALS[] - 1 : 0
         elseif minor_intervals ≡ :auto
@@ -256,7 +256,7 @@ end
         end
         pl = plot(1:4; minorgrid = true, minorticks = minor_intervals)
         sp = first(pl)
-        for axis in (:xaxis, :yaxis)
+        for axis ∈ (:xaxis, :yaxis)
             ticks = PlotsBase.get_ticks(sp, sp[axis], update = false)
             n_expected_minor_ticks = (length(first(ticks)) - 1) * n_minor_ticks_per_major
             minor_ticks = PlotsBase.get_minor_ticks(sp, sp[axis], ticks)

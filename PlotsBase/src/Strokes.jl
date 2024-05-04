@@ -22,7 +22,7 @@ function stroke(args...; alpha = nothing)
     color = :black
     style = :solid
 
-    for arg in args
+    for arg ∈ args
         T = typeof(arg)
 
         # if arg in _all_styles
@@ -57,7 +57,7 @@ function brush(args...; alpha = nothing)
     size = 1
     color = :black
 
-    for arg in args
+    for arg ∈ args
         T = typeof(arg)
 
         if T <: Colorant

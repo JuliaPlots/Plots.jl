@@ -12,7 +12,7 @@ function seriestype_supported(pkg::AbstractBackend, st::Symbol)
     haskey(_series_recipe_deps, st) || return :no
 
     supported = true
-    for dep in _series_recipe_deps[st]
+    for dep ∈ _series_recipe_deps[st]
         if seriestype_supported(pkg, dep) ≡ :no
             supported = false
             break
@@ -28,7 +28,7 @@ end
 # get a list of all seriestypes
 function all_seriestypes()
     sts = Set{Symbol}(keys(_series_recipe_deps))
-    for bsym in _initialized_backends
+    for bsym ∈ _initialized_backends
         be = backend_instance(bsym)
         sts = union(sts, Set{Symbol}(supported_seriestypes(be)))
     end
@@ -75,7 +75,7 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     y := y[indices]
 
     # sort vector arguments
-    for arg in POTENTIAL_VECTOR_ARGUMENTS
+    for arg ∈ POTENTIAL_VECTOR_ARGUMENTS
         if typeof(plotattributes[arg]) <: AVec
             plotattributes[arg] = _cycle(plotattributes[arg], indices)
         end
@@ -98,7 +98,7 @@ end
 @recipe function f(::Type{Val{:hline}}, x, y, z)  # COV_EXCL_LINE
     n = length(y)
     newx = repeat(Float64[1, 2, NaN], n)
-    newy = vec(Float64[yi for i in 1:3, yi in y])
+    newy = vec(Float64[yi for i ∈ 1:3, yi ∈ y])
     x := newx
     y := newy
     seriestype := :straightline
@@ -108,7 +108,7 @@ end
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)  # COV_EXCL_LINE
     n = length(y)
-    newx = vec(Float64[yi for i in 1:3, yi in y])
+    newx = vec(Float64[yi for i ∈ 1:3, yi ∈ y])
     x := newx
     y := repeat(Float64[1, 2, NaN], n)
     seriestype := :straightline
@@ -196,7 +196,7 @@ function make_steps(x::AbstractArray, st, even)
     newx = zeros(2n - (even ? 0 : 1))
     xstartindex = firstindex(x)
     newx[1] = x[xstartindex]
-    for i in 2:n
+    for i ∈ 2:n
         xindex = xstartindex - 1 + i
         idx = 2i - 1
         if st ≡ :mid
@@ -209,7 +209,7 @@ function make_steps(x::AbstractArray, st, even)
     even && (newx[end] = x[end])
     return newx
 end
-make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
+make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti ∈ t)
 
 @nospecialize
 
@@ -303,7 +303,7 @@ end
         end
     end
     newx, newy, newz = zeros(3n), zeros(3n), z ≢ nothing ? zeros(3n) : nothing
-    for (i, (xi, yi, zi)) in enumerate(zip(x, y, z ≢ nothing ? z : 1:n))
+    for (i, (xi, yi, zi)) ∈ enumerate(zip(x, y, z ≢ nothing ? z : 1:n))
         rng = (3i - 2):(3i)
         newx[rng] = [xi, xi, NaN]
         if z ≢ nothing
@@ -356,7 +356,7 @@ end
 function bezier_value(pts::AVec, t::Real)
     val = 0.0
     n = length(pts) - 1
-    for (i, p) in enumerate(pts)
+    for (i, p) ∈ enumerate(pts)
         val += p * binomial(n, i - 1) * (1 - t)^(n - i + 1) * t^(i - 1)
     end
     val
@@ -373,7 +373,7 @@ end
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
-    for rng in DataSeries.iter_segments(args...)
+    for rng ∈ DataSeries.iter_segments(args...)
         length(rng) < 2 && continue
         ts = range(0, stop = 1, length = npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x, rng), t), ts))
@@ -451,7 +451,7 @@ end
 
     xseg, yseg = map(_ -> Segments(), 1:2)
     valid_i = isfinite.(procx) .& isfinite.(procy)
-    for i in 1:ny
+    for i ∈ 1:ny
         valid_i[i] || continue
         yi = procy[i]
         center = procx[i]
@@ -475,7 +475,7 @@ end
         x := xseg.pts
         y := yseg.pts
         # expand attributes to match indices in new series data
-        for k in _segmenting_vector_attributes ∪ _segmenting_array_attributes
+        for k ∈ _segmenting_vector_attributes ∪ _segmenting_array_attributes
             if (v = get(plotattributes, k, nothing)) isa AVec
                 if eachindex(v) != eachindex(y)
                     @warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
@@ -508,7 +508,7 @@ end
     m, n = size(z.surf)
     x_pts, y_pts = fill(NaN, 6m * n), fill(NaN, 6m * n)
     fz = zeros(m * n)
-    for i in 1:m, j in 1:n  # i ≡ y, j ≡ x
+    for i ∈ 1:m, j ∈ 1:n  # i ≡ y, j ≡ x
         k = (j - 1) * m + i
         inds = (6(k - 1) + 1):(6k - 1)
         x_pts[inds] .= [xe[j], xe[j + 1], xe[j + 1], xe[j], xe[j]]
@@ -768,7 +768,7 @@ _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
 _filternans(vs::NTuple{1,AbstractVector}) = filter!.(isfinite, vs)
 function _filternans(vs::NTuple{N,AbstractVector}) where {N}
-    _invertedindex(v, not) = [j for (i, j) in enumerate(v) if !(i ∈ not)]
+    _invertedindex(v, not) = [j for (i, j) ∈ enumerate(v) if !(i ∈ not)]
     nots = union(Set.(findall.(!isfinite, vs))...)
     _invertedindex.(vs, Ref(nots))
 end
@@ -869,7 +869,7 @@ end
 end
 
 @recipe f(hv::AbstractVector{H}) where {H<:StatsBase.Histogram} =  # COV_EXCL_LINE
-    for h in hv
+    for h ∈ hv
         @series begin
             h
         end
@@ -886,7 +886,7 @@ end
         if float_weights ≡ weights
             float_weights = deepcopy(float_weights)
         end
-        for (i, c) in enumerate(float_weights)
+        for (i, c) ∈ enumerate(float_weights)
             c == 0 && (float_weights[i] = NaN)
         end
     end
@@ -927,7 +927,7 @@ end
     s = sum(y)
     θ = 0
     colors = plotattributes[:seriescolor]
-    for i in eachindex(y)
+    for i ∈ eachindex(y)
         θ_new = θ + 2π * y[i] / s
         coords = [(0.0, 0.0); partialcircle(θ, θ_new, 50)]
         @series begin
@@ -1031,7 +1031,7 @@ export lens!
         ()
     end
     # add subplot
-    for series in sp.series_list
+    for series ∈ sp.series_list
         @series begin
             plotattributes = merge(backup, copy(series.plotattributes))
             subplot := lens_index
@@ -1114,8 +1114,8 @@ error_tuple(x::Tuple) = x
 function error_coords(errorbar, errordata, otherdata...)
     ed = Vector{float_extended_type(errordata)}(undef, 0)
     od = map(odi -> Vector{float_extended_type(odi)}(undef, 0), otherdata)
-    for (i, edi) in enumerate(errordata)
-        for (j, odj) in enumerate(otherdata)
+    for (i, edi) ∈ enumerate(errordata)
+        for (j, odj) ∈ enumerate(otherdata)
             odi = _cycle(odj, i)
             nanappend!(od[j], [odi, odi])
         end
@@ -1202,7 +1202,7 @@ function quiver_using_arrows(plotattributes::AKW)
     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
     x, y = zeros(0), zeros(0)
     is_3d && (z = zeros(0))
-    for i in 1:max(length(xorig), length(yorig), is_3d ? 0 : length(zorig))
+    for i ∈ 1:max(length(xorig), length(yorig), is_3d ? 0 : length(zorig))
         # get the starting position
         xi = _cycle(xorig, i)
         yi = _cycle(yorig, i)
@@ -1250,7 +1250,7 @@ function quiver_using_hack(plotattributes::AKW)
 
     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
     pts = P2[]
-    for i in 1:max(length(xorig), length(yorig))
+    for i ∈ 1:max(length(xorig), length(yorig))
 
         # get the starting position
         xi = _cycle(xorig, i)
@@ -1303,7 +1303,7 @@ end
 
 # images - grays
 function clamp_greys!(mat::AMat{<:Gray})
-    for i in eachindex(mat)
+    for i ∈ eachindex(mat)
         mat[i].val < 0 && (mat[i] = Gray(0))
         mat[i].val > 1 && (mat[i] = Gray(1))
     end
@@ -1357,7 +1357,7 @@ end
     seriestype --> :shape
     # For backwards compatibility, column vectors of segmenting attributes are
     # interpreted as having one element per shape
-    for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
+    for attr ∈ union(_segmenting_array_attributes, _segmenting_vector_attributes)
         v = get(plotattributes, attr, nothing)
         if v isa AVec || v isa AMat && size(v, 2) == 1
             @warn """
@@ -1372,7 +1372,7 @@ end
 
 @recipe function f(shapes::AMat{<:Shape})  # COV_EXCL_LINE
     seriestype --> :shape
-    for j in axes(shapes, 2)
+    for j ∈ axes(shapes, 2)
         @series coords(vec(shapes[:, j]))
     end
 end
@@ -1439,7 +1439,7 @@ end
 function get_xy(v::AVec{OHLC}, x = eachindex(v))
     xdiff = 0.3ignorenan_mean(abs.(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
-    for (i, ohlc) in enumerate(v)
+    for (i, ohlc) ∈ enumerate(v)
         ox, oy = get_xy(ohlc, x[i], xdiff)
         nanappend!(x_out, ox)
         nanappend!(y_out, oy)
@@ -1577,7 +1577,7 @@ end
     seriestype := :shape
 
     # create a filled polygon for each item
-    for c in axes(weights, 2)
+    for c ∈ axes(weights, 2)
         sx = vcat(weights[:, c], c == 1 ? zeros(n) : reverse(weights[:, c - 1]))
         sy = vcat(returns, reverse(returns))
         @series (sx, sy)
@@ -1589,7 +1589,7 @@ end
 @recipe function f(a::AreaPlot; seriestype = :line)  # COV_EXCL_LINE
     data = cumsum(a.args[end], dims = 2)
     x = length(a.args) == 1 ? (axes(data, 1)) : a.args[1]
-    for i in axes(data, 2)
+    for i ∈ axes(data, 2)
         @series begin
             fillrange := i > 1 ? data[:, i - 1] : 0
             x, data[:, i]

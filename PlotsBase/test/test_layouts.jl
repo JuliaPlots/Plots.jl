@@ -121,7 +121,7 @@ end
     @test PlotsBase.Commons.parent_bbox(rl) == PlotsBase.DEFAULT_BBOX[]
     @test PlotsBase.bbox(rl) == PlotsBase.DEFAULT_BBOX[]
     @test PlotsBase.origin(PlotsBase.DEFAULT_BBOX[]) == (0PlotsBase.mm, 0PlotsBase.mm)
-    for h_anchor in (:left, :right, :hcenter), v_anchor in (:top, :bottom, :vcenter)
+    for h_anchor ∈ (:left, :right, :hcenter), v_anchor ∈ (:top, :bottom, :vcenter)
         @test PlotsBase.bbox(0, 0, 1, 1, h_anchor, v_anchor) isa PlotsBase.BoundingBox
     end
 

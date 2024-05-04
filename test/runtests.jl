@@ -2,12 +2,12 @@ const TEST_PACKAGES =
     let val = get(ENV, "PLOTS_TEST_PACKAGES", "GR,UnicodePlots,PythonPlot")
         Symbol.(strip.(split(val, ",")))
     end
-const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p in TEST_PACKAGES)
+const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p ∈ TEST_PACKAGES)
 
 using PlotsBase
 
 # initialize all backends
-for pkg in TEST_PACKAGES
+for pkg ∈ TEST_PACKAGES
     @eval begin
         import $pkg  # trigger extension
         $(TEST_BACKENDS[pkg])()
@@ -18,7 +18,7 @@ gr()
 using Plots
 using Test
 
-for pkg in TEST_PACKAGES
+for pkg ∈ TEST_PACKAGES
     @testset "simple plots using $pkg" begin
         @eval $(TEST_BACKENDS[pkg])()
         pl = plot(1:2)

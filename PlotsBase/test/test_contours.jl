@@ -43,7 +43,7 @@ end
     end
 
     @testset "Number" begin
-        @testset "$n contours" for n in (2, 5, 100)
+        @testset "$n contours" for n ∈ (2, 5, 100)
             p = contour(x, y, z, levels = n)
             attr = p[1][1].plotattributes
             @test attr[:seriestype] ≡ :contour

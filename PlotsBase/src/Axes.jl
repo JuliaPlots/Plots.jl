@@ -204,7 +204,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
     (lims isa Tuple || lims ≡ :round) && return
-    for sp in axis.sps, series in series_list(sp)
+    for sp ∈ axis.sps, series ∈ series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end
     nothing
@@ -320,7 +320,7 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
     PlotsBase.Commons.preprocess_attributes!(KW(kw))
 
     # then override for any keywords... only those keywords that already exists in plotattributes
-    for (k, v) in kw
+    for (k, v) ∈ kw
         haskey(plotattributes, k) || continue
         if k ≡ :discrete_values
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
@@ -370,7 +370,7 @@ function _update_axis(
 )
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
-    for k in Commons._all_axis_attrs
+    for k ∈ Commons._all_axis_attrs
         # first get the args without the letter: `tickfont = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
         if haskey(plotattributes_in, k)
@@ -432,10 +432,10 @@ function Commons.get_ticks(
 end
 
 function reset_extrema!(sp::Subplot)
-    for asym in (:x, :y, :z)
+    for asym ∈ (:x, :y, :z)
         sp[get_attr_symbol(asym, :axis)][:extrema] = Extrema()
     end
-    for series in sp.series_list
+    for series ∈ sp.series_list
         expand_extrema!(sp, series.plotattributes)
     end
 end

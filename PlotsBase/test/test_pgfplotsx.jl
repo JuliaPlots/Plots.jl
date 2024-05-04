@@ -184,8 +184,8 @@ with(:pgfplotsx) do
     end
 
     @testset "Heatmap-like" begin
-        xs = [string("x", i) for i in 1:10]
-        ys = [string("y", i) for i in 1:4]
+        xs = [string("x", i) for i ∈ 1:10]
+        ys = [string("y", i) for i ∈ 1:4]
         z = float((1:4) * reshape(1:10, 1, :))
         pl = heatmap(xs, ys, z, aspect_ratio = 1)
         axis = first(get_pgf_axes(pl))
@@ -236,7 +236,7 @@ with(:pgfplotsx) do
             markerstrokewidth = 0,
             ticks = -2:2,
         )
-        for (i, axis) in enumerate(get_pgf_axes(pl))
+        for (i, axis) ∈ enumerate(get_pgf_axes(pl))
             opts = axis.options
             # just check by indexing (not defined -> throws)
             opts["x axis line style"]

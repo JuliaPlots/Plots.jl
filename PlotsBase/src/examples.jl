@@ -39,7 +39,7 @@ const _examples = PlotExample[
         quote
             p = plot([sin, cos], zeros(0), leg = false, xlims = (0, 2π), ylims = (-1, 1))
             anim = Animation()
-            for x in range(0, stop = 2π, length = 20)
+            for x ∈ range(0, stop = 2π, length = 20)
                 push!(p, x, Float64[sin(x), cos(x)])
                 frame(anim)
             end
@@ -268,7 +268,7 @@ const _examples = PlotExample[
                     bot[i] + hgt[i],
                     bot[i],
                     closepct[i] * hgt[i] + bot[i],
-                ) for i in 1:n
+                ) for i ∈ 1:n
             ]
             ohlc(y)
         end,
@@ -452,8 +452,8 @@ const _examples = PlotExample[
     PlotExample( # 28
         "Heatmap, categorical axes, and aspect_ratio",
         quote
-            xs = [string("x", i) for i in 1:10]
-            ys = [string("y", i) for i in 1:4]
+            xs = [string("x", i) for i ∈ 1:10]
+            ys = [string("y", i) for i ∈ 1:4]
             z = float((1:4) * reshape(1:10, 1, :))
             heatmap(xs, ys, z, aspect_ratio = 1)
         end,
@@ -503,7 +503,7 @@ const _examples = PlotExample[
             )
 
             anim = Animation()
-            for x in range(1, stop = 2π, length = 20)
+            for x ∈ range(1, stop = 2π, length = 20)
                 plot(push!(p, x, Float64[sin(x), cos(x), atan(x), cos(x), log(x)]))
                 frame(anim)
             end
@@ -847,8 +847,8 @@ const _examples = PlotExample[
             xs = collect(0.1:0.05:2.0)
             ys = collect(0.2:0.1:2.0)
 
-            X = [x for x in xs for _ in ys]
-            Y = [y for _ in xs for y in ys]
+            X = [x for x ∈ xs for _ ∈ ys]
+            Y = [y for _ ∈ xs for y ∈ ys]
 
             Z = (x, y) -> 1 / x + y * x^2
 
@@ -889,13 +889,13 @@ const _examples = PlotExample[
             θs = range(0, π, length = 25)
             θqs = range(1, π - 1, length = 25)
 
-            x = vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
-            y = vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
-            z = vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+            x = vec([sin(θ) * cos(ϕ) for (ϕ, θ) ∈ Iterators.product(ϕs, θs)])
+            y = vec([sin(θ) * sin(ϕ) for (ϕ, θ) ∈ Iterators.product(ϕs, θs)])
+            z = vec([cos(θ) for (ϕ, θ) ∈ Iterators.product(ϕs, θs)])
 
-            u = 0.1vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
-            v = 0.1vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
-            w = 0.1vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            u = 0.1vec([sin(θ) * cos(ϕ) for (ϕ, θ) ∈ Iterators.product(ϕs, θqs)])
+            v = 0.1vec([sin(θ) * sin(ϕ) for (ϕ, θ) ∈ Iterators.product(ϕs, θqs)])
+            w = 0.1vec([cos(θ) for (ϕ, θ) ∈ Iterators.product(ϕs, θqs)])
 
             quiver(x, y, z, quiver = (u, v, w))
         end,
@@ -958,7 +958,7 @@ const _examples = PlotExample[
 
                 plots = [wireframe(args..., title = "wire"; kw...)]
 
-                for ax in (:x, :y, :z)
+                for ax ∈ (:x, :y, :z)
                     push!(
                         plots,
                         wireframe(
@@ -972,7 +972,7 @@ const _examples = PlotExample[
                     )
                 end
 
-                for ax in (:x, :y, :z)
+                for ax ∈ (:x, :y, :z)
                     push!(
                         plots,
                         wireframe(
@@ -1334,7 +1334,7 @@ replace_module(ex) = ex
 function replace_module(ex::Expr)
     if Meta.isexpr(ex, :import) || Meta.isexpr(ex, :using)
         expr = Expr(ex.head)
-        for arg in ex.args
+        for arg ∈ ex.args
             mod = last(arg.args)
             new_arg = if Meta.isexpr(arg, :.)
                 mod ≡ :PlotsBase ? arg : Expr(:., :PlotsBase, mod)
@@ -1401,7 +1401,7 @@ function test_examples(
     strict = false,
 )
     plts = Dict()
-    for i in eachindex(_examples)
+    for i ∈ eachindex(_examples)
         i ∈ something(only, (i,)) || continue
         i ∈ skip && continue
         try

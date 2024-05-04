@@ -11,7 +11,7 @@
         [(missing, missing)],
         [(missing, missing, missing), ("a", "b", "c")],
     )
-    for z in zipped
+    for z ∈ zipped
         @test isequal(collect(zip(PlotsBase.unzip(z)...)), z)
         @test isequal(collect(zip(PlotsBase.unzip(GeometryBasics.Point.(z))...)), z)
     end
@@ -271,7 +271,7 @@ end
 
     # Test step plot with variable limits
     x = 0:0.001:1
-    y = vcat([0.0 for _ in 1:100], [1.0 for _ in 101:200], [0.5 for _ in 201:1001])
+    y = vcat([0.0 for _ ∈ 1:100], [1.0 for _ ∈ 101:200], [0.5 for _ ∈ 201:1001])
     pl = scatter(x, y)
     @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
     pl = scatter(x, y, xlims = [0, 0.25])

@@ -87,7 +87,7 @@ end
 
 function copy_series!(series, letter)
     plt = series[:plot_object]
-    for s in plt.series_list, l in (:x, :y, :z)
+    for s ∈ plt.series_list, l ∈ (:x, :y, :z)
         if (s ≢ series || l ≢ letter) && s[l] ≡ series[letter]
             series[letter] = copy(series[letter])
         end
@@ -103,7 +103,7 @@ extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x
 extend_by_data!(v::AbstractVector, x::AbstractVector) =
     isimmutable(v) ? vcat(v, x) : append!(v, x)
 
-for comp in (:line, :fill, :marker)
+for comp ∈ (:line, :fill, :marker)
     compcolor = string(comp, :color)
     get_compcolor = Symbol(:get_, compcolor)
     comp_z = string(comp, :_z)
@@ -235,10 +235,10 @@ end
 has_attribute_segments(series::Series) =
     any(
         series[attr] isa AbstractVector && length(series[attr]) > 1 for
-        attr in PlotsBase.Commons._segmenting_vector_attributes
+        attr ∈ PlotsBase.Commons._segmenting_vector_attributes
     ) || any(
         series[attr] isa AbstractArray for
-        attr in PlotsBase.Commons._segmenting_array_attributes
+        attr ∈ PlotsBase.Commons._segmenting_array_attributes
     )
 
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
@@ -250,10 +250,10 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
 
     if check
         scales = :xscale, :yscale, :zscale
-        for (n, s) in enumerate(args)
+        for (n, s) ∈ enumerate(args)
             (scale = get(series, scales[n], :identity)) ∈ PlotsBase.Commons._log_scales ||
                 continue
-            for (i, v) in enumerate(s)
+            for (i, v) ∈ enumerate(s)
                 if v <= 0
                     @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
                     @debug "" exception = (DomainError(v), stacktrace())
@@ -269,13 +269,13 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
                 warn_on_inconsistent_shape_attrs(series, x, y, z, r)
                 (SeriesSegment(r, first(r)),)
             elseif seriestype in (:scatter, :scatter3d)
-                (SeriesSegment(i:i, i) for i in r)
+                (SeriesSegment(i:i, i) for i ∈ r)
             else
-                (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
+                (SeriesSegment(i:(i + 1), i) for i ∈ first(r):(last(r) - 1))
             end
         end |> Iterators.flatten
     else
-        (SeriesSegment(r, 1) for r in nan_segments)
+        (SeriesSegment(r, 1) for r ∈ nan_segments)
     end
 
     warn_on_attr_dim_mismatch(series, x, y, z, segments)
@@ -288,7 +288,7 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
         minimum(map(seg -> first(seg.range), segments)),
         maximum(map(seg -> last(seg.range), segments)),
     )
-    for attr in PlotsBase.Commons._segmenting_vector_attributes
+    for attr ∈ PlotsBase.Commons._segmenting_vector_attributes
         if (v = get(series, attr, nothing)) isa PlotsBase.Commons.AVec &&
            eachindex(v) != seg_range
             @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
@@ -306,7 +306,7 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
 end
 
 function warn_on_inconsistent_shape_attrs(series, x, y, z, r)
-    for attr in PlotsBase.Commons._segmenting_vector_attributes
+    for attr ∈ PlotsBase.Commons._segmenting_vector_attributes
         v = get(series, attr, nothing)
         if v isa PlotsBase.Commons.AVec && length(unique(v[r])) > 1
             @warn "Different values of `$attr` specified for different shape vertices. Only first one will be used."
@@ -327,7 +327,7 @@ attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 function attr!(series::Series; kw...)
     plotattributes = KW(kw)
     Commons.preprocess_attributes!(plotattributes)
-    for (k, v) in plotattributes
+    for (k, v) ∈ plotattributes
         if haskey(_series_defaults, k)
             series[k] = v
         else

@@ -379,7 +379,7 @@ function plotly_layout(plt::Plot)
 
     multiple_subplots = length(plt.subplots) > 1
 
-    for sp in plt.subplots
+    for sp ∈ plt.subplots
         spidx = multiple_subplots ? sp[:subplot_index] : ""
         x_idx, y_idx = multiple_subplots ? plotly_link_indicies(plt, sp) : ("", "")
 
@@ -462,7 +462,7 @@ function plotly_layout(plt::Plot)
         plotly_add_legend!(plotattributes_out, sp)
 
         # annotations
-        for ann in sp[:annotations]
+        for ann ∈ sp[:annotations]
             append!(
                 plotattributes_out[:annotations],
                 KW[plotly_annotation_dict(
@@ -473,9 +473,9 @@ function plotly_layout(plt::Plot)
             )
         end
         # series_annotations
-        for series in series_list(sp)
+        for series ∈ series_list(sp)
             anns = series[:series_annotations]
-            for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
+            for (xi, yi, str, fnt) ∈ EachAnn(anns, series[:x], series[:y])
                 push!(
                     plotattributes_out[:annotations],
                     plotly_annotation_dict(
@@ -620,7 +620,7 @@ plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing) =
 function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
     n = length(cg)
     cinds = repeat(1:n, inner = 2)
-    vinds = vcat((i:(i + 1) for i in 1:n)...)
+    vinds = vcat((i:(i + 1) for i ∈ 1:n)...)
     map(
         i -> [
             cg.values[vinds[i]],
@@ -661,7 +661,7 @@ end
 # we split by NaNs and then construct/destruct the shapes to get the closed coords
 function plotly_close_shapes(x, y)
     xs, ys = nansplit(x), nansplit(y)
-    for i in eachindex(xs)
+    for i ∈ eachindex(xs)
         shape = Shape(xs[i], ys[i])
         xs[i], ys[i] = coords(shape)
     end
@@ -749,8 +749,7 @@ function plotly_series(plt::Plot, series::Series)
     end
 
     x, y, z = (
-        plotly_data(series, letter, data) for
-        (letter, data) in zip((:x, :y, :z), (x, y, z))
+        plotly_data(series, letter, data) for (letter, data) ∈ zip((:x, :y, :z), (x, y, z))
     )
 
     plotattributes_out[:name] = series[:label]
@@ -860,10 +859,8 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:k] = k
             elseif typeof(series[:connections]) <: AbstractVector{NTuple{3,Int}}
                 # 1-based indexing
-                i, j, k = broadcast(
-                    i -> [inds[i] - 1 for inds in series[:connections]],
-                    (1, 2, 3),
-                )
+                i, j, k =
+                    broadcast(i -> [inds[i] - 1 for inds ∈ series[:connections]], (1, 2, 3))
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k
@@ -953,10 +950,10 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
 
     x, y = (
         plotly_data(series, letter, data) for
-        (letter, data) in zip((:x, :y), PlotsBase.shape_data(series, 100))
+        (letter, data) ∈ zip((:x, :y), PlotsBase.shape_data(series, 100))
     )
 
-    for (k, segment) in enumerate(segments)
+    for (k, segment) ∈ enumerate(segments)
         i, rng = segment.attr_index, segment.range
         length(rng) < 2 && continue
 
@@ -1016,7 +1013,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
 
     needs_scatter_fix = !isscatter && hasmarker && !any(isnan, y) && length(segments) > 1
 
-    for (k, segment) in enumerate(segments)
+    for (k, segment) ∈ enumerate(segments)
         i, rng = segment.attr_index, segment.range
 
         plotattributes_out = deepcopy(plotattributes_base)
@@ -1222,7 +1219,7 @@ end
 # get a list of dictionaries, each representing the series params
 function plotly_series(plt::Plot)
     isempty(plt.series_list) && return KW[]
-    reduce(vcat, plotly_series(plt, series) for series in plt.series_list)
+    reduce(vcat, plotly_series(plt, series) for series ∈ plt.series_list)
 end
 
 # get json string for a list of dictionaries, each representing the series params

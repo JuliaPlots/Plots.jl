@@ -26,7 +26,7 @@ end
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 
         @testset "plot" begin
-            for pl in [
+            for pl ∈ [
                 histogram([1, 0, 0, 0, 0, 0]),
                 plot([missing]),
                 plot([missing, missing]),
@@ -130,11 +130,11 @@ end
         value.(m)
     end
 
-    @testset "$f" for f in (hline, hspan)
+    @testset "$f" for f ∈ (hline, hspan)
         @test f(data).subplots[1].attr[:title] == "y"
     end
 
-    @testset "$f" for f in (vline, vspan)
+    @testset "$f" for f ∈ (vline, vspan)
         @test f(data).subplots[1].attr[:title] == "x"
     end
 end
@@ -161,8 +161,8 @@ end
     data4 = rand(4, 4)
     mat = reshape(1:8, 2, 4)
     sp = plot(data4, ribbon = (mat, mat))[1]
-    for i in axes(data4, 1)
-        for attribute in (:fillrange, :ribbon)
+    for i ∈ axes(data4, 1)
+        for attribute ∈ (:fillrange, :ribbon)
             nt = NamedTuple{tuple(attribute)}
             get_attrs(pl) = pl[1][i][attribute]
             @test plot(data4; nt(0)...) |> get_attrs == 0

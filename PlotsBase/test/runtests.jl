@@ -6,7 +6,7 @@ const TEST_PACKAGES =
         )
         Symbol.(strip.(split(val, ",")))
     end
-const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p in TEST_PACKAGES)
+const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p ∈ TEST_PACKAGES)
 
 get!(ENV, "MPLBACKEND", "agg")
 
@@ -17,7 +17,7 @@ import GR
 gr()
 
 # initialize all backends
-for pkg in TEST_PACKAGES
+for pkg ∈ TEST_PACKAGES
     @eval begin
         import $pkg  # trigger extension
         $(TEST_BACKENDS[pkg])()
@@ -64,7 +64,7 @@ else
     []
 end
 
-for name in (
+for name ∈ (
     "misc",
     "utils",
     "args",

@@ -143,9 +143,9 @@ function PlotsBase._before_layout_calcs(plt::Plot{GastonBackend})
     # then add the series (curves in gaston)
     foreach(series -> gaston_add_series(plt, series), plt.series_list)
 
-    for sp in plt.subplots
+    for sp ∈ plt.subplots
         sp ≡ nothing && continue
-        for ann in sp[:annotations]
+        for ann ∈ sp[:annotations]
             x, y, val = locate_annotation(sp, ann...)
             sp.o.axesconf *= "; set label '$(val.str)' at $x,$y $(gaston_font(val.font))"
         end
@@ -167,7 +167,7 @@ function PlotsBase._update_plot_object(plt::Plot{GastonBackend})
     nothing
 end
 
-for (mime, term) in (
+for (mime, term) ∈ (
     "application/eps"        => "epscairo",
     "image/eps"              => "epscairo",
     "application/pdf"        => "pdfcairo",
@@ -231,7 +231,7 @@ end
 function gaston_get_subplots(n, plt_subplots, layout)
     nr, nc = size(layout)
     sps = Array{Any}(nothing, nr, nc)
-    for r in 1:nr, c in 1:nc  # NOTE: col major
+    for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
         sps[r, c] = if (l = layout[r, c]) isa GridLayout
             n, sub = gaston_get_subplots(n, plt_subplots, l)
             size(sub) == (1, 1) ? only(sub) : sub
@@ -249,7 +249,7 @@ end
 
 function gaston_init_subplots(plt, sps)
     sz = nr, nc = size(sps)
-    for c in 1:nc, r in 1:nr  # NOTE: row major
+    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
         if (sp = sps[r, c]) isa Subplot || sp ≡ nothing
             gaston_init_subplot(plt, sp)
         else
@@ -270,7 +270,7 @@ function gaston_init_subplot(
         dims =
             RecipesPipeline.is3d(sp) || sp[:projection] == "3d" || needs_any_3d_axes(sp) ? 3 : 2
         any_label = false
-        for series in series_list(sp)
+        for series ∈ series_list(sp)
             if dims == 2 && series[:seriestype] ∈ (:heatmap, :contour)
                 dims = 3  # we need heatmap/contour to use splot, not plot
             end
@@ -286,7 +286,7 @@ end
 function gaston_multiplot_pos_size(layout, parent_xy_wh)
     nr, nc = size(layout)
     dat = Array{Any}(nothing, nr, nc)
-    for r in 1:nr, c in 1:nc
+    for r ∈ 1:nr, c ∈ 1:nc
         l = layout[r, c]
         # width and height (pct) are multiplicative (parent)
         w = layout.widths[c].value * parent_xy_wh[3]
@@ -314,7 +314,7 @@ end
 
 function gaston_multiplot_pos_size!(dat)
     nr, nc = size(dat)
-    for r in 1:nr, c in 1:nc
+    for r ∈ 1:nr, c ∈ 1:nc
         if (xy_wh_sp = dat[r, c]) isa Array
             gaston_multiplot_pos_size!(xy_wh_sp)
         elseif xy_wh_sp isa Tuple
@@ -336,10 +336,10 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     st = series[:seriestype]
     curves = Gaston.Curve[]
     if gsp.dims == 2 && z ≡ nothing
-        for (n, seg) in enumerate(series_segments(series, st; check = true))
+        for (n, seg) ∈ enumerate(series_segments(series, st; check = true))
             i, rng = seg.attr_index, seg.range
             fr = _cycle(series[:fillrange], 1:length(x[rng]))
-            for sc in gaston_seriesconf!(sp, series, n == 1, i)
+            for sc ∈ gaston_seriesconf!(sp, series, n == 1, i)
                 push!(curves, Gaston.Curve(x[rng], y[rng], nothing, fr, sc))
             end
         end
@@ -369,12 +369,12 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
                 z = reshape(z, length(y), length(x))
             end
         end
-        for sc in gaston_seriesconf!(sp, series, true, 1)
+        for sc ∈ gaston_seriesconf!(sp, series, true, 1)
             push!(curves, Gaston.Curve(x, y, z, supp, sc))
         end
     end
 
-    for c in curves
+    for c ∈ curves
         append = length(gsp.curves) > 0
         push!(gsp.curves, c)
         Gaston.write_data(c, gsp.dims, gsp.datafile; append)
@@ -524,7 +524,7 @@ function gaston_parse_axes_attrs(
     polar = ispolar(sp) && dims == 2  # cannot splot in polar coordinates
 
     fs = sp[:framestyle]
-    for letter in (:x, :y, :z)
+    for letter ∈ (:x, :y, :z)
         (letter ≡ :z && dims == 2) && continue
         axis = sp[get_attr_symbol(letter, :axis)]
 
@@ -679,7 +679,7 @@ function gaston_parse_axes_attrs(
         gaston_ticks = if (ttype = PlotsBase.ticks_type(rticks)) ≡ :ticks
             string.(rticks)
         elseif ttype ≡ :ticks_and_labels
-            ["'$l' $t" for (t, l) in zip(rticks...)]
+            ["'$l' $t" for (t, l) ∈ zip(rticks...)]
         end
         push!(
             axesconf,
@@ -799,7 +799,7 @@ function gaston_font(f; rot = true, align = true, color = true, scale = 1)
 end
 
 gaston_palette(gradient) =
-    let palette = ["$(n - 1) $(c.r) $(c.g) $(c.b)" for (n, c) in enumerate(gradient)]
+    let palette = ["$(n - 1) $(c.r) $(c.g) $(c.b)" for (n, c) ∈ enumerate(gradient)]
         '(' * join(palette, ", ") * ')'
     end
 

@@ -58,14 +58,14 @@ PlotsBase.coords(shapes::AVec{<:Shape}) = RecipesPipeline.unzip(map(coords, shap
 
 "get an array of tuples of points on a circle with radius `r`"
 partialcircle(start_angle, end_angle, n = 20, r = 1) =
-    [(r * cos(u), r * sin(u)) for u in range(start_angle, end_angle, n)]
+    [(r * cos(u), r * sin(u)) for u ∈ range(start_angle, end_angle, n)]
 
 "interleave 2 vectors into each other (like a zipper's teeth)"
 function weave(x, y; ordering = Vector[x, y])
     ret = eltype(x)[]
     done = false
     while !done
-        for o in ordering
+        for o ∈ ordering
             try
                 push!(ret, popfirst!(o))
             catch
@@ -147,12 +147,12 @@ function center(shape::Shape)
     x, y = coords(shape)
     n = length(x)
     A, Cx, Cy = 0, 0, 0
-    for i in 1:n
+    for i ∈ 1:n
         ip1 = i == n ? 1 : i + 1
         A += x[i] * y[ip1] - x[ip1] * y[i]
     end
     A *= 0.5
-    for i in 1:n
+    for i ∈ 1:n
         ip1 = i == n ? 1 : i + 1
         m = (x[i] * y[ip1] - x[ip1] * y[i])
         Cx += (x[i] + x[ip1]) * m
@@ -164,7 +164,7 @@ end
 function scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     sx, sy = coords(shape)
     cx, cy = c
-    for i in eachindex(sx)
+    for i ∈ eachindex(sx)
         sx[i] = (sx[i] - cx) * x + cx
         sy[i] = (sy[i] - cy) * y + cy
     end
@@ -182,7 +182,7 @@ scale(shape::Shape, x::Real, y::Real = x, c = center(shape)) =
 
 function translate!(shape::Shape, x::Real, y::Real = x)
     sx, sy = coords(shape)
-    for i in eachindex(sx)
+    for i ∈ eachindex(sx)
         sx[i] += x
         sy[i] += y
     end
@@ -214,7 +214,7 @@ rotate(x::Real, y::Real, θ::Real, c) =
 
 function rotate!(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
-    for i in eachindex(x)
+    for i ∈ eachindex(x)
         xi = Shapes.rotate_x(x[i], y[i], θ, c...)
         yi = Shapes.rotate_y(x[i], y[i], θ, c...)
         x[i], y[i] = xi, yi

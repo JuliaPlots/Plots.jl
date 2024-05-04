@@ -35,22 +35,22 @@ function Base.show(io::IO, plt::Plot)
     ) && return
     print(io, "\nCaptured extra kwargs:\n")
     do_show = true
-    for (key, value) in plt[:extra_plot_kwargs]
+    for (key, value) ∈ plt[:extra_plot_kwargs]
         do_show && println(io, "  Plot:")
         println(io, " "^4, key, ": ", value)
         do_show = false
     end
     do_show = true
-    for (i, ekwargs) in enumerate(sp_ekwargs)
-        for (key, value) in ekwargs
+    for (i, ekwargs) ∈ enumerate(sp_ekwargs)
+        for (key, value) ∈ ekwargs
             do_show && println(io, "  SubplotPlot{$i}:")
             println(io, " "^4, key, ": ", value)
             do_show = false
         end
         do_show = true
     end
-    for (i, ekwargs) in enumerate(s_ekwargs)
-        for (key, value) in ekwargs
+    for (i, ekwargs) ∈ enumerate(s_ekwargs)
+        for (key, value) ∈ ekwargs
             do_show && println(io, "  Series{$i}:")
             println(io, " "^4, key, ": ", value)
             do_show = false
@@ -132,7 +132,7 @@ function plot!(
 
     # compute the layout
     layout = layout_attrs(plotattributes, n)[1]
-    num_sp = sum(length(p.subplots) for p in plts)
+    num_sp = sum(length(p.subplots) for p ∈ plts)
 
     # create a new plot object, with subplot list/map made of existing subplots.
     # note: we create a new backend figure for this new plot object
@@ -143,7 +143,7 @@ function plot!(
 
     # TODO: replace this with proper processing from a merged user_attrs KW
     # update plot args
-    for p in plts
+    for p ∈ plts
         plt.attr = merge(p.attr, plt.attr)  # plt.attr preempts p.attr (for `twinx`)
         plt.n += p.n
     end
@@ -155,7 +155,7 @@ function plot!(
     plt.init = true
 
     series_attrs = KW()
-    for (k, v) in plotattributes
+    for (k, v) ∈ plotattributes
         Commons.is_series_attrs(k) && (series_attrs[k] = pop!(plotattributes, k))
     end
 
@@ -167,13 +167,13 @@ function plot!(
 
     # initialize the subplots
     cmdidx = 1
-    for (idx, sp) in enumerate(plt.subplots)
+    for (idx, sp) ∈ enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
         serieslist = series_list(sp)
         append!(plt.inset_subplots, sp.plt.inset_subplots)
         sp.plt = plt
         sp.attr[:subplot_index] = idx
-        for series in serieslist
+        for series ∈ serieslist
             merge!(series.plotattributes, series_attrs)
             _slice_series_attrs!(series.plotattributes, plt, sp, cmdidx)
             push!(plt.series_list, series)
@@ -184,7 +184,7 @@ function plot!(
     ttl_idx = _add_plot_title!(plt)
 
     # first apply any args for the subplots
-    for (idx, sp) in enumerate(plt.subplots)
+    for (idx, sp) ∈ enumerate(plt.subplots)
         Plots._update_subplot_attrs(
             plt,
             sp,
@@ -255,9 +255,9 @@ function prepare_output(plt::Plot)
 
     # specific to :plot_title see _add_plot_title!
     force_minpad = get(plt, :force_minpad, ())
-    isempty(force_minpad) || for i in eachindex(plt.layout.grid)
+    isempty(force_minpad) || for i ∈ eachindex(plt.layout.grid)
         plt.layout.grid[i].minpad = Tuple(
-            i ≡ nothing ? j : i for (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
+            i ≡ nothing ? j : i for (i, j) ∈ zip(force_minpad, plt.layout.grid[i].minpad)
         )
     end
 

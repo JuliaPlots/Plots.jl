@@ -366,7 +366,7 @@ function gr_polyline(x, y, func = GR.polyline; arrowside = :none, arrowstyle = :
     iend = 0
     while iend < n - 1
         istart = -1  # set istart to the first index that is finite
-        for j in (iend + 1):n
+        for j ∈ (iend + 1):n
             if ok(x[j], y[j])
                 istart = j
                 break
@@ -374,7 +374,7 @@ function gr_polyline(x, y, func = GR.polyline; arrowside = :none, arrowstyle = :
         end
         if istart > 0
             iend = -1  # iend is the last finite index
-            for j in (istart + 1):n
+            for j ∈ (istart + 1):n
                 if ok(x[j], y[j])
                     iend = j
                 else
@@ -404,7 +404,7 @@ function gr_polyline3d(x, y, z, func = GR.polyline3d)
     n = length(x)
     while iend < n - 1
         istart = -1  # set istart to the first index that is finite
-        for j in (iend + 1):n
+        for j ∈ (iend + 1):n
             if ok(x[j], y[j], z[j])
                 istart = j
                 break
@@ -412,7 +412,7 @@ function gr_polyline3d(x, y, z, func = GR.polyline3d)
         end
         if istart > 0
             iend = -1  # iend is the last finite index
-            for j in (istart + 1):n
+            for j ∈ (istart + 1):n
                 if ok(x[j], y[j], z[j])
                     iend = j
                 else
@@ -467,7 +467,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
             sp,
         )
         gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
-        for i in eachindex(α)
+        for i ∈ eachindex(α)
             GR.polyline([sinf[i], 0], [cosf[i], 0])
         end
     end
@@ -481,7 +481,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
             sp,
         )
         gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
-        for i in eachindex(rtick_values)
+        for i ∈ eachindex(rtick_values)
             r = (rtick_values[i] - rmin) / (rmax - rmin)
             (r ≤ 1 && r ≥ 0) && GR.drawarc(-r, r, -r, r, 0, 359)
         end
@@ -496,14 +496,14 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     # draw angular ticks
     if xaxis[:showaxis]
         GR.drawarc(-1, 1, -1, 1, 0, 359)
-        for i in eachindex(α)
+        for i ∈ eachindex(α)
             x, y = GR.wctondc(1.1sinf[i], 1.1cosf[i])
             GR.textext(x, y, string((360 - α[i]) % 360, "^o"))
         end
     end
 
     # draw radial ticks
-    yaxis[:showaxis] && for i in eachindex(rtick_values)
+    yaxis[:showaxis] && for i ∈ eachindex(rtick_values)
         r = (rtick_values[i] - rmin) / (rmax - rmin)
         (r ≤ 1 && r ≥ 0) && gr_text(GR.wctondc(0.05, r)..., _cycle(rtick_labels, i))
     end
@@ -706,7 +706,7 @@ end
 
 function _cbar_unique(values, propname)
     out = last(values)
-    if any(x != out for x in values)
+    if any(x != out for x ∈ values)
         @warn """
         Multiple series with different $propname share a colorbar.
         Colorbar may not reflect all series correctly.
@@ -763,7 +763,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
             push!(levels, z_max)
         end
         colors = gr_colorbar_colors(last(series), clims)
-        for (from, to, color) in zip(levels[1:(end - 1)], levels[2:end], colors)
+        for (from, to, color) ∈ zip(levels[1:(end - 1)], levels[2:end], colors)
             GR.setfillcolorind(color)
             GR.fillrect(x_min, x_max, from, to)
         end
@@ -781,7 +781,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         gr_set_transparency(_cbar_unique(get_linealpha.(series), "line alpha"))
         levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         colors = gr_colorbar_colors(last(series), clims)
-        for (line, color) in zip(levels, colors)
+        for (line, color) ∈ zip(levels, colors)
             GR.setlinecolorind(color)
             GR.polyline([x_min, x_max], [line, line])
         end
@@ -825,7 +825,7 @@ alignment(symb) =
 
 function gr_set_gradient(c)
     grad = _as_gradient(c)
-    for (i, z) in enumerate(range(0, 1; length = 256))
+    for (i, z) ∈ enumerate(range(0, 1; length = 256))
         c = grad[z]
         GR.setcolorrep(999 + i, red(c), green(c), blue(c))
     end
@@ -925,7 +925,7 @@ end
 
 function gr_get_ticks_size(ticks, rot)
     w, h = 0.0, 0.0
-    for (cv, dv) in zip(ticks...)
+    for (cv, dv) ∈ zip(ticks...)
         wi, hi = gr_text_size(dv, rot)
         w = NaNMath.max(w, wi)
         h = NaNMath.max(h, hi)
@@ -996,7 +996,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
     if gr_is3d(sp)
         # Add margin for x and y ticks
         m = 0mm
-        for (ax, tc) in ((xaxis, xticks), (yaxis, yticks))
+        for (ax, tc) ∈ ((xaxis, xticks), (yaxis, yticks))
             isempty(first(tc)) && continue
             rot = ax[:rotation]
             gr_set_tickfont(
@@ -1027,7 +1027,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
 
         # Add margin for x or y label
         m = 0mm
-        for ax in (xaxis, yaxis)
+        for ax ∈ (xaxis, yaxis)
             (guide = ax[:guide] == "") && continue
             gr_set_font(guidefont(ax), sp)
             l = last(gr_text_size(guide))
@@ -1045,7 +1045,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
         end
     else
         # Add margin for x/y ticks & labels
-        for (ax, tc, (a, b)) in
+        for (ax, tc, (a, b)) ∈
             ((xaxis, xticks, (:top, :bottom)), (yaxis, yticks, (:right, :left)))
             if !isempty(first(tc))
                 isy = ax[:letter] ≡ :y
@@ -1142,7 +1142,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     # init the colorbar
     cbar = GRColorbar()
 
-    for series in series_list(sp)
+    for series ∈ series_list(sp)
         gr_add_series(sp, series)
         gr_update_colorbar!(cbar, series)
     end
@@ -1154,7 +1154,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     gr_add_legend(sp, leg, vp_plt)
 
     # add annotations
-    for ann in sp[:annotations]
+    for ann ∈ sp[:annotations]
         x, y = if PlotsBase.is3d(sp)
             x, y, z, val = locate_annotation(sp, ann...)
             GR.setwindow(-1, 1, -1, 1)
@@ -1222,7 +1222,7 @@ function gr_add_legend(sp, leg, viewport_area)
 
         nentry = 1
 
-        for series in series_list(sp)
+        for series ∈ series_list(sp)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
             clims = gr_clims(sp, series)
@@ -1395,7 +1395,7 @@ function gr_get_legend_geometry(vp, sp)
             textw = r - l
         end
         gr_set_font(legendfont(sp), sp)
-        for series in series_list(sp)
+        for series ∈ series_list(sp)
             should_add_to_legend(series) || continue
             (l, r), (b, t) = extrema.(gr_inqtext(0, 0, string(series[:label])))
             texth = max(texth, t - b)
@@ -1715,7 +1715,7 @@ function gr_label_ticks(sp, letter, ticks)
     else
         rot < -270 || -90 < rot < 90 || rot > 270 ? 1 : -1
     end
-    for (cv, dv) in zip(ticks...)
+    for (cv, dv) ∈ zip(ticks...)
         x, y = GR.wctondc(reverse_if((cv, ov), isy)...)
         sz_rot, sz = gr_text_size(dv, rot), gr_text_size(dv)
         x_off, y_off = x_offset, y_offset
@@ -1790,7 +1790,7 @@ function gr_label_ticks_3d(sp, letter, ticks)
     end
 
     GR.setwindow(-1, 1, -1, 1)
-    for (cv, dv) in zip((ax[:flip] ? reverse(cvs) : cvs, dvs)...)
+    for (cv, dv) ∈ zip((ax[:flip] ? reverse(cvs) : cvs, dvs)...)
         xi, yi = gr_w3tondc(sort_3d_axes(cv, nt, ft, letter)...)
         sz_rot, sz = gr_text_size(dv, rot), gr_text_size(dv)
         x_off = x_offset + 0.5(sgn2a * first(sz_rot) + sgn3 * last(sz) * sind(rot))
@@ -1944,7 +1944,7 @@ function gr_add_series(sp, series)
     end
 
     # this is all we need to add the series_annotations text
-    for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
+    for (xi, yi, str, fnt) ∈ EachAnn(series[:series_annotations], x, y)
         gr_set_font(fnt, sp)
         gr_text(GR.wctondc(xi, yi)..., str)
     end
@@ -1975,7 +1975,7 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
 
     # draw the line(s)
     st = series[:seriestype]
-    for segment in series_segments(series, st; check = true)
+    for segment ∈ series_segments(series, st; check = true)
         i, rng = segment.attr_index, segment.range
         isempty(rng) && continue
         is3d = st ≡ :path3d && z ≢ nothing
@@ -2016,14 +2016,14 @@ function gr_draw_markers(
     isempty(x) && return
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     (shapes = series[:markershape]) ≡ :none && return
-    for segment in series_segments(series, :scatter)
+    for segment ∈ series_segments(series, :scatter)
         rng = intersect(eachindex(IndexLinear(), x), segment.range)
         isempty(rng) && continue
         i = segment.attr_index
         ms = get_thickness_scaling(series) * _cycle(msize, i)
         msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
         shape = _cycle(shapes, i)
-        for j in rng
+        for j ∈ rng
             gr_draw_marker(
                 series,
                 _cycle(x, j),
@@ -2041,7 +2041,7 @@ end
 
 function gr_draw_shapes(series, clims)
     x, y = PlotsBase.shape_data(series)
-    for segment in series_segments(series, :shape)
+    for segment ∈ series_segments(series, :shape)
         i, rng = segment.attr_index, segment.range
         if length(rng) > 1
             # connect to the beginning
@@ -2181,7 +2181,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
             z_log, z_normalized = gr_z_normalized_log_scaled(scale, z, clims)
             z_log, plot_color.(map(z -> get(fillgrad, z), z_normalized), series[:fillalpha])
         end
-        for i in eachindex(colors)
+        for i ∈ eachindex(colors)
             isnan(_z[i]) && (colors[i] = set_RGBA_alpha(0, colors[i]))
         end
         GR.drawimage(first(x), last(x), last(y), first(y), w, h, gr_color.(colors))
@@ -2196,7 +2196,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
         end
         rgba = map(x -> round(Int32, 1_000 + 255x), z_normalized)
         bg_rgba = gr_getcolorind(plot_color(sp[:background_color_inside]))
-        for i in eachindex(rgba)
+        for i ∈ eachindex(rgba)
             isnan(_z[i]) && (rgba[i] = bg_rgba)
         end
         if ispolar(series)
@@ -2221,7 +2221,7 @@ end
 
 # ----------------------------------------------------------------
 
-for (mime, fmt) in (
+for (mime, fmt) ∈ (
     "application/pdf" => "pdf",
     "image/png" => "png",
     "application/postscript" => "ps",

@@ -57,7 +57,7 @@ _get_showtheme_attrs(thm::Symbol, func::Symbol) = thm, get(_color_functions, fun
     cp = cfunc.(RGB.(cp))
 
     # apply the theme
-    for k in keys(defaults)
+    for k ∈ keys(defaults)
         k in (:colorgradient, :palette) && continue
         def = defaults[k]
         arg = get(Commons._keyAliases, k, k)
@@ -78,7 +78,7 @@ _get_showtheme_attrs(thm::Symbol, func::Symbol) = thm, get(_color_functions, fun
     colorbar := false
     layout := (2, 3)
 
-    for j in 1:4
+    for j ∈ 1:4
         @series begin
             subplot := 1
             color_palette := cp

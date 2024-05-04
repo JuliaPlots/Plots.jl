@@ -23,7 +23,7 @@ reference_path(backend, version) = reference_dir("Plots", string(backend), strin
 function checkout_reference_dir(dn::AbstractString)
     mkpath(dn)
     local repo
-    for i in 1:6
+    for i ∈ 1:6
         try
             repo = LibGit2.clone(
                 "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
@@ -57,7 +57,7 @@ function reference_file(backend, version, i)
     refdir = reference_dir("Plots", string(backend))
     fn = ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
-    for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
+    for ver ∈ sort(VersionNumber.(readdir(refdir)), rev = true)
         if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
             reffn = tmpfn
             break
@@ -110,7 +110,7 @@ function image_comparison_facts(
     sigma = [1, 1],     # number of pixels to "blur"
     tol = 1e-2,         # acceptable error (percent)
 )
-    for i in setdiff(1:length(PlotsBase._examples), skip)
+    for i ∈ setdiff(1:length(PlotsBase._examples), skip)
         if only ≡ nothing || i in only
             @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
         end

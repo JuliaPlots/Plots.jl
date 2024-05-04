@@ -30,7 +30,7 @@ end
 # convert a bounding box from absolute coords to percentages...
 # returns an array of percentages of figure size: [left, bottom, width, height]
 function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
-    mms = Float64[f(bb).value for f in (left, bottom, width, height)]
+    mms = Float64[f(bb).value for f ∈ (left, bottom, width, height)]
     if flipy
         mms[2] = figh.value - mms[2]  # flip y when origin in bottom-left
     end

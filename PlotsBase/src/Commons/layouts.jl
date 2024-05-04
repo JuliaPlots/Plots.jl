@@ -14,7 +14,7 @@ function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
     oargs = vcat(oarg1, originargs...)
     orighor = :left
     origver = :top
-    for oarg in oargs
+    for oarg ∈ oargs
         if oarg ≡ :center
             orighor = origver = oarg
         elseif oarg in (:left, :right, :hcenter)
@@ -161,11 +161,11 @@ function GridLayout(
         DEFAULT_MINPAD[],
         DEFAULT_BBOX[],
         grid,
-        Measure[w * pct for w in widths],
-        Measure[h * pct for h in heights],
+        Measure[w * pct for w ∈ widths],
+        Measure[h * pct for h ∈ heights],
         KW(kw),
     )
-    for i in eachindex(grid)
+    for i ∈ eachindex(grid)
         grid[i] = EmptyLayout(layout)
     end
     layout

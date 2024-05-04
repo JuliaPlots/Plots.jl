@@ -171,7 +171,7 @@ include("users.jl")
     imports = sizehint!(Expr[], n)
     examples = sizehint!(Expr[], 10n)
     scratch_dir = mktempdir()
-    for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
+    for i ∈ setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
         _examples[i].external && continue
         (imp = _examples[i].imports) ≡ nothing || push!(imports, imp)
         func = gensym(string(i))

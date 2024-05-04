@@ -10,7 +10,7 @@ end
 end
 
 @testset "Empty anim" begin
-    anim = @animate for i in []
+    anim = @animate for i ∈ []
     end
     @test_throws ArgumentError gif(anim, show_msg = false)
 end
@@ -33,7 +33,7 @@ end
     x = sin.(t)
     y = cos.(t)
 
-    anim = @animate for i in 1:n
+    anim = @animate for i ∈ 1:n
         circleplot(x, y, i)
     end
     @test filesize(gif(anim, show_msg = false).filename) > 10_000
@@ -42,22 +42,22 @@ end
     @test filesize(webm(anim, show_msg = false).filename) > 10_000
     @test filesize(PlotsBase.apng(anim, show_msg = false).filename) > 10_000
 
-    @gif for i in 1:n
+    @gif for i ∈ 1:n
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end every 5
 
-    @gif for i in 1:n
+    @gif for i ∈ 1:n
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end when i % 5 == 0
 
-    @gif for i in 1:n
+    @gif for i ∈ 1:n
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end when i % 5 == 0 fps = 10
 
     @test_throws LoadError macroexpand(
         @__MODULE__,
         quote
-            @gif for i in 1:n
+            @gif for i ∈ 1:n
                 circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
             end when i % 5 == 0 every 10 # cannot use every and when together
         end,
@@ -66,13 +66,13 @@ end
     @test_nowarn macroexpand(
         @__MODULE__,
         quote
-            @gif for i in 1:n
+            @gif for i ∈ 1:n
                 circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
             end asdf = bla #asdf is allowed
         end,
     )
 
-    anim = PlotsBase.@apng for i in 1:n
+    anim = PlotsBase.@apng for i ∈ 1:n
         circleplot(x, y, i, line_z = 1:n, cbar = false, framestyle = :zerolines)
     end every 5
     @test showable(MIME("image/png"), anim)
@@ -81,7 +81,7 @@ end
 @testset "html" begin
     pl = plot([sin, cos], zeros(0), leg = false, xlims = (0, 2π), ylims = (-1, 1))
     anim = Animation()
-    for x in range(0, stop = 2π, length = 10)
+    for x ∈ range(0, stop = 2π, length = 10)
         push!(pl, x, Float64[sin(x), cos(x)])
         frame(anim)
     end
