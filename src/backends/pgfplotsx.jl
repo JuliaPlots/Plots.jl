@@ -267,7 +267,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
             for (series_index, series) in enumerate(series_list(sp))
                 # give each series a uuid for fillbetween
-                series_id = uuid4()
+                series_id = maximum(values(_pgfplotsx_series_ids),init=0) + 1
                 _pgfplotsx_series_ids[Symbol("$series_index")] = series_id
                 opt = series.plotattributes
                 st = series[:seriestype]
