@@ -20,7 +20,7 @@ mutable struct Series
 end
 
 @recipe function f(s::Series)
-    for (k,v) in s.plotattributes
+    for (k, v) in s.plotattributes
         k == :subplot && continue
         plotattributes[k] = v
     end
