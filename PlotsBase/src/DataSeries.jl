@@ -21,11 +21,13 @@ export get_linestyle,
     get_markercolor,
     get_markeralpha
 
+import Base.show
 import ..Commons: get_gradient, get_subplot, _series_defaults
 import ..PlotsBase
 
 using ..PlotsBase: DefaultsDict, RecipesPipeline, get_attr_symbol, KW
 using ..PlotUtils: ColorGradient, plot_color
+using ..RecipesBase: @recipe
 using ..Commons
 
 mutable struct Series
