@@ -32,6 +32,14 @@ mutable struct Series
     plotattributes::DefaultsDict
 end
 
+@recipe function f(s::Series)
+    for (k, v) in s.plotattributes
+        k == :subplot && continue
+        plotattributes[k] = v
+    end
+    ()
+end
+
 Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]
 Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
