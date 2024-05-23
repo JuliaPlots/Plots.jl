@@ -21,7 +21,7 @@ end
 
 @recipe function f(s::Series)
     for (k, v) in s.plotattributes
-        k == :subplot && continue
+        k in (:subplot, :yerror, :xerror, :zerror) && continue
         plotattributes[k] = v
     end
     ()
