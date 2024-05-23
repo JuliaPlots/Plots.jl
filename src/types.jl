@@ -19,6 +19,14 @@ mutable struct Series
     plotattributes::DefaultsDict
 end
 
+@recipe function f(s::Series)
+    for (k, v) in s.plotattributes
+        k in (:subplot, :yerror, :xerror, :zerror) && continue
+        plotattributes[k] = v
+    end
+    ()
+end
+
 # a single subplot
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
