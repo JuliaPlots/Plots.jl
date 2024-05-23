@@ -21,15 +21,25 @@ export get_linestyle,
     get_markercolor,
     get_markeralpha
 
+import Base.show
 import ..Commons: get_gradient, get_subplot, _series_defaults
 import ..PlotsBase
 
 using ..PlotsBase: DefaultsDict, RecipesPipeline, get_attr_symbol, KW
 using ..PlotUtils: ColorGradient, plot_color
+using ..RecipesBase: @recipe
 using ..Commons
 
 mutable struct Series
     plotattributes::DefaultsDict
+end
+
+@recipe function f(s::Series)
+    for (k, v) in s.plotattributes
+        k in (:subplot, :yerror, :xerror, :zerror) && continue
+        plotattributes[k] = v
+    end
+    ()
 end
 
 Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]

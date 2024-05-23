@@ -20,6 +20,12 @@ using OffsetArrays
     end
 end
 
+@testset "Series" begin
+    pl = plot(1:3, yerror = 1)
+    @test plot(pl[1][1])[1][1][:primary] == true
+    @test plot(pl[1][2])[1][1][:primary] == false
+    @test isequal(plot(pl[1][2])[1][1][:y], pl[1][2][:y])
+end
 @testset "lens!" begin
     pl = plot(1:5)
     lens!(pl, [1, 2], [1, 2], inset = (1, bbox(0.0, 0.0, 0.2, 0.2)), colorbar = false)
