@@ -47,6 +47,7 @@ include("gruvbox.jl")
 include("sheet.jl")
 include("dao.jl")
 include("dracula.jl")
+include("rose_pine.jl")
 
 
 const _themes = Dict{Symbol, PlotTheme}([
@@ -67,7 +68,10 @@ const _themes = Dict{Symbol, PlotTheme}([
     :juno => _juno,
     :lime => _lime,
     :orange => _orange,
-    :dracula => _dracula
+    :dracula => _dracula,
+    :rose_pine => _rose_pine,
+    :rose_pine_dawn => _rose_pine_dawn
+
 ])
 
 
