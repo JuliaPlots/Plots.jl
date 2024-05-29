@@ -15,7 +15,7 @@ function get_pgf_axes(pl)
     Plots.pgfx_axes(pl.o)
 end
 
-with(:pgfplotsx) do
+Plots.with(:pgfplotsx) do
     pl = plot(1:5)
     axis = first(get_pgf_axes(pl))
     @test pl.o.the_plot isa PGFPlotsX.TikzDocument

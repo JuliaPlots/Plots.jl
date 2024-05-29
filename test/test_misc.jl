@@ -20,7 +20,7 @@ end
 end
 
 @testset "NoFail" begin
-    with(:unicodeplots) do
+    Plots.with(:unicodeplots) do
         @test backend() == Plots.UnicodePlotsBackend()
 
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
@@ -223,7 +223,7 @@ end
 
 @testset "wrap" begin
     # not sure what is intended here ...
-    wrapped = wrap([:red, :blue])
+    wrapped = Plots.wrap([:red, :blue])
     @test !isempty(wrapped)
     @test scatter(1:2, color = wrapped) isa Plots.Plot
 end
@@ -241,7 +241,7 @@ end
     @test plot(skipmissing(1:5)) isa Plots.Plot
 end
 
-with(:gr) do
+Plots.with(:gr) do
     @testset "text" begin
         io = PipeBuffer()
         x = y = range(-3, 3, length = 10)

@@ -1,5 +1,5 @@
 using Plots, Test
-with(:plotly) do
+Sys.isunix() && Plots.with(:plotly) do
     @testset "Basic" begin
         @test backend() == Plots.PlotlyBackend()
 

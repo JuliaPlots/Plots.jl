@@ -29,7 +29,7 @@ macro test_save(fmt)
     end |> esc
 end
 
-with(:gr) do
+Plots.with(:gr) do
     @test Plots.defaultOutputFormat(plot()) == "png"
     @test Plots.addExtension("foo", "bar") == "foo.bar"
 
@@ -39,37 +39,39 @@ with(:gr) do
     @test_save :ps
 end
 
-with(:unicodeplots) do
+Plots.with(:unicodeplots) do
     @test_save :txt
     if Plots.UnicodePlots.get_font_face() ≢ nothing
         @test_save :png
     end
 end
 
-with(:plotlyjs) do
-    @test_save :html
-    @test_save :json
-    @test_save :pdf
-    @test_save :png
-    @test_save :svg
-    # @test_save :eps
-end
+if Sys.isunix()
+    Plots.with(:plotlyjs) do
+        @test_save :html
+        @test_save :json
+        @test_save :pdf
+        @test_save :png
+        @test_save :svg
+        # @test_save :eps
+    end
 
-with(:plotly) do
-    @test_save :pdf
-    @test_save :png
-    @test_save :svg
-    @test_save :html
+    Plots.with(:plotly) do
+        @test_save :pdf
+        @test_save :png
+        @test_save :svg
+        @test_save :html
+    end
 end
 
 if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
-    with(:pgfplotsx) do
+    Plots.with(:pgfplotsx) do
         @test_save :tex
         @test_save :png
         @test_save :pdf
     end
 
-    with(:pythonplot) do
+    Plots.with(:pythonplot) do
         @test_save :pdf
         @test_save :png
         @test_save :svg
@@ -79,14 +81,14 @@ if Sys.islinux() && Sys.which("pdflatex") ≢ nothing
 end
 
 #=
-with(:gaston) do
+Plots.with(:gaston) do
     @test_save :png
     @test_save :pdf
     @test_save :eps
     @test_save :svg
 end
 
-with(:inspectdr) do
+Plots.with(:inspectdr) do
     @test_save :png
     @test_save :pdf
     @test_save :eps
@@ -95,7 +97,7 @@ end
 =#
 
 @testset "html" begin
-    with(:gr) do
+    Plots.with(:gr) do
         io = PipeBuffer()
         pl = plot(1:2)
         pl.attr[:html_output_format] = :auto

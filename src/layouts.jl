@@ -211,10 +211,32 @@ grid(args...; kw...) = GridLayout(args...; kw...)
 function GridLayout(
     dims...;
     parent = RootLayout(),
-    widths = zeros(dims[2]),
-    heights = zeros(dims[1]),
+    widths = nothing,
+    heights = nothing,
     kw...,
 )
+    # Check the values for heights and widths if values are provided
+    if heights !== nothing
+        if sum(heights) != 1
+            error("The sum of heights must be 1!")
+        end
+        if all(x -> 0 < x < 1, heights) == false
+            error("Values for heights must be in the range (0, 1)!")
+        end
+    else
+        heights = zeros(dims[1])
+    end
+    if widths !== nothing
+        if sum(widths) != 1
+            error("The sum of widths must be 1!")
+        end
+        if all(x -> 0 < x < 1, widths) == false
+            error("Values for widths must be in the range (0, 1)!")
+        end
+    else
+        widths = zeros(dims[2])
+    end
+
     grid = Matrix{AbstractLayout}(undef, dims...)
     layout = GridLayout(
         parent,

@@ -1,7 +1,7 @@
 name = "Plots"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 author = ["Tom Breloff (@tbreloff)"]
-version = "1.39.0-dev"
+version = "1.40.5"
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -22,7 +22,6 @@ Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PlotThemes = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -41,34 +40,20 @@ UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 UnitfulLatexify = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 
-[weakdeps]
-FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-
-[extensions]
-FileIOExt = "FileIO"
-GeometryBasicsExt = "GeometryBasics"
-IJuliaExt = "IJulia"
-ImageInTerminalExt = "ImageInTerminal"
-UnitfulExt = "Unitful"
-
 [compat]
 Aqua = "0.8"
 Contour = "0.5 - 0.6"
 Downloads = "1"
-FFMPEG = "0.2 - 0.4"
+FFMPEG = "0.3, 0.4"
 FixedPointNumbers = "0.6 - 0.8"
 GR = "0.69.5 - 0.73"
 Gaston = "1"
-HDF5 = "0.16"
-InspectDR = "0.4"
+HDF5 = "0.16 - 0.17"
+InspectDR = "0.5"
 JLFzf = "0.1"
 JSON = "0.21, 1"
 LaTeXStrings = "1"
-Latexify = "0.14 - 0.15, 0.16"
+Latexify = "0.14 - 0.16"
 Measures = "0.3"
 NaNMath = "0.3, 1"
 PGFPlots = "3"
@@ -79,9 +64,8 @@ PlotlyBase = "0.7 - 0.8"
 PlotlyJS = "0.18"
 PlotlyKaleido = "1"
 PrecompileTools = "1"
-Preferences = "1"
 PyPlot = "2"
-PythonPlot = "1 - 1.0.2"
+PythonPlot = "1"
 RecipesBase = "1.3.1"
 RecipesPipeline = "0.6.10"
 Reexport = "0.2, 1"
@@ -90,12 +74,19 @@ Requires = "1"
 Scratch = "1"
 Showoff = "0.3.1, 1"
 Statistics = "1"
-StatsBase = "0.33, 0.34"
+StatsBase = "0.33 - 0.34"
 UnicodeFun = "0.4"
 UnicodePlots = "3.4"
 UnitfulLatexify = "1"
 Unzip = "0.1 - 0.2"
 julia = "1.6"
+
+[extensions]
+FileIOExt = "FileIO"
+GeometryBasicsExt = "GeometryBasics"
+IJuliaExt = "IJulia"
+ImageInTerminalExt = "ImageInTerminal"
+UnitfulExt = "Unitful"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -132,4 +123,11 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "InspectDR", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
+
+[weakdeps]
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"

@@ -1,3 +1,4 @@
+using Plots, Test
 @testset "Plotting plots" begin
     pl = @test_nowarn plot(plot(1:2), plot(1:2, size = (1_200, 400)))
     @test pl[:size] == (1_200, 400)
@@ -25,6 +26,7 @@ end
         background_color = :darkgray,
         background_color_inside = :lightgray,
     )
+    @test pl.layout.heights == [0.05Plots.pct, 0.95Plots.pct]
     @test pl[:plot_title] == "My title"
     @test pl[:plot_titleindex] == 5
 

@@ -28,7 +28,7 @@
           ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
     @test Plots.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
     # GR is used during tests and it correctly overrides labelfunc(), but PGFPlotsX did not
-    with(:pgfplotsx) do
+    Plots.with(:pgfplotsx) do
         @test Plots.get_labels(:auto, 1:3, :log10) == ["10^{1}", "10^{2}", "10^{3}"]
     end
     @test Plots.get_labels(:auto, 1:3, :log10) == ["10^{1}", "10^{2}", "10^{3}"]
@@ -141,7 +141,7 @@ end
 @testset "Twinx" begin
     pl = plot(1:10, margin = 2Plots.cm)
     twpl = twinx(pl)
-    pl! = plot!(twinx(), -(1:10))
+    pl! = plot!(twpl, -(1:10))
     @test twpl[:right_margin] == 2Plots.cm
     @test twpl[:left_margin] == 2Plots.cm
     @test twpl[:top_margin] == 2Plots.cm

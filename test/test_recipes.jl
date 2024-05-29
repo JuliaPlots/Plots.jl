@@ -1,5 +1,12 @@
 using OffsetArrays
 
+@testset "Series" begin
+    pl = plot(1:3, yerror = 1)
+    @test plot(pl[1][1])[1][1][:primary] == true
+    @test plot(pl[1][2])[1][1][:primary] == false
+    @test isequal(plot(pl[1][2])[1][1][:y], pl[1][2][:y])
+end
+
 @testset "User recipes" begin
     struct LegendPlot end
     @recipe function f(plot::LegendPlot)
@@ -99,7 +106,7 @@ end
     @test Plots.seriestype_supported(Plots.NoBackend(), :line) === :no
 end
 
-with(:gr) do
+Plots.with(:gr) do
     @testset "error bars" begin
         x = y = 1:10
         yerror = fill(1, length(y))
