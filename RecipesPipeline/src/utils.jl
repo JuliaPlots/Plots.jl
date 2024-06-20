@@ -150,6 +150,7 @@ for st in (
     :volume,
     :wireframe,
     :mesh3d,
+    :spy,
 )
     @eval is3d(::Type{Val{Symbol($(string(st)))}}) = true
 end
