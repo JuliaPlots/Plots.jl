@@ -1,8 +1,9 @@
 struct NoBackend <: AbstractBackend end
 
-const _plots_project         = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
-const _current_plots_version = _plots_project.version
-const _plots_compats         = _plots_project.compat
+lazyloadPkg() = Base.require(@__MODULE__, :Pkg)
+
+const _current_plots_version = pkgversion(Plots)
+const _plots_compats         = TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))["compat"]
 
 const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
 const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
@@ -10,7 +11,7 @@ const _backend_packages     = Dict{Symbol,Symbol}()
 const _initialized_backends = Set{Symbol}()
 const _backends             = Symbol[]
 
-const _plots_deps = let toml = Pkg.TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
+const _plots_deps = let toml = TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
     merge(toml["deps"], toml["extras"])
 end
 
@@ -38,7 +39,8 @@ function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = t
     version = if pkg_id === nothing
         nothing
     else
-        get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
+        pkg = lazyloadPkg()
+        get(@invokelatest(pkg.dependencies()), pkg_id.uuid, (; version = nothing)).version
     end
     version === nothing && @warn "backend `$str` is not installed."
     version
@@ -46,14 +48,11 @@ end
 
 function _check_compat(m::Module; warn = true)
     (be_v = _check_installed(m; warn)) === nothing && return
-    if (be_c = _plots_compats[string(m)]) isa String  # julia 1.6
-        if be_v ∉ Pkg.Types.semver_spec(be_c)
-            @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c)."
-        end
-    else
-        if intersect(be_v, be_c.val) |> isempty
-            @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c.str)."
-        end
+    be_c = _plots_compats[string(m)]
+    pkg = lazyloadPkg()
+    semver = @invokelatest pkg.Types.semver_spec(be_c)
+    if @invokelatest(be_v ∉ semver)
+        @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c)."
     end
     nothing
 end
@@ -214,9 +213,10 @@ function diagnostics(io::IO = stdout)
     else
         be_name = string(backend_package_name(be))
         @info "selected `Plots` backend: $be_name, from $origin"
-        Pkg.status(
+        pkg = lazyloadPkg()
+        @invokelatest pkg.status(
             ["Plots", "RecipesBase", "RecipesPipeline", be_name];
-            mode = Pkg.PKGMODE_MANIFEST,
+            mode = pkg.PKGMODE_MANIFEST,
             io,
         )
     end
@@ -379,7 +379,9 @@ function _initialize_backend(pkg::AbstractBackend)
     @eval name === :GR ? Plots : Main begin
         import $name
         export $name
-        $(_check_compat)($name)
+        if $(QuoteNode(name)) !== :GR
+            $(_check_compat)($name)
+        end
     end
     _post_imports(pkg)
     _runtime_init(pkg)
