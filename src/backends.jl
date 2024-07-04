@@ -2,7 +2,7 @@ struct NoBackend <: AbstractBackend end
 
 lazyloadPkg() = Base.require(@__MODULE__, :Pkg)
 
-const _current_plots_version = pkgversion(Plots)
+const _current_plots_version = VersionNumber(TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))["version"])
 const _plots_compats         = TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))["compat"]
 
 const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
@@ -40,7 +40,7 @@ function _check_installed(backend::Union{Module,AbstractString,Symbol}; warn = t
         nothing
     else
         pkg = lazyloadPkg()
-        get(@invokelatest(pkg.dependencies()), pkg_id.uuid, (; version = nothing)).version
+        get(Base.invokelatest(pkg.dependencies), pkg_id.uuid, (; version = nothing)).version
     end
     version === nothing && @warn "backend `$str` is not installed."
     version
@@ -50,8 +50,8 @@ function _check_compat(m::Module; warn = true)
     (be_v = _check_installed(m; warn)) === nothing && return
     be_c = _plots_compats[string(m)]
     pkg = lazyloadPkg()
-    semver = @invokelatest pkg.Types.semver_spec(be_c)
-    if @invokelatest(be_v ∉ semver)
+    semver = Base.invokelatest(pkg.Types.semver_spec, be_c)
+    if Base.invokelatest(∉, be_v, semver)
         @warn "`$m` $be_v is not compatible with this version of `Plots`. The declared compatibility is $(be_c)."
     end
     nothing
@@ -214,7 +214,7 @@ function diagnostics(io::IO = stdout)
         be_name = string(backend_package_name(be))
         @info "selected `Plots` backend: $be_name, from $origin"
         pkg = lazyloadPkg()
-        @invokelatest pkg.status(
+        Base.invokelatest(pkg.status,
             ["Plots", "RecipesBase", "RecipesPipeline", be_name];
             mode = pkg.PKGMODE_MANIFEST,
             io,
