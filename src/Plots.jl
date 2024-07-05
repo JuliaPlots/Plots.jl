@@ -7,7 +7,7 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
     @eval Base.Experimental.@max_methods 1
 end
 
-using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
+using Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random, TOML
 using PrecompileTools, Reexport, RelocatableFolders
 using Base.Meta
 @reexport using RecipesBase
