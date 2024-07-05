@@ -214,7 +214,8 @@ function diagnostics(io::IO = stdout)
         be_name = string(backend_package_name(be))
         @info "selected `Plots` backend: $be_name, from $origin"
         pkg = lazyloadPkg()
-        Base.invokelatest(pkg.status,
+        Base.invokelatest(
+            pkg.status,
             ["Plots", "RecipesBase", "RecipesPipeline", be_name];
             mode = pkg.PKGMODE_MANIFEST,
             io,
