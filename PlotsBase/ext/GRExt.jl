@@ -1603,25 +1603,25 @@ function gr_draw_axes(sp, vp)
 end
 
 function gr_draw_axis_minorgrid_3d(sp, letter, vp)
-    ax = axis_drawing_info_3d(sp, letter)
+    ax = PlotsBase.axis_drawing_info_3d(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
     gr_draw_minorgrid(sp, axis, ax.minorgrid_segments, gr_polyline3d)
 end
 
 function gr_draw_axis_grid_3d(sp, letter, vp)
-    ax = axis_drawing_info_3d(sp, letter)
+    ax = PlotsBase.axis_drawing_info_3d(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
     gr_draw_grid(sp, axis, ax.grid_segments, gr_polyline3d)
 end
 
 function gr_draw_axis_minorgrid(sp, letter, vp)
-    ax = axis_drawing_info(sp, letter)
+    ax = PlotsBase.axis_drawing_info(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
     gr_draw_minorgrid(sp, axis, ax.minorgrid_segments)
 end
 
 function gr_draw_axis_grid(sp, letter, vp)
-    ax = axis_drawing_info(sp, letter)
+    ax = PlotsBase.axis_drawing_info(sp, letter)
     axis = sp[get_attr_symbol(letter, :axis)]
     gr_draw_grid(sp, axis, ax.grid_segments)
 end
