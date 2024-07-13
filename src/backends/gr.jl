@@ -1407,6 +1407,8 @@ function gr_draw_axes(sp, vp)
         x_bg, y_bg = RecipesPipeline.unzip(GR.wc3towc.(area_x, area_y, area_z))
         GR.fillarea(x_bg, y_bg)
 
+        foreach(letter -> gr_draw_axis_minorgrid_3d(sp, letter, vp), (:x, :y, :z))
+        foreach(letter -> gr_draw_axis_grid_3d(sp, letter, vp), (:x, :y, :z))
         foreach(letter -> gr_draw_axis_3d(sp, letter, vp), (:x, :y, :z))
     elseif ispolar(sp)
         r = gr_set_viewport_polar(vp)
@@ -1414,10 +1416,36 @@ function gr_draw_axes(sp, vp)
         rmin, rmax = axis_limits(sp, :y)
         gr_polaraxes(rmin, rmax, sp)
     elseif sp[:framestyle] !== :none
+        foreach(letter -> gr_draw_axis_minorgrid(sp, letter, vp), (:x, :y))
+        foreach(letter -> gr_draw_axis_grid(sp, letter, vp), (:x, :y))
         foreach(letter -> gr_draw_axis(sp, letter, vp), (:x, :y))
     end
     GR.settransparency(1.0)
     nothing
+end
+
+function gr_draw_axis_minorgrid_3d(sp, letter, vp)
+    ax = axis_drawing_info_3d(sp, letter)
+    axis = sp[get_attr_symbol(letter, :axis)]
+    gr_draw_minorgrid(sp, axis, ax.minorgrid_segments, gr_polyline3d)
+end
+
+function gr_draw_axis_grid_3d(sp, letter, vp)
+    ax = axis_drawing_info_3d(sp, letter)
+    axis = sp[get_attr_symbol(letter, :axis)]
+    gr_draw_grid(sp, axis, ax.grid_segments, gr_polyline3d)
+end
+
+function gr_draw_axis_minorgrid(sp, letter, vp)
+    ax = axis_drawing_info(sp, letter)
+    axis = sp[get_attr_symbol(letter, :axis)]
+    gr_draw_minorgrid(sp, axis, ax.minorgrid_segments)
+end
+
+function gr_draw_axis_grid(sp, letter, vp)
+    ax = axis_drawing_info(sp, letter)
+    axis = sp[get_attr_symbol(letter, :axis)]
+    gr_draw_grid(sp, axis, ax.grid_segments)
 end
 
 function gr_draw_axis(sp, letter, vp)
@@ -1425,8 +1453,6 @@ function gr_draw_axis(sp, letter, vp)
     axis = sp[get_attr_symbol(letter, :axis)]
 
     # draw segments
-    gr_draw_grid(sp, axis, ax.grid_segments)
-    gr_draw_minorgrid(sp, axis, ax.minorgrid_segments)
     gr_draw_spine(sp, axis, ax.segments)
     gr_draw_border(sp, axis, ax.border_segments)
     gr_draw_ticks(sp, axis, ax.tick_segments)
@@ -1442,8 +1468,6 @@ function gr_draw_axis_3d(sp, letter, vp)
     axis = sp[get_attr_symbol(letter, :axis)]
 
     # draw segments
-    gr_draw_grid(sp, axis, ax.grid_segments, gr_polyline3d)
-    gr_draw_minorgrid(sp, axis, ax.minorgrid_segments, gr_polyline3d)
     gr_draw_spine(sp, axis, ax.segments, gr_polyline3d)
     gr_draw_border(sp, axis, ax.border_segments, gr_polyline3d)
     gr_draw_ticks(sp, axis, ax.tick_segments, gr_polyline3d)
