@@ -671,11 +671,11 @@ function main()
         "Contributing" => "contributing.md",
         "Ecosystem" => [
             # "StatsPlots" => "generated/statsplots.md", #TODO: uncomment once StatsPlots is ready
-            "GraphRecipes" => [
-                "Introduction" => "GraphRecipes/introduction.md",
-                "Examples" => "GraphRecipes/examples.md",
-                "Attributes" => "generated/graph_attributes.md",
-            ],
+            # "GraphRecipes" => [
+            #     "Introduction" => "GraphRecipes/introduction.md",
+            #     "Examples" => "GraphRecipes/examples.md",
+            #     "Attributes" => "generated/graph_attributes.md",
+            # ], #TODO: uncomment once GraphRecipes is ready
             "UnitfulExt" => [
                 "Introduction" => "UnitfulExt/unitfulext.md",
                 "Examples" => [
