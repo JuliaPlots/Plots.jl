@@ -302,6 +302,7 @@ const _base_supported_args = [
     :permute,
     :unitformat,
 ]
+extra_supported_kws(pkg::AbstractBackend) = []
 
 function merge_with_base_supported(v::AVec)
     v = vcat(v, _base_supported_args)

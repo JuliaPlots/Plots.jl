@@ -1558,6 +1558,12 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
             end
         end
     end
+    supported_extra_kws = extra_supported_kws(pkg)
+    for kw in keys(extra_kwargs)
+        if kw ∉ supported_extra_kws
+            @warn "Extra keyword argument $kw not explicitly supported with $pkg.  Choose from: $(join(supported_extra_kws, ", "))"
+        end
+    end
     extra_kwargs
 end
 

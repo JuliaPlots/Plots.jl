@@ -2,6 +2,10 @@
 
 is_marker_supported(::PythonPlotBackend, shape::Shape) = true
 
+# As this gets longer perhaps it should be a Set
+extra_supported_kws(::PythonPlotBackend) =
+    [:levels, :mincnt, :edgecolors, :extend3d, :colors, :cmap, :facecolors, :shade]
+
 # problem: github.com/tbreloff/Plots.jl/issues/308
 # solution: hack from @stevengj: github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
 let otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
