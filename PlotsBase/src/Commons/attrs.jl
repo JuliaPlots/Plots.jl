@@ -410,6 +410,7 @@ const _plot_defaults = KW(
     :thickness_scaling   => 1,
     :display_type        => :auto,
     :warn_on_unsupported => true,
+    :safe_saving         => true,
     :extra_plot_kwargs   => Dict(),
     :extra_kwargs        => :series,    # directs collection of extra_kwargs
 )
@@ -1156,7 +1157,11 @@ label_to_string(label::Nothing, series_plotindex) = ""
 label_to_string(label::Missing, series_plotindex) = ""
 label_to_string(label::Symbol, series_plotindex) =
     if label ≡ :auto
+<<<<<<< HEAD
         string("y", series_plotindex)
+=======
+        return label_auto(series_plotindex)
+>>>>>>> d6b3aaf8 (safe-saving arg)
     elseif label ≡ :none
         ""
     else
