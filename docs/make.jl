@@ -3,7 +3,11 @@ using MacroTools: rmlines
 using PlotThemes, Plots, RecipesBase, RecipesPipeline
 using Documenter, DemoCards, Literate, StableRNGs, Glob
 using JSON
-
+import PythonPlot
+import PGFPlotsX
+import PlotlyJS
+import Gaston
+import UnicodePlots
 # import StatsPlots
 
 const SRC_DIR = joinpath(@__DIR__, "src")
@@ -740,6 +744,7 @@ function main()
         @time makedocs(;
             source = work,
             format = Documenter.HTML(;
+                size_threshold = nothing,
                 prettyurls = get(ENV, "CI", nothing) == "true",
                 assets = ["assets/favicon.ico", gallery_assets...],
                 collapselevel = 2,
