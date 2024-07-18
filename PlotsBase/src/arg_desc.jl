@@ -83,6 +83,7 @@ const _arg_desc = KW(
                                  Example: `pgfplotsx(); scatter(1:5, extra_kwargs=Dict(:subplot=>Dict("axis line shift" => "10pt"))`."""),
     :fontfamily               => (Union{AStr,Symbol}, "Default font family for title, legend entries, tick labels and guides."),
     :warn_on_unsupported      => (Bool, "Warn on unsupported attributes, series types and marker shapes."),
+    :safe_saving              => (Bool, "Do not override existing files when saving to disk. Choose from (true, false), i.e. `plot(rand(10), safe_saving=false)` for enable file overriding"),
 
     # subplot args
     :title                       => (AStr, "Subplot title."),
