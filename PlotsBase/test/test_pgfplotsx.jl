@@ -28,7 +28,7 @@ with(:pgfplotsx) do
 
     @testset "Legends" begin
         pl = plot(rand(5, 2), lab = ["1" ""], arrow = true)
-        scatter!(pl, rand(5))
+        scatter!(pl, rand(5), label=:auto)
         axis_contents = first(get_pgf_axes(pl)).contents
         leg_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis_contents)
         series = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
@@ -93,8 +93,8 @@ with(:pgfplotsx) do
     end
 
     @testset "Plot in pieces" begin
-        pl = plot(rand(100) / 3, reg = true, fill = (0, :green))
-        scatter!(pl, rand(100), markersize = 6, c = :orange)
+        pl = plot(rand(100) / 3, reg = true, fill = (0, :green), label=:auto)
+        scatter!(pl, rand(100), markersize = 6, c = :orange, label=:auto)
         axis_contents = first(get_pgf_axes(pl)).contents
         leg_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis_contents)
         series = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
