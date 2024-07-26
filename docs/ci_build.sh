@@ -54,6 +54,7 @@ export JULIA_CONDAPKG_BACKEND=MicroMamba
 
 julia='xvfb-run -a julia --color=yes --project=docs'
 
+$julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaPlots/Plots.jl", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3]), subdir="RecipesPipeline");' #FIXME: not needed when registered
 $julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaPlots/Plots.jl", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3]), subdir="PlotsBase");' #FIXME: not needed when registered
 $julia -e '
   using Pkg; Pkg.add("CondaPkg")
