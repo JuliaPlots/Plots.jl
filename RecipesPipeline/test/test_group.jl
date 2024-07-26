@@ -46,4 +46,16 @@ lp = map(i -> "xx" * "$(i % 599)", 1:2_000)
           RecipesPipeline.GroupBy
     @test RecipesPipeline._extract_group_attributes(Dict(:A => [1], :B => [2])) isa
           RecipesPipeline.GroupBy
+
+    @testset "_filter_input_data!" begin
+        filtered_keys = [:x, :y, :z, :xerror, :yerror, :zerror]
+        orig_akw = Dict{Symbol,Any}(k => rand(10) for k in filtered_keys)
+        orig_akw[:idxfilter] = [1,4,10]
+
+        akw = deepcopy(orig_akw)
+        RecipesPipeline._filter_input_data!(akw)
+        for k in filtered_keys
+            @test akw[k] == orig_akw[k][orig_akw[:idxfilter]]
+        end
+    end
 end
