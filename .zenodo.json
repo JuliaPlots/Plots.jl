@@ -770,6 +770,12 @@
             "name": "Syver Døving Agdestein",
             "orcid": "0000-0002-1589-2916", 
             "type": "Other"
+        },
+        {
+            "affiliation": "Flatiron Institute",
+            "name": "Lukas Weber",
+            "orcid": "0000-0003-4949-5529",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
