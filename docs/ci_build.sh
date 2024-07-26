@@ -80,6 +80,7 @@ if [ "$GITHUB_REPOSITORY" == 'JuliaPlots/PlotDocs.jl' ]; then
   $julia -e 'using Pkg; Pkg.add(PackageSpec(name="Plots", rev="master"))'
   $julia docs/make.jl
 elif [ "$GITHUB_REPOSITORY" == 'JuliaPlots/Plots.jl' ]; then
+  $julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaPlots/Plots.jl", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3]), subdir="PlotsBase");'
   $julia -e 'using Pkg; Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()'
   $julia -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl") do; include("docs/make.jl"); end'
 else
