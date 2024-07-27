@@ -1,6 +1,7 @@
 name: benchmarks
 
 on:
+  workflow_dispatch:
   pull_request:
 
 concurrency: 

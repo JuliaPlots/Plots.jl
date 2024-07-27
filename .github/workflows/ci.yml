@@ -1,6 +1,7 @@
 name: ci
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [master, v2]
@@ -37,10 +38,7 @@ jobs:
         include:
           - os: ubuntu-latest
             experimental: true
-            version: '~1.11.0-0'  # upcoming julia version (`alpha`, `beta` or `rc`)
-          - os: ubuntu-latest
-            experimental: true
-            version: 'nightly'
+            version: 'pre'  # upcoming julia version (`alpha`, `beta` or `rc`)
 
     steps:
       - uses: actions/checkout@v4
