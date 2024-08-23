@@ -64,6 +64,17 @@ end
     @test_throws ErrorException plot(map(_ -> plot(1:2), 1:5)...; layout = grid(2, 2))
 end
 
+@testset "Allowed grid widths/heights" begin
+    @test_nowarn grid(2, 1, heights = [0.5, 0.5])
+    @test_nowarn grid(4, 1, heights = [0.3, 0.3, 0.3, 0.1])
+    @test_nowarn grid(1, 2, widths = [0.5, 0.5])
+    @test_nowarn grid(1, 4, widths = [0.3, 0.3, 0.3, 0.1])
+    @test_throws ErrorException grid(2, 1, heights = [0.5, 0.4])
+    @test_throws ErrorException grid(4, 1, heights = [1.5, -0.5])
+    @test_throws ErrorException grid(1, 2, widths = [0.5, 0.4])
+    @test_throws ErrorException grid(1, 4, widths = [1.5, -0.5])
+end
+
 @testset "Invalid viewport" begin
     # github.com/JuliaPlots/Plots.jl/issues/2804
     pl = plot(1, layout = (10, 2))
