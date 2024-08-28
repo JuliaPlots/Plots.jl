@@ -1,8 +1,9 @@
 name: invalidations
 on:
+  workflow_dispatch:
   pull_request:
   push:
-    branches: [master]
+    branches: [v2]
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
