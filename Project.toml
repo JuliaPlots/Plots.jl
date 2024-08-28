@@ -1,7 +1,7 @@
 name = "Plots"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 author = ["Tom Breloff (@tbreloff)"]
-version = "1.40.7"
+version = "1.40.8"
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -41,13 +41,27 @@ UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 UnitfulLatexify = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 
+[weakdeps]
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[extensions]
+FileIOExt = "FileIO"
+GeometryBasicsExt = "GeometryBasics"
+IJuliaExt = "IJulia"
+ImageInTerminalExt = "ImageInTerminal"
+UnitfulExt = "Unitful"
+
 [compat]
 Aqua = "0.8"
 Contour = "0.5 - 0.6"
 Downloads = "1"
 FFMPEG = "0.3, 0.4"
 FixedPointNumbers = "0.6 - 0.8"
-GR = "0.69.5 - 0.73"
+GR = "0.73"
 Gaston = "1"
 HDF5 = "0.16 - 0.17"
 InspectDR = "0.5"
@@ -63,7 +77,7 @@ PlotThemes = "2, 3"
 PlotUtils = "1"
 PlotlyBase = "0.7 - 0.8"
 PlotlyJS = "0.18"
-PlotlyKaleido = "1"
+PlotlyKaleido = "1,2"
 PrecompileTools = "1"
 PyPlot = "2"
 PythonPlot = "1"
@@ -81,13 +95,6 @@ UnicodePlots = "3.4"
 UnitfulLatexify = "1"
 Unzip = "0.1 - 0.2"
 julia = "1.6"
-
-[extensions]
-FileIOExt = "FileIO"
-GeometryBasicsExt = "GeometryBasics"
-IJuliaExt = "IJulia"
-ImageInTerminalExt = "ImageInTerminal"
-UnitfulExt = "Unitful"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -125,10 +132,3 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
 test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
-
-[weakdeps]
-FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"

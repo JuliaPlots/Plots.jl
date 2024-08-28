@@ -22,6 +22,10 @@ for (mime, fmt) in (
     "image/svg+xml" => "svg",
     "image/eps" => "eps",
 )
-    @eval _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend}) =
+    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend})
+        if !PlotlyKaleido.is_running()
+            PlotlyKaleido.restart()
+        end
         PlotlyKaleido.savefig(io, plotlybase_syncplot(plt), format = $fmt)
+    end
 end
