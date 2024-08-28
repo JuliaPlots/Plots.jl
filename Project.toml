@@ -18,7 +18,6 @@ Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Measures = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PlotThemes = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
@@ -40,6 +39,20 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 UnitfulLatexify = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
+
+[weakdeps]
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[extensions]
+FileIOExt = "FileIO"
+GeometryBasicsExt = "GeometryBasics"
+IJuliaExt = "IJulia"
+ImageInTerminalExt = "ImageInTerminal"
+UnitfulExt = "Unitful"
 
 [compat]
 Aqua = "0.8"
@@ -82,13 +95,6 @@ UnitfulLatexify = "1"
 Unzip = "0.1 - 0.2"
 julia = "1.6"
 
-[extensions]
-FileIOExt = "FileIO"
-GeometryBasicsExt = "GeometryBasics"
-IJuliaExt = "IJulia"
-ImageInTerminalExt = "ImageInTerminal"
-UnitfulExt = "Unitful"
-
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
@@ -125,10 +131,3 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
 test = ["Aqua", "Colors", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "Gtk", "ImageMagick", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyBase", "PyPlot", "PythonPlot", "PlotlyKaleido", "HDF5", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "StatsPlots", "Test", "TestImages", "UnicodePlots", "Unitful", "VisualRegressionTests"]
-
-[weakdeps]
-FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
