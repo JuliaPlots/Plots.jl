@@ -259,7 +259,7 @@ backend(sym::Symbol) =
     end
 
 const _deprecated_backends =
-    [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize, :pgfplots]
+    [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize, :pgfplots, :inspect_dr, :pyplot]
 
 # ---------------------------------------------------------
 
