@@ -164,6 +164,8 @@ const _shape_keys = Symbol[
     :hline,
     :+,
     :x,
+    :uparrow,
+    :downarrow,
 ]
 
 const _all_markers = vcat(:none, :auto, _shape_keys)  # sort(collect(keys(_shapes))))

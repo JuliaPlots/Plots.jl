@@ -1263,6 +1263,7 @@ function gr_add_legend(sp, leg, viewport_area)
 
             if (msh = series[:markershape]) ≢ :none
                 msz = max(first(series[:markersize]), 0)
+                msh = msh in gr_markertypes ? msh : Shape(msh)
                 msw = max(first(series[:markerstrokewidth]), 0)
                 mfac = 0.8 * lfps / (msz + 0.5 * msw + 1e-20)
                 gr_draw_marker(
@@ -2047,6 +2048,7 @@ function gr_draw_markers(
         ms = get_thickness_scaling(series) * _cycle(msize, i)
         msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
         shape = _cycle(shapes, i)
+        shape = shape in gr_markertypes ? shape : Shape(shape)
         for j ∈ rng
             gr_draw_marker(
                 series,
