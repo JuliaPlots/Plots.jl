@@ -1296,7 +1296,61 @@ end
     ()
 end
 @deps quiver shape path
+@userplot VectorFieldPlot
 
+@recipe function f(vfp::VectorFieldPlot)
+    if length(vfp.args) != 1 || !isa(vfp.args[1], Function)
+        error("VectorFieldPlot expects a single function as an argument")
+    end
+    
+    vecfunc = vfp.args[1]
+
+    # Default values
+    steps = get(plotattributes, :steps, 11)
+    vf_xlims = get(plotattributes, :vf_xlims, (-10, 10))  # Vector field x limits
+    vf_ylims = get(plotattributes, :vf_ylims, (-10, 10))  # Vector field y limits
+    plot_xlims = get(plotattributes, :xlims, (-10, 10))  # Plot x limits
+    plot_ylims = get(plotattributes, :ylims, (-10, 10))  # Plot y limits
+
+    # Generate 2D grid for vector field
+    x = range(vf_xlims[1], vf_xlims[2], length=steps)
+    y = range(vf_ylims[1], vf_ylims[2], length=steps)
+    X = [xi for xi in x, _ in y]
+    Y = [yi for _ in x, yi in y]
+
+    # Compute vector components
+    U = [vecfunc(xi, yi)[1] for xi in x, yi in y]
+    V = [vecfunc(xi, yi)[2] for xi in x, yi in y]
+
+    # Scale vectors
+    max_magnitude = maximum(sqrt.(U.^2 .+ V.^2))
+    scale_factor = 1.5 * min(step(x), step(y)) / max_magnitude  # Increased from 0.8 to 1.2 to lengthen the tails
+
+    # Plot attributes
+    aspect_ratio --> :equal
+    xlabel --> "x"
+    ylabel --> "y"
+    title --> "Vector Field"
+    xlims --> plot_xlims
+    ylims --> plot_ylims
+    xticks --> range(plot_xlims[1], plot_xlims[2], length=11)
+    yticks --> range(plot_ylims[1], plot_ylims[2], length=11)
+    grid --> true
+    minorgrid --> true
+    gridlinewidth --> 0.5
+    gridstyle --> :dot
+    gridalpha --> 0.7
+    legend --> false
+
+    # Create the quiver plot
+    @series begin
+        seriestype := :quiver
+        quiver := (scale_factor .* U, scale_factor .* V)
+        linewidth --> 1.0  # Increased from 0.8 to 1.0 to make tails more visible
+        arrow := (:arrow, 0.1)  # Added arrow attribute to make arrowheads smaller
+        X, Y
+    end
+end
 # --------------------------------------------------------------------
 # 1 argument
 # --------------------------------------------------------------------
