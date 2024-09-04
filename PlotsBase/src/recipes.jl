@@ -332,6 +332,11 @@ end
     if plotattributes[:markershape] ≢ :none
         primary := false
         @series begin
+            markershape := if plotattributes[:markershape] === :arrow
+                [isless(yi, 0.0) ? :downarrow : :uparrow for yi in y]
+            else
+                plotattributes[:markershape]
+            end
             seriestype := :scatter
             x := x
             y := y
