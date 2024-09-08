@@ -63,6 +63,9 @@ const blacklist = if VERSION.major == 1 && VERSION.minor ≥ 9
 else
     []
 end
+if Sys.isapple()
+    push!(blacklist, 50)  # FIXME: https://github.com/jheinen/GR.jl/issues/550
+end
 
 for name ∈ (
     "misc",
