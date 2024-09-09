@@ -105,6 +105,7 @@ end
 function image_comparison_facts(
     pkg::Symbol;
     skip = [],          # skip these examples (int index)
+    broken = [],        # known broken examples (int index)
     only = nothing,     # limit to these examples (int index)
     debug = false,      # print debug information ?
     sigma = [1, 1],     # number of pixels to "blur"
@@ -112,7 +113,11 @@ function image_comparison_facts(
 )
     for i ∈ setdiff(1:length(PlotsBase._examples), skip)
         if only ≡ nothing || i in only
-            @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
+            if i ∈ broken
+                @test_broken success(image_comparison_tests(pkg, i; debug, sigma, tol))
+            else
+                @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
+            end
         end
     end
 end
@@ -141,7 +146,8 @@ end
         image_comparison_facts(
             :gr,
             tol = PLOTS_IMG_TOL,
-            skip = vcat(PlotsBase._backend_skips[:gr], blacklist),
+            skip = vcat(PlotsBase._backend_skips[:gr]),
+            broken = broken_examples,
         )
     end
 end

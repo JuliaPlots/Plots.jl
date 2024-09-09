@@ -54,17 +54,10 @@ is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 ref_name(i) = "ref" * lpad(i, 3, '0')
 
-const blacklist = if VERSION.major == 1 && VERSION.minor ≥ 9
-    [
-        25,
-        30, # FIXME: remove, when StatsPlots supports Plots v2
-        41,
-    ]  # FIXME: github.com/JuliaLang/julia/issues/47261
+const broken_examples = if Sys.isapple()
+    [50] # FIXME: https://github.com/jheinen/GR.jl/issues/550
 else
     []
-end
-if Sys.isapple()
-    push!(blacklist, 50)  # FIXME: https://github.com/jheinen/GR.jl/issues/550
 end
 
 for name ∈ (
