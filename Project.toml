@@ -25,6 +25,7 @@ UnitfulExt = "Unitful"
 
 [compat]
 GR = "0.73, 1"
+ImageInTerminal = "0.5"
 PlotsBase = "0.1"
 PrecompileTools = "1"
 Reexport = "1"
