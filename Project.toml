@@ -24,6 +24,7 @@ ImageInTerminalExt = "ImageInTerminal"
 UnitfulExt = "Unitful"
 
 [compat]
+FileIO = "1"
 GR = "0.73, 1"
 IJulia = "1"
 PlotsBase = "0.1"
