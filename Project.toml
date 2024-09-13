@@ -25,6 +25,7 @@ UnitfulExt = "Unitful"
 
 [compat]
 GR = "0.73, 1"
+IJulia = "1"
 PlotsBase = "0.1"
 PrecompileTools = "1"
 Reexport = "1"
