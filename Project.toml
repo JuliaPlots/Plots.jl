@@ -24,11 +24,15 @@ ImageInTerminalExt = "ImageInTerminal"
 UnitfulExt = "Unitful"
 
 [compat]
+FileIO = "1"
 GR = "0.73, 1"
 ImageInTerminal = "0.5"
+GeometryBasics = "0.4"
+IJulia = "1"
 PlotsBase = "0.1"
 PrecompileTools = "1"
 Reexport = "1"
+Unitful = "1"
 julia = "1.9"
 
 [extras]
