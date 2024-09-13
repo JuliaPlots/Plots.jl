@@ -104,7 +104,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 
     # update markerstrokecolor
     plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] ≡ :match
-        get_series_color(plotattributes[:seriescolor], sp, plotIndex, stype)
+        plot_color(sp[:foreground_color_subplot])
     elseif plotattributes[:markerstrokecolor] ≡ :auto
         get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
     else

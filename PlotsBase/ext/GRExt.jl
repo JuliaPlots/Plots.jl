@@ -227,6 +227,7 @@ const gr_markertypes = (
     vline = -30,
     hline = -31,
 )
+const gr_marker_keys = keys(gr_markertypes)
 const gr_haligns = (
     left = GR.TEXT_HALIGN_LEFT,
     hcenter = GR.TEXT_HALIGN_CENTER,
@@ -823,7 +824,7 @@ alignment(symb) =
 
 # --------------------------------------------------------------------------------------
 function gr_get_markershape(s::Symbol)
-    s in gr_markertypes ? s : Shape(s)
+    s in gr_marker_keys ? s : Shape(s)
 end
 
 function gr_set_gradient(c)

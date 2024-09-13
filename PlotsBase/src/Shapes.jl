@@ -135,8 +135,8 @@ const _shapes = KW(
     :star6     => makestar(6),
     :star7     => makestar(7),
     :star8     => makestar(8),
-    :uparrow   => Shape([(-1.5,-3), (0,0), (1.5,-3)]), 
-    :downarrow => Shape([(-1.5, 3), (0, 0), (1.5, 3)]), 
+    :uparrow   => Shape([(-1.3,-1), (0, 1.5), (0,-1.5), (0, 1.5), (1.3,-1)]), 
+    :downarrow => Shape([(-1.3, 1), (0, -1.5), (0,1.5), (0, -1.5),(1.3, 1)]), 
 )
 
 Shape(k::Symbol) = deepcopy(_shapes[k])
