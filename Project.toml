@@ -26,6 +26,7 @@ UnitfulExt = "Unitful"
 [compat]
 FileIO = "1"
 GR = "0.73, 1"
+GeometryBasics = "0.4"
 IJulia = "1"
 PlotsBase = "0.1"
 PrecompileTools = "1"
