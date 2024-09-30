@@ -431,7 +431,7 @@ end
 
 gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 gr_inqtext(x, y, s::AbstractString) =
-    if (occursin('\\', s) || occursin("10^{", s)) &&
+    if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
        match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
         GR.inqtextext(x, y, s)
     else
@@ -440,7 +440,7 @@ gr_inqtext(x, y, s::AbstractString) =
 
 gr_text(x, y, s) = gr_text(x, y, string(s))
 gr_text(x, y, s::AbstractString) =
-    if (occursin('\\', s) || occursin("10^{", s)) &&
+    if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
        match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
         GR.textext(x, y, s)
     else
