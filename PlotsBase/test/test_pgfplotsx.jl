@@ -436,7 +436,7 @@ with(:pgfplotsx) do
         @test PlotsBase.pgfx_sanitize_string("A string, with 2 punctuation chars.") ==
               "A string, with 2 punctuation chars."
         @test PlotsBase.pgfx_sanitize_string("Interpolação polinomial") ==
-              raw"Interpola$\textnormal{\c{c}}$$\textnormal{\~{a}}$o polinomial"
+              raw"Interpola$\textnormal{\c{c}}$$\tilde{a}$o polinomial"
         @test PlotsBase.pgfx_sanitize_string("∫∞ ∂x") == raw"$\int$$\infty$ $\partial$x"
 
         # special LaTeX characters
