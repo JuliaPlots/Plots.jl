@@ -66,7 +66,7 @@ is_pkgeval() || @testset "Backends" begin
         @test filesize(fn) > 1_000
     end
     Sys.islinux() && for be ∈ TEST_BACKENDS
-        skip = vcat(PlotsBase._backend_skips[be], blacklist)
+        skip = vcat(PlotsBase._backend_skips[be], broken_examples)
         PlotsBase.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
         closeall()
     end
