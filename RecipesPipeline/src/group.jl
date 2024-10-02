@@ -50,7 +50,7 @@ filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
 filter_data(v, idxfilter) = v
 
 function filter_data!(plotattributes::AKW, idxfilter)
-    for s in (:x, :y, :z)
+    for s in (:x, :y, :z, :xerror, :yerror, :zerror)
         plotattributes[s] = filter_data(get(plotattributes, s, nothing), idxfilter)
     end
 end
