@@ -33,9 +33,12 @@ jobs:
           - '1.9'  # minimal declared julia compat in `Project.toml`
         experimental:
           - false
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
         arch: [x64]
         include:
+          - os: macOS-latest
+            arch: aarch64
+            version: '1'
           - os: ubuntu-latest
             experimental: true
             version: 'pre'  # upcoming julia version (`alpha`, `beta` or `rc`)
