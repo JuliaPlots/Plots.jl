@@ -32,17 +32,14 @@ jobs:
           - '1' # latest stable
         experimental:
           - false
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-13]
         arch: [x64]
-        exclude:
-          # No native binaries for Julia 1.6 on ARM macOS
-          - os: macos-latest
-            version: '1.6'
         include:
           # In its place, test Julia 1.6 on x86 macOS
-          - os: macos-13
+          - os: macos-latest
             experimental: false
-            version: '1.6'
+            arch: aarch64
+            version: '1'
           - os: ubuntu-latest
             experimental: false
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
