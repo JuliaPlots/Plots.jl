@@ -1426,14 +1426,19 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
     isempty(handles) && return
 
     leg = legend_angle(leg)
-    ncol = if (lc = sp[:legend_column]) < 0
+    ncol = if (lc = sp[:legend_column]) == -1
         nseries
-    elseif lc > 1
-        lc == nseries ||
-            @warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
+    elseif lc > nseries
+        #lc == nseries ||
+        #    @warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
+        #nseries
+        @warn "n° of legend_column=$lc is larger than n° of series=$nseries"
         nseries
-    else
+    elseif lc == 0 || lc < -1
+        @warn "n° of legend_column=$lc has undefined behaviour. Assuming vertical layout."
         1
+    else
+        lc
     end
     leg = ax.legend(
         handles,
@@ -1447,7 +1452,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
         framealpha = alpha(plot_color(sp[:legend_background_color])),
         fancybox = false,  # makes the legend box square
         # borderpad = 0.8,  # to match GR legendbox
-        ncol,
+        ncols = ncol,
     )
     leg.get_frame().set_linewidth(_py_thickness_scale(plt, 1))
     leg.set_zorder(1_000)
