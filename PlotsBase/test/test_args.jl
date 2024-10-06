@@ -33,12 +33,12 @@ end
 end
 
 @testset "Series Attributes" begin
-    pl = plot([[1, 2, 3], [2, 3, 4]], lw = 5)
-    @test hline!(deepcopy(pl), [1.75])[1].series_list[3][:label] ==
-          hline!(deepcopy(pl), [1.75], z_order = :front)[1].series_list[3][:label] ==
+    pl = plot([[1, 2, 3], [2, 3, 4]], lw = 5, label=:auto)
+    @test hline!(deepcopy(pl), [1.75], label=:auto)[1].series_list[3][:label] ==
+          hline!(deepcopy(pl), [1.75], z_order = :front, label=:auto)[1].series_list[3][:label] ==
           "y3"
-    @test hline!(deepcopy(pl), [1.75], z_order = :back)[1].series_list[1][:label] == "y3"
-    @test hline!(deepcopy(pl), [1.75], z_order = 2)[1].series_list[2][:label] == "y3"
+    @test hline!(deepcopy(pl), [1.75], z_order = :back, label=:auto)[1].series_list[1][:label] == "y3"
+    @test hline!(deepcopy(pl), [1.75], z_order = 2, label=:auto)[1].series_list[2][:label] == "y3"
     sp = pl[1]
     @test isempty(sp[1][:extra_kwargs])
     @test sp[2][:series_index] == 2
