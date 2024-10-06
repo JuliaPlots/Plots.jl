@@ -1,6 +1,7 @@
 const Options = PGFPlotsX.Options
 const Table   = PGFPlotsX.Table
 
+extra_supported_kws(::PGFPlotsXBackend) = [:add]
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
