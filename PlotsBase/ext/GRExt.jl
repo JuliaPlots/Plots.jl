@@ -2052,7 +2052,9 @@ function gr_draw_markers(
         ms = get_thickness_scaling(series) * _cycle(msize, i)
         msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
         shape = _cycle(shapes, i)
-        shape = gr_get_markershape.(shape)
+        if !(shape isa Shape)
+            shape = gr_get_markershape.(shape)
+        end
         for j ∈ rng
             gr_draw_marker(
                 series,

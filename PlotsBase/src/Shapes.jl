@@ -47,6 +47,9 @@ function Shape(x::AVec{X}, y::AVec{Y}) where {X,Y}
     return Shape(convert(Vector{X}, x), convert(Vector{Y}, y))
 end
 
+# make it broadcast like a scalar
+Base.Broadcast.broadcastable(shape::Shape) = Ref(shape)
+
 get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
 vertices(shape::Shape) = collect(zip(shape.x, shape.y))
