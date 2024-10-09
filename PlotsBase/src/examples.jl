@@ -1258,12 +1258,10 @@ _animation_examples = [02, 31]
 _backend_skips = Dict(
     :none => Int[],
     :pythonplot => Int[],
-    :gr => [25, 30],  # TODO: add back when StatsPlots is available
+    :gr => Int[],
     :plotlyjs => [
         21,
         24,
-        25,
-        30,
         49,
         50,
         51,
@@ -1314,6 +1312,10 @@ _backend_skips = Dict(
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
+# 25 and 30 require StatsPlots, which doesn't support Plots v2 yet
+for backend in keys(_backend_skips)
+    append!(_backend_skips[backend], [25, 30])
+end
 
 # ---------------------------------------------------------------------------------
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`

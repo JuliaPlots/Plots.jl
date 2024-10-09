@@ -30,16 +30,20 @@ jobs:
       matrix:
         version:
           - '1'  # latest stable
-          - '1.9'  # minimal declared julia compat in `Project.toml`
+          - '1.10'  # minimal declared julia compat in `Project.toml`
         experimental:
           - false
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
         arch: [x64]
         include:
           - os: ubuntu-latest
             experimental: true
             version: 'pre'  # upcoming julia version (`alpha`, `beta` or `rc`)
-
+          - os: macOS-latest
+            arch: aarch64
+            version: '1'
+            experimental: false
+            
     steps:
       - uses: actions/checkout@v4
 
