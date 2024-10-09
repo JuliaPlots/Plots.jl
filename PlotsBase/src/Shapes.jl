@@ -47,6 +47,9 @@ function Shape(x::AVec{X}, y::AVec{Y}) where {X,Y}
     return Shape(convert(Vector{X}, x), convert(Vector{Y}, y))
 end
 
+# make it broadcast like a scalar
+Base.Broadcast.broadcastable(shape::Shape) = Ref(shape)
+
 get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
 vertices(shape::Shape) = collect(zip(shape.x, shape.y))
@@ -135,6 +138,8 @@ const _shapes = KW(
     :star6     => makestar(6),
     :star7     => makestar(7),
     :star8     => makestar(8),
+    :uparrow   => Shape([(-1.3,-1), (0, 1.5), (0,-1.5), (0, 1.5), (1.3,-1)]), 
+    :downarrow => Shape([(-1.3, 1), (0, -1.5), (0,1.5), (0, -1.5),(1.3, 1)]), 
 )
 
 Shape(k::Symbol) = deepcopy(_shapes[k])

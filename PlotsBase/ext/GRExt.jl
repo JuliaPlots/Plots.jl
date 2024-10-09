@@ -227,6 +227,7 @@ const gr_markertypes = (
     vline = -30,
     hline = -31,
 )
+const gr_marker_keys = keys(gr_markertypes)
 const gr_haligns = (
     left = GR.TEXT_HALIGN_LEFT,
     hcenter = GR.TEXT_HALIGN_CENTER,
@@ -822,6 +823,9 @@ alignment(symb) =
     end
 
 # --------------------------------------------------------------------------------------
+function gr_get_markershape(s::Symbol)
+    s in gr_marker_keys ? s : Shape(s)
+end
 
 function gr_set_gradient(c)
     grad = _as_gradient(c)
@@ -1263,6 +1267,7 @@ function gr_add_legend(sp, leg, viewport_area)
 
             if (msh = series[:markershape]) ≢ :none
                 msz = max(first(series[:markersize]), 0)
+                msh = gr_get_markershape.(msh)
                 msw = max(first(series[:markerstrokewidth]), 0)
                 mfac = 0.8 * lfps / (msz + 0.5 * msw + 1e-20)
                 gr_draw_marker(
@@ -2047,6 +2052,9 @@ function gr_draw_markers(
         ms = get_thickness_scaling(series) * _cycle(msize, i)
         msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
         shape = _cycle(shapes, i)
+        if !(shape isa Shape)
+            shape = gr_get_markershape.(shape)
+        end
         for j ∈ rng
             gr_draw_marker(
                 series,

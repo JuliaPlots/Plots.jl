@@ -61,6 +61,7 @@ using ..ColorTypes: alpha
 using ..RecipesBase
 using ..Statistics
 using ..NaNMath
+using ..Unzip
 using ..Printf
 
 const width = Measures.width

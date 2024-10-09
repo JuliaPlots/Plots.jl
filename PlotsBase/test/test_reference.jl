@@ -18,7 +18,7 @@ reference_dir(args...) =
     else
         joinpath(homedir(), ".julia", "dev", "PlotReferenceImages.jl", args...)
     end
-reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
+reference_path(backend, version) = reference_dir("PlotsBase", string(backend), string(version))
 
 function checkout_reference_dir(dn::AbstractString)
     mkpath(dn)
@@ -54,7 +54,7 @@ end
 
 function reference_file(backend, version, i)
     # NOTE: keep ref[...].png naming consistent with `PlotDocs`
-    refdir = reference_dir("Plots", string(backend))
+    refdir = mkpath(reference_dir("PlotsBase", string(backend)))
     fn = ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
     for ver ∈ sort(VersionNumber.(readdir(refdir)), rev = true)
