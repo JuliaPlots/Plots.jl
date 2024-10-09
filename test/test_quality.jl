@@ -12,6 +12,7 @@
                 :Latexify,
                 :LaTeXStrings,
                 :Requires,
+                :Pkg,
                 :UnitfulLatexify,
             ]
         ),
