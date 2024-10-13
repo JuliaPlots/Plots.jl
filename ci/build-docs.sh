@@ -48,6 +48,7 @@ fi
 
 export LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)
 export GKSwstype=nul  # Plots.jl/issues/3664
+export MPLBACKEND=agg
 export COLORTERM=truecolor  # UnicodePlots.jl
 export PLOTDOCS_ANSICOLOR=true
 export JULIA_CONDAPKG_BACKEND=MicroMamba
