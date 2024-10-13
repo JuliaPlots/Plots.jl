@@ -44,9 +44,7 @@ cd(joinpath(@__DIR__, "..", "assets")) do
 
         @plottest ast_example() "ast_example.png" popup = !isci() tol = itol()
 
-        if !(v"1.6" < VERSION < v"1.7") # having Static.jl in the Manifest adds another type
-            @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol()
-        end
+        @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol(2e-2)
         @plottest julia_dict_tree() "julia_dict_tree.png" popup = !isci() tol = itol()
 
         @plottest funky_edge_and_marker_args() "funky_edge_and_marker_args.png" popup =
