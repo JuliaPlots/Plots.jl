@@ -54,7 +54,7 @@ export JULIA_CONDAPKG_BACKEND=MicroMamba
 
 julia='xvfb-run -a julia --color=yes --project=docs'
 
-$julia -e '
+JULIA_PKG_PRECOMPILE_AUTO=0 $julia -e '
   using Pkg; Pkg.add("CondaPkg")
   using CondaPkg; CondaPkg.resolve()
   libgcc = if Sys.islinux()
