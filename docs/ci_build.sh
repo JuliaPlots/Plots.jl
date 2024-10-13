@@ -79,7 +79,7 @@ echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $G
 $julia <<'EOF'
 using Pkg
 
-rev = split(ENV["GITHUB_REF"], "/", limit=3)[3])
+rev = split(ENV["GITHUB_REF"], "/", limit=3)[3]
 println("rev=$rev")
 
 Pkg.develop([
@@ -90,7 +90,7 @@ Pkg.develop([
   (; path="./GraphRecipes"),
   (; path="./StatsPlots"),
 ])
-Pkg.add(PackageSpec(; name="Plots", rev)
+Pkg.add(PackageSpec(; name="Plots", rev))
 
 Pkg.instantiate()
 EOF
