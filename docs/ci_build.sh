@@ -54,15 +54,6 @@ export JULIA_CONDAPKG_BACKEND=MicroMamba
 
 julia='xvfb-run -a julia --color=yes --project=docs'
 
-$julia -e 'using Pkg; Pkg.develop([
-  (; path="./RecipesBase"),
-  (; path="./RecipesPipeline"),
-  (; path="./PlotsBase"),
-  (; path="."),
-  (; path="./GraphRecipes"),
-  (; path="./StatsPlots"),
-)'  # FIXME: not needed when registered
-
 $julia -e '
   using Pkg; Pkg.add("CondaPkg")
   using CondaPkg; CondaPkg.resolve()
@@ -85,13 +76,12 @@ $julia -e '
 '
 
 echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
-if [ "$GITHUB_REPOSITORY" == 'JuliaPlots/PlotDocs.jl' ]; then
-  $julia -e 'using Pkg; Pkg.add(PackageSpec(name="Plots", rev="master"))'
-  $julia docs/make.jl
-elif [ "$GITHUB_REPOSITORY" == 'JuliaPlots/Plots.jl' ]; then
-  $julia -e 'using Pkg; Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()'
-  $julia docs/make.jl
-else
-  echo "something is wrong with $GITHUB_REPOSITORY"
-  exit 1
-fi
+$julia -e 'using Pkg; Pkg.develop([
+  (; path="./RecipesBase"),
+  (; path="./RecipesPipeline"),
+  (; path="./PlotsBase"),
+  (; path="./GraphRecipes"),
+  (; path="./StatsPlots"),
+)'
+$julia -e 'using Pkg; Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()'
+$julia docs/make.jl
