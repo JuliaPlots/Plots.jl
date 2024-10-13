@@ -92,8 +92,8 @@ jobs:
       - name: Test downstream packages
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          xvfb-run julia --color=yes ci/downstream.jl GraphRecipes || true
-          xvfb-run julia --color=yes ci/downstream.jl StatsPlots || true
+          xvfb-run julia --color=yes ci/downstream.jl GraphRecipes
+          xvfb-run julia --color=yes ci/downstream.jl StatsPlots
 
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')

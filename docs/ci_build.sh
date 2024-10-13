@@ -54,10 +54,7 @@ export JULIA_CONDAPKG_BACKEND=MicroMamba
 
 julia='xvfb-run -a julia --color=yes --project=docs'
 
-# $julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaPlots/Plots.jl", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3], subdir="RecipesBase"));' #FIXME: not needed when registered
-# $julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaPlots/Plots.jl", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3], subdir="RecipesPipeline"));' #FIXME: not needed when registered
-# $julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaPlots/Plots.jl", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3], subdir="PlotsBase"));' #FIXME: not needed when registered
-$julia -e 'using Pkg; Pkg.develop([(;path="."), (;path="./RecipesBase"), (;path="./RecipesPipeline"), (;path="./PlotsBase")]);' #FIXME: not needed when registered
+$julia -e 'using Pkg; Pkg.develop([(; path="."), (; path="./RecipesBase"), (; path="./RecipesPipeline"), (; path="./PlotsBase")]);'  # FIXME: not needed when registered
 $julia -e '
   using Pkg; Pkg.add("CondaPkg")
   using CondaPkg; CondaPkg.resolve()
@@ -78,6 +75,9 @@ $julia -e '
   CondaPkg.PkgREPL.add([libgcc..., "matplotlib"])
   CondaPkg.status()
 '
+
+$julia -e 'using Pkg; Pkg.add(PackageSpec(name="StatsPlots", rev="v2"))'  # FIXME: remove when StatsPlots v2 is out
+$julia -e 'using Pkg; Pkg.add(PackageSpec(name="GraphRecipes", rev="v2"))'  # FIXME: remove when StatsPlots v2 is out
 
 echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
 if [ "$GITHUB_REPOSITORY" == 'JuliaPlots/PlotDocs.jl' ]; then
