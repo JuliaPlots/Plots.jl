@@ -233,8 +233,8 @@ plt
 
 ```@example input_data
 # Holy plotting, Batman!
-batman = Plots.scale(make_batman(), 0.07, 0.07, (0, 0))
-batman = translate(batman, 0.7, 1.23)
+batman = PlotsBase.scale(make_batman(), 0.07, 0.07, (0, 0))
+batman = PlotsBase.translate(batman, 0.7, 1.23)
 plot!(batman, fillcolor = :black)
 ```
 

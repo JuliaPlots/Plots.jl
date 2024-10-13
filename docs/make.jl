@@ -647,14 +647,14 @@ function main()
             ],
         ],
         "Manual" => [
-            "Input Data" => "input_data.md",
+            # "Input Data" => "input_data.md",  # TODO: uncomment once StatsPlots is ready
             "Output" => "output.md",
             "Attributes" => "attributes.md",
             "Series Attributes" => "generated/attributes_series.md",
             "Plot Attributes" => "generated/attributes_plot.md",
             "Subplot Attributes" => "generated/attributes_subplot.md",
             "Axis Attributes" => "generated/attributes_axis.md",
-            "Layouts" => "layouts.md",
+            # "Layouts" => "layouts.md",  # TODO: uncomment once StatsPlots is ready
             "Recipes" => [
                 "Overview" => "recipes.md",
                 "RecipesBase" => [
