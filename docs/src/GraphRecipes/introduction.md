@@ -1,6 +1,6 @@
 ```@setup graphintro
 using Plots, GraphRecipes; gr()
-Plots.reset_defaults()
+Plots.Commons.reset_defaults()
 ```
 # GraphRecipes
 [GraphRecipes](https://github.com/JuliaPlots/GraphRecipes.jl) is a collection of recipes for visualizing graphs. Users specify a graph through an adjacency matrix, an adjacency list, or an `AbstractGraph` via [Graphs](https://github.com/JuliaGraphs/Graphs.jl). GraphRecipes will then use a layout algorithm to produce a visualization of the graph that the user passed.

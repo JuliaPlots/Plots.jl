@@ -1,6 +1,6 @@
 ```@setup input_data
 using Plots; gr()
-Plots.reset_defaults()
+Plots.Commons.reset_defaults()
 ```
 
 # [Input Data](@id input-data)
@@ -191,7 +191,7 @@ plt = plot(
 
 ```@example input_data
 # create an ellipse in the sky
-pts = Plots.partialcircle(0, 2π, 100, 0.1)
+pts = PlotsBase.partialcircle(0, 2π, 100, 0.1)
 x, y = Plots.unzip(pts)
 x = 1.5x .+ 0.7
 y .+= 1.3

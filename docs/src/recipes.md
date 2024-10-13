@@ -1,6 +1,6 @@
 ```@setup recipes
 using Plots; gr()
-Plots.reset_defaults()
+Plots.Commons.reset_defaults()
 ```
 
 

@@ -142,7 +142,7 @@ We can use this to define a user recipe for a pie plot.
         # determine the angle until we stop
         θ_new = θ + 2π * y[i] / s
         # calculate the coordinates
-        coords = [(0.0, 0.0); Plots.partialcircle(θ, θ_new, 50)]
+        coords = [(0.0, 0.0); PlotsBase.partialcircle(θ, θ_new, 50)]
         @series begin
             seriestype := :shape
             label --> string(labels[i])
@@ -307,7 +307,7 @@ However, the simpler approach is writing the pie recipe as a series recipe and r
     θ = 0
     for i in eachindex(y)
         θ_new = θ + 2π * y[i] / s
-        coords = [(0.0, 0.0); Plots.partialcircle(θ, θ_new, 50)]
+        coords = [(0.0, 0.0); PlotsBase.partialcircle(θ, θ_new, 50)]
         @series begin
             seriestype := :shape
             label --> string(x[i])
@@ -347,7 +347,7 @@ In fact, a pie recipe could be also implemented as a plot recipe by acessing the
     θ = 0
     for i in 1:length(y)
         θ_new = θ + 2π * y[i] / s
-        coords = [(0.0, 0.0); Plots.partialcircle(θ, θ_new, 50)]
+        coords = [(0.0, 0.0); PlotsBase.partialcircle(θ, θ_new, 50)]
         @series begin
             seriestype := :shape
             label --> string(labels[i])

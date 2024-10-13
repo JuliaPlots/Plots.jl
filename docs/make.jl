@@ -93,7 +93,7 @@ ref_name(i) = "ref" * lpad(i, 3, '0')
 
 function generate_cards(
     prefix::AbstractString, backend::Symbol, slice;
-    skip = get(Plots.PlotsBase._backend_skips, backend, Int[])
+    skip = get(PlotsBase._backend_skips, backend, Int[])
 )
     @show backend
     # create folder: for each backend we generate a DemoSection "generated" under "gallery"
@@ -102,7 +102,7 @@ function generate_cards(
 
     needs_rng_fix = Dict{Int,Bool}()
 
-    for (i, example) ∈ enumerate(Plots.PlotsBase._examples)
+    for (i, example) ∈ enumerate(PlotsBase._examples)
         (slice ≢ nothing && i ∉ slice) && continue
         # write out the header, description, code block, and image link
         jlname = "$backend-$(ref_name(i)).jl"
@@ -114,7 +114,7 @@ function generate_cards(
 
             # DemoCards YAML frontmatter
             # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-            asset = if i ∈ Plots.PlotsBase._animation_examples
+            asset = if i ∈ PlotsBase._animation_examples
                 "anim_$(backend)_$(ref_name(i)).gif"
             else
                 "$(backend)_$(ref_name(i)).png"
@@ -151,14 +151,14 @@ function generate_cards(
         # DemoCards use Literate.jl syntax with extra leading `#` as markdown lines
         write(jl, "# $(replace(example.desc, "\n" => "\n  # "))\n")
         isnothing(example.imports) || pretty_print_expr(jl, example.imports)
-        needs_rng_fix[i] = (exprs_rng = Plots.PlotsBase.replace_rand(example.exprs)) != example.exprs
+        needs_rng_fix[i] = (exprs_rng = PlotsBase.replace_rand(example.exprs)) != example.exprs
         pretty_print_expr(jl, exprs_rng)
 
         # NOTE: the supported `Literate.jl` syntax is `#src` and `#hide` NOT `# src` !!
         # from the docs: """
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
-        asset = if i ∈ Plots.PlotsBase._animation_examples
+        asset = if i ∈ PlotsBase._animation_examples
             "gif(anim, \"assets/anim_$(backend)_$(ref_name(i)).gif\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
         else
             "png(\"assets/$(backend)_$(ref_name(i)).png\")  #src\n"
@@ -192,7 +192,7 @@ function generate_cards(
     # TODO(johnnychen): make this part of the page template
     attr_name = string(backend, ".jl")
     open(joinpath(cardspath, attr_name), "w") do jl
-        pkg = Plots.PlotsBase.backend_instance(Symbol(lowercase(string(backend))))
+        pkg = PlotsBase.backend_instance(Symbol(lowercase(string(backend))))
         write(jl, """
             # ---
             # title: Supported attribute values
@@ -202,10 +202,10 @@ function generate_cards(
             # date: $(now())
             # ---
 
-            # - Supported arguments: $(markdown_code_to_string(collect(Plots.PlotsBase.supported_attrs(pkg))))
-            # - Supported values for linetype: $(markdown_symbols_to_string(Plots.PlotsBase.supported_seriestypes(pkg)))
-            # - Supported values for linestyle: $(markdown_symbols_to_string(Plots.PlotsBase.supported_styles(pkg)))
-            # - Supported values for marker: $(markdown_symbols_to_string(Plots.PlotsBase.supported_markers(pkg)))
+            # - Supported arguments: $(markdown_code_to_string(collect(PlotsBase.supported_attrs(pkg))))
+            # - Supported values for linetype: $(markdown_symbols_to_string(PlotsBase.supported_seriestypes(pkg)))
+            # - Supported values for linestyle: $(markdown_symbols_to_string(PlotsBase.supported_styles(pkg)))
+            # - Supported values for marker: $(markdown_symbols_to_string(PlotsBase.supported_markers(pkg)))
             """
         )
     end
@@ -227,11 +227,11 @@ function make_support_df(allvals, func; default_backends)
     for be ∈ bs # cols
         be_supported_vals = fill("", length(vals))
         for (i, val) ∈ enumerate(vals)
-            be_supported_vals[i] = if func == Plots.PlotsBase.supported_seriestypes
-                stype = Plots.PlotsBase.seriestype_supported(Plots.PlotsBase.backend_instance(be), val)
+            be_supported_vals[i] = if func == PlotsBase.supported_seriestypes
+                stype = PlotsBase.seriestype_supported(PlotsBase.backend_instance(be), val)
                 stype ≡ :native ? "✅" : (stype ≡ :no ? "" : "🔼")
             else
-                val ∈ func(Plots.PlotsBase.backend_instance(be)) ? "✅" : ""
+                val ∈ func(PlotsBase.backend_instance(be)) ? "✅" : ""
             end
         end
         df[!, be] = be_supported_vals
@@ -241,10 +241,10 @@ end
 
 function generate_supported_markdown(; default_backends)
     supported_args = OrderedDict(
-        "Keyword Arguments" => (Plots.Commons._all_attrs, Plots.PlotsBase.supported_attrs),
-        "Markers" => (Plots.Commons._all_markers, Plots.PlotsBase.supported_markers),
-        "Line Styles" => (Plots.Commons._all_styles,  Plots.PlotsBase.supported_styles),
-        "Scales" => (Plots.Commons._all_scales,  Plots.PlotsBase.supported_scales)
+        "Keyword Arguments" => (Plots.Commons._all_attrs, PlotsBase.supported_attrs),
+        "Markers" => (Plots.Commons._all_markers, PlotsBase.supported_markers),
+        "Line Styles" => (Plots.Commons._all_styles,  PlotsBase.supported_styles),
+        "Scales" => (Plots.Commons._all_scales,  PlotsBase.supported_scales)
     )
     open(joinpath(GEN_DIR, "supported.md"), "w") do md
         write(md, """
@@ -260,7 +260,7 @@ function generate_supported_markdown(; default_backends)
             - 🔼 the series type is supported through series recipes.
 
             ```@raw html
-            $(to_html(make_support_df(Plots.PlotsBase.all_seriestypes(), Plots.PlotsBase.supported_seriestypes; default_backends)))
+            $(to_html(make_support_df(PlotsBase.all_seriestypes(), PlotsBase.supported_seriestypes; default_backends)))
             ```
             """
         )
@@ -289,7 +289,7 @@ function make_attr_df(ktype::Symbol, defs::KW)
         Description = fill("", n),
     )
     for (i, (k, def)) ∈ enumerate(defs)
-        type, desc = get(Plots.PlotsBase._arg_desc, k, (Any, ""))
+        type, desc = get(PlotsBase._arg_desc, k, (Any, ""))
 
         aliases = sort(collect(keys(filter(p -> p.second == k, Plots.Commons._keyAliases))))
         df.Attribute[i] = string(k)
@@ -585,12 +585,17 @@ function main()
     unicodeplots()
     gaston()
 
-    # NOTE: for a faster representative test build use `PLOTDOCS_BACKENDS='GR' PLOTDOCS_EXAMPLES='1'`
-    default_backends = "GR PythonPlot PlotlyJS PGFPlotsX UnicodePlots Gaston"
-    backends = get(ENV, "PLOTDOCS_BACKENDS", default_backends)
-    backends = backends == "ALL" ? default_backends : backends
+    # NOTE: for a faster representative test build use `PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES='1'`
+    default_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston"
+    packages = get(ENV, "PLOTDOCS_PACKAGES", default_packages)
+    packages = let val = packages == "ALL" ? default_packages : packages
+        Symbol.(filter(!isempty, strip.(split(val, ","))))
+    end
+    packages_backends = NamedTuple(p => Symbol(lowercase(string(p))) for p ∈ packages)
+    backends = values(packages_backends) |> collect
+
+    @info "selected packages: $packages"
     @info "selected backends: $backends"
-    backends = Symbol.(lowercase.(split(backends)))
 
     slice = parse.(Int, split(get(ENV, "PLOTDOCS_EXAMPLES", "")))
     slice = length(slice) == 0 ? nothing : slice
@@ -606,7 +611,7 @@ function main()
 
     for (pkg, dest) ∈ (
             (PlotThemes, "plotthemes.md"),
-            # (StatsPlots, "statsplots.md"), #TODO: uncomment after having compatible StatsPlots
+            # (StatsPlots, "statsplots.md"), # TODO: uncomment after having compatible StatsPlots
         )
         cp(pkgdir(pkg, "README.md"), joinpath(GEN_DIR, dest); force = true)
     end
@@ -614,13 +619,13 @@ function main()
     @info "gallery"
     gallery = Pair{String,String}[]
     gallery_assets, gallery_callbacks, user_gallery = map(_ -> [], 1:3)
-    needs_rng_fix = Dict{String,Any}()
+    needs_rng_fix = Dict{Symbol,Any}()
 
-    for name ∈ backends
-        pname = string(Plots.PlotsBase.backend_package_name(name))
-        needs_rng_fix[pname] = generate_cards(joinpath(@__DIR__, "gallery"), name, slice)
-        let (path, cb, assets) = makedemos(joinpath("gallery", string(name)); src = "$work/gallery")
-            push!(gallery, pname => joinpath("gallery", path))
+    for pkg ∈ packages
+        be = packages_backends[pkg]
+        needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
+        let (path, cb, assets) = makedemos(joinpath("gallery", string(be)); src = "$work/gallery")
+            push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
             push!(gallery_assets, assets)
         end
@@ -635,7 +640,7 @@ function main()
         "Getting Started" => [
             "Installation" => "install.md",
             "Basics" => "basics.md",
-            "Tutorial" => "tutorial.md",
+            # "Tutorial" => "tutorial.md",  # TODO: uncomment once StatsPlots is ready
             "Series Types" => [
                 "Contour Plots" => "series_types/contour.md",
                 "Histograms" => "series_types/histogram.md",
@@ -674,12 +679,12 @@ function main()
         "Learning" => "learning.md",
         "Contributing" => "contributing.md",
         "Ecosystem" => [
-            # "StatsPlots" => "generated/statsplots.md", #TODO: uncomment once StatsPlots is ready
+            # "StatsPlots" => "generated/statsplots.md",  # TODO: uncomment once StatsPlots is ready
             # "GraphRecipes" => [
             #     "Introduction" => "GraphRecipes/introduction.md",
             #     "Examples" => "GraphRecipes/examples.md",
             #     "Attributes" => "generated/graph_attributes.md",
-            # ], #TODO: uncomment once GraphRecipes is ready
+            # ], # TODO: uncomment once GraphRecipes is ready
             "UnitfulExt" => [
                 "Introduction" => "UnitfulExt/unitfulext.md",
                 "Examples" => [
@@ -687,7 +692,7 @@ function main()
                     "Plots" => "generated/unitfulext_plots.md",
                 ]
             ],
-            "Overview" => "ecosystem.md",
+            # "Overview" => "ecosystem.md",  # TODO: uncomment once StatsPlots is ready
         ],
         "Advanced Topics" => ["Plot objects" => "plot_objects.md","Plotting pipeline" => "pipeline.md"],
         "Gallery" => gallery,
@@ -708,8 +713,6 @@ function main()
     unique!(selected_pages)
     # @show selected_pages length(gallery) length(user_gallery)
 
-    # FIXME: github.com/JuliaDocs/DemoCards.jl/pull/134
-    # delete src/democards/bulmagridtheme.css when released
     n = 0
     for (root, dirs, files) ∈ walkdir(SRC_DIR)
         foreach(dir -> mkpath(joinpath(WORK_DIR, dir)), dirs)
@@ -770,9 +773,10 @@ function main()
     # postprocess gallery html files to remove `rng` in user displayed code
     # non-exhaustive list of examples to be fixed:
     # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
-    for name ∈ split(backends)
-        prefix = joinpath(@__DIR__, "build", "gallery", lowercase(name), "generated")
-        must_fix = needs_rng_fix[name]
+    for pkg ∈ packages
+        be = packages_backends[pkg]
+        prefix = joinpath(@__DIR__, "build", "gallery", string(be), "generated")
+        must_fix = needs_rng_fix[pkg]
         for file ∈ glob("*/index.html", prefix)
             (m = match(r"-ref(\d+)", file)) ≡ nothing && continue
             idx = parse(Int, first(m.captures))
