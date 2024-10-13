@@ -171,7 +171,7 @@ function make_batman()
     for (i, mi) in enumerate(m)
         append!(
             pts,
-            map(BezierCurve([p[i], m[i], p[i + 1]]), range(0, 1, length = 30))
+            map(PlotsBase.BezierCurves.BezierCurve([p[i], m[i], p[i + 1]]), range(0, 1, length = 30))
         )
     end
     x, y = Plots.unzip(Tuple.(pts))

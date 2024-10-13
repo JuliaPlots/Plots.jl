@@ -64,20 +64,27 @@ jobs:
 
       - uses: julia-actions/cache@v2
 
-      - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
+      - name: Develop all Plots packages
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
+          Pkg.develop([
+            (; path="./RecipesBase"),
+            (; path="./RecipesPipeline"),
+            (; path="./PlotsBase"),
+            (; path="."),
+            (; path="./GraphRecipes"),
+            (; path="./StatsPlots"),
+          ])
 
       - name: Install conda based matplotlib
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         run: julia --color=yes ci/matplotlib.jl
 
-      - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
+      - name: Test all Plots packages
         timeout-minutes: 60
         run: |
           cmd=(julia --color=yes)
@@ -87,13 +94,9 @@ jobs:
           echo ${cmd[@]}
           ${cmd[@]} -e '
             using Pkg
-            foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
+            Pkg.test(["GraphRecipes", "StatsPlots"]; coverage=true)
+            Pkg.test(["RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"]; coverage=true)
           '
-      - name: Test downstream packages
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          xvfb-run julia --color=yes ci/downstream.jl GraphRecipes || true
-          xvfb-run julia --color=yes ci/downstream.jl StatsPlots || true
 
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')

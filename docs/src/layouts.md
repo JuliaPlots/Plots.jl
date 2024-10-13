@@ -74,7 +74,7 @@ Use `px`/`mm`/`inch` for absolute coords, `w`/`h` for percentage relative to the
 
 ```@example layouts_2
 # boxplot is defined in StatsPlots
-using StatsPlots, StatsPlots.PlotMeasures
+using StatsPlots
 gr(leg = false, bg = :lightgrey)
 
 # Create a filled contour and boxplot side by side.
@@ -96,7 +96,7 @@ histogram!(
 # relative to a subplot)
 sticks!(
     randn(100),
-    inset = bbox(0, -0.2, 200px, 100px, :center),
+    inset = bbox(0, -0.2, 200Plots.px, 100Plots.px, :center),
     ticks = nothing,
     subplot = 4
 )

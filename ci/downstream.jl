@@ -3,11 +3,11 @@ using Pkg
 const LibGit2 = Pkg.GitTools.LibGit2
 const TOML = Pkg.TOML
 
-failsafe_clone_checkout(path, url) = begin
+failsafe_clone_checkout(path, url; branch="master", stable=true) = begin
     local repo
     for i in 1:6
         try
-            repo = Pkg.GitTools.ensure_clone(stdout, path, url)
+            repo = Pkg.GitTools.ensure_clone(stdout, path, url; branch)
             break
         catch err
             @warn err
@@ -27,11 +27,14 @@ failsafe_clone_checkout(path, url) = begin
     end
     @assert isfile(versions)
 
-    version_dict = TOML.parse(read(versions, String))
-    stable = VersionNumber.(keys(version_dict)) |> maximum
-    tag = LibGit2.GitObject(repo, "v$stable")
-    hash = string(LibGit2.target(tag))
-    LibGit2.checkout!(repo, hash)
+    if stable
+        version_dict = TOML.parse(read(versions, String))
+        stable = VersionNumber.(keys(version_dict)) |> maximum
+        tag = LibGit2.GitObject(repo, "v$stable")
+        hash = string(LibGit2.target(tag))
+        LibGit2.checkout!(repo, hash)
+    else
+    end
     nothing
 end
 
@@ -65,7 +68,11 @@ test_stable(pkg::AbstractString) = begin
         end
 
         pkg_dir = joinpath(tmpd, "$pkg.jl")
-        failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl")
+        if true  # v2, remove when stable
+            failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl"; branch="v2", stable=false)
+        else
+            failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl")
+        end
         fake_supported_versions!(pkg_dir)
 
         Pkg.develop(; path = pkg_dir)

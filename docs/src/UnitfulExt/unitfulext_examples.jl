@@ -64,7 +64,7 @@ plot([plot(y, ylab="mass", title=repr(s), unitformat=s) for s in (nothing, true,
 # `unitformat` can be one of a number of predefined symbols, defined in
 
 URsymbols = if isdefined(Base, :get_extension)
-     getproperty(Base.get_extension(Plots, :UnitfulExt), :UNIT_FORMATS)
+     getproperty(Base.get_extension(Plots.PlotsBase, :UnitfulExt), :UNIT_FORMATS)
 else
      Plots.UnitfulExt.UNIT_FORMATS
 end |> keys
