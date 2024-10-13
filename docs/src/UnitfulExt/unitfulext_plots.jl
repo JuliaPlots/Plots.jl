@@ -108,7 +108,7 @@ plot(
 
 # ## Marker types
 
-markers = intersect(PlotsBase._shape_keys, PlotsBase.supported_markers())
+markers = intersect(PlotsBase.Commons._shape_keys, PlotsBase.supported_markers())
 markers = reshape(markers, 1, length(markers))
 n = length(markers)
 x = (range(0, stop=10, length=n + 2))[2:end - 1] * u"km"
