@@ -64,13 +64,13 @@ jobs:
 
       - uses: julia-actions/cache@v2
 
-      - name: Develop RecipesBase, RecipesPipeline, PlotsBase, Plots
+      - name: Develop all Plots packages
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", "."))
+          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", ".", "./GraphRecipes", "StatsPlots"))
 
       - name: Install conda based matplotlib
         env:
