@@ -76,7 +76,7 @@ JULIA_PKG_PRECOMPILE_AUTO=0 $julia -e '
 '
 
 echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
-$julia <<'EOF'
+JULIA_PKG_PRECOMPILE_AUTO=0 $julia -e '
 using Pkg
 
 rev = split(ENV["GITHUB_REF"], "/", limit=3)[3]
@@ -93,5 +93,5 @@ Pkg.develop([
 Pkg.add(PackageSpec(; name="Plots", rev))
 
 Pkg.instantiate()
-EOF
+'
 $julia docs/make.jl
