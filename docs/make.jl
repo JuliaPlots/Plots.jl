@@ -8,7 +8,7 @@ import PGFPlotsX
 import PlotlyJS
 import Gaston
 import UnicodePlots
-# import StatsPlots
+import StatsPlots
 
 const SRC_DIR = joinpath(@__DIR__, "src")
 const WORK_DIR = joinpath(@__DIR__, "work")
@@ -611,7 +611,7 @@ function main()
 
     for (pkg, dest) ∈ (
             (PlotThemes, "plotthemes.md"),
-            # (StatsPlots, "statsplots.md"), # TODO: uncomment after having compatible StatsPlots
+            (StatsPlots, "statsplots.md"),
         )
         cp(pkgdir(pkg, "README.md"), joinpath(GEN_DIR, dest); force = true)
     end
@@ -640,21 +640,21 @@ function main()
         "Getting Started" => [
             "Installation" => "install.md",
             "Basics" => "basics.md",
-            # "Tutorial" => "tutorial.md",  # TODO: uncomment once StatsPlots is ready
+            "Tutorial" => "tutorial.md",
             "Series Types" => [
                 "Contour Plots" => "series_types/contour.md",
                 "Histograms" => "series_types/histogram.md",
             ],
         ],
         "Manual" => [
-            # "Input Data" => "input_data.md",  # TODO: uncomment once StatsPlots is ready
+            "Input Data" => "input_data.md",
             "Output" => "output.md",
             "Attributes" => "attributes.md",
             "Series Attributes" => "generated/attributes_series.md",
             "Plot Attributes" => "generated/attributes_plot.md",
             "Subplot Attributes" => "generated/attributes_subplot.md",
             "Axis Attributes" => "generated/attributes_axis.md",
-            # "Layouts" => "layouts.md",  # TODO: uncomment once StatsPlots is ready
+            "Layouts" => "layouts.md",
             "Recipes" => [
                 "Overview" => "recipes.md",
                 "RecipesBase" => [
@@ -679,12 +679,12 @@ function main()
         "Learning" => "learning.md",
         "Contributing" => "contributing.md",
         "Ecosystem" => [
-            # "StatsPlots" => "generated/statsplots.md",  # TODO: uncomment once StatsPlots is ready
-            # "GraphRecipes" => [
-            #     "Introduction" => "GraphRecipes/introduction.md",
-            #     "Examples" => "GraphRecipes/examples.md",
-            #     "Attributes" => "generated/graph_attributes.md",
-            # ], # TODO: uncomment once GraphRecipes is ready
+            "StatsPlots" => "generated/statsplots.md",
+            "GraphRecipes" => [
+                "Introduction" => "GraphRecipes/introduction.md",
+                "Examples" => "GraphRecipes/examples.md",
+                "Attributes" => "generated/graph_attributes.md",
+            ],
             "UnitfulExt" => [
                 "Introduction" => "UnitfulExt/unitfulext.md",
                 "Examples" => [
@@ -692,7 +692,7 @@ function main()
                     "Plots" => "generated/unitfulext_plots.md",
                 ]
             ],
-            # "Overview" => "ecosystem.md",  # TODO: uncomment once StatsPlots is ready
+            "Overview" => "ecosystem.md",
         ],
         "Advanced Topics" => ["Plot objects" => "plot_objects.md","Plotting pipeline" => "pipeline.md"],
         "Gallery" => gallery,

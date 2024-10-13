@@ -1,5 +1,5 @@
 ```@setup backends
-# using StatsPlots  # NOTE: restore when StatsPlots compatible
+using StatsPlots
 using Plots, RecipesBase, Statistics; gr()
 Plots.Commons.reset_defaults()
 
@@ -18,13 +18,10 @@ Plots.Commons.reset_defaults()
         [f g]
     end
 
-    #=
-    # NOTE: restore when StatsPlots compatible
     @series begin
         subplot := 2 + (n > 2)
         RecipesBase.recipetype(:groupedbar, d)
     end
-    =#
 
     if n > 2
         @series begin
