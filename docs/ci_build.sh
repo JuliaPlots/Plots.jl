@@ -84,9 +84,6 @@ $julia -e '
   CondaPkg.status()
 '
 
-$julia -e 'using Pkg; Pkg.add(PackageSpec(name="StatsPlots", rev="v2"))'  # FIXME: remove when StatsPlots v2 is out
-$julia -e 'using Pkg; Pkg.add(PackageSpec(name="GraphRecipes", rev="v2"))'  # FIXME: remove when StatsPlots v2 is out
-
 echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
 if [ "$GITHUB_REPOSITORY" == 'JuliaPlots/PlotDocs.jl' ]; then
   $julia -e 'using Pkg; Pkg.add(PackageSpec(name="Plots", rev="master"))'
