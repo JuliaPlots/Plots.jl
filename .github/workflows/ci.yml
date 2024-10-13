@@ -77,6 +77,12 @@ jobs:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         run: julia --color=yes ci/matplotlib.jl
 
+      - name: Test downstream packages
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          xvfb-run julia --color=yes ci/downstream.jl GraphRecipes
+          xvfb-run julia --color=yes ci/downstream.jl StatsPlots
+
       - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
         timeout-minutes: 60
         run: |
@@ -89,11 +95,6 @@ jobs:
             using Pkg
             foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
           '
-      - name: Test downstream packages
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          xvfb-run julia --color=yes ci/downstream.jl GraphRecipes
-          xvfb-run julia --color=yes ci/downstream.jl StatsPlots
 
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
