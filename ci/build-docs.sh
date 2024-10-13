@@ -91,7 +91,7 @@ Pkg.develop([
   (; path="./StatsPlots"),
 ])
 Pkg.add(PackageSpec(; name="Plots", rev))
-
 Pkg.instantiate()
+Pkg.precompile()
 '
 $julia docs/make.jl
