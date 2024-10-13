@@ -70,7 +70,14 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          foreach(path -> Pkg.develop(; path), ("./RecipesBase", "./RecipesPipeline", "./PlotsBase", ".", "./GraphRecipes", "StatsPlots"))
+          Pkg.develop([
+            (; path="./RecipesBase"),
+            (; path="./RecipesPipeline"),
+            (; path="./PlotsBase"),
+            (; path="."),
+            (; path="./GraphRecipes"),
+            (; path="./StatsPlots"),
+          ])
 
       - name: Install conda based matplotlib
         env:
@@ -87,8 +94,8 @@ jobs:
           echo ${cmd[@]}
           ${cmd[@]} -e '
             using Pkg
-            foreach(name -> Pkg.test(name; coverage=true), ("GraphRecipes", "StatsPlots"))
-            foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
+            Pkg.test(["GraphRecipes", "StatsPlots"]; coverage=true)
+            Pkg.test(["RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"]; coverage=true)
           '
 
       - uses: julia-actions/julia-processcoverage@latest

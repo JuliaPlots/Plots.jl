@@ -54,7 +54,15 @@ export JULIA_CONDAPKG_BACKEND=MicroMamba
 
 julia='xvfb-run -a julia --color=yes --project=docs'
 
-$julia -e 'using Pkg; Pkg.develop([(; path="."), (; path="./RecipesBase"), (; path="./RecipesPipeline"), (; path="./PlotsBase")]);'  # FIXME: not needed when registered
+$julia -e 'using Pkg; Pkg.develop([
+  (; path="./RecipesBase"),
+  (; path="./RecipesPipeline"),
+  (; path="./PlotsBase"),
+  (; path="."),
+  (; path="./GraphRecipes"),
+  (; path="./StatsPlots"),
+)'  # FIXME: not needed when registered
+
 $julia -e '
   using Pkg; Pkg.add("CondaPkg")
   using CondaPkg; CondaPkg.resolve()
