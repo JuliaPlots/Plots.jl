@@ -92,12 +92,7 @@ jobs:
             cmd=(xvfb-run ${cmd[@]})
           fi
           echo ${cmd[@]}
-          ${cmd[@]} -e '
-            using Pkg
-            Pkg.test(["GraphRecipes", "StatsPlots"]; coverage=true)
-            Pkg.test(["RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"]; coverage=true)
-          '
-
+          ${cmd[@]} -e 'using Pkg; Pkg.test(["RecipesBase", "RecipesPipeline", "PlotsBase", "Plots", "GraphRecipes", "StatsPlots"]; coverage=true)'
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
         with:
