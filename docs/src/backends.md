@@ -1,6 +1,7 @@
 ```@setup backends
-using StatsPlots, RecipesBase, Statistics; gr()
-Plots.reset_defaults()
+# using StatsPlots  # NOTE: restore when StatsPlots compatible
+using Plots, RecipesBase, Statistics; gr()
+Plots.Commons.reset_defaults()
 
 @userplot BackendPlot
 
@@ -17,10 +18,13 @@ Plots.reset_defaults()
         [f g]
     end
 
+    #=
+    # NOTE: restore when StatsPlots compatible
     @series begin
         subplot := 2 + (n > 2)
         RecipesBase.recipetype(:groupedbar, d)
     end
+    =#
 
     if n > 2
         @series begin
@@ -133,7 +137,7 @@ Also, PlotlyJS supports saving the output to more formats than Plotly, such as E
 
 ```@example backends
 plotlyjs(); backendplot(n = 2)  #hide
-png("backends_plotlyjs.png")  #hide
+png("backends_plotlyjs.png")  #hide=#
 ```
 ![](backends_plotlyjs.png)
 
@@ -181,7 +185,7 @@ plot(
         :xaxis => KW(:domain => "auto")
    ),
 )
-Plots.html("plotly_mathjax")  #hide
+PlotsBase.html("plotly_mathjax")  #hide
 ```
 ```@raw html
 <object type="text/html" data="plotly_mathjax.html" style="width:100%;height:450px;"></object>

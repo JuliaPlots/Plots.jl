@@ -38,7 +38,7 @@
         @test PlotsBase.translate(square, 0, 1).x == squareUp.x
         @test PlotsBase.translate(square, 0, 1).y == squareUp.y
 
-        @test PlotsBase.center(translate!(square, 1)) == (1.5, 1.5)
+        @test PlotsBase.center(PlotsBase.translate!(square, 1)) == (1.5, 1.5)
     end
 
     @testset "Rotate" begin

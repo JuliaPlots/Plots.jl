@@ -108,11 +108,6 @@ export
     test_examples,
     coords,
 
-    translate,
-    translate!,
-    rotate,
-    rotate!,
-    center,
     plotattr,
     scalefontsizes,
     resetfontsizes

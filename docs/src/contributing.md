@@ -1,6 +1,6 @@
 ```@setup contributing
 using Plots; gr()
-Plots.reset_defaults()
+Plots.Commons.reset_defaults()
 ```
 
 This is a guide to contributing to Plots and the surrounding ecosystem. Plots is a complex and far-reaching suite of software components, and as such will be most effective when the community contributes their own expertise, knowledge, perspective, and effort. The document is roughly broken up into the following categories, and after reading this introduction you should feel comfortable skipping to the section(s) that interest you the most:
