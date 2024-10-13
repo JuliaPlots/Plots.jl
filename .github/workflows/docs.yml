@@ -28,4 +28,4 @@ jobs:
           PYTHON: ""
           DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        run: bash docs/ci_build.sh
+        run: bash ci/build-docs.sh
