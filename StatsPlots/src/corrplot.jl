@@ -61,7 +61,7 @@ end
     title := ""
 
     # histograms on the diagonal
-    for i = 1:n
+    for i ∈ 1:n
         @series begin
             if title != "" && title_location === :left && i == 1
                 title := title
@@ -77,10 +77,10 @@ end
     end
 
     # scatters
-    for i = 1:n
+    for i ∈ 1:n
         ylink := setdiff(vec(indices[i, :]), indices[i, i])
         vi = view(mat, :, i)
-        for j = 1:n
+        for j ∈ 1:n
             j == i && continue
             vj = view(mat, :, j)
             subplot := indices[i, j]

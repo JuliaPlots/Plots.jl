@@ -17,7 +17,7 @@ function add_ast(adjlist, names, depthdict, depthlists, nodetypes, ex::Expr, par
     end
     push!(depthlists[depth], idx)
 
-    for arg in (iscall ? ex.args[2:end] : ex.args)
+    for arg ∈ (iscall ? ex.args[2:end] : ex.args)
         if isa(arg, LineNumberNode)
             continue
         end
@@ -79,7 +79,7 @@ end
 # Type trees
 
 function add_subs!(nodes, source, destiny, ::Type{T}, supidx) where {T}
-    for sub in subtypes(T)
+    for sub ∈ subtypes(T)
         push!(nodes, sub)
         subidx = length(nodes)
         push!(source, supidx)

@@ -38,7 +38,7 @@ end
         seriestype --> :sticks
     end
     if components
-        for k = 1:Distributions.ncomponents(m)
+        for k ∈ 1:Distributions.ncomponents(m)
             c = Distributions.component(m, k)
             @series begin
                 (c, yz_args(c)...)
@@ -50,7 +50,7 @@ end
 end
 
 @recipe function f(distvec::AbstractArray{<:Distribution}, yz...)
-    for di in distvec
+    for di ∈ distvec
         @series begin
             seriesargs = isempty(yz) ? yz_args(di) : yz
             if di isa DiscreteUnivariateDistribution

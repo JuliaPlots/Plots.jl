@@ -19,7 +19,7 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
     # n is the total number of rows/columns.  hists always shown
     n = N + 1 - k
 
-    labs = pop!(plotattributes, :label, ["x$i" for i = 1:N])
+    labs = pop!(plotattributes, :label, ["x$i" for i ∈ 1:N])
     if labs != [""] && length(labs) != N
         error("Number of labels not identical to number of datasets")
     end
@@ -34,7 +34,7 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
     )
     spidx = 1
     indices = zeros(Int, n, n)
-    for i = 1:n, j = 1:n
+    for i ∈ 1:n, j ∈ 1:n
         isblank = (i == 1 && j == n) || (compact && i > 1 && j < n && j >= i)
         g[i, j].attr[:blank] = isblank
         if !isblank
@@ -65,7 +65,7 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
     markeralpha --> clamp(pltarea * 100 / nsamples^0.42, 0.005, 0.4)
 
     # histograms in the right column
-    for i = 1:N
+    for i ∈ 1:N
         compact && i == 1 && continue
         @series begin
             orientation := :h
@@ -77,7 +77,7 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
     end
 
     # histograms in the top row
-    for j = 1:N
+    for j ∈ 1:N
         compact && j == N && continue
         @series begin
             seriestype := :histogram
@@ -88,9 +88,9 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
     end
 
     # scatters
-    for i = 1:N
+    for i ∈ 1:N
         vi = view(mat, :, i)
-        for j = 1:N
+        for j ∈ 1:N
             # only the lower triangle
             if compact && i <= j
                 continue

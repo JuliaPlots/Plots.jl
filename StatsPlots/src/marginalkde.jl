@@ -28,7 +28,7 @@
     ps = pdf.(Ref(k), x, y)
 
     ls = []
-    for p in range(1.0 / levels, stop = 1 - 1.0 / levels, length = levels - 1)
+    for p ∈ range(1.0 / levels, stop = 1 - 1.0 / levels, length = levels - 1)
         push!(ls, quantile(ps, p))
     end
 

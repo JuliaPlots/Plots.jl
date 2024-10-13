@@ -37,10 +37,10 @@ grouped_xy(y::AbstractArray) = 1:size(y, 1), y
         bws = plotattributes[:bar_width] / nc
         bar_width := bws * clamp(1 - spacing, 0, 1)
         xmat = zeros(nr, nc)
-        for r = 1:nr
+        for r ∈ 1:nr
             bw = _cycle(bws, r)
             farleft = xnums[r] - 0.5 * (bw * nc)
-            for c = 1:nc
+            for c ∈ 1:nc
                 xmat[r, c] = farleft + 0.5bw + (c - 1) * bw
             end
         end
@@ -75,12 +75,12 @@ function groupedbar_fillrange(y)
     fr = zeros(nr, nc)
     y = copy(y)
     y[.!isfinite.(y)] .= 0
-    for r = 1:nr
+    for r ∈ 1:nr
         y_neg = 0
         # upper & lower bounds for positive bar
-        y_pos = sum([e for e in y[r, :] if e > 0])
+        y_pos = sum([e for e ∈ y[r, :] if e > 0])
         # division subtract towards 0
-        for c = 1:nc
+        for c ∈ 1:nc
             el = y[r, c]
             if el >= 0
                 y[r, c] = y_pos

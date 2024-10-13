@@ -31,7 +31,7 @@ end
 function df_helper(d, x)
     if isa(x, Expr) && x.head === :block # meaning that there were multiple plot commands
         commands = [
-            df_helper(d, xx) for xx in x.args if
+            df_helper(d, xx) for xx ∈ x.args if
             !(isa(xx, Expr) && xx.head === :line || isa(xx, LineNumberNode))
         ] # apply the helper recursively
         return Expr(:block, commands...)
@@ -97,7 +97,7 @@ function parse_table_call!(d, x::Expr, syms, vars)
     elseif x.head === :braces # From Query: use curly brackets to simplify writing named tuples
         new_ex = Expr(:tuple, x.args...)
 
-        for (j, field_in_NT) in enumerate(new_ex.args)
+        for (j, field_in_NT) ∈ enumerate(new_ex.args)
             if isa(field_in_NT, Expr) && field_in_NT.head === :(=)
                 new_ex.args[j] = Expr(:(=), field_in_NT.args...)
             elseif field_in_NT isa QuoteNode
@@ -114,7 +114,7 @@ function parse_table_call!(d, x::Expr, syms, vars)
         end
         return parse_table_call!(d, new_ex, syms, vars)
     end
-    return Expr(x.head, (parse_table_call!(d, arg, syms, vars) for arg in x.args)...)
+    return Expr(x.head, (parse_table_call!(d, arg, syms, vars) for arg ∈ x.args)...)
 end
 
 function column_names(t)
@@ -131,7 +131,7 @@ function insert_kw!(x::Expr, s::Symbol, v)
 end
 
 function _argnames(names, x::Expr)
-    Expr(:vect, [_arg2string(names, s) for s in x.args[2:end] if not_kw(s)]...)
+    Expr(:vect, [_arg2string(names, s) for s ∈ x.args[2:end] if not_kw(s)]...)
 end
 
 _arg2string(names, x) = stringify(x)
@@ -151,7 +151,7 @@ stringify(x) = filter(t -> t != ':', string(x))
 
 compute_name(names, i::Int) = names[i]
 compute_name(names, i::Symbol) = i
-compute_name(names, i) = reshape([compute_name(names, ii) for ii in i], 1, :)
+compute_name(names, i) = reshape([compute_name(names, ii) for ii ∈ i], 1, :)
 
 """
     add_label(argnames, f, args...; kwargs...)
@@ -187,7 +187,7 @@ end
 
 get_col(s::Int, col_nt, names) = col_nt[names[s]]
 get_col(s::Symbol, col_nt, names) = get(col_nt, s, s)
-get_col(syms, col_nt, names) = hcat((get_col(s, col_nt, names) for s in syms)...)
+get_col(syms, col_nt, names) = hcat((get_col(s, col_nt, names) for s ∈ syms)...)
 
 # get the appropriate name when passed an Integer
 add_sym!(cols, i::Integer, names) = push!(cols, names[i])
@@ -195,7 +195,7 @@ add_sym!(cols, i::Integer, names) = push!(cols, names[i])
 add_sym!(cols, s::Symbol, names) = s in names ? push!(cols, s) : cols
 # recursively extract column names
 function add_sym!(cols, s, names)
-    for si in s
+    for si ∈ s
         add_sym!(cols, si, names)
     end
     cols
@@ -222,5 +222,5 @@ function extract_columns_and_names(df, syms...)
     selected_cols = add_sym!(Symbol[], syms, names)
 
     cols = Tables.columntable(TableOperations.select(df, unique(selected_cols)...))
-    return Tuple(get_col(s, cols, names) for s in syms), names
+    return Tuple(get_col(s, cols, names) for s ∈ syms), names
 end

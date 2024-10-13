@@ -15,7 +15,7 @@ function violin_coords(
         KernelDensity.kde(y, weights = weights(wts), npoints = 200, bandwidth = bandwidth)
     if trim
         xmin, xmax = PlotsBase.ignorenan_extrema(y)
-        inside = Bool[xmin <= x <= xmax for x in kd.x]
+        inside = Bool[xmin <= x <= xmax for x ∈ kd.x]
         return (kd.density[inside], kd.x[inside])
     end
     kd.density, kd.x
@@ -53,7 +53,7 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
     bw = plotattributes[:bar_width]
     bw == nothing && (bw = 0.8)
     msc = plotattributes[:markerstrokecolor]
-    for (i, glabel) in enumerate(glabels)
+    for (i, glabel) ∈ enumerate(glabels)
         fy = y[filter(i -> _cycle(x, i) == glabel, 1:length(y))]
         widths, centers = violin_coords(
             fy,
@@ -116,7 +116,7 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
             qy = quantile(fy, quantiles)
             maxw = maximum(widths)
 
-            for i in eachindex(qy)
+            for i ∈ eachindex(qy)
                 qxi = xcenter .+ [-maxw, maxw] * (0.5 - abs(0.5 - quantiles[i]))
                 qyi = [qy[i], qy[i]]
                 if side === :right
@@ -188,7 +188,7 @@ recipetype(::Val{:groupedviolin}, args...) = GroupedViolin(args)
         float.(x)
     else
         bar_width --> 0.8
-        xnums = [findfirst(isequal(xi), ux) for xi in x] .- 0.5
+        xnums = [findfirst(isequal(xi), ux) for xi ∈ x] .- 0.5
         xticks --> (eachindex(ux) .- 0.5, ux)
         xnums
     end
@@ -201,7 +201,7 @@ recipetype(::Val{:groupedviolin}, args...) = GroupedViolin(args)
         n = length(labels)
         bws = plotattributes[:bar_width] / n
         bar_width := bws * clamp(1 - spacing, 0, 1)
-        for i = 1:n
+        for i ∈ 1:n
             groupinds = idxs[i]
             Δx = _cycle(bws, i) * (i - (n + 1) / 2)
             x[groupinds] .+= Δx

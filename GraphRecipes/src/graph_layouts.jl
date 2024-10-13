@@ -13,7 +13,7 @@ function spectral_graph(
     positions =
         NetworkLayout.spectral(adjmat; nodeweights = convert(Vector{Float64}, node_weights))
 
-    ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
+    ([p[1] for p ∈ positions], [p[2] for p ∈ positions], [p[3] for p ∈ positions])
 end
 
 function spectral_graph(
@@ -41,9 +41,9 @@ function spring_graph(
     T = Float64
     adjmat = make_symmetric(adjmat)
     startpostions = if dim == 2
-        [Point(T(x[i]), T(y[i])) for i in 1:length(x)]
+        [Point(T(x[i]), T(y[i])) for i ∈ 1:length(x)]
     elseif dim == 3
-        [Point(T(x[i]), T(y[i]), T(z[i])) for i in 1:length(x)]
+        [Point(T(x[i]), T(y[i]), T(z[i])) for i ∈ 1:length(x)]
     end
 
     positions = NetworkLayout.spring(
@@ -56,9 +56,9 @@ function spring_graph(
         initialpos = startpostions,
     )
     if dim == 2
-        ([p[1] for p in positions], [p[2] for p in positions], nothing)
+        ([p[1] for p ∈ positions], [p[2] for p ∈ positions], nothing)
     else
-        ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
+        ([p[1] for p ∈ positions], [p[2] for p ∈ positions], [p[3] for p ∈ positions])
     end
 end
 
@@ -88,9 +88,9 @@ function sfdp_graph(
     adjmat = make_symmetric(adjmat)
     T = Float64
     startpostions = if dim == 2
-        [Point(T(x[i]), T(y[i])) for i in 1:length(x)]
+        [Point(T(x[i]), T(y[i])) for i ∈ 1:length(x)]
     elseif dim == 3
-        [Point(T(x[i]), T(y[i]), T(z[i])) for i in 1:length(x)]
+        [Point(T(x[i]), T(y[i]), T(z[i])) for i ∈ 1:length(x)]
     end
 
     positions = NetworkLayout.sfdp(
@@ -104,9 +104,9 @@ function sfdp_graph(
         initialpos = startpostions,
     )
     if dim == 2
-        ([p[1] for p in positions], [p[2] for p in positions], nothing)
+        ([p[1] for p ∈ positions], [p[2] for p ∈ positions], nothing)
     else
-        ([p[1] for p in positions], [p[2] for p in positions], [p[3] for p in positions])
+        ([p[1] for p ∈ positions], [p[2] for p ∈ positions], [p[3] for p ∈ positions])
     end
 end
 
@@ -134,7 +134,7 @@ function shell_graph(
     @assert dim == 2
     positions = NetworkLayout.shell(adjmat; nlist = nlist)
 
-    ([p[1] for p in positions], [p[2] for p in positions], nothing)
+    ([p[1] for p ∈ positions], [p[2] for p ∈ positions], nothing)
 end
 
 function shell_graph(
@@ -193,11 +193,11 @@ end
 #     x, y, z
 # end
 
-norm_ij(X, i, j) = sqrt(sum(Float64[(v[i] - v[j])^2 for v in X]))
+norm_ij(X, i, j) = sqrt(sum(Float64[(v[i] - v[j])^2 for v ∈ X]))
 stress(X, dist, w, i, j) = w[i, j] * (norm_ij(X, i, j) - dist[i, j])^2
 function stress(X, dist, w)
     tot = 0.0
-    for i in 1:size(X, 1), j in 1:(i - 1)
+    for i ∈ 1:size(X, 1), j ∈ 1:(i - 1)
         tot += stress(X, dist, w, i, j)
     end
     tot
@@ -231,11 +231,11 @@ function by_axis_local_stress_graph(
     # in each iteration, we update one dimension/node at a time, reducing the total stress with each update
     X = dim == 2 ? (x, y) : (x, y, z)
     laststress = stress(X, dist, w)
-    for k in 1:maxiter
-        for p in free_dims
-            for i in 1:n
+    for k ∈ 1:maxiter
+        for p ∈ free_dims
+            for i ∈ 1:n
                 numer, denom = 0.0, 0.0
-                for j in 1:n
+                for j ∈ 1:n
                     i == j && continue
                     numer +=
                         w[i, j] *
@@ -283,7 +283,7 @@ function buchheim_graph(
     # @show adjlist typeof(adjlist)
     positions =
         NetworkLayout.buchheim(adjlist; nodesize = convert(Vector{Float64}, node_weights))
-    Float64[p[1] for p in positions], Float64[p[2] for p in positions], nothing
+    Float64[p[1] for p ∈ positions], Float64[p[2] for p ∈ positions], nothing
 end
 
 # -----------------------------------------------------
@@ -364,9 +364,9 @@ end
 
 function adjlist_and_degrees(source, destiny, n)
     # build a list of children (adjacency list)
-    alist = Vector{Int}[Int[] for i in 1:n]
+    alist = Vector{Int}[Int[] for i ∈ 1:n]
     indeg, outdeg = zeros(Int, n), zeros(Int, n)
-    for (si, di) in zip(source, destiny)
+    for (si, di) ∈ zip(source, destiny)
         push!(alist[si], di)
         indeg[di] += 1
         outdeg[si] += 1
@@ -385,18 +385,18 @@ function compute_tree_layers(source, destiny, n)
     placed = Int[]
 
     layers = zeros(n)
-    for i in 1:n
+    for i ∈ 1:n
         idx = shift!(idxs)
 
         # first, place this after its parents
-        for j in placed
+        for j ∈ placed
             if idx in alist[j]
                 layers[idx] = max(layers[idx], layers[j] + 1)
             end
         end
 
         # next, shift its children lower
-        for j in idxs
+        for j ∈ idxs
             if j in alist[idx]
                 layers[j] = max(layers[j], layers[idx] + 1)
             end
@@ -418,16 +418,16 @@ function compute_tree_layers2(source, destiny, n)
     end
 
     layers = zeros(Int, n)
-    for i in roots
+    for i ∈ roots
         shift_children!(layers, alist, Int[], i)
     end
 
     # now that we've shifted children out, move parents closer to their closest children
     while true
         shifted = false
-        for parent in 1:n
+        for parent ∈ 1:n
             if !(isempty(alist[parent]))
-                minidx = minimum(layers[child] for child in alist[parent])
+                minidx = minimum(layers[child] for child ∈ alist[parent])
                 if layers[parent] < minidx - 1
                     shifted = true
                     layers[parent] = minidx - 1
@@ -441,12 +441,12 @@ function compute_tree_layers2(source, destiny, n)
 end
 
 function shift_children!(layers, alist, placed, parent)
-    for idx in alist[parent]
+    for idx ∈ alist[parent]
         if !(idx in placed) && layers[idx] <= layers[parent]
             layers[idx] = layers[parent] + 1
         end
     end
-    for idx in alist[parent]
+    for idx ∈ alist[parent]
         if idx != parent && !(idx in placed)
             push!(placed, idx)
             shift_children!(layers, alist, placed, idx)
@@ -486,7 +486,7 @@ function chord_diagram(
 
     x = Array{Float64}(undef, N)
     y = Array{Float64}(undef, N)
-    for i in 1:N
+    for i ∈ 1:N
         v = (i - 1) * δ
         x[i] = sin(v)
         y[i] = cos(v)

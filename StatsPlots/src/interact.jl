@@ -1,7 +1,7 @@
 plot_function(plt::Function, grouped) = plt
 plot_function(plt::Tuple, grouped) = grouped ? plt[2] : plt[1]
 
-combine_cols(dict, ns) = length(ns) > 1 ? hcat((dict[n] for n in ns)...) : dict[ns[1]]
+combine_cols(dict, ns) = length(ns) > 1 ? hcat((dict[n] for n ∈ ns)...) : dict[ns[1]]
 
 function dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
     (t isa AbstractObservable) || (t = Observable{Any}(t))
@@ -10,7 +10,7 @@ function dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
 
     @show names = map(collect ∘ keys, coltable)
 
-    dict = @map Dict((key, val) for (key, val) in pairs(&coltable))
+    dict = @map Dict((key, val) for (key, val) ∈ pairs(&coltable))
     x = Widgets.dropdown(names, placeholder = "First axis", multiple = true)
     y = Widgets.dropdown(names, placeholder = "Second axis", multiple = true)
     y_toggle = Widgets.togglecontent(y, value = false, label = "Second axis")
@@ -65,7 +65,7 @@ function dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
 
             # grouping kwarg
             has_by = by_toggle[] && !isempty(by[])
-            by_tup = Tuple(getindex(&dict, b) for b in by[])
+            by_tup = Tuple(getindex(&dict, b) for b ∈ by[])
             has_by && (kwargs[:group] = NamedTuple{Tuple(by[])}(by_tup))
 
             # label kwarg

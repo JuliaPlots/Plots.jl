@@ -56,7 +56,7 @@ function get_source_destiny_weight(mat::AbstractArray{T,2}) where {T}
     weights = Array{T}(undef, L)
 
     idx = 0
-    for i in 1:nrow, j in 1:ncol
+    for i ∈ 1:nrow, j ∈ 1:ncol
         value = mat[i, j]
         if !isnan(value) && (nosparse || value != zero(T)) # TODO: deal with Nullable
             if i < j
@@ -98,8 +98,8 @@ function get_source_destiny_weight(
 ) where {V<:AbstractVector{T}} where {T<:Any}
     source = Int[]
     destiny = Int[]
-    for (i, l) in enumerate(adjlist)
-        for j in l
+    for (i, l) ∈ enumerate(adjlist)
+        for j ∈ l
             push!(source, i)
             push!(destiny, j)
         end
@@ -133,8 +133,8 @@ function get_adjacency_list(
     weights::AbstractVector,
 )
     n = infer_size_from(source, destiny)
-    adjlist = [Int[] for i in 1:n]
-    for (s, d) in zip(source, destiny)
+    adjlist = [Int[] for i ∈ 1:n]
+    for (s, d) ∈ zip(source, destiny)
         push!(adjlist[s], d)
     end
     adjlist
@@ -146,7 +146,7 @@ get_adjacency_list(adjlist::AbstractVector{<:AbstractVector{Int}}) = adjlist
 
 function make_symmetric(A::AbstractMatrix)
     A = copy(A)
-    for i in 1:size(A, 1), j in (i + 1):size(A, 2)
+    for i ∈ 1:size(A, 1), j ∈ (i + 1):size(A, 2)
         A[i, j] = A[j, i] = A[i, j] + A[j, i]
     end
     A
@@ -165,7 +165,7 @@ function compute_laplacian(adjmat::AbstractMatrix, node_weights::AbstractVector)
     D = diagm(0 => deg)
 
     # Laplacian (L = D - adjmat)
-    L = eltype(adjmat)[i == j ? deg[i] : -adjmat[i, j] for i in 1:n, j in 1:n]
+    L = eltype(adjmat)[i == j ? deg[i] : -adjmat[i, j] for i ∈ 1:n, j ∈ 1:n]
 
     L, D
 end
@@ -183,14 +183,14 @@ function estimate_distance(adjmat::AbstractMatrix)
     )
     tot = 0.0
     cnt = 0
-    for (i, d) in enumerate(dists)
+    for (i, d) ∈ enumerate(dists)
         if d < 1e10
             tot += d
             cnt += 1
         end
     end
     avg = cnt > 0 ? tot / cnt : 1.0
-    for (i, d) in enumerate(dists)
+    for (i, d) ∈ enumerate(dists)
         if d > 1e10
             dists[i] = 3avg
         end
@@ -203,7 +203,7 @@ function get_source_destiny_weight(g::Graphs.AbstractGraph)
     destiny = Vector{Int}()
     sizehint!(source, Graphs.nv(g))
     sizehint!(destiny, Graphs.nv(g))
-    for e in Graphs.edges(g)
+    for e ∈ Graphs.edges(g)
         push!(source, Graphs.src(e))
         push!(destiny, Graphs.dst(e))
     end
@@ -363,7 +363,7 @@ more details.
     # plotattributes and replace the attributes with their aliases. Then delete the alias
     # names from the plotattributes dictionary.
     @process_aliases plotattributes graph_aliases
-    for arg in keys(graph_aliases)
+    for arg ∈ keys(graph_aliases)
         remove_aliases!(arg, plotattributes, graph_aliases)
     end
     # The above process will remove all marker properties from the plotattributes
@@ -395,7 +395,7 @@ more details.
             nodestrokestyle,
         ],
     )
-    for (markerproperty, nodeproperty) in marker_node_collection
+    for (markerproperty, nodeproperty) ∈ marker_node_collection
         # Make sure that the node properties are row vectors.
         nodeproperty isa Array && (nodeproperty = permutedims(vec(nodeproperty)))
         plotattributes[markerproperty] = nodeproperty
@@ -406,7 +406,7 @@ more details.
     # fact that we override the default behavior. Custom nodehapes are incompatible
     # with the backend's markershapes and thus replaced.
     if nodeshape isa Function ||
-       nodeshape isa Array && any([s isa Function for s in nodeshape])
+       nodeshape isa Array && any([s isa Function for s ∈ nodeshape])
         plotattributes[:markershape] = :circle
     end
 
@@ -426,8 +426,8 @@ more details.
     source, destiny, weights = get_source_destiny_weight(g.args...)
     if !(eltype(source) <: Integer)
         names = unique(sort(vcat(source, destiny)))
-        source = Int[findfirst(names, si) for si in source]
-        destiny = Int[findfirst(names, di) for di in destiny]
+        source = Int[findfirst(names, si) for si ∈ source]
+        destiny = Int[findfirst(names, di) for di ∈ destiny]
     end
     n = infer_size_from(source, destiny)
     display_n = trim ? n : nr  # number of displayed nodes
@@ -516,7 +516,7 @@ more details.
         nodeshape = repeat([nodeshape], length(x))
     end
     if !is3d
-        for i in eachindex(x)
+        for i ∈ eachindex(x)
             node_number =
                 i % length(nodeshape) == 0 ? length(nodeshape) : i % length(nodeshape)
             node_weight =
@@ -591,7 +591,7 @@ more details.
     # then all of the information in node_vec_vec_xy[i] can be summarised with three
     # numbers describing the center and the radius of the circle.
     node_perimeter_info = []
-    for i in eachindex(node_vec_vec_xy)
+    for i ∈ eachindex(node_vec_vec_xy)
         if nodeshape[i] == :circle
             push!(
                 node_perimeter_info,
@@ -615,7 +615,7 @@ more details.
             matrix_size = round(Int, sqrt(length(edgelabel)))
             edgelabel = reshape(edgelabel, matrix_size, matrix_size)
         end
-        for i in 1:size(edgelabel)[1], j in 1:size(edgelabel)[2]
+        for i ∈ 1:size(edgelabel)[1], j ∈ 1:size(edgelabel)[2]
             if islabel(edgelabel[i, j])
                 tmp[(i, j)] = edgelabel[i, j]
             end
@@ -627,14 +627,14 @@ more details.
     # edges).
     if edgelabel isa Dict
         edgelabel = convert(Dict{Any,Any}, edgelabel)
-        for key in keys(edgelabel)
+        for key ∈ keys(edgelabel)
             if length(key) == 2
                 edgelabel[(key..., 1)] = edgelabel[key]
             end
         end
     end
     edge_has_been_seen = Dict()
-    for edge in zip(source, destiny)
+    for edge ∈ zip(source, destiny)
         edge_has_been_seen[edge] = 0
     end
     if length(curvature_scalar) == 1
@@ -655,7 +655,7 @@ more details.
         2
     end
 
-    for (edge_num, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+    for (edge_num, (si, di, wi)) ∈ enumerate(zip(source, destiny, weights))
         edge_has_been_seen[(si, di)] += 1
         xseg = Float64[]
         yseg = Float64[]
@@ -704,19 +704,19 @@ more details.
                 )
                 append!(xseg, xpts)
                 append!(yseg, ypts)
-                append!(l_wg, [wi for i in 1:length(xpts)])
+                append!(l_wg, [wi for i ∈ 1:length(xpts)])
             elseif method == :arcdiagram
                 r = (xdi - xsi) / 2
                 x₀ = (xdi + xsi) / 2
                 θ = range(0, stop = π, length = 30)
                 xpts = x₀ .+ r .* cos.(θ)
                 ypts = r .* sin.(θ) .+ ysi # ysi == ydi
-                for x in xpts
+                for x ∈ xpts
                     push!(xseg, x)
                     push!(l_wg, wi)
                 end
                 # push!(xseg, NaN)
-                for y in ypts
+                for y ∈ ypts
                     push!(yseg, y)
                 end
                 # push!(yseg, NaN)
@@ -740,7 +740,7 @@ more details.
                 A = hcat(xpts, ypts)
                 itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
                 tfine = range(0, stop = 1, length = nsegments)
-                xpts, ypts = [itp(t, 1) for t in tfine], [itp(t, 2) for t in tfine]
+                xpts, ypts = [itp(t, 1) for t ∈ tfine], [itp(t, 2) for t ∈ tfine]
                 if !isnothing(edgelabel) &&
                    haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                     q = control_point(
@@ -859,7 +859,7 @@ more details.
                 A = hcat(xpts, ypts)
                 itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
                 tfine = range(0, stop = 1, length = nsegments)
-                xpts, ypts = [itp(t, 1) for t in tfine], [itp(t, 2) for t in tfine]
+                xpts, ypts = [itp(t, 1) for t ∈ tfine], [itp(t, 2) for t ∈ tfine]
             else
                 _, _, start_point1, start_point2 = nearest_intersection(
                     xsi,
@@ -901,7 +901,7 @@ more details.
                 A = hcat(xpts, ypts)
                 itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
                 tfine = range(0, stop = 1, length = nsegments)
-                xpts, ypts = [itp(t, 1) for t in tfine], [itp(t, 2) for t in tfine]
+                xpts, ypts = [itp(t, 1) for t ∈ tfine], [itp(t, 2) for t ∈ tfine]
             end
             append!(xseg, xpts)
             append!(yseg, ypts)
@@ -955,8 +955,8 @@ more details.
             ),
         )
         edges_list = (
-            [edges_list[1][:, j] for j in 1:size(edges_list[1], 2)],
-            [edges_list[2][:, j] for j in 1:size(edges_list[2], 2)],
+            [edges_list[1][:, j] for j ∈ 1:size(edges_list[1], 2)],
+            [edges_list[2][:, j] for j ∈ 1:size(edges_list[2], 2)],
         )
     end
 
@@ -1002,12 +1002,12 @@ more details.
     # The boxes around edge labels are defined as another list of series that sits on top
     # of the series for the edges.
     edge_has_been_seen = Dict()
-    for edge in zip(source, destiny)
+    for edge ∈ zip(source, destiny)
         edge_has_been_seen[edge] = 0
     end
     index = 0
     if edge_label_box && !isnothing(edgelabel)
-        for (edge_num, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+        for (edge_num, (si, di, wi)) ∈ enumerate(zip(source, destiny, weights))
             edge_has_been_seen[(si, di)] += 1
             if haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                 index += 1
@@ -1063,13 +1063,13 @@ more details.
         markeralpha := 0
         aspect_ratio --> :equal
         if length(names) == length(x)
-            annotations := [(x[i], y[i], names[i]) for i in eachindex(x)]
+            annotations := [(x[i], y[i], names[i]) for i ∈ eachindex(x)]
         end
         @series begin
             seriestype := :shape
             N = length(x)
             angles = Vector{Float64}(undef, N)
-            for i in 1:N
+            for i ∈ 1:N
                 if y[i] > 0
                     angles[i] = acos(x[i])
                 else
@@ -1077,9 +1077,9 @@ more details.
                 end
             end
             δ = 0.4 * (angles[2] - angles[1])
-            vec_vec_xy = [arcshape(Θ - δ, Θ + δ) for Θ in angles] # Shape
-            [[xy[1] for xy in vec_xy] for vec_xy in vec_vec_xy],
-            [[xy[2] for xy in vec_xy] for vec_xy in vec_vec_xy]
+            vec_vec_xy = [arcshape(Θ - δ, Θ + δ) for Θ ∈ angles] # Shape
+            [[xy[1] for xy ∈ vec_xy] for vec_xy ∈ vec_vec_xy],
+            [[xy[2] for xy ∈ vec_xy] for vec_xy ∈ vec_vec_xy]
         end
     else
         if is3d
@@ -1106,9 +1106,9 @@ more details.
                 line_z := nodestroke_z
 
                 nodeperimeters = (Any[], Any[])
-                for vec_xy in node_vec_vec_xy
-                    push!(nodeperimeters[1], [xy[1] for xy in vec_xy])
-                    push!(nodeperimeters[2], [xy[2] for xy in vec_xy])
+                for vec_xy ∈ node_vec_vec_xy
+                    push!(nodeperimeters[1], [xy[1] for xy ∈ vec_xy])
+                    push!(nodeperimeters[2], [xy[2] for xy ∈ vec_xy])
                 end
 
                 nodeperimeters
@@ -1148,7 +1148,7 @@ more details.
                                 i % length(names),
                             )],
                             fontsize,
-                        ) for i in eachindex(x)
+                        ) for i ∈ eachindex(x)
                     ]
                 ]
             end

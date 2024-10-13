@@ -1,11 +1,11 @@
 function treepositions(hc::Hclust, useheight::Bool, orientation = :vertical)
     order = StatsBase.indexmap(hc.order)
-    nodepos = Dict(-i => (float(order[i]), 0.0) for i in hc.order)
+    nodepos = Dict(-i => (float(order[i]), 0.0) for i ∈ hc.order)
 
     xs = Array{Float64}(undef, 4, size(hc.merges, 1))
     ys = Array{Float64}(undef, 4, size(hc.merges, 1))
 
-    for i = 1:size(hc.merges, 1)
+    for i ∈ 1:size(hc.merges, 1)
         x1, y1 = nodepos[hc.merges[i, 1]]
         x2, y2 = nodepos[hc.merges[i, 2]]
 

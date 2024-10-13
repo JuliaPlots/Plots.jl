@@ -41,7 +41,7 @@ PlotsBase.@deps density path
         newx, newy = newy, newx
     end
 
-    newy = cumsum(float(yi) for yi in newy)
+    newy = cumsum(float(yi) for yi ∈ newy)
     newy ./= newy[end]
 
     x := newx
@@ -109,7 +109,7 @@ PlotsBase.group_as_matrix(g::GroupedHist) = true
 
         # compute weights (frequencies) by group using those edges
         y = fill(NaN, nbins, ngroups)
-        for i = 1:ngroups
+        for i ∈ 1:ngroups
             groupinds = idxs[i]
             v_i = filter(x -> !isnan(x), v[:, i])
             w_i = weights == nothing ? nothing : weights[groupinds]
@@ -182,7 +182,7 @@ function linbin(X, gpoints; trun = true)
     gcnts = zeros(M)
     delta = (b - a) / (M - 1)
 
-    for i = 1:n
+    for i ∈ 1:n
         lxi = ((X[i] - a) / delta) + 1
         li = floor(Int, lxi)
         rem = lxi - li
@@ -232,7 +232,7 @@ function bkfe(gcounts, drv, bandwidth, range_x)
     hmold1 = arg
 
     if drv >= 2
-        for i in (2:drv)
+        for i ∈ (2:drv)
             hmnew = arg .* hmold1 .- (i - 1) .* hmold0
             hmold0 = hmold1       # Compute mth degree Hermite polynomial
             hmold1 = hmnew        # by recurrence.

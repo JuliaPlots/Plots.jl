@@ -122,7 +122,7 @@ end
     @test GraphRecipes.isnothing(0.0) == PlotsBase.isnothing(0.0)
     @test GraphRecipes.isnothing(1.0) == PlotsBase.isnothing(1.0)
 
-    for (s, e) in [(rand(rng), rand(rng)) for i in 1:100]
+    for (s, e) ∈ [(rand(rng), rand(rng)) for i ∈ 1:100]
         @test GraphRecipes.partialcircle(s, e) == PlotsBase.partialcircle(s, e)
     end
 

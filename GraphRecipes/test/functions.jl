@@ -6,8 +6,8 @@ using GraphRecipes.AbstractTrees
 function random_labelled_graph()
     n = 15
     rng = StableRNG(1)
-    A = Float64[rand(rng) < 0.5 ? 0 : rand(rng) for i in 1:n, j in 1:n]
-    for i in 1:n
+    A = Float64[rand(rng) < 0.5 ? 0 : rand(rng) for i ∈ 1:n, j ∈ 1:n]
+    for i ∈ 1:n
         A[i, 1:(i - 1)] = A[1:(i - 1), i]
         A[i, i] = 0
     end
@@ -62,8 +62,8 @@ function edgelabel()
     n = 8
     g = wheel_digraph(n)
     edgelabel_dict = Dict()
-    for i in 1:n
-        for j in 1:n
+    for i ∈ 1:n
+        for j ∈ 1:n
             edgelabel_dict[(i, j)] = string("edge ", i, " to ", j)
         end
     end
@@ -102,7 +102,7 @@ function arc_chord_diagrams()
         graphplot(
             adjmat,
             method = :chorddiagram,
-            names = [text(string(i), 8) for i in 1:8],
+            names = [text(string(i), 8) for i ∈ 1:8],
             linecolor = :black,
             fillcolor = :lightgray,
             rng = rng,
@@ -124,7 +124,7 @@ function marker_properties()
     seed = 42
     rng = StableRNG(seed)
     g = barabasi_albert(N, 1; rng = rng)
-    weights = [length(neighbors(g, i)) for i in 1:nv(g)]
+    weights = [length(neighbors(g, i)) for i ∈ 1:nv(g)]
     graphplot(
         g,
         curvature_scalar = 0,
@@ -147,7 +147,7 @@ end
 function ast_example()
     code = :(function mysum(list)
         out = 0
-        for value in list
+        for value ∈ list
             out += value
         end
         out
@@ -172,7 +172,7 @@ julia_type_tree() = plot(
     rng = StableRNG(1),
 )
 
-AbstractTrees.children(d::Dict) = [p for p in d]
+AbstractTrees.children(d::Dict) = [p for p ∈ d]
 AbstractTrees.children(p::Pair) = AbstractTrees.children(p[2])
 function AbstractTrees.printnode(io::IO, p::Pair)
     str =
@@ -193,9 +193,8 @@ function julia_dict_tree()
     )
 end
 
-diamond_nodeshape(x_i, y_i, s) = [
-    (x_i + 0.5s * dx, y_i + 0.5s * dy) for (dx, dy) in [(1, 1), (-1, 1), (-1, -1), (1, -1)]
-]
+diamond_nodeshape(x_i, y_i, s) =
+    [(x_i + 0.5s * dx, y_i + 0.5s * dy) for (dx, dy) ∈ [(1, 1), (-1, 1), (-1, -1), (1, -1)]]
 
 function diamond_nodeshape_wh(x_i, y_i, h, w)
     out = Tuple{Float64,Float64}[(-0.5, 0), (0, -0.5), (0.5, 0), (0, 0.5)]
@@ -210,7 +209,7 @@ function custom_nodeshapes_single()
     rng = StableRNG(1)
     g = rand(rng, 5, 5)
     g[g .> 0.5] .= 0
-    for i in 1:5
+    for i ∈ 1:5
         g[i, i] = 0
     end
     graphplot(g, nodeshape = diamond_nodeshape, rng = rng)
@@ -220,7 +219,7 @@ function custom_nodeshapes_various()
     rng = StableRNG(1)
     g = rand(rng, 5, 5)
     g[g .> 0.5] .= 0
-    for i in 1:5
+    for i ∈ 1:5
         g[i, i] = 0
     end
     graphplot(
@@ -249,7 +248,7 @@ function funky_edge_and_marker_args()
     curviness_matrix = zeros(n, n)
     edgewidth_matrix = zeros(n, n)
     edgestyle_dict = Dict()
-    for e in edges(g)
+    for e ∈ edges(g)
         curviness_matrix[e.src, e.dst] = 0.5sin(e.src)
         edgewidth_matrix[e.src, e.dst] = 0.8e.dst
         edgestyle_dict[(e.src, e.dst)] = e.src < 2.0 ? :solid : e.src > 3.0 ? :dash : :dot

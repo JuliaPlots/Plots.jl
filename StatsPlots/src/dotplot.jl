@@ -22,7 +22,7 @@
 
     points_x, points_y = zeros(0), zeros(0)
 
-    for (i, grouplabel) in enumerate(grouplabels)
+    for (i, grouplabel) ∈ enumerate(grouplabels)
         # filter y
         groupy = y[filter(i -> _cycle(x, i) == grouplabel, 1:length(y))]
 
@@ -89,7 +89,7 @@ recipetype(::Val{:groupeddotplot}, args...) = GroupedDotplot(args)
         float.(x)
     else
         bar_width --> 0.8
-        xnums = [findfirst(isequal(xi), ux) for xi in x] .- 0.5
+        xnums = [findfirst(isequal(xi), ux) for xi ∈ x] .- 0.5
         xticks --> (eachindex(ux) .- 0.5, ux)
         xnums
     end
@@ -102,7 +102,7 @@ recipetype(::Val{:groupeddotplot}, args...) = GroupedDotplot(args)
         n = length(labels)
         bws = plotattributes[:bar_width] / n
         bar_width := bws * clamp(1 - spacing, 0, 1)
-        for i = 1:n
+        for i ∈ 1:n
             groupinds = idxs[i]
             Δx = _cycle(bws, i) * (i - (n + 1) / 2)
             x[groupinds] .+= Δx

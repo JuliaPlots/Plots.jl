@@ -25,7 +25,7 @@ andrewsplot
     seriestype := :andrews
 
     # series in a user recipe will have different colors
-    for g in unique(x)
+    for g ∈ unique(x)
         @series begin
             label := "$g"
             range(-π, stop = π, length = 200), Surface(y[g .== x, :]) #surface needed, or the array will be split into columns
@@ -41,14 +41,14 @@ end
     seriestype := :path
 
     # these series are the lines, will keep the same colors
-    for j = 1:rows
+    for j ∈ 1:rows
         @series begin
             primary := false
             ys = zeros(length(x))
             terms =
-                [isodd(i) ? cos((i ÷ 2) .* ti) : sin((i ÷ 2) .* ti) for i = 2:cols, ti in x]
-            for ti in eachindex(x)
-                ys[ti] = y[j, 1] / sqrt(2) + sum(y[j, i] .* terms[i - 1, ti] for i = 2:cols)
+                [isodd(i) ? cos((i ÷ 2) .* ti) : sin((i ÷ 2) .* ti) for i ∈ 2:cols, ti ∈ x]
+            for ti ∈ eachindex(x)
+                ys[ti] = y[j, 1] / sqrt(2) + sum(y[j, i] .* terms[i - 1, ti] for i ∈ 2:cols)
             end
 
             x := x

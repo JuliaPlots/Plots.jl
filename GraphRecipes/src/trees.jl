@@ -29,7 +29,7 @@ struct TreePlot{T}
 end
 
 function add_children!(nodes, source, destiny, node, parent_idx)
-    for child in children(node)
+    for child ∈ children(node)
         push!(nodes, child)
         child_idx = length(nodes)
         push!(source, parent_idx)

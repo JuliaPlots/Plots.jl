@@ -106,7 +106,7 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
     ret = Vector{Float64}(undef, 2)
     A = Array{Float64}(undef, 2, 2)
     nearest = Inf
-    for i in 1:(length(vec_xy_d) - 1)
+    for i ∈ 1:(length(vec_xy_d) - 1)
         xvec .= [vec_xy_d[i][1], vec_xy_d[i + 1][1]]
         yvec .= [vec_xy_d[i][2], vec_xy_d[i + 1][2]]
         A .= [-xs+xd -xvec[1]+xvec[2]; -ys+yd -yvec[1]+yvec[2]]
@@ -220,8 +220,8 @@ function unoccupied_angle(x1, y1, x, y)
     max_range = zeros(2)
     # Calculate all angles between the point [x1,y1] and all points [x[i],y[i]], make sure
     # that all of the angles are between 0 and 2pi
-    angles = [atan(y[i] - y1, x[i] - x1) for i in 1:length(x)]
-    for i in 1:length(angles)
+    angles = [atan(y[i] - y1, x[i] - x1) for i ∈ 1:length(x)]
+    for i ∈ 1:length(angles)
         if angles[i] < 0
             angles[i] += 2pi
         end
@@ -229,7 +229,7 @@ function unoccupied_angle(x1, y1, x, y)
     # Sort all of the angles and calculate which two angles subtend the largest gap.
     sort!(angles)
     max_range .= [angles[end], angles[1]]
-    for i in 2:length(x)
+    for i ∈ 2:length(x)
         if (
             clockwise_difference(angles[i], angles[i - 1]) >
             clockwise_difference(max_range[2], max_range[1])
@@ -247,17 +247,17 @@ function process_edge_attribute(attr, source, destiny, weights)
         return attr
     elseif attr isa Graphs.AbstractGraph
         mat = incidence_matrix(attr)
-        attr = [mat[si, di] for (si, di) in zip(source, destiny)][:] |> permutedims
+        attr = [mat[si, di] for (si, di) ∈ zip(source, destiny)][:] |> permutedims
     elseif attr isa Function
         attr =
             [
                 attr(si, di, wi) for
-                (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+                (i, (si, di, wi)) ∈ enumerate(zip(source, destiny, weights))
             ][:] |> permutedims
     elseif attr isa Dict
-        attr = [attr[(si, di)] for (si, di) in zip(source, destiny)][:] |> permutedims
+        attr = [attr[(si, di)] for (si, di) ∈ zip(source, destiny)][:] |> permutedims
     elseif all(size(attr) .!= 1)
-        attr = [attr[si, di] for (si, di) in zip(source, destiny)][:] |> permutedims
+        attr = [attr[si, di] for (si, di) ∈ zip(source, destiny)][:] |> permutedims
     end
     attr
 end
@@ -265,21 +265,21 @@ end
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r = 1)
     Tuple{Float64,Float64}[
-        (r * cos(u), r * sin(u)) for u in range(start_θ, stop = end_θ, length = n)
+        (r * cos(u), r * sin(u)) for u ∈ range(start_θ, stop = end_θ, length = n)
     ]
 end
 
 function partialcircle(start_θ, end_θ, circle_center::Array{T,1}, n = 20, r = 1) where {T}
     Tuple{Float64,Float64}[
         (r * cos(u) + circle_center[1], r * sin(u) + circle_center[2]) for
-        u in range(start_θ, stop = end_θ, length = n)
+        u ∈ range(start_θ, stop = end_θ, length = n)
     ]
 end
 
 function partialellipse(start_θ, end_θ, n = 20, major_axis = 2, minor_axis = 1)
     Tuple{Float64,Float64}[
         (major_axis * cos(u), minor_axis * sin(u)) for
-        u in range(start_θ, stop = end_θ, length = n)
+        u ∈ range(start_θ, stop = end_θ, length = n)
     ]
 end
 
@@ -293,7 +293,7 @@ function partialellipse(
 ) where {T}
     Tuple{Float64,Float64}[
         (major_axis * cos(u) + ellipse_center[1], minor_axis * sin(u) + ellipse_center[2])
-        for u in range(start_θ, stop = end_θ, length = n)
+        for u ∈ range(start_θ, stop = end_θ, length = n)
     ]
 end
 
@@ -327,7 +327,7 @@ end
 
 function replacement_kwarg(sym, name, plotattributes, graph_aliases)
     replacement = name
-    for alias in graph_aliases[sym]
+    for alias ∈ graph_aliases[sym]
         if haskey(plotattributes, alias)
             replacement = plotattributes[alias]
         end
@@ -348,13 +348,13 @@ macro process_aliases(plotattributes, graph_aliases)
                 $(esc(plotattributes)),
                 $(esc(graph_aliases)),
             )),
-        ) for sym in attributes
+        ) for sym ∈ attributes
     ]
     ex
 end
 
 remove_aliases!(sym, plotattributes, graph_aliases) =
-    for alias in graph_aliases[sym]
+    for alias ∈ graph_aliases[sym]
         if haskey(plotattributes, alias)
             delete!(plotattributes, alias)
         end
