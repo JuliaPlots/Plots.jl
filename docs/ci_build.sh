@@ -76,16 +76,22 @@ $julia -e '
 '
 
 echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
-$julia <<EOF
+$julia <<'EOF'
 using Pkg
+
+rev = split(ENV["GITHUB_REF"], "/", limit=3)[3])
+println("rev=$rev")
+
 Pkg.develop([
   (; path="./RecipesBase"),
   (; path="./RecipesPipeline"),
   (; path="./PlotsBase"),
+  (; path="."),
   (; path="./GraphRecipes"),
   (; path="./StatsPlots"),
 ])
-Pkg.add(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3]))
+Pkg.add(PackageSpec(; name="Plots", rev)
+
 Pkg.instantiate()
 EOF
 $julia docs/make.jl
