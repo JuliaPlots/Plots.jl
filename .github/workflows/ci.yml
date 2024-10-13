@@ -77,13 +77,7 @@ jobs:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         run: julia --color=yes ci/matplotlib.jl
 
-      - name: Test downstream packages
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          xvfb-run julia --color=yes ci/downstream.jl GraphRecipes
-          xvfb-run julia --color=yes ci/downstream.jl StatsPlots
-
-      - name: Test RecipesBase, RecipesPipeline, PlotsBase, Plots
+      - name: Test all Plots packages
         timeout-minutes: 60
         run: |
           cmd=(julia --color=yes)
@@ -93,6 +87,7 @@ jobs:
           echo ${cmd[@]}
           ${cmd[@]} -e '
             using Pkg
+            foreach(name -> Pkg.test(name; coverage=true), ("GraphRecipes", "StatsPlots"))
             foreach(name -> Pkg.test(name; coverage=true), ("RecipesBase", "RecipesPipeline", "PlotsBase", "Plots"))
           '
 
