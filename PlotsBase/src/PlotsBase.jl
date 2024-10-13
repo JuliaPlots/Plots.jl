@@ -108,7 +108,6 @@ export
     test_examples,
     coords,
 
-    center,
     plotattr,
     scalefontsizes,
     resetfontsizes
