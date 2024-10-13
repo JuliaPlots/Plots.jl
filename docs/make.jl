@@ -585,6 +585,8 @@ function main()
     unicodeplots()
     gaston()
 
+    PythonPlot.pygui(false)  # prevent segfault on event loop in ci
+
     # NOTE: for a faster representative test build use `PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES='1'`
     default_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston"
     packages = get(ENV, "PLOTDOCS_PACKAGES", default_packages)
