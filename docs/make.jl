@@ -822,6 +822,7 @@ function main()
     deploydocs(
         repo = "github.com/JuliaPlots/Plots.jl.git",
         versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
+        devbranch = "v2",
         push_preview = true,
         forcepush = true,
     )
