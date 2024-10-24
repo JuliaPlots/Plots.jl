@@ -819,12 +819,15 @@ function main()
     end
 
     @info "deploydocs"
-    deploydocs(
-        repo = "github.com/JuliaPlots/PlotDocs.jl.git",
-        versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
-        push_preview = true,
-        forcepush = true,
-    )
+    repo = "github.com/JuliaPlots/PlotDocs.jl.git"  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
+    withenv("GITHUB_REPOSITORY" => repo) do
+        deploydocs(;
+            versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
+            push_preview = true,
+            forcepush = true,
+            repo,
+        )
+    end
 end
 
 main()
