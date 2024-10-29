@@ -42,6 +42,7 @@ include("sand.jl")
 include("lime.jl")
 include("orange.jl")
 include("wong.jl")
+include("boxed.jl")
 include("juno.jl")
 include("gruvbox.jl")
 include("sheet.jl")
@@ -65,6 +66,7 @@ const _themes = Dict{Symbol, PlotTheme}([
     :mute => _mute,
     :wong => _wong,
     :wong2 => _wong2,
+    :boxed => _boxed,
     :juno => _juno,
     :lime => _lime,
     :orange => _orange,
