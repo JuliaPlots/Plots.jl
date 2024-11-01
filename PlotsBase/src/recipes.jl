@@ -1084,7 +1084,7 @@ end
 # Error Bars
 
 Commons.@attributes function error_style!(plotattributes::AKW)
-    # errorbar color should soley determined by markerstrokecolor
+    # errorbar color should solely determined by markerstrokecolor
     haskey(plotattributes, :marker_z) &&
         RecipesPipeline.reset_kw!(plotattributes, :marker_z)
     haskey(plotattributes, :line_z) && RecipesPipeline.reset_kw!(plotattributes, :line_z)

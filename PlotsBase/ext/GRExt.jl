@@ -2187,7 +2187,7 @@ function gr_z_normalized_log_scaled(scale, z, clims)
     any(x -> !isfinite(x), loglims) && throw(
         DomainError(
             loglims,
-            "Non-finite value in colorbar limits. Please provide explicits limits via `clims`.",
+            "Non-finite value in colorbar limits. Please provide explicit limits via `clims`.",
         ),
     )
     z_log, get_z_normalized.(z_log, loglims...)

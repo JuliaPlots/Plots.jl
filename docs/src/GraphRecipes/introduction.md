@@ -12,7 +12,7 @@ GraphRecipes can be installed with the package manager:
 ```
 
 ## Usage
-The main user interface is through the fuction `graphplot`:
+The main user interface is through the function `graphplot`:
 ```@example graphintro
 using GraphRecipes, Plots
 

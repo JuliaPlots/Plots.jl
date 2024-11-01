@@ -134,11 +134,11 @@ PlotsBase.wand_edges(x::AbstractVector, args...) = (binwidth = wand_bins(x, args
 (minimum(x) - binwidth):binwidth:(maximum(x) + binwidth))
 
 "Returns optimal histogram bin widths in accordance to Wand (1995)'s criterion'"
-function wand_bins(x, scalest = :minim, gridsize = 401, range_x = extrema(x), trun = true)
+function wand_bins(x, scalest = :minim, gridsize = 401, range_x = extrema(x), t_run = true)
     n = length(x)
     minx, maxx = range_x
     gpoints = range(minx, stop = maxx, length = gridsize)
-    gcounts = linbin(x, gpoints, trun = trun)
+    gcounts = linbin(x, gpoints; t_run)
 
     scalest = if scalest === :stdev
         sqrt(var(x))
@@ -156,7 +156,7 @@ function wand_bins(x, scalest = :minim, gridsize = 401, range_x = extrema(x), tr
     sb = (maxx - mean(x)) / scalest
 
     gpoints = range(sa, stop = sb, length = gridsize)
-    gcounts = linbin(sx, gpoints, trun = trun)
+    gcounts = linbin(sx, gpoints; t_run)
 
     hpi = begin
         alpha = ((2 / (11 * n))^(1 / 13)) * sqrt(2)
@@ -175,7 +175,7 @@ function wand_bins(x, scalest = :minim, gridsize = 401, range_x = extrema(x), tr
     scalest * hpi
 end
 
-function linbin(X, gpoints; trun = true)
+function linbin(X, gpoints; t_run = true)
     n, M = length(X), length(gpoints)
 
     a, b = gpoints[1], gpoints[M]
@@ -192,14 +192,9 @@ function linbin(X, gpoints; trun = true)
             gcnts[li + 1] += rem
         end
 
-        if !trun
-            if lt < 1
-                gcnts[1] += 1
-            end
-
-            if li >= M
-                gcnts[M] += 1
-            end
+        if !t_run
+            lt < 1 && (gcnts[1] += 1)
+            li ≥ M && (gcnts[M] += 1)
         end
     end
     gcnts

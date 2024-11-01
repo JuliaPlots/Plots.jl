@@ -337,11 +337,11 @@ The `group` syntax is also possible in combination with `groupedbar`:
 
 ```julia
 ctg = repeat(["Category 1", "Category 2"], inner = 5)
-nam = repeat("G" .* string.(1:5), outer = 2)
+name = repeat("G" .* string.(1:5), outer = 2)
 
-groupedbar(nam, rand(5, 2), group = ctg, xlabel = "Groups", ylabel = "Scores",
-        title = "Scores by group and category", bar_width = 0.67,
-        lw = 0, framestyle = :box)
+groupedbar(name, rand(5, 2), group = ctg, xlabel = "Groups", ylabel = "Scores",
+           title = "Scores by group and category", bar_width = 0.67,
+           lw = 0, framestyle = :box)
 ```
 
 ![](https://user-images.githubusercontent.com/6645258/32116755-b7018f02-bb2a-11e7-82c7-ca471ecaeecf.png)

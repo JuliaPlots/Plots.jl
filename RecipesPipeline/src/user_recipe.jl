@@ -5,7 +5,7 @@
 
 Wrap input arguments in a `RecipeData' vector and recursively apply user recipes and type
 recipes on the first element. Prepend the returned `RecipeData` vector. If an element with
-empy `args` is returned pop it from the vector, finish up, and it to vector of `Dict`s with
+empty `args` is returned pop it from the vector, finish up, and it to vector of `Dict`s with
 processed series. When all arguments are processed return the series `Dict`.
 """
 function _process_userrecipes!(plt, plotattributes, args)

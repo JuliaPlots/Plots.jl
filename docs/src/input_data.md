@@ -73,7 +73,7 @@ As shown in the examples, you can plot a single polygon by using a single call t
 
 Now, let's say you're plotting `n` polygons grouped into `g` groups, with `n` > `g`. While you can use `plot` to draw separate polygons with each call, you cannot group two separate plots back into a single group. You'll end up with `n` groups in the legend, rather than `g` groups.
 
-To adress this, you can use `NaN` as a path separator. A call to `plot` would then draw one path with disjoints The following code draws `n=4` rectangles in `g=2` groups.
+To address this, you can use `NaN` as a path separator. A call to `plot` would then draw one path with disjoints The following code draws `n=4` rectangles in `g=2` groups.
 
 ```@example input_data
 using Plots

@@ -328,7 +328,7 @@ const _examples = PlotExample[
         "Custom Markers",
         """A `PlotsBase.Shape` is a light wrapper around vertices of a polygon.  For supported
         backends, pass arbitrary polygons as the marker shapes.  Note: The center is (0,0) and
-        the size is expected to be rougly the area of the unit circle.
+        the size is expected to be roughly the area of the unit circle.
         """,
         quote
             verts = [
@@ -1308,7 +1308,7 @@ _backend_skips = Dict(
         31,  # animations - needs github.com/mbaz/Gaston.jl/pull/178
         49,  # TODO: support polar
         60,  # :perspective projection unsupported
-        63,  # FXIME: twin axes misalignement
+        63,  # FXIME: twin axes misalignment
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]

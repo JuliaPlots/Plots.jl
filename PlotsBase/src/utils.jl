@@ -224,7 +224,7 @@ function heatmap_edges(
 )
     nx, ny = length(x), length(y)
     # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
-    # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
+    # the correct check, since (4, 3) != (3, 4) and a misleading plot is produced.
     ismidpoints = prod(z_size) == (ny * nx)
     isedges = z_size == (ny - 1, nx - 1)
     (ismidpoints || isedges) ||
@@ -696,7 +696,7 @@ __straightline_data(xl, yl, x, y, exp_fact) =
         ___straightline_data(xl, yl, x, y, exp_fact)
     else
         k, r = divrem(n, 3)
-        @assert r == 0 "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
+        @assert r == 0 "Malformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
         xdata, ydata = fill(NaN, n), fill(NaN, n)
         for i ∈ 1:k
             inds = (3i - 2):(3i - 1)
@@ -883,8 +883,8 @@ end
 # Function barrier because lims are type-unstable
 function _guess_best_legend_position(xl, yl, plt, weight = 100)
     scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
-    u = zeros(4) # faster than tuple
-    # Quadrants where the points will be tested
+    u = zeros(4)  # faster than tuple
+    # quadrants where the points will be tested
     quadrants = (
         ((0.00, 0.25), (0.00, 0.25)),   # bottomleft
         ((0.75, 1.00), (0.00, 0.25)),   # bottomright

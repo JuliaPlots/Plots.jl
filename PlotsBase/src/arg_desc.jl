@@ -101,9 +101,9 @@ const _arg_desc = KW(
     :foreground_color_title      => (ColorType, "Color of subplot title (`:match` matches :foreground_color_subplot`)."),
     :color_palette               => (Union{AVec{ColorType},Symbol}, "Iterable (cycle through) or color gradient (generate list from gradient) or `:auto` (generate a color list using `Colors.distiguishable_colors` and custom seed colors chosen to contrast with the background). The color palette is a color list from which series colors are automatically chosen."),
     :legend_position             => (Union{Bool,NTuple{2,Real},Symbol}, """
-                                    Show the legend ? Can also be a (x,y) tuple or Symbol (legend position) or angle (angle,inout) tuple. Bottom left corner of legend is placed at (x,y).
+                                    Show the legend ? Can also be a (x,y) tuple or Symbol (legend position) or angle (angle,in-out) tuple. Bottom left corner of legend is placed at (x,y).
                                     Choose from (`:none`, `:best`, `:inline`, `:inside`, `:legend`) or any valid combination of `:(outer ?)(top/bottom ?)(right/left ?)`, i.e.: `:top`, `:topright`, `:outerleft`, `:outerbottomright` ... (note: only some may be supported in each backend)."""),
-    :legend_column               => (Integer, "Number of columns in the legend. `-1` stands for maximum number of colums (horizontal legend)."),
+    :legend_column               => (Integer, "Number of columns in the legend. `-1` stands for maximum number of columns (horizontal legend)."),
     :legend_title_font           => (Font, "Font of the legend title."),
     :legend_font_family          => (Union{AStr,Symbol}, "Font family of legend entries."),
     :legend_font_pointsize       => (Integer, "Font pointsize of legend entries."),
