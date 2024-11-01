@@ -186,7 +186,7 @@ Many people have trouble with Git.  More have trouble with Github.  I think much
 Here are some guidelines for the development workflow (Note: Even if you've made 20 PRs to Plots in the past, please read this as it may be different than past guidelines):
 
 - **Commit to a branch that belongs to you.**  Typically that means you should give your branches names that are unique to you, and that might include information on the feature you're developing.  For example, I might choose to `git checkout -b tb-fonts` when starting work on fonts.
-- **Open a PR against master.**  `master` is the "bleeding edge".  (Note: I used to recommend PRing to `dev`)
+- **Open a PR against master.**  `master` is the "bleeding edge".  (Note: I used to recommend `PR`ing to `dev`)
 - **Only merge others changes when absolutely necessary.** You should prefer to use `git rebase origin/master` instead of `git merge origin/master`.  A rebase replays your recent commits on top of the most recent `master`, avoiding complicated and messy merge commits and generally avoiding confusion.  If you follow the first rule, then you likely won't get yourself in trouble.  Rebase horror stories generally result when many people are working on the same branch.  I find [this resource](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) is great for understanding the important parts of `git rebase`.
 
 ---

@@ -520,7 +520,7 @@ for letter ∈ ("x", "y", "z")
             $($letter)error(x, y [, z]; $($letter)error = vals)
             $($letter)error!(x, y [, z]; $($letter)error = vals)
 
-        Create or add a series of $($letter)errorbars at the positions defined by `x`, `y` and `z` with the lenghts defined in `vals`.
+        Create or add a series of $($letter)errorbars at the positions defined by `x`, `y` and `z` with the lengths defined in `vals`.
 
         Markerstrokecolor will color the whole errorbars if not specified otherwise.
         """

@@ -132,7 +132,7 @@ function shell_graph(
     kw...,
 )
     @assert dim == 2
-    positions = NetworkLayout.shell(adjmat; nlist = nlist)
+    positions = NetworkLayout.shell(adjmat; nlist)
 
     ([p[1] for p ∈ positions], [p[2] for p ∈ positions], nothing)
 end
@@ -234,16 +234,16 @@ function by_axis_local_stress_graph(
     for k ∈ 1:maxiter
         for p ∈ free_dims
             for i ∈ 1:n
-                numer, denom = 0.0, 0.0
+                num, den = 0.0, 0.0
                 for j ∈ 1:n
                     i == j && continue
-                    numer +=
+                    num +=
                         w[i, j] *
                         (X[p][j] + dist[i, j] * (X[p][i] - X[p][j]) / norm_ij(X, i, j))
-                    denom += w[i, j]
+                    den += w[i, j]
                 end
-                if denom != 0
-                    X[p][i] = numer / denom
+                if den != 0
+                    X[p][i] = num / den
                 end
             end
         end

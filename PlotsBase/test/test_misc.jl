@@ -297,7 +297,7 @@ with(:gr) do
         p4 = [0.5, 0.5, 1.0]
         pts = [p0, p1, p2, p3, p4]
         x, y, z = broadcast(i -> getindex.(pts, i), (1, 2, 3))
-        # [x[i],y[i],z[i]] is the i-th vertix of the mesh
+        # [x[i],y[i],z[i]] is the i-th vertex of the mesh
         mesh3d(
             x,
             y,

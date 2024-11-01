@@ -19,7 +19,7 @@ plotattr(:Subplot)
 plotattr(:Axis)
 ```
 
-Once you acquire the list of attributes, you can either use the aliases of a specific attribute or investigate a specific attribut to print that attribute's aliases and its description.
+Once you acquire the list of attributes, you can either use the aliases of a specific attribute or investigate a specific attribute to print that attribute's aliases and its description.
 
 ```@repl attr
 # Specific Attribute Example

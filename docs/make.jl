@@ -436,7 +436,7 @@ function generate_graph_attr_markdown()
             "Font size for the node labels and the edge labels.",
             "Shape of the nodes, choose from `:hexagon`, `:circle`, `:ellipse`, `:rect` or `:rectangle`.",
             "The size of nodes in the plot coordinates. Note that if `names` is not empty, then nodes will be scaled to fit the labels inside them.",
-            "The color of the nodes. If `nodecolor` is an integer, then it will be taken from the current color pallette. Otherwise, the user can pass any color that would be recognised by the Plots `color` attribute.",
+            "The color of the nodes. If `nodecolor` is an integer, then it will be taken from the current color palette. Otherwise, the user can pass any color that would be recognised by the Plots `color` attribute.",
             "The coordinates of the nodes.",
             "The method that GraphRecipes uses to produce an optimal layout, choose from `:spectral`, `:sfdp`, `:circular`, `:shell`, `:stress`, `:spring`, `:tree`, `:buchheim`, `:arcdiagram` or `:chorddiagram`. See [NetworkLayout](https://github.com/JuliaGraphs/NetworkLayout.jl) for further details.",
             "A layout algorithm that can be passed in by the user.",

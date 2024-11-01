@@ -29,7 +29,7 @@ mutable struct MyVec
 end
 ```
 
-If `MyVec` was a subtype of AbstractVector, there would not be anything to do... it should "just work".  However this isn't always desireable, and it would be nice if you could call `plot(10:20, myvec)` without having to personally define every possible combination of inputs.  It this case, you'll want to use a special type of recipe signature:
+If `MyVec` was a subtype of AbstractVector, there would not be anything to do... it should "just work".  However this isn't always desirable, and it would be nice if you could call `plot(10:20, myvec)` without having to personally define every possible combination of inputs.  It this case, you'll want to use a special type of recipe signature:
 
 ```julia
 @recipe f(::Type{MyVec}, myvec::MyVec) = myvec.v

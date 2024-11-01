@@ -62,7 +62,7 @@ import GR # loads backend code
 - stephist logscale improvements
 
 ## 0.25.2
-- improvements to handle missings
+- improvements to handle `missing`s
 - pyplot: allow setting the color gradient for z values
 - document :colorbar_entry
 - limit number of automatic bins
@@ -162,7 +162,7 @@ import GR # loads backend code
 - implement guide position in gr, pyplot and pgfplots
 - inspectdr fixes
 - default appveyor
-- rudimentary missings support
+- rudimentary `missing`s support
 - deprecation fixes for PGFPlots
 
 ## 0.20.0
@@ -568,7 +568,7 @@ Many updates, min julia 1.0
 - GR:
 	- manually draw 2D axes... fixes several issues and missing features
 	- fontsize fix
-- PGFPlots: pass axis syle
+- PGFPlots: pass axis style
 
 #### 0.8.0
 

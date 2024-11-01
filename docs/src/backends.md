@@ -393,7 +393,7 @@ Pros:
 - Drag & drop &Delta;-markers (measure/display &Delta;x, &Delta;y & slope).
 - Designed with larger datasets in mind.
   - Responsive even with moderate (>200k points) datasets.
-  - Confirmed to handle 2GB datsets with reasonable speed on older desktop running Windows 7 (drag+pan of data area highly discouraged).
+  - Confirmed to handle 2GB datasets with reasonable speed on older desktop running Windows 7 (drag+pan of data area highly discouraged).
 
 Cons:
 
@@ -509,7 +509,7 @@ Primary author: Tim Holy
 
 ### [Qwt](https://github.com/tbreloff/Qwt.jl)
 
-My package which wraps PyQwt.  Similar to PyPlot, it uses PyCall to convert calls to python.  Though Qwt.jl was the "first draft" of Plots, the functionality is superceded by other backends, and it's not worth my time to maintain.
+My package which wraps PyQwt.  Similar to PyPlot, it uses PyCall to convert calls to python.  Though Qwt.jl was the "first draft" of Plots, the functionality is supersded by other backends, and it's not worth my time to maintain.
 
 Primary author: Thomas Breloff
 

@@ -539,7 +539,7 @@ function gaston_parse_axes_attrs(
         # guide labels
         guide_font = guidefont(axis)
         if letter ≡ :y && dims == 2
-            # vertical by default (consistency witht other backends)
+            # vertical by default (consistency with other backends)
             guide_font = font(guide_font; rotation = guide_font.rotation + 90)
         end
         push!(

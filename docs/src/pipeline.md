@@ -121,7 +121,7 @@ This hook gave us a nice way to swap out the input data and add custom visualiza
 
 Groups: When you'd like to split a data series into multiple plot series, you can use the `group` keyword.  Attributes can be applied to the resulting series as if your data had been already separated into distinct input data.  The `group` variable determines how to split the data and also assigns the legend label.
 
-In this example, we split the data points into 3 groups randomly, and give them different marker shapes (`[:s :o :x]` are aliases for `:star5`, `:octagon`, and `:xcross`). The other attibutes (`:markersize` and `:markeralpha`) are shared.
+In this example, we split the data points into 3 groups randomly, and give them different marker shapes (`[:s :o :x]` are aliases for `:star5`, `:octagon`, and `:xcross`). The other attributes (`:markersize` and `:markeralpha`) are shared.
 
 ```@example pipeline
 scatter(rand(100), group = rand(1:3, 100), marker = (10,0.3, [:s :o :x]))

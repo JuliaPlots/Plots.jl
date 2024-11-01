@@ -335,7 +335,7 @@ seriespie(rand(4, 2), layout = 2)
 ## Remarks
 
 Plot recipes and series recipes are actually very similar.
-In fact, a pie recipe could be also implemented as a plot recipe by acessing the data through `plotattributes`.
+In fact, a pie recipe could be also implemented as a plot recipe by accessing the data through `plotattributes`.
 
 ```@example types
 @recipe function f(::Type{Val{:plotpie}}, plt::AbstractPlot)
