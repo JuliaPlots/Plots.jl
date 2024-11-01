@@ -1,4 +1,4 @@
-name: Run codespell on source files
+name: codespell
 
 on: [pull_request]
 
