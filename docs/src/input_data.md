@@ -107,7 +107,7 @@ png("input_data_1") # hide
 
 ## DataFrames support
 
-Using the [StatsPlots](https://github.com/JuliaPlots/StatsPlots.jl) extension package, you can pass a `DataFrame` as the first argument (similar to Gadfly or R's ggplot2).  For data fields or certain attributes (such as `group`) a symbol will be replaced with the corresponding column(s) of the `DataFrame`.  Additionally, the column name might be used as the   An example:
+Using the [StatsPlots](https://github.com/JuliaPlots/Plots.jl/tree/v2/StatsPlots) extension package, you can pass a `DataFrame` as the first argument (similar to Gadfly or R's ggplot2).  For data fields or certain attributes (such as `group`) a symbol will be replaced with the corresponding column(s) of the `DataFrame`.  Additionally, the column name might be used as the   An example:
 
 ```@example input_data
 using StatsPlots, RDatasets

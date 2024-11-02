@@ -8,7 +8,7 @@ dist = Gamma(2)
 a = [randn(100); randn(100) .+ 3; randn(100) ./ 2 .+ 3]
 ```
 
-Plots is great on its own, but the real power comes from the ecosystem surrounding it.  The design of Plots (and more specifically [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl)) is to bind together disparate functionality into a cohesive and consistent user experience.  Some packages may choose to implement recipes to visualize their custom types.  Others may extend the functionality of Plots for Base types.  On this page I'll attempt to collect and display some of the many things you can do using the ecosystem which has developed around the Plots core.
+Plots is great on its own, but the real power comes from the ecosystem surrounding it.  The design of Plots (and more specifically [RecipesBase](https://github.com/JuliaPlots/Plots.jl/tree/v2/RecipesBase)) is to bind together disparate functionality into a cohesive and consistent user experience.  Some packages may choose to implement recipes to visualize their custom types.  Others may extend the functionality of Plots for Base types.  On this page I'll attempt to collect and display some of the many things you can do using the ecosystem which has developed around the Plots core.
 
 ---
 

@@ -6,9 +6,9 @@ Plots.Commons.reset_defaults()
 
 # [Recipes](@id recipes)
 
-Recipes are a way of defining visualizations in your own packages and code, without having to depend on Plots. The functionality relies on [RecipesBase](https://github.com/JuliaPlots/RecipesBase.jl), a super lightweight but powerful package which allows users to create advanced plotting logic without Plots.  The `@recipe` macro in RecipesBase will add a method definition for `RecipesBase.apply_recipe`.  Plots adds to and calls this same function, and so your package and Plots can communicate without ever knowing about the other.  Magic!
+Recipes are a way of defining visualizations in your own packages and code, without having to depend on Plots. The functionality relies on [RecipesBase](https://github.com/JuliaPlots/Plots.jl/tree/v2/RecipesBase), a super lightweight but powerful package which allows users to create advanced plotting logic without Plots.  The `@recipe` macro in RecipesBase will add a method definition for `RecipesBase.apply_recipe`.  Plots adds to and calls this same function, and so your package and Plots can communicate without ever knowing about the other.  Magic!
 
-Visualizing custom user types has always been a confusing problem.  Should a package developer add a dependency on a plotting package (forcing the significant baggage that comes with that dependency)? Should they attempt conditional dependencies?  Should they submit a PR to graphics packages to define their custom visualizations?  It seems that every option had many cons for each pro, and the decision was tough.  With recipes, these issues go away.  One tiny package (RecipesBase) gives simple hooks into the visualization pipeline, allowing users and package developers to focus solely on the specifics of their visualization.  Pick the shapes/lines/colors that will represent your data well, decide on custom defaults, and convert the inputs (if you need to).  Everything else is handled by Plots.  There are many examples of recipes both within Plots and in many external packages, including [GraphRecipes](https://github.com/JuliaPlots/GraphRecipes.jl).
+Visualizing custom user types has always been a confusing problem.  Should a package developer add a dependency on a plotting package (forcing the significant baggage that comes with that dependency)? Should they attempt conditional dependencies?  Should they submit a PR to graphics packages to define their custom visualizations?  It seems that every option had many cons for each pro, and the decision was tough.  With recipes, these issues go away.  One tiny package (RecipesBase) gives simple hooks into the visualization pipeline, allowing users and package developers to focus solely on the specifics of their visualization.  Pick the shapes/lines/colors that will represent your data well, decide on custom defaults, and convert the inputs (if you need to).  Everything else is handled by Plots.  There are many examples of recipes both within Plots and in many external packages, including [GraphRecipes](https://github.com/JuliaPlots/Plots.jl/tree/v2/GraphRecipes).
 
 
 ### Visualizing User Types
@@ -81,7 +81,7 @@ These are the dispatch signatures for each type (note that most of these can acc
 ```
 - These are called after input data has been processed, but **before the plot is created**.
 - Build layouts, add subplots, and other plot-wide attributes.
-- See `marginalhist` in [StatsPlots](https://github.com/JuliaPlots/StatsPlots.jl) for an example.
+- See `marginalhist` in [StatsPlots](https://github.com/JuliaPlots/Plots.jl/tree/v2/StatsPlots) for an example.
 
 ### [Series Recipes](@id series-recipes)
 ```julia
@@ -250,7 +250,7 @@ See below where I go through a series recipe for creating boxplots.  Many of the
 
 ### Marginal Histograms
 
-Here we show a user recipe version of the `marginalhist` plot recipe for [StatsPlots](https://github.com/JuliaPlots/StatsPlots.jl). This is a nice example because, although easy to understand, it utilizes some great Plots features.
+Here we show a user recipe version of the `marginalhist` plot recipe for [StatsPlots](https://github.com/JuliaPlots/Plots.jl/tree/v2/StatsPlots). This is a nice example because, although easy to understand, it utilizes some great Plots features.
 
 Marginal histograms are a visualization comparing two variables.  The main plot is a 2D histogram, where each rectangle is a (possibly normalized and weighted) count of data points in that bucket.  Above the main plot is a smaller histogram of the first variable, and to the right of the main plot is a histogram of the second variable.  The full recipe:
 

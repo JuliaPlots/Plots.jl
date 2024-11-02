@@ -429,8 +429,8 @@ Writing your own recipes is an advanced topic described on the
 a recipe.
 
 Recipes are included in many recipe libraries. Two fundamental recipe libraries
-are [PlotRecipes.jl](https://github.com/JuliaPlots/PlotRecipes.jl) and
-[StatsPlots.jl](https://github.com/JuliaPlots/StatsPlots.jl). Let's look into
+are [GraphRecipes.jl](https://github.com/JuliaPlots/Plots.jl/tree/v2/GraphRecipes) and
+[StatsPlots.jl](https://github.com/JuliaPlots/Plots.jl/tree/v2/StatsPlots). Let's look into
 StatsPlots.jl. StatsPlots.jl adds a bunch of recipes, but the ones we'll focus
 on are:
 
@@ -532,7 +532,7 @@ try. Here's a short list of very usable addons to check out:
 - [PlotThemes.jl](https://github.com/JuliaPlots/PlotThemes.jl) allows you to
   change the color scheme of your plots. For example, `theme(:dark)` adds a
   dark theme.
-- [StatsPlots.jl](https://github.com/JuliaPlots/StatsPlots.jl) adds functionality 
+- [StatsPlots.jl](https://github.com/JuliaPlots/Plots.jl/tree/v2/StatsPlots) adds functionality 
   for visualizations of statistical analysis
 - The [ecosystem page](@ref ecosystem) shows many other packages which have recipes
   and extend Plots.jl's functionality.
