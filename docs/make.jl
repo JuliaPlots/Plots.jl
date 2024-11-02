@@ -774,11 +774,10 @@ function main()
                 collapselevel = 2,
                 ansicolor,
             ),
-            # modules = [RecipesBase, RecipesPipeline],
-            # pagesonly = true,  # fails DemoCards !
+            # pagesonly = true,  # fails DemoCards, see github.com/JuliaDocs/DemoCards.jl/issues/162
             sitename = "Plots",
             authors = "Thomas Breloff",
-            warnonly = debug,
+            warnonly = true,
             pages,
         )
     catch e
