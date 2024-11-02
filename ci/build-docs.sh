@@ -66,7 +66,10 @@ JULIA_PKG_PRECOMPILE_AUTO=0 $julia -e '
       v"3.4.29" => ">=11.1,<12.1",
       v"3.4.30" => ">=12.1,<13.1",
       v"3.4.31" => ">=13.1,<14.1",
-      # ... keep this up-to-date with gcc 14
+      v"3.4.32" => ">=14.1,<15.1",
+      v"3.4.33" => ">=15.1,<16.1",
+      v"3.4.34" => ">=16.1,<17.1",
+      # ... keep this up-to-date with gcc 18
     )[Base.BinaryPlatforms.detect_libstdcxx_version()]
     ("libgcc-ng$specs", "libstdcxx-ng$specs")
   else
