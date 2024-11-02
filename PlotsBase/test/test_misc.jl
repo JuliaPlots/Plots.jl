@@ -63,13 +63,6 @@ end
     end
 end
 
-@testset "bool_env" begin
-    @test PlotsBase.bool_env("FOO", "true")
-    @test PlotsBase.bool_env("FOO", "1")
-    @test !PlotsBase.bool_env("FOO", "false")
-    @test !PlotsBase.bool_env("FOO", "0")
-end
-
 @testset "Themes" begin
     @test showtheme(:dark) isa PlotsBase.Plot
 end

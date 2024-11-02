@@ -1,3 +1,14 @@
+using Pkg
+Base.get_bool_env("PLOTDOCS_DEV", false) && Pkg.develop([
+    (; path="../RecipesBase"),
+    (; path="../RecipesPipeline"),
+    (; path="../PlotsBase"),
+    (; path=".."),
+    (; path="../GraphRecipes"),
+    (; path="../StatsPlots"),
+])
+# oneliner debug PLOTDOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
+
 using DataFrames, OrderedCollections, Dates
 using MacroTools: rmlines
 using PlotThemes, Plots, RecipesBase, RecipesPipeline
@@ -13,6 +24,7 @@ import StatsPlots
 const SRC_DIR = joinpath(@__DIR__, "src")
 const WORK_DIR = joinpath(@__DIR__, "work")
 const GEN_DIR = joinpath(WORK_DIR, "generated")
+const BRANCH = ("master", "v2")[2]  # transition to v2
 
 const ATTRIBUTE_SEARCH = Dict{String,Any}()  # search terms
 
@@ -57,7 +69,7 @@ end
 # ----------------------------------------------------------------------
 
 edit_url(args...) =
-    "https://github.com/JuliaPlots/Plots.jl/blob/master/docs/" * if length(args) == 0
+    "https://github.com/JuliaPlots/Plots.jl/blob/$BRANCH/docs/" * if length(args) == 0
         "make.jl"
     else
         joinpath("src", args...)
@@ -626,81 +638,87 @@ function main()
     for pkg ∈ packages
         be = packages_backends[pkg]
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
-        let (path, cb, assets) = makedemos(joinpath("gallery", string(be)); src = "$work/gallery")
+        let (path, cb, assets) = makedemos(joinpath("gallery", string(be)); src="$work/gallery", edit_branch=BRANCH)
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
             push!(gallery_assets, assets)
         end
     end
-    user_gallery, cb, assets = makedemos(joinpath("user_gallery"); src = work)
+    user_gallery, cb, assets = makedemos(joinpath("user_gallery"); src=work, edit_branch=BRANCH)
     push!(gallery_callbacks, cb)
     push!(gallery_assets, assets)
     unique!(gallery_assets)
+    @show user_gallery gallery_assets
 
-    pages = [
-        "Home" => "index.md",
-        "Getting Started" => [
-            "Installation" => "install.md",
-            "Basics" => "basics.md",
-            "Tutorial" => "tutorial.md",
-            "Series Types" => [
-                "Contour Plots" => "series_types/contour.md",
-                "Histograms" => "series_types/histogram.md",
-            ],
-        ],
-        "Manual" => [
-            "Input Data" => "input_data.md",
-            "Output" => "output.md",
-            "Attributes" => "attributes.md",
-            "Series Attributes" => "generated/attributes_series.md",
-            "Plot Attributes" => "generated/attributes_plot.md",
-            "Subplot Attributes" => "generated/attributes_subplot.md",
-            "Axis Attributes" => "generated/attributes_axis.md",
-            "Layouts" => "layouts.md",
-            "Recipes" => [
-                "Overview" => "recipes.md",
-                "RecipesBase" => [
-                    "Home" => "RecipesBase/index.md",
-                    "Recipes Syntax" => "RecipesBase/syntax.md",
-                    "Recipes Types" => "RecipesBase/types.md",
-                    "Internals" => "RecipesBase/internals.md",
-                    "Public API" => "RecipesBase/api.md",
-                ],
-                "RecipesPipeline" => [
-                    "Home" => "RecipesPipeline/index.md",
-                    "Public API" => "RecipesPipeline/api.md",
+
+    pages = if (debug = length(packages) ≤ 1)  # debug
+        ["Home" => "index.md", "Gallery" => gallery, "User Gallery" => user_gallery]
+    else  # release
+        [
+            "Home" => "index.md",
+            "Getting Started" => [
+                "Installation" => "install.md",
+                "Basics" => "basics.md",
+                "Tutorial" => "tutorial.md",
+                "Series Types" => [
+                    "Contour Plots" => "series_types/contour.md",
+                    "Histograms" => "series_types/histogram.md",
                 ],
             ],
-            "Colors" => "colors.md",
-            "ColorSchemes" => "generated/colorschemes.md",
-            "Animations" => "animations.md",
-            "Themes" => "generated/plotthemes.md",
-            "Backends" => "backends.md",
-            "Supported Attributes" => "generated/supported.md",
-        ],
-        "Learning" => "learning.md",
-        "Contributing" => "contributing.md",
-        "Ecosystem" => [
-            "StatsPlots" => "generated/statsplots.md",
-            "GraphRecipes" => [
-                "Introduction" => "GraphRecipes/introduction.md",
-                "Examples" => "GraphRecipes/examples.md",
-                "Attributes" => "generated/graph_attributes.md",
+            "Manual" => [
+                "Input Data" => "input_data.md",
+                "Output" => "output.md",
+                "Attributes" => "attributes.md",
+                "Series Attributes" => "generated/attributes_series.md",
+                "Plot Attributes" => "generated/attributes_plot.md",
+                "Subplot Attributes" => "generated/attributes_subplot.md",
+                "Axis Attributes" => "generated/attributes_axis.md",
+                "Layouts" => "layouts.md",
+                "Recipes" => [
+                    "Overview" => "recipes.md",
+                    "RecipesBase" => [
+                        "Home" => "RecipesBase/index.md",
+                        "Recipes Syntax" => "RecipesBase/syntax.md",
+                        "Recipes Types" => "RecipesBase/types.md",
+                        "Internals" => "RecipesBase/internals.md",
+                        "Public API" => "RecipesBase/api.md",
+                    ],
+                    "RecipesPipeline" => [
+                        "Home" => "RecipesPipeline/index.md",
+                        "Public API" => "RecipesPipeline/api.md",
+                    ],
+                ],
+                "Colors" => "colors.md",
+                "ColorSchemes" => "generated/colorschemes.md",
+                "Animations" => "animations.md",
+                "Themes" => "generated/plotthemes.md",
+                "Backends" => "backends.md",
+                "Supported Attributes" => "generated/supported.md",
             ],
-            "UnitfulExt" => [
-                "Introduction" => "UnitfulExt/unitfulext.md",
-                "Examples" => [
-                    "Simple" => "generated/unitfulext_examples.md",
-                    "Plots" => "generated/unitfulext_plots.md",
-                ]
+            "Learning" => "learning.md",
+            "Contributing" => "contributing.md",
+            "Ecosystem" => [
+                "StatsPlots" => "generated/statsplots.md",
+                "GraphRecipes" => [
+                    "Introduction" => "GraphRecipes/introduction.md",
+                    "Examples" => "GraphRecipes/examples.md",
+                    "Attributes" => "generated/graph_attributes.md",
+                ],
+                "UnitfulExt" => [
+                    "Introduction" => "UnitfulExt/unitfulext.md",
+                    "Examples" => [
+                        "Simple" => "generated/unitfulext_examples.md",
+                        "Plots" => "generated/unitfulext_plots.md",
+                    ]
+                ],
+                "Overview" => "ecosystem.md",
             ],
-            "Overview" => "ecosystem.md",
-        ],
-        "Advanced Topics" => ["Plot objects" => "plot_objects.md","Plotting pipeline" => "pipeline.md"],
-        "Gallery" => gallery,
-        "User Gallery" => user_gallery,
-        "API" => "api.md",
-    ]
+            "Advanced Topics" => ["Plot objects" => "plot_objects.md","Plotting pipeline" => "pipeline.md"],
+            "Gallery" => gallery,
+            "User Gallery" => user_gallery,
+            "API" => "api.md",
+        ]
+    end
 
     # those will be built pages - to skip some pages, comment them above
     selected_pages = []
@@ -713,7 +731,7 @@ function main()
 
     collect_pages!(pages)
     unique!(selected_pages)
-    # @show selected_pages length(gallery) length(user_gallery)
+    @show debug selected_pages length(gallery) pages
 
     n = 0
     for (root, dirs, files) ∈ walkdir(SRC_DIR)
@@ -742,23 +760,25 @@ function main()
         nb && Literate.notebook(ipath, notebooks; execute)
     end
 
-    ansicolor = get(ENV, "PLOTDOCS_ANSICOLOR", "true") == "true"
-    @info "makedocs" ansicolor
+    ansicolor = Base.get_bool_env("PLOTDOCS_ANSICOLOR", true)
+    @info "makedocs ansicolor=$ansicolor" 
     failed = false
     try
         @time makedocs(;
+            root = @__DIR__,
             source = work,
             format = Documenter.HTML(;
                 size_threshold = nothing,
-                prettyurls = get(ENV, "CI", nothing) == "true",
+                prettyurls = Base.get_bool_env("CI", false),
                 assets = ["assets/favicon.ico", gallery_assets...],
                 collapselevel = 2,
                 ansicolor,
             ),
+            # modules = [RecipesBase, RecipesPipeline],
+            # pagesonly = true,  # fails DemoCards !
             sitename = "Plots",
             authors = "Thomas Breloff",
-            warnonly = true,
-            pagesonly = true,
+            warnonly = debug,
             pages,
         )
     catch e
@@ -766,13 +786,14 @@ function main()
         e isa InterruptException || rethrow()
     end
 
+    @info "gallery_callbacks"
     foreach(gallery_callbacks) do cb
         cb()  # URL redirection for DemoCards-generated gallery
     end
 
     failed && return  # don't deploy and post-process on failure
 
-    # postprocess gallery html files to remove `rng` in user displayed code
+    @info "post-process gallery html files to remove `rng` in user displayed code"
     # non-exhaustive list of examples to be fixed:
     # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
     for pkg ∈ packages
@@ -806,14 +827,15 @@ function main()
         end
     end
 
-    # postprocess temporary work dir
+    @info "post-process temporary work dir"
     src = basename(SRC_DIR)
     for file ∈ glob("*/index.html", joinpath(@__DIR__, "build"))
         lines = readlines(file; keep=true)
-        any((occursin("blob/master/docs", line) for line ∈ lines)) || continue
+        any(line -> occursin("blob/$BRANCH/docs", line), lines) || continue
+        @info "fixing $file"
         open(file, "w") do io
             for line ∈ lines
-                write(io, replace(line, "blob/master/docs/$work" => "blob/master/docs/$src"))
+                write(io, replace(line, "blob/$BRANCH/docs/$work" => "blob/$BRANCH/docs/$src"))
             end
         end
     end
@@ -828,6 +850,7 @@ function main()
             repo,
         )
     end
+    @info "done !"
 end
 
 main()

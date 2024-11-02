@@ -2,9 +2,6 @@
 # # [Plots.jl examples](@id 2_Plots)
 #---------------------------------------------------------
 
-#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/examples/2_Plots.ipynb)
-#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/examples/2_Plots.ipynb)
-
 #md # !!! note
 #md #     These examples are available as Jupyter notebooks.
 #md #     You can execute them online with [binder](https://mybinder.org/) or just view them with [nbviewer](https://nbviewer.jupyter.org/) by clicking on the badges above!

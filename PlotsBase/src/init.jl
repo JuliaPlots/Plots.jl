@@ -22,7 +22,7 @@ function _plots_theme_defaults()
 end
 
 function _plots_plotly_defaults()
-    if bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", "false")
+    if Base.get_bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", false)
         _plotly_local_file_path[] =
             fn = joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
         isfile(fn) ||
