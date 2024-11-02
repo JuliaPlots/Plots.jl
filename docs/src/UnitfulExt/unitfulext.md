@@ -20,6 +20,6 @@ Pictures speak louder than words, so we wrote some examples (accessible through 
 
 ---
 
-### Ommissions, bugs, and contributing
+### Omissions, bugs, and contributing
 
 Please do not hesitate to raise an [issue](https://github.com/JuliaPlots/Plots.jl/issues) or submit a [PR](https://github.com/JuliaPlots/Plots.jl/pulls) if you would like a new recipe to be added.

@@ -46,9 +46,9 @@ using FileIO
 using Dates
 using Test
 
-is_auto() = PlotsBase.bool_env("VISUAL_REGRESSION_TESTS_AUTO")
-is_pkgeval() = PlotsBase.bool_env("JULIA_PKGEVAL")
-is_ci() = PlotsBase.bool_env("CI")
+is_auto() = Base.get_bool_env("VISUAL_REGRESSION_TESTS_AUTO", false)
+is_pkgeval() = Base.get_bool_env("JULIA_PKGEVAL", false)
+is_ci() = Base.get_bool_env("CI", false)
 
 is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
