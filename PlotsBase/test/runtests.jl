@@ -1,3 +1,6 @@
+using Pkg
+Pkg.status(; outdated = true)
+
 const TEST_PACKAGES =
     let val = get(
             ENV,
