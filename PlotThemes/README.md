@@ -1,3 +1,7 @@
+# WARNING
+
+https://github.com/JuliaPlots/PlotThemes.jl is now integrated into https://github.com/JuliaPlots/Plots.jl for Plots v2, please make corresponding PRs there.
+
 # PlotThemes
 
 [![Build Status](https://travis-ci.org/JuliaPlots/PlotThemes.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/PlotThemes.jl)
