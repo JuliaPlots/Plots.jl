@@ -437,7 +437,7 @@ plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing) =
         [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
     else
         vals = range(0.0, stop = 1.0, length = length(c))
-        map(i --> [vals[i], rgba_string(plot_color(c[i], α))], eachindex(c))
+        map(i -> [vals[i], rgba_string(plot_color(c[i], α))], eachindex(c))
     end
 
 function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
