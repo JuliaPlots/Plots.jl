@@ -28,6 +28,7 @@ Currently the following themes are available:
 - `:solarized_light`
 - `:wong`
 - `:wong2`
+- `:boxed`
 - `:gruvbox_dark`
 - `:gruvbox_light`
 - `:bright`
@@ -81,6 +82,9 @@ Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 ### `:wong2`
 ![theme_wong2](https://user-images.githubusercontent.com/16589944/70847880-eaecac80-1e69-11ea-9b59-cdf937427121.png)
 
+### `:boxed`
+![theme_boxed](https://github.com/user-attachments/assets/ed1baaf1-4679-4d9a-9667-3118dc42200e)
+
 ### `:gruvbox_dark`
 ![theme_gruvbox_dark](https://user-images.githubusercontent.com/16589944/70847882-f049f700-1e69-11ea-94f8-255f2cd17288.png)
 
@@ -116,3 +120,10 @@ PRs for new themes very welcome! Adding a new theme (e.g. `mytheme`) is as easy 
 _themes[:mytheme] = PlotTheme(; kwargs...)
 ```
 The keyword arguments can be any collection of Plots attributes plus a colorgradient keyword argument.
+For adding the `showtheme` figure to `README.md`, use 
+```julia
+Plots.showtheme(:your_theme)
+plot!(dpi=400)
+savefig("your_theme.png")
+```
+The image can be uploaded to the `README.md` file by pulling it in with the file-editing web interface.
