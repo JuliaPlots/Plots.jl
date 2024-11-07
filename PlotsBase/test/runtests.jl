@@ -1,5 +1,5 @@
 using Pkg
-Pkg.status(; outdated = true)
+Pkg.status(; outdated = true, mode = Pkg.PKGMODE_MANIFEST)
 
 const TEST_PACKAGES =
     let val = get(
