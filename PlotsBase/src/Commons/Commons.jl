@@ -61,8 +61,8 @@ using ..ColorTypes: alpha
 using ..RecipesBase
 using ..Statistics
 using ..NaNMath
-using ..Unzip
 using ..Printf
+using ..Unzip
 
 const width = Measures.width
 const height = Measures.height

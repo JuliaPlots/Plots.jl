@@ -2290,7 +2290,7 @@ function PlotsBase._display(plt::Plot{GRBackend})
         GR.emergencyclosegks()
         println(
             "\033]1337;File=inline=1;preserveAspectRatio=0:",
-            base64encode(open(read, filepath)),
+            Base64.base64encode(open(read, filepath)),
             "\a",
         )
         rm(filepath)

@@ -180,4 +180,4 @@ end  # module
 
 # -----------------------------------------------------------------------------
 
-@reexport using .Fonts
+Reexport.@reexport using .Fonts

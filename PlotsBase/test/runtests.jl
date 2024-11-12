@@ -45,6 +45,12 @@ using FileIO
 using Dates
 using Test
 
+# backends weakdeps
+import UnitfulLatexify
+import Latexify
+import Contour
+import 
+
 function available_channels()
     juliaup = "https://julialang-s3.julialang.org/juliaup"
     for i ∈ 1:6
