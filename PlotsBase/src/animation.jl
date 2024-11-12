@@ -134,28 +134,28 @@ function build_animation(
 
     fn = abspath(expanduser(fn))
     framerate = ffmpeg_framerate(fps)
-    verbose_level = (verbose isa Int ? verbose : verbose ? 32 : 16) # "error"
-
+    verbose_level = (verbose isa Int ? verbose : verbose ? 32 : 16)  # "error"
+    pattern = joinpath(anim.dir, ANIM_PATTERN)
     if is_animated_gif
         if variable_palette
             # generate a colorpalette for each frame for highest quality, but larger filesize
             palette = "palettegen=stats_mode=single[pal],[0:v][pal]paletteuse=new=1"
-            `-v $verbose_level -framerate $framerate -i $(anim.dir)/$ANIM_PATTERN -lavfi "$palette" -loop $loop -y $fn` |>
+            `-v $verbose_level -framerate $framerate -i $pattern -lavfi "$palette" -loop $loop -y $fn` |>
             ffmpeg_exe
         else
             # generate a colorpalette first so ffmpeg does not have to guess it
-            `-v $verbose_level -i $(anim.dir)/$ANIM_PATTERN -vf "palettegen=stats_mode=full" -y "$(anim.dir)/palette.bmp"` |>
+            `-v $verbose_level -i $pattern -vf "palettegen=stats_mode=full" -y "$(anim.dir)/palette.bmp"` |>
             ffmpeg_exe
             # then apply the palette to get better results
-            `-v $verbose_level -framerate $framerate -i $(anim.dir)/$ANIM_PATTERN -i "$(anim.dir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn` |>
+            `-v $verbose_level -framerate $framerate -i $pattern -i "$(anim.dir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn` |>
             ffmpeg_exe
         end
     elseif file_extension(fn) in ("png", "apng")
         # FFMPEG specific command for APNG (Animated PNG) animations
-        `-v $verbose_level -framerate $framerate -i $(anim.dir)/$ANIM_PATTERN -plays $loop -f apng  -y $fn` |>
+        `-v $verbose_level -framerate $framerate -i $pattern -plays $loop -f apng  -y $fn` |>
         ffmpeg_exe
     else
-        `-v $verbose_level -framerate $framerate -i $(anim.dir)/$ANIM_PATTERN -vf format=yuv420p -loop $loop -y $fn` |>
+        `-v $verbose_level -framerate $framerate -i $pattern -vf format=yuv420p -loop $loop -y $fn` |>
         ffmpeg_exe
     end
 
