@@ -23,6 +23,11 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
 
     # now write from the file
     write(io, read(open(pngfn), String))
+
+    # cleanup
+    rm("$fn.pdf")
+    rm("$fn.png")
+    nothing
 end
 
 # Possibly need to create another extension that has both pgfplotsx and showio

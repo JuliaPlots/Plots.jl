@@ -57,17 +57,19 @@ if PlotsBase.DEFAULT_BACKEND == "gr"  # FIXME: Creating a new global in closed m
                     $func() = begin  # evaluate each example in a local scope
                         $(PlotsBase._examples[i].exprs)
                         $i == 1 || return  # trigger display only for one example
-                        fn = joinpath(scratch_dir, tempname())
+                        fn = tempname(scratch_dir)
                         pl = current()
                         show(devnull, pl)
-                        # FIXME: pgfplotsx requires bug
-                        backend_name() ≡ :pgfplotsx && return
                         if backend_name() ≡ :unicodeplots
                             savefig(pl, "$fn.txt")
                             return
                         end
-                        showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
-                        showable(MIME"application/pdf"(), pl) && savefig(pl, "$fn.pdf")
+                        if showable(MIME"image/png"(), pl)
+                            savefig(pl, "$fn.png")
+                        end
+                        if showable(MIME"application/pdf"(), pl)
+                            savefig(pl, "$fn.pdf")
+                        end
                         if showable(MIME"image/svg+xml"(), pl)
                             show(PipeBuffer(), MIME"image/svg+xml"(), pl)
                         end

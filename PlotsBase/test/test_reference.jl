@@ -18,7 +18,8 @@ reference_dir(args...) =
     else
         joinpath(homedir(), ".julia", "dev", "PlotReferenceImages.jl", args...)
     end
-reference_path(backend, version) = reference_dir("PlotsBase", string(backend), string(version))
+reference_path(backend, version) =
+    reference_dir("PlotsBase", string(backend), string(version))
 
 function checkout_reference_dir(dn::AbstractString)
     mkpath(dn)
