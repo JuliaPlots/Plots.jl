@@ -111,12 +111,12 @@ function diagnostics(io::IO = stdout)
 end
 
 macro precompile_backend(backend_package)
+    abstract_backend = Symbol(backend_package, :Backend)
     quote
         PrecompileTools.@setup_workload begin
             using PlotsBase  # for extensions
-            backend($(Symbol(backend_package, :Backend)))
-            __init__()  # must call init !!
-            # PlotsBase.extension_init($be_type())  # because `__init__` has `ccall(:jl_generating_output, Cint, ()) == 1 && return`
+            backend($abstract_backend())
+            __init__()  # call extension module init !!
             @debug PlotsBase.backend_package_name()
             n = length(PlotsBase._examples)
             imports = sizehint!(Expr[], n)
@@ -164,9 +164,10 @@ macro precompile_backend(backend_package)
                 PrecompileTools.@compile_workload begin
                     eval.(imports)
                     eval.(examples)
+                    PlotsBase.CURRENT_PLOT.nullableplot = nothing
+                    PlotsBase.extension_cleanup($abstract_backend())
                 end
             end
-            PlotsBase.CURRENT_PLOT.nullableplot = nothing
         end
     end |> esc
 end

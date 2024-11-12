@@ -15,9 +15,6 @@ end
 const mpl_toolkits = PythonCall.pynew()
 const numpy = PythonCall.pynew()
 const mpl = PythonCall.pynew()
-const Gcf = PythonCall.pynew()
-const orig_gcf = PythonCall.pynew()
-const orig_figure = PythonCall.pynew()
 
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
@@ -48,7 +45,7 @@ function PlotsBase.extension_init(::PythonPlotBackend)
     backend_gui = PythonPlot.find_backend(mpl)
     PythonPlot.backend = backend_gui[1]
     PythonPlot.gui = backend_gui[2]
-    PythonCall.pycopy!(PythonPlot.pyplot, PythonCall.pyimport("matplotlib.pyplot")) # raw Python module
+    PythonCall.pycopy!(PythonPlot.pyplot, PythonCall.pyimport("matplotlib.pyplot"))  # raw Python module
     PythonCall.pycopy!(PythonPlot.Gcf, PythonCall.pyimport("matplotlib._pylab_helpers").Gcf)
     PythonCall.pycopy!(PythonPlot.orig_gcf, PythonPlot.pyplot.gcf)
     PythonCall.pycopy!(PythonPlot.orig_figure, PythonPlot.pyplot.figure)
@@ -77,6 +74,21 @@ function PlotsBase.extension_init(::PythonPlotBackend)
             splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
         append!(Base.Multimedia.displays, otherdisplays)
     end
+end
+
+function PlotsBase.extension_cleanup(::PythonPlotBackend)
+    mpl_toolkits = PythonCall.pynew()
+    numpy = PythonCall.pynew()
+    mpl = PythonCall.pynew()
+    PythonPlot.pyplot.gcf = PythonCall.pynew()
+    PythonPlot.pyplot.figure = PythonCall.pynew()
+    PythonPlot.pyplot = PythonCall.pynew()
+    PythonPlot.Gcf = PythonCall.pynew()
+    PythonPlot.orig_gcf = PythonCall.pynew()
+    PythonPlot.orig_figure = PythonCall.pynew()
+    PythonPlot.backend = PythonCall.pynew()
+    PythonPlot.gui = PythonCall.pynew()
+    nothing
 end
 
 PlotsBase.@extension_static PythonPlotBackend pythonplot

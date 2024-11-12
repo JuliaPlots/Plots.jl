@@ -183,6 +183,8 @@ end
 "extra init step for an extension"
 extension_init(::AbstractBackend) = nothing
 
+extension_cleanup(::AbstractBackend) = nothing
+
 "generate extension `__init__` function, and common defines"
 macro extension_static(be_type, be)
     be_sym = QuoteNode(be)
