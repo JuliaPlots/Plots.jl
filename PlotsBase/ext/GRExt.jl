@@ -1,7 +1,7 @@
 module GRExt
 
-import PlotsBase: PlotsBase, _cycle
-import RecipesPipeline
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, _cycle
+
 import NaNMath
 import GR
 
@@ -2302,5 +2302,7 @@ function PlotsBase._display(plt::Plot{GRBackend})
 end
 
 PlotsBase.closeall(::GRBackend) = GR.emergencyclosegks()
+
+PlotsBase.@precompile_backend GR
 
 end  # module

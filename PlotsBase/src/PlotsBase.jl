@@ -169,33 +169,6 @@ include("plotly.jl")
 include("init.jl")
 include("users.jl")
 
-# COV_EXCL_START
-PrecompileTools.@setup_workload begin
-    backend(:none)
-    n = length(_examples)
-    imports = sizehint!(Expr[], n)
-    examples = sizehint!(Expr[], 10n)
-    for i ∈ setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
-        _examples[i].external && continue
-        (imp = _examples[i].imports) ≡ nothing || push!(imports, imp)
-        func = gensym(string(i))
-        push!(examples, quote
-            $func() = begin  # evaluate each example in a local scope
-                $(_examples[i].exprs)
-                $i == 1 || return  # trigger display only for one example
-                show(devnull, current())
-                nothing
-            end
-            $func()
-        end)
-    end
-    PrecompileTools.@compile_workload begin
-        backend(:none)
-        eval.(imports)
-        eval.(examples)
-    end
-    CURRENT_PLOT.nullableplot = nothing
-end
-# COV_EXCL_STOP
+PlotsBase.@precompile_backend None
 
 end

@@ -109,3 +109,64 @@ function diagnostics(io::IO = stdout)
     end
     nothing
 end
+
+macro precompile_backend(backend_package)
+    quote
+        PrecompileTools.@setup_workload begin
+            using PlotsBase  # for extensions
+            backend($(Symbol(backend_package, :Backend)))
+            __init__()  # must call init !!
+            # PlotsBase.extension_init($be_type())  # because `__init__` has `ccall(:jl_generating_output, Cint, ()) == 1 && return`
+            @debug PlotsBase.backend_package_name()
+            n = length(PlotsBase._examples)
+            imports = sizehint!(Expr[], n)
+            examples = sizehint!(Expr[], 10n)
+            scratch_dir = mktempdir()
+            for i ∈ setdiff(
+                1:n,
+                PlotsBase._backend_skips[backend_name()],
+                PlotsBase._animation_examples,
+            )
+                PlotsBase._examples[i].external && continue
+                (imp = PlotsBase._examples[i].imports) ≡ nothing ||
+                    push!(imports, PlotsBase.replace_module(imp))
+                func = gensym(string(i))
+                push!(
+                    examples,
+                    quote
+                        $func() = begin  # evaluate each example in a local scope
+                            $(PlotsBase._examples[i].exprs)
+                            @debug $i
+                            $i == 1 || return  # trigger display only for one example
+                            fn = tempname(scratch_dir)
+                            pl = current()
+                            show(devnull, pl)
+                            if backend_name() ≡ :unicodeplots
+                                savefig(pl, "$fn.txt")
+                                return
+                            end
+                            if showable(MIME"image/png"(), pl)
+                                savefig(pl, "$fn.png")
+                            end
+                            if showable(MIME"application/pdf"(), pl)
+                                savefig(pl, "$fn.pdf")
+                            end
+                            if showable(MIME"image/svg+xml"(), pl)
+                                show(PipeBuffer(), MIME"image/svg+xml"(), pl)
+                            end
+                            nothing
+                        end
+                        $func()
+                    end,
+                )
+            end
+            withenv("GKSwstype" => "nul", "MPLBACKEND" => "agg") do
+                PrecompileTools.@compile_workload begin
+                    eval.(imports)
+                    eval.(examples)
+                end
+            end
+            PlotsBase.CURRENT_PLOT.nullableplot = nothing
+        end
+    end |> esc
+end

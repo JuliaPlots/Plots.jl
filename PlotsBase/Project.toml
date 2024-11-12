@@ -34,6 +34,7 @@ UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 
 [weakdeps]
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Contour = "d38c429a-6771-53c6-b99e-75d170b6e991"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
@@ -60,7 +61,7 @@ GeometryBasicsExt = "GeometryBasics"
 HDF5Ext = "HDF5"
 IJuliaExt = "IJulia"
 ImageInTerminalExt = "ImageInTerminal"
-PGFPlotsXExt = ["Contour", "Latexify", "LaTeXStrings", "PGFPlotsX"]
+PGFPlotsXExt = ["Colors", "Contour", "Latexify", "LaTeXStrings", "PGFPlotsX"]
 PlotlyJSExt = "PlotlyJS"
 PlotlyKaleidoExt = "PlotlyKaleido"
 PythonPlotExt = "PythonPlot"
@@ -69,6 +70,7 @@ UnitfulExt = ["LaTeXStrings", "Unitful", "UnitfulLatexify"]
 
 [compat]
 Base64 = "1"
+Colors = "0.12 - 0.13"
 Contour = "0.6"
 Dates = "1"
 FFMPEG = "0.4"

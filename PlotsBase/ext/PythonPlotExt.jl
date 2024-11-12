@@ -1,6 +1,7 @@
 module PythonPlotExt
 
-import RecipesPipeline
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, PlotUtils
+
 import PythonPlot
 import NaNMath
 
@@ -14,10 +15,9 @@ end
 const mpl_toolkits = PythonCall.pynew()
 const numpy = PythonCall.pynew()
 const mpl = PythonCall.pynew()
-
-using PlotUtils
-
-import PlotsBase
+const Gcf = PythonCall.pynew()
+const orig_gcf = PythonCall.pynew()
+const orig_figure = PythonCall.pynew()
 
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
@@ -36,17 +36,26 @@ using PlotsBase.Axes
 struct PythonPlotBackend <: PlotsBase.AbstractBackend end
 
 function PlotsBase.extension_init(::PythonPlotBackend)
-    if PythonPlot.version < v"3.4"
-        @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
-        officially supported by the Plots community. To ensure smooth PlotsBase.jl
-        integration update your Matplotlib library to a version ≥ 3.4.0
-        """
-    end
     PythonCall.pycopy!(mpl, PythonCall.pyimport("matplotlib"))
     PythonCall.pycopy!(mpl_toolkits, PythonCall.pyimport("mpl_toolkits"))
     PythonCall.pycopy!(numpy, PythonCall.pyimport("numpy"))
     PythonCall.pyimport("mpl_toolkits.axes_grid1")
     numpy.seterr(invalid = "ignore")
+
+    # FIXME: __init__ is bypassed in PythonPlot see PythonPlot.jl/src/init.jl
+    # we duplicate the code of PythonPlot here
+    PythonPlot.version = PythonPlot.vparse(PythonCall.pyconvert(String, mpl.__version__))
+    backend_gui = PythonPlot.find_backend(mpl)
+    PythonPlot.backend = backend_gui[1]
+    PythonPlot.gui = backend_gui[2]
+    PythonCall.pycopy!(PythonPlot.pyplot, PythonCall.pyimport("matplotlib.pyplot")) # raw Python module
+    PythonCall.pycopy!(PythonPlot.Gcf, PythonCall.pyimport("matplotlib._pylab_helpers").Gcf)
+    PythonCall.pycopy!(PythonPlot.orig_gcf, PythonPlot.pyplot.gcf)
+    PythonCall.pycopy!(PythonPlot.orig_figure, PythonPlot.pyplot.figure)
+    PythonPlot.pyplot.gcf = PythonPlot.gcf
+    PythonPlot.pyplot.figure = PythonPlot.figure
+    ##################################################################
+
     PythonPlot.ioff()  # we don't want every command to update the figure
 
     # WARNING: matplotlib uses a reverse convention: `labeltop` instead of `toplabel`
@@ -56,7 +65,12 @@ function PlotsBase.extension_init(::PythonPlotBackend)
             Commons.set_attr_symbol!(keyword, string(letter))
         end
     end
-
+    if PythonPlot.version < v"3.4"
+        @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
+        officially supported by the Plots community. To ensure smooth PlotsBase.jl
+        integration update your Matplotlib library to a version ≥ 3.4.0
+        """
+    end
     # problem: github.com/tbreloff/Plots.jl/issues/308
     # solution: hack from @stevengj: github.com/JuliaPy/PyPlot.jl/pull/223#issuecomment-229747768
     let otherdisplays =
@@ -214,7 +228,7 @@ _py_color(cs::AVec) = map(_py_color, cs)
 _py_color(grad::PlotUtils.AbstractColorList) = _py_color(color_list(grad))
 _py_color(c::Colorant, α) = _py_color(plot_color(c, α))
 
-function _py_colormap(cg::ColorGradient)
+function _py_colormap(cg::PlotUtils.ColorGradient)
     pyvals = collect(zip(cg.values, _py_color(PlotUtils.color_list(cg))))
     cm = mpl.colors.LinearSegmentedColormap.from_list("tmp", pyvals)
     cm.set_bad(color = (0, 0, 0, 0.0), alpha = 0.0)
@@ -459,7 +473,7 @@ _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{PythonPlotBackend})
     w, h = map(s -> Commons.px2inch(s * plt[:dpi] / DPI), plt[:size])
-    # reuse the current figure?
+    # reuse the current figure ?
     plt[:overwrite_figure] ? PythonPlot.gcf() : PythonPlot.figure()
 end
 
@@ -1710,5 +1724,7 @@ for (mime, fmt) ∈ (
 end
 
 PlotsBase.closeall(::PythonPlotBackend) = PythonPlot.close("all")
+
+PlotsBase.@precompile_backend PythonPlot
 
 end  # module

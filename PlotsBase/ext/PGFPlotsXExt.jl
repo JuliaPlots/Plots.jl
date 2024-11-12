@@ -1,14 +1,15 @@
 module PGFPlotsXExt
 
-import PlotsBase: PlotsBase, pgfx_sanitize_string
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, pgfx_sanitize_string, Plot
 import LaTeXStrings: LaTeXString
 import Printf: @sprintf
 
-import RecipesPipeline
 import PlotUtils
-import PGFPlotsX
 import Latexify
-import Contour
+import Contour  # PGFPlotsX extension
+import Colors  # PGFPlotsX extension
+
+import PGFPlotsX
 
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
@@ -1302,7 +1303,7 @@ function pgfx_sanitize_plot!(plt)
                 end
             elseif value isa Union{AbstractString,AVec{<:AbstractString}}
                 subplot.attr[key] = pgfx_sanitize_string.(value)
-            elseif value isa Axis
+            elseif value isa PlotsBase.Axis
                 for (k, v) ∈ value.plotattributes
                     if v isa Union{AbstractString,AVec{<:AbstractString}}
                         value.plotattributes[k] = pgfx_sanitize_string.(v)
@@ -1593,5 +1594,7 @@ function PlotsBase._display(plt::Plot{PGFPlotsXBackend})
     plt.o.was_shown = true
     display(PGFPlotsX.PGFPlotsXDisplay(), plt.o.the_plot)
 end
+
+PlotsBase.@precompile_backend PGFPlotsX
 
 end  # module

@@ -105,7 +105,7 @@ end
     unicode_instance = PlotsBase.backend_instance(:unicodeplots)
     @test PlotsBase.seriestype_supported(unicode_instance, :surface) ≡ :native
     @test PlotsBase.seriestype_supported(unicode_instance, :hspan) ≡ :recipe
-    @test PlotsBase.seriestype_supported(PlotsBase.NoBackend(), :line) ≡ :native
+    @test PlotsBase.seriestype_supported(PlotsBase.NoneBackend(), :line) ≡ :native
 end
 
 with(:gr) do

@@ -3,23 +3,23 @@ const _default_supported_syms = :attr, :seriestype, :marker, :style, :scale
 _f1_sym(sym::Symbol) = Symbol("is_$(sym)_supported")
 _f2_sym(sym::Symbol) = Symbol("supported_$(sym)s")
 
-struct NoBackend <: AbstractBackend end
+struct NoneBackend <: AbstractBackend end
 
-backend_name(::NoBackend) = :none
-should_warn_on_unsupported(::NoBackend) = false
+backend_name(::NoneBackend) = :none
+should_warn_on_unsupported(::NoneBackend) = false
 
 for sym ∈ _default_supported_syms
     @eval begin
-        $(_f1_sym(sym))(::NoBackend, $sym::Symbol) = true
-        $(_f2_sym(sym))(::NoBackend) = Commons.$(Symbol("_all_$(sym)s"))
+        $(_f1_sym(sym))(::NoneBackend, $sym::Symbol) = true
+        $(_f2_sym(sym))(::NoneBackend) = Commons.$(Symbol("_all_$(sym)s"))
     end
 end
 
-_display(::Plot{NoBackend}) =
+_display(::Plot{NoneBackend}) =
     @warn "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
 
-const _backendSymbol        = Dict{DataType,Symbol}(NoBackend => :none)
-const _backendType          = Dict{Symbol,DataType}(:none => NoBackend)
+const _backendSymbol        = Dict{DataType,Symbol}(NoneBackend => :none)
+const _backendType          = Dict{Symbol,DataType}(:none => NoneBackend)
 const _backend_packages     = (unicodeplots = :UnicodePlots, pythonplot = :PythonPlot, pgfplotsx = :PGFPlotsX, plotlyjs = :PlotlyJS, gaston = :Gaston, plotly = nothing, none = nothing, hdf5 = :HDF5, gr = :GR)
 const _supported_backends   = keys(_backend_packages)
 const _initialized_backends = Set([:none])
@@ -192,9 +192,8 @@ macro extension_static(be_type, be)
             PlotsBase._backendType[$be_sym] = $be_type
             PlotsBase._backendSymbol[$be_type] = $be_sym
             push!(PlotsBase._initialized_backends, $be_sym)
-            ccall(:jl_generating_output, Cint, ()) == 1 && return
             PlotsBase.extension_init($be_type())
-            @debug "Initialized $be_type backend in PlotsBase; run `$be()` to activate it."
+            @debug $("Initialized $be_type backend in PlotsBase; run `$be()` to activate it.")
         end
     end |> esc
 end

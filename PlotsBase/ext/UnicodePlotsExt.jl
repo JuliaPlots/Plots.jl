@@ -1,6 +1,6 @@
 module UnicodePlotsExt
 
-import PlotsBase: PlotsBase, texmath2unicode
+import PlotsBase: PlotsBase, PrecompileTools, texmath2unicode
 import RecipesPipeline
 import UnicodePlots
 
@@ -489,5 +489,7 @@ function PlotsBase._display(plt::Plot{UnicodePlotsBackend})
     show(stdout, plt)
     println(stdout)
 end
+
+PlotsBase.@precompile_backend UnicodePlots
 
 end  # module
