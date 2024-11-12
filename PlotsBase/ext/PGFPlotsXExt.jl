@@ -1,14 +1,12 @@
 module PGFPlotsXExt
 
-import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, pgfx_sanitize_string, Plot
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, PlotUtils, pgfx_sanitize_string, Plot
 import LaTeXStrings: LaTeXString
 import Printf: @sprintf
 
-import PlotUtils
 import Latexify
 import Contour  # PGFPlotsX extension
 import Colors  # PGFPlotsX extension
-
 import PGFPlotsX
 
 using PlotsBase.Annotations
@@ -27,6 +25,26 @@ using PlotsBase.Axes
 
 struct PGFPlotsXBackend <: PlotsBase.AbstractBackend end
 PlotsBase.@extension_static PGFPlotsXBackend pgfplotsx
+
+######################################################
+# FIXME: extension issue, from PGFPlotsX
+function _rgb_for_printing(c::Colors.Colorant)
+    rgb = convert(Colors.RGB{Float64}, c)
+    # round colors since pgfplots cannot parse scientific notation, eg 1e-10
+    round.((Colors.red(rgb), Colors.green(rgb), Colors.blue(rgb)); digits = 4)
+end
+function PGFPlotsX.print_opt(io::IO, c::Colors.Colorant)
+    rgb_64 = _rgb_for_printing(c)
+    print(io, "rgb,1:",
+            "red,"  , rgb_64[1], ";",
+            "green,", rgb_64[2], ";",
+            "blue," , rgb_64[3])
+end
+function PGFPlotsX.print_tex(io::IO, c::Colors.Colorant)
+    rgb_64 = _rgb_for_printing(c)
+    print(io, "rgb=", rgb_64[1], ",", rgb_64[2], ",", rgb_64[3])
+end
+######################################################
 
 const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported([
     :annotations,

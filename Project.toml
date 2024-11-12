@@ -4,18 +4,13 @@ author = ["Tom Breloff (@tbreloff)"]
 version = "2.0.0"
 
 [deps]
-Contour = "d38c429a-6771-53c6-b99e-75d170b6e991"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925"
 PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-RecipesPipeline = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-Contour = "0.6.3"
-GR = "0.73, 1"
+GR = "0.73"
 PlotsBase = "0.1"
 PrecompileTools = "1"
 Reexport = "1"
