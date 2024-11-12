@@ -7,7 +7,7 @@ First, add the package:
 import Pkg
 Pkg.add("Plots")  # ≡ `PlotsBase` + `GR` backend
 
-Pkg.add("PlotBase", "PythonPlot")  # `PlotsBase` + `PythonPlot` backend, avoids installaing the `GR` backend
+Pkg.add("PlotBase", "PythonPlot")  # `PlotsBase` + `PythonPlot` backend, avoids installing the `GR` backend
 
 # if you want the latest features:
 Pkg.pkg"add Plots#master"
