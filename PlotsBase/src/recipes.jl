@@ -333,7 +333,7 @@ end
         primary := false
         @series begin
             markershape := if plotattributes[:markershape] === :arrow
-                [isless(yi, 0.0) ? :downarrow : :uparrow for yi in y]
+                [isless(yi, 0.0) ? :downarrow : :uparrow for yi ∈ y]
             else
                 plotattributes[:markershape]
             end

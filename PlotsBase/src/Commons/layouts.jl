@@ -150,7 +150,7 @@ function GridLayout(
         heights = zeros(dims[1])
     end
     if widths ≢ nothing
-       sum(widths) ≈ 1 || error("The widths provided ($(widths)) must sum to 1.")
+        sum(widths) ≈ 1 || error("The widths provided ($(widths)) must sum to 1.")
         all_between_one(widths) ||
             error("The widths provided ($(widths)) must be in the range (0, 1).")
     else

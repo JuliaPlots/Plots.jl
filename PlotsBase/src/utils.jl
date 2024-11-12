@@ -106,9 +106,14 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     elseif plotattributes[:markerstrokecolor] ≡ :auto
         get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
     else
-        get_series_color(something(plotattributes[:markerstrokecolor], plotattributes[:seriescolor]), sp, plotIndex, stype)
+        get_series_color(
+            something(plotattributes[:markerstrokecolor], plotattributes[:seriescolor]),
+            sp,
+            plotIndex,
+            stype,
+        )
     end
-     
+
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
     if plotattributes[:marker_z] ≢ nothing
         Commons.ensure_gradient!(plotattributes, :markercolor, :markeralpha)

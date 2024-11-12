@@ -8,13 +8,13 @@
 Recursively apply series recipes until the backend supports the seriestype
 """
 function _process_seriesrecipes!(plt, kw_list)
-    for kw in kw_list
+    for kw ∈ kw_list
         # in series attributes given as vector with one element per series,
         # select the value for current series
         slice_series_attributes!(plt, kw_list, kw)
     end
     process_sliced_series_attributes!(plt, kw_list)
-    for kw in kw_list
+    for kw ∈ kw_list
         series_attrs = DefaultsDict(kw, series_defaults(plt))
         # now we have a fully specified series, with colors chosen. we must recursively
         # handle series recipes, which dispatch on seriestype. If a backend does not
@@ -51,7 +51,7 @@ function _process_seriesrecipe(plt, plotattributes)
         warn_on_recipe_aliases!(plt, datalist, :series, st)
 
         # assuming there was no error, recursively apply the series recipes
-        for data in datalist
+        for data ∈ datalist
             if isa(data, RecipeData)
                 preprocess_attributes!(plt, data.plotattributes)
                 if data.plotattributes[:seriestype] == st

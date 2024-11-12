@@ -81,11 +81,11 @@ struct Surface{M<:AMat} <: AbstractSurface
     surf::M
 end
 
-Surface(f::Function, x, y) = Surface(Float64[f(xi, yi) for yi in y, xi in x])
+Surface(f::Function, x, y) = Surface(Float64[f(xi, yi) for yi ∈ y, xi ∈ x])
 
 Base.Array(surf::Surface) = surf.surf
 
-for f in (:length, :size, :axes, :iterate)
+for f ∈ (:length, :size, :axes, :iterate)
     @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
 Base.copy(surf::Surface) = Surface(copy(surf.surf))
@@ -110,7 +110,7 @@ function Volume(
 end
 
 Base.Array(vol::Volume) = vol.v
-for f in (:length, :size, :axes, :iterate)
+for f ∈ (:length, :size, :axes, :iterate)
     @eval Base.$f(vol::Volume, args...) = $f(vol.v, args...)
 end
 Base.copy(vol::Volume{T}) where {T} =
@@ -138,7 +138,7 @@ end
 Returns `true` if `myseriestype` represents a 3D series, `false` otherwise.
 """
 is3d(st) = false
-for st in (
+for st ∈ (
     :contour,
     :contourf,
     :contour3d,
@@ -162,7 +162,7 @@ is3d(plotattributes::AbstractDict) = is3d(get(plotattributes, :seriestype, :path
 Returns `true` if `myseriestype` represents a surface series, `false` otherwise.
 """
 is_surface(st) = false
-for st in (:contour, :contourf, :contour3d, :image, :heatmap, :surface, :wireframe)
+for st ∈ (:contour, :contourf, :contour3d, :image, :heatmap, :surface, :wireframe)
     @eval is_surface(::Type{Val{Symbol($(string(st)))}}) = true
 end
 is_surface(st::Symbol) = is_surface(Val{st})
@@ -175,7 +175,7 @@ is_surface(plotattributes::AbstractDict) =
 Returns `true` if `myseriestype` needs 3d axes, `false` otherwise.
 """
 needs_3d_axes(st) = false
-for st in (:contour3d, :path3d, :scatter3d, :surface, :volume, :wireframe, :mesh3d)
+for st ∈ (:contour3d, :path3d, :scatter3d, :surface, :volume, :wireframe, :mesh3d)
     @eval needs_3d_axes(::Type{Val{Symbol($(string(st)))}}) = true
 end
 needs_3d_axes(st::Symbol) = needs_3d_axes(Val{st})
@@ -209,7 +209,7 @@ unzip(v::AVec{<:Tuple}) = map(x -> getfield.(v, x), fieldnames(eltype(v)))
 # --------------------------------
 
 _map_funcs(f::Function, u::AVec) = map(f, u)
-_map_funcs(fs::AVec{F}, u::AVec) where {F<:Function} = [map(f, u) for f in fs]
+_map_funcs(fs::AVec{F}, u::AVec) where {F<:Function} = [map(f, u) for f ∈ fs]
 
 # --------------------------------
 # ## Signature strings

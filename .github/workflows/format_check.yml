@@ -25,7 +25,7 @@ jobs:
       - name: Format Julia files
         run: |
           using JuliaFormatter
-          format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots"])
+          format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
         shell: julia --color=yes --compile=min -O0 {0}
 
       - name: suggester / JuliaFormatter

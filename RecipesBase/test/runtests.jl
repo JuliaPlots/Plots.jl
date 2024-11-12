@@ -9,7 +9,7 @@ const KW = Dict{Symbol,Any}
 
 RB.is_key_supported(k::Symbol) = true
 
-for t in map(i -> Symbol(:T, i), 1:5)
+for t ∈ map(i -> Symbol(:T, i), 1:5)
     @eval struct $t end
 end
 

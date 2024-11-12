@@ -36,7 +36,7 @@ _prepare_series_data(v::Volume) =
 _series_data_vector(x, plotattributes) = [_prepare_series_data(x)]
 
 # fixed number of blank series
-_series_data_vector(n::Integer, plotattributes) = [zeros(0) for i in 1:n]
+_series_data_vector(n::Integer, plotattributes) = [zeros(0) for i ∈ 1:n]
 
 # vector of data points is a single series
 _series_data_vector(v::AVec{<:DataPoint}, plotattributes) = [_prepare_series_data(v)]
@@ -48,7 +48,7 @@ function _series_data_vector(v::AVec, plotattributes)
     elseif all(x -> x isa MaybeString, v)
         _series_data_vector(Vector{MaybeString}(v), plotattributes)
     else
-        vcat((_series_data_vector(vi, plotattributes) for vi in v)...)
+        vcat((_series_data_vector(vi, plotattributes) for vi ∈ v)...)
     end
 end
 
@@ -57,7 +57,7 @@ function _series_data_vector(v::AMat{<:DataPoint}, plotattributes)
     if is3d(plotattributes)
         [_prepare_series_data(Surface(v))]
     else
-        [_prepare_series_data(v[:, i]) for i in axes(v, 2)]
+        [_prepare_series_data(v[:, i]) for i ∈ axes(v, 2)]
     end
 end
 
@@ -133,7 +133,7 @@ struct SliceIt end
     my = length(ys)
     mz = length(zs)
     if mx > 0 && my > 0 && mz > 0
-        for i in 1:max(mx, my, mz)
+        for i ∈ 1:max(mx, my, mz)
             # add a new series
             di = copy(plotattributes)
             xi, yi, zi = xs[mod1(i, mx)], ys[mod1(i, my)], zs[mod1(i, mz)]

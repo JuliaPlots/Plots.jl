@@ -28,11 +28,12 @@ function frame(anim::Animation, plt::P = current()) where {P<:AbstractPlot}
     push!(anim.frames, filename)
 end
 
-anim_filename(ext, parent = nothing) = if isijulia()
-    "tmp"
-else
-    tempname(parent ≡ nothing ? tempdir() : parent)
-end * ext
+anim_filename(ext, parent = nothing) =
+    if isijulia()
+        "tmp"
+    else
+        tempname(parent ≡ nothing ? tempdir() : parent)
+    end * ext
 
 giffn(parent = nothing) = anim_filename(".gif", parent)
 movfn(parent = nothing) = anim_filename(".mov", parent)
@@ -110,12 +111,14 @@ mp4(anim::Animation, fn = mp4fn(anim.dir); kw...) = build_animation(anim, fn, fa
     webm(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
 Creates an .webm-file from an `Animation` object.
 """
-webm(anim::Animation, fn = webmfn(anim.dir); kw...) = build_animation(anim, fn, false; kw...)
+webm(anim::Animation, fn = webmfn(anim.dir); kw...) =
+    build_animation(anim, fn, false; kw...)
 """
     apng(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
 Creates an animated .apng-file from an `Animation` object.
 """
-apng(anim::Animation, fn = apngfn(anim.dir); kw...) = build_animation(anim, fn, false; kw...)
+apng(anim::Animation, fn = apngfn(anim.dir); kw...) =
+    build_animation(anim, fn, false; kw...)
 
 ffmpeg_framerate(fps) = "$fps"
 ffmpeg_framerate(fps::Rational) = "$(fps.num)/$(fps.den)"
@@ -136,6 +139,7 @@ function build_animation(
     framerate = ffmpeg_framerate(fps)
     verbose_level = (verbose isa Int ? verbose : verbose ? 32 : 16)  # "error"
     pattern = joinpath(anim.dir, ANIM_PATTERN)
+    palette = joinpath(anim.dir, "palette.bmp")
     if is_animated_gif
         if variable_palette
             # generate a colorpalette for each frame for highest quality, but larger filesize
@@ -144,10 +148,10 @@ function build_animation(
             ffmpeg_exe
         else
             # generate a colorpalette first so ffmpeg does not have to guess it
-            `-v $verbose_level -i $pattern -vf "palettegen=stats_mode=full" -y "$(anim.dir)/palette.bmp"` |>
+            `-v $verbose_level -i $pattern -vf "palettegen=stats_mode=full" -y "$palette"` |>
             ffmpeg_exe
             # then apply the palette to get better results
-            `-v $verbose_level -framerate $framerate -i $pattern -i "$(anim.dir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn` |>
+            `-v $verbose_level -framerate $framerate -i $pattern -i "$palette" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn` |>
             ffmpeg_exe
         end
     elseif file_extension(fn) in ("png", "apng")
@@ -189,7 +193,6 @@ Base.showable(::MIME"image/png", agif::AnimatedGif) =
 Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
 
-
 Base.show(io::IO, ::MIME"image/png", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
 
@@ -205,7 +208,7 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     freqassert = :()
     block = forloop.args[2]
 
-    animationsKwargs = Any[]
+    kw = Any[]
     filterexpr = true
 
     n = length(args)
@@ -219,14 +222,14 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
             filterexpr == true ||
                 error("Can only specify one filterexpression (one of 'when' or 'every')")
 
-            filterexpr = #      when          every
+            filterexpr =  #    when          every
                 arg == :when ? args[i + 1] : :(mod1($countersym, $(args[i + 1])) == 1)
 
             i += 1
         elseif arg isa Expr && arg.head == Symbol("=")
-            #specification of type <kwarg> = <spec>
+            # specification of type <kwarg> = <spec>
             lhs, rhs = arg.args
-            push!(animationsKwargs, :($lhs = $rhs))
+            push!(kw, :($lhs = $rhs))
         else
             error("Parameter specification not understood: $(arg)")
         end
@@ -242,21 +245,21 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
 
     # add a final call to `gif(anim)`?
     retval = if type ≡ :gif
-        :(PlotsBase.gif($animsym; $(animationsKwargs...)))
+        :(PlotsBase.gif($animsym; $(kw...)))
     elseif type ≡ :apng
-        :(PlotsBase.apng($animsym; $(animationsKwargs...)))
+        :(PlotsBase.apng($animsym; $(kw...)))
     else
         animsym
     end
 
     # full expression:
     quote
-        $freqassert                     # if filtering, check frequency is an Integer > 0
-        $animsym = PlotsBase.Animation()    # init animation object
-        let $countersym = 1             # init iteration counter
-            $forloop                    # for loop, saving a frame after each iteration
+        $freqassert                       # if filtering, check frequency is an Integer > 0
+        $animsym = PlotsBase.Animation()  # init animation object
+        let $countersym = 1               # init iteration counter
+            $forloop                      # for loop, saving a frame after each iteration
         end
-        $retval                         # return the animation object, or the gif
+        $retval                           # return the animation object, or the gif
     end |> esc
 end
 

@@ -1313,7 +1313,7 @@ _backend_skips = Dict(
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
 # 25 and 30 require StatsPlots, which doesn't support Plots v2 yet
-for backend in keys(_backend_skips)
+for backend ∈ keys(_backend_skips)
     append!(_backend_skips[backend], [25, 30])
 end
 

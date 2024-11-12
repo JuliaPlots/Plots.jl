@@ -823,9 +823,7 @@ alignment(symb) =
     end
 
 # --------------------------------------------------------------------------------------
-function gr_get_markershape(s::Symbol)
-    s in gr_marker_keys ? s : Shape(s)
-end
+gr_get_markershape(s::Symbol) = s in gr_marker_keys ? s : Shape(s)
 
 function gr_set_gradient(c)
     grad = _as_gradient(c)
