@@ -59,11 +59,10 @@ const DEBUG = false
     @test run(```$(Base.julia_cmd()) $script```) |> success
 end
 
-is_pkgeval() || for pkg ∈ TEST_PACKAGES
+(!is_pkgeval() && is_latest("release")) && for pkg ∈ TEST_PACKAGES
     @testset "persistent backend $pkg" begin
         be = TEST_BACKENDS[pkg]
         if is_ci()
-            is_latest("release") || continue
             (Sys.isapple() && be ≡ :gaston) && continue  # FIXME: hangs
             (Sys.iswindows() && be ≡ :plotlyjs) && continue  # FIXME: OutOfMemory
         end
