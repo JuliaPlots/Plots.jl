@@ -49,9 +49,28 @@ using FileIO
 using Dates
 using Test
 
+function fetch_available_versions()
+    buf = PipeBuffer()
+    pipeline(`curl https://julialang-s3.julialang.org/juliaup/DBVERSION`, stdout=buf, stderr=devnull) |> run
+    dbversion = readline(buf)
+    buf = PipeBuffer()
+    pipeline(`curl https://julialang-s3.julialang.org/juliaup/versiondb/versiondb-$dbversion-x86_64-unknown-linux-gnu.json`, stdout=buf, stderr=devnull) |> run
+    json = JSON.parse(buf)
+    json["AvailableChannels"]
+end
+
 function is_latest_release()
+    channels = fetch_available_versions()
+    rel = VersionNumber(split(channels["release"]["Version"], '+') |> first)
     nightly = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
-    !nightly && VERSION > v"1.11.0-"  # adjust when new release is out !
+    !nightly && VersionNumber(rel.major, rel.minor, 0, ("",)) ≤ VERSION < VersionNumber(rel.major, rel.minor + 1, 0, ("",))
+end
+
+function is_latest_lts()
+    channels = fetch_available_versions()
+    rel = VersionNumber(split(channels["lts"]["Version"], '+') |> first)
+    nightly = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
+    !nightly && VersionNumber(rel.major, rel.minor, 0, ("",)) ≤ VERSION < VersionNumber(rel.major, rel.minor + 1, 0, ("",))
 end
 
 is_auto() = Base.get_bool_env("VISUAL_REGRESSION_TESTS_AUTO", false)
