@@ -29,6 +29,7 @@ jobs:
       matrix:
         version:
           - '1.6' # LTS (minimal declared julia compat in `Project.toml`)
+          - 'lts'
           - '1' # latest stable
         experimental:
           - false
