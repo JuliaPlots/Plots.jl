@@ -57,7 +57,7 @@ if PlotsBase.DEFAULT_BACKEND == "gr"  # FIXME: Creating a new global in closed m
                     $func() = begin  # evaluate each example in a local scope
                         $(PlotsBase._examples[i].exprs)
                         $i == 1 || return  # trigger display only for one example
-                        fn = joinpath(scratch_dir, tempname(scratch_dir))
+                        fn = tempname(scratch_dir)
                         pl = current()
                         show(devnull, pl)
                         if backend_name() ≡ :unicodeplots
