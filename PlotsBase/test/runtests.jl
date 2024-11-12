@@ -49,6 +49,11 @@ using FileIO
 using Dates
 using Test
 
+function is_latest_release()
+    nightly = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
+    !nightly && VERSION > v"1.11.0-"  # adjust when new release is out !
+end
+
 is_auto() = Base.get_bool_env("VISUAL_REGRESSION_TESTS_AUTO", false)
 is_pkgeval() = Base.get_bool_env("JULIA_PKGEVAL", false)
 is_ci() = Base.get_bool_env("CI", false)
