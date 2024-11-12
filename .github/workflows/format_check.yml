@@ -16,18 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
-      - name: Install dependencies
-        run: |
-          using Pkg
-          Pkg.add("JuliaFormatter")
-        shell: julia --color=yes {0}
-
       - name: Format Julia files
         run: |
-          using JuliaFormatter
-          format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
-        shell: julia --color=yes --compile=min -O0 {0}
-
+          julia --color=yes --compile=min -O0 '
+            using Pkg
+            Pkg.add("JuliaFormatter")
+            format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
+          '
       - name: suggester / JuliaFormatter
         if: success() && github.ref == 'refs/heads/master'
         uses: reviewdog/action-suggester@v1
