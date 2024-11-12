@@ -165,7 +165,6 @@ include("users.jl")
     n = length(_examples)
     imports = sizehint!(Expr[], n)
     examples = sizehint!(Expr[], 10n)
-    scratch_dir = mktempdir()
     for i ∈ setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
         _examples[i].external && continue
         (imp = _examples[i].imports) ≡ nothing || push!(imports, imp)
@@ -174,7 +173,6 @@ include("users.jl")
             $func() = begin  # evaluate each example in a local scope
                 $(_examples[i].exprs)
                 $i == 1 || return  # trigger display only for one example
-                fn = joinpath(scratch_dir, tempname())
                 show(devnull, current())
                 nothing
             end

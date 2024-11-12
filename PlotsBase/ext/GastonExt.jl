@@ -180,8 +180,8 @@ for (mime, term) ∈ (
 )
     @eval function PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         term = String($term)
-        tmpfile = tempname() * ".$term"
         if plt.o ≢ nothing
+            tmpfile = tempname() * ".$term"
             ret = Gaston.save(;
                 saveopts = gaston_saveopts(plt),
                 handle = plt.o.handle,
@@ -192,8 +192,8 @@ for (mime, term) ∈ (
                 while !isfile(tmpfile)
                 end  # avoid race condition with read in next line
                 write(io, read(tmpfile))
-                rm(tmpfile, force = true)
             end
+            isfile(tmpfile) && rm(tmpfile, force = true)
         end
         nothing
     end

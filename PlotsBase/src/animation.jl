@@ -27,11 +27,17 @@ function frame(anim::Animation, plt::P = current()) where {P<:AbstractPlot}
     push!(anim.frames, filename)
 end
 
-giffn() = isijulia() ? "tmp.gif" : tempname() * ".gif"
-movfn() = isijulia() ? "tmp.mov" : tempname() * ".mov"
-mp4fn() = isijulia() ? "tmp.mp4" : tempname() * ".mp4"
-webmfn() = isijulia() ? "tmp.webm" : tempname() * ".webm"
-apngfn() = isijulia() ? "tmp.png" : tempname() * ".png"
+anim_filename(ext, parent = nothing) = if isijulia()
+    "tmp"
+else
+    tempname(parent ≡ nothing ? tempdir() : parent)
+end * ext
+
+giffn(parent = nothing) = anim_filename(".gif", parent)
+movfn(parent = nothing) = anim_filename(".mov", parent)
+mp4fn(parent = nothing) = anim_filename(".mp4", parent)
+webmfn(parent = nothing) = anim_filename(".webm", parent)
+apngfn(parent = nothing) = anim_filename(".png", parent)
 
 mutable struct FrameIterator
     itr
@@ -88,27 +94,27 @@ file_extension(fn) = Base.Filesystem.splitext(fn)[2][2:end]
     gif(animation[, filename]; fps=20, loop=0, variable_palette=false, verbose=false, show_msg=true)
 Creates an animated .gif-file from an `Animation` object.
 """
-gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim, fn; kw...)
+gif(anim::Animation, fn = giffn(anim.dir); kw...) = buildanimation(anim, fn; kw...)
 """
     mov(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
 Creates an .mov-file from an `Animation` object.
 """
-mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim, fn, false; kw...)
+mov(anim::Animation, fn = movfn(anim.dir); kw...) = buildanimation(anim, fn, false; kw...)
 """
     mp4(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
 Creates an .mp4-file from an `Animation` object.
 """
-mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim, fn, false; kw...)
+mp4(anim::Animation, fn = mp4fn(anim.dir); kw...) = buildanimation(anim, fn, false; kw...)
 """
     webm(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
 Creates an .webm-file from an `Animation` object.
 """
-webm(anim::Animation, fn = webmfn(); kw...) = buildanimation(anim, fn, false; kw...)
+webm(anim::Animation, fn = webmfn(anim.dir); kw...) = buildanimation(anim, fn, false; kw...)
 """
     apng(animation[, filename]; fps=20, loop=0, verbose=false, show_msg=true)
 Creates an animated .apng-file from an `Animation` object.
 """
-apng(anim::Animation, fn = apngfn(); kw...) = buildanimation(anim, fn, false; kw...)
+apng(anim::Animation, fn = apngfn(anim.dir); kw...) = buildanimation(anim, fn, false; kw...)
 
 ffmpeg_framerate(fps) = "$fps"
 ffmpeg_framerate(fps::Rational) = "$(fps.num)/$(fps.den)"
@@ -169,7 +175,6 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     else
         error("Cannot show animation with extension $ext: $agif")
     end
-
     write(io, html)
     nothing
 end
@@ -183,6 +188,7 @@ Base.showable(::MIME"image/png", agif::AnimatedGif) =
 
 Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
+
 
 Base.show(io::IO, ::MIME"image/png", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
