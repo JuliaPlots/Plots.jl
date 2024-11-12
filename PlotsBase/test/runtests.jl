@@ -51,7 +51,6 @@ using Test
 
 function fetch_available_versions()
     juliaup = "https://julialang-s3.julialang.org/juliaup"
-    local json
     for i ∈ 1:6
         buf = PipeBuffer()
         pipeline(`curl -s $juliaup/DBVERSION` |> ignorestatus, stdout=buf) |> run
@@ -60,10 +59,10 @@ function fetch_available_versions()
         buf = PipeBuffer()
         pipeline(`curl -s $juliaup/versiondb/versiondb-$dbversion-x86_64-unknown-linux-gnu.json` |> ignorestatus, stdout=buf) |> run
         json = JSON.parse(buf)
-        break
+        haskey(json, "AvailableChannels") || continue
+        return json["AvailableChannels"]
         sleep(10i)
     end
-    json["AvailableChannels"]
 end
 
 function is_latest_release()
