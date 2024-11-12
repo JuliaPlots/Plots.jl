@@ -47,9 +47,9 @@ using Test
 
 # backends weakdeps
 import UnitfulLatexify
+import LaTeXStrings
 import Latexify
 import Contour
-import 
 
 function available_channels()
     juliaup = "https://julialang-s3.julialang.org/juliaup"

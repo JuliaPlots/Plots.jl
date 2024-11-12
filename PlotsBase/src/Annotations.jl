@@ -10,7 +10,7 @@ export SeriesAnnotations,
     annotations,
     assign_annotation_coord!
 
-import ..PlotsBase: Series, Subplot, TimeType, is3d, discrete_value!
+import ..PlotsBase: Series, Subplot, is3d, discrete_value!
 
 using ..Commons
 using ..Shapes
@@ -161,7 +161,7 @@ _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwx
 )
 
 assign_annotation_coord!(axis, x) = discrete_value!(axis, x)[1]
-assign_annotation_coord!(axis, x::TimeType) = assign_annotation_coord!(axis, Dates.value(x))
+assign_annotation_coord!(axis, x::Dates.TimeType) = assign_annotation_coord!(axis, Dates.value(x))
 
 _annotation_coords(pos::Symbol) = get(Commons._position_aliases, pos, pos)
 _annotation_coords(pos) = pos

@@ -1503,6 +1503,19 @@ end
     SliceIt, m, n, Surface(mat)
 end
 
+@specialize
+
+findnz(A::SparseArrays.AbstractSparseMatrix) = SparseArrays.findnz(A)
+
+# fallback function for finding non-zero elements of non-sparse matrices
+function findnz(A::AbstractMatrix)
+    keysnz = findall(!iszero, A)
+    rs = map(k -> k[1], keysnz)
+    cs = map(k -> k[2], keysnz)
+    zs = A[keysnz]
+    rs, cs, zs
+end
+
 @recipe function f(::Type{Val{:spy}}, x, y, z)  # COV_EXCL_LINE
     yflip := true
     aspect_ratio := 1
@@ -1526,19 +1539,6 @@ end
     seriestype := :scatter
     grid --> false
     ()
-end
-
-@specialize
-
-findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
-
-# fallback function for finding non-zero elements of non-sparse matrices
-function findnz(A::AbstractMatrix)
-    keysnz = findall(!iszero, A)
-    rs = map(k -> k[1], keysnz)
-    cs = map(k -> k[2], keysnz)
-    zs = A[keysnz]
-    rs, cs, zs
 end
 
 # -------------------------------------------------

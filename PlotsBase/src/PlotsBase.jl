@@ -133,7 +133,7 @@ include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
 
-Commons.@generic_functions attr attr! rotate rotate!
+Commons.@generic_functions attr attr!
 
 include("Fonts.jl")
 include("Ticks.jl")

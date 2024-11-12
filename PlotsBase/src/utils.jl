@@ -259,7 +259,7 @@ end
 
 fakedata(sz::Int...) = fakedata(Random.seed!(PLOTS_SEED), sz...)
 
-function fakedata(rng::AbstractRNG, sz...)
+function fakedata(rng::Random.AbstractRNG, sz...)
     y = zeros(sz...)
     for r ∈ 2:size(y, 1)
         y[r, :] = 0.95vec(y[r - 1, :]) + randn(rng, size(y, 2))

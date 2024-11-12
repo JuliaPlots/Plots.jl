@@ -18,7 +18,9 @@ export Shape,
     scale!,
     scale,
     translate,
-    translate!
+    translate!,
+    rotate,
+    rotate!
 
 const P2 = NTuple{2,Float64}
 const P3 = NTuple{3,Float64}
