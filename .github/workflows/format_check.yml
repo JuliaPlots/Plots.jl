@@ -16,22 +16,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
-      - name: Format Julia files
+      - name: format Julia files
         run: |
           julia --color=yes -e '
             using Pkg
             Pkg.add("JuliaFormatter")
             format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
           '
-      - name: suggester / JuliaFormatter
-        if: success() && github.ref == 'refs/heads/master'
+      - name: suggester
+        if: success() && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/v2' )
         uses: reviewdog/action-suggester@v1
         with:
           tool_name: JuliaFormatter
           fail_on_error: true
 
       # reviewdog/action-suggester not using `cleanup` flag?
-      - name: Cleanup
+      - name: cleanup
         if: success() || failure()
         run: |
           git checkout -- .
