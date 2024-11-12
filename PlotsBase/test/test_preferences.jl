@@ -63,7 +63,7 @@ is_pkgeval() || for pkg ∈ TEST_PACKAGES
     @testset "persistent backend $pkg" begin
         be = TEST_BACKENDS[pkg]
         if is_ci()
-            is_latest_release() || continue
+            is_latest("release") || continue
             (Sys.isapple() && be ≡ :gaston) && continue  # FIXME: hangs
             (Sys.iswindows() && be ≡ :plotlyjs) && continue  # FIXME: OutOfMemory
         end

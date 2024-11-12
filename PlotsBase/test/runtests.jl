@@ -49,7 +49,7 @@ using FileIO
 using Dates
 using Test
 
-function fetch_available_versions()
+function available_channels()
     juliaup = "https://julialang-s3.julialang.org/juliaup"
     for i ∈ 1:6
         buf = PipeBuffer()
@@ -65,18 +65,15 @@ function fetch_available_versions()
     end
 end
 
-function is_latest_release()
-    channels = fetch_available_versions()
-    rel = VersionNumber(split(channels["release"]["Version"], '+') |> first)
-    nightly = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
-    !nightly && VersionNumber(rel.major, rel.minor, 0, ("",)) ≤ VERSION < VersionNumber(rel.major, rel.minor + 1, 0)
-end
-
-function is_latest_lts()
-    channels = fetch_available_versions()
-    rel = VersionNumber(split(channels["lts"]["Version"], '+') |> first)
-    nightly = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
-    !nightly && VersionNumber(rel.major, rel.minor, 0, ("",)) ≤ VERSION < VersionNumber(rel.major, rel.minor + 1, 0)
+"""
+julia> is_latest("lts")
+julia> is_latest("release")
+"""
+function is_latest(variant)
+    channels = available_channels()
+    ver = VersionNumber(split(channels[variant]["Version"], '+') |> first)
+    dev = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
+    !dev && VersionNumber(ver.major, ver.minor, 0, ("",)) ≤ VERSION < VersionNumber(ver.major, ver.minor + 1, 0)
 end
 
 is_auto() = Base.get_bool_env("VISUAL_REGRESSION_TESTS_AUTO", false)
