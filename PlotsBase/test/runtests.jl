@@ -15,10 +15,6 @@ get!(ENV, "MPLBACKEND", "agg")
 
 using PlotsBase
 
-# always initialize GR
-import GR
-gr()
-
 # initialize all backends
 for pkg ∈ TEST_PACKAGES
     @eval begin
@@ -118,7 +114,6 @@ for name ∈ (
         if is_auto() || is_pkgeval()
             name != "backends" && continue
         end
-        gr()  # reset to default backend (safer)
         include("test_$name.jl")
     end
 end
