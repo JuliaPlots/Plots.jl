@@ -18,7 +18,7 @@ jobs:
       - uses: julia-actions/setup-julia@latest
       - name: Format Julia files
         run: |
-          julia --color=yes --compile=min -O0 '
+          julia --color=yes '
             using Pkg
             Pkg.add("JuliaFormatter")
             format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
