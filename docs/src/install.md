@@ -5,7 +5,9 @@ First, add the package:
 
 ```julia
 import Pkg
-Pkg.add("Plots")
+Pkg.add("Plots")  # ≡ `PlotsBase` + `GR` backend
+
+Pkg.add("PlotBase", "PythonPlot")  # `PlotsBase` + `PythonPlot` backend, avoids installaing the `GR` backend
 
 # if you want the latest features:
 Pkg.pkg"add Plots#master"
@@ -21,8 +23,9 @@ Pkg.add("GR")
 # need to install additional system packages if you are on Linux, see
 # https://gr-framework.org/julia.html#installation
 
-Pkg.add("PGFPlotsX")
-# You need to have LaTeX installed on your system
+Pkg.add("UnicodePlots")  # simplest terminal based backend (guaranteed to work from a cluster, e.g. without X forwarding)
+
+Pkg.add("PGFPlotsX")  # you need to have LaTeX installed on your system
 
 Pkg.add("PlotlyJS"); Pkg.add("PlotlyBase")
 # Note that you only need to add this if you need Electron windows and
@@ -30,16 +33,9 @@ Pkg.add("PlotlyJS"); Pkg.add("PlotlyBase")
 # In order to have a good experience with Jupyter, refer to Plotly-specific
 # Jupyter installation (https://github.com/plotly/plotly.py#installation)
 
-Pkg.add("PythonPlot")
-# Depends only on PythonPlot package
+Pkg.add("PythonPlot")  # depends only on PythonPlot package
 
-Pkg.add("UnicodePlots")
-```
-
-Tier 2 support backends:
-```julia
-Pkg.add("InspectDR")
-Pkg.add("Gaston")
+Pkg.add("Gaston")  # Gnuplot based backend
 ```
 
 Learn more about backends [here](https://docs.juliaplots.org/latest/backends/).
@@ -58,20 +54,24 @@ Pkg.add("GraphRecipes")
 ```julia
 using Plots # or StatsPlots
 # using GraphRecipes  # if you wish to use GraphRecipes package too
+
+# or alternatively
+import PythonPlot  # select installed backend (triggered by packages extensions: https://docs.julialang.org/en/v1/manual/code-loading/#man-extensions)
+using PlotsBase
 ```
 
 Optionally, [choose a backend](@ref backends) and/or override default settings at the same time:
 
 ```julia
 gr(size = (300, 300), legend = false)  # provide optional defaults
+unicodeplots()                         # plot in terminal
 pgfplotsx()
 plotly(ticks=:native)                  # plotlyjs for richer saving options
 pythonplot()                           # backends are selected with lowercase names
-unicodeplots()                         # plot in terminal
 ```
 
 !!! tip
-    Plots will use the GR backend by default. You can override this choice by setting an environment variable in your `~/.julia/config/startup.jl` file (if the file does not exist, create it). To do this, add e.g. the following line of code: `ENV["PLOTS_DEFAULT_BACKEND"] = "PlotlyJS"`.
+    Plots will use the GR backend by default. You can override this choice by setting an environment variable in your `~/.julia/config/startup.jl` file (if the file does not exist, create it). To do this, add e.g. the following line of code: `ENV["PLOTSBASE_DEFAULT_BACKEND"] = "UnicodePlots"`.
 
 !!! tip
     You can override standard default values in your `~/.julia/config/startup.jl` file, for example `PLOTS_DEFAULTS = Dict(:markersize => 10, :legend => false, :warn_on_unsupported => false)`.
