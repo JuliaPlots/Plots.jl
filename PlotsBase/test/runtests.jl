@@ -73,7 +73,7 @@ function is_latest(variant)
     channels = available_channels()
     ver = VersionNumber(split(channels[variant]["Version"], '+') |> first)
     dev = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
-    !dev && VersionNumber(ver.major, ver.minor, 0, ("",)) ≤ VERSION < VersionNumber(ver.major, ver.minor + 1, 0)
+    !dev && VersionNumber(ver.major, ver.minor, 0, ("",)) ≤ VERSION < VersionNumber(ver.major, ver.minor + 1)
 end
 
 is_auto() = Base.get_bool_env("VISUAL_REGRESSION_TESTS_AUTO", false)
