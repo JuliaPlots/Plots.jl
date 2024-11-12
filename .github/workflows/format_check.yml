@@ -18,9 +18,9 @@ jobs:
       - uses: julia-actions/setup-julia@latest
       - name: format Julia files
         run: |
-          julia --color=yes -e '
-            using Pkg
-            Pkg.add("JuliaFormatter")
+          julia --color=yes --compile=min -O0 -e '
+            using Pkg; Pkg.add("JuliaFormatter")
+            using JuliaFormatter
             format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
           '
       - name: suggester
