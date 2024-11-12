@@ -6,7 +6,7 @@ const wong_palette = [
     RGB(([0, 158, 115] / 255)...), # blueish green
     RGB(([240, 228, 66] / 255)...), # yellow
     RGB(([0, 114, 178] / 255)...), # blue
-    RGB(([213, 94, 0] / 255)...), # vermillion
+    RGB(([213, 94, 0] / 255)...), # vermilion
     RGB(([204, 121, 167] / 255)...), # reddish purple
 ]
 
