@@ -59,7 +59,6 @@ const ATTRIBUTE_SEARCH = Dict{String,Any}()  # search terms
         end
         # end addition
         ############################################################
-        push!(ctx.search_index, rec)
         domify(dctx, node, node.element)
     end
 end
