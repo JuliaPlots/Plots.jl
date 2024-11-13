@@ -22,6 +22,8 @@ import Gaston
 import UnicodePlots
 import StatsPlots
 
+const PlotsBase = Plots.PlotsBase
+
 const SRC_DIR = joinpath(@__DIR__, "src")
 const WORK_DIR = joinpath(@__DIR__, "work")
 const GEN_DIR = joinpath(WORK_DIR, "generated")
@@ -153,7 +155,7 @@ function generate_cards(
 
             i ∈ skip && @goto write_file
             write(jl, """
-                Plots.Commons.reset_defaults()  #hide
+                PlotsBase.Commons.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(Plots.SEED))  #hide
                 nothing  #hide
@@ -253,10 +255,10 @@ end
 
 function generate_supported_markdown(; default_backends)
     supported_args = OrderedDict(
-        "Keyword Arguments" => (Plots.Commons._all_attrs, PlotsBase.supported_attrs),
-        "Markers" => (Plots.Commons._all_markers, PlotsBase.supported_markers),
-        "Line Styles" => (Plots.Commons._all_styles,  PlotsBase.supported_styles),
-        "Scales" => (Plots.Commons._all_scales,  PlotsBase.supported_scales)
+        "Keyword Arguments" => (PlotsBase.Commons._all_attrs, PlotsBase.supported_attrs),
+        "Markers" => (PlotsBase.Commons._all_markers, PlotsBase.supported_markers),
+        "Line Styles" => (PlotsBase.Commons._all_styles,  PlotsBase.supported_styles),
+        "Scales" => (PlotsBase.Commons._all_scales,  PlotsBase.supported_scales)
     )
     open(joinpath(GEN_DIR, "supported.md"), "w") do md
         write(md, """
@@ -303,7 +305,7 @@ function make_attr_df(ktype::Symbol, defs::KW)
     for (i, (k, def)) ∈ enumerate(defs)
         type, desc = get(PlotsBase._arg_desc, k, (Any, ""))
 
-        aliases = sort(collect(keys(filter(p -> p.second == k, Plots.Commons._keyAliases))))
+        aliases = sort(collect(keys(filter(p -> p.second == k, PlotsBase.Commons._keyAliases))))
         df.Attribute[i] = string(k)
         df.Aliases[i] = join(aliases, ", ")
         df.Default[i] = show_default(def)
@@ -331,10 +333,10 @@ function generate_attr_markdown(c)
         """,
     )
     attribute_defaults = Dict(
-        :Series => Plots.Commons._series_defaults,
-        :Plot => Plots.Commons._plot_defaults,
-        :Subplot => Plots.Commons._subplot_defaults,
-        :Axis => Plots.Commons._axis_defaults,
+        :Series => PlotsBase.Commons._series_defaults,
+        :Plot => PlotsBase.Commons._plot_defaults,
+        :Subplot => PlotsBase.Commons._subplot_defaults,
+        :Axis => PlotsBase.Commons._axis_defaults,
     )
 
     df = make_attr_df(c, attribute_defaults[c])
