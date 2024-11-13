@@ -326,6 +326,7 @@ function get_aspect_ratio(sp)
         end
     end
     ar isa Bool && (ar = Int(ar))  # NOTE: Bool <: ... <: Number
+    ar isa Rational && (ar = float(ar))
     ar
 end
 
