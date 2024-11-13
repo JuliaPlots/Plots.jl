@@ -4,12 +4,14 @@ author = ["Tom Breloff (@tbreloff)"]
 version = "2.0.0"
 
 [deps]
+Contour = "d38c429a-6771-53c6-b99e-75d170b6e991"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
 PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
+Contour = "0.6.3"
 GR = "0.73"
 PlotsBase = "0.1"
 PrecompileTools = "1"

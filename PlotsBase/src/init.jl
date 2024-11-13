@@ -135,12 +135,18 @@ macro precompile_backend(backend_package)
                     examples,
                     quote
                         $func() = begin  # evaluate each example in a local scope
+                            if backend_name() ≡ :pythonplot
+                                return  # FIXME: __init__ failure with PythonPlot
+                            end
                             $(PlotsBase._examples[i].exprs)
                             @debug $i
                             $i == 1 || return  # trigger display only for one example
                             fn = tempname(scratch_dir)
                             pl = current()
                             show(devnull, pl)
+                            if backend_name() ≡ :pgfplotsx
+                                return  # FIXME: `Colors` extension issue for PFPlotsX
+                            end
                             if backend_name() ≡ :unicodeplots
                                 savefig(pl, "$fn.txt")
                                 return
@@ -165,7 +171,6 @@ macro precompile_backend(backend_package)
                     eval.(imports)
                     eval.(examples)
                     PlotsBase.CURRENT_PLOT.nullableplot = nothing
-                    PlotsBase.extension_cleanup($abstract_backend())
                 end
             end
         end

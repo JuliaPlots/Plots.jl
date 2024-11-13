@@ -39,19 +39,20 @@ function PlotsBase.extension_init(::PythonPlotBackend)
     PythonCall.pyimport("mpl_toolkits.axes_grid1")
     numpy.seterr(invalid = "ignore")
 
-    # FIXME: __init__ is bypassed in PythonPlot see PythonPlot.jl/src/init.jl
-    # we duplicate the code of PythonPlot here
-    PythonPlot.version = PythonPlot.vparse(PythonCall.pyconvert(String, mpl.__version__))
-    backend_gui = PythonPlot.find_backend(mpl)
-    PythonPlot.backend = backend_gui[1]
-    PythonPlot.gui = backend_gui[2]
-    PythonCall.pycopy!(PythonPlot.pyplot, PythonCall.pyimport("matplotlib.pyplot"))  # raw Python module
-    PythonCall.pycopy!(PythonPlot.Gcf, PythonCall.pyimport("matplotlib._pylab_helpers").Gcf)
-    PythonCall.pycopy!(PythonPlot.orig_gcf, PythonPlot.pyplot.gcf)
-    PythonCall.pycopy!(PythonPlot.orig_figure, PythonPlot.pyplot.figure)
-    PythonPlot.pyplot.gcf = PythonPlot.gcf
-    PythonPlot.pyplot.figure = PythonPlot.figure
-    ##################################################################
+    @static if false
+        # FIXME: __init__ is bypassed in PythonPlot see PythonPlot.jl/src/init.jl
+        # we duplicate the code of PythonPlot here
+        PythonPlot.version = PythonPlot.vparse(PythonCall.pyconvert(String, mpl.__version__))
+        backend_gui = PythonPlot.find_backend(mpl)
+        PythonPlot.backend = backend_gui[1]
+        PythonPlot.gui = backend_gui[2]
+        PythonCall.pycopy!(PythonPlot.pyplot, PythonCall.pyimport("matplotlib.pyplot"))  # raw Python module
+        PythonCall.pycopy!(PythonPlot.Gcf, PythonCall.pyimport("matplotlib._pylab_helpers").Gcf)
+        PythonCall.pycopy!(PythonPlot.orig_gcf, PythonPlot.pyplot.gcf)
+        PythonCall.pycopy!(PythonPlot.orig_figure, PythonPlot.pyplot.figure)
+        PythonPlot.pyplot.gcf = PythonPlot.gcf
+        PythonPlot.pyplot.figure = PythonPlot.figure
+    end
 
     PythonPlot.ioff()  # we don't want every command to update the figure
 
@@ -74,21 +75,6 @@ function PlotsBase.extension_init(::PythonPlotBackend)
             splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
         append!(Base.Multimedia.displays, otherdisplays)
     end
-end
-
-function PlotsBase.extension_cleanup(::PythonPlotBackend)
-    mpl_toolkits = PythonCall.pynew()
-    numpy = PythonCall.pynew()
-    mpl = PythonCall.pynew()
-    PythonPlot.pyplot.gcf = PythonCall.pynew()
-    PythonPlot.pyplot.figure = PythonCall.pynew()
-    PythonPlot.pyplot = PythonCall.pynew()
-    PythonPlot.Gcf = PythonCall.pynew()
-    PythonPlot.orig_gcf = PythonCall.pynew()
-    PythonPlot.orig_figure = PythonCall.pynew()
-    PythonPlot.backend = PythonCall.pynew()
-    PythonPlot.gui = PythonCall.pynew()
-    nothing
 end
 
 PlotsBase.@extension_static PythonPlotBackend pythonplot

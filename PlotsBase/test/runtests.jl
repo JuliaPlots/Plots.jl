@@ -28,6 +28,7 @@ import PlotsBase: PLOTS_SEED, Plot, with
 import SentinelArrays: ChainedVector
 import GeometryBasics
 import OffsetArrays
+import Downloads
 import FreeType  # for `unicodeplots`
 import LibGit2
 import Aqua
@@ -55,11 +56,11 @@ function available_channels()
     juliaup = "https://julialang-s3.julialang.org/juliaup"
     for i ∈ 1:6
         buf = PipeBuffer()
-        pipeline(`curl -s $juliaup/DBVERSION` |> ignorestatus, stdout=buf) |> run
+        Downloads.download("$juliaup/DBVERSION", buf)
         dbversion = VersionNumber(readline(buf))
         dbversion.major == 1 || continue
         buf = PipeBuffer()
-        pipeline(`curl -s $juliaup/versiondb/versiondb-$dbversion-x86_64-unknown-linux-gnu.json` |> ignorestatus, stdout=buf) |> run
+        Downloads.download("$juliaup/versiondb/versiondb-$dbversion-x86_64-unknown-linux-gnu.json", buf)
         json = JSON.parse(buf)
         haskey(json, "AvailableChannels") || continue
         return json["AvailableChannels"]

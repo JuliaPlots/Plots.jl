@@ -183,8 +183,6 @@ end
 "extra init step for an extension"
 extension_init(::AbstractBackend) = nothing
 
-extension_cleanup(::AbstractBackend) = nothing
-
 "generate extension `__init__` function, and common defines"
 macro extension_static(be_type, be)
     be_sym = QuoteNode(be)
@@ -194,7 +192,8 @@ macro extension_static(be_type, be)
             PlotsBase._backendType[$be_sym] = $be_type
             PlotsBase._backendSymbol[$be_type] = $be_sym
             push!(PlotsBase._initialized_backends, $be_sym)
-            PlotsBase.extension_init($be_type())
+            ccall(:jl_generating_output, Cint, ()) == 1 && return
+            PlotsBase.extension_init($be_type())  # runtime init, incompatible with precompilation
             @debug $("Initialized $be_type backend in PlotsBase; run `$be()` to activate it.")
         end
     end |> esc
