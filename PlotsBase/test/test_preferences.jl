@@ -72,8 +72,11 @@ end
         write(
             script,
             """
+            $WEAKDEPS
+
             import $pkg
             using Test, PlotsBase
+
             $be()
             res = @testset "[subtest] persistent backend $pkg" begin
                 @test PlotsBase.backend_name() ≡ :$be

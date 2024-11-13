@@ -15,12 +15,17 @@ get!(ENV, "MPLBACKEND", "agg")
 
 using PlotsBase
 
-# backends weakdeps
-import UnitfulLatexify
-import LaTeXStrings
-import Latexify
-import Contour
-import Colors
+# multiple weakdeps (keep in sync with Project.toml !)
+const WEAKDEPS = Expr(
+    :block,
+    :(import Latexify)
+    :(import UnitfulLatexify),
+    :(import LaTeXStrings),
+    :(import Latexify),
+    :(import Contour),
+    :(import Colors),
+)
+eval(WEAKDEPS)
 
 # initialize all backends
 for pkg ∈ TEST_PACKAGES
