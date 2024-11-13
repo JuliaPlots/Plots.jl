@@ -7,6 +7,16 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
     @eval Base.Experimental.@max_methods 1
 end
 
+# multiple weakdeps triggers (keep in sync with Project.toml !)
+const WEAKDEPS = Expr(
+    :block,
+    :(import UnitfulLatexify),
+    :(import LaTeXStrings),
+    :(import Latexify),
+    :(import Contour),
+    :(import Colors),
+)
+
 using Base.Meta
 
 import PrecompileTools

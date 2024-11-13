@@ -15,6 +15,8 @@ for sym ∈ _default_supported_syms
     end
 end
 
+const WEAKDEPS = 
+
 _display(::Plot{NoneBackend}) =
     @warn "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
 

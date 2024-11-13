@@ -23,6 +23,7 @@ import UnicodePlots
 import StatsPlots
 
 const PlotsBase = Plots.PlotsBase
+eval(PlotsBase.WEAKDEPS)
 
 const SRC_DIR = joinpath(@__DIR__, "src")
 const WORK_DIR = joinpath(@__DIR__, "work")
