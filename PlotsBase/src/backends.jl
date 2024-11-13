@@ -194,7 +194,7 @@ macro extension_static(be_type, be)
             push!(PlotsBase._initialized_backends, $be_sym)
             ccall(:jl_generating_output, Cint, ()) == 1 && return
             PlotsBase.extension_init($be_type())  # runtime init, incompatible with precompilation
-            @debug $("Initialized $be_type backend in PlotsBase; run `$be()` to activate it.")
+            @debug $("Initialized $be_type in PlotsBase; run `$be()` to activate it.")
         end
     end |> esc
 end

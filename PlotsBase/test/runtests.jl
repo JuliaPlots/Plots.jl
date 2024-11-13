@@ -15,6 +15,13 @@ get!(ENV, "MPLBACKEND", "agg")
 
 using PlotsBase
 
+# backends weakdeps
+import UnitfulLatexify
+import LaTeXStrings
+import Latexify
+import Contour
+import Colors
+
 # initialize all backends
 for pkg ∈ TEST_PACKAGES
     @eval begin
@@ -45,12 +52,6 @@ using Unitful
 using FileIO
 using Dates
 using Test
-
-# backends weakdeps
-import UnitfulLatexify
-import LaTeXStrings
-import Latexify
-import Contour
 
 function available_channels()
     juliaup = "https://julialang-s3.julialang.org/juliaup"
