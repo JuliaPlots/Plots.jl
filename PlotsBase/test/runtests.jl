@@ -18,7 +18,6 @@ using PlotsBase
 # multiple weakdeps (keep in sync with Project.toml !)
 const WEAKDEPS = Expr(
     :block,
-    :(import Latexify),
     :(import UnitfulLatexify),
     :(import LaTeXStrings),
     :(import Latexify),
