@@ -1,5 +1,5 @@
 using Pkg
-Base.get_bool_env("PLOTDOCS_DEV", false) && Pkg.develop([
+Base.get_bool_env("PLOTS_DOCS_DEV", false) && Pkg.develop([
     (; path="../RecipesBase"),
     (; path="../RecipesPipeline"),
     (; path="../PlotThemes"),
@@ -8,7 +8,7 @@ Base.get_bool_env("PLOTDOCS_DEV", false) && Pkg.develop([
     (; path="../StatsPlots"),
     (; path=".."),
 ])
-# oneliner debug PLOTDOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
+# oneliner debug PLOTS_DOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
 
 using DataFrames, OrderedCollections, Dates
 using MacroTools: rmlines
