@@ -210,20 +210,15 @@ rotate_x(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
 rotate_y(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
     ((y - centery) * cos(θ) + (x - centerx) * sin(θ) + centery)
 
-end  # module
-
-# -----------------------------------------------------------------------------
-
-using .Shapes
 
 rotate(x::Real, y::Real, θ::Real, c) =
-    (Shapes.rotate_x(x, y, θ, c...), Shapes.rotate_y(x, y, θ, c...))
+    (rotate_x(x, y, θ, c...), rotate_y(x, y, θ, c...))
 
 function rotate!(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
     for i ∈ eachindex(x)
-        xi = Shapes.rotate_x(x[i], y[i], θ, c...)
-        yi = Shapes.rotate_y(x[i], y[i], θ, c...)
+        xi = rotate_x(x[i], y[i], θ, c...)
+        yi = rotate_y(x[i], y[i], θ, c...)
         x[i], y[i] = xi, yi
     end
     shape
@@ -232,7 +227,14 @@ end
 "rotate an object in space"
 function rotate(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
-    x_new = Shapes.rotate_x.(x, y, θ, c...)
-    y_new = Shapes.rotate_y.(x, y, θ, c...)
+    x_new = rotate_x.(x, y, θ, c...)
+    y_new = rotate_y.(x, y, θ, c...)
     Shape(x_new, y_new)
 end
+
+
+end  # module
+
+# -----------------------------------------------------------------------------
+
+using .Shapes

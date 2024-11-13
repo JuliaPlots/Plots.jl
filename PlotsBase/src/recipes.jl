@@ -1506,10 +1506,10 @@ end
 
 @specialize
 
-findnz(A::SparseArrays.AbstractSparseMatrix) = SparseArrays.findnz(A)
+find_nnz(A::SparseArrays.AbstractSparseMatrix) = SparseArrays.findnz(A)
 
 # fallback function for finding non-zero elements of non-sparse matrices
-function findnz(A::AbstractMatrix)
+function find_nnz(A::AbstractMatrix)
     keysnz = findall(!iszero, A)
     rs = map(k -> k[1], keysnz)
     cs = map(k -> k[2], keysnz)
@@ -1520,7 +1520,7 @@ end
 @recipe function f(::Type{Val{:spy}}, x, y, z)  # COV_EXCL_LINE
     yflip := true
     aspect_ratio := 1
-    rs, cs, zs = findnz(z.surf)
+    rs, cs, zs = PlotsBase.find_nnz(z.surf)
     xlims := ignorenan_extrema(cs)
     ylims := ignorenan_extrema(rs)
     widen --> true

@@ -1,7 +1,9 @@
+const Shapes = PlotsBase.Shapes
+
 @testset "Shapes" begin
-    get_xs = PlotsBase.Shapes.get_xs
-    get_ys = PlotsBase.Shapes.get_ys
-    vertices = PlotsBase.Shapes.vertices
+    get_xs = Shapes.get_xs
+    get_ys = Shapes.get_ys
+    vertices = Shapes.vertices
     @testset "Type" begin
         square = Shape([(0, 0.0), (1, 0.0), (1, 1.0), (0, 1.0)])
         @test get_xs(square) == [0, 1, 1, 0]
@@ -27,7 +29,7 @@
 
     @testset "Center" begin
         square = Shape([(0, 0), (1, 0), (1, 1), (0, 1)])
-        @test PlotsBase.center(square) == (0.5, 0.5)
+        @test Shapes.center(square) == (0.5, 0.5)
     end
 
     @testset "Translate" begin
@@ -35,10 +37,10 @@
         squareUp = Shape([(0, 1), (1, 1), (1, 2), (0, 2)])
         squareUpRight = Shape([(1, 1), (2, 1), (2, 2), (1, 2)])
 
-        @test PlotsBase.translate(square, 0, 1).x == squareUp.x
-        @test PlotsBase.translate(square, 0, 1).y == squareUp.y
+        @test Shapes.translate(square, 0, 1).x == squareUp.x
+        @test Shapes.translate(square, 0, 1).y == squareUp.y
 
-        @test PlotsBase.center(PlotsBase.translate!(square, 1)) == (1.5, 1.5)
+        @test Shapes.center(Shapes.translate!(square, 1)) == (1.5, 1.5)
     end
 
     @testset "Rotate" begin
@@ -50,12 +52,12 @@
         square = Shape([(0, 0), (1, 0), (1, 1), (0, 1)])
 
         # make a new, rotated square
-        square2 = PlotsBase.rotate(square, -2)
+        square2 = Shapes.rotate(square, -2)
         @test square2.x ≈ coordsRotated2[1, :]
         @test square2.y ≈ coordsRotated2[2, :]
 
         # unrotate the new square in place
-        PlotsBase.rotate!(square2, 2)
+        Shapes.rotate!(square2, 2)
         @test square2.x ≈ coords[1, :]
         @test square2.y ≈ coords[2, :]
     end
@@ -71,18 +73,18 @@
     end
 
     @testset "Misc" begin
-        @test PlotsBase.weave([1, 3], [2, 4]) == collect(1:4)
-        @test PlotsBase.makeshape(3) isa PlotsBase.Shape
-        @test PlotsBase.makestar(3) isa PlotsBase.Shape
-        @test PlotsBase.makecross() isa PlotsBase.Shape
-        @test PlotsBase.makearrowhead(10.0) isa PlotsBase.Shape
+        @test Shapes.weave([1, 3], [2, 4]) == collect(1:4)
+        @test Shapes.makeshape(3) isa Shape
+        @test Shapes.makestar(3) isa Shape
+        @test Shapes.makecross() isa Shape
+        @test Shapes.makearrowhead(10.0) isa Shape
 
-        @test PlotsBase.rotate(1.0, 2.0, 5.0, (0, 0)) isa Tuple
+        @test Shapes.rotate(1.0, 2.0, 5.0, (0, 0)) isa Tuple
 
-        star = PlotsBase.makestar(3)
-        star_scaled = PlotsBase.scale(star, 0.5)
+        star = Shapes.makestar(3)
+        star_scaled = Shapes.scale(star, 0.5)
 
-        PlotsBase.scale!(star, 0.5)
+        Shapes.scale!(star, 0.5)
         @test get_xs(star) == get_xs(star_scaled)
         @test get_ys(star) == get_ys(star_scaled)
 
@@ -221,9 +223,9 @@ end
 end
 
 @testset "Series Annotations" begin
-    get_xs = PlotsBase.Shapes.get_xs
-    get_ys = PlotsBase.Shapes.get_ys
-    vertices = PlotsBase.Shapes.vertices
+    get_xs = Shapes.get_xs
+    get_ys = Shapes.get_ys
+    vertices = Shapes.vertices
     square = Shape([(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
     @test_logs (:warn, "Unused SeriesAnnotations arg: triangle (Symbol)") begin
         pl = plot(

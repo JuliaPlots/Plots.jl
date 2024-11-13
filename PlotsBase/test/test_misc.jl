@@ -262,7 +262,7 @@ with(:gr) do
             @test ylims(pl) == (-1, +1)
         end
 
-        @test PlotsBase.findnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
+        @test PlotsBase.find_nnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
     end
 
     @testset "mesh3d" begin
