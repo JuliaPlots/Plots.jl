@@ -240,8 +240,8 @@ function append_unit_if_needed!(attr, key, label::Nothing, u)
 end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
-        attr[key] = UnitfulString(
+    attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
+        UnitfulString(
             LaTeXString(
                 format_unit_label(
                     label,
@@ -252,7 +252,7 @@ function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString
             u,
         )
     else
-        attr[key] = UnitfulString(
+        UnitfulString(
             S(
                 format_unit_label(
                     label,

@@ -73,11 +73,11 @@ jobs:
           Pkg.develop([
             (; path="./RecipesBase"),
             (; path="./RecipesPipeline"),
+            (; path="./PlotThemes"),
             (; path="./PlotsBase"),
-            (; path="."),
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
-            (; path="./PlotThemes"),
+            (; path="."),
           ])
 
       - name: Install conda based matplotlib
@@ -96,11 +96,11 @@ jobs:
           ${cmd[@]} -e 'using Pkg; Pkg.test([
             "RecipesBase",
             "RecipesPipeline",
+            "PlotThemes",
             "PlotsBase",
-            "Plots",
             "GraphRecipes",
             "StatsPlots",
-            "PlotThemes",
+            "Plots",
           ]; coverage=true)'
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')

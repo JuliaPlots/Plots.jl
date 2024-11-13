@@ -1,8 +1,6 @@
 module GastonExt
 
-import RecipesPipeline
-import PlotUtils
-import PlotsBase
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, PlotUtils
 import Gaston
 
 using PlotsBase.Annotations
@@ -844,5 +842,7 @@ function gaston_enclose_tick_string(tick_string)
     base, power = split(tick_string, '^')
     "$base^{$power}"
 end
+
+PlotsBase.@precompile_backend Gaston
 
 end  # module

@@ -1,4 +1,4 @@
-const PLOTS_DEFAULTS = Dict(:theme => :wong2, :fontfamily => :palantino)
+const PLOTSBASE_DEFAULTS = Dict(:theme => :wong2, :fontfamily => :palantino)
 PlotsBase._plots_theme_defaults()
 
 @testset "Loading theme" begin
@@ -7,7 +7,7 @@ PlotsBase._plots_theme_defaults()
     @test PlotsBase.guidefont(pl[1][:xaxis]).family == "palantino"
 end
 
-empty!(PLOTS_DEFAULTS)
+empty!(PLOTSBASE_DEFAULTS)
 PlotsBase._plots_theme_defaults()
 
 @testset "default" begin

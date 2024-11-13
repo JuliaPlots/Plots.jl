@@ -114,6 +114,7 @@ plot(
     plts_tail::Union{PlaceHolder,Plot}...;
     kw...,
 ) = plot!(deepcopy(plt1), deepcopy(plt2), deepcopy.(plts_tail)...; kw...)
+
 function plot!(
     plt1::Plot,
     plt2::Union{PlaceHolder,Plot},

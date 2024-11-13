@@ -1,6 +1,5 @@
-using Markdown
 using GraphRecipes
-using Plots
+using Markdown
 
 cd(@__DIR__)
 

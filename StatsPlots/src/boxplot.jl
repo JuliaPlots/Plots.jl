@@ -24,7 +24,7 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
             [getindex(x, plotattributes[:series_plotindex])]
         end
     end
-    xsegs, ysegs = Plots.PlotsBase.Segments(), Plots.PlotsBase.Segments()
+    xsegs, ysegs = PlotsBase.Segments(), PlotsBase.Segments()
     texts = String[]
     glabels = sort(collect(unique(x)))
     warning = false

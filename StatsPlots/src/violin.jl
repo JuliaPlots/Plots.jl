@@ -46,9 +46,9 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
             [getindex(x, plotattributes[:series_plotindex])]
         end
     end
-    xsegs, ysegs = Plots.PlotsBase.Segments(), Plots.PlotsBase.Segments()
-    qxsegs, qysegs = Plots.PlotsBase.Segments(), Plots.PlotsBase.Segments()
-    mxsegs, mysegs = Plots.PlotsBase.Segments(), Plots.PlotsBase.Segments()
+    xsegs, ysegs = PlotsBase.Segments(), PlotsBase.Segments()
+    qxsegs, qysegs = PlotsBase.Segments(), PlotsBase.Segments()
+    mxsegs, mysegs = PlotsBase.Segments(), PlotsBase.Segments()
     glabels = sort(collect(unique(x)))
     bw = plotattributes[:bar_width]
     bw == nothing && (bw = 0.8)

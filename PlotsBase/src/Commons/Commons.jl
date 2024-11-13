@@ -2,7 +2,7 @@
 module Commons
 
 export AVec,
-    AMat, KW, AKW, TicksArgs, PlotsBase, PLOTS_SEED, _haligns, _valigns, _cbar_width
+    AMat, KW, AKW, TicksArgs, PlotsBase, SEED, _haligns, _valigns, _cbar_width
 export get_subplot,
     coords,
     ispolar,
@@ -61,8 +61,8 @@ using ..ColorTypes: alpha
 using ..RecipesBase
 using ..Statistics
 using ..NaNMath
-using ..Unzip
 using ..Printf
+using ..Unzip
 
 const width = Measures.width
 const height = Measures.height
@@ -326,6 +326,7 @@ function get_aspect_ratio(sp)
         end
     end
     ar isa Bool && (ar = Int(ar))  # NOTE: Bool <: ... <: Number
+    ar isa Rational && (ar = float(ar))
     ar
 end
 

@@ -1,6 +1,6 @@
 module PlotlyJSExt
 
-import PlotsBase: PlotsBase, Plot
+import PlotsBase: PlotsBase, PrecompileTools, Plot
 using PlotsBase.Commons
 using PlotsBase.Plotly
 using PlotsBase.Plots
@@ -73,5 +73,7 @@ function PlotsBase._ijulia__extra_mime_info!(plt::Plot{PlotlyJSBackend}, out::Di
         Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
     out
 end
+
+PlotsBase.@precompile_backend PlotlyJS
 
 end  # module

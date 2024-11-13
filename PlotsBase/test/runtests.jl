@@ -15,9 +15,16 @@ get!(ENV, "MPLBACKEND", "agg")
 
 using PlotsBase
 
-# always initialize GR
-import GR
-gr()
+# multiple weakdeps (keep in sync with Project.toml !)
+const WEAKDEPS = Expr(
+    :block,
+    :(import UnitfulLatexify),
+    :(import LaTeXStrings),
+    :(import Latexify),
+    :(import Contour),
+    :(import Colors),
+)
+eval(WEAKDEPS)
 
 # initialize all backends
 for pkg ∈ TEST_PACKAGES
@@ -28,10 +35,11 @@ for pkg ∈ TEST_PACKAGES
 end
 
 import Unitful: m, s, cm, DimensionError
-import PlotsBase: PLOTS_SEED, Plot, with
+import PlotsBase: SEED, Plot, with
 import SentinelArrays: ChainedVector
 import GeometryBasics
 import OffsetArrays
+import Downloads
 import FreeType  # for `unicodeplots`
 import LibGit2
 import Aqua
@@ -48,6 +56,39 @@ using Unitful
 using FileIO
 using Dates
 using Test
+
+function available_channels()
+    juliaup = "https://julialang-s3.julialang.org/juliaup"
+    for i ∈ 1:6
+        buf = PipeBuffer()
+        Downloads.download("$juliaup/DBVERSION", buf)
+        dbversion = VersionNumber(readline(buf))
+        dbversion.major == 1 || continue
+        buf = PipeBuffer()
+        Downloads.download(
+            "$juliaup/versiondb/versiondb-$dbversion-x86_64-unknown-linux-gnu.json",
+            buf,
+        )
+        json = JSON.parse(buf)
+        haskey(json, "AvailableChannels") || continue
+        return json["AvailableChannels"]
+        sleep(10i)
+    end
+end
+
+"""
+julia> is_latest("lts")
+julia> is_latest("release")
+"""
+function is_latest(variant)
+    channels = available_channels()
+    ver = VersionNumber(split(channels[variant]["Version"], '+') |> first)
+    dev = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
+    !dev &&
+        VersionNumber(ver.major, ver.minor, 0, ("",)) ≤
+        VERSION <
+        VersionNumber(ver.major, ver.minor + 1)
+end
 
 is_auto() = Base.get_bool_env("VISUAL_REGRESSION_TESTS_AUTO", false)
 is_pkgeval() = Base.get_bool_env("JULIA_PKGEVAL", false)
@@ -91,7 +132,6 @@ for name ∈ (
         if is_auto() || is_pkgeval()
             name != "backends" && continue
         end
-        gr()  # reset to default backend (safer)
         include("test_$name.jl")
     end
 end

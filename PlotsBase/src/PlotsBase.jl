@@ -7,12 +7,32 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
     @eval Base.Experimental.@max_methods 1
 end
 
-using Pkg, Dates, Printf, Statistics, Base64, LinearAlgebra, SparseArrays, Random
-using PrecompileTools, Preferences, Reexport, RelocatableFolders
 using Base.Meta
-@reexport using RecipesBase
-@reexport using PlotThemes
-@reexport using PlotUtils
+
+import PrecompileTools
+import LinearAlgebra
+import SparseArrays
+import Preferences
+import UnicodeFun
+import Statistics
+import StatsBase
+import Downloads
+import Reexport
+import Measures
+import NaNMath
+import Showoff
+import Random
+import Base64
+import Printf
+import Dates
+import Unzip
+import JLFzf
+import JSON
+import Pkg
+
+Reexport.@reexport using RecipesBase
+Reexport.@reexport using PlotThemes
+Reexport.@reexport using PlotUtils
 
 import RecipesBase: plot, plot!, animate, is_explicit, grid
 import RecipesPipeline:
@@ -34,14 +54,6 @@ import RecipesPipeline:
     pop_kw!,
     Volume,
     is3d
-import UnicodeFun
-import StatsBase
-import Downloads
-import Measures
-import Showoff
-import Unzip
-import JLFzf
-import JSON
 
 #! format: off
 export
@@ -113,8 +125,6 @@ export
     resetfontsizes
 
 #! format: on
-import NaNMath
-
 const _project = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
 const _version = _project.version
 const _compat  = _project.compat
@@ -123,7 +133,7 @@ include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
 
-Commons.@generic_functions attr attr! rotate rotate!
+Commons.@generic_functions attr attr!
 
 include("Fonts.jl")
 include("Ticks.jl")
@@ -159,33 +169,6 @@ include("plotly.jl")
 include("init.jl")
 include("users.jl")
 
-# COV_EXCL_START
-@setup_workload begin
-    backend(:none)
-    n = length(_examples)
-    imports = sizehint!(Expr[], n)
-    examples = sizehint!(Expr[], 10n)
-    for i ∈ setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
-        _examples[i].external && continue
-        (imp = _examples[i].imports) ≡ nothing || push!(imports, imp)
-        func = gensym(string(i))
-        push!(examples, quote
-            $func() = begin  # evaluate each example in a local scope
-                $(_examples[i].exprs)
-                $i == 1 || return  # trigger display only for one example
-                show(devnull, current())
-                nothing
-            end
-            $func()
-        end)
-    end
-    @compile_workload begin
-        backend(:none)
-        eval.(imports)
-        eval.(examples)
-    end
-    CURRENT_PLOT.nullableplot = nothing
-end
-# COV_EXCL_STOP
+PlotsBase.@precompile_backend None
 
 end

@@ -1,8 +1,4 @@
-using Plots
-using StableRNGs
-using GraphRecipes
-using GraphRecipes.Colors
-using GraphRecipes.AbstractTrees
+
 function random_labelled_graph()
     n = 15
     rng = StableRNG(1)
@@ -172,11 +168,11 @@ julia_type_tree() = plot(
     rng = StableRNG(1),
 )
 
-AbstractTrees.children(d::Dict) = [p for p ∈ d]
-AbstractTrees.children(p::Pair) = AbstractTrees.children(p[2])
-function AbstractTrees.printnode(io::IO, p::Pair)
+@eval AbstractTrees children(d::AbstractDict) = [p for p ∈ d]
+@eval AbstractTrees children(p::Pair) = AbstractTrees.children(p[2])
+@eval AbstractTrees function printnode(io::IO, p::Pair)
     str =
-        isempty(AbstractTrees.children(p[2])) ? string(p[1], ": ", p[2]) :
+        isempty(children(p[2])) ? string(p[1], ": ", p[2]) :
         string(p[1], ": ")
     print(io, str)
 end

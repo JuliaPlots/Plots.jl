@@ -3,11 +3,11 @@ using Distributions
 using StatsPlots
 using StableRNGs
 using Clustering
+using PlotsBase
 using NaNMath
-using Plots
 using Test
 
-import Plots: PlotsBase
+import GR; gr()
 
 @testset "Grouped histogram" begin
     rng = StableRNG(1337)
@@ -17,7 +17,7 @@ import Plots: PlotsBase
         ylims = (1e-2, 1e4),
         bar_position = :stack,
     )
-    @test NaNMath.minimum(gpl[1][1][:y]) <= 1e-2
+    @test NaNMath.minimum(gpl[1][1][:y]) ≤ 1e-2
     @test NaNMath.minimum(gpl[1][1][:y]) > 0
     rng = StableRNG(1337)
     gpl = groupedhist(
@@ -26,7 +26,7 @@ import Plots: PlotsBase
         ylims = (1e-2, 1e4),
         bar_position = :dodge,
     )
-    @test NaNMath.minimum(gpl[1][1][:y]) <= 1e-2
+    @test NaNMath.minimum(gpl[1][1][:y]) ≤ 1e-2
     @test NaNMath.minimum(gpl[1][1][:y]) > 0
 
     data = [1, 1, 1, 1, 2, 1]

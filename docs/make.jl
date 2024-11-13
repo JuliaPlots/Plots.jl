@@ -1,13 +1,14 @@
 using Pkg
-Base.get_bool_env("PLOTDOCS_DEV", false) && Pkg.develop([
+Base.get_bool_env("PLOTS_DOCS_DEV", false) && Pkg.develop([
     (; path="../RecipesBase"),
     (; path="../RecipesPipeline"),
+    (; path="../PlotThemes"),
     (; path="../PlotsBase"),
-    (; path=".."),
     (; path="../GraphRecipes"),
     (; path="../StatsPlots"),
+    (; path=".."),
 ])
-# oneliner debug PLOTDOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
+# oneliner debug PLOTS_DOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
 
 using DataFrames, OrderedCollections, Dates
 using MacroTools: rmlines
@@ -29,11 +30,10 @@ const BRANCH = ("master", "v2")[2]  # transition to v2
 const ATTRIBUTE_SEARCH = Dict{String,Any}()  # search terms
 
 # monkey patch `Documenter` - note that this could break on minor `Documenter` releases
-@eval Documenter.Writers.HTMLWriter domify(ctx, navnode) = begin
-    # github.com/JuliaDocs/Documenter.jl/blob/327d155f992ec7c63e35fa2cb08f7f7c2d33409a/src/Writers/HTMLWriter.jl#L1448-L1455
-    page = getpage(ctx, navnode)
-    map(page.elements) do elem
-        rec = SearchRecord(ctx, navnode, elem)
+@eval Documenter.Writers.HTMLWriter domify(dctx::DCtx) = begin
+    ctx, navnode = dctx.ctx, dctx.navnode
+    return map(getpage(ctx, navnode).mdast.children) do node
+        rec = SearchRecord(ctx, navnode, node, node.element)
         ############################################################
         # begin addition
         info = "[src=$(rec.src) fragment=$(rec.fragment) title=$(rec.title) page_title=$(rec.page_title)]"
@@ -60,7 +60,7 @@ const ATTRIBUTE_SEARCH = Dict{String,Any}()  # search terms
         end
         # end addition
         ############################################################
-        domify(ctx, navnode, page.mapping[elem])
+        domify(dctx, node, node.element)
     end
 end
 
@@ -155,7 +155,7 @@ function generate_cards(
             write(jl, """
                 Plots.Commons.reset_defaults()  #hide
                 using StableRNGs  #hide
-                rng = StableRNG($(Plots.PLOTS_SEED))  #hide
+                rng = StableRNG($(Plots.SEED))  #hide
                 nothing  #hide
                 """
             )

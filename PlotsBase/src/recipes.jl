@@ -720,7 +720,8 @@ function _auto_binning_nbins(
 ) where {N}
     max_bins = 10_000
     _cl(x) = min(ceil(Int, max(x, one(x))), max_bins)
-    _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
+    _iqr(v) = (q = Statistics.quantile(v, 0.75) - Statistics.quantile(v, 0.25);
+    q > 0 ? q : oftype(q, 1))
     _span(v) = maximum(v) - minimum(v)
 
     n_samples = length(LinearIndices(first(vs)))
@@ -743,7 +744,7 @@ function _auto_binning_nbins(
     elseif mode ≡ :rice  # Rice Rule
         _cl(2 * nd)
     elseif mode ≡ :scott  # Scott's normal reference rule
-        _cl(_span(v) / (3.5 * std(v) / nd))
+        _cl(_span(v) / (3.5 * Statistics.std(v) / nd))
     elseif mode ≡ :fd  # Freedman–Diaconis rule
         _cl(_span(v) / (2 * _iqr(v) / nd))
     elseif mode ≡ :wand
@@ -797,7 +798,7 @@ function _make_hist(
             closed = :left,
         ),
     )
-    normalize!(h, mode = _hist_norm_mode(normed))
+    LinearAlgebra.normalize!(h, mode = _hist_norm_mode(normed))
 end
 
 @nospecialize
@@ -1503,10 +1504,23 @@ end
     SliceIt, m, n, Surface(mat)
 end
 
+@specialize
+
+find_nnz(A::SparseArrays.AbstractSparseMatrix) = SparseArrays.findnz(A)
+
+# fallback function for finding non-zero elements of non-sparse matrices
+function find_nnz(A::AbstractMatrix)
+    keysnz = findall(!iszero, A)
+    rs = map(k -> k[1], keysnz)
+    cs = map(k -> k[2], keysnz)
+    zs = A[keysnz]
+    rs, cs, zs
+end
+
 @recipe function f(::Type{Val{:spy}}, x, y, z)  # COV_EXCL_LINE
     yflip := true
     aspect_ratio := 1
-    rs, cs, zs = findnz(z.surf)
+    rs, cs, zs = PlotsBase.find_nnz(z.surf)
     xlims := ignorenan_extrema(cs)
     ylims := ignorenan_extrema(rs)
     widen --> true
@@ -1526,19 +1540,6 @@ end
     seriestype := :scatter
     grid --> false
     ()
-end
-
-@specialize
-
-findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
-
-# fallback function for finding non-zero elements of non-sparse matrices
-function findnz(A::AbstractMatrix)
-    keysnz = findall(!iszero, A)
-    rs = map(k -> k[1], keysnz)
-    cs = map(k -> k[2], keysnz)
-    zs = A[keysnz]
-    rs, cs, zs
 end
 
 # -------------------------------------------------

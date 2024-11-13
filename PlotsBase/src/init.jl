@@ -4,14 +4,14 @@ using REPL
 const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # use fixed version of Plotly instead of the latest one for stable dependency
 # see github.com/JuliaPlots/Plots.jl/pull/2779
-const _plotly_min_js_filename = "plotly-2.6.3.min.js"
+const _plotly_min_js_filename = "plotly-2.3.0.min.js"  # must match https://github.com/JuliaPlots/PlotlyJS.jl/blob/master/deps/plotly_cdn_version.jl
 
 const _use_local_dependencies = Ref(false)
 const _use_local_plotlyjs = Ref(false)
 
 _plots_defaults() =
-    if isdefined(Main, :PLOTS_DEFAULTS)
-        copy(Dict{Symbol,Any}(Main.PLOTS_DEFAULTS))
+    if isdefined(Main, :PLOTSBASE_DEFAULTS)
+        copy(Dict{Symbol,Any}(Main.PLOTSBASE_DEFAULTS))
     else
         Dict{Symbol,Any}()
     end
@@ -22,7 +22,7 @@ function _plots_theme_defaults()
 end
 
 function _plots_plotly_defaults()
-    if Base.get_bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", false)
+    if Base.get_bool_env("PLOTSBASE_HOST_DEPENDENCY_LOCAL", false)
         _plotly_local_file_path[] =
             fn = joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
         isfile(fn) ||
@@ -64,7 +64,8 @@ end
 # "Preferences that are accessed during compilation are automatically marked as compile-time preferences"
 # ==> this must always be done during precompilation, otherwise
 # the cache will not invalidate when preferences change
-const DEFAULT_BACKEND = lowercase(load_preference(PlotsBase, "default_backend", "gr"))
+const DEFAULT_BACKEND =
+    lowercase(Preferences.load_preference(PlotsBase, "default_backend", "gr"))
 
 function default_backend()
     # environment variable preempts the `Preferences` based mechanism
@@ -78,18 +79,23 @@ function set_default_backend!(
     kw...,
 )
     if backend ≡ nothing
-        delete_preferences!(PlotsBase, "default_backend"; force, kw...)
+        Preferences.delete_preferences!(PlotsBase, "default_backend"; force, kw...)
     else
         # NOTE: `_check_installed` already throws a warning
         if (value = lowercase(string(backend))) |> PlotsBase._check_installed ≢ nothing
-            set_preferences!(PlotsBase, "default_backend" => value; force, kw...)
+            Preferences.set_preferences!(
+                PlotsBase,
+                "default_backend" => value;
+                force,
+                kw...,
+            )
         end
     end
     nothing
 end
 
 function diagnostics(io::IO = stdout)
-    origin = if has_preference(PlotsBase, "default_backend")
+    origin = if Preferences.has_preference(PlotsBase, "default_backend")
         "`Preferences`"
     elseif haskey(ENV, "PLOTSBASE_DEFAULT_BACKEND")
         "environment variable"
@@ -108,4 +114,74 @@ function diagnostics(io::IO = stdout)
         )
     end
     nothing
+end
+
+macro precompile_backend(backend_package)
+    abstract_backend = Symbol(backend_package, :Backend)
+    quote
+        PrecompileTools.@setup_workload begin
+            using PlotsBase  # for extensions
+            backend($abstract_backend())
+            __init__()  # call extension module init !!
+            @debug PlotsBase.backend_package_name()
+            n = length(PlotsBase._examples)
+            imports = sizehint!(Expr[], n)
+            examples = sizehint!(Expr[], 10n)
+            scratch_dir = mktempdir()
+            for i ∈ setdiff(
+                1:n,
+                PlotsBase._backend_skips[backend_name()],
+                PlotsBase._animation_examples,
+            )
+                PlotsBase._examples[i].external && continue
+                (imp = PlotsBase._examples[i].imports) ≡ nothing ||
+                    push!(imports, PlotsBase.replace_module(imp))
+                func = gensym(string(i))
+                push!(
+                    examples,
+                    quote
+                        $func() = begin  # evaluate each example in a local scope
+                            if backend_name() ≡ :pythonplot
+                                return  # FIXME: __init__ failure with PythonPlot
+                            end
+                            @debug $i
+                            $(PlotsBase._examples[i].exprs)
+                            $i == 1 || return  # trigger display only for one example
+                            fn = tempname(scratch_dir)
+                            pl = current()
+                            show(devnull, pl)
+                            if backend_name() ≡ :plotlyjs
+                                return  # FIXME: precompilation hang
+                            end
+                            if backend_name() ≡ :pgfplotsx
+                                return  # FIXME: `Colors` extension issue for PFPlotsX
+                            end
+                            if backend_name() ≡ :unicodeplots
+                                savefig(pl, "$fn.txt")
+                                return
+                            end
+                            if showable(MIME"image/png"(), pl)
+                                savefig(pl, "$fn.png")
+                            end
+                            if showable(MIME"application/pdf"(), pl)
+                                savefig(pl, "$fn.pdf")
+                            end
+                            if showable(MIME"image/svg+xml"(), pl)
+                                show(PipeBuffer(), MIME"image/svg+xml"(), pl)
+                            end
+                            nothing
+                        end
+                        $func()
+                    end,
+                )
+            end
+            withenv("GKSwstype" => "nul", "MPLBACKEND" => "agg") do
+                PrecompileTools.@compile_workload begin
+                    eval.(imports)
+                    eval.(examples)
+                    PlotsBase.CURRENT_PLOT.nullableplot = nothing
+                end
+            end
+        end
+    end |> esc
 end

@@ -2,7 +2,7 @@
 const DEFAULT_BBOX = Ref(BoundingBox(0mm, 0mm, 0mm, 0mm))
 const DEFAULT_MINPAD = Ref((20mm, 5mm, 2mm, 10mm))
 const DEFAULT_LINEWIDTH = Ref(1)
-const PLOTS_SEED = 1234
+const SEED = 1234
 const PX_PER_INCH = 100
 const DPI = PX_PER_INCH
 const MM_PER_INCH = 25.4

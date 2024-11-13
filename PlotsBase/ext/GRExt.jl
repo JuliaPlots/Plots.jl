@@ -1,7 +1,7 @@
 module GRExt
 
-import PlotsBase: PlotsBase, _cycle
-import RecipesPipeline
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, _cycle
+
 import NaNMath
 import GR
 
@@ -2290,7 +2290,7 @@ function PlotsBase._display(plt::Plot{GRBackend})
         GR.emergencyclosegks()
         println(
             "\033]1337;File=inline=1;preserveAspectRatio=0:",
-            base64encode(open(read, filepath)),
+            Base64.base64encode(open(read, filepath)),
             "\a",
         )
         rm(filepath)
@@ -2302,5 +2302,7 @@ function PlotsBase._display(plt::Plot{GRBackend})
 end
 
 PlotsBase.closeall(::GRBackend) = GR.emergencyclosegks()
+
+PlotsBase.@precompile_backend GR
 
 end  # module

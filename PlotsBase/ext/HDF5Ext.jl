@@ -7,7 +7,7 @@ import PlotUtils: PlotUtils, Colors
 import PlotUtils.ColorSchemes: ColorScheme
 import PlotUtils.Colors: Colorant
 
-import PlotsBase
+import PlotsBase: PlotsBase, PrecompileTools
 
 using PlotsBase.Annotations
 using PlotsBase.DataSeries
@@ -579,5 +579,7 @@ PlotsBase.hdf5plot_read(path::AbstractString; name::String = "_unnamed") =
     HDF5.h5open(path, "r") do file
         return _read_plot(HDF5.open_group(file, h5plotpath("_unnamed")))
     end
+
+PlotsBase.@precompile_backend HDF5
 
 end  # module
