@@ -4,7 +4,7 @@
     Aqua.test_all(
         PlotsBase;
         stale_deps = (;
-            ignore = [:CondaPkg, :LaTeXStrings]
+            ignore = [:CondaPkg]
         ),
         persistent_tasks = false,
         ambiguities = false,
