@@ -2,10 +2,11 @@ using Pkg
 Base.get_bool_env("PLOTDOCS_DEV", false) && Pkg.develop([
     (; path="../RecipesBase"),
     (; path="../RecipesPipeline"),
+    (; path="../PlotThemes"),
     (; path="../PlotsBase"),
-    (; path=".."),
     (; path="../GraphRecipes"),
     (; path="../StatsPlots"),
+    (; path=".."),
 ])
 # oneliner debug PLOTDOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
 

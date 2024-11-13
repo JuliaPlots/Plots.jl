@@ -73,11 +73,11 @@ jobs:
           Pkg.develop([
             (; path="./RecipesBase"),
             (; path="./RecipesPipeline"),
+            (; path="./PlotThemes"),
             (; path="./PlotsBase"),
-            (; path="."),
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
-            (; path="./PlotThemes"),
+            (; path="."),
           ])
 
       - name: Install conda based matplotlib
@@ -96,8 +96,8 @@ jobs:
           ${cmd[@]} -e 'using Pkg; Pkg.test([
             "RecipesBase",
             "RecipesPipeline",
-            "PlotsBase",
             "PlotThemes",
+            "PlotsBase",
             "GraphRecipes",
             "StatsPlots",
             "Plots",
