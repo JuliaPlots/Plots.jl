@@ -138,12 +138,15 @@ macro precompile_backend(backend_package)
                             if backend_name() ≡ :pythonplot
                                 return  # FIXME: __init__ failure with PythonPlot
                             end
-                            $(PlotsBase._examples[i].exprs)
                             @debug $i
+                            $(PlotsBase._examples[i].exprs)
                             $i == 1 || return  # trigger display only for one example
                             fn = tempname(scratch_dir)
                             pl = current()
                             show(devnull, pl)
+                            if backend_name() ≡ :plotlyjs
+                                return  # FIXME: precompilation hang
+                            end
                             if backend_name() ≡ :pgfplotsx
                                 return  # FIXME: `Colors` extension issue for PFPlotsX
                             end

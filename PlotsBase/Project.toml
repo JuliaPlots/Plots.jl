@@ -66,7 +66,7 @@ PlotlyJSExt = "PlotlyJS"
 PlotlyKaleidoExt = "PlotlyKaleido"
 PythonPlotExt = "PythonPlot"
 UnicodePlotsExt = "UnicodePlots"
-UnitfulExt = ["LaTeXStrings", "Unitful", "UnitfulLatexify"]
+UnitfulExt = ["Latexify", "LaTeXStrings", "Unitful", "UnitfulLatexify"]
 
 [compat]
 Base64 = "1"
