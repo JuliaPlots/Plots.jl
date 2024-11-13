@@ -5,8 +5,8 @@ import RecipesBase: recipetype
 import Tables
 import TableOperations
 using RecipesPipeline
-@reexport using Plots
-import Plots.PlotsBase.Commons: _cycle
+@reexport using PlotsBase
+import PlotsBase.Commons: _cycle
 using StatsBase
 using Distributions
 using LinearAlgebra: eigen, diagm

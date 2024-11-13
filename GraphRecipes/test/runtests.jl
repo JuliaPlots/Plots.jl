@@ -1,17 +1,19 @@
 using VisualRegressionTests
 using AbstractTrees
 using LinearAlgebra
-using Logging
+using GraphRecipes.AbstractTrees
+using GraphRecipes.Colors
 using GraphRecipes
 using SparseArrays
 using ImageMagick
 using StableRNGs
+using PlotsBase
+using Logging
 using Graphs
-using Plots
 using Test
 using Gtk  # for popup
 
-import Plots: PlotsBase
+import GR; gr()
 
 isci() = get(ENV, "CI", "false") == "true"
 itol(tol = nothing) = something(tol, isci() ? 1e-3 : 1e-5)

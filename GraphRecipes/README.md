@@ -21,7 +21,9 @@ For a given graph, there are many legitimate ways to display and visualize the g
 ## An example
 ```julia
 using GraphRecipes
-using Plots
+using PlotsBase
+
+import GR; gr()
 
 g = [0 1 1;
      1 0 1;

@@ -12,10 +12,10 @@ Wrap a tree-like object for plotting. Uses `AbstractTrees.children()` to recursi
 
 ```julia
 using AbstractTrees, GraphRecipes
-AbstractTrees.children(d::Dict) = [p for p in d]
-AbstractTrees.children(p::Pair) = AbstractTrees.children(p[2])
-function AbstractTrees.printnode(io::IO, p::Pair)
-    str = isempty(AbstractTrees.children(p[2])) ? string(p[1], ": ", p[2]) : string(p[1], ": ")
+@eval AbstractTrees children(d::AnstractDict) = [p for p in d]
+@eval AbstractTrees children(p::Pair) = AbstractTrees.children(p[2])
+@eval AbstractTrees  function printnode(io::IO, p::Pair)
+    str = isempty(children(p[2])) ? string(p[1], ": ", p[2]) : string(p[1], ": ")
     print(io, str)
 end
 
