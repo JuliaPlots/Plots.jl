@@ -10,8 +10,8 @@ const _use_local_dependencies = Ref(false)
 const _use_local_plotlyjs = Ref(false)
 
 _plots_defaults() =
-    if isdefined(Main, :PLOTS_DEFAULTS)
-        copy(Dict{Symbol,Any}(Main.PLOTS_DEFAULTS))
+    if isdefined(Main, :PLOTSBASE_DEFAULTS)
+        copy(Dict{Symbol,Any}(Main.PLOTSBASE_DEFAULTS))
     else
         Dict{Symbol,Any}()
     end
@@ -22,7 +22,7 @@ function _plots_theme_defaults()
 end
 
 function _plots_plotly_defaults()
-    if Base.get_bool_env("PLOTS_HOST_DEPENDENCY_LOCAL", false)
+    if Base.get_bool_env("PLOTSBASE_HOST_DEPENDENCY_LOCAL", false)
         _plotly_local_file_path[] =
             fn = joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
         isfile(fn) ||

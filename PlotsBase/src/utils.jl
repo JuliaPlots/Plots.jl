@@ -257,7 +257,7 @@ function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     x, y
 end
 
-fakedata(sz::Int...) = fakedata(Random.seed!(PLOTS_SEED), sz...)
+fakedata(sz::Int...) = fakedata(Random.seed!(SEED), sz...)
 
 function fakedata(rng::Random.AbstractRNG, sz...)
     y = zeros(sz...)

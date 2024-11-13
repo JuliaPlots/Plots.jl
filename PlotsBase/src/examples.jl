@@ -1374,7 +1374,7 @@ function test_examples(
         PlotsBase.Commons.debug!($debug)
         backend($(QuoteNode(pkgname)))
         rng = $rng
-        rng ≡ nothing || Random.seed!(rng, PlotsBase.PLOTS_SEED)
+        rng ≡ nothing || Random.seed!(rng, PlotsBase.SEED)
         theme(:default)
     end)
     (imp = _examples[i].imports) ≡ nothing || Base.eval(m, imp)

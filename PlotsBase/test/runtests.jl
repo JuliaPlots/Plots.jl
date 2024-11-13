@@ -31,7 +31,7 @@ for pkg ∈ TEST_PACKAGES
 end
 
 import Unitful: m, s, cm, DimensionError
-import PlotsBase: PLOTS_SEED, Plot, with
+import PlotsBase: SEED, Plot, with
 import SentinelArrays: ChainedVector
 import GeometryBasics
 import OffsetArrays

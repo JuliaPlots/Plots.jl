@@ -8,12 +8,12 @@ ci_tol() =
     end
 
 const TESTS_MODULE = Module(:PlotsBaseTestModule)
-const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
+const PLOTSBASE_IMG_TOL = parse(Float64, get(ENV, "PLOTSBASE_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, PlotsBase))
 
 reference_dir(args...) =
-    if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) ≢ nothing
+    if (ref_dir = get(ENV, "PLOTSBASE_REFERENCE_DIR", nothing)) ≢ nothing
         ref_dir
     else
         joinpath(homedir(), ".julia", "dev", "PlotReferenceImages.jl", args...)
@@ -88,7 +88,7 @@ function image_comparison_tests(
         PlotsBase.Commons.debug!($debug)
         backend($(QuoteNode(pkg)))
         theme(:default)
-        rng = StableRNG(PlotsBase.PLOTS_SEED)
+        rng = StableRNG(PlotsBase.SEED)
         $(PlotsBase.replace_rand(example.exprs))
     end
     @debug imports exprs
@@ -127,15 +127,15 @@ end
 #=
 
 with(:gr) do
-    image_comparison_facts(:gr, tol = PLOTS_IMG_TOL, skip = PlotsBase._backend_skips[:gr])
+    image_comparison_facts(:gr, tol = PLOTSBASE_IMG_TOL, skip = PlotsBase._backend_skips[:gr])
 end
 
 with(:plotlyjs) do
-    image_comparison_facts(:plotlyjs, tol = PLOTS_IMG_TOL, skip = PlotsBase._backend_skips[:plotlyjs])
+    image_comparison_facts(:plotlyjs, tol = PLOTSBASE_IMG_TOL, skip = PlotsBase._backend_skips[:plotlyjs])
 end
 
 with(:pgfplotsx) do
-    image_comparison_facts(:pgfplotsx, tol = PLOTS_IMG_TOL, skip = PlotsBase._backend_skips[:pgfplotsx])
+    image_comparison_facts(:pgfplotsx, tol = PLOTSBASE_IMG_TOL, skip = PlotsBase._backend_skips[:pgfplotsx])
 end
 =#
 
@@ -146,7 +146,7 @@ end
         @test backend_name() ≡ :gr
         image_comparison_facts(
             :gr,
-            tol = PLOTS_IMG_TOL,
+            tol = PLOTSBASE_IMG_TOL,
             skip = vcat(PlotsBase._backend_skips[:gr]),
             broken = broken_examples,
         )

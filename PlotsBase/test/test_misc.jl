@@ -9,7 +9,7 @@ end
 @testset "Plotly standalone" begin
     @test PlotsBase._plotly_local_file_path[] ≡ nothing
     temp = PlotsBase._use_local_dependencies[]
-    withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
+    withenv("PLOTSBASE_HOST_DEPENDENCY_LOCAL" => true) do
         PlotsBase._plots_plotly_defaults()
         @test PlotsBase._plotly_local_file_path[] isa String
         @test isfile(PlotsBase._plotly_local_file_path[])
