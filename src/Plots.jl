@@ -1,6 +1,5 @@
 module Plots
 
-import PrecompileTools
 import Reexport
 Reexport.@reexport using PlotsBase
 
