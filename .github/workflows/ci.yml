@@ -97,10 +97,10 @@ jobs:
             "RecipesBase",
             "RecipesPipeline",
             "PlotsBase",
-            "Plots",
+            "PlotThemes",
             "GraphRecipes",
             "StatsPlots",
-            "PlotThemes",
+            "Plots",
           ]; coverage=true)'
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
