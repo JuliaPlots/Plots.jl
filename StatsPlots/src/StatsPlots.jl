@@ -6,7 +6,7 @@ import Tables
 import TableOperations
 using RecipesPipeline
 @reexport using Plots
-import Plots: _cycle
+import Plots.PlotsBase.Commons: _cycle
 using StatsBase
 using Distributions
 using LinearAlgebra: eigen, diagm
