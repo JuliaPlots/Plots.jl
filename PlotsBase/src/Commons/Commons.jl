@@ -2,7 +2,7 @@
 module Commons
 
 export AVec,
-    AMat, KW, AKW, TicksArgs, PlotsBase, _haligns, _valigns, _cbar_width
+    AMat, KW, AKW, TicksArgs, PlotsBase, SEED, _haligns, _valigns, _cbar_width
 export get_subplot,
     coords,
     ispolar,
