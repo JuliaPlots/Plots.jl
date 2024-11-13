@@ -4,7 +4,7 @@ using REPL
 const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # use fixed version of Plotly instead of the latest one for stable dependency
 # see github.com/JuliaPlots/Plots.jl/pull/2779
-const _plotly_min_js_filename = "plotly-2.6.3.min.js"
+const _plotly_min_js_filename = "plotly-2.3.0.min.js"  # must match https://github.com/JuliaPlots/PlotlyJS.jl/blob/master/deps/plotly_cdn_version.jl
 
 const _use_local_dependencies = Ref(false)
 const _use_local_plotlyjs = Ref(false)
