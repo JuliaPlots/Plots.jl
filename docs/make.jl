@@ -158,7 +158,7 @@ function generate_cards(
             write(jl, """
                 PlotsBase.Commons.reset_defaults()  #hide
                 using StableRNGs  #hide
-                rng = StableRNG($(Plots.SEED))  #hide
+                rng = StableRNG($(PlotsBase.SEED))  #hide
                 nothing  #hide
                 """
             )
