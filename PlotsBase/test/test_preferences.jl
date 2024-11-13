@@ -72,7 +72,7 @@ end
         write(
             script,
             """
-            $WEAKDEPS
+            $(PlotsBase.WEAKDEPS)
 
             import $pkg
             using Test, PlotsBase

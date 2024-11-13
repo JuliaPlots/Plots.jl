@@ -14,17 +14,7 @@ const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p ∈ TES
 get!(ENV, "MPLBACKEND", "agg")
 
 using PlotsBase
-
-# multiple weakdeps (keep in sync with Project.toml !)
-const WEAKDEPS = Expr(
-    :block,
-    :(import UnitfulLatexify),
-    :(import LaTeXStrings),
-    :(import Latexify),
-    :(import Contour),
-    :(import Colors),
-)
-eval(WEAKDEPS)
+eval(PlotsBase.WEAKDEPS)
 
 # initialize all backends
 for pkg ∈ TEST_PACKAGES
