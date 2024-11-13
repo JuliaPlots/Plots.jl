@@ -30,7 +30,8 @@
               ["\$10^{1}\$", "\$10^{2}\$", "\$10^{3}\$"]
         @test PlotsBase.get_labels(:latex, 1:3, :log2) ==
               ["\$2^{1}\$", "\$2^{2}\$", "\$2^{3}\$"]
-        @test PlotsBase.get_labels(:latex, 1:3, :ln) == ["\$e^{1}\$", "\$e^{2}\$", "\$e^{3}\$"]
+        @test PlotsBase.get_labels(:latex, 1:3, :ln) ==
+              ["\$e^{1}\$", "\$e^{2}\$", "\$e^{3}\$"]
     end
 
     @test PlotsBase.get_labels(x -> 1e3x, 1:3, :identity) == ["1000", "2000", "3000"]

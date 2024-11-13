@@ -64,7 +64,8 @@ end
 # "Preferences that are accessed during compilation are automatically marked as compile-time preferences"
 # ==> this must always be done during precompilation, otherwise
 # the cache will not invalidate when preferences change
-const DEFAULT_BACKEND = lowercase(Preferences.load_preference(PlotsBase, "default_backend", "gr"))
+const DEFAULT_BACKEND =
+    lowercase(Preferences.load_preference(PlotsBase, "default_backend", "gr"))
 
 function default_backend()
     # environment variable preempts the `Preferences` based mechanism
@@ -82,7 +83,12 @@ function set_default_backend!(
     else
         # NOTE: `_check_installed` already throws a warning
         if (value = lowercase(string(backend))) |> PlotsBase._check_installed ≢ nothing
-            Preferences.set_preferences!(PlotsBase, "default_backend" => value; force, kw...)
+            Preferences.set_preferences!(
+                PlotsBase,
+                "default_backend" => value;
+                force,
+                kw...,
+            )
         end
     end
     nothing

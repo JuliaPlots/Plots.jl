@@ -61,7 +61,10 @@ function available_channels()
         dbversion = VersionNumber(readline(buf))
         dbversion.major == 1 || continue
         buf = PipeBuffer()
-        Downloads.download("$juliaup/versiondb/versiondb-$dbversion-x86_64-unknown-linux-gnu.json", buf)
+        Downloads.download(
+            "$juliaup/versiondb/versiondb-$dbversion-x86_64-unknown-linux-gnu.json",
+            buf,
+        )
         json = JSON.parse(buf)
         haskey(json, "AvailableChannels") || continue
         return json["AvailableChannels"]
@@ -77,7 +80,10 @@ function is_latest(variant)
     channels = available_channels()
     ver = VersionNumber(split(channels[variant]["Version"], '+') |> first)
     dev = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
-    !dev && VersionNumber(ver.major, ver.minor, 0, ("",)) ≤ VERSION < VersionNumber(ver.major, ver.minor + 1)
+    !dev &&
+        VersionNumber(ver.major, ver.minor, 0, ("",)) ≤
+        VERSION <
+        VersionNumber(ver.major, ver.minor + 1)
 end
 
 is_auto() = Base.get_bool_env("VISUAL_REGRESSION_TESTS_AUTO", false)

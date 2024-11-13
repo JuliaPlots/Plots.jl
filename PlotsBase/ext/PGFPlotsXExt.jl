@@ -1,6 +1,7 @@
 module PGFPlotsXExt
 
-import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, PlotUtils, pgfx_sanitize_string, Plot
+import PlotsBase:
+    PlotsBase, PrecompileTools, RecipesPipeline, PlotUtils, pgfx_sanitize_string, Plot
 import LaTeXStrings: LaTeXString
 import Printf: @sprintf
 
