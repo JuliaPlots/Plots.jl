@@ -979,10 +979,10 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
 
     # Add margin given by the user
     padding = (
-        left = Ref(2mm + sp[:left_margin]),
-        top = Ref(2mm + sp[:top_margin]),
-        right = Ref(2mm + sp[:right_margin]),
-        bottom = Ref(2mm + sp[:bottom_margin]),
+        left = Ref(sp[:left_margin]),
+        top = Ref(sp[:top_margin]),
+        right = Ref(sp[:right_margin]),
+        bottom = Ref(sp[:bottom_margin]),
     )
 
     # Add margin for title
