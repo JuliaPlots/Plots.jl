@@ -191,6 +191,8 @@ get_col(syms, col_nt, names) = hcat((get_col(s, col_nt, names) for s ∈ syms)..
 
 # get the appropriate name when passed an Integer
 add_sym!(cols, i::Integer, names) = push!(cols, names[i])
+# get the appropriate name when passed an AbstractString
+add_sym!(cols, str::AbstractString, names) = add_sym!(cols, Symbol(str), names)
 # check for errors in Symbols
 add_sym!(cols, s::Symbol, names) = s in names ? push!(cols, s) : cols
 # recursively extract column names
