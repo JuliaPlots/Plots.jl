@@ -329,7 +329,7 @@ with(:gr) do
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa
               PlotsBase.Plot
         @test_logs (:warn, r"n° of legend_column.*") png(
-            plot(1:2, legend_columns = 10),
+            plot(1:2, legend_columns = 10, label=:auto),
             tempname(),
         )
     end
