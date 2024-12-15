@@ -3,7 +3,7 @@
 - [Start with the tutorial](@ref tutorial)
 - [Section from Chris Rackauckas' awesome earlier tutorial](https://ucidatascienceinitiative.github.io/IntroToJulia/Html/PlotsJL)
 - [Machine Learning and Visualization in Julia](https://www.breloff.com/JuliaML-and-Plots/)
-- [Quant Econ tutorial](https://lectures.quantecon.org/jl/julia_plots.html#plotsjl-jl)
+- [Quant Econ tutorial](https://julia.quantecon.org/intro.html) has many examples. Search for Plots.
 - [Plotting section of a Julia wiki](https://en.wikibooks.org/wiki/Introducing_Julia/Plotting)
 - [How do Recipes actually work?](https://daschw.github.io/recipes/)
 
