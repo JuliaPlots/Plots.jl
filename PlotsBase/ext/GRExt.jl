@@ -894,7 +894,10 @@ function gr_set_tickfont(sp, letter::Symbol; kw...)
     )
 end
 
-# size of the text with no rotation
+"""
+Size of the text with no rotation.
+Returns `(width, height)`.
+"""
 function gr_text_size(str)
     GR.savestate()
     GR.selntran(0)
@@ -1046,21 +1049,33 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
             padding[mirrored(zaxis, :right) ? :right : :left][] += 1mm + height * l * px  # NOTE: why `height` here ?
         end
     else
-        # Add margin for x/y ticks & labels
-        for (ax, tc, (a, b)) ∈
-            ((xaxis, xticks, (:top, :bottom)), (yaxis, yticks, (:right, :left)))
+        # Add margin for x ticks & labels
+        (ax, tc, (a, b)) = (xaxis, xticks, (:top, :bottom))
+        is_xmirrored = mirrored(ax, a)
             if !isempty(first(tc))
-                isy = ax[:letter] ≡ :y
                 gr_set_tickfont(sp, ax)
                 ts = gr_get_ticks_size(tc, ax[:rotation])
-                l = 0.01 + (isy ? first(ts) : last(ts))
-                padding[ax[:mirror] ? a : b][] += 1mm + sp_size[isy ? 1 : 2] * l * px
+                l = last(ts)
+                padding[is_xmirrored ? a : b][] += 2 * height * l * px
             end
             if (guide = ax[:guide]) != ""
                 gr_set_font(guidefont(ax), sp)
                 l = last(gr_text_size(guide))
-                padding[mirrored(ax, a) ? a : b][] += 1mm + height * l * px  # NOTE: using `height` is arbitrary
+                padding[is_xmirrored ? a : b][] += sp[is_xmirrored ? :top_margin : :bottom_margin] + 1.625 * height * l * px
             end
+        # Add margin for y ticks & labels
+        (ax, tc, (a, b)) = (yaxis, yticks, (:right, :left))
+        is_ymirrored = mirrored(ax, a)
+        if !isempty(first(tc))
+            gr_set_tickfont(sp, ax)
+            ts = gr_get_ticks_size(tc, ax[:rotation])
+            l = first(ts)
+            padding[is_ymirrored ? a : b][] += 1.5 * width * l * px
+        end
+        if (guide = ax[:guide]) != ""
+            gr_set_font(guidefont(ax), sp)
+            l = last(gr_text_size(guide))
+            padding[is_ymirrored ? a : b][] += sp[is_ymirrored ? :right_margin : :left_margin] + width * l * px
         end
     end
     if (title = gr_colorbar_title(sp)).str != ""
