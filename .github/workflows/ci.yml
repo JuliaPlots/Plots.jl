@@ -29,8 +29,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
+          - 'lts'  # minimal declared julia compat in `Project.toml`
           - '1'  # latest stable
-          - '1.10'  # minimal declared julia compat in `Project.toml`
         experimental:
           - false
         os: [ubuntu-latest, windows-latest]
