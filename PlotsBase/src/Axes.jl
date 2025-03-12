@@ -326,13 +326,13 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
         if k ≡ :discrete_values
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
         elseif k ≡ :lims && isa(v, NTuple{2,Dates.TimeType})
-            plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
+            plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
         else
             plotattributes[k] = v
         end
     end
 
-    # replace scale aliases
+    # replace scale aliases‚
     if haskey(_scale_aliases, plotattributes[:scale])
         plotattributes[:scale] = _scale_aliases[plotattributes[:scale]]
     end
