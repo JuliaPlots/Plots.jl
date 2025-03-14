@@ -20,7 +20,7 @@ Define arrowheads to apply to lines - args are `style` (`:open` or `:closed`),
 """
 function arrow(args...)
     style, side = :simple, :head
-    headlength = headwidth = 0.3
+    headlength = headwidth = 1
     setlength = false
     for arg ∈ args
         T = typeof(arg)
