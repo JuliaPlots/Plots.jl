@@ -38,6 +38,8 @@ import Dates
 import Unzip
 import JLFzf
 import JSON
+import Tables
+import TableOperations
 import Pkg
 
 Reexport.@reexport using RecipesBase
@@ -77,6 +79,7 @@ export
     plot,
     plot!,
     attr!,
+    @df,
 
     current,
     default,
