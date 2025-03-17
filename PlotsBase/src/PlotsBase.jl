@@ -148,6 +148,7 @@ using .Commons.Frontend
 
 Commons.@generic_functions attr attr!
 
+include("df.jl")
 include("Fonts.jl")
 include("Ticks.jl")
 include("DataSeries.jl")
