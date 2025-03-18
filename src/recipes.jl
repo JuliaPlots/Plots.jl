@@ -1034,8 +1034,6 @@ export lens!
         @series begin
             primary := false
             subplot := sp_index
-            # x := RecipesPipeline.inverse_scale_func(xscale).([xi_mag, xi_lens])
-            # y := RecipesPipeline.inverse_scale_func(yscale).([yi_mag, yi_lens])
             x := [xi_mag, xi_lens]
             y := [yi_mag, yi_lens]
             ()
