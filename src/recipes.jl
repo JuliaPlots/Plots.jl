@@ -461,9 +461,6 @@ end
         push!(yseg, yi, fi, fi, yi, yi)
     end
 
-    # widen limits out a bit
-    expand_extrema!(axis, scale_lims(ignorenan_extrema(xseg.pts)..., default_widen_factor))
-
     # switch back
     if !isvertical(plotattributes)
         xseg, yseg = yseg, xseg
