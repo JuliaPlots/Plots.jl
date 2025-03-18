@@ -311,6 +311,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "show background rectangle" => nothing,
             )
         end
+        push!(the_plot.options, "tight background" => nothing)
 
         for sp ∈ plt.subplots
             bb2 = bbox(sp)
