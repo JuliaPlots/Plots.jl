@@ -25,6 +25,7 @@ julia> scatter([(1,4),(2,5),(3,6)])
     bar!(x,y)
 
 Make a bar plot of `y` vs `x`.
+If `y` is a named tuple the keys are used as ticklabels. 
 
 # Keyword arguments
 - $(_document_argument(:bar_position))
@@ -37,6 +38,7 @@ Make a bar plot of `y` vs `x`.
 ```julia-repl
 julia> bar([1,2,3],[4,5,6],fillcolor=[:red,:green,:blue],fillalpha=[0.2,0.4,0.6])
 julia> bar([(1,4),(2,5),(3,6)])
+julia> bar((A=5, B=8, C=3, D=5, E=8, F=10, G=3))
 ```
 """
 @shorthands bar
