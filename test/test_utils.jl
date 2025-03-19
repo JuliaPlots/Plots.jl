@@ -157,7 +157,7 @@ end
     @test segments([nan10; 1:5]) == [11:15]
     @test segments([1:5; nan10]) == [1:5]
     @test segments([nan10; 1:5; nan10; 1:5; nan10]) == [11:15, 26:30]
-    @test segments([NaN; 1], 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
+    @test segments(repeat([NaN; 1], 5), 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
     @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
 end
 

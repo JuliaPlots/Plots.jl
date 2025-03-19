@@ -69,10 +69,10 @@ struct NaNSegmentsIterator
 end
 
 function iter_segments(args...)
-    tup = Plots.wraptuple(args)
-    n1 = minimum(map(firstindex, tup))
-    n2 = maximum(map(lastindex, tup))
-    NaNSegmentsIterator(tup, n1, n2)
+    i = eachindex(first(args))
+    all(eachindex(a) == i for a in args) ||
+        @warn "Inconsistent indices of plot args: $(eachindex.(args))"
+    NaNSegmentsIterator(args, first(i), last(i))
 end
 
 "floor number x in base b, note this is different from using Base.round(...; base=b) !"
@@ -93,6 +93,8 @@ end
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
     x, y, z = series[:x], series[:y], series[:z]
     (x === nothing || isempty(x)) && return UnitRange{Int}[]
+
+    warn_on_attr_dim_mismatch(series, eachindex(x))
 
     args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
     nan_segments = collect(iter_segments(args...))
@@ -125,21 +127,19 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     else
         (SeriesSegment(r, 1) for r in nan_segments)
     end
-
-    warn_on_attr_dim_mismatch(series, x, y, z, segments)
     segments
 end
 
-function warn_on_attr_dim_mismatch(series, x, y, z, segments)
-    isempty(segments) && return
-    seg_range = UnitRange(
-        minimum(map(seg -> first(seg.range), segments)),
-        maximum(map(seg -> last(seg.range), segments)),
-    )
+function warn_on_attr_dim_mismatch(series, indices)
+
+    # TODO a more precise set of attributes that is relevant here?
     for attr in _segmenting_vector_attributes
-        if (v = get(series, attr, nothing)) isa AVec && eachindex(v) != seg_range
-            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
-            if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
+        if (v = get(series, attr, nothing)) isa AVec && eachindex(v) != indices
+            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $indices."
+            if any(
+                v -> !isnothing(v) && any(isnan, v),
+                (series[:x], series[:y], series[:z]),
+            )
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
                     If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
                     pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
