@@ -410,6 +410,14 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)  # COV_EXCL_LINE
+    if typeof(y) <: NamedTuple
+        names = collect(keys(y))
+        values_y = [values(y)...]
+        plotnames = string.(names)
+
+        x = plotnames
+        y = values_y
+    end
     ywiden --> false
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)

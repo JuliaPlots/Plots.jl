@@ -10,6 +10,7 @@ _prepare_series_data(::Nothing) = nothing
 _prepare_series_data(t::Tuple{T,T}) where {T<:Number} = t
 _prepare_series_data(f::Function) = f
 _prepare_series_data(ar::AbstractRange{<:Number}) = ar
+_prepare_series_data(nt::NamedTuple) = nt
 function _prepare_series_data(a::AbstractArray{T}) where {T<:MaybeNumber}
     # Get a non-missing AbstractFloat type for the array
     # There may be a better way to do this?
@@ -67,6 +68,7 @@ _compute_x(x::Nothing, y::Nothing, z) = axes(z, 1)
 _compute_x(x::Nothing, y, z) = axes(y, 1)
 _compute_x(x::Function, y, z) = map(x, y)
 _compute_x(x, y, z) = x
+_compute_x(x::Nothing, y::NamedTuple, z) = length(y) 
 
 _compute_y(x::Nothing, y::Nothing, z) = axes(z, 2)
 _compute_y(x, y::Function, z) = map(y, x)
