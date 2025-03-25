@@ -44,6 +44,7 @@ export width, height, leftpad, toppad, bottompad, rightpad
 export origin, left, right, bottom, top, bbox, bbox!
 export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
 export MM_PER_PX, MM_PER_INCH, DPI, PX_PER_INCH
+export @cm, @mm, @in
 
 export GridLayout, EmptyLayout, RootLayout
 export BBox, BoundingBox, mm, cm, inch, pt, w, h
