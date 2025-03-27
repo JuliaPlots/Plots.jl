@@ -301,6 +301,7 @@ end
 @recipe f(v::AVec{<:Tuple}) = unzip(v)
 @recipe f(tup::Tuple) = [tup]
 
+
 # list of NamedTuples
 @recipe function f(ntv::AVec{<:NamedTuple{K,Tuple{S,T}}}) where {K,S,T}  # COV_EXCL_LINE
     xguide --> string(K[1])
