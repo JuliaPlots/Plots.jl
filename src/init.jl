@@ -139,8 +139,8 @@ include(_path(backend_name()))
             end,
         )
     end
-    withenv("GKSwstype" => "nul") do
-        @compile_workload begin
+    @compile_workload begin
+        withenv("GKSwstype" => "nul") do
             load_default_backend()
             eval.(imports)
             eval.(examples)
