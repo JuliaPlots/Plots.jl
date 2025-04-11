@@ -52,7 +52,7 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}  # LaTeX
-          sudo apt -y install lib{gtk-3-0,xss1,gconf-2-4,nss3,asound2,x11-xcb1}  # IOError: connect: connection refused (ECONNREFUSED), see github.com/JuliaGizmos/Blink.jl/issues/128#issuecomment-427684728
+          sudo apt -y install lib{gtk-3-0,xss1,nss3,asound2t64,x11-xcb1}  # IOError: connect: connection refused (ECONNREFUSED), see github.com/JuliaGizmos/Blink.jl/issues/128#issuecomment-427684728
           sudo fc-cache -vr
 
       - name: Set LD_PRELOAD
