@@ -1552,7 +1552,7 @@ gr_set_window(sp, vp) =
             if (yscale = sp[:yaxis][:scale]) ∈ _log_scales
                 scaleop |= gr_y_log_scales[yscale]
             end
-            if needs_3d && (zscale = sp[:zaxis][:scale] ∈ _log_scales)
+            if needs_3d && (zscale = sp[:zaxis][:scale]) ∈ _log_scales
                 scaleop |= gr_z_log_scales[zscale]
             end
             sp[:xaxis][:flip] && (scaleop |= GR.OPTION_FLIP_X)
