@@ -114,7 +114,7 @@ include(_path(backend_name()))
     n = length(_examples)
     imports = sizehint!(Expr[], n)
     examples = sizehint!(Expr[], 10n)
-    scratch_dir = mktempdir()
+    _scratch_dir = mktempdir()
     for i in setdiff(1:n, _backend_skips[backend_name()], _animation_examples)
         _examples[i].external && continue
         (imp = _examples[i].imports) === nothing || push!(imports, imp)
@@ -125,7 +125,7 @@ include(_path(backend_name()))
                 $func() = begin  # evaluate each example in a local scope
                     $(_examples[i].exprs)
                     $i == 1 || return  # only for one example
-                    fn = tempname($scratch_dir)
+                    fn = tempname($_scratch_dir)
                     pl = current()
                     show(devnull, pl)
                     showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
