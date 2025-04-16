@@ -67,6 +67,63 @@ Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.val
 Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
 Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
 
+"""
+Define size in cm.
+
+Example:
+
+```
+plot(X, Y; size = @cm(10, 7))
+```
+"""
+macro cm(x, y)
+    return quote
+        if ($x isa Real) && ($y isa Real)
+            ($x, $y) ./ (MM_PER_PX / 10)
+        else
+            error("macro @cm is not defined for this datatype")
+        end
+    end
+end
+
+"""
+Define size in mm.
+
+Example:
+
+```
+plot(X, Y; size = @mm(100, 70))
+```
+"""
+macro mm(x, y)
+    return quote
+        if ($x isa Real) && ($y isa Real)
+            ($x, $y) ./ MM_PER_PX
+        else
+            error("macro @mm is not defined for this datatype")
+        end
+    end
+end
+
+"""
+Define size in inch.
+
+Example:
+
+```
+plot(X, Y; size = @in(10, 7))
+```
+"""
+macro in(x, y)
+    return quote
+        if ($x isa Real) && ($y isa Real)
+            ($x, $y) .* PX_PER_INCH
+        else
+            error("macro @in is not defined for this datatype")
+        end
+    end
+end
+
 inch2px(inches::Real) = float(inches * PX_PER_INCH)
 px2inch(px::Real)     = float(px / PX_PER_INCH)
 inch2mm(inches::Real) = float(inches * MM_PER_INCH)
