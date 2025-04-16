@@ -138,7 +138,10 @@ file types, some also support svg, ps, eps, html and tex.
 """
 function savefig(plt::Plot, fn) # fn might be an `AbstractString` or an `AbstractPath` from `FilePaths.jl`
     fn = abspath(expanduser(fn))
-
+    if isfile(fn) && plt[:safe_saving]
+        @warn "Filename $fn already exists, defaulting to prevent overriding. To disable this behavior, provide `:safe_saving=false` kwarg, i.e. `plot(rand(10), safe_saving=false)`"
+        return
+    end
     # get the extension
     _, ext = splitext(fn)
     ext = chop(ext, head = 1, tail = 0)
