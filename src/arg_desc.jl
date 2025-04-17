@@ -2,6 +2,9 @@ const AStr = AbstractString
 const ColorType = Union{Symbol,Colorant,PlotUtils.ColorSchemes.ColorScheme,Integer}
 const TicksType = Union{AVec{Real},Tuple{AVec{Real},AVec{AStr}},Symbol,Bool,Nothing}
 
+link_histogram   = "[`histogram`](https://docs.juliaplots.org/stable/api/#Plots.histogram-Tuple)"
+link_histogram2d = "[`histogram2d`](https://docs.juliaplots.org/stable/api/#Plots.histogram2d-Tuple)"
+
 # NOTE: when updating `arg_desc`, don't forget to modify `PlotDocs.make_attr_df` accordingly.
 const _arg_desc = KW(
     # series args
@@ -26,8 +29,27 @@ const _arg_desc = KW(
     :markerstrokecolor  => (ColorType, "Color of the marker stroke (border). `:match` will take the value from `:foreground_color_subplot`."),
     :markerstrokealpha  => (Real, "The alpha/opacity override for the marker stroke (border). `nothing` (the default) means it will take the alpha value of markerstrokecolor."),
     :bins               => (Union{Integer,NTuple{2,Integer},AVec,Symbol}, """
-                        Default is :auto (the Freedman-Diaconis rule). For histogram-types, defines the approximate number of bins to aim for, or the auto-binning algorithm to use (:sturges, :sqrt, :rice, :scott or :fd).
-                        For fine-grained control pass a Vector of break values, e.g. `range(minimum(x), stop = maximum(x), length = 25)`."""),
+Defines the number of bins.
+
+Can take in one of the following types:
+* `Integer` - defines the approximate number of bins to aim for. Not guaranteed to give the exact value.
+    * `bins=10` gives a 1D histogram with about 10 bins.
+    * `bins=10` gives a 2D histogram with about 10 bins for each dimension.
+* `Tuple{Integer, Integer}` - for two-dimensional histograms, defines the approximate number of bins per dimension. Not guaranteed to give the exact values.
+    * `bins=(10, 20)` gives a 2D histogram with about 10 bins for the `x` dimension and about 20 bins for the `y` dimension.
+* `Symbol` - defines the auto-binning algorithm to use.
+    * `:auto` (`:fd`, default) - [Freedman-Diaconis' rule](https://en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice)
+    * `:sturges` - [Sturges' rule](https://en.wikipedia.org/wiki/Histogram#Sturges'_formula)
+    * `:sqrt` - [Square root rule](https://en.wikipedia.org/wiki/Histogram#Square-root_choice)
+    * `:rice` - [Rice rule](https://en.wikipedia.org/wiki/Histogram#Rice_rule)
+    * `:scott` - [Scott's normal reference rule](https://en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule)
+* `AbstractVector` - defines a vector of values for bin edges.
+    * `bins=range(-10, 10, length=21)` gives a histogram with bins starting from -10, ending at 10, and containing 21 break values, giving 20 bins.
+
+Relevant attribute for the following series types:
+    * $(link_histogram)
+    * $(link_histogram2d)
+                        """),
     :smooth             => (Bool, "Add a regression line ?"),
     :group              => (AVec, "Data is split into a separate series, one for each unique value in `group`."),
     :x                  => (Any, "Input data (first dimension)."),
@@ -48,8 +70,23 @@ const _arg_desc = KW(
     :quiver             => (Union{AVec,NTuple{2,AVec}}, "The directional vectors U,V which specify velocity/gradient vectors for a quiver plot."),
     :arrow              => (Union{Bool,Arrow}, "Defines arrowheads that should be displayed at the end of path line segments (just before a NaN and the last non-NaN point). Used in quiverplot, streamplot, or similar."),
     :normalize          => (Union{Bool,Symbol}, "Histogram normalization mode. Possible values are: false/:none (no normalization, default), true/:pdf (normalize to a discrete PDF, where the total area of the bins is 1), :probability (bin heights sum to 1) and :density (the area of each bin, rather than the height, is equal to the counts - useful for uneven bin sizes)."),
-    :weights            => (AVec, "Used in histogram types for weighted counts."),
-    :show_empty_bins    => (Bool, "Whether empty bins in a 2D histogram are colored as 0 (true), or transparent (the default)."),
+    :weights            => (AVec, """
+                            Weights entries in a histogram.
+
+                            `weights` must be a vector of the same length as the data vector `x`.
+
+                            Relevant attribute for the following series types:
+                            * $(link_histogram)
+                            * $(link_histogram2d)
+                            """),
+    :show_empty_bins    => (Bool, """
+                            Colors in empty bins of a 2D histogram.
+
+                            If `true`, empty bins are colored as the minimum value of the given color scheme.
+
+                            Relevant attribute for the following series types:
+                            * $(link_histogram2d)
+                            """),
     :contours           => (Bool, "Add contours to the side-grids of 3D plots?  Used in surface/wireframe."),
     :contour_labels     => (Bool, "Show labels at the contour lines ?"),
     :match_dimensions   => (Bool, "For heatmap types: should the first dimension of a matrix (rows) correspond to the first dimension of the plot (`x`-axis) ? Defaults to `false`, which matches the behavior of Matplotlib, Plotly, and others. Note: when passing a function for `z`, the function should still map `(x,y) -> z`."),
