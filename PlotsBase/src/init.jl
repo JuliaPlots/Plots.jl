@@ -1,4 +1,4 @@
-using Scratch
+using Scratch: @get_scratch!
 using REPL
 
 const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
@@ -147,7 +147,7 @@ macro precompile_backend(backend_package)
                             @debug $i
                             $(PlotsBase._examples[i].exprs)
                             $i == 1 || return  # trigger display only for one example
-                            fn = tempname(scratch_dir)
+                            fn = tempname($scratch_dir)
                             pl = current()
                             show(devnull, pl)
                             if backend_name() ≡ :plotlyjs
