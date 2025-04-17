@@ -779,6 +779,11 @@
         {
             "name": "Patrick Jaap",
             "type": "Other"
+        },
+        {   
+            "affiliation": "Ludwig-Maximilians-Universiaet Muenchen",
+            "name": "Jonas Zimmermann",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
