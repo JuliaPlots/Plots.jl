@@ -1,4 +1,4 @@
-using Scratch
+using Scratch: @get_scratch!
 using REPL
 import Base64
 
@@ -125,7 +125,7 @@ include(_path(backend_name()))
                 $func() = begin  # evaluate each example in a local scope
                     $(_examples[i].exprs)
                     $i == 1 || return  # only for one example
-                    fn = tempname(scratch_dir)
+                    fn = tempname($scratch_dir)
                     pl = current()
                     show(devnull, pl)
                     showable(MIME"image/png"(), pl) && savefig(pl, "$fn.png")
