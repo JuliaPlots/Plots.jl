@@ -89,11 +89,7 @@ is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 ref_name(i) = "ref" * lpad(i, 3, '0')
 
-const broken_examples = if Sys.isapple()
-    [50] # FIXME: https://github.com/jheinen/GR.jl/issues/550
-else
-    []
-end
+const BROKEN_EXAMPLES = []
 
 for name ∈ (
     "misc",

@@ -149,7 +149,7 @@ end
             :gr,
             tol = PLOTSBASE_IMG_TOL,
             skip = vcat(PlotsBase._backend_skips[:gr]),
-            broken = broken_examples,
+            broken = BROKEN_EXAMPLES,
         )
     end
 end
