@@ -895,21 +895,16 @@ function plotly_series(plt::Plot, series::Series)
                 get_plotly_marker(series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
             :size => 2_cycle(series[:markersize], inds),
-            :color =>
-                rgba_string.(
+            :color => rgba_string.(
+                plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds)),
+            ),
+            :line => KW(
+                :color => rgba_string.(
                     plot_color.(
-                        get_markercolor.(series, inds),
-                        get_markeralpha.(series, inds),
+                        get_markerstrokecolor.(series, inds),
+                        get_markerstrokealpha.(series, inds),
                     ),
                 ),
-            :line => KW(
-                :color =>
-                    rgba_string.(
-                        plot_color.(
-                            get_markerstrokecolor.(series, inds),
-                            get_markerstrokealpha.(series, inds),
-                        ),
-                    ),
                 :width => _cycle(series[:markerstrokewidth], inds),
             ),
         )
@@ -1295,8 +1290,10 @@ function plotly_html_body(plt, style = nothing)
     html
 end
 
-js_body(plt::Plot, uuid) =
-    "Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));"
+js_body(
+    plt::Plot,
+    uuid,
+) = "Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));"
 
 plotly_show_js(io::IO, plot::Plot) =
     JSON.print(io, Dict(:data => plotly_series(plot), :layout => plotly_layout(plot)))

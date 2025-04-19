@@ -360,7 +360,14 @@ gr_set_projectiontype(sp) = GR.setprojectiontype(gr_projections[sp[:projection_t
 
 # draw line segments, splitting x/y into contiguous/finite segments
 # note: this can be used for shapes by passing func `GR.fillarea`
-function gr_polyline(x, y, func = GR.polyline; arrowside = :none, arrowstyle = :simple, arrowsize = 1)
+function gr_polyline(
+    x,
+    y,
+    func = GR.polyline;
+    arrowside = :none,
+    arrowstyle = :simple,
+    arrowsize = 1,
+)
     draw_head = arrowside in (:head, :both)
     draw_tail = arrowside in (:tail, :both)
     n = length(x)
@@ -2022,11 +2029,19 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
         elseif is2d
-            arrow = series[:arrow] isa Arrow ? series[:arrow] : Arrow(:none, :simple, 1.0, 1.0)
-        
-            arrowside, arrowstyle, arrowsize = arrow.side, arrow.style, (arrow.headlength+arrow.headwidth)/2
-                 
-            gr_polyline(x[rng], y[rng]; arrowside = arrowside, arrowstyle = arrowstyle, arrowsize = arrowsize)
+            arrow =
+                series[:arrow] isa Arrow ? series[:arrow] : Arrow(:none, :simple, 1.0, 1.0)
+
+            arrowside, arrowstyle, arrowsize =
+                arrow.side, arrow.style, (arrow.headlength+arrow.headwidth)/2
+
+            gr_polyline(
+                x[rng],
+                y[rng];
+                arrowside = arrowside,
+                arrowstyle = arrowstyle,
+                arrowsize = arrowsize,
+            )
         end
     end
 end
