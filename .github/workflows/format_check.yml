@@ -23,6 +23,7 @@ jobs:
             using JuliaFormatter
             format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
           '
+          git diff
       - name: suggester
         if: success() && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/v2' )
         uses: reviewdog/action-suggester@v1
