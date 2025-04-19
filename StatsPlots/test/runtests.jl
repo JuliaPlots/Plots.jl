@@ -7,7 +7,8 @@ using PlotsBase
 using NaNMath
 using Test
 
-import GR; gr()
+import GR
+gr()
 
 @testset "Grouped histogram" begin
     rng = StableRNG(1337)

@@ -210,9 +210,7 @@ rotate_x(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
 rotate_y(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
     ((y - centery) * cos(θ) + (x - centerx) * sin(θ) + centery)
 
-
-rotate(x::Real, y::Real, θ::Real, c) =
-    (rotate_x(x, y, θ, c...), rotate_y(x, y, θ, c...))
+rotate(x::Real, y::Real, θ::Real, c) = (rotate_x(x, y, θ, c...), rotate_y(x, y, θ, c...))
 
 function rotate!(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
@@ -231,7 +229,6 @@ function rotate(shape::Shape, θ::Real, c = center(shape))
     y_new = rotate_y.(x, y, θ, c...)
     Shape(x_new, y_new)
 end
-
 
 end  # module
 

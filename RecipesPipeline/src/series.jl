@@ -68,7 +68,7 @@ _compute_x(x::Nothing, y::Nothing, z) = axes(z, 1)
 _compute_x(x::Nothing, y, z) = axes(y, 1)
 _compute_x(x::Function, y, z) = map(x, y)
 _compute_x(x, y, z) = x
-_compute_x(x::Nothing, y::NamedTuple, z) = length(y) 
+_compute_x(x::Nothing, y::NamedTuple, z) = length(y)
 
 _compute_y(x::Nothing, y::Nothing, z) = axes(z, 2)
 _compute_y(x, y::Function, z) = map(y, x)

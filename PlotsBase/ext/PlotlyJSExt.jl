@@ -8,6 +8,14 @@ using PlotsBase.Plots
 import PlotlyJS: PlotlyJS, WebIO
 
 struct PlotlyJSBackend <: PlotsBase.AbstractBackend end
+
+function PlotsBase.extension_init(::PlotlyJSBackend)
+    if Base.get_bool_env("PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON", false)
+        (Sys.islinux() && isdefined(PlotlyJS, :unsafe_electron)) &&
+            PlotlyJS.unsafe_electron()
+    end
+end
+
 PlotsBase.@extension_static PlotlyJSBackend plotlyjs
 
 const _plotlyjs_attrs = PlotsBase.Plotly._plotly_attrs

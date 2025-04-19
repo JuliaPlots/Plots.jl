@@ -13,7 +13,8 @@ using Graphs
 using Test
 using Gtk  # for popup
 
-import GR; gr()
+import GR
+gr()
 
 isci() = get(ENV, "CI", "false") == "true"
 itol(tol = nothing) = something(tol, isci() ? 1e-3 : 1e-5)

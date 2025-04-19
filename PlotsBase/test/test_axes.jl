@@ -36,7 +36,8 @@
 
     @test PlotsBase.get_labels(x -> 1e3x, 1:3, :identity) == ["1000", "2000", "3000"]
     @test PlotsBase.get_labels(:auto, 1:3, :identity) == ["1", "2", "3"]
-    with(:gr) do  # NOTE: GR overrides `labelfunc`
+    with(:gr) do
+        # NOTE: GR overrides `labelfunc`
         @test PlotsBase.get_labels(:scientific, float.(500:500:1500), :identity) ==
               ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
         @test PlotsBase.get_labels(:engineering, float.(500:500:1500), :identity) ==

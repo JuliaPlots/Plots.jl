@@ -12,6 +12,7 @@ const TEST_PACKAGES =
 const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p ∈ TEST_PACKAGES)
 
 get!(ENV, "MPLBACKEND", "agg")
+get!(ENV, "PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON", "true")
 
 using PlotsBase
 eval(PlotsBase.WEAKDEPS)
@@ -122,6 +123,7 @@ for name ∈ (
         if is_auto() || is_pkgeval()
             name != "backends" && continue
         end
+        haskey(TEST_BACKENDS, :GR) && gr()  # reset to default backend
         include("test_$name.jl")
     end
 end
