@@ -25,13 +25,12 @@ PlotTheme(; kw...) = PlotTheme(KW(kw))
 PlotTheme(base::PlotTheme; kw...) = PlotTheme(KW(base.defaults..., KW(kw)...))
 
 "Get the palette of a PlotTheme"
-function theme_palette(s::Symbol)
+theme_palette(s::Symbol) =
     if haskey(_themes, s) && haskey(_themes[s].defaults, :palette)
-        return _themes[s].defaults[:palette]
+        _themes[s].defaults[:palette]
     else
-        return palette(:default)
+        palette(:default)
     end
-end
 
 # add themes
 include("dark.jl")
@@ -75,4 +74,4 @@ const _themes = Dict{Symbol,PlotTheme}([
 
 add_theme(s::Symbol, thm::PlotTheme) = _themes[s] = thm
 
-end # module
+end  # module

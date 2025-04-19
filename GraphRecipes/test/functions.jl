@@ -171,9 +171,7 @@ julia_type_tree() = plot(
 @eval AbstractTrees children(d::AbstractDict) = [p for p ∈ d]
 @eval AbstractTrees children(p::Pair) = AbstractTrees.children(p[2])
 @eval AbstractTrees function printnode(io::IO, p::Pair)
-    str =
-        isempty(children(p[2])) ? string(p[1], ": ", p[2]) :
-        string(p[1], ": ")
+    str = isempty(children(p[2])) ? string(p[1], ": ", p[2]) : string(p[1], ": ")
     print(io, str)
 end
 

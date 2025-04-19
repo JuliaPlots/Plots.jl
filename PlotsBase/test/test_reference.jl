@@ -8,7 +8,8 @@ ci_tol() =
     end
 
 const TESTS_MODULE = Module(:PlotsBaseTestModule)
-const PLOTSBASE_IMG_TOL = parse(Float64, get(ENV, "PLOTSBASE_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
+const PLOTSBASE_IMG_TOL =
+    parse(Float64, get(ENV, "PLOTSBASE_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, PlotsBase))
 
