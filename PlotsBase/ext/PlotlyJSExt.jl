@@ -8,6 +8,25 @@ using PlotsBase.Plots
 import PlotlyJS: PlotlyJS, WebIO
 
 struct PlotlyJSBackend <: PlotsBase.AbstractBackend end
+
+function PlotsBase.extension_init(::PlotlyJSBackend)
+    # workaround for github.com/JuliaGizmos/Blink.jl/issues/325
+    # taken from github.com/Eben60/PackageMaker.jl/commit/297219f5c14845bf75de4475cabab4dbf6e6599d 
+    @eval PlotlyJS.Blink.AtomShell function init(; debug = false)
+        electron() # Check path exists
+        p, dp = port(), port()
+        debug && inspector(dp)
+        dbg = debug ? "--debug=$dp" : []
+        unsafe = Base.get_bool_env("PLOTSBASE_UNSAFE_ELECTRON", false) ? "--no-sandbox" : []
+        proc = (debug ? run_rdr : run)(
+            `$(electron()) $unsafe $dbg $mainjs port $p`; wait=false)
+        conn = try_connect(ip"127.0.0.1", p)
+        shell = Electron(proc, conn)
+        initcbs(shell)
+        return shell
+    end
+end
+
 PlotsBase.@extension_static PlotlyJSBackend plotlyjs
 
 const _plotlyjs_attrs = PlotsBase.Plotly._plotly_attrs
