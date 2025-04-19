@@ -331,9 +331,9 @@ function PlotsBase.locate_annotation(
 ) where {N}
     units = getaxisunit(sp.attr[:xaxis], sp.attr[:yaxis], sp.attr[:zaxis])
     PlotsBase.locate_annotation(sp, _ustrip.(zip(units, rel)), label)
-end#==================##==================#
+end
 
-# ticks and limits #
+# ticks and limits
 
 PlotsBase._transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Quantity} =
     _ustrip.(getaxisunit(axis), ticks)

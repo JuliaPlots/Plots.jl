@@ -7,7 +7,7 @@ using PlotsBase
 using NaNMath
 using Test
 
-import GR;
+import GR
 gr()
 
 @testset "Grouped histogram" begin

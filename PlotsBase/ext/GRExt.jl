@@ -2035,13 +2035,7 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
             arrowside, arrowstyle, arrowsize =
                 arrow.side, arrow.style, (arrow.headlength+arrow.headwidth)/2
 
-            gr_polyline(
-                x[rng],
-                y[rng];
-                arrowside = arrowside,
-                arrowstyle = arrowstyle,
-                arrowsize = arrowsize,
-            )
+            gr_polyline(x[rng], y[rng]; arrowside, arrowstyle, arrowsize)
         end
     end
 end

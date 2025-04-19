@@ -13,7 +13,7 @@ using Graphs
 using Test
 using Gtk  # for popup
 
-import GR;
+import GR
 gr()
 
 isci() = get(ENV, "CI", "false") == "true"
