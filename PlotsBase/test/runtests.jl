@@ -123,6 +123,7 @@ for name ∈ (
         if is_auto() || is_pkgeval()
             name != "backends" && continue
         end
+        haskey(TEST_BACKENDS, :GR) && gr()  # reset to default backend
         include("test_$name.jl")
     end
 end
