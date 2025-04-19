@@ -17,9 +17,11 @@ function PlotsBase.extension_init(::PlotlyJSBackend)
         p, dp = port(), port()
         debug && inspector(dp)
         dbg = debug ? "--debug=$dp" : []
+        # vvvvvvvvvvvv begin addition
         unsafe = Base.get_bool_env("PLOTSBASE_UNSAFE_ELECTRON", false) ? "--no-sandbox" : []
-        proc = (debug ? run_rdr : run)(
-            `$(electron()) $unsafe $dbg $mainjs port $p`; wait=false)
+        cmd = `$(electron()) $unsafe $dbg $mainjs port $p`
+        # ^^^^^^^^^^^^ end addition
+        proc = (debug ? run_rdr : run)(cmd; wait=false)
         conn = try_connect(ip"127.0.0.1", p)
         shell = Electron(proc, conn)
         initcbs(shell)

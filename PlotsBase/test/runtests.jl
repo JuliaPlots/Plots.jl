@@ -12,6 +12,7 @@ const TEST_PACKAGES =
 const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p ∈ TEST_PACKAGES)
 
 get!(ENV, "MPLBACKEND", "agg")
+get!(ENV, "PLOTSBASE_UNSAFE_ELECTRON", "true")
 
 using PlotsBase
 eval(PlotsBase.WEAKDEPS)
