@@ -28,7 +28,6 @@ default(show = false, reuse = true)
     rng = StableRNG(1)
     for method ∈ keys(GraphRecipes._graph_funcs)
         method ≡ :spectral && continue  # FIXME
-        @show method
         dat = if (inp = GraphRecipes._graph_inputs[method]) ≡ :adjmat
             [
                 0 1 1;
@@ -53,7 +52,6 @@ default(show = false, reuse = true)
         else
             @error "wrong input $inp"
         end
-        @show inp
         pl = graphplot(dat; method)
         @test pl isa PlotsBase.Plot
     end
