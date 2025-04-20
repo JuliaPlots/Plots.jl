@@ -5,6 +5,15 @@ infer_size_from(args...) = maximum(maximum.(args))
 # see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
 # also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
 
+function points(dim::Integer, positions)
+    one, two = [p[1] for p ∈ positions], [p[2] for p ∈ positions]
+    if dim == 2
+        (one, two, nothing)
+    else
+        (one, two, [p[3] for p ∈ positions])
+    end
+end
+
 function spectral_graph(
     adjmat::AbstractMatrix;
     node_weights::AbstractVector = ones(size(adjmat, 1)),
@@ -13,17 +22,15 @@ function spectral_graph(
     positions =
         NetworkLayout.spectral(adjmat; nodeweights = convert(Vector{Float64}, node_weights))
 
-    ([p[1] for p ∈ positions], [p[2] for p ∈ positions], [p[3] for p ∈ positions])
+    points(3, positions)
 end
 
-function spectral_graph(
+spectral_graph(
     source::AbstractVector{Int},
     destiny::AbstractVector{Int},
     weights::AbstractVector;
     kw...,
-)
-    spectral_graph(get_adjacency_matrix(source, destiny, weights); kw...)
-end
+) = spectral_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 
 function spring_graph(
     adjmat::AbstractMatrix;
@@ -37,7 +44,7 @@ function spring_graph(
     C = 2.0,
     kw...,
 )
-    @assert dim == 2 || dim == 3
+    @assert dim ∈ (2, 3)
     T = Float64
     adjmat = make_symmetric(adjmat)
     startpostions = if dim == 2
@@ -55,21 +62,16 @@ function spring_graph(
         C = C,
         initialpos = startpostions,
     )
-    if dim == 2
-        ([p[1] for p ∈ positions], [p[2] for p ∈ positions], nothing)
-    else
-        ([p[1] for p ∈ positions], [p[2] for p ∈ positions], [p[3] for p ∈ positions])
-    end
+
+    points(dim, positions)
 end
 
-function spring_graph(
+spring_graph(
     source::AbstractVector{Int},
     destiny::AbstractVector{Int},
     weights::AbstractVector;
     kw...,
-)
-    spring_graph(get_adjacency_matrix(source, destiny, weights); kw...)
-end
+) = spring_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 
 function sfdp_graph(
     adjmat::AbstractMatrix;
@@ -103,21 +105,15 @@ function sfdp_graph(
         K = K,
         initialpos = startpostions,
     )
-    if dim == 2
-        ([p[1] for p ∈ positions], [p[2] for p ∈ positions], nothing)
-    else
-        ([p[1] for p ∈ positions], [p[2] for p ∈ positions], [p[3] for p ∈ positions])
-    end
+    points(dim, positions)
 end
 
-function sfdp_graph(
+sfdp_graph(
     source::AbstractVector{Int},
     destiny::AbstractVector{Int},
     weights::AbstractVector;
     kw...,
-)
-    sfpd_graph(get_adjacency_matrix(source, destiny, weights); kw...)
-end
+) = sfpd_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 
 circular_graph(args...; kwargs...) = shell_graph(args...; kwargs...)
 
@@ -134,17 +130,15 @@ function shell_graph(
     @assert dim == 2
     positions = NetworkLayout.shell(adjmat; nlist)
 
-    ([p[1] for p ∈ positions], [p[2] for p ∈ positions], nothing)
+    points(dim, positions)
 end
 
-function shell_graph(
+shell_graph(
     source::AbstractVector{Int},
     destiny::AbstractVector{Int},
     weights::AbstractVector;
     kw...,
-)
-    shell_graph(get_adjacency_matrix(source, destiny, weights); kw...)
-end
+) = shell_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 
 # -----------------------------------------------------
 
@@ -260,14 +254,12 @@ function by_axis_local_stress_graph(
     dim == 2 ? (X..., nothing) : X
 end
 
-function by_axis_local_stress_graph(
+by_axis_local_stress_graph(
     source::AbstractVector{Int},
     destiny::AbstractVector{Int},
     weights::AbstractVector;
     kw...,
-)
-    by_axis_local_stress_graph(get_adjacency_matrix(source, destiny, weights); kw...)
-end
+) = by_axis_local_stress_graph(get_adjacency_matrix(source, destiny, weights); kw...)
 
 # -----------------------------------------------------
 
@@ -283,7 +275,7 @@ function buchheim_graph(
     # @show adjlist typeof(adjlist)
     positions =
         NetworkLayout.buchheim(adjlist; nodesize = convert(Vector{Float64}, node_weights))
-    Float64[p[1] for p ∈ positions], Float64[p[2] for p ∈ positions], nothing
+    points(dim, positions)
 end
 
 # -----------------------------------------------------
@@ -312,7 +304,7 @@ function tree_graph(
     # TODO: compute layers, which get bigger as you go away from the root
     if layers == nothing
         # layers = rand(rng_from_rng_or_seed(rng, nothing), 1:4, n)
-        layers = compute_tree_layers2(source, destiny, n)
+        layers = compute_tree_layers(source, destiny, n)
     end
 
     # reverse direction?
@@ -321,9 +313,7 @@ function tree_graph(
     end
 
     # add noise
-    if add_noise
-        layers = layers + 0.6rand(rng_from_rng_or_seed(rng, nothing), size(layers)...)
-    end
+    add_noise && (layers += 0.6rand(rng_from_rng_or_seed(rng, nothing), size(layers)...))
 
     # TODO: normalize layers somehow so it's in line with distances
     layers .*= layers_scalar
@@ -355,9 +345,9 @@ function tree_graph(
     # now that we've fixed one dimension, let the stress algo solve for the other(s)
     by_axis_local_stress_graph(
         get_adjacency_matrix(source, destiny, weights);
-        node_weights = node_weights,
-        rng = rng,
-        dim = dim,
+        node_weights,
+        rng,
+        dim,
         extrakw...,
     )
 end
@@ -374,7 +364,8 @@ function adjlist_and_degrees(source, destiny, n)
     alist, indeg, outdeg
 end
 
-function compute_tree_layers(source, destiny, n)
+#=
+function compute_tree_layers_old(source, destiny, n)
     alist, indeg, outdeg = adjlist_and_degrees(source, destiny, n)
 
     # choose root to be the node with lots going out, but few coming in
@@ -406,11 +397,12 @@ function compute_tree_layers(source, destiny, n)
     end
     layers
 end
+=#
 
 # an alternative algo to pick tree layers... generate a list of roots,
 # and for each root, make a pass through the tree (without recurrency)
 # and push the children below their parents
-function compute_tree_layers2(source, destiny, n)
+function compute_tree_layers(source, destiny, n)
     alist, indeg, outdeg = adjlist_and_degrees(source, destiny, n)
     roots = filter(i -> indeg[i] == 0, 1:n)
     if isempty(roots)

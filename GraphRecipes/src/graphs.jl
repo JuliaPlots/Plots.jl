@@ -26,16 +26,16 @@ const _graph_inputs = Dict{Symbol,Any}(
 
 function prepare_graph_inputs(method::Symbol, inputs...; display_n = nothing)
     input_type = get(_graph_inputs, method, :sourcedestiny)
-    if input_type === :adjmat
+    if input_type ≡ :adjmat
         mat = if display_n === nothing
             get_adjacency_matrix(inputs...)
         else
             get_adjacency_matrix(inputs..., display_n)
         end
         (mat,)
-    elseif input_type === :sourcedestiny
+    elseif input_type ≡ :sourcedestiny
         get_source_destiny_weight(inputs...)
-    elseif input_type === :adjlist
+    elseif input_type ≡ :adjlist
         (get_adjacency_list(inputs...),)
     end
 end
@@ -457,10 +457,10 @@ more details.
     if root in (:left, :right)
         x, y = y, -x
     end
-    if root == :left
+    if root ≡ :left
         x, y = -x, y
     end
-    if root == :bottom
+    if root ≡ :bottom
         x, y = x, -y
     end
 
@@ -472,7 +472,7 @@ more details.
     end
 
     # center and rescale to the widest of all dimensions
-    if method == :arcdiagram
+    if method ≡ :arcdiagram
         xl, yl = arcdiagram_limits(x, source, destiny)
         xlims --> xl
         ylims --> yl
@@ -544,13 +544,12 @@ more details.
             end
             nodewidth = xextent[2] - xextent[1]
             nodewidth_array[i] = nodewidth
-            if nodeshape[node_number] == :circle
+            if nodeshape[node_number] ≡ :circle
                 push!(
                     node_vec_vec_xy,
                     partialcircle(0, 2π, [x[i], y[i]], 80, nodewidth / 2),
                 )
-            elseif (nodeshape[node_number] == :rect) ||
-                   (nodeshape[node_number] == :rectangle)
+            elseif (nodeshape[node_number] ≡ :rect) || (nodeshape[node_number] ≡ :rectangle)
                 push!(
                     node_vec_vec_xy,
                     [
@@ -561,9 +560,9 @@ more details.
                         (xextent[1], yextent[1]),
                     ],
                 )
-            elseif nodeshape[node_number] == :hexagon
+            elseif nodeshape[node_number] ≡ :hexagon
                 push!(node_vec_vec_xy, partialcircle(0, 2π, [x[i], y[i]], 7, nodewidth / 2))
-            elseif nodeshape[node_number] == :ellipse
+            elseif nodeshape[node_number] ≡ :ellipse
                 nodeheight = (yextent[2] - yextent[1])
                 push!(
                     node_vec_vec_xy,
@@ -592,7 +591,7 @@ more details.
     # numbers describing the center and the radius of the circle.
     node_perimeter_info = []
     for i ∈ eachindex(node_vec_vec_xy)
-        if nodeshape[i] == :circle
+        if nodeshape[i] ≡ :circle
             push!(
                 node_perimeter_info,
                 GeometryTypes.Circle(
@@ -645,9 +644,9 @@ more details.
     # TODO do a proper job of calculating nsegments.
     nsegments = if curves && (method in (:tree, :buchheim))
         4
-    elseif method == :chorddiagram
+    elseif method ≡ :chorddiagram
         3
-    elseif method == :arcdiagram
+    elseif method ≡ :arcdiagram
         30
     elseif curves
         50
@@ -705,7 +704,7 @@ more details.
                 append!(xseg, xpts)
                 append!(yseg, ypts)
                 append!(l_wg, [wi for i ∈ 1:length(xpts)])
-            elseif method == :arcdiagram
+            elseif method ≡ :arcdiagram
                 r = (xdi - xsi) / 2
                 x₀ = (xdi + xsi) / 2
                 θ = range(0, stop = π, length = 30)
@@ -822,7 +821,7 @@ more details.
             θ1 = unoccupied_angle(xsi, ysi, x[inds], y[inds]) - self_edge_angle / 2
             θ2 = θ1 + self_edge_angle
             nodewidth = nodewidth_array[si]
-            if nodeshape == :circle
+            if nodeshape ≡ :circle
                 xpts = [
                     xsi + nodewidth * cos(θ1) / 2,
                     NaN,
@@ -1057,7 +1056,7 @@ more details.
     nodestrokestyle =
         format_nodeproperty(nodestrokestyle, n_edges, index, fill_value = :solid)
 
-    if method == :chorddiagram
+    if method ≡ :chorddiagram
         seriestype := :scatter
         markersize := 0
         markeralpha := 0

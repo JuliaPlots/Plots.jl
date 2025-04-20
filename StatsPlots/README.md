@@ -81,7 +81,7 @@ The `@df` syntax is also compatible with the Plots.jl grouping machinery:
 
 ```julia
 using RDatasets
-school = RDatasets.dataset("mlmRev","Hsb82")
+school = dataset("mlmRev", "Hsb82")
 @df school density(:MAch, group = :Sx)
 ```
 
@@ -106,8 +106,8 @@ The old syntax, passing the `DataFrame` as the first argument to the `plot` call
 A GUI based on the Interact package is available to create plots from a table interactively, using any of the recipes defined below. This small app can be deployed in a Jupyter lab / notebook, Juno plot pane, a Blink window or in the browser, see [here](http://juliagizmos.github.io/Interact.jl/latest/deploying/) for instructions.
 
 ```julia
-import RDatasets
-iris = RDatasets.dataset("datasets", "iris")
+using RDatasets
+iris = dataset("datasets", "iris")
 using StatsPlots, Interact
 using Blink
 w = Window()
@@ -203,8 +203,8 @@ cornerplot(M, compact=true)
 ## boxplot, dotplot, and violin
 
 ```julia
-import RDatasets
-singers = RDatasets.dataset("lattice", "singer")
+using RDatasets
+singers = dataset("lattice", "singer")
 @df singers violin(string.(:VoicePart), :Height, linewidth=0)
 @df singers boxplot!(string.(:VoicePart), :Height, fillalpha=0.75, linewidth=2)
 @df singers dotplot!(string.(:VoicePart), :Height, marker=(:black, stroke(0)))

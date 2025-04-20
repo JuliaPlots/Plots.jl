@@ -26,8 +26,8 @@
     # main scatter2d
     @series begin
         seriestype := :scatter
-        right_margin --> 0PlotsBase.mm
-        top_margin --> 0PlotsBase.mm
+        right_margin --> 0mm
+        top_margin --> 0mm
         subplot := 2
         xlims --> xlims
         ylims --> ylims
@@ -50,7 +50,7 @@
     # upper scatter
     @series begin
         subplot := 1
-        bottom_margin --> 0PlotsBase.mm
+        bottom_margin --> 0mm
         showaxis := :x
         x := x
         y := ones(y |> size)
@@ -63,7 +63,7 @@
         orientation := :h
         showaxis := :y
         subplot := 3
-        left_margin --> 0PlotsBase.mm
+        left_margin --> 0mm
         # bins := edges2
         y := y
         x := ones(x |> size)
