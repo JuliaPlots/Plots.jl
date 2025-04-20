@@ -20,6 +20,7 @@ const WEAKDEPS = Expr(
 using Base.Meta
 
 import PrecompileTools
+import TableOperations
 import LinearAlgebra
 import SparseArrays
 import Preferences
@@ -38,8 +39,6 @@ import Dates
 import Unzip
 import JLFzf
 import JSON
-import Tables
-import TableOperations
 import Pkg
 
 Reexport.@reexport using RecipesBase
@@ -148,7 +147,7 @@ using .Commons.Frontend
 
 Commons.@generic_functions attr attr!
 
-include("df.jl")
+include("DF.jl")
 include("Fonts.jl")
 include("Ticks.jl")
 include("DataSeries.jl")

@@ -1,21 +1,23 @@
-plot_function(plt::Function, grouped) = plt
-plot_function(plt::Tuple, grouped) = grouped ? plt[2] : plt[1]
+module InteractExt
 
-combine_cols(dict, ns) = length(ns) > 1 ? hcat((dict[n] for n ∈ ns)...) : dict[ns[1]]
+import StatsPlots: StatsPlots, PlotsBase
+import Interact: Observables, Widgets, OrderedCollections
+import PlotsBase: TableOperations
 
-function dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
-    (t isa AbstractObservable) || (t = Observable{Any}(t))
+function StatsPlots.dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
+    (t isa Observables.AbstractObservable) || (t = Observables.Observable{Any}(t))
 
-    coltable = map(Tables.columntable, t)
+    coltable = map(TableOperations.Tables.columntable, t)
 
-    @show names = map(collect ∘ keys, coltable)
+    names = map(collect ∘ keys, coltable)
+    @show names
 
-    dict = @map Dict((key, val) for (key, val) ∈ pairs(&coltable))
-    x = Widgets.dropdown(names, placeholder = "First axis", multiple = true)
-    y = Widgets.dropdown(names, placeholder = "Second axis", multiple = true)
+    dict = Observables.@map Dict((key, val) for (key, val) ∈ pairs(&coltable))
+    x = Widgets.dropdown(names; placeholder = "First axis", multiple = true)
+    y = Widgets.dropdown(names; placeholder = "Second axis", multiple = true)
     y_toggle = Widgets.togglecontent(y, value = false, label = "Second axis")
     plot_type = Widgets.dropdown(
-        OrderedDict(
+        OrderedCollections.OrderedDict(
             "line"         => PlotsBase.plot,
             "scatter"      => PlotsBase.scatter,
             "bar"          => (PlotsBase.bar, StatsPlots.groupedbar),
@@ -27,14 +29,18 @@ function dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
             "histogram"    => StatsPlots.histogram,
             "marginalhist" => StatsPlots.marginalhist,
             "violin"       => (StatsPlots.violin, StatsPlots.groupedviolin),
-        ),
+        );
         placeholder = "Plot type",
     )
 
     # Add bins if the plot allows it
-    display_nbins =
-        @map (&plot_type) in [corrplot, cornerplot, histogram, marginalhist] ? "block" :
-             "none"
+    bins_plots = (
+        StatsPlots.corrplot,
+        StatsPlots.cornerplot,
+        StatsPlots.histogram,
+        StatsPlots.marginalhist,
+    )
+    display_nbins = Observables.@map (&plot_type) in bins_plots ? "block" : "none"
     nbins = (Widgets.slider(
         nbins_range,
         extra_obs = ["display" => display_nbins],
@@ -47,12 +53,17 @@ function dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
     )
     nbins_throttle = Observables.throttle(throttle, nbins)
 
+    plot_function(plt::Function, grouped) = plt
+    plot_function(plt::Tuple, grouped) = grouped ? plt[2] : plt[1]
+
+    combine_cols(dict, ns) = length(ns) > 1 ? hcat((dict[n] for n ∈ ns)...) : dict[ns[1]]
+
     by = Widgets.dropdown(names, multiple = true, placeholder = "Group by")
     by_toggle = Widgets.togglecontent(by, value = false, label = "Split data")
     plt = Widgets.button("plot")
-    output = @map begin
+    output = Observables.@map begin
         if (&plt == 0)
-            plot()
+            PlotsBase.plot()
         else
             args = Any[]
             # add first and maybe second argument
@@ -88,7 +99,7 @@ function dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
             plot_func(args...; nbins = &nbins_throttle, kwargs...)
         end
     end
-    wdg = Widget{:dataviewer}(
+    wdg = Widgets.Widget{:dataviewer}(
         [
             "x" => x,
             "y" => y,
@@ -98,13 +109,15 @@ function dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:100)
             "plot_type" => plot_type,
             "plot_button" => plt,
             "nbins" => nbins,
-        ],
-        output = output,
+        ];
+        output,
     )
-    @layout! wdg Widgets.div(
+    Widgets.@layout! wdg Widgets.div(
         Widgets.div(:x, :y_toggle, :plot_type, :by_toggle, :plot_button),
         Widgets.div(style = Dict("width" => "3em")),
         Widgets.div(Widgets.observe(_), :nbins),
         style = Dict("display" => "flex", "direction" => "row"),
     )
+end
+
 end

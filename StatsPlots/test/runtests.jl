@@ -1,16 +1,24 @@
 using MultivariateStats
 using Distributions
-using StatsPlots
 using StableRNGs
 using Clustering
 using PlotsBase
+using RDatasets
+using Interact
 using NaNMath
 using Test
 
+using StatsPlots
 import GR
 gr()
 
-@testset "Grouped histogram" begin
+const iris = dataset("datasets", "iris")
+const singers = dataset("lattice", "singer")
+
+const Widgets = Base.get_extension(StatsPlots, :InteractExt).Widgets
+@test Widgets isa Module
+
+@testset "grouped histogram" begin
     rng = StableRNG(1337)
     gpl = groupedhist(
         rand(rng, 1000),
@@ -73,52 +81,50 @@ end # testset
     ]
 end
 
-@testset "Histogram" begin
+@testset "histogram" begin
     data = randn(1000)
     @test 0.2 < StatsPlots.wand_bins(data) < 0.4
 end
 
-@testset "Distributions" begin
+@testset "distributions" begin
     @testset "univariate" begin
-        @testset "discrete" begin
-            pbern = plot(Bernoulli(0.25))
-            @test pbern[1][1][:x][1:2] == zeros(2)
-            @test pbern[1][1][:x][4:5] == ones(2)
-            @test pbern[1][1][:y][[1, 4]] == zeros(2)
-            @test pbern[1][1][:y][[2, 5]] == [0.75, 0.25]
+        pbern = plot(Bernoulli(0.25))
+        @test pbern[1][1][:x][1:2] == zeros(2)
+        @test pbern[1][1][:x][4:5] == ones(2)
+        @test pbern[1][1][:y][[1, 4]] == zeros(2)
+        @test pbern[1][1][:y][[2, 5]] == [0.75, 0.25]
 
-            pdirac = plot(Dirac(0.25))
-            @test pdirac[1][1][:x][1:2] == [0.25, 0.25]
-            @test pdirac[1][1][:y][1:2] == [0, 1]
+        pdirac = plot(Dirac(0.25))
+        @test pdirac[1][1][:x][1:2] == [0.25, 0.25]
+        @test pdirac[1][1][:y][1:2] == [0, 1]
 
-            ppois_unbounded = plot(Poisson(1))
-            @test ppois_unbounded[1][1][:x] isa AbstractVector
-            @test ppois_unbounded[1][1][:x][1:2] == zeros(2)
-            @test ppois_unbounded[1][1][:x][4:5] == ones(2)
-            @test ppois_unbounded[1][1][:y][[1, 4]] == zeros(2)
-            @test ppois_unbounded[1][1][:y][[2, 5]] ==
-                  pdf.(Poisson(1), ppois_unbounded[1][1][:x][[1, 4]])
+        ppois_unbounded = plot(Poisson(1))
+        @test ppois_unbounded[1][1][:x] isa AbstractVector
+        @test ppois_unbounded[1][1][:x][1:2] == zeros(2)
+        @test ppois_unbounded[1][1][:x][4:5] == ones(2)
+        @test ppois_unbounded[1][1][:y][[1, 4]] == zeros(2)
+        @test ppois_unbounded[1][1][:y][[2, 5]] ==
+              pdf.(Poisson(1), ppois_unbounded[1][1][:x][[1, 4]])
 
-            pnonint = plot(Bernoulli(0.75) - 1 // 2)
-            @test pnonint[1][1][:x][1:2] == [-1 // 2, -1 // 2]
-            @test pnonint[1][1][:x][4:5] == [1 // 2, 1 // 2]
-            @test pnonint[1][1][:y][[1, 4]] == zeros(2)
-            @test pnonint[1][1][:y][[2, 5]] == [0.25, 0.75]
+        pnonint = plot(Bernoulli(0.75) - 1 // 2)
+        @test pnonint[1][1][:x][1:2] == [-1 // 2, -1 // 2]
+        @test pnonint[1][1][:x][4:5] == [1 // 2, 1 // 2]
+        @test pnonint[1][1][:y][[1, 4]] == zeros(2)
+        @test pnonint[1][1][:y][[2, 5]] == [0.25, 0.75]
 
-            pmix = plot(
-                MixtureModel([Bernoulli(0.75), Bernoulli(0.5)], [0.5, 0.5]);
-                components = false,
-            )
-            @test pmix[1][1][:x][1:2] == zeros(2)
-            @test pmix[1][1][:x][4:5] == ones(2)
-            @test pmix[1][1][:y][[1, 4]] == zeros(2)
-            @test pmix[1][1][:y][[2, 5]] == [0.375, 0.625]
+        pmix = plot(
+            MixtureModel([Bernoulli(0.75), Bernoulli(0.5)], [0.5, 0.5]);
+            components = false,
+        )
+        @test pmix[1][1][:x][1:2] == zeros(2)
+        @test pmix[1][1][:x][4:5] == ones(2)
+        @test pmix[1][1][:y][[1, 4]] == zeros(2)
+        @test pmix[1][1][:y][[2, 5]] == [0.375, 0.625]
 
-            dzip = MixtureModel([Dirac(0), Poisson(1)], [0.1, 0.9])
-            pzip = plot(dzip; components = false)
-            @test pzip[1][1][:x] isa AbstractVector
-            @test pzip[1][1][:y][2:3:end] == pdf.(dzip, Int.(pzip[1][1][:x][1:3:end]))
-        end
+        dzip = MixtureModel([Dirac(0), Poisson(1)], [0.1, 0.9])
+        pzip = plot(dzip; components = false)
+        @test pzip[1][1][:x] isa AbstractVector
+        @test pzip[1][1][:y][2:3:end] == pdf.(dzip, Int.(pzip[1][1][:x][1:3:end]))
     end
 end
 
@@ -186,16 +192,64 @@ end
     @test show(devnull, pl) isa Nothing
 end
 
+@testset "marginalkde" begin
+    rng = StableRNG(1337)
+    x = randn(rng, 1024)
+    y = randn(rng, 1024)
+    pl = marginalkde(x, x + y)
+    @test show(devnull, pl) isa Nothing
+end
+
 @testset "violin" begin
     rng = StableRNG(1337)
-    pl = violin(repeat([0.1, 0.2, 0.3], outer = 100), randn(300), side = :right)
+    pl = violin(repeat([0.1, 0.2, 0.3], outer = 100), randn(rng, 300), side = :right)
     @test show(devnull, pl) isa Nothing
 end
 
 @testset "density" begin
     rng = StableRNG(1337)
-    pl = density(rand(100_000), label = "density(rand())")
+    pl = density(rand(rng, 100_000), label = "density(rand())")
     @test show(devnull, pl) isa Nothing
+end
+
+@testset "covellipse" begin
+    pl = covellipse([0, 2], [2 1; 1 4]; n_std = 2, aspect_ratio = 1, label = "cov1")
+    @test show(devnull, pl) isa Nothing
+end
+
+@testset "corrplot / cornerplot" begin
+    rng = StableRNG(1337)
+    M = randn(rng, 1_000, 4)
+    @. M[:, 2] += 0.8sqrt(abs(M[:, 1])) - 0.5M[:, 3] + 5
+    @. M[:, 3] -= 0.7M[:, 1]^2 + 2
+    pl = corrplot(M; label = ["x$i" for i ∈ 1:4])
+    @test show(devnull, pl) isa Nothing
+
+    pl = cornerplot(M)
+    @test show(devnull, pl) isa Nothing
+end
+
+@testset "boxplot / dotplot / violin" begin
+    @df singers violin(string.(:VoicePart), :Height, linewidth = 0)
+    @df singers boxplot!(string.(:VoicePart), :Height, fillalpha = 0.75, linewidth = 2)
+    @df singers dotplot!(string.(:VoicePart), :Height, marker = (:black, stroke(0)))
+    @test true
+end
+
+@testset "ea_histogram" begin
+    rng = StableRNG(1337)
+    a = [randn(rng, 100); randn(rng, 100) .+ 3; randn(rng, 100) ./ 2 .+ 3]
+    pl = ea_histogram(a, bins = :scott, fillalpha = 0.4)
+    @test show(devnull, pl) isa Nothing
+end
+
+@testset "andrewsplot" begin
+    @df iris andrewsplot(:Species, cols(1:4), legend = :topleft)
+end
+
+@testset "interaction" begin
+    dv = dataviewer(iris)
+    @test true
 end
 
 @testset "boxplot" begin

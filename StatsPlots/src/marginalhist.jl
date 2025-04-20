@@ -28,8 +28,8 @@
     # main histogram2d
     @series begin
         seriestype := :histogram2d
-        right_margin --> 0PlotsBase.mm
-        top_margin --> 0PlotsBase.mm
+        right_margin --> 0mm
+        top_margin --> 0mm
         subplot := 2
         bins := (edges1, edges2)
         xlims --> xlims
@@ -54,7 +54,7 @@
     # upper histogram
     @series begin
         subplot := 1
-        bottom_margin --> 0PlotsBase.mm
+        bottom_margin --> 0mm
         bins := edges1
         y := x
         xlims --> xlims
@@ -64,7 +64,7 @@
     @series begin
         orientation := :h
         subplot := 3
-        left_margin --> 0PlotsBase.mm
+        left_margin --> 0mm
         bins := edges2
         y := y
         ylims --> ylims

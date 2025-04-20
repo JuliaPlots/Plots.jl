@@ -1,3 +1,10 @@
+module DF
+
+export @df, extract_columns_and_names
+
+import ..TableOperations
+
+const Tables = TableOperations.Tables
 """
     `@df d x`
 
@@ -29,14 +36,14 @@ function df_helper(x)
 end
 
 function df_helper(d, x)
-    if isa(x, Expr) && x.head == :block # meaning that there were multiple plot commands
+    if isa(x, Expr) && x.head ≡ :block # meaning that there were multiple plot commands
         commands = [
             df_helper(d, xx) for xx ∈ x.args if
-            !(isa(xx, Expr) && xx.head == :line || isa(xx, LineNumberNode))
+            !(isa(xx, Expr) && xx.head ≡ :line || isa(xx, LineNumberNode))
         ] # apply the helper recursively
         return Expr(:block, commands...)
 
-    elseif isa(x, Expr) && x.head == :call # each function call is operated on alone
+    elseif isa(x, Expr) && x.head ≡ :call # each function call is operated on alone
         syms = Any[]
         vars = Symbol[]
         plot_call = parse_table_call!(d, x, syms, vars)
@@ -49,7 +56,7 @@ function df_helper(d, x)
         argnames = _argnames(names, x)
         if (length(plot_call.args) >= 2) &&
            isa(plot_call.args[2], Expr) &&
-           (plot_call.args[2].head == :parameters)
+           (plot_call.args[2].head ≡ :parameters)
             label_plot_call = Expr(
                 :call,
                 :($(@__MODULE__).add_label),
@@ -79,11 +86,11 @@ function parse_table_call!(d, x::QuoteNode, syms, vars)
 end
 
 function parse_table_call!(d, x::Expr, syms, vars)
-    if x.head == :. && length(x.args) == 2
+    if x.head ≡ :. && length(x.args) == 2
         isa(x.args[2], QuoteNode) && return x
-    elseif x.head == :call
-        x.args[1] == :^ && length(x.args) == 2 && return x.args[2]
-        if x.args[1] == :cols
+    elseif x.head ≡ :call
+        x.args[1] ≡ :^ && length(x.args) == 2 && return x.args[2]
+        if x.args[1] ≡ :cols
             if length(x.args) == 1
                 push!(x.args, :($(@__MODULE__).column_names($d)))
                 return parse_table_call!(d, x, syms, vars)
@@ -126,7 +133,7 @@ not_kw(x) = true
 not_kw(x::Expr) = !(x.head in [:kw, :parameters])
 
 function insert_kw!(x::Expr, s::Symbol, v)
-    index = isa(x.args[2], Expr) && x.args[2].head == :parameters ? 3 : 2
+    index = isa(x.args[2], Expr) && x.args[2].head ≡ :parameters ? 3 : 2
     x.args = vcat(x.args[1:(index - 1)], Expr(:kw, s, v), x.args[index:end])
 end
 
@@ -136,11 +143,11 @@ end
 
 _arg2string(names, x) = stringify(x)
 function _arg2string(names, x::Expr)
-    if x.head == :call && x.args[1] == :cols
+    if x.head ≡ :call && x.args[1] ≡ :cols
         return :($(@__MODULE__).compute_name($names, $(x.args[2])))
-    elseif x.head == :call && x.args[1] == :hcat
+    elseif x.head ≡ :call && x.args[1] ≡ :hcat
         return hcat(stringify.(x.args[2:end])...)
-    elseif x.head == :hcat
+    elseif x.head ≡ :hcat
         return hcat(stringify.(x.args)...)
     else
         return stringify(x)
@@ -224,3 +231,9 @@ function extract_columns_and_names(df, syms...)
     cols = Tables.columntable(TableOperations.select(df, unique(selected_cols)...))
     return Tuple(get_col(s, cols, names) for s ∈ syms), names
 end
+
+end  # module
+
+# -----------------------------------------------------------------------------
+
+using .DF
