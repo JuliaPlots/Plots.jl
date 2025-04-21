@@ -192,12 +192,19 @@ end
         rng = StableRNG(1337)
         x = 1:10
         y = fill(NaN, 10, 100, 6)
-        for i = axes(y, 3)
-            y[:,:,i] = collect(1:2:20) .+ 5rand(rng, 10, 100) .* collect(1:2:20) .+ 100rand(rng)
+        for i ∈ axes(y, 3)
+            y[:, :, i] =
+                collect(1:2:20) .+ 5rand(rng, 10, 100) .* collect(1:2:20) .+ 100rand(rng)
         end
 
         pl = errorline(x, y[:, :, 1], errorstyle = :ribbon, label = "Ribbon")
-        errorline!(x, y[:, :, 2], errorstyle = :stick, label = "Stick", secondarycolor = :matched)
+        errorline!(
+            x,
+            y[:, :, 2],
+            errorstyle = :stick,
+            label = "Stick",
+            secondarycolor = :matched,
+        )
         errorline!(x, y[:, :, 3], errorstyle = :plume, label = "Plume")
         errorline!(x, y[:, :, 4], errortype = :sem)
         errorline!(x, y[:, :, 5], errortype = :percentile)
@@ -213,7 +220,7 @@ end
     pl = plot(
         qqplot(x, y, qqline = :fit),  # qqplot of two samples, show a fitted regression line
         qqplot(Cauchy, y),            # compare with a Cauchy distribution fitted to y; pass an instance (e.g. Normal(0,1)) to compare with a specific distribution
-        qqnorm(x, qqline = :R)        # the :R default line passes through the 1st and 3rd quartiles of the distribution
+        qqnorm(x, qqline = :R),        # the :R default line passes through the 1st and 3rd quartiles of the distribution
     )
     @test show(devnull, pl) isa Nothing
 end
@@ -242,22 +249,38 @@ end
     y = [i * randn(StableRNG(1337), 100) for i ∈ 1:4]
     violin(y, median = true)
     violin(y, quantiles = [0.1, 0.5, 0.9], linecolor = :white, linewidth = 3)
-    violin(y, quantiles = 3,  mean = true)
+    violin(y, quantiles = 3, mean = true)
 end
 
 @testset "violin df" begin
-    pl = violin(repeat([0.1, 0.2, 0.3], outer = 100), randn(StableRNG(1337), 300), side = :right)
+    pl = violin(
+        repeat([0.1, 0.2, 0.3], outer = 100),
+        randn(StableRNG(1337), 300),
+        side = :right,
+    )
     @test show(devnull, pl) isa Nothing
 
-    @df singers violin(string.(:VoicePart), :Height, side = :right, linewidth = 0, label = "Scala")
-    @df singers dotplot!(string.(:VoicePart), :Height, side = :right, marker = (:black, stroke(0)), label = "")
+    @df singers violin(
+        string.(:VoicePart),
+        :Height,
+        side = :right,
+        linewidth = 0,
+        label = "Scala",
+    )
+    @df singers dotplot!(
+        string.(:VoicePart),
+        :Height,
+        side = :right,
+        marker = (:black, stroke(0)),
+        label = "",
+    )
 end
 
 @testset "groupedviolin" begin
     df = DataFrame(
         x = repeat(["A", "B"], inner = 10),
         y = (1:20) .+ randn(20),
-        g = repeat(["Group 1", "Group 2"], inner = 5, outer = 2)
+        g = repeat(["Group 1", "Group 2"], inner = 5, outer = 2),
     )
     @df df groupedviolin(:x, :y; group = :g)
 end
