@@ -101,7 +101,7 @@ function parse_table_call!(d, x::Expr, syms, vars)
             push!(vars, new_vars)
             return new_vars
         end
-    elseif x.head==:braces # From Query: use curly brackets to simplify writing named tuples
+    elseif x.head ≡ :braces  # From Query: use curly brackets to simplify writing named tuples
         new_ex = Expr(:tuple, x.args...)
 
         for (j, field_in_NT) ∈ enumerate(new_ex.args)
@@ -137,22 +137,20 @@ function insert_kw!(x::Expr, s::Symbol, v)
     x.args = vcat(x.args[1:(index - 1)], Expr(:kw, s, v), x.args[index:end])
 end
 
-function _argnames(names, x::Expr)
+_argnames(names, x::Expr) =
     Expr(:vect, [_arg2string(names, s) for s ∈ x.args[2:end] if not_kw(s)]...)
-end
 
 _arg2string(names, x) = stringify(x)
-function _arg2string(names, x::Expr)
+_arg2string(names, x::Expr) =
     if x.head ≡ :call && x.args[1] ≡ :cols
-        return :($(@__MODULE__).compute_name($names, $(x.args[2])))
+        :($(@__MODULE__).compute_name($names, $(x.args[2])))
     elseif x.head ≡ :call && x.args[1] ≡ :hcat
-        return hcat(stringify.(x.args[2:end])...)
+        hcat(stringify.(x.args[2:end])...)
     elseif x.head ≡ :hcat
-        return hcat(stringify.(x.args)...)
+        hcat(stringify.(x.args)...)
     else
-        return stringify(x)
+        stringify(x)
     end
-end
 
 stringify(x) = filter(t -> t != ':', string(x))
 
@@ -174,7 +172,7 @@ then it will error.
 function add_label(argnames, f, args...; kwargs...)
     i = findlast(t -> isa(t, Expr) || isa(t, AbstractArray), argnames)
     try
-        if (i ≡ nothing)
+        if i ≡ nothing
             return f(args...; kwargs...)
         else
             return f(label = stringify.(argnames[i]), args...; kwargs...)
