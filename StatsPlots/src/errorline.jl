@@ -21,7 +21,7 @@
 
     errortype (symbol - *:std*, :sem, :percentile) - which error metric to use to show the distribution of y at each x-value.
 
-    percentiles (Vector{Int64} *[25, 75]*) - if using errortype === :percentile then which percentiles to use as bounds.
+    percentiles (Vector{Int64} *[25, 75]*) - if using errortype ≡ :percentile then which percentiles to use as bounds.
 
     groupcolor (Symbol, RGB, Vector of Symbol or RGB) - Declares the color for each group. If no value is passed then will use
         the default colorscheme. If one value is given then it will use that color for all groups. If multiple colors are
@@ -63,22 +63,22 @@ function compute_error(
         y = float(y)
     end
     # First compute the center
-    y_central = if centertype === :mean
+    y_central = if centertype ≡ :mean
         mapslices(NaNMath.mean, y, dims = 2)
-    elseif centertype === :median
+    elseif centertype ≡ :median
         mapslices(NaNMath.median, y, dims = 2)
     else
         error("Invalid center type. Valid symbols include :mean or :median")
     end
 
     # Takes 2d matrix [x,y] and computes the desired error type for each row (value of x)
-    if errortype === :std || errortype === :sem
+    if errortype ≡ :std || errortype ≡ :sem
         y_error = mapslices(NaNMath.std, y, dims = 2)
         if errortype == :sem
             y_error = y_error ./ sqrt(size(y, 2))
         end
 
-    elseif errortype === :percentile
+    elseif errortype ≡ :percentile
         y_lower = fill(NaN, size(y, 1))
         y_upper = fill(NaN, size(y, 1))
         if any(isnan.(y)) # NaNMath does not have a percentile function so have to go via StatsBase
@@ -147,11 +147,11 @@ end
     end
 
     # Check groupcolor format
-    if (groupcolor !== nothing && ndims(y) > 2) && length(groupcolor) == 1
+    if (groupcolor ≢ nothing && ndims(y) > 2) && length(groupcolor) == 1
         groupcolor = repeat(groupcolor, size(y, 3)) # Use the same color for all groups
-    elseif (groupcolor !== nothing && ndims(y) > 2) && length(groupcolor) < size(y, 3)
+    elseif (groupcolor ≢ nothing && ndims(y) > 2) && length(groupcolor) < size(y, 3)
         error("$(length(groupcolor)) colors given for a matrix with $(size(y,3)) groups")
-    elseif groupcolor === nothing
+    elseif groupcolor ≡ nothing
         gsi_counter = 0
         for i ∈ 1:length(plotattributes[:plot_object].series_list)
             if plotattributes[:plot_object].series_list[i].plotattributes[:primary]
@@ -165,7 +165,7 @@ end
         groupcolor = palette(color_palette)[idx]
     end
 
-    if errorstyle === :plume && numsecondarylines > size(y, 2) # Override numsecondarylines
+    if errorstyle ≡ :plume && numsecondarylines > size(y, 2) # Override numsecondarylines
         numsecondarylines = size(y, 2)
     end
 
@@ -173,7 +173,7 @@ end
         # Compute center and distribution for each value of x
         y_central, y_error = compute_error(y[:, :, g], centertype, errortype, percentiles)
 
-        if errorstyle === :ribbon
+        if errorstyle ≡ :ribbon
             seriestype := :path
             @series begin
                 x := x
@@ -185,7 +185,7 @@ end
                 () # Suppress implicit return
             end
 
-        elseif errorstyle === :stick
+        elseif errorstyle ≡ :stick
             x_offset = diff(extrema(x) |> collect)[1] * stickwidth
             seriestype := :path
             for (i, xi) ∈ enumerate(x)
@@ -194,7 +194,7 @@ end
                     primary := false
                     x :=
                         [xi - x_offset, xi + x_offset, xi, xi, xi + x_offset, xi - x_offset]
-                    if errortype === :percentile
+                    if errortype ≡ :percentile
                         y := [
                             repeat([y_central[i] - y_error[1][i]], 3)
                             repeat([y_central[i] + y_error[2][i]], 3)
@@ -206,9 +206,9 @@ end
                         ]
                     end
                     # Set the stick color
-                    if secondarycolor === nothing
+                    if secondarycolor ≡ nothing
                         linecolor := :gray60
-                    elseif secondarycolor === :matched
+                    elseif secondarycolor ≡ :matched
                         linecolor := groupcolor[g]
                     else
                         linecolor := secondarycolor
@@ -228,7 +228,7 @@ end
                 ()
             end
 
-        elseif errorstyle === :plume
+        elseif errorstyle ≡ :plume
             num_obs = size(y, 2)
             if num_obs > numsecondarylines
                 sub_sample_idx = sample(1:num_obs, numsecondarylines, replace = false)
@@ -244,7 +244,7 @@ end
                     x := x
                     y := y_sub_sample[:, i]
                     # Set the stick color
-                    if secondarycolor === nothing || secondarycolor === :matched
+                    if secondarycolor ≡ nothing || secondarycolor ≡ :matched
                         linecolor := groupcolor[g]
                     else
                         linecolor := secondarycolor

@@ -11,7 +11,7 @@ function violin_coords(
     bandwidth = KernelDensity.default_bandwidth(y),
 )
     kd =
-        wts === nothing ? KernelDensity.kde(y, npoints = 200, bandwidth = bandwidth) :
+        wts ≡ nothing ? KernelDensity.kde(y, npoints = 200, bandwidth = bandwidth) :
         KernelDensity.kde(y, weights = weights(wts), npoints = 200, bandwidth = bandwidth)
     if trim
         xmin, xmax = PlotsBase.ignorenan_extrema(y)
@@ -69,9 +69,9 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
 
         # make the violin
         xcenter = PlotsBase.discrete_value!(plotattributes, :x, glabel)[1]
-        xcoords = if (side === :right)
+        xcoords = if (side ≡ :right)
             vcat(widths, zeros(length(widths))) .+ xcenter
-        elseif (side === :left)
+        elseif (side ≡ :left)
             vcat(zeros(length(widths)), -reverse(widths)) .+ xcenter
         else
             vcat(widths, -reverse(widths)) .+ xcenter
@@ -86,9 +86,9 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
             mw = maximum(widths)
             mx = xcenter .+ [-mw, mw] * 0.75
             my = [mea, mea]
-            if side === :right
+            if side ≡ :right
                 mx[1] = xcenter
-            elseif side === :left
+            elseif side ≡ :left
                 mx[2] = xcenter
             end
 
@@ -101,9 +101,9 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
             mw = maximum(widths)
             mx = xcenter .+ [-mw, mw] / 2
             my = [med, med]
-            if side === :right
+            if side ≡ :right
                 mx[1] = xcenter
-            elseif side === :left
+            elseif side ≡ :left
                 mx[2] = xcenter
             end
 
@@ -119,9 +119,9 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
             for i ∈ eachindex(qy)
                 qxi = xcenter .+ [-maxw, maxw] * (0.5 - abs(0.5 - quantiles[i]))
                 qyi = [qy[i], qy[i]]
-                if side === :right
+                if side ≡ :right
                     qxi[1] = xcenter
-                elseif side === :left
+                elseif side ≡ :left
                     qxi[2] = xcenter
                 end
 

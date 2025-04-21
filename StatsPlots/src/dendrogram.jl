@@ -16,7 +16,7 @@ function treepositions(hc::Hclust, useheight::Bool, orientation = :vertical)
         xs[:, i] .= [x1, x1, x2, x2]
         ys[:, i] .= [y1, ypos, ypos, y2]
     end
-    if orientation === :horizontal
+    if orientation ≡ :horizontal
         return ys, xs
     else
         return xs, ys
@@ -29,7 +29,7 @@ end
     legend --> false
     linecolor --> :black
 
-    if orientation === :horizontal
+    if orientation ≡ :horizontal
         yforeground_color_axis --> :white
         ygrid --> false
         ylims --> (0.5, length(hc.order) + 0.5)

@@ -11,7 +11,7 @@ grouped_xy(y::AbstractArray) = 1:size(y, 1), y
     x, y = grouped_xy(g.args...)
 
     nr, nc = size(y)
-    isstack = pop!(plotattributes, :bar_position, :dodge) === :stack
+    isstack = pop!(plotattributes, :bar_position, :dodge) ≡ :stack
     isylog = pop!(plotattributes, :yscale, :identity) ∈ (:log10, :log)
     the_ylims = pop!(plotattributes, :ylims, (-Inf, Inf))
 

@@ -126,7 +126,7 @@ end
 
 function column_names(t)
     s = Tables.schema(t)
-    s === nothing ? propertynames(first(Tables.rows(t))) : s.names
+    s ≡ nothing ? propertynames(first(Tables.rows(t))) : s.names
 end
 
 not_kw(x) = true
@@ -174,7 +174,7 @@ then it will error.
 function add_label(argnames, f, args...; kwargs...)
     i = findlast(t -> isa(t, Expr) || isa(t, AbstractArray), argnames)
     try
-        if (i === nothing)
+        if (i ≡ nothing)
             return f(args...; kwargs...)
         else
             return f(label = stringify.(argnames[i]), args...; kwargs...)

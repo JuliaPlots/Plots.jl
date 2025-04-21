@@ -27,7 +27,7 @@ const _graph_inputs = Dict{Symbol,Any}(
 function prepare_graph_inputs(method::Symbol, inputs...; display_n = nothing)
     input_type = get(_graph_inputs, method, :sourcedestiny)
     if input_type ≡ :adjmat
-        mat = if display_n === nothing
+        mat = if display_n ≡ nothing
             get_adjacency_matrix(inputs...)
         else
             get_adjacency_matrix(inputs..., display_n)
