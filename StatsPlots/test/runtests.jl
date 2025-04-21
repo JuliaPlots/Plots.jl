@@ -3,6 +3,7 @@ using Distributions
 using StableRNGs
 using Clustering
 using PlotsBase
+using StatsBase
 using RDatasets
 using Interact
 using NaNMath
@@ -238,6 +239,13 @@ end
 end
 
 @testset "violin" begin
+    y = [i * randn(StableRNG(1337), 100) for i ∈ 1:4]
+    violin(y, median = true)
+    violin(y, quantiles = [0.1, 0.5, 0.9], linecolor = :white, linewidth = 3)
+    violin(y, quantiles = 3,  mean = true)
+end
+
+@testset "violin df" begin
     pl = violin(repeat([0.1, 0.2, 0.3], outer = 100), randn(StableRNG(1337), 300), side = :right)
     @test show(devnull, pl) isa Nothing
 
@@ -251,7 +259,7 @@ end
         y = (1:20) .+ randn(20),
         g = repeat(["Group 1", "Group 2"], inner = 5, outer = 2)
     )
-    @df df groupedviolin(:x, :y, group = :g)
+    @df df groupedviolin(:x, :y; group = :g)
 end
 
 @testset "density" begin
@@ -260,7 +268,7 @@ end
 end
 
 @testset "covellipse" begin
-    pl = covellipse([0, 2], [2 1; 1 4]; n_std = 2, aspect_ratio = 1, label = "cov1")
+    pl = covellipse([0, 2], [2 1; 1 4]; n_std = 2, showaxes = true, label = "cov1")
     @test show(devnull, pl) isa Nothing
 end
 
@@ -282,7 +290,7 @@ end
 end
 
 @testset "boxplot / dotplot / violin" begin
-    @df singers violin(string.(:VoicePart), :Height, linewidth = 0)
+    @df singers violin(string.(:VoicePart), :Height, show_mean = true, show_median = true)
     @df singers boxplot!(string.(:VoicePart), :Height, fillalpha = 0.75, linewidth = 2)
     @df singers dotplot!(string.(:VoicePart), :Height, marker = (:black, stroke(0)))
     @test true
