@@ -11,6 +11,7 @@ PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 RecipesPipeline = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 
 [compat]
 GR = "0.73"

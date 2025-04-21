@@ -272,12 +272,12 @@ The ErrorLine function shows error distributions for lines plots in a variety of
 x = 1:10
 y = fill(NaN, 10, 100, 3)
 for i = axes(y,3)
-    y[:,:,i] = collect(1:2:20) .+ rand(10,100).*5 .* collect(1:2:20) .+ rand()*100
+    y[:, :, i] = collect(1:2:20) .+ rand(10,100).*5 .* collect(1:2:20) .+ rand()*100
 end
 
-errorline(1:10, y[:,:,1], errorstyle=:ribbon, label="Ribbon")
-errorline!(1:10, y[:,:,2], errorstyle=:stick, label="Stick", secondarycolor=:matched)
-errorline!(1:10, y[:,:,3], errorstyle=:plume, label="Plume")
+errorline(x, y[:, :, 1], errorstyle=:ribbon, label="Ribbon")
+errorline!(x, y[:, :, 2], errorstyle=:stick, label="Stick", secondarycolor=:matched)
+errorline!(x, y[:, :, 3], errorstyle=:plume, label="Plume")
 ```
 
 ![ErrorLine Styles](https://user-images.githubusercontent.com/24966610/186655231-2b7b9e37-0beb-4796-ad08-cbb84020ffd8.svg)
@@ -320,7 +320,7 @@ plot(
 ## Grouped Bar plots
 
 ```julia
-groupedbar(rand(10,3), bar_position = :stack, bar_width=0.7)
+groupedbar(rand(10, 3), bar_position = :stack, bar_width = 0.7)
 ```
 
 ![tmp](https://cloud.githubusercontent.com/assets/933338/18962081/58a2a5e0-863d-11e6-8638-94f88ecc544d.png)
@@ -328,7 +328,7 @@ groupedbar(rand(10,3), bar_position = :stack, bar_width=0.7)
 This is the default:
 
 ```julia
-groupedbar(rand(10,3), bar_position = :dodge, bar_width=0.7)
+groupedbar(rand(10, 3), bar_position = :dodge, bar_width = 0.7)
 ```
 
 ![tmp](https://cloud.githubusercontent.com/assets/933338/18962092/673f6c78-863d-11e6-9ee9-8ca104e5d2a3.png)

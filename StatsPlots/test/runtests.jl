@@ -19,18 +19,16 @@ const Widgets = Base.get_extension(StatsPlots, :InteractExt).Widgets
 @test Widgets isa Module
 
 @testset "grouped histogram" begin
-    rng = StableRNG(1337)
     gpl = groupedhist(
-        rand(rng, 1000),
+        rand(StableRNG(1337), 1000),
         yscale = :log10,
         ylims = (1e-2, 1e4),
         bar_position = :stack,
     )
     @test NaNMath.minimum(gpl[1][1][:y]) ≤ 1e-2
     @test NaNMath.minimum(gpl[1][1][:y]) > 0
-    rng = StableRNG(1337)
     gpl = groupedhist(
-        rand(rng, 1000),
+        rand(StableRNG(1337), 1000),
         yscale = :log10,
         ylims = (1e-2, 1e4),
         bar_position = :dodge,
@@ -79,10 +77,15 @@ end # testset
         17.0 23.0 28.0 43.0
         0.0 17.0 0.0 28.0
     ]
+
+    D = rand(StableRNG(1337), 10, 10)
+    D += D'
+    pl = hclust(D, linkage = :single)
+    @test show(devnull, pl) isa Nothing
 end
 
 @testset "histogram" begin
-    data = randn(1000)
+    data = randn(StableRNG(1337), 1_000)
     @test 0.2 < StatsPlots.wand_bins(data) < 0.4
 end
 
@@ -126,11 +129,15 @@ end
         @test pzip[1][1][:x] isa AbstractVector
         @test pzip[1][1][:y][2:3:end] == pdf.(dzip, Int.(pzip[1][1][:x][1:3:end]))
     end
+
+    dist = Gamma(2)
+    scatter(dist, leg = false)
+    bar!(dist, func = cdf, alpha = 0.3)
 end
 
 @testset "ordinations" begin
     @testset "MDS" begin
-        X = randn(4, 100)
+        X = randn(StableRNG(1337), 4, 100)
         M = fit(MultivariateStats.MDS, X; maxoutdim = 3, distances = false)
         Y = MultivariateStats.predict(M)'
 
@@ -151,33 +158,63 @@ end
 end
 
 @testset "errorline" begin
+    @testset "input types" begin
+        x = 1:10
+        # test for floats
+        y = rand(StableRNG(1337), 10, 100) .* collect(1:2:20)
+        @test errorline(x, y)[1][1][:x] == x # x-input
+        @test all(
+            round.(errorline(x, y)[1][1][:y], digits = 3) .==
+            round.(mean(y, dims = 2), digits = 3),
+        ) # mean of y
+        @test all(
+            round.(errorline(x, y)[1][1][:ribbon], digits = 3) .==
+            round.(std(y, dims = 2), digits = 3),
+        ) # std of y
+        # test for ints
+        y = reshape(1:100, 10, 10)
+        @test all(errorline(x, y)[1][1][:y] .== mean(y, dims = 2))
+        @test all(
+            round.(errorline(x, y)[1][1][:ribbon], digits = 3) .==
+            round.(std(y, dims = 2), digits = 3),
+        )
+        # test colors
+        y = rand(StableRNG(1337), 10, 100, 3) .* collect(1:2:20)
+        c = palette(:default)
+        e = errorline(x, y)
+        @test colordiff(c[1], e[1][1][:linecolor]) == 0.0
+        @test colordiff(c[2], e[1][2][:linecolor]) == 0.0
+        @test colordiff(c[3], e[1][3][:linecolor]) == 0.0
+    end
+
+    @testset "example" begin
+        rng = StableRNG(1337)
+        x = 1:10
+        y = fill(NaN, 10, 100, 6)
+        for i = axes(y, 3)
+            y[:,:,i] = collect(1:2:20) .+ 5rand(rng, 10, 100) .* collect(1:2:20) .+ 100rand(rng)
+        end
+
+        pl = errorline(x, y[:, :, 1], errorstyle = :ribbon, label = "Ribbon")
+        errorline!(x, y[:, :, 2], errorstyle = :stick, label = "Stick", secondarycolor = :matched)
+        errorline!(x, y[:, :, 3], errorstyle = :plume, label = "Plume")
+        errorline!(x, y[:, :, 4], errortype = :sem)
+        errorline!(x, y[:, :, 5], errortype = :percentile)
+        errorline!(x, y[:, :, 6], errortype = :percentile, errorstyle = :stick)
+        @test show(devnull, pl) isa Nothing
+    end
+end
+
+@testset "qqplot" begin
     rng = StableRNG(1337)
-    x = 1:10
-    # Test for floats
-    y = rand(rng, 10, 100) .* collect(1:2:20)
-    @test errorline(1:10, y)[1][1][:x] == x # x-input
-    @test all(
-        round.(errorline(1:10, y)[1][1][:y], digits = 3) .==
-        round.(mean(y, dims = 2), digits = 3),
-    ) # mean of y
-    @test all(
-        round.(errorline(1:10, y)[1][1][:ribbon], digits = 3) .==
-        round.(std(y, dims = 2), digits = 3),
-    ) # std of y
-    # Test for ints
-    y = reshape(1:100, 10, 10)
-    @test all(errorline(1:10, y)[1][1][:y] .== mean(y, dims = 2))
-    @test all(
-        round.(errorline(1:10, y)[1][1][:ribbon], digits = 3) .==
-        round.(std(y, dims = 2), digits = 3),
+    x = rand(rng, Normal(), 100)
+    y = rand(rng, Cauchy(), 100)
+    pl = plot(
+        qqplot(x, y, qqline = :fit),  # qqplot of two samples, show a fitted regression line
+        qqplot(Cauchy, y),            # compare with a Cauchy distribution fitted to y; pass an instance (e.g. Normal(0,1)) to compare with a specific distribution
+        qqnorm(x, qqline = :R)        # the :R default line passes through the 1st and 3rd quartiles of the distribution
     )
-    # Test colors
-    y = rand(rng, 10, 100, 3) .* collect(1:2:20)
-    c = palette(:default)
-    e = errorline(1:10, y)
-    @test colordiff(c[1], e[1][1][:linecolor]) == 0.0
-    @test colordiff(c[2], e[1][2][:linecolor]) == 0.0
-    @test colordiff(c[3], e[1][3][:linecolor]) == 0.0
+    @test show(devnull, pl) isa Nothing
 end
 
 @testset "marginalhist" begin
@@ -201,14 +238,24 @@ end
 end
 
 @testset "violin" begin
-    rng = StableRNG(1337)
-    pl = violin(repeat([0.1, 0.2, 0.3], outer = 100), randn(rng, 300), side = :right)
+    pl = violin(repeat([0.1, 0.2, 0.3], outer = 100), randn(StableRNG(1337), 300), side = :right)
     @test show(devnull, pl) isa Nothing
+
+    @df singers violin(string.(:VoicePart), :Height, side = :right, linewidth = 0, label = "Scala")
+    @df singers dotplot!(string.(:VoicePart), :Height, side = :right, marker = (:black, stroke(0)), label = "")
+end
+
+@testset "groupedviolin" begin
+    df = DataFrame(
+        x = repeat(["A", "B"], inner = 10),
+        y = (1:20) .+ randn(20),
+        g = repeat(["Group 1", "Group 2"], inner = 5, outer = 2)
+    )
+    @df df groupedviolin(:x, :y, group = :g)
 end
 
 @testset "density" begin
-    rng = StableRNG(1337)
-    pl = density(rand(rng, 100_000), label = "density(rand())")
+    pl = density(rand(StableRNG(1337), 100_000), label = "density(rand())")
     @test show(devnull, pl) isa Nothing
 end
 
@@ -217,9 +264,14 @@ end
     @test show(devnull, pl) isa Nothing
 end
 
+@testset "ecdf" begin
+    pl = plot(StatsBase.ecdf(randn(StableRNG(1337), 100)), label = "Normal")
+    ecdfplot!(rand(Cauchy(), 100); label = "Cauchy")
+    @test show(devnull, pl) isa Nothing
+end
+
 @testset "corrplot / cornerplot" begin
-    rng = StableRNG(1337)
-    M = randn(rng, 1_000, 4)
+    M = randn(StableRNG(1337), 1_000, 4)
     @. M[:, 2] += 0.8sqrt(abs(M[:, 1])) - 0.5M[:, 3] + 5
     @. M[:, 3] -= 0.7M[:, 1]^2 + 2
     pl = corrplot(M; label = ["x$i" for i ∈ 1:4])
