@@ -17,8 +17,8 @@
     barwidth == nothing && (barwidth = 0.8)
 
     getoffsets(halfwidth, y) =
-        mode === :uniform ? (rand(length(y)) .* 2 .- 1) .* halfwidth :
-        mode === :density ? violinoffsets(halfwidth, y) : zeros(length(y))
+        mode ≡ :uniform ? (rand(length(y)) .* 2 .- 1) .* halfwidth :
+        mode ≡ :density ? violinoffsets(halfwidth, y) : zeros(length(y))
 
     points_x, points_y = zeros(0), zeros(0)
 
@@ -31,9 +31,9 @@
 
         offsets = getoffsets(halfwidth, groupy)
 
-        if side === :left
+        if side ≡ :left
             offsets = -abs.(offsets)
-        elseif side === :right
+        elseif side ≡ :right
             offsets = abs.(offsets)
         end
 

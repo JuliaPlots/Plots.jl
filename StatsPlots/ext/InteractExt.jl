@@ -10,7 +10,7 @@ function StatsPlots.dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:10
     coltable = map(TableOperations.Tables.columntable, t)
 
     names = map(collect ∘ keys, coltable)
-    @show names
+    # @show names
 
     dict = Observables.@map Dict((key, val) for (key, val) ∈ pairs(&coltable))
     x = Widgets.dropdown(names; placeholder = "First axis", multiple = true)

@@ -99,7 +99,7 @@ PlotsBase.group_as_matrix(g::GroupedHist) = true
     bar_width --> mean(map(i -> edges[i + 1] - edges[i], 1:nbins))
     x = map(i -> (edges[i] + edges[i + 1]) / 2, 1:nbins)
 
-    if group === nothing
+    if group ≡ nothing
         y = reshape(h.weights, nbins, 1)
     else
         gb = RecipesPipeline._extract_group_attributes(group)
@@ -142,11 +142,11 @@ function wand_bins(x, scalest = :minim, gridsize = 401, range_x = extrema(x), t_
     gpoints = range(minx, stop = maxx, length = gridsize)
     gcounts = linbin(x, gpoints; t_run)
 
-    scalest = if scalest === :stdev
+    scalest = if scalest ≡ :stdev
         sqrt(var(x))
-    elseif scalest === :iqr
+    elseif scalest ≡ :iqr
         (quantile(x, 3 // 4) - quantile(x, 1 // 4)) / 1.349
-    elseif scalest === :minim
+    elseif scalest ≡ :minim
         min((quantile(x, 3 // 4) - quantile(x, 1 // 4)) / 1.349, sqrt(var(x)))
     else
         error("scalest must be one of :stdev, :iqr or :minim (default)")
