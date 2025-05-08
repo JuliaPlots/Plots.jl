@@ -55,7 +55,7 @@ end
     linecolor --> PlotsBase.fg_color(plotattributes)
     markeralpha := 0.4
     grad = cgrad(get(plotattributes, :markercolor, :RdYlBu))
-    indices = reshape(1:(n ^ 2), n, n)'
+    indices = reshape(1:(n^2), n, n)'
     title = get(plotattributes, :title, "")
     title_location = get(plotattributes, :title_location, :center)
     title := ""

@@ -801,9 +801,8 @@ gaston_palette(gradient) =
         '(' * join(palette, ", ") * ')'
     end
 
-gaston_palette_conf(
-    series,
-) = "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
+gaston_palette_conf(series) =
+    "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
 
 function gaston_marker(marker, alpha)
     # NOTE: :rtriangle, :ltriangle, :hexagon, :heptagon, :octagon seems unsupported by gnuplot

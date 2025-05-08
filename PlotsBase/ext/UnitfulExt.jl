@@ -85,13 +85,8 @@ end
     axisletter = plotattributes[:letter]   # x, y, or z
     unitsymbol = Symbol(axisletter, :unit)
     axisunit = pop!(plotattributes, unitsymbol, _unit(eltype(first(x))))
-    map(
-        x -> (
-            plotattributes[unitsymbol] = axisunit;
-            fixaxis!(plotattributes, x, axisletter)
-        ),
-        x,
-    )
+    map(x -> (plotattributes[unitsymbol] = axisunit;
+    fixaxis!(plotattributes, x, axisletter)), x)
 end
 
 # Recipe for bare units

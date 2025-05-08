@@ -728,10 +728,8 @@ function _auto_binning_nbins(
 ) where {N}
     max_bins = 10_000
     _cl(x) = min(ceil(Int, max(x, one(x))), max_bins)
-    _iqr(v) = (
-        q = Statistics.quantile(v, 0.75) - Statistics.quantile(v, 0.25);
-        q > 0 ? q : oftype(q, 1)
-    )
+    _iqr(v) = (q = Statistics.quantile(v, 0.75) - Statistics.quantile(v, 0.25);
+    q > 0 ? q : oftype(q, 1))
     _span(v) = maximum(v) - minimum(v)
 
     n_samples = length(LinearIndices(first(vs)))
