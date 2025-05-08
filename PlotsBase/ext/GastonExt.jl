@@ -1,8 +1,6 @@
 module GastonExt
 
-import RecipesPipeline
-import PlotUtils
-import PlotsBase
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, PlotUtils
 import Gaston
 
 using PlotsBase.Annotations
@@ -180,8 +178,8 @@ for (mime, term) ∈ (
 )
     @eval function PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         term = String($term)
-        tmpfile = tempname() * ".$term"
         if plt.o ≢ nothing
+            tmpfile = tempname() * ".$term"
             ret = Gaston.save(;
                 saveopts = gaston_saveopts(plt),
                 handle = plt.o.handle,
@@ -192,8 +190,8 @@ for (mime, term) ∈ (
                 while !isfile(tmpfile)
                 end  # avoid race condition with read in next line
                 write(io, read(tmpfile))
-                rm(tmpfile, force = true)
             end
+            isfile(tmpfile) && rm(tmpfile, force = true)
         end
         nothing
     end
@@ -539,7 +537,7 @@ function gaston_parse_axes_attrs(
         # guide labels
         guide_font = guidefont(axis)
         if letter ≡ :y && dims == 2
-            # vertical by default (consistency witht other backends)
+            # vertical by default (consistency with other backends)
             guide_font = font(guide_font; rotation = guide_font.rotation + 90)
         end
         push!(
@@ -803,8 +801,9 @@ gaston_palette(gradient) =
         '(' * join(palette, ", ") * ')'
     end
 
-gaston_palette_conf(series) =
-    "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
+gaston_palette_conf(
+    series,
+) = "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
 
 function gaston_marker(marker, alpha)
     # NOTE: :rtriangle, :ltriangle, :hexagon, :heptagon, :octagon seems unsupported by gnuplot
@@ -844,5 +843,7 @@ function gaston_enclose_tick_string(tick_string)
     base, power = split(tick_string, '^')
     "$base^{$power}"
 end
+
+PlotsBase.@precompile_backend Gaston
 
 end  # module

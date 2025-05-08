@@ -144,7 +144,6 @@ const _styleAliases = Dict{Symbol,Symbol}(
 const _shape_keys = Symbol[
     :circle,
     :rect,
-    :star5,
     :diamond,
     :hexagon,
     :cross,
@@ -157,6 +156,7 @@ const _shape_keys = Symbol[
     :heptagon,
     :octagon,
     :star4,
+    :star5,
     :star6,
     :star7,
     :star8,
@@ -164,6 +164,8 @@ const _shape_keys = Symbol[
     :hline,
     :+,
     :x,
+    :uparrow,
+    :downarrow,
 ]
 
 const _all_markers = vcat(:none, :auto, _shape_keys)  # sort(collect(keys(_shapes))))
@@ -955,13 +957,13 @@ end
 @attributes function process_font_attr!(plotattributes::AKW, fontname::Symbol, arg)
     T = typeof(arg)
     if fontname in (:legend_font,)
-        # TODO: this is neccessary while old and new font names coexist and should be standard after the transition
+        # TODO: this is necessary while old and new font names coexist and should be standard after the transition
         fontname = Symbol(fontname, :_)
     end
     if T <: PlotsBase.Font
         Symbol(fontname, :family) --> arg.family
 
-        # TODO: this is neccessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
+        # TODO: this is necessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
         if in(Symbol(fontname, :size), _all_attrs)
             Symbol(fontname, :size) --> arg.pointsize
         else

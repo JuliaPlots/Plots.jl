@@ -1,6 +1,6 @@
 module PlotlyJSExt
 
-import PlotsBase: PlotsBase, Plot
+import PlotsBase: PlotsBase, PrecompileTools, Plot
 using PlotsBase.Commons
 using PlotsBase.Plotly
 using PlotsBase.Plots
@@ -8,6 +8,14 @@ using PlotsBase.Plots
 import PlotlyJS: PlotlyJS, WebIO
 
 struct PlotlyJSBackend <: PlotsBase.AbstractBackend end
+
+function PlotsBase.extension_init(::PlotlyJSBackend)
+    if Base.get_bool_env("PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON", false)
+        (Sys.islinux() && isdefined(PlotlyJS, :unsafe_electron)) &&
+            PlotlyJS.unsafe_electron()
+    end
+end
+
 PlotsBase.@extension_static PlotlyJSBackend plotlyjs
 
 const _plotlyjs_attrs = PlotsBase.Plotly._plotly_attrs
@@ -73,5 +81,7 @@ function PlotsBase._ijulia__extra_mime_info!(plt::Plot{PlotlyJSBackend}, out::Di
         Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
     out
 end
+
+PlotsBase.@precompile_backend PlotlyJS
 
 end  # module

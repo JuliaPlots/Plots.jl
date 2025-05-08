@@ -4,12 +4,13 @@ export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_fun
 export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis
 
 import ..PlotsBase
-import ..PlotsBase: Subplot, DefaultsDict, TimeType, attr!
+import ..PlotsBase: Subplot, DefaultsDict, attr!
 
 using ..RecipesPipeline
 using ..Commons
 using ..Ticks
 using ..Fonts
+using ..Dates
 
 const default_widen_factor = Ref(1.06)
 const _widen_seriestypes = (
@@ -324,14 +325,14 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
         haskey(plotattributes, k) || continue
         if k ≡ :discrete_values
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
-        elseif k ≡ :lims && isa(v, NTuple{2,TimeType})
-            plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
+        elseif k ≡ :lims && isa(v, NTuple{2,Dates.TimeType})
+            plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
         else
             plotattributes[k] = v
         end
     end
 
-    # replace scale aliases
+    # replace scale aliases‚
     if haskey(_scale_aliases, plotattributes[:scale])
         plotattributes[:scale] = _scale_aliases[plotattributes[:scale]]
     end

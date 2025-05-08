@@ -319,7 +319,7 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
             merge!(spmap, m)
             i += length(sps)
         elseif isa(l, Subplot) && empty
-            error("Subplot exists. Cannot re-use existing layout.  Please make a new one.")
+            error("Subplot exists. Cannot reuse existing layout.  Please make a new one.")
         end
         i ≥ n && break  # only add n subplots
     end

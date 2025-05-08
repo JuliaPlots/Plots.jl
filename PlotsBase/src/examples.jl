@@ -328,7 +328,7 @@ const _examples = PlotExample[
         "Custom Markers",
         """A `PlotsBase.Shape` is a light wrapper around vertices of a polygon.  For supported
         backends, pass arbitrary polygons as the marker shapes.  Note: The center is (0,0) and
-        the size is expected to be rougly the area of the unit circle.
+        the size is expected to be roughly the area of the unit circle.
         """,
         quote
             verts = [
@@ -1246,8 +1246,8 @@ const _examples = PlotExample[
         "Specifying edges and missing values for barplots",
         "In `bar(x, y)`, `x` may be the same length as `y` to specify bar centers, or one longer to specify bar edges.",
         :(plot(
-            bar(-5:5, randn(10)),                  # bar edges at -5:5
-            bar(-2:2, [2, -2, NaN, -1, 1], color = 1:5), # bar centers at -2:2, one missing value
+            bar(-5:5, randn(10)),  # bar edges at -5:5
+            bar(-2:2, [2, -2, NaN, -1, 1], color = 1:5),  # bar centers at -2:2, one missing value
             legend = false,
         )),
     ),
@@ -1257,13 +1257,12 @@ const _examples = PlotExample[
 _animation_examples = [02, 31]
 _backend_skips = Dict(
     :none => Int[],
+    :hdf5 => Int[47],
     :pythonplot => Int[],
-    :gr => [25, 30],  # TODO: add back when StatsPlots is available
+    :gr => Int[],
     :plotlyjs => [
         21,
         24,
-        25,
-        30,
         49,
         50,
         51,
@@ -1310,10 +1309,14 @@ _backend_skips = Dict(
         31,  # animations - needs github.com/mbaz/Gaston.jl/pull/178
         49,  # TODO: support polar
         60,  # :perspective projection unsupported
-        63,  # FXIME: twin axes misalignement
+        63,  # FXIME: twin axes misalignment
     ],
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
+# 25 and 30 require StatsPlots, which doesn't support Plots v2 yet
+for backend ∈ keys(_backend_skips)
+    append!(_backend_skips[backend], [25, 30])
+end
 
 # ---------------------------------------------------------------------------------
 # replace `f(args...)` with `f(rng, args...)` for `f ∈ (rand, randn)`
@@ -1371,7 +1374,7 @@ function test_examples(
         PlotsBase.Commons.debug!($debug)
         backend($(QuoteNode(pkgname)))
         rng = $rng
-        rng ≡ nothing || Random.seed!(rng, PlotsBase.PLOTS_SEED)
+        rng ≡ nothing || Random.seed!(rng, PlotsBase.SEED)
         theme(:default)
     end)
     (imp = _examples[i].imports) ≡ nothing || Base.eval(m, imp)

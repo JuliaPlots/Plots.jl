@@ -1,6 +1,7 @@
 name: format
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [master, v2]
@@ -15,27 +16,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
-      - name: Install dependencies
+      - name: format Julia files
         run: |
-          using Pkg
-          Pkg.add("JuliaFormatter")
-        shell: julia --color=yes {0}
-
-      - name: Format Julia files
-        run: |
-          using JuliaFormatter
-          format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test"])
-        shell: julia --color=yes --compile=min -O0 {0}
-
-      - name: suggester / JuliaFormatter
-        if: success() && github.ref == 'refs/heads/master'
+          julia --color=yes --compile=min -O0 -e '
+            using Pkg; Pkg.add("JuliaFormatter")
+            using JuliaFormatter
+            format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
+          '
+          if [ "$(git diff --name-only)" != "" ]; then
+            echo "Some files have not been formatted !!"
+            git diff
+            exit 1
+          fi
+      - name: suggester
+        if: success() && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/v2' )
         uses: reviewdog/action-suggester@v1
         with:
           tool_name: JuliaFormatter
           fail_on_error: true
 
       # reviewdog/action-suggester not using `cleanup` flag?
-      - name: Cleanup
+      - name: cleanup
         if: success() || failure()
         run: |
           git checkout -- .

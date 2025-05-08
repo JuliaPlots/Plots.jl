@@ -1,12 +1,9 @@
 @testset "Auto QUality Assurance" begin
     # JuliaTesting/Aqua.jl/issues/77
-    # TODO: fix :Contour, :Latexify and :LaTeXStrings stale imports in Plots 2.0
     # :CondaPkg stale deps show up when running CI
     Aqua.test_all(
         PlotsBase;
-        stale_deps = (;
-            ignore = [:CondaPkg, :Contour, :UnitfulLatexify, :LaTeXStrings, :Latexify]
-        ),
+        stale_deps = (; ignore = [:CondaPkg]),
         persistent_tasks = false,
         ambiguities = false,
         deps_compat = false,  # FIXME: fails `CondaPkg`

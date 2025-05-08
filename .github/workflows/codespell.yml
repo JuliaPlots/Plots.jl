@@ -1,0 +1,17 @@
+name: codespell
+
+on: [pull_request]
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: codespell-project/actions-codespell@v2
+      with:
+        ignore_words_list: nd,nax,namin,namax,linez,ist
+        only_warn: 0

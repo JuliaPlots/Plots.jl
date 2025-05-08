@@ -1,8 +1,7 @@
 "Things that should be common to all backends and frontend modules"
 module Commons
 
-export AVec,
-    AMat, KW, AKW, TicksArgs, PlotsBase, PLOTS_SEED, _haligns, _valigns, _cbar_width
+export AVec, AMat, KW, AKW, TicksArgs, PlotsBase, SEED, _haligns, _valigns, _cbar_width
 export get_subplot,
     coords,
     ispolar,
@@ -62,6 +61,7 @@ using ..RecipesBase
 using ..Statistics
 using ..NaNMath
 using ..Printf
+using ..Unzip
 
 const width = Measures.width
 const height = Measures.height
@@ -133,15 +133,13 @@ all_styles(arg) =
     true_or_all_true(a -> get(Commons._styleAliases, a, a) in Commons._all_styles, arg)
 all_shapes(arg) = true_or_all_true(
     a ->
-        get(Commons._marker_aliases, a, a) in Commons._all_markers ||
-            a isa PlotsBase.Shape,
+        get(Commons._marker_aliases, a, a) in Commons._all_markers || a isa PlotsBase.Shape,
     arg,
 )
 all_alphas(arg) = true_or_all_true(
     a ->
-        (typeof(a) <: Real && a > 0 && a < 1) || (
-            typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))
-        ),
+        (typeof(a) <: Real && a > 0 && a < 1) ||
+        (typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))),
     arg,
 )
 all_reals(arg) = true_or_all_true(a -> typeof(a) <: Real, arg)
@@ -325,6 +323,7 @@ function get_aspect_ratio(sp)
         end
     end
     ar isa Bool && (ar = Int(ar))  # NOTE: Bool <: ... <: Number
+    ar isa Rational && (ar = float(ar))
     ar
 end
 

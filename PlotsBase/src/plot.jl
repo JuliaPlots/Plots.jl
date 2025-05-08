@@ -42,7 +42,7 @@ function Base.show(io::IO, plt::Plot)
     end
     do_show = true
     for (i, ekwargs) ∈ enumerate(sp_ekwargs)
-        for (key, value) ∈ ekwargs
+        for (key, value) ∈ pairs(ekwargs)
             do_show && println(io, "  SubplotPlot{$i}:")
             println(io, " "^4, key, ": ", value)
             do_show = false
@@ -50,7 +50,7 @@ function Base.show(io::IO, plt::Plot)
         do_show = true
     end
     for (i, ekwargs) ∈ enumerate(s_ekwargs)
-        for (key, value) ∈ ekwargs
+        for (key, value) ∈ pairs(ekwargs)
             do_show && println(io, "  Series{$i}:")
             println(io, " "^4, key, ": ", value)
             do_show = false
@@ -114,6 +114,7 @@ plot(
     plts_tail::Union{PlaceHolder,Plot}...;
     kw...,
 ) = plot!(deepcopy(plt1), deepcopy(plt2), deepcopy.(plts_tail)...; kw...)
+
 function plot!(
     plt1::Plot,
     plt2::Union{PlaceHolder,Plot},

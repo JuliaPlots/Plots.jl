@@ -1,7 +1,7 @@
 module GRExt
 
-import PlotsBase: PlotsBase, _cycle
-import RecipesPipeline
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, _cycle
+
 import NaNMath
 import GR
 
@@ -227,6 +227,7 @@ const gr_markertypes = (
     vline = -30,
     hline = -31,
 )
+const gr_marker_keys = keys(gr_markertypes)
 const gr_haligns = (
     left = GR.TEXT_HALIGN_LEFT,
     hcenter = GR.TEXT_HALIGN_CENTER,
@@ -359,11 +360,19 @@ gr_set_projectiontype(sp) = GR.setprojectiontype(gr_projections[sp[:projection_t
 
 # draw line segments, splitting x/y into contiguous/finite segments
 # note: this can be used for shapes by passing func `GR.fillarea`
-function gr_polyline(x, y, func = GR.polyline; arrowside = :none, arrowstyle = :simple)
+function gr_polyline(
+    x,
+    y,
+    func = GR.polyline;
+    arrowside = :none,
+    arrowstyle = :simple,
+    arrowsize = 1,
+)
     draw_head = arrowside in (:head, :both)
     draw_tail = arrowside in (:tail, :both)
     n = length(x)
     iend = 0
+    GR.setarrowsize(arrowsize)
     while iend < n - 1
         istart = -1  # set istart to the first index that is finite
         for j ∈ (iend + 1):n
@@ -431,7 +440,7 @@ end
 
 gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 gr_inqtext(x, y, s::AbstractString) =
-    if (occursin('\\', s) || occursin("10^{", s)) &&
+    if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
        match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
         GR.inqtextext(x, y, s)
     else
@@ -440,7 +449,7 @@ gr_inqtext(x, y, s::AbstractString) =
 
 gr_text(x, y, s) = gr_text(x, y, string(s))
 gr_text(x, y, s::AbstractString) =
-    if (occursin('\\', s) || occursin("10^{", s)) &&
+    if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
        match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
         GR.textext(x, y, s)
     else
@@ -822,6 +831,7 @@ alignment(symb) =
     end
 
 # --------------------------------------------------------------------------------------
+gr_get_markershape(s::Symbol) = s in gr_marker_keys ? s : Shape(s)
 
 function gr_set_gradient(c)
     grad = _as_gradient(c)
@@ -1263,6 +1273,7 @@ function gr_add_legend(sp, leg, viewport_area)
 
             if (msh = series[:markershape]) ≢ :none
                 msz = max(first(series[:markersize]), 0)
+                msh = gr_get_markershape.(msh)
                 msw = max(first(series[:markerstrokewidth]), 0)
                 mfac = 0.8 * lfps / (msz + 0.5 * msw + 1e-20)
                 gr_draw_marker(
@@ -1548,7 +1559,7 @@ gr_set_window(sp, vp) =
             if (yscale = sp[:yaxis][:scale]) ∈ _log_scales
                 scaleop |= gr_y_log_scales[yscale]
             end
-            if needs_3d && (zscale = sp[:zaxis][:scale] ∈ _log_scales)
+            if needs_3d && (zscale = sp[:zaxis][:scale]) ∈ _log_scales
                 scaleop |= gr_z_log_scales[zscale]
             end
             sp[:xaxis][:flip] && (scaleop |= GR.OPTION_FLIP_X)
@@ -2018,12 +2029,13 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
         elseif is2d
-            arrowside, arrowstyle = if (arrow = series[:arrow]) isa Arrow
-                arrow.side, arrow.style
-            else
-                :none, :simple
-            end
-            gr_polyline(x[rng], y[rng]; arrowside = arrowside, arrowstyle = arrowstyle)
+            arrow =
+                series[:arrow] isa Arrow ? series[:arrow] : Arrow(:none, :simple, 1.0, 1.0)
+
+            arrowside, arrowstyle, arrowsize =
+                arrow.side, arrow.style, (arrow.headlength+arrow.headwidth)/2
+
+            gr_polyline(x[rng], y[rng]; arrowside, arrowstyle, arrowsize)
         end
     end
 end
@@ -2047,6 +2059,9 @@ function gr_draw_markers(
         ms = get_thickness_scaling(series) * _cycle(msize, i)
         msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
         shape = _cycle(shapes, i)
+        if !(shape isa Shape)
+            shape = gr_get_markershape.(shape)
+        end
         for j ∈ rng
             gr_draw_marker(
                 series,
@@ -2179,7 +2194,7 @@ function gr_z_normalized_log_scaled(scale, z, clims)
     any(x -> !isfinite(x), loglims) && throw(
         DomainError(
             loglims,
-            "Non-finite value in colorbar limits. Please provide explicits limits via `clims`.",
+            "Non-finite value in colorbar limits. Please provide explicit limits via `clims`.",
         ),
     )
     z_log, get_z_normalized.(z_log, loglims...)
@@ -2284,7 +2299,7 @@ function PlotsBase._display(plt::Plot{GRBackend})
         GR.emergencyclosegks()
         println(
             "\033]1337;File=inline=1;preserveAspectRatio=0:",
-            base64encode(open(read, filepath)),
+            Base64.base64encode(open(read, filepath)),
             "\a",
         )
         rm(filepath)
@@ -2296,5 +2311,7 @@ function PlotsBase._display(plt::Plot{GRBackend})
 end
 
 PlotsBase.closeall(::GRBackend) = GR.emergencyclosegks()
+
+PlotsBase.@precompile_backend GR
 
 end  # module

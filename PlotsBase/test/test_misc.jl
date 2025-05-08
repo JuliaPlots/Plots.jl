@@ -9,7 +9,7 @@ end
 @testset "Plotly standalone" begin
     @test PlotsBase._plotly_local_file_path[] ≡ nothing
     temp = PlotsBase._use_local_dependencies[]
-    withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
+    withenv("PLOTSBASE_HOST_DEPENDENCY_LOCAL" => true) do
         PlotsBase._plots_plotly_defaults()
         @test PlotsBase._plotly_local_file_path[] isa String
         @test isfile(PlotsBase._plotly_local_file_path[])
@@ -61,13 +61,6 @@ end
             @test pl[1][:yaxis][:scale] ≡ :ln
         end
     end
-end
-
-@testset "bool_env" begin
-    @test PlotsBase.bool_env("FOO", "true")
-    @test PlotsBase.bool_env("FOO", "1")
-    @test !PlotsBase.bool_env("FOO", "false")
-    @test !PlotsBase.bool_env("FOO", "0")
 end
 
 @testset "Themes" begin
@@ -269,7 +262,7 @@ with(:gr) do
             @test ylims(pl) == (-1, +1)
         end
 
-        @test PlotsBase.findnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
+        @test PlotsBase.find_nnz([0 1; 2 0]) == ([2, 1], [1, 2], [2, 1])
     end
 
     @testset "mesh3d" begin
@@ -297,7 +290,7 @@ with(:gr) do
         p4 = [0.5, 0.5, 1.0]
         pts = [p0, p1, p2, p3, p4]
         x, y, z = broadcast(i -> getindex.(pts, i), (1, 2, 3))
-        # [x[i],y[i],z[i]] is the i-th vertix of the mesh
+        # [x[i],y[i],z[i]] is the i-th vertex of the mesh
         mesh3d(
             x,
             y,

@@ -68,6 +68,8 @@ function show_png_from_html(io::IO, plt::AbstractPlot)
     html_to_png(html_fn, png_fn, w, h)
 
     # now read that file data into io
-    pngdata = readall(png_fn)
-    write(io, pngdata)
+    write(io, readall(png_fn))
+    rm(html_fn)
+    rm(png_fn)
+    nothing
 end

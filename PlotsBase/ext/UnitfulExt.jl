@@ -87,7 +87,8 @@ end
     axisunit = pop!(plotattributes, unitsymbol, _unit(eltype(first(x))))
     map(
         x -> (
-            plotattributes[unitsymbol] = axisunit; fixaxis!(plotattributes, x, axisletter)
+            plotattributes[unitsymbol] = axisunit;
+            fixaxis!(plotattributes, x, axisletter)
         ),
         x,
     )
@@ -240,8 +241,8 @@ function append_unit_if_needed!(attr, key, label::Nothing, u)
 end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
-        attr[key] = UnitfulString(
+    attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
+        UnitfulString(
             LaTeXString(
                 format_unit_label(
                     label,
@@ -252,7 +253,7 @@ function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString
             u,
         )
     else
-        attr[key] = UnitfulString(
+        UnitfulString(
             S(
                 format_unit_label(
                     label,
@@ -332,9 +333,8 @@ function PlotsBase.locate_annotation(
     PlotsBase.locate_annotation(sp, _ustrip.(zip(units, rel)), label)
 end
 
-#==================#
-# ticks and limits #
-#==================#
+# ticks and limits
+
 PlotsBase._transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Quantity} =
     _ustrip.(getaxisunit(axis), ticks)
 PlotsBase.Axes.process_limits(lims::AbstractArray{T}, axis) where {T<:Quantity} =

@@ -1,7 +1,7 @@
 module IJuliaExt
 
 import PlotsBase: PlotsBase, Plot
-using Base64
+import Base64
 
 # NOTE: cannot use import IJulia
 const IJulia =
@@ -28,7 +28,7 @@ function _ijulia_display_dict(plt::Plot)
         out[mime] = sprint(show, MIME(mime), plt)
     elseif output_type ≡ :png
         mime = "image/png"
-        out[mime] = base64encode(show, MIME(mime), plt)
+        out[mime] = Base64.base64encode(show, MIME(mime), plt)
     elseif output_type ≡ :svg
         mime = "image/svg+xml"
         out[mime] = sprint(show, MIME(mime), plt)
@@ -38,7 +38,7 @@ function _ijulia_display_dict(plt::Plot)
         PlotsBase._ijulia__extra_mime_info!(plt, out)
     elseif output_type ≡ :pdf
         mime = "application/pdf"
-        out[mime] = base64encode(show, MIME(mime), plt)
+        out[mime] = Base64.base64encode(show, MIME(mime), plt)
     else
         error("Unsupported output type $output_type")
     end

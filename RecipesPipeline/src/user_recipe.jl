@@ -5,7 +5,7 @@
 
 Wrap input arguments in a `RecipeData' vector and recursively apply user recipes and type
 recipes on the first element. Prepend the returned `RecipeData` vector. If an element with
-empy `args` is returned pop it from the vector, finish up, and it to vector of `Dict`s with
+empty `args` is returned pop it from the vector, finish up, and it to vector of `Dict`s with
 processed series. When all arguments are processed return the series `Dict`.
 """
 function _process_userrecipes!(plt, plotattributes, args)
@@ -66,7 +66,7 @@ function _recipedata_vector(plt, plotattributes, args)
 
     # remove subplot and axis args from plotattributes...
     # they will be passed through in the kw_list
-    isempty(args) || for (k, v) in plotattributes
+    isempty(args) || for (k, v) ∈ plotattributes
         if is_subplot_attribute(plt, k) || is_axis_attribute(plt, k)
             reset_kw!(plotattributes, k)
         end
@@ -81,7 +81,7 @@ function _expand_seriestype_array(plotattributes, args)
     if typeof(sts) <: AbstractArray
         reset_kw!(plotattributes, :seriestype)
         rd = Vector{RecipeData}(undef, size(sts, 1))
-        for r in axes(sts, 1)
+        for r ∈ axes(sts, 1)
             dc = copy(plotattributes)
             dc[:seriestype] = sts[r:r, :]
             rd[r] = RecipeData(dc, args)

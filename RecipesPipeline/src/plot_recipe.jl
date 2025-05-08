@@ -31,7 +31,7 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
     datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
     if !isnothing(datalist)
         warn_on_recipe_aliases!(plt, datalist, :plot, st)
-        for data in datalist
+        for data ∈ datalist
             preprocess_attributes!(plt, data.plotattributes)
             if data.plotattributes[:seriestype] == st
                 error(

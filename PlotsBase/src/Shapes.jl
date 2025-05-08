@@ -18,7 +18,9 @@ export Shape,
     scale!,
     scale,
     translate,
-    translate!
+    translate!,
+    rotate,
+    rotate!
 
 const P2 = NTuple{2,Float64}
 const P3 = NTuple{3,Float64}
@@ -46,6 +48,9 @@ Shape(s::Shape) = deepcopy(s)
 function Shape(x::AVec{X}, y::AVec{Y}) where {X,Y}
     return Shape(convert(Vector{X}, x), convert(Vector{Y}, y))
 end
+
+# make it broadcast like a scalar
+Base.Broadcast.broadcastable(shape::Shape) = Ref(shape)
 
 get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
@@ -135,6 +140,8 @@ const _shapes = KW(
     :star6     => makestar(6),
     :star7     => makestar(7),
     :star8     => makestar(8),
+    :uparrow   => Shape([(-1.3, -1), (0, 1.5), (0, -1.5), (0, 1.5), (1.3, -1)]),
+    :downarrow => Shape([(-1.3, 1), (0, -1.5), (0, 1.5), (0, -1.5), (1.3, 1)]),
 )
 
 Shape(k::Symbol) = deepcopy(_shapes[k])
@@ -203,20 +210,13 @@ rotate_x(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
 rotate_y(x::Real, y::Real, θ::Real, centerx::Real, centery::Real) =
     ((y - centery) * cos(θ) + (x - centerx) * sin(θ) + centery)
 
-end  # module
-
-# -----------------------------------------------------------------------------
-
-using .Shapes
-
-rotate(x::Real, y::Real, θ::Real, c) =
-    (Shapes.rotate_x(x, y, θ, c...), Shapes.rotate_y(x, y, θ, c...))
+rotate(x::Real, y::Real, θ::Real, c) = (rotate_x(x, y, θ, c...), rotate_y(x, y, θ, c...))
 
 function rotate!(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
     for i ∈ eachindex(x)
-        xi = Shapes.rotate_x(x[i], y[i], θ, c...)
-        yi = Shapes.rotate_y(x[i], y[i], θ, c...)
+        xi = rotate_x(x[i], y[i], θ, c...)
+        yi = rotate_y(x[i], y[i], θ, c...)
         x[i], y[i] = xi, yi
     end
     shape
@@ -225,7 +225,13 @@ end
 "rotate an object in space"
 function rotate(shape::Shape, θ::Real, c = center(shape))
     x, y = coords(shape)
-    x_new = Shapes.rotate_x.(x, y, θ, c...)
-    y_new = Shapes.rotate_y.(x, y, θ, c...)
+    x_new = rotate_x.(x, y, θ, c...)
+    y_new = rotate_y.(x, y, θ, c...)
     Shape(x_new, y_new)
 end
+
+end  # module
+
+# -----------------------------------------------------------------------------
+
+using .Shapes

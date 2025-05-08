@@ -20,7 +20,7 @@ function warn_on_recipe_aliases!(
     recipe_type::Symbol,
     @nospecialize(args)
 )
-    for x in v
+    for x ∈ v
         warn_on_recipe_aliases!(plt, x, recipe_type, args)
     end
 end
@@ -55,7 +55,7 @@ Select the proper indices from `val` for attribute `key`.
 split_attribute(plt, key, val::AbstractArray, indices) =
     val[indices, fill(Colon(), ndims(val) - 1)...]
 split_attribute(plt, key, val::Tuple, indices) =
-    Tuple(split_attribute(plt, key, v, indices) for v in val)
+    Tuple(split_attribute(plt, key, v, indices) for v ∈ val)
 
 # ## Preprocessing attributes
 
@@ -93,10 +93,10 @@ Preprocessing of axis attributes.
 Prepends the axis letter to axis attributes by default.
 """
 function preprocess_axis_attrs!(plt, plotattributes)
-    for (k, v) in plotattributes
+    for (k, v) ∈ plotattributes
         is_axis_attribute(plt, k) || continue
         pop!(plotattributes, k)
-        for letter in (:x, :y, :z)
+        for letter ∈ (:x, :y, :z)
             get!(plotattributes, Symbol(letter, k), v)
         end
     end
@@ -121,7 +121,7 @@ Removes the `:letter` key from `plotattributes` and does the same prepending of 
 function postprocess_axis_attrs!(plt, plotattributes, letter)
     pop!(plotattributes, :letter)
     letter in (:x, :y, :z) || return
-    for (k, v) in plotattributes
+    for (k, v) ∈ plotattributes
         is_axis_attribute(plt, k) || continue
         pop!(plotattributes, k)
         get!(plotattributes, Symbol(letter, k), v)

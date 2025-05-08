@@ -110,7 +110,7 @@ function create_kw_body(func_signature::Expr)
     kw_body, cleanup_body = map(_ -> Expr(:block), 1:2)
     arg1 = args[1]
     if isa(arg1, Expr) && arg1.head ≡ :parameters
-        for kwpair in arg1.args
+        for kwpair ∈ arg1.args
             k, v = kwpair.args
             if isa(k, Expr) && k.head ≡ :(::)
                 k = k.args[1]
@@ -143,13 +143,13 @@ end
 # and we push this block onto the series_blocks list.
 # then at the end we push the main body onto the series list
 function process_recipe_body!(expr::Expr)
-    for (i, e) in enumerate(expr.args)
+    for (i, e) ∈ enumerate(expr.args)
         if isa(e, Expr)
             # process trailing flags, like:
             #   a --> b, :quiet, :force
             quiet, require, force = false, false, false
             if _is_arrow_tuple(e)
-                for flag in e.args
+                for flag ∈ e.args
                     if _equals_symbol(flag, :quiet)
                         quiet = true
                     elseif _equals_symbol(flag, :require)
@@ -506,9 +506,9 @@ function create_grid_vcat(expr::Expr)
         nr = length(expr.args)
         nc = rmin
         body = Expr(:block)
-        for r in 1:nr
+        for r ∈ 1:nr
             if (arg = expr.args[r]) |> isrow
-                for (c, item) in enumerate(arg.args)
+                for (c, item) ∈ enumerate(arg.args)
                     push!(body.args, :(cell[$r, $c] = $(create_grid(item))))
                 end
             else
@@ -535,7 +535,7 @@ end
 
 function create_grid_curly(expr::Expr)
     kw = KW()
-    for (i, arg) in enumerate(expr.args[2:end])
+    for (i, arg) ∈ enumerate(expr.args[2:end])
         add_layout_pct!(kw, arg, i, length(expr.args) - 1)
     end
     s = expr.args[1]

@@ -207,7 +207,7 @@ function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
     # other subplots to link to, link them together
     (link = axis[:link]) |> isempty && return
     for other_sp ∈ link
-        link_axes!(axis, get_axis(get_subplot(plt, other_sp), letter))
+        PlotsBase.link_axes!(axis, get_axis(get_subplot(plt, other_sp), letter))
     end
     axis.plotattributes[:link] = []
     nothing

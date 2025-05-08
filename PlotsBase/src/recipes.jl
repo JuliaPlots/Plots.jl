@@ -332,6 +332,11 @@ end
     if plotattributes[:markershape] ≢ :none
         primary := false
         @series begin
+            markershape := if plotattributes[:markershape] ≡ :arrow
+                [isless(yi, 0.0) ? :downarrow : :uparrow for yi ∈ y]
+            else
+                plotattributes[:markershape]
+            end
             seriestype := :scatter
             x := x
             y := y
@@ -405,6 +410,14 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)  # COV_EXCL_LINE
+    if typeof(y) <: NamedTuple
+        names = collect(keys(y))
+        values_y = [values(y)...]
+        plotnames = string.(names)
+
+        x = plotnames
+        y = values_y
+    end
     ywiden --> false
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
@@ -715,7 +728,10 @@ function _auto_binning_nbins(
 ) where {N}
     max_bins = 10_000
     _cl(x) = min(ceil(Int, max(x, one(x))), max_bins)
-    _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
+    _iqr(v) = (
+        q = Statistics.quantile(v, 0.75) - Statistics.quantile(v, 0.25);
+        q > 0 ? q : oftype(q, 1)
+    )
     _span(v) = maximum(v) - minimum(v)
 
     n_samples = length(LinearIndices(first(vs)))
@@ -738,7 +754,7 @@ function _auto_binning_nbins(
     elseif mode ≡ :rice  # Rice Rule
         _cl(2 * nd)
     elseif mode ≡ :scott  # Scott's normal reference rule
-        _cl(_span(v) / (3.5 * std(v) / nd))
+        _cl(_span(v) / (3.5 * Statistics.std(v) / nd))
     elseif mode ≡ :fd  # Freedman–Diaconis rule
         _cl(_span(v) / (2 * _iqr(v) / nd))
     elseif mode ≡ :wand
@@ -792,7 +808,7 @@ function _make_hist(
             closed = :left,
         ),
     )
-    normalize!(h, mode = _hist_norm_mode(normed))
+    LinearAlgebra.normalize!(h, mode = _hist_norm_mode(normed))
 end
 
 @nospecialize
@@ -983,16 +999,21 @@ export lens!
     xscale = sp[:xaxis][:scale]
     yscale = sp[:yaxis][:scale]
     xl1, xl2 = xlims(sp)
-    bbx1 = xl1 + left(inset_bbox).value * (xl2 - xl1)
-    bbx2 = bbx1 + width(inset_bbox).value * (xl2 - xl1)
+    xls1, xls2 = RecipesPipeline.scale_func(xscale).((xl1, xl2))
+    bbx1 = xls1 + left(inset_bbox).value * (xls2 - xls1)
+    bbx2 = bbx1 + width(inset_bbox).value * (xls2 - xls1)
     yl1, yl2 = ylims(sp)
-    bby1 = yl1 + (1 - bottom(inset_bbox).value) * (yl2 - yl1)
-    bby2 = bby1 + height(inset_bbox).value * (yl2 - yl1)
-    bbx = bbx1 + width(inset_bbox).value * (xl2 - xl1) / 2 * (sp[:xaxis][:flip] ? -1 : 1)
-    bby = bby1 + height(inset_bbox).value * (yl2 - yl1) / 2 * (sp[:yaxis][:flip] ? -1 : 1)
+    yls1, yls2 = RecipesPipeline.scale_func(yscale).((yl1, yl2))
+    bby1 = yls1 + (1 - bottom(inset_bbox).value) * (yls2 - yls1)
+    bby2 = bby1 + height(inset_bbox).value * (yls2 - yls1)
+    bbx = bbx1 + width(inset_bbox).value * (xls2 - xls1) / 2 * (sp[:xaxis][:flip] ? -1 : 1)
+    bby = bby1 + height(inset_bbox).value * (yls2 - yls1) / 2 * (sp[:yaxis][:flip] ? -1 : 1)
     lens_index = last(plt.subplots)[:subplot_index] + 1
-    x1, x2 = RecipesPipeline.inverse_scale_func(xscale).(plotattributes[:x])
-    y1, y2 = RecipesPipeline.inverse_scale_func(yscale).(plotattributes[:y])
+    x1, x2 = plotattributes[:x]
+    y1, y2 = plotattributes[:y]
+    xs1, xs2 = RecipesPipeline.scale_func(xscale).((x1, x2))
+    ys1, ys2 = RecipesPipeline.scale_func(yscale).((y1, y2))
+
     backup = copy(plotattributes)
     empty!(plotattributes)
 
@@ -1006,19 +1027,21 @@ export lens!
     if haskey(backup, :linewidth)
         linewidth := backup[:linewidth]
     end
-    bbx_mag = (x1 + x2) / 2
-    bby_mag = (y1 + y2) / 2
+    bbx_mag = (xs1 + xs2) / 2
+    bby_mag = (ys1 + ys2) / 2
     xi_lens, yi_lens =
         intersection_point(bbx_mag, bby_mag, bbx, bby, abs(bby2 - bby1), abs(bbx2 - bbx1))
     xi_mag, yi_mag =
         intersection_point(bbx, bby, bbx_mag, bby_mag, abs(y2 - y1), abs(x2 - x1))
+    xi_mag, xi_lens = RecipesPipeline.inverse_scale_func(xscale).((xi_mag, xi_lens))
+    yi_mag, yi_lens = RecipesPipeline.inverse_scale_func(yscale).((yi_mag, yi_lens))
     # add lines
     if xl1 < xi_lens < xl2 && yl1 < yi_lens < yl2
         @series begin
             primary := false
             subplot := sp_index
-            x := RecipesPipeline.scale_func(xscale).([xi_mag, xi_lens])
-            y := RecipesPipeline.scale_func(yscale).([yi_mag, yi_lens])
+            x := ([xi_mag, xi_lens])
+            y := ([yi_mag, yi_lens])
             ()
         end
     end
@@ -1026,8 +1049,8 @@ export lens!
     @series begin
         primary := false
         subplot := sp_index
-        x := RecipesPipeline.scale_func(xscale).([x1, x1, x2, x2, x1])
-        y := RecipesPipeline.scale_func(yscale).([y1, y2, y2, y1, y1])
+        x := ([x1, x1, x2, x2, x1])
+        y := ([y1, y2, y2, y1, y1])
         ()
     end
     # add subplot
@@ -1036,8 +1059,8 @@ export lens!
             plotattributes = merge(backup, copy(series.plotattributes))
             subplot := lens_index
             primary := false
-            xlims := RecipesPipeline.scale_func(xscale).((x1, x2))
-            ylims := RecipesPipeline.scale_func(yscale).((y1, y2))
+            xlims := (x1, x2)
+            ylims := (y1, y2)
             ()
         end
     end
@@ -1079,7 +1102,7 @@ end
 # Error Bars
 
 Commons.@attributes function error_style!(plotattributes::AKW)
-    # errorbar color should soley determined by markerstrokecolor
+    # errorbar color should solely determined by markerstrokecolor
     haskey(plotattributes, :marker_z) &&
         RecipesPipeline.reset_kw!(plotattributes, :marker_z)
     haskey(plotattributes, :line_z) && RecipesPipeline.reset_kw!(plotattributes, :line_z)
@@ -1498,10 +1521,23 @@ end
     SliceIt, m, n, Surface(mat)
 end
 
+@specialize
+
+find_nnz(A::SparseArrays.AbstractSparseMatrix) = SparseArrays.findnz(A)
+
+# fallback function for finding non-zero elements of non-sparse matrices
+function find_nnz(A::AbstractMatrix)
+    keysnz = findall(!iszero, A)
+    rs = map(k -> k[1], keysnz)
+    cs = map(k -> k[2], keysnz)
+    zs = A[keysnz]
+    rs, cs, zs
+end
+
 @recipe function f(::Type{Val{:spy}}, x, y, z)  # COV_EXCL_LINE
     yflip := true
     aspect_ratio := 1
-    rs, cs, zs = findnz(z.surf)
+    rs, cs, zs = PlotsBase.find_nnz(z.surf)
     xlims := ignorenan_extrema(cs)
     ylims := ignorenan_extrema(rs)
     widen --> true
@@ -1521,19 +1557,6 @@ end
     seriestype := :scatter
     grid --> false
     ()
-end
-
-@specialize
-
-findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
-
-# fallback function for finding non-zero elements of non-sparse matrices
-function findnz(A::AbstractMatrix)
-    keysnz = findall(!iszero, A)
-    rs = map(k -> k[1], keysnz)
-    cs = map(k -> k[2], keysnz)
-    zs = A[keysnz]
-    rs, cs, zs
 end
 
 # -------------------------------------------------

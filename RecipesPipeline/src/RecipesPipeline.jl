@@ -127,7 +127,7 @@ using PrecompileTools
         mats = (Int[1 2; 3 4], Float64[1 2; 3 4])
         surfs = Surface.(mats)
         vols = Volume(ones(Int, 1, 2, 3)), Volume(ones(Float64, 1, 2, 3))
-        for pl_attrs in plotattributes
+        for pl_attrs ∈ plotattributes
             _series_data_vector(1, pl_attrs)
             _series_data_vector([1], pl_attrs)
             _series_data_vector(["a"], pl_attrs)

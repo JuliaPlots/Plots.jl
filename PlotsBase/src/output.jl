@@ -190,7 +190,7 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
         print(
             io,
             "<img src=\"data:image/png;base64,",
-            base64encode(show, MIME("image/png"), plt),
+            Base64.base64encode(show, MIME("image/png"), plt),
             "\" />",
         )
     elseif output_type ≡ :svg

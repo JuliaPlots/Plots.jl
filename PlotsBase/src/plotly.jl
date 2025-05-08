@@ -381,7 +381,7 @@ function plotly_layout(plt::Plot)
 
     for sp ∈ plt.subplots
         spidx = multiple_subplots ? sp[:subplot_index] : ""
-        x_idx, y_idx = multiple_subplots ? plotly_link_indicies(plt, sp) : ("", "")
+        x_idx, y_idx = multiple_subplots ? plotly_link_indices(plt, sp) : ("", "")
 
         # add an annotation for the title
         if sp[:title] != ""
@@ -614,7 +614,7 @@ plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing) =
         [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
     else
         vals = range(0.0, stop = 1.0, length = length(c))
-        map(i --> [vals[i], rgba_string(plot_color(c[i], α))], eachindex(c))
+        map(i -> [vals[i], rgba_string(plot_color(c[i], α))], eachindex(c))
     end
 
 function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
@@ -646,8 +646,8 @@ get_plotly_marker(k, def) = get(
     def,
 )
 
-# find indicies of axes to which the subplot links to
-function plotly_link_indicies(plt::Plot, sp::Subplot)
+# find indices of axes to which the subplot links to
+function plotly_link_indices(plt::Plot, sp::Subplot)
     if plt[:link] in (:x, :y, :both)
         x_idx = sp[:xaxis].sps[1][:subplot_index]
         y_idx = sp[:yaxis].sps[1][:subplot_index]
@@ -657,7 +657,7 @@ function plotly_link_indicies(plt::Plot, sp::Subplot)
     x_idx, y_idx
 end
 
-# the Shape contructor will automatically close the shape. since we need it closed,
+# the Shape constructor will automatically close the shape. since we need it closed,
 # we split by NaNs and then construct/destruct the shapes to get the closed coords
 function plotly_close_shapes(x, y)
     xs, ys = nansplit(x), nansplit(y)
@@ -735,7 +735,7 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:zaxis] = "z$spidx"
         plotattributes_out[:scene] = "scene$spidx"
     else
-        x_idx, y_idx = length(plt.subplots) > 1 ? plotly_link_indicies(plt, sp) : ("", "")
+        x_idx, y_idx = length(plt.subplots) > 1 ? plotly_link_indices(plt, sp) : ("", "")
         plotattributes_out[:xaxis] = "x$(x_idx)"
         plotattributes_out[:yaxis] = "y$(y_idx)"
     end
@@ -895,21 +895,16 @@ function plotly_series(plt::Plot, series::Series)
                 get_plotly_marker(series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
             :size => 2_cycle(series[:markersize], inds),
-            :color =>
-                rgba_string.(
+            :color => rgba_string.(
+                plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds)),
+            ),
+            :line => KW(
+                :color => rgba_string.(
                     plot_color.(
-                        get_markercolor.(series, inds),
-                        get_markeralpha.(series, inds),
+                        get_markerstrokecolor.(series, inds),
+                        get_markerstrokealpha.(series, inds),
                     ),
                 ),
-            :line => KW(
-                :color =>
-                    rgba_string.(
-                        plot_color.(
-                            get_markerstrokecolor.(series, inds),
-                            get_markerstrokealpha.(series, inds),
-                        ),
-                    ),
                 :width => _cycle(series[:markerstrokewidth], inds),
             ),
         )
@@ -940,7 +935,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
     # x, y = series[:x], series[:y]
 
     # these are the axes that the series should be mapped to
-    x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
+    x_idx, y_idx = plotly_link_indices(plt, series[:subplot])
     plotattributes_base = KW(
         :xaxis => "x$(x_idx)",
         :yaxis => "y$(y_idx)",
@@ -1295,8 +1290,10 @@ function plotly_html_body(plt, style = nothing)
     html
 end
 
-js_body(plt::Plot, uuid) =
-    "Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));"
+js_body(
+    plt::Plot,
+    uuid,
+) = "Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));"
 
 plotly_show_js(io::IO, plot::Plot) =
     JSON.print(io, Dict(:data => plotly_series(plot), :layout => plotly_layout(plot)))

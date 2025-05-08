@@ -4,7 +4,7 @@
 
 # Plots
 
-[gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/workflows/ci/badge.svg?branch=master
+[gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2
 [gh-ci-url]: https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
 
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
@@ -24,7 +24,7 @@
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 [![][docs-stable-img]][docs-stable-url]
 [![][docs-dev-img]][docs-dev-url]
-[![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl)
+[![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
 [![Plots Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FPlots&query=total_requests&suffix=%2Fmonth&label=Downloads)](https://juliapkgstats.com/pkg/Plots)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725317.svg)](https://doi.org/10.5281/zenodo.4725317)

@@ -8,17 +8,19 @@ ci_tol() =
     end
 
 const TESTS_MODULE = Module(:PlotsBaseTestModule)
-const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
+const PLOTSBASE_IMG_TOL =
+    parse(Float64, get(ENV, "PLOTSBASE_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, PlotsBase))
 
 reference_dir(args...) =
-    if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) ≢ nothing
+    if (ref_dir = get(ENV, "PLOTSBASE_REFERENCE_DIR", nothing)) ≢ nothing
         ref_dir
     else
         joinpath(homedir(), ".julia", "dev", "PlotReferenceImages.jl", args...)
     end
-reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
+reference_path(backend, version) =
+    reference_dir("PlotsBase", string(backend), string(version))
 
 function checkout_reference_dir(dn::AbstractString)
     mkpath(dn)
@@ -54,7 +56,7 @@ end
 
 function reference_file(backend, version, i)
     # NOTE: keep ref[...].png naming consistent with `PlotDocs`
-    refdir = reference_dir("Plots", string(backend))
+    refdir = mkpath(reference_dir("PlotsBase", string(backend)))
     fn = ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
     for ver ∈ sort(VersionNumber.(readdir(refdir)), rev = true)
@@ -87,7 +89,7 @@ function image_comparison_tests(
         PlotsBase.Commons.debug!($debug)
         backend($(QuoteNode(pkg)))
         theme(:default)
-        rng = StableRNG(PlotsBase.PLOTS_SEED)
+        rng = StableRNG(PlotsBase.SEED)
         $(PlotsBase.replace_rand(example.exprs))
     end
     @debug imports exprs
@@ -105,6 +107,7 @@ end
 function image_comparison_facts(
     pkg::Symbol;
     skip = [],          # skip these examples (int index)
+    broken = [],        # known broken examples (int index)
     only = nothing,     # limit to these examples (int index)
     debug = false,      # print debug information ?
     sigma = [1, 1],     # number of pixels to "blur"
@@ -112,7 +115,11 @@ function image_comparison_facts(
 )
     for i ∈ setdiff(1:length(PlotsBase._examples), skip)
         if only ≡ nothing || i in only
-            @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
+            if i ∈ broken
+                @test_broken success(image_comparison_tests(pkg, i; debug, sigma, tol))
+            else
+                @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
+            end
         end
     end
 end
@@ -121,15 +128,15 @@ end
 #=
 
 with(:gr) do
-    image_comparison_facts(:gr, tol = PLOTS_IMG_TOL, skip = PlotsBase._backend_skips[:gr])
+    image_comparison_facts(:gr, tol = PLOTSBASE_IMG_TOL, skip = PlotsBase._backend_skips[:gr])
 end
 
 with(:plotlyjs) do
-    image_comparison_facts(:plotlyjs, tol = PLOTS_IMG_TOL, skip = PlotsBase._backend_skips[:plotlyjs])
+    image_comparison_facts(:plotlyjs, tol = PLOTSBASE_IMG_TOL, skip = PlotsBase._backend_skips[:plotlyjs])
 end
 
 with(:pgfplotsx) do
-    image_comparison_facts(:pgfplotsx, tol = PLOTS_IMG_TOL, skip = PlotsBase._backend_skips[:pgfplotsx])
+    image_comparison_facts(:pgfplotsx, tol = PLOTSBASE_IMG_TOL, skip = PlotsBase._backend_skips[:pgfplotsx])
 end
 =#
 
@@ -140,8 +147,9 @@ end
         @test backend_name() ≡ :gr
         image_comparison_facts(
             :gr,
-            tol = PLOTS_IMG_TOL,
-            skip = vcat(PlotsBase._backend_skips[:gr], blacklist),
+            tol = PLOTSBASE_IMG_TOL,
+            skip = vcat(PlotsBase._backend_skips[:gr]),
+            broken = broken_examples,
         )
     end
 end

@@ -1,6 +1,4 @@
 
-bool_env(x, default::String = "0")::Bool = tryparse(Bool, get(ENV, x, default))
-
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
 
@@ -108,7 +106,12 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     elseif plotattributes[:markerstrokecolor] ≡ :auto
         get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
     else
-        get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
+        get_series_color(
+            something(plotattributes[:markerstrokecolor], plotattributes[:seriescolor]),
+            sp,
+            plotIndex,
+            stype,
+        )
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
@@ -224,7 +227,7 @@ function heatmap_edges(
 )
     nx, ny = length(x), length(y)
     # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
-    # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
+    # the correct check, since (4, 3) != (3, 4) and a misleading plot is produced.
     ismidpoints = prod(z_size) == (ny * nx)
     isedges = z_size == (ny - 1, nx - 1)
     (ismidpoints || isedges) ||
@@ -254,9 +257,9 @@ function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     x, y
 end
 
-fakedata(sz::Int...) = fakedata(Random.seed!(PLOTS_SEED), sz...)
+fakedata(sz::Int...) = fakedata(Random.seed!(SEED), sz...)
 
-function fakedata(rng::AbstractRNG, sz...)
+function fakedata(rng::Random.AbstractRNG, sz...)
     y = zeros(sz...)
     for r ∈ 2:size(y, 1)
         y[r, :] = 0.95vec(y[r - 1, :]) + randn(rng, size(y, 2))
@@ -696,7 +699,7 @@ __straightline_data(xl, yl, x, y, exp_fact) =
         ___straightline_data(xl, yl, x, y, exp_fact)
     else
         k, r = divrem(n, 3)
-        @assert r == 0 "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
+        @assert r == 0 "Malformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
         xdata, ydata = fill(NaN, n), fill(NaN, n)
         for i ∈ 1:k
             inds = (3i - 2):(3i - 1)
@@ -883,8 +886,8 @@ end
 # Function barrier because lims are type-unstable
 function _guess_best_legend_position(xl, yl, plt, weight = 100)
     scale = (maximum(xl) - minimum(xl), maximum(yl) - minimum(yl))
-    u = zeros(4) # faster than tuple
-    # Quadrants where the points will be tested
+    u = zeros(4)  # faster than tuple
+    # quadrants where the points will be tested
     quadrants = (
         ((0.00, 0.25), (0.00, 0.25)),   # bottomleft
         ((0.75, 1.00), (0.00, 0.25)),   # bottomright
