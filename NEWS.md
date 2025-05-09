@@ -8,15 +8,18 @@
 
 - deprecated backends `pgfplots` and `pyplot` removed
 - deprecated keyword `orientation` removed
-- backends are extensions now so the backend code must be explicitly loaded using `import` with the backend package, e.g. ```julia
-using Plots
-import GR # loads backend code
+- backends are extensions now so the backend code must be explicitly loaded using `import` with the backend package, e.g. 
+    ```julia
+    using Plots
+    import GR # loads backend code
 
-```
+    ```
 - Types are no longer part of the Plots API this affects
   - `Shape`, which is now `shape`
+- The default `label` is now `:none`, use `:auto` to restore the previous behaviour
 
 ---
+
 #### notes on release changes, ongoing development, and future planned work
 
 ## NOTE: this file is deprecated, see the [TagBot](https://github.com/marketplace/actions/julia-tagbot) auto-generated changelogs instead

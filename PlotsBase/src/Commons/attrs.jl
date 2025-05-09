@@ -325,7 +325,7 @@ const _bar_width = 0.8
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(
-    :label              => :auto,
+    :label              => :none,
     :colorbar_entry     => true,
     :seriescolor        => :auto,
     :seriesalpha        => nothing,

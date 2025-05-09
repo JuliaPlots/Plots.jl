@@ -30,23 +30,23 @@ default(show = false, reuse = true)
         method ≡ :spectral && continue  # FIXME
         dat = if (inp = GraphRecipes._graph_inputs[method]) ≡ :adjmat
             [
-                0 1 1;
-                1 0 1;
+                0 1 1
+                1 0 1
                 1 1 0
             ]
         elseif inp ≡ :sourcedestiny
             Symmetric(sparse(rand(rng, 0:1, 8, 8)))
         elseif inp ≡ :adjlist
             dat = [
-                0 1 1 0 0 0 0 0 0 0;
-                0 0 0 0 1 1 0 0 0 0;
-                0 0 0 1 0 0 1 0 1 0;
-                0 0 0 0 0 0 0 0 0 0;
-                0 0 0 0 0 0 0 1 0 1;
-                0 0 0 0 0 0 0 0 0 0;
-                0 0 0 0 0 0 0 0 0 0;
-                0 0 0 0 0 0 0 0 0 0;
-                0 0 0 0 0 0 0 0 0 0;
+                0 1 1 0 0 0 0 0 0 0
+                0 0 0 0 1 1 0 0 0 0
+                0 0 0 1 0 0 1 0 1 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 1 0 1
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
                 0 0 0 0 0 0 0 0 0 0
             ]
         else

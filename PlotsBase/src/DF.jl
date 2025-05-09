@@ -105,7 +105,7 @@ function parse_table_call!(d, x::Expr, syms, vars)
         new_ex = Expr(:tuple, x.args...)
 
         for (j, field_in_NT) ∈ enumerate(new_ex.args)
-            if isa(field_in_NT, Expr) && field_in_NT.head==:(=)
+            if isa(field_in_NT, Expr) && field_in_NT.head == :(=)
                 new_ex.args[j] = Expr(:(=), field_in_NT.args...)
             elseif field_in_NT isa QuoteNode
                 new_ex.args[j] = Expr(:(=), field_in_NT.value, field_in_NT)
