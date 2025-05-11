@@ -75,9 +75,11 @@ jobs:
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
-          foreach(println, readdir())
           Pkg.instantiate()
           Pkg.develop([
+            (; path="./RecipesBase"),  # compat for LTS, remove later
+            (; path="./RecipesPipeline"),  # compat for LTS, remove later
+            (; path="./PlotThemes"),  # compat for LTS, remove later
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
           ])
