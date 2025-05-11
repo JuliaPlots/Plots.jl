@@ -14,12 +14,15 @@ libgcc = if Sys.islinux()
         v"3.4.31" => ">=13.1,<14.1",
         v"3.4.32" => ">=14.1,<15.1",
         v"3.4.33" => ">=15.1,<16.1",
-        # ... keep this up-to-date with gcc 16
+        v"3.4.34" => ">=16.1,<17.1",
+        v"3.4.35" => ">=17.1,<18.1",
+        v"3.4.36" => ">=18.1,<19.1",
+        # ... keep this up-to-date with gcc 19
     )[Base.BinaryPlatforms.detect_libstdcxx_version()]
     ("libgcc-ng$specs", "libstdcxx-ng$specs")
 else
     ()
 end
 
-CondaPkg.PkgREPL.add([libgcc..., "matplotlib"])
+CondaPkg.PkgREPL.add([libgcc..., "matplotlib>=3.4", "openssl>=3.4"])
 CondaPkg.status()
