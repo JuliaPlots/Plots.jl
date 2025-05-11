@@ -75,7 +75,6 @@ jobs:
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
-          Pkg.instantiate()
           Pkg.develop([
             (; path="./RecipesBase"),  # compat for LTS [sources], remove later
             (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
@@ -84,6 +83,7 @@ jobs:
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
           ])
+          Pkg.instantiate()
 
       - name: Test Plots stack
         timeout-minutes: 60
