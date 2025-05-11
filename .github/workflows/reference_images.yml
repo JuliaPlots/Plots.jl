@@ -21,7 +21,7 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          gh_ref = ${{ github.ref_name }}
+          gh_ref = "${{ github.ref_name }}"
           @info "Adding Plots#$gh_ref"
           Pkg.add(PackageSpec(name="Plots", rev="$gh_ref"))
           Pkg.test("Plots")
