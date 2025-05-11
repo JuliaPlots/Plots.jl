@@ -64,22 +64,6 @@ jobs:
 
       - uses: julia-actions/cache@v2
 
-      - name: Develop all Plots packages
-        env:
-          JULIA_PKG_PRECOMPILE_AUTO: 0
-        shell: julia --color=yes {0}
-        run: |
-          using Pkg
-          Pkg.develop([
-            (; path="./RecipesBase"),
-            (; path="./RecipesPipeline"),
-            (; path="./PlotThemes"),
-            (; path="./PlotsBase"),
-            (; path="./GraphRecipes"),
-            (; path="./StatsPlots"),
-            (; path="."),
-          ])
-
       - name: Install conda based matplotlib
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
@@ -88,7 +72,7 @@ jobs:
       - name: Test all Plots packages
         timeout-minutes: 60
         run: |
-          cmd=(julia --color=yes)
+          cmd=(julia --color=yes --project=@.)
           if [ "$RUNNER_OS" == "Linux" ]; then
             cmd=(xvfb-run ${cmd[@]})
           fi
