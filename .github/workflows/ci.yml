@@ -39,7 +39,7 @@ jobs:
           - os: ubuntu-latest
             experimental: true
             version: 'pre'  # upcoming julia version (`alpha`, `beta` or `rc`)
-          - os: macOS-latest
+          - os: macos-latest
             arch: aarch64
             version: '1'
             experimental: false
@@ -64,36 +64,36 @@ jobs:
 
       - uses: julia-actions/cache@v2
 
-      - name: Develop all Plots packages
-        env:
-          JULIA_PKG_PRECOMPILE_AUTO: 0
-        shell: julia --color=yes {0}
-        run: |
-          using Pkg
-          Pkg.develop([
-            (; path="./RecipesBase"),
-            (; path="./RecipesPipeline"),
-            (; path="./PlotThemes"),
-            (; path="./PlotsBase"),
-            (; path="./GraphRecipes"),
-            (; path="./StatsPlots"),
-            (; path="."),
-          ])
-
       - name: Install conda based matplotlib
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         run: julia --color=yes ci/matplotlib.jl
 
-      - name: Test all Plots packages
+      - name: Develop downstream packages
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
+        shell: julia --project=@. --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.develop([
+            (; path="./RecipesBase"),  # compat for LTS [sources], remove later
+            (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
+            (; path="./PlotThemes"),  # compat for LTS [sources], remove later
+            (; path="./PlotsBase"),  # compat for LTS [sources], remove later
+            (; path="./GraphRecipes"),
+            (; path="./StatsPlots"),
+          ])
+
+      - name: Test Plots stack
         timeout-minutes: 60
         run: |
-          cmd=(julia --color=yes)
+          cmd=(julia --project=@. --color=yes --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
             cmd=(xvfb-run ${cmd[@]})
           fi
           echo ${cmd[@]}
-          ${cmd[@]} -e 'using Pkg; Pkg.test([
+          ${cmd[@]} -e 'using Pkg
+          Pkg.test([
             "RecipesBase",
             "RecipesPipeline",
             "PlotThemes",
@@ -103,11 +103,9 @@ jobs:
             "Plots",
           ]; coverage=true)'
       - uses: julia-actions/julia-processcoverage@latest
-        if: startsWith(matrix.os, 'ubuntu')
         with:
           directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,src,GraphRecipes/src,StatsPlots/src,PlotThemes/src
       - uses: codecov/codecov-action@v5
-        if: startsWith(matrix.os, 'ubuntu')
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false

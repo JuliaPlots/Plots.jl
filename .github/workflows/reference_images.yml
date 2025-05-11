@@ -5,26 +5,15 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: JuliaPlots/PlotDocs.jl
           token: ${{ secrets.PLOTS_REFIMAGES_TOKEN }}
       - uses: julia-actions/setup-julia@latest
         with:
-          version: "1"
-      - name: Cache artifacts
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts 
-          key: ${{runner.os}}-test-${{env.cache-name}}-${{hashFiles('**/Project.toml')}}
-          restore-keys: |
-            ${{runner.os}}-test-${{env.cache-name}}-
-            ${{runner.os}}-test-
-            ${{runner.os}}-
+          version: 1
+      - uses: julia-actions/cache@v2
       - name: Run Plots tests
         env:
           PLOTSBASE_TEST_PACKAGES: GR
@@ -32,12 +21,12 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          gh_ref = ${{ github.ref_name }}
+          gh_ref = "${{ github.ref_name }}"
           @info "Adding Plots#$gh_ref"
           Pkg.add(PackageSpec(name="Plots", rev="$gh_ref"))
           Pkg.test("Plots")
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@latest
         with:
           title: "Update Plot reference images from branch ${{ github.ref_name}} by the action ${{ github.workflow_ref }}"
           body: "Review changes thoroughly and only merge when no unwanted chages are present."

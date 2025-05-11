@@ -8,13 +8,21 @@ version = "2.0.0"
 [deps]
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
 PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
+PlotThemes = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 RecipesPipeline = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
+[sources]
+PlotsBase = {path = "PlotsBase"}
+PlotThemes = {path = "PlotThemes"}
+RecipesBase = {path = "RecipesBase"}
+RecipesPipeline = {path = "RecipesPipeline"}
+
 [compat]
 GR = "0.73"
 PlotsBase = "0.1"
+PlotThemes = "3"
 RecipesBase = "1"
 RecipesPipeline = "1"
 Reexport = "1"
