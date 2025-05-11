@@ -72,7 +72,7 @@ jobs:
       - name: Test all Plots packages
         timeout-minutes: 60
         run: |
-          cmd=(julia --color=yes --project=@.)
+          cmd=(julia --color=yes --depwarn=yes --project=@.)
           if [ "$RUNNER_OS" == "Linux" ]; then
             cmd=(xvfb-run ${cmd[@]})
           fi
