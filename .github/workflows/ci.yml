@@ -39,7 +39,7 @@ jobs:
           - os: ubuntu-latest
             experimental: true
             version: 'pre'  # upcoming julia version (`alpha`, `beta` or `rc`)
-          - os: macOS-latest
+          - os: macos-latest
             arch: aarch64
             version: '1'
             experimental: false
@@ -69,10 +69,21 @@ jobs:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         run: julia --color=yes ci/matplotlib.jl
 
-      - name: Test all Plots packages
+      - name: Develop downstream packages
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
+        shell: julia --project=@. --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.develop([
+            (; path="./GraphRecipes"),
+            (; path="./StatsPlots"),
+          ])
+
+      - name: Test Plots stack
         timeout-minutes: 60
         run: |
-          cmd=(julia --color=yes --depwarn=yes --project=@.)
+          cmd=(julia --project=@. --color=yes --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
             cmd=(xvfb-run ${cmd[@]})
           fi
