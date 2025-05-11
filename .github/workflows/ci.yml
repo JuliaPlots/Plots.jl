@@ -75,6 +75,8 @@ jobs:
         shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
+          foreach(println, readdir())
+          Pkg.instantiate()
           Pkg.develop([
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
@@ -89,8 +91,6 @@ jobs:
           fi
           echo ${cmd[@]}
           ${cmd[@]} -e 'using Pkg
-          foreach(println, readdir())
-          Pkg.instantiate()
           Pkg.test([
             "RecipesBase",
             "RecipesPipeline",
