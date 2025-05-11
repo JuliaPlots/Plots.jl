@@ -25,10 +25,7 @@ jobs:
         shell: julia --color=yes --project=@. {0}
         run: |
           using Pkg
-          gh_ref = "${{ github.ref_name }}"
-          @info "Adding Plots#$gh_ref"
-          Pkg.add(PackageSpec(name="Plots", rev="$gh_ref"))
-          Pkg.test("Plots")
+          Pkg.test("PlotsBase")
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
