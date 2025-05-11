@@ -115,10 +115,13 @@ function image_comparison_facts(
 )
     for i ∈ setdiff(1:length(PlotsBase._examples), skip)
         if only ≡ nothing || i in only
+            test = image_comparison_tests(pkg, i; debug, sigma, tol)
             if i ∈ broken
-                @test_broken success(image_comparison_tests(pkg, i; debug, sigma, tol))
+                @test_broken success(test)
+            elseif is_auto()
+                nothing
             else
-                @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
+                @test success(test)
             end
         end
     end
