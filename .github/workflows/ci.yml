@@ -77,7 +77,10 @@ jobs:
             cmd=(xvfb-run ${cmd[@]})
           fi
           echo ${cmd[@]}
-          ${cmd[@]} -e 'using Pkg; Pkg.test([
+          ${cmd[@]} -e 'using Pkg
+          foreach(println, readdir())
+          Pkg.instantiate()
+          Pkg.test([
             "RecipesBase",
             "RecipesPipeline",
             "PlotThemes",
