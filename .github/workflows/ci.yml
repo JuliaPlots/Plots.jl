@@ -83,7 +83,6 @@ jobs:
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
           ])
-          Pkg.instantiate()
 
       - name: Test Plots stack
         timeout-minutes: 60

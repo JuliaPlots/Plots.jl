@@ -9,7 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: JuliaPlots/PlotDocs.jl
           token: ${{ secrets.PLOTS_REFIMAGES_TOKEN }}
       - uses: julia-actions/setup-julia@latest
         with:
@@ -27,7 +26,7 @@ jobs:
           Pkg.add(PackageSpec(name="Plots", rev="$gh_ref"))
           Pkg.test("Plots")
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@latest
         with:
           title: "Update Plot reference images from branch ${{ github.ref_name}} by the action ${{ github.workflow_ref }}"
           body: "Review changes thoroughly and only merge when no unwanted chages are present."
