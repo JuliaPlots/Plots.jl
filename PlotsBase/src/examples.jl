@@ -1155,22 +1155,22 @@ const _examples = PlotExample[
 
             plot(
                 x,
-                sin.(x),
+                sin.(x);
                 xaxis = "common X label",
                 yaxis = "Y label 1",
                 color = :red,
-                title = "twinx";
+                title = "twinx",
                 kw...,
             )
             pl = plot!(twinx(), x, 2cos.(x), yaxis = "Y label 2"; kw...)
 
             plot(
                 x,
-                cos.(x),
+                cos.(x);
                 xaxis = "X label 1",
                 yaxis = "common Y label",
                 color = :red,
-                title = "twiny";
+                title = "twiny",
                 kw...,
             )
             pr = plot!(twiny(), 2x, cos.(2x), xaxis = "X label 2"; kw...)
@@ -1199,6 +1199,7 @@ const _examples = PlotExample[
                     marker = :circle,
                     ticks = :none,
                     leg_title = leg,
+                    label = :auto,
                     leg,
                     kw...,
                 ),
@@ -1231,6 +1232,7 @@ const _examples = PlotExample[
                     marker = :circle,
                     ticks = :none,
                     leg_title = leg,
+                    label = :auto,
                     leg = leg isa Symbol ? Symbol(:outer, leg) : :none,
                     kw...,
                 ),

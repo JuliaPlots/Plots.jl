@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -13,18 +13,8 @@ jobs:
           token: ${{ secrets.PLOTS_REFIMAGES_TOKEN }}
       - uses: julia-actions/setup-julia@latest
         with:
-          version: "1"
-      - name: Cache artifacts
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts 
-          key: ${{runner.os}}-test-${{env.cache-name}}-${{hashFiles('**/Project.toml')}}
-          restore-keys: |
-            ${{runner.os}}-test-${{env.cache-name}}-
-            ${{runner.os}}-test-
-            ${{runner.os}}-
+          version: 1
+      - uses: julia-actions/cache@v2
       - name: Run Plots tests
         env:
           PLOTSBASE_TEST_PACKAGES: GR
