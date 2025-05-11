@@ -15,7 +15,7 @@ Base.eval(TESTS_MODULE, :(using Random, StableRNGs, PlotsBase))
 
 reference_dir(args...) =
     if (ref_dir = get(ENV, "PLOTSBASE_REFERENCE_DIR", nothing)) ≢ nothing
-        ref_dir
+        joinpath(ref_dir, args...)
     else
         joinpath(homedir(), ".julia", "dev", "PlotReferenceImages.jl", args...)
     end
