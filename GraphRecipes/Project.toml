@@ -45,7 +45,3 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
 test = ["GR", "Gtk", "ImageMagick", "LinearAlgebra", "Logging", "Markdown", "PlotsBase", "Random", "SparseArrays", "StableRNGs", "Test", "VisualRegressionTests"]
-
-[sources]
-PlotsBase = { path = "../PlotsBase" }
-RecipesBase = { path = "../RecipesBase" }

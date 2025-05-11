@@ -149,8 +149,3 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
 test = ["Aqua", "Colors", "Contour", "Distributions", "FileIO", "FilePathsBase", "FreeType", "Gaston", "GeometryBasics", "GR", "Gtk", "HDF5", "Images", "Latexify", "LaTeXStrings", "LibGit2", "OffsetArrays", "PGFPlotsX", "PlotlyJS", "PlotlyKaleido", "PythonPlot", "RDatasets", "SentinelArrays", "StableRNGs", "StaticArrays", "Test", "TestImages", "UnicodePlots", "Unitful", "UnitfulLatexify", "VisualRegressionTests"]
-
-[sources]
-PlotThemes = { path = "../PlotThemes" }
-RecipesBase = { path = "../RecipesBase" }
-RecipesPipeline = { path = "../RecipesPipeline" }

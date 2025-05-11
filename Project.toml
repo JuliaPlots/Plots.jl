@@ -7,12 +7,22 @@ version = "2.0.0"
 
 [deps]
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+GraphRecipes = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
 PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+RecipesPipeline = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[sources]
+PlotsBase = {path = "PlotsBase"}
+RecipesBase = {path = "RecipesBase"}
+RecipesPipeline = {path = "RecipesPipeline"}
 
 [compat]
 GR = "0.73"
 PlotsBase = "0.1"
+RecipesBase = "1"
+RecipesPipeline = "1"
 Reexport = "1"
 julia = "1.10"
 
@@ -23,6 +33,3 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 
 [targets]
 test = ["PythonPlot", "Test", "UnicodePlots"]
-
-[sources]
-PlotsBase = { path = "PlotsBase" }
