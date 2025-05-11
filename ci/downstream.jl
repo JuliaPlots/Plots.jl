@@ -51,6 +51,7 @@ fake_supported_versions!(path) = begin
     compat = parsed_toml["compat"]
     maybe_pin_version!(compat, "RecipesBase", pkg_version("RecipesBase"))
     maybe_pin_version!(compat, "RecipesPipeline", pkg_version("RecipesPipeline"))
+    maybe_pin_version!(compat, "PlotThemes", pkg_version("PlotThemes"))
     maybe_pin_version!(compat, "PlotsBase", pkg_version("PlotsBase"))
     maybe_pin_version!(compat, "Plots", pkg_version(""))
     open(toml, "w") do io
@@ -63,7 +64,7 @@ end
 test_stable(pkg::AbstractString) = begin
     Pkg.activate(; temp = true)
     mktempdir() do tmpd
-        for dn in ("RecipesBase", "RecipesPipeline", "PlotsBase", "")
+        for dn in ("RecipesBase", "RecipesPipeline", "PlotThemes", "PlotsBase", "")
             Pkg.develop(; path = joinpath(@__DIR__, "..", dn))
         end
 
