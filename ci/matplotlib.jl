@@ -19,7 +19,7 @@ libgcc = if Sys.islinux()
         v"3.4.36" => ">=18.1,<19.1",
         # ... keep this up-to-date with gcc 19
     )[Base.BinaryPlatforms.detect_libstdcxx_version()]
-    ("libgcc-ng$specs", "libstdcxx-ng$specs")
+    ("libstdcxx-ng$specs", )  # "libgcc-ng$specs", 
 else
     ()
 end
