@@ -22,7 +22,7 @@ jobs:
         env:
           PLOTSBASE_TEST_PACKAGES: GR
           VISUAL_REGRESSION_TESTS_AUTO: true
-        shell: julia --color=yes {0}
+        shell: julia --color=yes --project=@. {0}
         run: |
           using Pkg
           gh_ref = "${{ github.ref_name }}"
