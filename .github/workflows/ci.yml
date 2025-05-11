@@ -77,9 +77,10 @@ jobs:
           using Pkg
           Pkg.instantiate()
           Pkg.develop([
-            (; path="./RecipesBase"),  # compat for LTS, remove later
-            (; path="./RecipesPipeline"),  # compat for LTS, remove later
-            (; path="./PlotThemes"),  # compat for LTS, remove later
+            (; path="./RecipesBase"),  # compat for LTS [sources], remove later
+            (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
+            (; path="./PlotThemes"),  # compat for LTS [sources], remove later
+            (; path="./PlotsBase"),  # compat for LTS [sources], remove later
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
           ])
