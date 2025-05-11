@@ -1,0 +1,7 @@
+[deps]
+GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
+PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"

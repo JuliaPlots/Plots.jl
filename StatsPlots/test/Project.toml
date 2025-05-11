@@ -1,0 +1,12 @@
+[deps]
+Clustering = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
+MultivariateStats = "6f286f6a-111f-5878-ab1e-185364afe411"
+NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
+PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
+RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
+StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
