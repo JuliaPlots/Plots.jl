@@ -18,6 +18,7 @@ jobs:
   ci:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
+      JULIA_CONDAPKG_LIBSTDCXX_NG_VERSION : 'ignore'  # handled ourselves in ci/matplotlib.jl
       JULIA_CONDAPKG_BACKEND: MicroMamba
       MPLBACKEND: agg
       GKS_ENCODING: utf8
@@ -67,7 +68,6 @@ jobs:
       - name: Install conda based matplotlib
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
-          JULIA_CONDAPKG_LIBSTDCXX_NG_VERSION : 'ignore'  # we handle it in ci/matplotlib.jl
         run: julia --color=yes ci/matplotlib.jl
 
       - name: Develop downstream packages
