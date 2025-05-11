@@ -101,11 +101,9 @@ jobs:
             "Plots",
           ]; coverage=true)'
       - uses: julia-actions/julia-processcoverage@latest
-        if: startsWith(matrix.os, 'ubuntu')
         with:
           directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,src,GraphRecipes/src,StatsPlots/src,PlotThemes/src
       - uses: codecov/codecov-action@v5
-        if: startsWith(matrix.os, 'ubuntu')
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
