@@ -95,35 +95,41 @@ else
     []
 end
 
-for name ∈ (
-    "misc",
-    "utils",
-    "args",
-    "defaults",
-    "dates",
-    "axes",
-    "layouts",
-    "contours",
-    "components",
-    "shorthands",
-    "recipes",
-    "unitful",
-    "hdf5plots",
-    "pgfplotsx",
-    "plotly",
-    "animations",
-    "output",
-    "reference",
-    "backends",
-    "preferences",
-    "quality",
-)
+# skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)
+names = if is_auto()
+    ["reference"]
+elseif is_pkgeval()
+    ["backends"]
+else
+    [
+        "misc",
+        "utils",
+        "args",
+        "defaults",
+        "dates",
+        "axes",
+        "layouts",
+        "contours",
+        "components",
+        "shorthands",
+        "recipes",
+        "unitful",
+        "hdf5plots",
+        "pgfplotsx",
+        "plotly",
+        "animations",
+        "output",
+        "reference",
+        "backends",
+        "preferences",
+        "quality",
+    ]
+end
+
+for name ∈ names
     @testset "$name" begin
-        # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)
-        if is_auto() || is_pkgeval()
-            name != "backends" && continue
-        end
         haskey(TEST_BACKENDS, :GR) && gr()  # reset to default backend
         include("test_$name.jl")
     end
 end
+
