@@ -8,7 +8,7 @@ CondaPkg.resolve()
 # gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html
 # see also github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/config/abi/pre/gnu.ver
 _compatible_libstdcxx_ng_versions = [
-    (v"3.4.34", ">=15.1,<16.1"),
+    (v"3.4.34", ">=15.1,<16.1"),  # NOTE: hypothetical upper bound
     (v"3.4.33", ">=14.1,<15.1"),
     (v"3.4.32", ">=13.2,<14.1"),
     (v"3.4.31", ">=13.1,<13.2"),
