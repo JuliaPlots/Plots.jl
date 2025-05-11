@@ -26,7 +26,7 @@ libgcc = if Sys.islinux()
     # julia 1.8.3 is built with libstdc++.so.6.0.29, so we must restrict to this version (gcc 11.3.0, not gcc 12.2.0)
     # see gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html
     max_minor_version = maximum(t -> Int(t[1].patch), _compatible_libstdcxx_ng_versions)
-    specs = Dict(versions)[Base.BinaryPlatforms.detect_libstdcxx_version(max_minor_version)]
+    specs = Dict(_compatible_libstdcxx_ng_versions)[Base.BinaryPlatforms.detect_libstdcxx_version(max_minor_version)]
     ("libgcc-ng$specs", "libstdcxx-ng$specs")  
 else
     ()
