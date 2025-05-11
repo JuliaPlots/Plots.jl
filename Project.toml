@@ -7,7 +7,6 @@ version = "2.0.0"
 
 [deps]
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-GraphRecipes = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
 PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 RecipesPipeline = "01d81517-befc-4cb6-b9ec-a95719d0359c"
