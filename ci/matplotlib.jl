@@ -25,13 +25,13 @@ _compatible_libstdcxx_ng_versions = [
     (v"3.4.20", (">=4.9", "<5.1")),
     (v"3.4.19", (">=4.8.3", "<4.9")),
 ]
-
 libgcc = if Sys.islinux()
     # see discourse.julialang.org/t/glibcxx-version-not-found/82209/8
     # julia 1.8.3 is built with libstdc++.so.6.0.29, so we must restrict to this version (gcc 11.3.0, not gcc 12.2.0)
-    max_minor_version = maximum(t -> Int(t[1].patch), _compatible_libstdcxx_ng_versions)
-    _, hi = Dict(_compatible_libstdcxx_ng_versions)[Base.BinaryPlatforms.detect_libstdcxx_version(max_minor_version)]
-    specs = ">=3.4,$hi"  # NOTE: ignore lower bound for compatibility
+    versions = Dict(_compatible_libstdcxx_ng_versions)
+    lo, hi = extrema(keys(versions))
+    _, ub = versions[Base.BinaryPlatforms.detect_libstdcxx_version(Int(hi.patch))]
+    specs = ">=$(VersionNumber(lo.major, lo.minor)),$ub"
     ("libgcc-ng$specs", "libstdcxx-ng$specs")  
 else
     ()
