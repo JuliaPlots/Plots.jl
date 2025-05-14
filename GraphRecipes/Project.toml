@@ -19,6 +19,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [sources]
 PlotsBase = {path = "../PlotsBase"}
+RecipesBase = {path = "../RecipesBase"}
 
 [compat]
 AbstractTrees = "0.4"
