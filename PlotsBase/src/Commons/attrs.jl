@@ -519,6 +519,7 @@ const _axis_defaults = KW(
     :widen                       => :auto,
     :draw_arrow                  => false,
     :unitformat                  => :round,
+    :unit                        => nothing,
 )
 
 # add defaults for the letter versions

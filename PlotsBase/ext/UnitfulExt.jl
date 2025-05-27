@@ -49,12 +49,16 @@ function fixaxis!(attr, x, axisletter)
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
-    u = pop!(attr, axisunit, _unit(eltype(x)))  # get the unit
+    u = get!(attr, axisunit, _unit(eltype(x)))  # get the unit
     # if the subplot already exists with data, get its unit
     sp = get(attr, :subplot, 1)
     if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
         label = attr[:plot_object][sp][axis][:guide]
-        u = getaxisunit(label)
+        spu = getaxisunit(attr[:plot_object][sp][axis])
+        if !isnothing(spu)
+            u = spu
+        end
+        attr[axisunit] = u  # update the unit in the attributes
         get!(attr, axislabel, label)  # if label was not given as an argument, reuse
     end
     # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
@@ -295,9 +299,9 @@ format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[
 format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
 format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
 
-getaxisunit(::AbstractString) = NoUnits
-getaxisunit(s::UnitfulString) = s.unit
-getaxisunit(a::Axis) = getaxisunit(a[:guide])
+getaxisunit(::Nothing) = nothing
+getaxisunit(u) = u
+getaxisunit(a::Axis) = getaxisunit(a[:unit])
 
 #==============
 Fix annotations
@@ -329,7 +333,7 @@ function PlotsBase.locate_annotation(
     rel::NTuple{N,<:MissingOrQuantity},
     label,
 ) where {N}
-    units = getaxisunit(sp.attr[:xaxis], sp.attr[:yaxis], sp.attr[:zaxis])
+    units = getaxisunit(sp.attr[:xaxis]), getaxisunit(sp.attr[:yaxis]), getaxisunit(sp.attr[:zaxis])
     PlotsBase.locate_annotation(sp, _ustrip.(zip(units, rel)), label)
 end
 
