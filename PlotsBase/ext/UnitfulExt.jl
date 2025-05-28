@@ -228,7 +228,7 @@ Append unit to labels when appropriate
 =====================================#
 
 append_unit_if_needed!(attr, key, u) =
-            append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
+    append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
 # dispatch on the type of `label`
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
