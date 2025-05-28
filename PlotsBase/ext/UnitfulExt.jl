@@ -36,7 +36,7 @@ Main recipe
     if axisletter ≡ :z && get(plotattributes, :seriestype, :nothing) ∈ clims_types
         u = get(plotattributes, :zunit, _unit(eltype(x)))
         ustripattribute!(plotattributes, :clims, u)
-        # append_unit_if_needed!(plotattributes, :colorbar_title, u)
+        append_unit_if_needed!(plotattributes, :colorbar_title, u)
     end
     fixaxis!(plotattributes, x, axisletter)
 end
@@ -44,6 +44,8 @@ end
 function fixaxis!(attr, x, axisletter)
     # Attribute keys
     axislabel = Symbol(axisletter, :guide) # xguide, yguide, zguide
+    axislims = Symbol(axisletter, :lims)   # xlims, ylims, zlims
+    axisticks = Symbol(axisletter, :ticks) # xticks, yticks, zticks
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
@@ -60,7 +62,7 @@ function fixaxis!(attr, x, axisletter)
         get!(attr, axislabel, label)  # if label was not given as an argument, reuse
     end
     # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
-    # append_unit_if_needed!(attr, axislabel, u)
+    append_unit_if_needed!(attr, axislabel, u)
     ustripattribute!(attr, err, u)
     if axisletter ≡ :y
         ustripattribute!(attr, :ribbon, u)
@@ -78,7 +80,7 @@ end
     u = get(plotattributes, :zunit, _unit(eltype(z)))
     ustripattribute!(plotattributes, :clims, u)
     z = fixaxis!(plotattributes, z, :z)
-    # append_unit_if_needed!(plotattributes, :colorbar_title, u)
+    append_unit_if_needed!(plotattributes, :colorbar_title, u)
     x, y, z
 end
 
@@ -174,14 +176,10 @@ end
 function fixmarkercolor!(attr)
     u = ustripattribute!(attr, :marker_z)
     ustripattribute!(attr, :clims, u)
-    # u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
-end
-function fixlinecolor!(attr)
-    u = ustripattribute!(attr, :line_z)
-    ustripattribute!(attr, :clims, u)
-    # u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
+    u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
 end
 fixmarkersize!(attr) = ustripattribute!(attr, :markersize)
+fixlinecolor!(attr) = ustripattribute!(attr, :line_z)
 
 # strip unit from attribute[key]
 ustripattribute!(attr, key) =
@@ -233,49 +231,73 @@ PlotsBase.protectedstring(s) = ProtectedString(s)
 Append unit to labels when appropriate
 =====================================#
 
-# append_unit_if_needed!(attr, key, u) =
-#     append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
-# # dispatch on the type of `label`
-# append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
-# append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
-# function append_unit_if_needed!(attr, key, label::Nothing, u)
-#     attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
-#         UnitfulString(LaTeXString(Latexify.latexify(u)), u)
-#     else
-#         UnitfulString(string(u), u)
-#     end
-# end
-# function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
-#     isempty(label) && return attr[key] = UnitfulString(label, u)
-#     attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
-#         UnitfulString(
-#             LaTeXString(
-#                 format_unit_label(
-#                     label,
-#                     Latexify.latexify(u),
-#                     get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
-#                 ),
-#             ),
-#             u,
-#         )
-#     else
-#         UnitfulString(
-#             S(
-#                 format_unit_label(
-#                     label,
-#                     u,
-#                     get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
-#                 ),
-#             ),
-#             u,
-#         )
-#     end
-# end
+append_unit_if_needed!(attr, key, u) =
+    append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
+# dispatch on the type of `label`
+append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
+append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
+function append_unit_if_needed!(attr, key, label::Nothing, u)
+    attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
+        UnitfulString(LaTeXString(Latexify.latexify(u)), u)
+    else
+        UnitfulString(string(u), u)
+    end
+end
+function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
+    isempty(label) && return attr[key] = UnitfulString(label, u)
+    attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
+        UnitfulString(
+            LaTeXString(
+                format_unit_label(
+                    label,
+                    Latexify.latexify(u),
+                    get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
+                ),
+            ),
+            u,
+        )
+    else
+        UnitfulString(
+            S(
+                format_unit_label(
+                    label,
+                    u,
+                    get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
+                ),
+            ),
+            u,
+        )
+    end
+end
 
 #=============================================
 Surround unit string with specified delimiters
 =============================================#
 
+const UNIT_FORMATS = Dict(
+    :round => ('(', ')'),
+    :square => ('[', ']'),
+    :curly => ('{', '}'),
+    :angle => ('<', '>'),
+    :slash => '/',
+    :slashround => (" / (", ")"),
+    :slashsquare => (" / [", "]"),
+    :slashcurly => (" / {", "}"),
+    :slashangle => (" / <", ">"),
+    :verbose => " in units of ",
+    :none => nothing,
+)
+
+format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
+format_unit_label(l, u, f::Function)                   = f(l, u)
+format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
+format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
+format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
+format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
+format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
+format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
 
 getaxisunit(::Nothing) = nothing
 getaxisunit(u) = u
