@@ -327,6 +327,8 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
         elseif k ≡ :lims && isa(v, NTuple{2,Dates.TimeType})
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
+        elseif k ≡ :guide && !isnothing(plotattributes[:unit])
+            plotattributes[k] = format_unit_label(v, plotattributes[:unit], plotattributes[:unitformat])
         else
             plotattributes[k] = v
         end
@@ -339,6 +341,32 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
 
     axis
 end
+
+format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
+format_unit_label(l, u, f::Function)                   = f(l, u)
+format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
+format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
+format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
+format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
+format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
+format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
+
+const UNIT_FORMATS = Dict(
+    :round => ('(', ')'),
+    :square => ('[', ']'),
+    :curly => ('{', '}'),
+    :angle => ('<', '>'),
+    :slash => '/',
+    :slashround => (" / (", ")"),
+    :slashsquare => (" / [", "]"),
+    :slashcurly => (" / {", "}"),
+    :slashangle => (" / <", ">"),
+    :verbose => " in units of ",
+    :none => nothing,
+)
+
 
 # -----------------------------------------------------------------------------
 
