@@ -44,8 +44,6 @@ end
 function fixaxis!(attr, x, axisletter)
     # Attribute keys
     axislabel = Symbol(axisletter, :guide) # xguide, yguide, zguide
-    axislims = Symbol(axisletter, :lims)   # xlims, ylims, zlims
-    axisticks = Symbol(axisletter, :ticks) # xticks, yticks, zticks
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
@@ -178,8 +176,12 @@ function fixmarkercolor!(attr)
     ustripattribute!(attr, :clims, u)
     u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
 end
+function fixlinecolor!(attr)
+    u = ustripattribute!(attr, :line_z)
+    ustripattribute!(attr, :clims, u)
+    u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
+end
 fixmarkersize!(attr) = ustripattribute!(attr, :markersize)
-fixlinecolor!(attr) = ustripattribute!(attr, :line_z)
 
 # strip unit from attribute[key]
 ustripattribute!(attr, key) =
