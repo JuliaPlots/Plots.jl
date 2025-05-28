@@ -33,11 +33,11 @@ end
     sp = pl[1]
     @test sp[:title] == "Foo"
     xlabel!(pl, "xlabel")
-    @test sp[:xaxis][:guide] == "xlabel"
+    @test PlotsBase.get_guide(sp[:xaxis]) == "xlabel"
     ylabel!(pl, "ylabel")
-    @test sp[:yaxis][:guide] == "ylabel"
+    @test PlotsBase.get_guide(sp[:yaxis]) == "ylabel"
     zlabel!(pl, "zlabel")
-    @test sp[:zaxis][:guide] == "zlabel"
+    @test PlotsBase.get_guide(sp[:zaxis]) == "zlabel"
 end
 
 @testset "Misc" begin

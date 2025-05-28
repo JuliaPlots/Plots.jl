@@ -1,7 +1,7 @@
 module Axes
 
 export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
-export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis
+export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide
 
 import ..PlotsBase
 import ..PlotsBase: Subplot, DefaultsDict, attr!
@@ -311,6 +311,7 @@ end
 
 has_ticks(axis::Axis) = _has_ticks(get(axis, :ticks, nothing))
 
+
 # update an Axis object with magic args and keywords
 function PlotsBase.attr!(axis::Axis, args...; kw...)
     # first process args
@@ -339,6 +340,45 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
 
     axis
 end
+
+function get_guide(axis::Axis)
+    if !isnothing(axis[:unit])
+        @info "unit" axis[:guide] axis[:unit]
+        return format_unit_label(
+            axis[:guide],
+            axis[:unit],
+            axis[:unitformat])
+    else
+        @info "no unit" axis[:guide] axis[:unit]
+        return axis[:guide]
+    end
+end
+
+const UNIT_FORMATS = Dict(
+    :round => ('(', ')'),
+    :square => ('[', ']'),
+    :curly => ('{', '}'),
+    :angle => ('<', '>'),
+    :slash => '/',
+    :slashround => (" / (", ")"),
+    :slashsquare => (" / [", "]"),
+    :slashcurly => (" / {", "}"),
+    :slashangle => (" / <", ">"),
+    :verbose => " in units of ",
+    :none => nothing,
+)
+
+format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
+format_unit_label(l, u, f::Function)                   = f(l, u)
+format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
+format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
+format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
+format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
+format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
+format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
+
 
 # -----------------------------------------------------------------------------
 

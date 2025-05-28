@@ -2,9 +2,9 @@ using PlotsBase, Test
 using Unitful
 using Unitful: m, cm, s, DimensionError
 # Some helper functions to access the subplot labels and the series inside each test plot
-xguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:xaxis].plotattributes[:guide]
-yguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:yaxis].plotattributes[:guide]
-zguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:zaxis].plotattributes[:guide]
+xguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:xaxis].plotattributes)
+yguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:yaxis].plotattributes)
+zguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:zaxis].plotattributes)
 xseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:x]
 yseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:y]
 zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:z]

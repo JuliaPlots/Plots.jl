@@ -60,7 +60,6 @@ function fixaxis!(attr, x, axisletter)
         get!(attr, axislabel, label)  # if label was not given as an argument, reuse
     end
     # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
-    append_unit_if_needed!(attr, axislabel, u)
     ustripattribute!(attr, err, u)
     if axisletter ≡ :y
         ustripattribute!(attr, :ribbon, u)
@@ -275,31 +274,6 @@ end
 #=============================================
 Surround unit string with specified delimiters
 =============================================#
-
-const UNIT_FORMATS = Dict(
-    :round => ('(', ')'),
-    :square => ('[', ']'),
-    :curly => ('{', '}'),
-    :angle => ('<', '>'),
-    :slash => '/',
-    :slashround => (" / (", ")"),
-    :slashsquare => (" / [", "]"),
-    :slashcurly => (" / {", "}"),
-    :slashangle => (" / <", ">"),
-    :verbose => " in units of ",
-    :none => nothing,
-)
-
-format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
-format_unit_label(l, u, f::Function)                   = f(l, u)
-format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
-format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
-format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
-format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
-format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
-format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
 
 getaxisunit(::Nothing) = nothing
 getaxisunit(u) = u
