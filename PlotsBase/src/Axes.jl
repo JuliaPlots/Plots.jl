@@ -343,13 +343,11 @@ end
 
 function get_guide(axis::Axis)
     if !isnothing(axis[:unit])
-        @info "unit" axis[:guide] axis[:unit]
         return format_unit_label(
             axis[:guide],
             axis[:unit],
             axis[:unitformat])
     else
-        @info "no unit" axis[:guide] axis[:unit]
         return axis[:guide]
     end
 end
