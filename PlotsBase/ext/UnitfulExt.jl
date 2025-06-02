@@ -17,7 +17,9 @@ import Unitful:
     Level,
     Gain,
     uconvert
-import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis
+import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis,
+    AbstractProtectedString, ProtectedString
+import PlotsBase.Axes: format_unit_label
 import RecipesBase
 import LaTeXStrings: LaTeXString
 import Latexify
@@ -57,7 +59,7 @@ function fixaxis!(attr, x, axisletter)
             u = spu
         end
         attr[axisunit] = u  # update the unit in the attributes
-        get!(attr, axislabel, label)  # if label was not given as an argument, reuse
+        # get!(attr, axislabel, label)  # if label was not given as an argument, reuse
     end
     # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
     ustripattribute!(attr, err, u)
@@ -208,28 +210,16 @@ end
 Label string containing unit information
 =======================================#
 
-abstract type AbstractProtectedString <: AbstractString end
-struct ProtectedString{S} <: AbstractProtectedString
-    content::S
-end
 struct UnitfulString{S,U} <: AbstractProtectedString
     content::S
     unit::U
 end
-# Minimum required AbstractString interface to work with PlotsBase
-const S = AbstractProtectedString
-Base.iterate(n::S) = iterate(n.content)
-Base.iterate(n::S, i::Integer) = iterate(n.content, i)
-Base.codeunit(n::S) = codeunit(n.content)
-Base.ncodeunits(n::S) = ncodeunits(n.content)
-Base.isvalid(n::S, i::Integer) = isvalid(n.content, i)
-Base.pointer(n::S) = pointer(n.content)
-Base.pointer(n::S, i::Integer) = pointer(n.content, i)
 
-PlotsBase.protectedstring(s) = ProtectedString(s)
 
 #=====================================
 Append unit to labels when appropriate
+This is needed for colorbars, etc., since axes have
+distinct unit handling
 =====================================#
 
 append_unit_if_needed!(attr, key, u) =

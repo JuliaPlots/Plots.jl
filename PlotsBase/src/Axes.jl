@@ -328,6 +328,9 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
         elseif k ≡ :lims && isa(v, NTuple{2,Dates.TimeType})
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
+        elseif k ≡ :guide && v isa AbstractString && isempty(v)
+            plotattributes[:unitformat] = :none
+            plotattributes[k] = v
         else
             plotattributes[k] = v
         end
@@ -342,16 +345,29 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
 end
 
 function get_guide(axis::Axis)
-    if !isnothing(axis[:unit])
+    if isnothing(axis[:unit]) || axis[:guide] isa PlotsBase.ProtectedString ||
+        axis[:unitformat] == :none 
+        return axis[:guide]
+    else
+        ustr = if PlotsBase.backend_name() ≡ :pgfplotsx
+            pgext = Base.get_extension(PlotsBase, :PGFPlotsXExt)
+            isnothing(pgext) && error("PGFPlotsX extension not loaded. Problems")
+            pgext.Latexify.latexify(axis[:unit])
+        else
+            string(axis[:unit])
+        end
+        if isempty(axis[:guide])
+            return ustr
+        end
         return format_unit_label(
             axis[:guide],
-            axis[:unit],
+            ustr,
             axis[:unitformat])
-    else
-        return axis[:guide]
     end
 end
 
+
+# Keyword options for unit formats
 const UNIT_FORMATS = Dict(
     :round => ('(', ')'),
     :square => ('[', ']'),
@@ -366,6 +382,7 @@ const UNIT_FORMATS = Dict(
     :none => nothing,
 )
 
+# All options for unit formats
 format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
 format_unit_label(l, u, f::Function)                   = f(l, u)
 format_unit_label(l, u, f::AbstractString)             = string(l, f, u)

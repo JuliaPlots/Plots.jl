@@ -931,14 +931,12 @@ end
 _generate_doclist(attributes) =
     replace(join(sort(collect(attributes)), "\n- "), "_" => "\\_")
 
-# for UnitfulExt - cannot reside in `UnitfulExt` (macro)
-function protectedstring end  # COV_EXCL_LINE
-
 """
     P_str(s)
 
 (Unitful extension only).
-Creates a string that will be Protected from recipe passes.
+Creates a string that will not have units appended.
+This is equivalent to passing `[x]unitformat = (l,u) -> l` to the plot command.
 
 Example:
 ```julia
@@ -953,6 +951,23 @@ end
 
 # for `PGFPlotsx` together with `UnitfulExt`
 function pgfx_sanitize_string end  # COV_EXCL_LINE
+
+# Old API: a ProtectedString implicitly has unitformat = (l,u) -> l
+# Can be removed for 2.0?
+abstract type AbstractProtectedString <: AbstractString end
+struct ProtectedString{S} <: AbstractProtectedString
+    content::S
+end
+const APS = AbstractProtectedString
+# Minimum required AbstractString interface to work with PlotsBase
+Base.iterate(n::APS) = iterate(n.content)
+Base.iterate(n::APS, i::Integer) = iterate(n.content, i)
+Base.codeunit(n::APS) = codeunit(n.content)
+Base.ncodeunits(n::APS) = ncodeunits(n.content)
+Base.isvalid(n::APS, i::Integer) = isvalid(n.content, i)
+Base.pointer(n::APS) = pointer(n.content)
+Base.pointer(n::APS, i::Integer) = pointer(n.content, i)
+protectedstring(s) = ProtectedString(s)
 
 function extrema_plus_buffer(v, buffmult = 0.2)
     vmin, vmax = ignorenan_extrema(v)
