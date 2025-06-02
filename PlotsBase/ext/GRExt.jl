@@ -1837,7 +1837,6 @@ end
 function gr_label_axis(sp, letter, vp)
     ax = sp[get_attr_symbol(letter, :axis)]
     if PlotsBase.get_guide(ax) != ""
-        @info "gr" ax PlotsBase.get_guide(ax) 
         mirror = ax[:mirror]
         GR.savestate()
         guide_position = ax[:guide_position]
