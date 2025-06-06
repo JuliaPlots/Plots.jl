@@ -779,6 +779,12 @@
         {
             "name": "Patrick Jaap",
             "type": "Other"
+        },
+        {
+            "affiliation": "Purdue University",
+            "name": "Isaac Wheeler",
+            "orcid": "0000-0002-9717-073X",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
