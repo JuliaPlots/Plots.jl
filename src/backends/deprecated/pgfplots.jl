@@ -339,7 +339,7 @@ function pgf_axis(sp::Subplot, letter)
     framestyle = pgf_framestyle(sp[:framestyle])
 
     # axis guide
-    kw[get_attr_symbol(letter, :label)] = axis[:guide]
+    kw[get_attr_symbol(letter, :label)] = Plots.get_guide(axis)
 
     # axis label position
     labelpos = ""

@@ -1118,7 +1118,7 @@ function _before_layout_calcs(plt::Plot{PythonPlotBackend})
                 pyaxis.set_major_locator(mpl.ticker.NullLocator())
             end
 
-            getproperty(ax, set_axis(letter, :label))(axis[:guide])
+            getproperty(ax, set_axis(letter, :label))(Plots.get_guide(axis))
             pyaxis.label.set_fontsize(_py_thickness_scale(plt, axis[:guidefontsize]))
             pyaxis.label.set_family(axis[:guidefontfamily])
             pyaxis.label.set_math_fontfamily(
