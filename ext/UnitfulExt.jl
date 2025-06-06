@@ -211,7 +211,6 @@ append_unit_if_needed!(attr, key, u) =
 append_unit_if_needed!(attr, key, label::Plots.ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 function append_unit_if_needed!(attr, key, label::Nothing, u)
-    @info "append unit to nothing" key label u
     attr[key] = if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
         UnitfulString(LaTeXString(latexify(u)), u)
     else
@@ -219,7 +218,6 @@ function append_unit_if_needed!(attr, key, label::Nothing, u)
     end
 end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
-    @info "append unit to label" key label u
     isempty(label) && return attr[key] = UnitfulString(label, u)
     if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
         attr[key] = UnitfulString(
