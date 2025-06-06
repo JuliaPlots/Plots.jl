@@ -35,16 +35,17 @@ function fixaxis!(attr, x, axisletter)
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
-    u = pop!(attr, axisunit, _unit(eltype(x)))  # get the unit
-    # if the subplot already exists with data, get its unit
+    u = get!(attr, axisunit, _unit(eltype(x)))  # get the unit
+    # if the subplot already exists with data, use that unit instead
     sp = get(attr, :subplot, 1)
     if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
-        label = attr[:plot_object][sp][axis][:guide]
-        u = getaxisunit(label)
-        get!(attr, axislabel, label)  # if label was not given as an argument, reuse
+        spu = getaxisunit(attr[:plot_object][sp][axis])
+        if !isnothing(spu)
+            u = spu
+        end
+        attr[axisunit] = u  # update the unit in the attributes
     end
     # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
-    append_unit_if_needed!(attr, axislabel, u)
     ustripattribute!(attr, err, u)
     if axisletter === :y
         ustripattribute!(attr, :ribbon, u)
@@ -159,8 +160,12 @@ function fixmarkercolor!(attr)
     ustripattribute!(attr, :clims, u)
     u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
 end
+function fixlinecolor!(attr)
+    u = ustripattribute!(attr, :line_z)
+    ustripattribute!(attr, :clims, u)
+    u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
+end
 fixmarkersize!(attr) = ustripattribute!(attr, :markersize)
-fixlinecolor!(attr) = ustripattribute!(attr, :line_z)
 
 # strip unit from attribute[key]
 ustripattribute!(attr, key) =
@@ -188,36 +193,25 @@ end
 Label string containing unit information
 =======================================#
 
-abstract type AbstractProtectedString <: AbstractString end
-struct ProtectedString{S} <: AbstractProtectedString
-    content::S
-end
-struct UnitfulString{S,U} <: AbstractProtectedString
+const APS = Plots.AbstractProtectedString
+struct UnitfulString{S,U} <: APS
     content::S
     unit::U
 end
-# Minimum required AbstractString interface to work with Plots
-const S = AbstractProtectedString
-Base.iterate(n::S) = iterate(n.content)
-Base.iterate(n::S, i::Integer) = iterate(n.content, i)
-Base.codeunit(n::S) = codeunit(n.content)
-Base.ncodeunits(n::S) = ncodeunits(n.content)
-Base.isvalid(n::S, i::Integer) = isvalid(n.content, i)
-Base.pointer(n::S) = pointer(n.content)
-Base.pointer(n::S, i::Integer) = pointer(n.content, i)
-
-Plots.protectedstring(s) = ProtectedString(s)
 
 #=====================================
 Append unit to labels when appropriate
+This is needed for colorbars, mostly,
+since axes have their own handling
 =====================================#
 
 append_unit_if_needed!(attr, key, u) =
     append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
 # dispatch on the type of `label`
-append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
+append_unit_if_needed!(attr, key, label::Plots.ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 function append_unit_if_needed!(attr, key, label::Nothing, u)
+    @info "append unit to nothing" key label u
     attr[key] = if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
         UnitfulString(LaTeXString(latexify(u)), u)
     else
@@ -225,11 +219,12 @@ function append_unit_if_needed!(attr, key, label::Nothing, u)
     end
 end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
+    @info "append unit to label" key label u
     isempty(label) && return attr[key] = UnitfulString(label, u)
     if attr[:plot_object].backend == Plots.PGFPlotsXBackend()
         attr[key] = UnitfulString(
             LaTeXString(
-                format_unit_label(
+                Plots.format_unit_label(
                     label,
                     latexify(u),
                     get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
@@ -240,7 +235,7 @@ function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString
     else
         attr[key] = UnitfulString(
             S(
-                format_unit_label(
+                Plots.format_unit_label(
                     label,
                     u,
                     get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
@@ -251,38 +246,10 @@ function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString
     end
 end
 
-#=============================================
-Surround unit string with specified delimiters
-=============================================#
-
-const UNIT_FORMATS = Dict(
-    :round => ('(', ')'),
-    :square => ('[', ']'),
-    :curly => ('{', '}'),
-    :angle => ('<', '>'),
-    :slash => '/',
-    :slashround => (" / (", ")"),
-    :slashsquare => (" / [", "]"),
-    :slashcurly => (" / {", "}"),
-    :slashangle => (" / <", ">"),
-    :verbose => " in units of ",
-    :none => nothing,
-)
-
-format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
-format_unit_label(l, u, f::Function)                   = f(l, u)
-format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
-format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
-format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
-format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
-format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
-format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
-
-getaxisunit(::AbstractString) = NoUnits
+getaxisunit(::Nothing) = nothing
 getaxisunit(s::UnitfulString) = s.unit
-getaxisunit(a::Axis) = getaxisunit(a[:guide])
+getaxisunit(a::Axis) = getaxisunit(a[:unit])
+getaxisunit(u) = u
 
 #==============
 Fix annotations

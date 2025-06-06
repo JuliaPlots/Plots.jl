@@ -1250,8 +1250,23 @@ macro ext_imp_use(imp_use::QuoteNode, mod::Symbol, args...)
     Expr(imp_use.value, ex) |> esc
 end
 
-# for UnitfulExt - cannot reside in `UnitfulExt` (macro)
-function protectedstring end  # COV_EXCL_LINE
+# for UnitfulExt 
+abstract type AbstractProtectedString <: AbstractString end
+struct ProtectedString{S} <: AbstractProtectedString
+    content::S
+end
+const APS = AbstractProtectedString
+# Minimum required AbstractString interface to work with PlotsBase
+Base.iterate(n::APS) = iterate(n.content)
+Base.iterate(n::APS, i::Integer) = iterate(n.content, i)
+Base.codeunit(n::APS) = codeunit(n.content)
+Base.ncodeunits(n::APS) = ncodeunits(n.content)
+Base.isvalid(n::APS, i::Integer) = isvalid(n.content, i)
+Base.pointer(n::APS) = pointer(n.content)
+Base.pointer(n::APS, i::Integer) = pointer(n.content, i)
+protectedstring(s) = ProtectedString(s)
+
+
 
 """
     P_str(s)
