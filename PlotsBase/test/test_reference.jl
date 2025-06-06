@@ -17,7 +17,7 @@ reference_dir(args...) =
     if (ref_dir = get(ENV, "PLOTSBASE_REFERENCE_DIR", nothing)) ≢ nothing
         joinpath(ref_dir, args...)
     else
-        joinpath(homedir(), ".julia", "dev", "PlotReferenceImages.jl", args...)
+        joinpath(first(Base.DEPOT_PATH), ".julia", "dev", "PlotReferenceImages.jl", args...)
     end
 reference_path(backend, version) =
     reference_dir("PlotsBase", string(backend), string(version))
