@@ -228,7 +228,7 @@ append_unit_if_needed!(attr, key, u) =
 append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 function append_unit_if_needed!(attr, key, label::Nothing, u)
-    attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
+    attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(LaTeXString(Latexify.latexify(u)), u)
     else
         UnitfulString(string(u), u)
@@ -236,7 +236,7 @@ function append_unit_if_needed!(attr, key, label::Nothing, u)
 end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
+    attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(
             LaTeXString(
                 format_unit_label(
