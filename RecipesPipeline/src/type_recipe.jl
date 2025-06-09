@@ -59,7 +59,15 @@ end
 function _apply_type_recipe(plotattributes, v::AVec{<:AVec}, letter)
     plt = plotattributes[:plot_object]
     preprocess_axis_args!(plt, plotattributes, letter)
-    # First we attempt the array type recipe and if any of the vector elements applies,
+    # First we try a vector of vectors recipe and see if that exists. if so, just stop there.
+    w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
+    if typeof(v) != typeof(w)
+        warn_on_recipe_aliases!(plt, plotattributes, :type, v)
+        postprocess_axis_args!(plt, plotattributes, letter)
+        return w
+    end
+
+    # Second we attempt the array type recipe and if any of the vector elements applies,
     # we will stop there. Note we use the same type equivalency test as for a general array 
     # to check if changes applied
     did_replace = false
