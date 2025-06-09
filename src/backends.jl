@@ -850,7 +850,7 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 # plotlyjs
 _post_imports(::PlotlyJSBackend) = @eval begin
     const PlotlyJS = Main.PlotlyJS
-    if Base.get_bool_env("PLOTS_PLOTLYJS_UNSAFE_ELECTRON", false)
+    if Plots.bool_env("PLOTS_PLOTLYJS_UNSAFE_ELECTRON", "false")
         (Sys.islinux() && isdefined(PlotlyJS, :unsafe_electron)) &&
             PlotlyJS.unsafe_electron()
     end
