@@ -5,8 +5,8 @@ using Test
 
 import Dates
 import RecipesPipeline: _prepare_series_data, _apply_type_recipe
-
 import RecipesBase
+import RecipesBase: @recipe
 
 @testset "DefaultsDict" begin
     dd = DefaultsDict(Dict(:foo => 1, :bar => missing), Dict(:foo => nothing, :baz => 'x'))
@@ -98,6 +98,25 @@ end
     @test typeof(res) <: Formatted
     @test res.data == [[Dates.value(Dates.Date(2001))]]
     @test res.formatter(Dates.value(Dates.Date(2001))) == "2001-01-01"
+
+    # Now we create a types that we've built Vec and Vec{Vec} recipes for to verify behaviour
+    struct Test1 <: Number
+        val::Float64
+    end
+
+    @recipe f(::Type{T}, v::T) where {T<:AbstractVector{<:Test1}} = map(x -> x.val + 1, v)
+
+    struct Test2 <: Number
+        val::Float64
+    end
+
+    @test _apply_type_recipe(plotattributes, Test1.([1, 2, 3]), :x) == [2.0, 3.0, 4.0]
+    @test _apply_type_recipe(plotattributes, [Test1.([1, 2, 3])], :x) == [[2.0, 3.0, 4.0]]
+
+    @recipe f(::Type{T}, v::T) where {T<:AbstractVector{<:AbstractVector{<:Test2}}} =
+        map(x -> map(y -> y.val + 2, x), v)
+
+    @test _apply_type_recipe(plotattributes, [Test2.([1, 2, 3])], :x) == [[3.0, 4.0, 5.0]]
 end
 
 @testset "_prepare_series_data" begin
