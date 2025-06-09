@@ -311,7 +311,6 @@ end
 
 has_ticks(axis::Axis) = _has_ticks(get(axis, :ticks, nothing))
 
-
 # update an Axis object with magic args and keywords
 function PlotsBase.attr!(axis::Axis, args...; kw...)
     # first process args
@@ -345,8 +344,9 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
 end
 
 function get_guide(axis::Axis)
-    if isnothing(axis[:unit]) || axis[:guide] isa PlotsBase.ProtectedString ||
-        axis[:unitformat] == :none 
+    if isnothing(axis[:unit]) ||
+       axis[:guide] isa PlotsBase.ProtectedString ||
+       axis[:unitformat] == :none
         return axis[:guide]
     else
         ustr = if PlotsBase.backend_name() ≡ :pgfplotsx
@@ -359,13 +359,9 @@ function get_guide(axis::Axis)
         if isempty(axis[:guide])
             return ustr
         end
-        return format_unit_label(
-            axis[:guide],
-            ustr,
-            axis[:unitformat])
+        return format_unit_label(axis[:guide], ustr, axis[:unitformat])
     end
 end
-
 
 # Keyword options for unit formats
 const UNIT_FORMATS = Dict(
@@ -393,7 +389,6 @@ format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u,
 format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
 format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
 format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
-
 
 # -----------------------------------------------------------------------------
 

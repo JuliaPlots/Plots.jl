@@ -17,8 +17,16 @@ import Unitful:
     Level,
     Gain,
     uconvert
-import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis,
-    AbstractProtectedString, ProtectedString
+import PlotsBase:
+    PlotsBase,
+    @recipe,
+    PlotText,
+    Subplot,
+    AVec,
+    AMat,
+    Axis,
+    AbstractProtectedString,
+    ProtectedString
 import PlotsBase.Axes: format_unit_label
 import RecipesBase
 import LaTeXStrings: LaTeXString
@@ -215,7 +223,6 @@ struct UnitfulString{S,U} <: AbstractProtectedString
     unit::U
 end
 
-
 #=====================================
 Append unit to labels when appropriate
 This is needed for colorbars, etc., since axes have
@@ -299,7 +306,9 @@ function PlotsBase.locate_annotation(
     rel::NTuple{N,<:MissingOrQuantity},
     label,
 ) where {N}
-    units = getaxisunit(sp.attr[:xaxis]), getaxisunit(sp.attr[:yaxis]), getaxisunit(sp.attr[:zaxis])
+    units = getaxisunit(sp.attr[:xaxis]),
+    getaxisunit(sp.attr[:yaxis]),
+    getaxisunit(sp.attr[:zaxis])
     PlotsBase.locate_annotation(sp, _ustrip.(zip(units, rel)), label)
 end
 

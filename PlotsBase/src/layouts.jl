@@ -335,9 +335,8 @@ function link_axes!(axes::Axis...)
     a1 = axes[1]
     for i ∈ 2:length(axes)
         a2 = axes[i]
-        a1[:unit] ≡ a2[:unit] || error(
-            "Cannot link axes with different units: $(a1[:unit]) and $(a2[:unit])",
-        )
+        a1[:unit] ≡ a2[:unit] ||
+            error("Cannot link axes with different units: $(a1[:unit]) and $(a2[:unit])")
         expand_extrema!(a1, Axes.ignorenan_extrema(a2))
         for k ∈ (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
