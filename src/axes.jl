@@ -95,6 +95,11 @@ function attr!(axis::Axis, args...; kw...)
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
         elseif k === :guide && v isa AbstractString && isempty(v)
             plotattributes[k] = protectedstring(v)
+        elseif k === :unit 
+            if !isnothing(plotattributes[k]) && plotattributes[k] != v
+                @warn "Overriding unit for $(axis[:letter]) axis: $(plotattributes[k]) -> $v.  This will produce a plot, but series plotted before the override cannot update and will therefore be incorrectly treated as if they had the new units."
+            end
+            plotattributes[k] = v
         else
             plotattributes[k] = v
         end
@@ -114,7 +119,9 @@ Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 function get_guide(axis::Axis)
-    if isnothing(axis[:unit]) || axis[:guide] isa ProtectedString ||
+    if isnothing(axis[:guide])
+        return ""
+    elseif isnothing(axis[:unit]) || axis[:guide] isa ProtectedString ||
         axis[:unitformat] == :none 
         return axis[:guide]
     else

@@ -29,21 +29,20 @@ end
 
 function fixaxis!(attr, x, axisletter)
     # Attribute keys
-    axislabel = Symbol(axisletter, :guide) # xguide, yguide, zguide
-    axislims = Symbol(axisletter, :lims)   # xlims, ylims, zlims
-    axisticks = Symbol(axisletter, :ticks) # xticks, yticks, zticks
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
-    u = get!(attr, axisunit, _unit(eltype(x)))  # get the unit
-    # if the subplot already exists with data, use that unit instead
+    # if the subplot already exists with data, use that unit
     sp = get(attr, :subplot, 1)
-    if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
+    if sp ≤ length(attr[:plot_object])
         spu = getaxisunit(attr[:plot_object][sp][axis])
         if !isnothing(spu)
             u = spu
+        else # Subplot exists but doesn't have a unit yet
+            u = get!(attr, axisunit, _unit(eltype(x)))  # get the unit
         end
-        attr[axisunit] = u  # update the unit in the attributes
+    else # Subplot doesn't exist yet, so create it with given unit
+        u = get!(attr, axisunit, _unit(eltype(x)))  # get the unit
     end
     # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
     ustripattribute!(attr, err, u)

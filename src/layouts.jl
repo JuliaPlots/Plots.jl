@@ -664,8 +664,8 @@ function twin(sp, letter)
     tax[:grid] = false
     tax[:showaxis] = false
     tax[:ticks] = :none
-    tax[:unitformat] = :none
     tax[:unit] = orig_sp[get_attr_symbol(letter, :axis)][:unit]
+    tax[:guide] = nothing
     oax[:grid] = false
     oax[:mirror] = true
     twin_sp[:background_color_inside] = RGBA{Float64}(0, 0, 0, 0)
