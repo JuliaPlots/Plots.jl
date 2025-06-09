@@ -151,7 +151,7 @@ end
         image_comparison_facts(
             :gr,
             tol = PLOTSBASE_IMG_TOL,
-            skip = vcat(PlotsBase._backend_skips[:gr]),
+            skip = vcat(PlotsBase._backend_skips[:gr], skipped_examples),
             broken = broken_examples,
         )
     end

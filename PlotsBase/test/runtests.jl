@@ -48,6 +48,12 @@ using FileIO
 using Dates
 using Test
 
+const broken_examples = Int[]  # NOTE: unexpected pass is a failure
+Sys.isapple() && push!(broken_examples, 50)  # FIXME: https://github.com/jheinen/GR.jl/issues/550
+
+const skipped_examples = Int[]  # NOTE: won't error, regardless of the test output
+push!(skipped_examples, 62)  # TODO: remove when new GR release is out and lands through CI (compat issues)
+
 function available_channels()
     juliaup = "https://julialang-s3.julialang.org/juliaup"
     for i ∈ 1:6
@@ -88,10 +94,6 @@ is_ci() = Base.get_bool_env("CI", false)
 is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
 ref_name(i) = "ref" * lpad(i, 3, '0')
-
-const broken_examples = Int[]
-Sys.isapple() && push!(broken_examples, 50)  # FIXME: https://github.com/jheinen/GR.jl/issues/550
-push!(broken_examples, 62)  # TODO: remove when new GR release is out and lands through CI (compat issues)
 
 # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)
 names = if is_auto()
