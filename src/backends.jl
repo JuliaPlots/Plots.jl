@@ -848,6 +848,12 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # plotlyjs
+function _post_imports(::PlotlyJSBackend)
+    if Base.get_bool_env("PLOTS_PLOTLYJS_UNSAFE_ELECTRON", false)
+        (Sys.islinux() && isdefined(PlotlyJS, :unsafe_electron)) &&
+            PlotlyJS.unsafe_electron()
+    end
+end
 
 const _plotlyjs_attr       = _plotly_attr
 const _plotlyjs_seriestype = _plotly_seriestype

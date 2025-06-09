@@ -20,6 +20,7 @@ jobs:
       GKS_ENCODING: "utf8"
       GKSwstype: "nul"
       JULIA_CONDAPKG_BACKEND: "MicroMamba"
+      PLOTS_PLOTLYJS_UNSAFE_ELECTRON: "true"
       MPLBACKEND: "agg"
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
