@@ -3,7 +3,9 @@ using BenchmarkTools
 using StableRNGs
 using Test
 
-import RecipesPipeline: _prepare_series_data
+import Dates
+import RecipesPipeline: _prepare_series_data, _apply_type_recipe
+
 import RecipesBase
 
 @testset "DefaultsDict" begin
@@ -80,6 +82,22 @@ end
     @test RecipesPipeline.epochdays2epochms(1) == 86_400_000
 
     @test RecipesBase.is_key_supported("key")
+end
+
+@testset "_apply_type_recipe" begin
+    plt = nothing
+    plotattributes = Dict{Symbol,Any}(:plot_object => plt)
+    @test _apply_type_recipe(plotattributes, [1, 2, 3], :x) == [1, 2, 3]
+    @test _apply_type_recipe(plotattributes, [[1, 2], [3, 4]], :x) == [[1, 2], [3, 4]]
+    res = _apply_type_recipe(plotattributes, [Dates.Date(2001)], :x)
+    @test typeof(res) <: Formatted
+    @test res.data == [Dates.value(Dates.Date(2001))]
+    @test res.formatter(Dates.value(Dates.Date(2001))) == "2001-01-01"
+
+    res = _apply_type_recipe(plotattributes, [[Dates.Date(2001)]], :x)
+    @test typeof(res) <: Formatted
+    @test res.data == [[Dates.value(Dates.Date(2001))]]
+    @test res.formatter(Dates.value(Dates.Date(2001))) == "2001-01-01"
 end
 
 @testset "_prepare_series_data" begin
