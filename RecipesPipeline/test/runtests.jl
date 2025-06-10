@@ -3,8 +3,10 @@ using BenchmarkTools
 using StableRNGs
 using Test
 
-import RecipesPipeline: _prepare_series_data
+import Dates
+import RecipesPipeline: _prepare_series_data, _apply_type_recipe
 import RecipesBase
+import RecipesBase: @recipe
 
 @testset "DefaultsDict" begin
     dd = DefaultsDict(Dict(:foo => 1, :bar => missing), Dict(:foo => nothing, :baz => 'x'))
@@ -80,6 +82,41 @@ end
     @test RecipesPipeline.epochdays2epochms(1) == 86_400_000
 
     @test RecipesBase.is_key_supported("key")
+end
+
+@testset "_apply_type_recipe" begin
+    plt = nothing
+    plotattributes = Dict{Symbol,Any}(:plot_object => plt)
+    @test _apply_type_recipe(plotattributes, [1, 2, 3], :x) == [1, 2, 3]
+    @test _apply_type_recipe(plotattributes, [[1, 2], [3, 4]], :x) == [[1, 2], [3, 4]]
+    res = _apply_type_recipe(plotattributes, [Dates.Date(2001)], :x)
+    @test typeof(res) <: Formatted
+    @test res.data == [Dates.value(Dates.Date(2001))]
+    @test res.formatter(Dates.value(Dates.Date(2001))) == "2001-01-01"
+
+    res = _apply_type_recipe(plotattributes, [[Dates.Date(2001)]], :x)
+    @test typeof(res) <: Formatted
+    @test res.data == [[Dates.value(Dates.Date(2001))]]
+    @test res.formatter(Dates.value(Dates.Date(2001))) == "2001-01-01"
+
+    struct Test1 <: Number
+        val::Float64
+    end
+
+    @recipe f(::Type{T}, v::T) where {T<:AbstractVector{<:Test1}} = map(x -> x.val + 1, v)
+
+    @test _apply_type_recipe(plotattributes, Test1.([1, 2, 3]), :x) == [2.0, 3.0, 4.0]
+    @test _apply_type_recipe(plotattributes, [Test1.([1, 2, 3])], :x) == [[2.0, 3.0, 4.0]]
+
+    struct Test2 <: Number
+        val::Float64
+    end
+
+    @recipe f(::Type{T}, v::T) where {T<:AbstractVector{<:AbstractVector{<:Test2}}} =
+        map(x -> map(y -> y.val + 2, x), v)
+
+    @test _apply_type_recipe(plotattributes, Test2.([1, 2, 3]), :x) == Test2.([1, 2, 3])
+    @test _apply_type_recipe(plotattributes, [Test2.([1, 2, 3])], :x) == [[3.0, 4.0, 5.0]]
 end
 
 @testset "_prepare_series_data" begin

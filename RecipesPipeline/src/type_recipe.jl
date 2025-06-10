@@ -54,6 +54,52 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     w
 end
 
+# Specialisation to apply type recipes on a vector of vectors. The type recipe can either 
+# apply to the vector of elements or the elements themselves
+function _apply_type_recipe(plotattributes, v::AVec{<:AVec}, letter)
+    plt = plotattributes[:plot_object]
+    preprocess_axis_attrs!(plt, plotattributes, letter)
+    # First we attempt on the vector of vector type recipe across everything. 
+    w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
+    warn_on_recipe_aliases!(plt, plotattributes, :type, v)
+    if typeof(v) != typeof(w)
+        postprocess_axis_attrs!(plt, plotattributes, letter)
+        return w
+    end
+    # Next we attempt the array type recipe and if any of the vector elements applies,
+    # we will stop there. Note we use the same type equivalency test as for a general array 
+    # to check if changes applied
+    did_replace = false
+    w = map(v) do u
+        newu = RecipesBase.apply_recipe(plotattributes, typeof(u), u)[1].args[1]
+        warn_on_recipe_aliases!(plt, plotattributes, :type, u)
+        did_replace |= typeof(u) !== typeof(newu)
+        newu
+    end
+
+    # if nothing changed, then we attempt it at a piecewise level
+    if !did_replace
+        if (smv = skipmissing(Base.Iterators.flatten(v))) |> isempty
+            postprocess_axis_attrs!(plt, plotattributes, letter)
+            # We'll just leave it untampered with if there are no elements
+            return v
+        end
+        x = first(smv)
+        args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
+        warn_on_recipe_aliases!(plt, plotattributes, :type, x)
+        postprocess_axis_attrs!(plt, plotattributes, letter)
+        return if length(args) == 2 && all(arg -> arg isa Function, args)
+            numfunc, formatter = args
+            Formatted(map(u -> map(numfunc, u), v), formatter)
+        else
+            v
+        end
+    end
+
+    postprocess_axis_attrs!(plt, plotattributes, letter)
+    w
+end
+
 # special handling for Surface... need to properly unwrap and re-wrap
 _apply_type_recipe(
     plotattributes,
