@@ -306,6 +306,22 @@ with(:gr) do
             fillcolor = :blue,
             fillalpha = 0.2,
         )
+        # Validate still works when we iuse different int types
+        mesh3d(
+            x,
+            y,
+            z;
+            connections = [
+                Int32[1, 2, 4, 3], # Quadrangle
+                Int32[1, 2, 5], # Triangle
+                Int32[2, 4, 5], # Triangle
+                Int32[4, 3, 5], # Triangle
+                Int32[3, 1, 5],  # Triangle
+            ],
+            linecolor = :black,
+            fillcolor = :blue,
+            fillalpha = 0.2,
+        )
         @test true
     end
 
