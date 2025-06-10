@@ -206,6 +206,26 @@ end
         end
     end
 
+    let p = scatter(
+            [4],
+            [4],
+            plot_title = "x",
+            xlims = (0, 10),
+            ylims = (0, 10),
+            annotations = (4, 4, "4"),
+        )
+        for (i, sp) ∈ enumerate(p.subplots)
+            if i == p.attr[:plot_titleindex]
+                @test sp[:annotations] == []
+            else
+                @test length(sp[:annotations]) == 1
+                @test sp[:annotations][1][1] == 4
+                @test sp[:annotations][1][2] == 4
+                @test sp[:annotations][1][3].str == "4"
+            end
+        end
+    end
+
     let p = plot(
             scatter([4], [4], xlims = (0, 10), ylims = (0, 10)),
             scatter([4], [4], xlims = (0, 10), ylims = (0, 10)),

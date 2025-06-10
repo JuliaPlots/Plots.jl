@@ -248,7 +248,9 @@ function _update_subplot_attrs(
     # grab those args which apply to this subplot
     for k ∈ keys(_subplot_defaults)
         # We don't apply annotations to the plot-title sub-plot
-        k != :annotations || get(plt.attr, :plot_titleindex, 0) != subplot_index || continue
+        if k == :annotations && get(plt.attr, :plot_titleindex, 0) == subplot_index
+            continue
+        end
         PlotsBase.slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
     end
 
