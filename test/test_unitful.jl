@@ -34,11 +34,17 @@ end
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
         @test yguide(plot(y, ylabel = P"hello")) == "hello"
+        @test yguide(plot(y, ylabel = "hello", unitformat=:none)) == "hello"
         pl = plot(y, ylabel = "")
         @test yguide(pl) == ""
         @test yguide(plot!(pl, -y)) == ""
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
+        @test yguide(pl) == "hello (m)"
+        plot!(pl, -y; ylabel = "goodbye")
+        @test yguide(pl) == "goodbye (m)"
+        pl = plot(y)
+        plot!(pl, -y; ylabel = "hello")
         @test yguide(pl) == "hello (m)"
     end
 
@@ -46,6 +52,11 @@ end
         @test yguide(plot(y, yunit = cm)) == "cm"
         @test yseries(plot(y, yunit = cm)) ≈ ustrip.(cm, y)
         @test plot([copy(y), copy(y)], yunit = cm) |> pl -> yseries(pl, 1) ≈ yseries(pl, 2)
+        pl = plot(y)
+        @test_logs (:warn, "Overriding unit") plot!(pl; yunit = cm) 
+        @test yguide(pl) == "cm"
+        plot!(pl; ylabel="hello")
+        @test yguide(pl) == "hello (cm)"
     end
 
     @testset "ylims" begin # Using all(lims .≈ lims) because of uncontrolled type conversions?
@@ -272,6 +283,24 @@ end
         y = rand(10) * u"m"
         @test plot(y, label = P"meters") isa Plots.Plot
     end
+
+    @testset "twinx (#4750)" begin
+        y = rand(10) * u"m"
+        pl = plot(y; ylabel = "hello")
+        pl2 = twinx(pl)
+        plot!(pl2, 1 ./ y; ylabel = "goodbye", yunit = u"cm^-1")
+        @test pl isa Plots.Plot
+        @test pl2 isa Plots.Subplot
+        @test yguide(pl) == "hello (m)"
+        @test yguide(pl, 2) == "goodbye (cm^-1)"
+    end
+
+    @testset "bad link" begin
+        pl1 = plot(rand(10)*u"m")
+        pl2 = plot(rand(10)*u"s")
+        @test_throws "Cannot link axes" plot(pl1, pl2; link = :y)
+    end
+
 end
 
 @testset "Comparing apples and oranges" begin
