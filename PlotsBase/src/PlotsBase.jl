@@ -73,6 +73,10 @@ export
     plotarea,
     KW,
 
+    @cm,
+    @mm,
+    @in,
+
     theme,
     protect,
     plot,
