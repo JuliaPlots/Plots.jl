@@ -363,7 +363,7 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
         elseif ms === :vline && (perm == (:x, :y) || perm == (:y, :x))
             plotattributes[:markershape] = :hline
         end
-        if plotattributes[:seriestype] === :bar # bar calls expand_extrema! in its recipe...
+        if plotattributes[:seriestype] === :bar
             sp = plotattributes[:subplot]
             sp[get_attr_symbol(letter1, :axis)][:lims],
             sp[get_attr_symbol(letter2, :axis)][:lims] =
