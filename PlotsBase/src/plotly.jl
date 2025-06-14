@@ -1281,10 +1281,13 @@ function plotly_html_body(plt, style = nothing)
     uuid = UUIDs.uuid4()
     html = """
         <div id=\"$(uuid)\" style=\"$(style)\"></div>
+        <script src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js" onload="plots_jl_plotly_init()"></script>
         <script>
-        $(requirejs_prefix)
-        $(js_body(plt, uuid))
-        $(requirejs_suffix)
+        function plots_jl_plotly_init() {
+            $(requirejs_prefix)
+            $(js_body(plt, uuid))
+            $(requirejs_suffix)
+        }
         </script>
     """
     html
