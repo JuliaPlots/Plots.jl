@@ -779,6 +779,12 @@
         {
             "name": "Patrick Jaap",
             "type": "Other"
+        },
+        {
+            "affiliation": "European XFEL",
+            "name": "James Wrigley",
+            "orcid": "0009-0003-6525-7413",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
