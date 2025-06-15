@@ -24,6 +24,8 @@ use fixed version of Plotly instead of the latest one for stable dependency
 """
 const _plotly_min_js_filename = "plotly-2.6.3.min.js"
 
+const _requirejs_version = v"2.3.7"
+
 """
 Whether to use local embedded or local dependencies instead of CDN.
 """

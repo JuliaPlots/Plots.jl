@@ -785,6 +785,12 @@
             "name": "Isaac Wheeler",
             "orcid": "0000-0002-9717-073X",
             "type": "Other"
+        },
+        {
+            "affiliation": "European XFEL",
+            "name": "James Wrigley",
+            "orcid": "0009-0003-6525-7413",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
