@@ -292,7 +292,8 @@ end
         @test pl isa Plots.Plot
         @test pl2 isa Plots.Subplot
         @test yguide(pl, 1) == "hello (m)"
-        @test yguide(pl, 2) == "goodbye (cm^-1)"
+        # on MacOS the superscript gets rendered with Unicode, on Ubuntu and Windows no
+        @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"] 
         @test xguide(pl, 1) == "check"
         @test xguide(pl, 2) == ""
     end
