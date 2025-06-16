@@ -53,7 +53,7 @@ end
         @test yseries(plot(y, yunit = cm)) ≈ ustrip.(cm, y)
         @test plot([copy(y), copy(y)], yunit = cm) |> pl -> yseries(pl, 1) ≈ yseries(pl, 2)
         pl = plot(y)
-        @test_logs (:warn, "Overriding unit") plot!(pl; yunit = cm) 
+        @test_logs (:warn, r"Overriding unit") plot!(pl; yunit = cm) 
         @test yguide(pl) == "cm"
         plot!(pl; ylabel="hello")
         @test yguide(pl) == "hello (cm)"
@@ -286,19 +286,22 @@ end
 
     @testset "twinx (#4750)" begin
         y = rand(10) * u"m"
-        pl = plot(y; ylabel = "hello")
+        pl = plot(y; xlabel = "check", ylabel = "hello")
         pl2 = twinx(pl)
         plot!(pl2, 1 ./ y; ylabel = "goodbye", yunit = u"cm^-1")
         @test pl isa Plots.Plot
         @test pl2 isa Plots.Subplot
-        @test yguide(pl) == "hello (m)"
+        @test yguide(pl, 1) == "hello (m)"
         @test yguide(pl, 2) == "goodbye (cm^-1)"
+        @test xguide(pl, 1) == "check"
+        @test xguide(pl, 2) == ""
     end
 
     @testset "bad link" begin
         pl1 = plot(rand(10)*u"m")
         pl2 = plot(rand(10)*u"s")
-        @test_throws "Cannot link axes" plot(pl1, pl2; link = :y)
+        # TODO: On Julia 1.8 and above, can replace ErrorException with part of error message.
+        @test_throws ErrorException plot(pl1, pl2; link = :y)
     end
 
 end
