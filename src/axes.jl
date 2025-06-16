@@ -93,8 +93,10 @@ function attr!(axis::Axis, args...; kw...)
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
         elseif k === :lims && isa(v, NTuple{2,TimeType})
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
-        elseif k === :guide && v isa AbstractString && isempty(v)
-            plotattributes[k] = protectedstring(v)
+        elseif k === :guide && v isa AbstractString && isempty(v) &&
+            !haskey(kw, :unitformat)
+            plotattributes[:unitformat] = :none
+            plotattributes[k] = v
         elseif k === :unit 
             if !isnothing(plotattributes[k]) && plotattributes[k] != v
                 @warn "Overriding unit for $(axis[:letter]) axis: $(plotattributes[k]) -> $v.  This will produce a plot, but series plotted before the override cannot update and will therefore be incorrectly treated as if they had the new units."

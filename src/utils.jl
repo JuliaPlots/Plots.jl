@@ -1264,7 +1264,18 @@ Base.ncodeunits(n::APS) = ncodeunits(n.content)
 Base.isvalid(n::APS, i::Integer) = isvalid(n.content, i)
 Base.pointer(n::APS) = pointer(n.content)
 Base.pointer(n::APS, i::Integer) = pointer(n.content, i)
-protectedstring(s) = ProtectedString(s)
+function protectedstring(s)
+    Base.depwarn("""
+    `protectedstring` and the `P_str` macro (used for Unitful plots) are deprecated, 
+    and will be dropped in Plots.jl 2.0 . 
+
+    To suppress all axis labels, pass an empty string to `xlabel`, etc. 
+    To suppress units in axis labels pass `unitformat = :none` or `unitformat=(l,u)->l`
+    (equivalently for `xunitformat`, `yunitformat`, etc.).
+        """, :protectedstring, force=true)
+    return ProtectedString(s)
+end
+
 
 
 

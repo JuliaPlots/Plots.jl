@@ -38,6 +38,7 @@ end
         pl = plot(y, ylabel = "")
         @test yguide(pl) == ""
         @test yguide(plot!(pl, -y)) == ""
+        @test yguide(plot(y, ylabel="", unitformat=:round)) == "m"
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
         @test yguide(pl) == "hello (m)"
