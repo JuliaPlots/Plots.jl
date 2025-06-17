@@ -373,6 +373,7 @@ const UNIT_FORMATS = Dict(
     :curly => ('{', '}'),
     :angle => ('<', '>'),
     :slash => '/',
+    :space => " ",
     :slashround => (" / (", ")"),
     :slashsquare => (" / [", "]"),
     :slashcurly => (" / {", "}"),
@@ -383,7 +384,7 @@ const UNIT_FORMATS = Dict(
 )
 
 # All options for unit formats
-format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
+format_unit_label(l, u, f::Nothing)                    = l
 format_unit_label(l, u, f::Function)                   = f(l, u)
 format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
 format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
