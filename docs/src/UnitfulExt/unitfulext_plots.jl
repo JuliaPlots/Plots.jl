@@ -190,4 +190,10 @@ p1 = plot(x, y, line_z=t, linewidth=3, legend=false)
 p2 = scatter(x, y, marker_z=z, color=:bluesreds, legend=false)
 plot(p1, p2)
 
+# ## Shared axes
 
+x = range(0.0u"s", 10.0u"s", length=21)
+y = x * 5u"m/s" .+ 1u"m"
+pl = plot(x, y)
+pl2 = twinx()
+plot!(pl2, x, 1 ./y, ylabel="inverse distance")

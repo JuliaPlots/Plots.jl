@@ -41,9 +41,9 @@ plot!(rand(10)*u"m", inset=bbox(0.5, 0.5, 0.3, 0.3), subplot=2)
 
 plot(y, ylabel="mass")
 
-# Unless you want it untouched, in which case you can use a "protected" string using the `@P_str` macro.
+# If you want it untouched, set the `yunitformat` to `:nounit`.
 
-plot(y, ylabel=P"mass in kilograms")
+plot(y, ylabel="mass in kilograms", yunitformat=:nounit)
 
 # Just like with the `label` keyword for legends, no axis label is added if you specify the axis label to be an empty string.
 
@@ -60,22 +60,18 @@ plot([plot(y, ylab="mass", title=repr(s), unitformat=s) for s in (nothing, true,
 
 # `unitformat` can be one of a number of predefined symbols, defined in
 
-URsymbols = if isdefined(Base, :get_extension)
-     getproperty(Base.get_extension(Plots.PlotsBase, :UnitfulExt), :UNIT_FORMATS)
-else
-     Plots.UnitfulExt.UNIT_FORMATS
-end |> keys
+URsymbols = PlotsBase.Axes.UNIT_FORMATS |> keys
 
 # which correspond to these unit formats:
 
-plot([plot(y, ylab="mass", title=repr(s), unitformat=s) for s in URsymbols]...)
+plot([plot(y, ylab="mass", title=repr(s), unitformat=s) for s in URsymbols]..., size=(800, 600))
 
 # `unitformat` can also be a `Char`, a `String`, or a `Tuple` (of `Char`s or
 # `String`s), which will be inserted around the label and unit depending on the
 # length of the tuple:
 
 URtuples = [", in ", (", in (", ")"), ("[", "] = (", ")"), ':', ('$', '$'), (':', ':', ':')]
-plot([plot(y, ylab="mass", title=repr(s), unitformat=s) for s in URtuples]...)
+plot([plot(y, ylab="mass", title=repr(s), unitformat=s) for s in URtuples]..., size=(600,600))
 
 # For *extreme* customizability, you can also supply a function that turns two
 # arguments (label, unit) into a string:
@@ -85,9 +81,17 @@ plot(y, ylab="mass", unitformat=formatter)
 
 # ## Axis unit
 
-# You can use the axis-specific keyword arguments to convert units on the fly
+# You can use the axis-specific keyword arguments to choose axis units. However, doing this 
+# after the first series is plotted will produce incorrect plots--units get stripped 
+# according to the current units for each axis. So, this works:
 
 plot(y, yunit=u"g")
+
+
+# This will be wrong:
+
+plot(y)
+plot!(2y, yunit=u"g")
 
 # ## Axis limits and ticks
 
