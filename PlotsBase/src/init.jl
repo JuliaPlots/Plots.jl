@@ -6,6 +6,8 @@ const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.3.0.min.js"  # must match https://github.com/JuliaPlots/PlotlyJS.jl/blob/master/deps/plotly_cdn_version.jl
 
+const _requirejs_version = v"2.3.7"
+
 const _use_local_dependencies = Ref(false)
 const _use_local_plotlyjs = Ref(false)
 

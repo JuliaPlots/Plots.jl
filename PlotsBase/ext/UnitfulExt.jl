@@ -224,7 +224,6 @@ Base.isvalid(n::UnitfulString, i::Integer) = isvalid(n.content, i)
 Base.pointer(n::UnitfulString) = pointer(n.content)
 Base.pointer(n::UnitfulString, i::Integer) = pointer(n.content, i)
 
-
 #=====================================
 Append unit to labels when appropriate
 This is needed for colorbars, etc., since axes have
@@ -236,7 +235,7 @@ append_unit_if_needed!(attr, key, u) =
 # dispatch on the type of `label`
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 function append_unit_if_needed!(attr, key, label::Nothing, u)
-    attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
+    attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(LaTeXString(Latexify.latexify(u)), u)
     else
         UnitfulString(string(u), u)
@@ -244,7 +243,7 @@ function append_unit_if_needed!(attr, key, label::Nothing, u)
 end
 function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
     isempty(label) && return attr[key] = UnitfulString(label, u)
-    attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
+    attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(
             LaTeXString(
                 format_unit_label(
@@ -307,7 +306,9 @@ function PlotsBase.locate_annotation(
     rel::NTuple{N,<:MissingOrQuantity},
     label,
 ) where {N}
-    units = getaxisunit(sp.attr[:xaxis]), getaxisunit(sp.attr[:yaxis]), getaxisunit(sp.attr[:zaxis])
+    units = getaxisunit(sp.attr[:xaxis]),
+    getaxisunit(sp.attr[:yaxis]),
+    getaxisunit(sp.attr[:zaxis])
     PlotsBase.locate_annotation(sp, _ustrip.(zip(units, rel)), label)
 end
 

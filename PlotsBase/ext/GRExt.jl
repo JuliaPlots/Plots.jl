@@ -2151,14 +2151,14 @@ function gr_draw_surface(series, x, y, z, clims)
         GR.setfillcolorind(0)
         GR.surface(x, y, z, get(e_kwargs, :display_option, GR.OPTION_FILLED_MESH))
     elseif st ≡ :mesh3d
-        if series[:connections] isa AbstractVector{<:AbstractVector{Int}}
+        if series[:connections] isa AbstractVector{<:AbstractVector{<:Integer}}
             # Combination of any polygon types
             cns = map(cns -> [length(cns), cns...], series[:connections])
-        elseif series[:connections] isa AbstractVector{NTuple{N,Int}} where {N}
+        elseif series[:connections] isa AbstractVector{NTuple{N,<:Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             N = length(series[:connections][1])
             cns = map(cns -> [N, cns...], series[:connections])
-        elseif series[:connections] isa NTuple{3,<:AbstractVector{Int}}
+        elseif series[:connections] isa NTuple{3,<:AbstractVector{<:Integer}}
             # Only triangles - connections have to be 0-based (indexing)
             ci, cj, ck = series[:connections]
             if !(length(ci) == length(cj) == length(ck))
