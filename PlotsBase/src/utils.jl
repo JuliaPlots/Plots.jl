@@ -931,10 +931,8 @@ end
 _generate_doclist(attributes) =
     replace(join(sort(collect(attributes)), "\n- "), "_" => "\\_")
 
-
 # for `PGFPlotsx` together with `UnitfulExt`
 function pgfx_sanitize_string end  # COV_EXCL_LINE
-
 
 function extrema_plus_buffer(v, buffmult = 0.2)
     vmin, vmax = ignorenan_extrema(v)

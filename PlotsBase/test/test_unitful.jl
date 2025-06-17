@@ -116,10 +116,14 @@ end
         @test yguide(plot(x, y, ylabel = "hello")) == "hello (s)"
         @test xguide(plot(x, y, xlabel = "hello", ylabel = "hello")) == "hello (m)"
         @test yguide(plot(x, y, xlabel = "hello", ylabel = "hello")) == "hello (s)"
-        @test xguide(plot(x, y, xlabel = "hello", unitformat=:nounit)) == "hello"
-        @test yguide(plot(x, y, ylabel = "hello", unitformat=:nounit)) == "hello"
-        @test xguide(plot(x, y, xlabel = "hello", ylabel = "hello", unitformat=:nounit)) == "hello"
-        @test yguide(plot(x, y, xlabel = "hello", ylabel = "hello", unitformat=:nounit)) == "hello"
+        @test xguide(plot(x, y, xlabel = "hello", unitformat = :nounit)) == "hello"
+        @test yguide(plot(x, y, ylabel = "hello", unitformat = :nounit)) == "hello"
+        @test xguide(
+            plot(x, y, xlabel = "hello", ylabel = "hello", unitformat = :nounit)
+        ) == "hello"
+        @test yguide(
+            plot(x, y, xlabel = "hello", ylabel = "hello", unitformat = :nounit)
+        ) == "hello"
     end
 
     @testset "unitformat" begin
@@ -288,7 +292,7 @@ end
         @test pl2 isa Plots.Subplot
         @test yguide(pl, 1) == "hello (m)"
         # on MacOS the superscript gets rendered with Unicode, on Ubuntu and Windows no
-        @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"] 
+        @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"]
         @test xguide(pl, 1) == "check"
         @test xguide(pl, 2) == ""
     end
