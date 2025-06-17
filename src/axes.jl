@@ -95,7 +95,7 @@ function attr!(axis::Axis, args...; kw...)
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
         elseif k === :guide && v isa AbstractString && isempty(v) &&
             !haskey(kw, :unitformat)
-            plotattributes[:unitformat] = :none
+            plotattributes[:unitformat] = :nounit
             plotattributes[k] = v
         elseif k === :unit 
             if !isnothing(plotattributes[k]) && plotattributes[k] != v
@@ -124,7 +124,7 @@ function get_guide(axis::Axis)
     if isnothing(axis[:guide])
         return ""
     elseif isnothing(axis[:unit]) || axis[:guide] isa ProtectedString ||
-        axis[:unitformat] == :none 
+        axis[:unitformat] == :nounit 
         return axis[:guide]
     else
         ustr = if Plots.backend_name() ≡ :pgfplotsx
@@ -156,6 +156,7 @@ const UNIT_FORMATS = Dict(
     :slashangle => (" / <", ">"),
     :verbose => " in units of ",
     :none => nothing,
+    :nounit => (l,u)->l
 )
 
 # All options for unit formats

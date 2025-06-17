@@ -34,7 +34,7 @@ end
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
         @test yguide(plot(y, ylabel = P"hello")) == "hello"
-        @test yguide(plot(y, ylabel = "hello", unitformat=:none)) == "hello"
+        @test yguide(plot(y, ylabel = "hello", unitformat=:nounit)) == "hello"
         pl = plot(y, ylabel = "")
         @test yguide(pl) == ""
         @test yguide(plot!(pl, -y)) == ""
@@ -156,6 +156,7 @@ end
         @test yguide(plot(args...; kwargs..., unitformat = :slashangle)) == "hello / <s>"
         @test yguide(plot(args...; kwargs..., unitformat = :verbose)) ==
               "hello in units of s"
+        @test yguide(plot(args...; kwargs..., unitformat = :nounit)) == "hello"
     end
 end
 

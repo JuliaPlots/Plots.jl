@@ -1270,7 +1270,7 @@ function protectedstring(s)
     and will be dropped in Plots.jl 2.0 . 
 
     To suppress all axis labels, pass an empty string to `xlabel`, etc. 
-    To suppress units in axis labels pass `unitformat = :none` or `unitformat=(l,u)->l`
+    To suppress units in axis labels pass `unitformat = :nounit` or `unitformat=(l,u)->l`
     (equivalently for `xunitformat`, `yunitformat`, etc.).
         """, :protectedstring, force=true)
     return ProtectedString(s)
