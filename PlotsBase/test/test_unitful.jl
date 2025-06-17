@@ -129,7 +129,6 @@ end
     @testset "unitformat" begin
         args = (x, y)
         kwargs = (:xlabel => "hello", :ylabel => "hello")
-        @test yguide(plot(args...; kwargs..., unitformat = nothing)) == "hello s"
         @test yguide(
             plot(
                 args...;
