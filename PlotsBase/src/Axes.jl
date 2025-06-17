@@ -330,6 +330,11 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
         elseif k ≡ :guide && v isa AbstractString && isempty(v)
             plotattributes[:unitformat] = :nounit
             plotattributes[k] = v
+        elseif k ≡ :unit
+            if !isnothing(plotattributes[k]) && plotattributes[k] != v
+                @warn "Overriding unit for $(axis[:letter]) axis: $(plotattributes[k]) -> $v.  This will produce a plot, but series plotted before the override cannot update and will therefore be incorrectly treated as if they had the new units."
+            end
+            plotattributes[k] = v
         else
             plotattributes[k] = v
         end

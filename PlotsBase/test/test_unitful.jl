@@ -146,7 +146,10 @@ end
         @test yguide(plot(args...; kwargs..., unitformat = '?')) == "hello ? s"
         @test yguide(plot(args...; kwargs..., unitformat = ('<', '>'))) == "hello <s>"
         @test yguide(plot(args...; kwargs..., unitformat = ('A', 'B', 'C'))) == "Ahello BsC"
-        @test yguide(plot(args...; kwargs..., unitformat = false)) == "hello s"
+        @test yguide(plot(args...; kwargs..., unitformat = false)) == "hello"
+        @test yguide(plot(args...; kwargs..., unitformat = :none)) == "hello"
+        @test yguide(plot(args...; kwargs..., unitformat = nothing)) == "hello"
+        @test yguide(plot(args...; kwargs..., unitformat = :nounit)) == "hello"
         @test yguide(plot(args...; kwargs..., unitformat = true)) == "hello (s)"
         @test yguide(plot(args...; kwargs..., unitformat = :round)) == "hello (s)"
         @test yguide(plot(args...; kwargs..., unitformat = :square)) == "hello [s]"
@@ -157,9 +160,9 @@ end
         @test yguide(plot(args...; kwargs..., unitformat = :slashsquare)) == "hello / [s]"
         @test yguide(plot(args...; kwargs..., unitformat = :slashcurly)) == "hello / {s}"
         @test yguide(plot(args...; kwargs..., unitformat = :slashangle)) == "hello / <s>"
+        @test yguide(plot(args...; kwargs..., unitformat = :space)) == "hello s"
         @test yguide(plot(args...; kwargs..., unitformat = :verbose)) ==
               "hello in units of s"
-        @test yguide(plot(args...; kwargs..., unitformat = :nounit)) == "hello"
     end
 end
 
@@ -288,8 +291,8 @@ end
         pl = plot(y; xlabel = "check", ylabel = "hello")
         pl2 = twinx(pl)
         plot!(pl2, 1 ./ y; ylabel = "goodbye", yunit = u"cm^-1")
-        @test pl isa Plots.Plot
-        @test pl2 isa Plots.Subplot
+        @test pl isa PlotsBase.Plot
+        @test pl2 isa PlotsBase.Subplot
         @test yguide(pl, 1) == "hello (m)"
         # on MacOS the superscript gets rendered with Unicode, on Ubuntu and Windows no
         @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"]
@@ -406,7 +409,7 @@ end
 end
 
 @testset "UnitfulString" begin
-    str = UnitfulString("mass", u"kg")
+    str = Base.get_extension(PlotsBase, :UnitfulExt).UnitfulString("mass", u"kg")
     @test pointer(str) isa Ptr
     @test pointer(str, 1) isa Ptr
     @test isvalid(str, 1)
