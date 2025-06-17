@@ -329,7 +329,7 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
         elseif k ≡ :lims && isa(v, NTuple{2,Dates.TimeType})
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
         elseif k ≡ :guide && v isa AbstractString && isempty(v)
-            plotattributes[:unitformat] = :none
+            plotattributes[:unitformat] = :nounit
             plotattributes[k] = v
         else
             plotattributes[k] = v
@@ -379,6 +379,7 @@ const UNIT_FORMATS = Dict(
     :slashangle => (" / <", ">"),
     :verbose => " in units of ",
     :none => nothing,
+    :nounit => (l,u)->l # no unit, just label,
 )
 
 # All options for unit formats

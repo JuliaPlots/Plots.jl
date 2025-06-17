@@ -425,7 +425,7 @@ function twin(sp, letter)
     tax[:grid] = false
     tax[:showaxis] = false
     tax[:ticks] = :none
-    tax[:unitformat] = :none
+    tax[:unitformat] = :nounit
     tax[:unit] = orig_sp[get_attr_symbol(letter, :axis)][:unit]
     oax[:grid] = false
     oax[:mirror] = true
