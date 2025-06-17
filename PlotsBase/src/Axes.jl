@@ -345,8 +345,7 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
 end
 
 function get_guide(axis::Axis)
-    if isnothing(axis[:unit]) || axis[:guide] isa PlotsBase.ProtectedString ||
-        axis[:unitformat] == :none 
+    if isnothing(axis[:unit]) || axis[:unitformat] == :nounit
         return axis[:guide]
     else
         ustr = if PlotsBase.backend_name() ≡ :pgfplotsx

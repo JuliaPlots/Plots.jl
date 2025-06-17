@@ -266,11 +266,6 @@ end
         @test contour(x, y, z) isa PlotsBase.Plot
         @test contourf(x, y, z) isa PlotsBase.Plot
     end
-
-    @testset "ProtectedString" begin
-        y = rand(10) * u"m"
-        @test plot(y, label = P"meters") isa PlotsBase.Plot
-    end
 end
 
 @testset "Comparing apples and oranges" begin
@@ -373,8 +368,8 @@ end
     @test length(pl.subplots[1].attr[:annotations]) == 1
 end
 
-@testset "AbstractProtectedString" begin
-    str = P"mass"
+@testset "UnitfulString" begin
+    str = UnitfulString("mass", u"kg")
     @test pointer(str) isa Ptr
     @test pointer(str, 1) isa Ptr
     @test isvalid(str, 1)

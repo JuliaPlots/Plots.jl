@@ -17,8 +17,7 @@ import Unitful:
     Level,
     Gain,
     uconvert
-import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis,
-    AbstractProtectedString, ProtectedString
+import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis
 import PlotsBase.Axes: format_unit_label
 import RecipesBase
 import LaTeXStrings: LaTeXString
@@ -208,12 +207,22 @@ end
 
 #=======================================
 Label string containing unit information
+Used only for colorbars, etc., which don't 
+have a bettter place for storing units
 =======================================#
 
-struct UnitfulString{S,U} <: AbstractProtectedString
+struct UnitfulString{S,U}
     content::S
     unit::U
 end
+# Minimum required AbstractString interface to work with PlotsBase
+Base.iterate(n::UnitfulString) = iterate(n.content)
+Base.iterate(n::UnitfulString, i::Integer) = iterate(n.content, i)
+Base.codeunit(n::UnitfulString) = codeunit(n.content)
+Base.ncodeunits(n::UnitfulString) = ncodeunits(n.content)
+Base.isvalid(n::UnitfulString, i::Integer) = isvalid(n.content, i)
+Base.pointer(n::UnitfulString) = pointer(n.content)
+Base.pointer(n::UnitfulString, i::Integer) = pointer(n.content, i)
 
 
 #=====================================
@@ -225,7 +234,6 @@ distinct unit handling
 append_unit_if_needed!(attr, key, u) =
     append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
 # dispatch on the type of `label`
-append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
 append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
 function append_unit_if_needed!(attr, key, label::Nothing, u)
     attr[key] = if attr[:plot_object].backend == PlotsBase.backend_instance(:pgfplotsx)
