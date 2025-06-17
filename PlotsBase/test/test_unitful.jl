@@ -33,7 +33,7 @@ end
 
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
-        @test yguide(plot(y, ylabel = P"hello")) == "hello"
+        @test yguide(plot(y, ylabel = "hello", unitformat=:nounit)) == "hello"
         pl = plot(y, ylabel = "")
         @test yguide(pl) == ""
         @test yguide(plot!(pl, -y)) == ""
@@ -102,13 +102,13 @@ end
 
     @testset "labels" begin
         @test xguide(plot(x, y, xlabel = "hello")) == "hello (m)"
-        @test xguide(plot(x, y, xlabel = P"hello")) == "hello"
         @test yguide(plot(x, y, ylabel = "hello")) == "hello (s)"
-        @test yguide(plot(x, y, ylabel = P"hello")) == "hello"
         @test xguide(plot(x, y, xlabel = "hello", ylabel = "hello")) == "hello (m)"
-        @test xguide(plot(x, y, xlabel = P"hello", ylabel = P"hello")) == "hello"
         @test yguide(plot(x, y, xlabel = "hello", ylabel = "hello")) == "hello (s)"
-        @test yguide(plot(x, y, xlabel = P"hello", ylabel = P"hello")) == "hello"
+        @test xguide(plot(x, y, xlabel = "hello", unitformat=:nounit)) == "hello"
+        @test yguide(plot(x, y, ylabel = "hello", unitformat=:nounit)) == "hello"
+        @test xguide(plot(x, y, xlabel = "hello", ylabel = "hello", unitformat=:nounit)) == "hello"
+        @test yguide(plot(x, y, xlabel = "hello", ylabel = "hello", unitformat=:nounit)) == "hello"
     end
 
     @testset "unitformat" begin
