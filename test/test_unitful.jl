@@ -275,7 +275,7 @@ end
         if us[1] != us[2] && us[1] != 1 && us[2] != 1 # Non-matching dimensions
             @test_throws DimensionError scatter!(x, y, marker_z = y) 
         else # One is dimensionless, or have same dimensions
-            @test scatter!(x, y, marker_z = y) isa PlotsBase.Plot #
+            @test scatter!(x, y, marker_z = y) isa Plots.Plot #
         end
     end
 
