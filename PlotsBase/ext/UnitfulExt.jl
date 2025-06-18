@@ -211,7 +211,7 @@ Used only for colorbars, etc., which don't
 have a bettter place for storing units
 =======================================#
 
-struct UnitfulString{S,U}
+struct UnitfulString{S,U} <: AbstractString
     content::S
     unit::U
 end
