@@ -380,7 +380,7 @@ const UNIT_FORMATS = Dict(
     :slashangle => (" / <", ">"),
     :verbose => " in units of ",
     :none => nothing,
-    :nounit => (l, u)->l # no unit, just label
+    :nounit => (l, u)->l, # no unit, just label
 )
 
 # All options for unit formats

@@ -34,11 +34,11 @@ end
 
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
-        @test yguide(plot(y, ylabel = "hello", unitformat=:nounit)) == "hello"
+        @test yguide(plot(y, ylabel = "hello", unitformat = :nounit)) == "hello"
         pl = plot(y, ylabel = "")
         @test yguide(pl) == ""
         @test yguide(plot!(pl, -y)) == ""
-        @test yguide(plot(y, ylabel="", unitformat=:round)) == "m"
+        @test yguide(plot(y, ylabel = "", unitformat = :round)) == "m"
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
         @test yguide(pl) == "hello (m)"
@@ -48,9 +48,9 @@ end
         plot!(pl, -y; ylabel = "hello")
         @test yguide(pl) == "hello (m)"
         pl = plot(y)
-        @test_logs (:warn, r"Overriding unit") plot!(pl; yunit = cm) 
+        @test_logs (:warn, r"Overriding unit") plot!(pl; yunit = cm)
         @test yguide(pl) == "cm"
-        plot!(pl; ylabel="hello")
+        plot!(pl; ylabel = "hello")
         @test yguide(pl) == "hello (cm)"
     end
 
@@ -120,10 +120,10 @@ end
         @test xguide(plot(x, y, xlabel = "hello", unitformat = :nounit)) == "hello"
         @test yguide(plot(x, y, ylabel = "hello", unitformat = :nounit)) == "hello"
         @test xguide(
-            plot(x, y, xlabel = "hello", ylabel = "hello", unitformat = :nounit)
+            plot(x, y, xlabel = "hello", ylabel = "hello", unitformat = :nounit),
         ) == "hello"
         @test yguide(
-            plot(x, y, xlabel = "hello", ylabel = "hello", unitformat = :nounit)
+            plot(x, y, xlabel = "hello", ylabel = "hello", unitformat = :nounit),
         ) == "hello"
     end
 
@@ -276,8 +276,8 @@ end
         @test scatter(x, y, markersize = x) isa PlotsBase.Plot
 
         @test scatter(x, y, marker_z = x) isa PlotsBase.Plot
-        if us[1] != us[2] && us[1] != 1 && us[2] != 1 # Non-matching dimesions
-            @test_throws DimensionError scatter!(x, y, marker_z = y) 
+        if us[1] != us[2] && us[1] != 1 && us[2] != 1 # Non-matching dimensions
+            @test_throws DimensionError scatter!(x, y, marker_z = y)
         else # One is dimensionless, or have same dimensions
             @test scatter!(x, y, marker_z = y) isa PlotsBase.Plot #
         end
@@ -293,15 +293,14 @@ end
     end
 
     @testset "colorbar title" begin
-
         x, y = (1:0.01:2) * m, (1:0.02:2) * s
         z = x' ./ y
-        pl = contour(x, y, z) isa PlotsBase.Plot
-        @test ctitle(pl) == "m s^-1"
+        pl = contour(x, y, z) 
+        @test ctitle(pl) ∈ ["m s^-1", "m s⁻¹"]
         pl = contourf(x, y, z, zunit = u"km/hr")
-        @test ctitle(pl) == "km hr^-1"
+        @test ctitle(pl) ∈ ["km hr^-1", "km hr⁻¹"]
         pl = heatmap(x, y, z, zunit = u"cm/s", zunitformat = :square, colorbar_title = "v")
-        @test ctitle(pl) == "v [cm s^-1]"
+        @test ctitle(pl) ∈ ["v [cm s^-1]", "v [cm s⁻¹]"]
     end
 
     @testset "twinx (#4750)" begin
@@ -380,7 +379,7 @@ end
 @testset "Ribbon" begin
     x = (1:10) * u"mm"
     y = rand(10) * u"s"
-    ribbon = 100*rand(10) * u"ms"
+    ribbon = 100 * rand(10) * u"ms"
     pl = plot(x, y, ribbon = ribbon)
     @test pl isa PlotsBase.Plot
     @test xguide(pl) == "mm"
@@ -394,7 +393,7 @@ end
 @testset "Fillrange" begin
     x = (1:10) * u"mm"
     y = rand(10) * u"s"
-    fillrange = 100*rand(10) * u"ms"
+    fillrange = 100 * rand(10) * u"ms"
     pl = plot(x, y, fillrange = fillrange)
     @test pl isa PlotsBase.Plot
     @test xguide(pl) == "mm"

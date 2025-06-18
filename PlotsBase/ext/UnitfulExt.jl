@@ -171,12 +171,12 @@ end
 # Markers / lines
 function fixseriescolor!(attr, key)
     sp = get(attr, :subplot, 1)
-    # Precedence to user-passed zunit
-    if haskey(attr, :zunit) 
+    if haskey(attr, :zunit)
+        # Precedence to user-passed zunit
         u = attr[:zunit]
         ustripattribute!(attr, key, u)
-    # Then to an existing subplot's colorbar title
     elseif sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
+        # Then to an existing subplot's colorbar title
         cbar_title = get(attr[:plot_object][sp], :colorbar_title, nothing)
         spu = (cbar_title isa UnitfulString ? cbar_title.unit : nothing)
         if !isnothing(spu)
@@ -185,8 +185,8 @@ function fixseriescolor!(attr, key)
         else
             u = ustripattribute!(attr, key)
         end
-    # Otherwise, get from the attribute
     else
+        # Otherwise, get from the attribute
         u = ustripattribute!(attr, key)
     end
     ustripattribute!(attr, :clims, u)
@@ -214,7 +214,7 @@ function ustripattribute!(attr, key, u)
         if eltype(v) <: Quantity
             attr[key] = _ustrip.(u, v)
         elseif v isa Tuple
-            attr[key] = Tuple([(eltype(vi) <: Quantity ? _ustrip.(u, vi) : vi) for vi in v])
+            attr[key] = Tuple([(eltype(vi) <: Quantity ? _ustrip.(u, vi) : vi) for vi ∈ v])
         end
     end
     u
@@ -274,16 +274,7 @@ function append_cbar_unit_if_needed!(attr, label::S, u) where {S<:AbstractString
             u,
         )
     else
-        UnitfulString(
-            S(
-                format_unit_label(
-                    label,
-                    u,
-                    get(attr, :zunitformat, :round),
-                ),
-            ),
-            u,
-        )
+        UnitfulString(S(format_unit_label(label, u, get(attr, :zunitformat, :round))), u)
     end
 end
 
