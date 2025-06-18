@@ -160,7 +160,7 @@ plot(rand(100)*u"km", layout=@layout([a b;c]), group=group, linetype=[:bar :scat
 xs = [string("x", i) for i = 1:10]
 ys = [string("y", i) for i = 1:4]
 z = float((1:4) * reshape(1:10, 1, :)) * u"km"
-heatmap(xs, ys, z, aspect_ratio=1)
+heatmap(xs, ys, z, aspect_ratio=1, colorbar_title="dist", zunitformat=:square)
 
 # ## Magic grid argument
 

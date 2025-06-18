@@ -37,7 +37,7 @@ Main recipe
     if axisletter ≡ :z && get(plotattributes, :seriestype, :nothing) ∈ clims_types
         u = get(plotattributes, :zunit, _unit(eltype(x)))
         ustripattribute!(plotattributes, :clims, u)
-        append_unit_if_needed!(plotattributes, :colorbar_title, u)
+        append_cbar_unit_if_needed!(plotattributes, u)
     end
     fixaxis!(plotattributes, x, axisletter)
 end
@@ -65,9 +65,9 @@ function fixaxis!(attr, x, axisletter)
         ustripattribute!(attr, :fillrange, u)
     end
     fixaspectratio!(attr, u, axisletter)
-    fixmarkercolor!(attr)
+    fixseriescolor!(attr, :marker_z)
+    fixseriescolor!(attr, :line_z)
     fixmarkersize!(attr)
-    fixlinecolor!(attr)
     _ustrip.(u, x)  # strip the unit
 end
 
@@ -76,7 +76,7 @@ end
     u = get(plotattributes, :zunit, _unit(eltype(z)))
     ustripattribute!(plotattributes, :clims, u)
     z = fixaxis!(plotattributes, z, :z)
-    append_unit_if_needed!(plotattributes, :colorbar_title, u)
+    append_cbar_unit_if_needed!(plotattributes, u)
     x, y, z
 end
 
@@ -169,15 +169,30 @@ function fixaspectratio!(attr, u, axisletter)
 end
 
 # Markers / lines
-function fixmarkercolor!(attr)
-    u = ustripattribute!(attr, :marker_z)
+function fixseriescolor!(attr, key)
+    sp = get(attr, :subplot, 1)
+    # Precedence to user-passed zunit
+    if haskey(attr, :zunit) 
+        u = attr[:zunit]
+        ustripattribute!(attr, key, u)
+    # Then to an existing subplot's colorbar title
+    elseif sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
+        cbar_title = get(attr[:plot_object][sp], :colorbar_title, nothing)
+        spu = (cbar_title isa UnitfulString ? cbar_title.unit : nothing)
+        if !isnothing(spu)
+            u = spu
+            ustripattribute!(attr, key, u)
+        else
+            u = ustripattribute!(attr, key)
+        end
+    # Otherwise, get from the attribute
+    else
+        u = ustripattribute!(attr, key)
+    end
     ustripattribute!(attr, :clims, u)
-    u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
-end
-function fixlinecolor!(attr)
-    u = ustripattribute!(attr, :line_z)
-    ustripattribute!(attr, :clims, u)
-    u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
+    # fixmarkercolor! is called for each axis, so after the first pass,
+    # u will be NoUnits and we don't want to append unit again
+    u == NoUnits || append_cbar_unit_if_needed!(attr, u)
 end
 fixmarkersize!(attr) = ustripattribute!(attr, :markersize)
 
@@ -230,26 +245,30 @@ This is needed for colorbars, etc., since axes have
 distinct unit handling
 =====================================#
 
-append_unit_if_needed!(attr, key, u) =
-    append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
+append_cbar_unit_if_needed!(attr, u) =
+    append_cbar_unit_if_needed!(attr, get(attr, :colorbar_title, nothing), u)
 # dispatch on the type of `label`
-append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
-function append_unit_if_needed!(attr, key, label::Nothing, u)
-    attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
+append_cbar_unit_if_needed!(attr, label::UnitfulString, u) = nothing
+function append_cbar_unit_if_needed!(attr, label::Nothing, u)
+    unitformat = get(attr, Symbol(:z, :unitformat), :round)
+    if unitformat ∈ [:nounit, :none, false, nothing]
+        return attr[:colorbar_title] = UnitfulString("", u)
+    end
+    attr[:colorbar_title] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(LaTeXString(Latexify.latexify(u)), u)
     else
         UnitfulString(string(u), u)
     end
 end
-function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
-    isempty(label) && return attr[key] = UnitfulString(label, u)
-    attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
+function append_cbar_unit_if_needed!(attr, label::S, u) where {S<:AbstractString}
+    isempty(label) && return attr[:colorbar_title] = UnitfulString(label, u)
+    attr[:colorbar_title] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(
             LaTeXString(
                 format_unit_label(
                     label,
                     Latexify.latexify(u),
-                    get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
+                    get(attr, :zunitformat, :round),
                 ),
             ),
             u,
@@ -260,7 +279,7 @@ function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString
                 format_unit_label(
                     label,
                     u,
-                    get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
+                    get(attr, :zunitformat, :round),
                 ),
             ),
             u,

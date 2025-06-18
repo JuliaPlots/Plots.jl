@@ -130,6 +130,11 @@ plot(x, y, z)
 
 heatmap((1:5)u"μs", 1:4, rand(5,4)u"m", clims=(0u"m", 2u"m"))
 
+# To specify colorbar units and unit formatting, use `zunit`, `zunitformat`, 
+# and `cbar_title`:
+
+heatmap((1:5)u"μs", 1:4, rand(5,4)u"m", zunit=u"cm", zunitformat=:square, cbar_title="dist")
+
 # ## Scatter plots
 
 # You can do scatter plots
