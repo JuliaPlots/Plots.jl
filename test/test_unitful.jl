@@ -5,6 +5,7 @@ using Unitful: m, cm, s, DimensionError
 xguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:xaxis])
 yguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:yaxis])
 zguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:zaxis])
+ctitle(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:colorbar_title]
 xseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:x]
 yseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:y]
 zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:z]
@@ -269,7 +270,13 @@ end
         x, y = rand(10) * us[1], rand(10) * us[2]
         @test scatter(x, y) isa Plots.Plot
         @test scatter(x, y, markersize = x) isa Plots.Plot
-        @test scatter(x, y, line_z = x) isa Plots.Plot
+
+        @test scatter(x, y, marker_z = x) isa Plots.Plot
+        if us[1] != us[2] && us[1] != 1 && us[2] != 1 # Non-matching dimensions
+            @test_throws DimensionError scatter!(x, y, marker_z = y) 
+        else # One is dimensionless, or have same dimensions
+            @test scatter!(x, y, marker_z = y) isa PlotsBase.Plot #
+        end
     end
 
     @testset "contour(x::$(us[1]), y::$(us[2]))" for us in collect(
@@ -284,6 +291,18 @@ end
     @testset "ProtectedString" begin
         y = rand(10) * u"m"
         @test plot(y, label = P"meters") isa Plots.Plot
+    end
+
+    @testset "colorbar title" begin
+
+        x, y = (1:0.01:2) * m, (1:0.02:2) * s
+        z = x' ./ y
+        pl = contour(x, y, z) 
+        @test ctitle(pl) ∈ ["m s^-1", "m s⁻¹"]
+        pl = contourf(x, y, z, zunit = u"km/hr")
+        @test ctitle(pl) ∈ ["km hr^-1", "km hr⁻¹"]
+        pl = heatmap(x, y, z, zunit = u"cm/s", zunitformat = :square, colorbar_title = "v")
+        @test ctitle(pl) ∈ ["v [cm s^-1]", "v [cm s⁻¹]"]
     end
 
     @testset "twinx (#4750)" begin
