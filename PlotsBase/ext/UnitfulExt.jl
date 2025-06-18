@@ -44,7 +44,6 @@ end
 
 function fixaxis!(attr, x, axisletter)
     # Attribute keys
-    axislabel = Symbol(axisletter, :guide) # xguide, yguide, zguide
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
@@ -52,7 +51,6 @@ function fixaxis!(attr, x, axisletter)
     # if the subplot already exists with data, get its unit
     sp = get(attr, :subplot, 1)
     if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
-        label = attr[:plot_object][sp][axis][:guide]
         spu = getaxisunit(attr[:plot_object][sp][axis])
         if !isnothing(spu)
             u = spu
@@ -200,6 +198,8 @@ function ustripattribute!(attr, key, u)
         v = attr[key]
         if eltype(v) <: Quantity
             attr[key] = _ustrip.(u, v)
+        elseif v isa Tuple
+            attr[key] = Tuple([(eltype(vi) <: Quantity ? _ustrip.(u, vi) : vi) for vi in v])
         end
     end
     u
