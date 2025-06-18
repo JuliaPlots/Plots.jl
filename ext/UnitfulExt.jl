@@ -183,6 +183,8 @@ function ustripattribute!(attr, key, u)
         v = attr[key]
         if eltype(v) <: Quantity
             attr[key] = _ustrip.(u, v)
+        elseif v isa Tuple
+            attr[key] = Tuple([(eltype(vi) <: Quantity ? _ustrip.(u, vi) : vi) for vi in v])
         end
     end
     u

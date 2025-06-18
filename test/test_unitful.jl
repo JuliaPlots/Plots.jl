@@ -354,20 +354,29 @@ end
     @test pl isa Plots.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
+    pl = plot(x, y, xerr = ex, yerr = (ey, ey ./ 2))
+    @test pl isa Plots.Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
 end
 
 @testset "Ribbon" begin
-    x = rand(10) * u"mm"
+    x = (1:10) * u"mm"
     y = rand(10) * u"s"
     ribbon = rand(10) * u"ms"
+    ribbon = 100*rand(10) * u"ms"
     pl = plot(x, y, ribbon = ribbon)
+    @test pl isa Plots.Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
+    pl = plot(x, y, ribbon = (ribbon, ribbon .* 2))
     @test pl isa Plots.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
 end
 
 @testset "Fillrange" begin
-    x = rand(10) * u"mm"
+    x = (1:10) * u"mm"
     y = rand(10) * u"s"
     fillrange = rand(10) * u"ms"
     pl = plot(x, y, fillrange = fillrange)
