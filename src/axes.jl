@@ -132,9 +132,7 @@ function get_guide(axis::Axis)
         else
             string(axis[:unit])
         end
-        if isempty(axis[:guide])
-            return ustr
-        end
+        isempty(axis[:guide]) && return ustr
         return format_unit_label(
             axis[:guide],
             ustr,

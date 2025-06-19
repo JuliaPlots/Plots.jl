@@ -36,10 +36,10 @@ function fixaxis!(attr, x, axisletter)
     sp = get(attr, :subplot, 1)
     if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
         spu = getaxisunit(attr[:plot_object][sp][axis])
-        if !isnothing(spu)
-            u = spu
-        else # Subplot exists but doesn't have a unit yet
-            u = get!(attr, axisunit, _unit(eltype(x)))  # get the unit
+        u = if isnothing(spu)  # subplot exists but doesn't have a unit yet
+            get!(attr, axisunit, _unit(eltype(x)))  # get the unit
+        else
+            spu 
         end
     else # Subplot doesn't exist yet, so create it with given unit
         u = get!(attr, axisunit, _unit(eltype(x)))  # get the unit
@@ -163,12 +163,11 @@ function fixseriescolor!(attr, key)
     # Then to an existing subplot's colorbar title
     elseif sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
         cbar_title = get(attr[:plot_object][sp], :colorbar_title, nothing)
-        spu = (cbar_title isa UnitfulString ? cbar_title.unit : nothing)
-        if !isnothing(spu)
-            u = spu
-            ustripattribute!(attr, key, u)
+        spu = cbar_title isa UnitfulString ? cbar_title.unit : nothing
+        u = if isnothing(spu)
+            ustripattribute!(attr, key)
         else
-            u = ustripattribute!(attr, key)
+            ustripattribute!(attr, key, spu)
         end
     # Otherwise, get from the attribute
     else
