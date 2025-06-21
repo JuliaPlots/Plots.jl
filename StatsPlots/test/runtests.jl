@@ -145,16 +145,16 @@ end
         mds_plt = plot(M)
         @test mds_plt[1][1][:x] == Y[:, 1]
         @test mds_plt[1][1][:y] == Y[:, 2]
-        @test mds_plt[1][:xaxis][:guide] == "MDS1"
-        @test mds_plt[1][:yaxis][:guide] == "MDS2"
+        @test PlotsBase.get_guide(mds_plt[1][:xaxis]) == "MDS1"
+        @test PlotsBase.get_guide(mds_plt[1][:yaxis]) == "MDS2"
 
         mds_plt2 = plot(M; mds_axes = (3, 1, 2))
         @test mds_plt2[1][1][:x] == Y[:, 3]
         @test mds_plt2[1][1][:y] == Y[:, 1]
         @test mds_plt2[1][1][:z] == Y[:, 2]
-        @test mds_plt2[1][:xaxis][:guide] == "MDS3"
-        @test mds_plt2[1][:yaxis][:guide] == "MDS1"
-        @test mds_plt2[1][:zaxis][:guide] == "MDS2"
+        @test PlotsBase.get_guide(mds_plt2[1][:xaxis]) == "MDS3"
+        @test PlotsBase.get_guide(mds_plt2[1][:yaxis]) == "MDS1"
+        @test PlotsBase.get_guide(mds_plt2[1][:zaxis]) == "MDS2"
     end
 end
 

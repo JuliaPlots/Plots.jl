@@ -126,7 +126,6 @@ export
     animate,
     @animate,
     @gif,
-    @P_str,
     Animation,
 
     test_examples,

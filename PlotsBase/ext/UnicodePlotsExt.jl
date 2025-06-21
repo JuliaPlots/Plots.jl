@@ -195,8 +195,8 @@ function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         kw = (
             compact = true,
             title = texmath2unicode(sp[:title]),
-            xlabel = texmath2unicode(xaxis[:guide]),
-            ylabel = texmath2unicode(yaxis[:guide]),
+            xlabel = texmath2unicode(PlotsBase.get_guide(xaxis)),
+            ylabel = texmath2unicode(PlotsBase.get_guide(yaxis)),
             labels = !plot_3d,  # guide labels and limits do not make sense in 3d
             xscale = xaxis[:scale],
             yscale = yaxis[:scale],

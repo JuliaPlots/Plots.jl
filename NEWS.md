@@ -17,6 +17,13 @@
 - Types are no longer part of the Plots API this affects
   - `Shape`, which is now `shape`
 - The default `label` is now `:none`, use `:auto` to restore the previous behaviour
+- UnitfulExt changes:
+  - The `P_str` macro is no longer provided as API. The intended goal was simply to not put 
+  units on axis labels which were "protected strings". To achieve this now, pass `unitformat=:nounit`.
+  - The axis option `unitformat=:none`, `unitformat=nothing`, and `unitformat=false` previously 
+    printed the axis guide as `string(label, " ", unit)`. That behavior is now moved to `unitformat=:space`,
+    and `:none`, `nothing`, and `false` print the axis guide without units.
+
 
 ---
 

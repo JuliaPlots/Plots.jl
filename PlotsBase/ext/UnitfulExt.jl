@@ -18,6 +18,7 @@ import Unitful:
     Gain,
     uconvert
 import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis
+import PlotsBase.Axes: format_unit_label
 import RecipesBase
 import LaTeXStrings: LaTeXString
 import Latexify
@@ -36,38 +37,37 @@ Main recipe
     if axisletter ≡ :z && get(plotattributes, :seriestype, :nothing) ∈ clims_types
         u = get(plotattributes, :zunit, _unit(eltype(x)))
         ustripattribute!(plotattributes, :clims, u)
-        append_unit_if_needed!(plotattributes, :colorbar_title, u)
+        append_cbar_unit_if_needed!(plotattributes, u)
     end
     fixaxis!(plotattributes, x, axisletter)
 end
 
 function fixaxis!(attr, x, axisletter)
     # Attribute keys
-    axislabel = Symbol(axisletter, :guide) # xguide, yguide, zguide
-    axislims = Symbol(axisletter, :lims)   # xlims, ylims, zlims
-    axisticks = Symbol(axisletter, :ticks) # xticks, yticks, zticks
     err = Symbol(axisletter, :error)       # xerror, yerror, zerror
     axisunit = Symbol(axisletter, :unit)   # xunit, yunit, zunit
     axis = Symbol(axisletter, :axis)       # xaxis, yaxis, zaxis
-    u = pop!(attr, axisunit, _unit(eltype(x)))  # get the unit
+    u = get!(attr, axisunit, _unit(eltype(x)))  # get the unit
     # if the subplot already exists with data, get its unit
     sp = get(attr, :subplot, 1)
     if sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
-        label = attr[:plot_object][sp][axis][:guide]
-        u = getaxisunit(label)
-        get!(attr, axislabel, label)  # if label was not given as an argument, reuse
+        spu = getaxisunit(attr[:plot_object][sp][axis])
+        if !isnothing(spu)
+            u = spu
+        end
+        attr[axisunit] = u  # update the unit in the attributes
+        # get!(attr, axislabel, label)  # if label was not given as an argument, reuse
     end
     # fix the attributes: labels, lims, ticks, marker/line stuff, etc.
-    append_unit_if_needed!(attr, axislabel, u)
     ustripattribute!(attr, err, u)
     if axisletter ≡ :y
         ustripattribute!(attr, :ribbon, u)
         ustripattribute!(attr, :fillrange, u)
     end
     fixaspectratio!(attr, u, axisletter)
-    fixmarkercolor!(attr)
+    fixseriescolor!(attr, :marker_z)
+    fixseriescolor!(attr, :line_z)
     fixmarkersize!(attr)
-    fixlinecolor!(attr)
     _ustrip.(u, x)  # strip the unit
 end
 
@@ -76,7 +76,7 @@ end
     u = get(plotattributes, :zunit, _unit(eltype(z)))
     ustripattribute!(plotattributes, :clims, u)
     z = fixaxis!(plotattributes, z, :z)
-    append_unit_if_needed!(plotattributes, :colorbar_title, u)
+    append_cbar_unit_if_needed!(plotattributes, u)
     x, y, z
 end
 
@@ -169,13 +169,32 @@ function fixaspectratio!(attr, u, axisletter)
 end
 
 # Markers / lines
-function fixmarkercolor!(attr)
-    u = ustripattribute!(attr, :marker_z)
+function fixseriescolor!(attr, key)
+    sp = get(attr, :subplot, 1)
+    if haskey(attr, :zunit)
+        # Precedence to user-passed zunit
+        u = attr[:zunit]
+        ustripattribute!(attr, key, u)
+    elseif sp ≤ length(attr[:plot_object]) && attr[:plot_object].n > 0
+        # Then to an existing subplot's colorbar title
+        cbar_title = get(attr[:plot_object][sp], :colorbar_title, nothing)
+        spu = (cbar_title isa UnitfulString ? cbar_title.unit : nothing)
+        if !isnothing(spu)
+            u = spu
+            ustripattribute!(attr, key, u)
+        else
+            u = ustripattribute!(attr, key)
+        end
+    else
+        # Otherwise, get from the attribute
+        u = ustripattribute!(attr, key)
+    end
     ustripattribute!(attr, :clims, u)
-    u == NoUnits || append_unit_if_needed!(attr, :colorbar_title, u)
+    # fixmarkercolor! is called for each axis, so after the first pass,
+    # u will be NoUnits and we don't want to append unit again
+    u == NoUnits || append_cbar_unit_if_needed!(attr, u)
 end
 fixmarkersize!(attr) = ustripattribute!(attr, :markersize)
-fixlinecolor!(attr) = ustripattribute!(attr, :line_z)
 
 # strip unit from attribute[key]
 ustripattribute!(attr, key) =
@@ -194,6 +213,8 @@ function ustripattribute!(attr, key, u)
         v = attr[key]
         if eltype(v) <: Quantity
             attr[key] = _ustrip.(u, v)
+        elseif v isa Tuple
+            attr[key] = Tuple([(eltype(vi) <: Quantity ? _ustrip.(u, vi) : vi) for vi ∈ v])
         end
     end
     u
@@ -201,68 +222,59 @@ end
 
 #=======================================
 Label string containing unit information
+Used only for colorbars, etc., which don't 
+have a bettter place for storing units
 =======================================#
 
-abstract type AbstractProtectedString <: AbstractString end
-struct ProtectedString{S} <: AbstractProtectedString
-    content::S
-end
-struct UnitfulString{S,U} <: AbstractProtectedString
+struct UnitfulString{S,U} <: AbstractString
     content::S
     unit::U
 end
 # Minimum required AbstractString interface to work with PlotsBase
-const S = AbstractProtectedString
-Base.iterate(n::S) = iterate(n.content)
-Base.iterate(n::S, i::Integer) = iterate(n.content, i)
-Base.codeunit(n::S) = codeunit(n.content)
-Base.ncodeunits(n::S) = ncodeunits(n.content)
-Base.isvalid(n::S, i::Integer) = isvalid(n.content, i)
-Base.pointer(n::S) = pointer(n.content)
-Base.pointer(n::S, i::Integer) = pointer(n.content, i)
-
-PlotsBase.protectedstring(s) = ProtectedString(s)
+Base.iterate(n::UnitfulString) = iterate(n.content)
+Base.iterate(n::UnitfulString, i::Integer) = iterate(n.content, i)
+Base.codeunit(n::UnitfulString) = codeunit(n.content)
+Base.ncodeunits(n::UnitfulString) = ncodeunits(n.content)
+Base.isvalid(n::UnitfulString, i::Integer) = isvalid(n.content, i)
+Base.pointer(n::UnitfulString) = pointer(n.content)
+Base.pointer(n::UnitfulString, i::Integer) = pointer(n.content, i)
 
 #=====================================
 Append unit to labels when appropriate
+This is needed for colorbars, etc., since axes have
+distinct unit handling
 =====================================#
 
-append_unit_if_needed!(attr, key, u) =
-    append_unit_if_needed!(attr, key, get(attr, key, nothing), u)
+append_cbar_unit_if_needed!(attr, u) =
+    append_cbar_unit_if_needed!(attr, get(attr, :colorbar_title, nothing), u)
 # dispatch on the type of `label`
-append_unit_if_needed!(attr, key, label::ProtectedString, u) = nothing
-append_unit_if_needed!(attr, key, label::UnitfulString, u) = nothing
-function append_unit_if_needed!(attr, key, label::Nothing, u)
-    attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
+append_cbar_unit_if_needed!(attr, label::UnitfulString, u) = nothing
+function append_cbar_unit_if_needed!(attr, label::Nothing, u)
+    unitformat = get(attr, Symbol(:z, :unitformat), :round)
+    if unitformat ∈ [:nounit, :none, false, nothing]
+        return attr[:colorbar_title] = UnitfulString("", u)
+    end
+    attr[:colorbar_title] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(LaTeXString(Latexify.latexify(u)), u)
     else
         UnitfulString(string(u), u)
     end
 end
-function append_unit_if_needed!(attr, key, label::S, u) where {S<:AbstractString}
-    isempty(label) && return attr[key] = UnitfulString(label, u)
-    attr[key] = if PlotsBase.backend_name() ≡ :pgfplotsx
+function append_cbar_unit_if_needed!(attr, label::S, u) where {S<:AbstractString}
+    isempty(label) && return attr[:colorbar_title] = UnitfulString(label, u)
+    attr[:colorbar_title] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(
             LaTeXString(
                 format_unit_label(
                     label,
                     Latexify.latexify(u),
-                    get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
+                    get(attr, :zunitformat, :round),
                 ),
             ),
             u,
         )
     else
-        UnitfulString(
-            S(
-                format_unit_label(
-                    label,
-                    u,
-                    get(attr, Symbol(get(attr, :letter, ""), :unitformat), :round),
-                ),
-            ),
-            u,
-        )
+        UnitfulString(S(format_unit_label(label, u, get(attr, :zunitformat, :round))), u)
     end
 end
 
@@ -270,34 +282,9 @@ end
 Surround unit string with specified delimiters
 =============================================#
 
-const UNIT_FORMATS = Dict(
-    :round => ('(', ')'),
-    :square => ('[', ']'),
-    :curly => ('{', '}'),
-    :angle => ('<', '>'),
-    :slash => '/',
-    :slashround => (" / (", ")"),
-    :slashsquare => (" / [", "]"),
-    :slashcurly => (" / {", "}"),
-    :slashangle => (" / <", ">"),
-    :verbose => " in units of ",
-    :none => nothing,
-)
-
-format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
-format_unit_label(l, u, f::Function)                   = f(l, u)
-format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
-format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
-format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
-format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
-format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
-format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
-
-getaxisunit(::AbstractString) = NoUnits
-getaxisunit(s::UnitfulString) = s.unit
-getaxisunit(a::Axis) = getaxisunit(a[:guide])
+getaxisunit(::Nothing) = nothing
+getaxisunit(u) = u
+getaxisunit(a::Axis) = getaxisunit(a[:unit])
 
 #==============
 Fix annotations
@@ -329,7 +316,9 @@ function PlotsBase.locate_annotation(
     rel::NTuple{N,<:MissingOrQuantity},
     label,
 ) where {N}
-    units = getaxisunit(sp.attr[:xaxis], sp.attr[:yaxis], sp.attr[:zaxis])
+    units = getaxisunit(sp.attr[:xaxis]),
+    getaxisunit(sp.attr[:yaxis]),
+    getaxisunit(sp.attr[:zaxis])
     PlotsBase.locate_annotation(sp, _ustrip.(zip(units, rel)), label)
 end
 
