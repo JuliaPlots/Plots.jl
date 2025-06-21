@@ -1377,7 +1377,7 @@ function test_examples(
     Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))
-    callback === nothing || callback(m, pkgname, i)
+    callback === nothing || Base.invokelatest(callback, m, pkgname, i))
     m.Plots.current()
 end
 
