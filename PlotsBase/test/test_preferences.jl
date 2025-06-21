@@ -67,7 +67,7 @@ end
             (Sys.iswindows() && be ≡ :plotlyjs) && continue  # FIXME: OutOfMemory
         end
         @test_logs PlotsBase.set_default_backend!(be)  # test the absence of warnings
-        rm.(Base.find_all_in_cache_path(Base.module_keys[PlotsBase]))  # make sure the compiled cache is removed
+        rm.(Base.find_all_in_cache_path(Base.PkgId(PlotsBase, string(nameof(PlotsBase)))))  # make sure the compiled cache is removed
         script = tempname()
         write(
             script,
