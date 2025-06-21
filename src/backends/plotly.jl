@@ -122,7 +122,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     framestyle = sp[:framestyle]
     ax = KW(
         :visible => framestyle !== :none,
-        :title => axis[:guide],
+        :title => Plots.get_guide(axis),
         :showgrid => axis[:grid],
         :gridcolor =>
             rgba_string(plot_color(axis[:foreground_color_grid], axis[:gridalpha])),

@@ -153,7 +153,7 @@ end
     @test haskey(Plots._keyAliases, :x_guide_position)
     @test !haskey(Plots._keyAliases, :xguide_position)
     pl = plot(1:2, xl = "x label")
-    @test pl[1][:xaxis][:guide] === "x label"
+    @test Plots.get_guide(pl[1][:xaxis]) === "x label"
     pl = plot(1:2, xrange = (0, 3))
     @test xlims(pl) === (0, 3)
     pl = plot(1:2, xtick = [1.25, 1.5, 1.75])

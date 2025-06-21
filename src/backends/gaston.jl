@@ -424,7 +424,7 @@ function gaston_parse_axes_args(
         end
         push!(
             axesconf,
-            "set $(letter)$(I)label '$(axis[:guide])' $(gaston_font(guide_font))",
+            "set $(letter)$(I)label '$(Plots.get_guide(axis))' $(gaston_font(guide_font))",
         )
 
         logscale, base = if (scale = axis[:scale]) === :identity
