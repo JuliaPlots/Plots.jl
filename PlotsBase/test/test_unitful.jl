@@ -295,7 +295,7 @@ end
     @testset "colorbar title" begin
         x, y = (1:0.01:2) * m, (1:0.02:2) * s
         z = x' ./ y
-        pl = contour(x, y, z) 
+        pl = contour(x, y, z)
         @test ctitle(pl) ∈ ["m s^-1", "m s⁻¹"]
         pl = contourf(x, y, z, zunit = u"km/hr")
         @test ctitle(pl) ∈ ["km hr^-1", "km hr⁻¹"]
