@@ -1385,8 +1385,8 @@ function test_examples(
     Base.eval(m, exprs)
 
     disp && Base.eval(m, :(gui(current())))
-    callback ≡ nothing || callback(m, pkgname, i)
-    m.PlotsBase.current()
+    callback ≡ nothing || Base.invokelatest(callback, m, pkgname, i)
+    Base.eval(m, :(current()))
 end
 
 # generate all plots and create a dict mapping idx --> plt
