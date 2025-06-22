@@ -337,11 +337,12 @@ Plots.with(:pgfplotsx) do
     end
 
     @testset "Markers and Paths" begin
+        cycle_upto(itr, n) = collect(Iterators.take(Iterators.cycle(itr), n))
         pl = plot(
             5 .- ones(9),
-            markershape = [:utriangle, :rect],
+            markershape = cycle_upto([:utriangle, :rect], 9),
             markersize = 8,
-            color = [:red, :black],
+            color = cycle_upto([:red, :black], 9),
         )
         axis_contents = first(get_pgf_axes(pl)).contents
         plots = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
