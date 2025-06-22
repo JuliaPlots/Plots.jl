@@ -1105,9 +1105,12 @@ function gr_add_legend(sp, leg, viewport_area)
             if vertical
                 ypos -= leg.dy
             else
-                # println(string(series[:label]), " ", nentry, " ", nentry % legend_cols)
+                # row-major sorting
                 xpos += nentry % legend_cols == 0 ? -(legend_cols - 1) * leg.dx : leg.dx
                 ypos -= nentry % legend_cols == 0 ? leg.dy : 0
+                # column-major sorting
+                # xpos += nentry % legend_rows == 0 ? leg.dx : 0
+                # ypos -= nentry % legend_rows == 0 ? -(legend_rows - 1) * leg.dy : leg.dy
                 nentry += 1
             end
         end
@@ -1234,14 +1237,13 @@ function gr_get_legend_geometry(vp, sp)
     elseif legend_column > nseries && nseries != 0 # catch plot_title here
         @warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
         (1 + has_title, nseries)
-    elseif legend_column == 0
-        @warn "n° of legend_column=$legend_column. Assuming vertical layout."
+    elseif legend_column == 0 || legend_column < -1
+        @warn "n° of legend_column=$legend_column has undefined behaviour. Assuming vertical layout."
         vertical = true
         (has_title + nseries, 1)
     else
         (ceil(Int64, nseries / legend_column) + has_title, legend_column)
     end
-    #println(column_layout)
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
