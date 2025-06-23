@@ -127,15 +127,17 @@ function get_guide(axis::Axis)
         axis[:unitformat] == :nounit 
         return axis[:guide]
     else
-        ustr = if Plots.backend_name() ≡ :pgfplotsx
+        unit = if axis[:unitformat] isa Function
+            unit = axis[:unit]
+        elseif Plots.backend_name() ≡ :pgfplotsx
             Latexify.latexify(axis[:unit])
         else
             string(axis[:unit])
         end
-        isempty(axis[:guide]) && return ustr
+        isempty(axis[:guide]) && return unit
         return format_unit_label(
             axis[:guide],
-            ustr,
+            unit,
             axis[:unitformat])
     end
 end
