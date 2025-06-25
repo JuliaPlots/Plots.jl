@@ -128,7 +128,7 @@ function get_guide(axis::Axis)
         return axis[:guide]
     else
         unit = if axis[:unitformat] isa Function
-            unit = axis[:unit]
+            axis[:unit]
         elseif Plots.backend_name() ≡ :pgfplotsx
             Latexify.latexify(axis[:unit])
         else
