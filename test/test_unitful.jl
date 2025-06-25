@@ -1,6 +1,7 @@
 using Plots, Test
 using Unitful
 using Unitful: m, cm, s, DimensionError
+using Latexify, UnitfulLatexify
 # Some helper functions to access the subplot labels and the series inside each test plot
 xguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:xaxis])
 yguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:yaxis])
@@ -291,6 +292,14 @@ end
     @testset "ProtectedString" begin
         y = rand(10) * u"m"
         @test plot(y, label = P"meters") isa Plots.Plot
+    end
+
+    @testset "latexify as unitformat" begin
+        y = rand(10) * u"m^-1"
+        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left/\\;\\mathrm{m}^{-1}\\right.\$"
+
+        uf = (l, u) -> l * " (" * latexify(u) * ")"
+        @test yguide(plot(y, ylabel = "hello", unitformat = uf)) == "hello (\$\\mathrm{m}^{-1}\$)"
     end
 
     @testset "colorbar title" begin
