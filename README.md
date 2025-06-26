@@ -2,32 +2,24 @@
   <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
+
 [gh-ci-url]: 
 https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
-
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges
-
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
-
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://docs.juliaplots.org/stable
-
 [![Plots Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FPlots&query=total_requests&suffix=%2Fmonth&label=Downloads)](https://juliapkgstats.com/pkg/Plots)
-
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-dev-url]: https://docs.juliaplots.org/dev
-
 [![][gh-ci-img]][gh-ci-url]
 [![][pkgeval-img]][pkgeval-url]
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 [![][docs-stable-img]][docs-stable-url]
 [![][docs-dev-img]][docs-dev-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
-
 [gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
 [gh-ci-url]: https://github.com/JuliaPlots/GraphRecipes.jl/actions?query=workflow%3Aci
 <a href='https://codespaces.new/JuliaPlots/Plots.jl?quickstart=1'><img src='https://github.com/codespaces/badge.svg' alt='Open in GitHub Codespaces' style='max-width: 100%;'></a>
