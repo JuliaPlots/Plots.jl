@@ -31,12 +31,6 @@ https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=mast
 [gh-ci-url]: https://github.com/JuliaPlots/GraphRecipes.jl/actions?query=workflow%3Aci
 <a href='https://codespaces.new/JuliaPlots/Plots.jl?quickstart=1'><img src='https://github.com/codespaces/badge.svg' alt='Open in GitHub Codespaces' style='max-width: 100%;'></a>
 
-# GraphRecipes
-The repository formerly known as PlotRecipes
-
-[![Build Status][gh-ci-img]][gh-ci-url]
-[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/stable/GraphRecipes/introduction)
-[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 
 ## Summary
 In this repository, a graph is a network of connected nodes (although sometimes people use the same word to refer to a plot). If you want to do plotting, then use [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
