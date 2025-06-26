@@ -6,7 +6,7 @@
 [gh-ci-url]: 
 https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
 
-[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
+[![Aqua.Jl QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges
 
