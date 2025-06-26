@@ -1,4 +1,4 @@
-<a href="https://opencollective.com/plots/donate" target="_blank">
+<a href="https://opencollective.com/plots/donate" target="_black">
 
 
 [gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
