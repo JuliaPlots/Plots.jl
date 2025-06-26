@@ -1,4 +1,4 @@
-<a>:href="https://opencollective.com/rei_de_roma/donate" target=_blank">
+<a>href="https://opencollective.com/rei_de_roma/donate" target=_blank">
 <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
