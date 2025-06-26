@@ -1,0 +1,20 @@
+ GraphRecipes
+ Markdown
+
+cd(@__DIR__)
+
+readme = read("../README.md", String) |> Markdown.parse
+content = readme.content
+
+code_blocks = []
+    paragraph ∈ content
+      paragraph isa Markdown.Code
+        push!(code_blocks, paragraph.code)
+    
+
+
+# Parse the code examples on the README into expressions. Ignore the first one, which is
+# the installation instructions.
+readme_exprs = [Meta.parse("begin $(code_blocks[i]) end") for i ∈ 2:length(code_blocks)]
+
+julia_logo_pun() = eval(readme_exprs[1])
