@@ -2,8 +2,6 @@
   <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
-# Plots
-
 [gh-ci-url]: 
 https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
 
@@ -39,6 +37,8 @@ https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=mast
 In this repository, a graph is a network of connected nodes (although sometimes people use the same word to refer to a plot). If you want to do plotting, then use [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
 
 For a given graph, there are many legitimate ways to display and visualize the graph. However, some graph layouts will convey the structure of the underlying graph much more clearly than other layouts. GraphRecipes provides many options for producing graph layouts including  (un)directed graphs, tree graphs and arc/chord diagrams. For each layout type the `graphplot` function will try to create a default layout that optimizes visual clarity. However, the user can tweak the default layout through a large number of powerful keyword arguments, see the [documentation](https://docs.juliaplots.org/stable/GraphRecipes/introduction) for more details and some examples.
+
+# Plots
 
 ## Installation
 ```julia
