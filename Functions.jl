@@ -3,10 +3,10 @@
     n = 15
     rng = StableRNG(1)
     A = Float64[rand(rng) < 0.5 ? 0 : rand(rng) for i ∈ 1:n, j ∈ 1:n]
-    for i ∈ 1:n
+     i ∈ 1:n
         A[i, 1:(i - 1)] = A[1:(i - 1), i]
         A[i, i] = 0
-    end
+    
     x = rand(rng, n)
     y = rand(rng, n)
     z = rand(rng, n)
@@ -22,7 +22,7 @@
         rng = rng,
     )
     p, n, A, x, y, z
-end
+
 
  random_3d_graph()
     n, A, x, y, z = random_labelled_graph()[2:end]
@@ -38,31 +38,31 @@ end
         layout_kw = Dict(:x => x, :y => y, :z => z),
         rng = StableRNG(1),
     )
-end
 
-function light_graphs()
+
+ light_graphs()
     g = wheel_graph(10)
     graphplot(g, curves = false, rng = StableRNG(1))
-end
 
-function directed()
+
+ directed()
     g = [
         0 1 1
         0 0 1
         0 1 0
     ]
     graphplot(g, names = 1:3, curvature_scalar = 0.1, rng = StableRNG(1))
-end
 
-function edgelabel()
+
+ edgelabel()
     n = 8
     g = wheel_digraph(n)
     edgelabel_dict = Dict()
-    for i ∈ 1:n
-        for j ∈ 1:n
+        i ∈ 1:n
+            j ∈ 1:n
             edgelabel_dict[(i, j)] = string("edge ", i, " to ", j)
-        end
-    end
+        
+    
 
     graphplot(
         g,
@@ -72,16 +72,16 @@ function edgelabel()
         nodeshape = :rect,
         rng = StableRNG(1),
     )
-end
 
-function selfedges()
+
+         selfedges()
     g = [
         1 1 1
         0 0 1
         0 0 1
     ]
     graphplot(DiGraph(g), self_edge_size = 0.2, rng = StableRNG(1))
-end
+
 
 multigraphs() = graphplot(
     [[1, 1, 2, 2], [1, 1, 1], [1]],
@@ -91,14 +91,14 @@ multigraphs() = graphplot(
     rng = StableRNG(1),
 )
 
-function arc_chord_diagrams()
+          arc_chord_diagrams()
     rng = StableRNG(1)
     adjmat = Symmetric(sparse(rand(rng, 0:1, 8, 8)))
     plot(
         graphplot(
             adjmat,
             method = :chorddiagram,
-            names = [text(string(i), 8) for i ∈ 1:8],
+            names = [text(string(i), 8)     i ∈ 1:8],
             linecolor = :black,
             fillcolor = :lightgray,
             rng = rng,
