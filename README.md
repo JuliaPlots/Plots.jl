@@ -13,7 +13,6 @@ https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
 
-[gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
