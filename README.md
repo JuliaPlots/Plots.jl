@@ -9,7 +9,6 @@ ________________________________
 [![npm version](https://badge.fury.io/js/typescript.svg)](https://www.npmjs.com/package/typescript)
 
 [![Downloads](https://img.shields.io/npm/dm/typescript.svg)](https://www.npmjs.com/package/typescript)
-
 [![OpenSSF Scorecard]
 (https://api.securityscorecards.dev/projects/github.com/microsoft/TypeScript/badge)]
 (https://securityscorecards.dev/viewer/?uri=github.com/microsoft/TypeScript)
