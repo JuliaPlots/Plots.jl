@@ -15,9 +15,6 @@ ________________________________
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 
-[![][pkgeval-img]][pkgeval-url]
-[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
-
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
 
 ________________________________
