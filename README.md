@@ -1,4 +1,4 @@
-[Open-Collective]href="https://opencollective.com/rei_de_roma/donate" target=_blank[Donate]
+[Open-Collective]:href="https://opencollective.com/rei_de_roma/donate" target=_blank:[Donate]
 
 
 [gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
