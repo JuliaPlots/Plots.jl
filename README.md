@@ -1,7 +1,5 @@
 
-<a> <img
-href="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200"
-</a>
+
 
 [gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
 [gh-ci-url]: https://github.com/JuliaPlots/GraphRecipes.jl/actions?query=workflow%3Aci
