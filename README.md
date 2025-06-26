@@ -2,10 +2,8 @@
   <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
-# Plots
 
-[gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2
-[gh-ci-url]: https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
+[![ci-img](https://github.com/Own65/Plots.jl/actions/workflows/format_check.yml/badge.svg)](https://github.com/Own65/Plots.jl/actions/workflows/format_check.yml)
 
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
@@ -18,6 +16,8 @@
 
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-dev-url]: https://docs.juliaplots.org/dev
+
+[![format](https://github.com/Own65/Plots.jl/actions/workflows/format_check.yml/badge.svg)](https://github.com/Own65/Plots.jl/actions/workflows/format_check.yml)
 
 [![][gh-ci-img]][gh-ci-url]
 [![][pkgeval-img]][pkgeval-url]
