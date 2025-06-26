@@ -4,9 +4,20 @@
 
 ________________________________
 
+[![PyPI version](https://badge.fury.io/py/u8darts.svg)](https://badge.fury.io/py/darts)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/u8darts-all.svg)](https://anaconda.org/conda-forge/u8darts-all)
+![Supported versions](https://img.shields.io/badge/python-3.9+-blue.svg)
+[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/unit8/darts?label=docker&sort=date)](https://hub.docker.com/r/unit8/darts)
+![GitHub Release Date](https://img.shields.io/github/release-date/unit8co/darts)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/unit8co/darts/release.yml?branch=master)
+
+________________________________
+
 [![npm version](https://badge.fury.io/js/typescript.svg)](https://www.npmjs.com/package/typescript)
 [![Downloads](https://img.shields.io/npm/dm/typescript.svg)](https://www.npmjs.com/package/typescript)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/microsoft/TypeScript/badge)](https://securityscorecards.dev/viewer/?uri=github.com/microsoft/TypeScript)
+
+________________________________
 
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/latest/generated/statsplots/)
 
