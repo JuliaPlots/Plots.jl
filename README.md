@@ -1,5 +1,6 @@
-[Open-Collective]:href="https://opencollective.com/rei_de_roma/donate" target=_blank:[Donate]
-
+<a>:href="https://opencollective.com/rei_de_roma/donate" target=_blank">
+<img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
+</a>
 
 [gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
 [gh-ci-url]: https://github.com/JuliaPlots/GraphRecipes.jl/actions?query=workflow%3Aci
