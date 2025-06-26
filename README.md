@@ -6,7 +6,7 @@ ________________________________
 
 [![ci](https://github.com/Own65/Plots.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/Own65/Plots.jl/actions/workflows/ci.yml)
 
-[![Plots Stats](https://travis-ci.org/JuliaPlots/StatsPlots.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/StatsPlots.jl)(https://app.travis-ci.com/JuliaPlots/StatsPlots.jl.svg?token=68FuGKx87AqnKQkyadMo&branch=master)
+[![Plots Stats](https://travis-ci.org/JuliaPlots/StatsPlots.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/StatsPlots.jl)
 
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/latest/generated/statsplots/)
 
