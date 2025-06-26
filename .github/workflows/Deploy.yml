@@ -1,0 +1,41 @@
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      # NOTE: Python is necessary for the pre-rendering (minification) step
+      - name: Install python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      # NOTE: Here you can install dependencies such as matplotlib if you use
+      # packages such as PyPlot.
+      - run: pip install matplotlib
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: 1
+      - name: Build
+        run: julia -e '
+          using Pkg;
+          Pkg.add(url="https://github.com/tlienart/Franklin.jl", rev="master");
+          Pkg.add(["NodeJS", "PyPlot", "GR", "Literate", "PlotlyJS", "Hyperscript"]);
+          Pkg.develop(path=".");
+          using NodeJS; run(`$(npm_cmd()) install highlight.js`);
+          using Franklin;
+          using FranklinTemplates;
+          FranklinTemplates.build_templates()'
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: docs/build
