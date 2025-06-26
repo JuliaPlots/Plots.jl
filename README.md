@@ -3,6 +3,8 @@
 </a>
 
 
+[![gh-ci-format-img](https://github.com/Own65/Plots.jl/actions/workflows/format_check.yml/badge.svg)](https://github.com/Own65/Plots.jl/actions/workflows/format_check.yml)
+
 [gh-ci-url]: 
 https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
 
