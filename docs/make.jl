@@ -1,4 +1,4 @@
-using FranklinTemplates, Franklin
+ FranklinTemplates, Franklin
 
 descr = Dict{String,String}(
     "sandbox"   => """
