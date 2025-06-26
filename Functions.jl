@@ -1,5 +1,5 @@
 
-function random_labelled_graph()
+ random_labelled_graph()
     n = 15
     rng = StableRNG(1)
     A = Float64[rand(rng) < 0.5 ? 0 : rand(rng) for i ∈ 1:n, j ∈ 1:n]
@@ -24,7 +24,7 @@ function random_labelled_graph()
     p, n, A, x, y, z
 end
 
-function random_3d_graph()
+ random_3d_graph()
     n, A, x, y, z = random_labelled_graph()[2:end]
     graphplot(
         A,
