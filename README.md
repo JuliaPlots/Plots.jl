@@ -6,6 +6,12 @@ ________________________________
 
 [![ci](https://github.com/Own65/Plots.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/Own65/Plots.jl/actions/workflows/ci.yml)
 
+[![Build Status](https://travis-ci.org/JuliaPlots/StatsPlots.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/StatsPlots.jl)
+
+[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/latest/generated/statsplots/)
+
+[![Project Chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
+
 [![Aqua.Jl QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges
@@ -13,7 +19,6 @@ ________________________________
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
 
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-
 
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
 
