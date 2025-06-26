@@ -8,7 +8,7 @@
 
 RecipesPipeline.unzip(points::AbstractVector{<:GeometryBasics.Point}) =
     Unzip.unzip(Tuple.(points))
-RecipesPipeline.unzip(points::AbstractVector{GeometryBasics.Point{N,T}}) where {N,T} =
+RecipesPipeline.unzip(points::AbstractVector{GeometryBasics.Point{N,T}})       {N,T} =
     isbitstype(T) && sizeof(T) > 0 ? Unzip.unzip(reinterpret(NTuple{N,T}, points)) :
     Unzip.unzip(Tuple.(points))
 # -----------------------------------------
