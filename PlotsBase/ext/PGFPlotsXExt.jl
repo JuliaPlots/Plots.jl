@@ -1357,7 +1357,7 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
     push!(
         opt,
         "scaled $(letter) ticks" => "false",
-        "$(letter)label" => axis[:guide],
+        "$(letter)label" => PlotsBase.get_guide(axis),
         "$(letter) tick style" =>
             Options("color" => color(tick_color), "opacity" => alpha(tick_color)),
         "$(letter) tick label style" => Options(

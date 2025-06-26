@@ -2,9 +2,10 @@ using PlotsBase, Test
 using Unitful
 using Unitful: m, cm, s, DimensionError
 # Some helper functions to access the subplot labels and the series inside each test plot
-xguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:xaxis].plotattributes[:guide]
-yguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:yaxis].plotattributes[:guide]
-zguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:zaxis].plotattributes[:guide]
+xguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:xaxis])
+yguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:yaxis])
+zguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:zaxis])
+ctitle(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:colorbar_title]
 xseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:x]
 yseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:y]
 zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:z]
@@ -33,13 +34,24 @@ end
 
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
-        @test yguide(plot(y, ylabel = P"hello")) == "hello"
+        @test yguide(plot(y, ylabel = "hello", unitformat = :nounit)) == "hello"
         pl = plot(y, ylabel = "")
         @test yguide(pl) == ""
         @test yguide(plot!(pl, -y)) == ""
+        @test yguide(plot(y, ylabel = "", unitformat = :round)) == "m"
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
         @test yguide(pl) == "hello (m)"
+        plot!(pl, -y; ylabel = "goodbye")
+        @test yguide(pl) == "goodbye (m)"
+        pl = plot(y)
+        plot!(pl, -y; ylabel = "hello")
+        @test yguide(pl) == "hello (m)"
+        pl = plot(y)
+        @test_logs (:warn, r"Overriding unit") plot!(pl; yunit = cm)
+        @test yguide(pl) == "cm"
+        plot!(pl; ylabel = "hello")
+        @test yguide(pl) == "hello (cm)"
     end
 
     @testset "yunit" begin
@@ -102,19 +114,22 @@ end
 
     @testset "labels" begin
         @test xguide(plot(x, y, xlabel = "hello")) == "hello (m)"
-        @test xguide(plot(x, y, xlabel = P"hello")) == "hello"
         @test yguide(plot(x, y, ylabel = "hello")) == "hello (s)"
-        @test yguide(plot(x, y, ylabel = P"hello")) == "hello"
         @test xguide(plot(x, y, xlabel = "hello", ylabel = "hello")) == "hello (m)"
-        @test xguide(plot(x, y, xlabel = P"hello", ylabel = P"hello")) == "hello"
         @test yguide(plot(x, y, xlabel = "hello", ylabel = "hello")) == "hello (s)"
-        @test yguide(plot(x, y, xlabel = P"hello", ylabel = P"hello")) == "hello"
+        @test xguide(plot(x, y, xlabel = "hello", unitformat = :nounit)) == "hello"
+        @test yguide(plot(x, y, ylabel = "hello", unitformat = :nounit)) == "hello"
+        @test xguide(
+            plot(x, y, xlabel = "hello", ylabel = "hello", unitformat = :nounit),
+        ) == "hello"
+        @test yguide(
+            plot(x, y, xlabel = "hello", ylabel = "hello", unitformat = :nounit),
+        ) == "hello"
     end
 
     @testset "unitformat" begin
         args = (x, y)
         kwargs = (:xlabel => "hello", :ylabel => "hello")
-        @test yguide(plot(args...; kwargs..., unitformat = nothing)) == "hello s"
         @test yguide(
             plot(
                 args...;
@@ -131,7 +146,10 @@ end
         @test yguide(plot(args...; kwargs..., unitformat = '?')) == "hello ? s"
         @test yguide(plot(args...; kwargs..., unitformat = ('<', '>'))) == "hello <s>"
         @test yguide(plot(args...; kwargs..., unitformat = ('A', 'B', 'C'))) == "Ahello BsC"
-        @test yguide(plot(args...; kwargs..., unitformat = false)) == "hello s"
+        @test yguide(plot(args...; kwargs..., unitformat = false)) == "hello"
+        @test yguide(plot(args...; kwargs..., unitformat = :none)) == "hello"
+        @test yguide(plot(args...; kwargs..., unitformat = nothing)) == "hello"
+        @test yguide(plot(args...; kwargs..., unitformat = :nounit)) == "hello"
         @test yguide(plot(args...; kwargs..., unitformat = true)) == "hello (s)"
         @test yguide(plot(args...; kwargs..., unitformat = :round)) == "hello (s)"
         @test yguide(plot(args...; kwargs..., unitformat = :square)) == "hello [s]"
@@ -142,6 +160,7 @@ end
         @test yguide(plot(args...; kwargs..., unitformat = :slashsquare)) == "hello / [s]"
         @test yguide(plot(args...; kwargs..., unitformat = :slashcurly)) == "hello / {s}"
         @test yguide(plot(args...; kwargs..., unitformat = :slashangle)) == "hello / <s>"
+        @test yguide(plot(args...; kwargs..., unitformat = :space)) == "hello s"
         @test yguide(plot(args...; kwargs..., unitformat = :verbose)) ==
               "hello in units of s"
     end
@@ -255,7 +274,13 @@ end
         x, y = rand(10) * us[1], rand(10) * us[2]
         @test scatter(x, y) isa PlotsBase.Plot
         @test scatter(x, y, markersize = x) isa PlotsBase.Plot
-        @test scatter(x, y, line_z = x) isa PlotsBase.Plot
+
+        @test scatter(x, y, marker_z = x) isa PlotsBase.Plot
+        if us[1] != us[2] && us[1] != 1 && us[2] != 1 # Non-matching dimensions
+            @test_throws DimensionError scatter!(x, y, marker_z = y)
+        else # One is dimensionless, or have same dimensions
+            @test scatter!(x, y, marker_z = y) isa PlotsBase.Plot #
+        end
     end
 
     @testset "contour(x::$(us[1]), y::$(us[2]))" for us ∈ collect(
@@ -267,9 +292,36 @@ end
         @test contourf(x, y, z) isa PlotsBase.Plot
     end
 
-    @testset "ProtectedString" begin
+    @testset "colorbar title" begin
+        x, y = (1:0.01:2) * m, (1:0.02:2) * s
+        z = x' ./ y
+        pl = contour(x, y, z)
+        @test ctitle(pl) ∈ ["m s^-1", "m s⁻¹"]
+        pl = contourf(x, y, z, zunit = u"km/hr")
+        @test ctitle(pl) ∈ ["km hr^-1", "km hr⁻¹"]
+        pl = heatmap(x, y, z, zunit = u"cm/s", zunitformat = :square, colorbar_title = "v")
+        @test ctitle(pl) ∈ ["v [cm s^-1]", "v [cm s⁻¹]"]
+    end
+
+    @testset "twinx (#4750)" begin
         y = rand(10) * u"m"
-        @test plot(y, label = P"meters") isa PlotsBase.Plot
+        pl = plot(y; xlabel = "check", ylabel = "hello")
+        pl2 = twinx(pl)
+        plot!(pl2, 1 ./ y; ylabel = "goodbye", yunit = u"cm^-1")
+        @test pl isa PlotsBase.Plot
+        @test pl2 isa PlotsBase.Subplot
+        @test yguide(pl, 1) == "hello (m)"
+        # on MacOS the superscript gets rendered with Unicode, on Ubuntu and Windows no
+        @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"]
+        @test xguide(pl, 1) == "check"
+        @test xguide(pl, 2) == ""
+    end
+
+    @testset "bad link" begin
+        pl1 = plot(rand(10)*u"m")
+        pl2 = plot(rand(10)*u"s")
+        # TODO: On Julia 1.8 and above, can replace ErrorException with part of error message.
+        @test_throws ErrorException plot(pl1, pl2; link = :y)
     end
 end
 
@@ -318,22 +370,30 @@ end
     @test pl isa PlotsBase.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
+    pl = plot(x, y, xerr = ex, yerr = (ey, ey ./ 2))
+    @test pl isa PlotsBase.Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
 end
 
 @testset "Ribbon" begin
-    x = rand(10) * u"mm"
+    x = (1:10) * u"mm"
     y = rand(10) * u"s"
-    ribbon = rand(10) * u"ms"
+    ribbon = 100 * rand(10) * u"ms"
     pl = plot(x, y, ribbon = ribbon)
+    @test pl isa PlotsBase.Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
+    pl = plot(x, y, ribbon = (ribbon, ribbon .* 2))
     @test pl isa PlotsBase.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
 end
 
 @testset "Fillrange" begin
-    x = rand(10) * u"mm"
+    x = (1:10) * u"mm"
     y = rand(10) * u"s"
-    fillrange = rand(10) * u"ms"
+    fillrange = 100 * rand(10) * u"ms"
     pl = plot(x, y, fillrange = fillrange)
     @test pl isa PlotsBase.Plot
     @test xguide(pl) == "mm"
@@ -373,8 +433,8 @@ end
     @test length(pl.subplots[1].attr[:annotations]) == 1
 end
 
-@testset "AbstractProtectedString" begin
-    str = P"mass"
+@testset "UnitfulString" begin
+    str = Base.get_extension(PlotsBase, :UnitfulExt).UnitfulString("mass", u"kg")
     @test pointer(str) isa Ptr
     @test pointer(str, 1) isa Ptr
     @test isvalid(str, 1)
