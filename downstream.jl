@@ -1,12 +1,12 @@
-using Pkg
+ Pkg
 
-const LibGit2 = Pkg.GitTools.LibGit2
-const TOML = Pkg.TOML
+ LibGit2 = Pkg.GitTools.LibGit2
+ TOML = Pkg.TOML
 
 failsafe_clone_checkout(path, url; branch="master", stable=true) = begin
-    local repo
-    for i in 1:6
-        try
+     repo
+       i in 1:6
+        
             repo = Pkg.GitTools.ensure_clone(stdout, path, url; branch)
             break
         catch err
