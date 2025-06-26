@@ -1,24 +1,24 @@
-module GastonExt
+ GastonExt
 
-import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, PlotUtils
-import Gaston
+ PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, PlotUtils
+ Gaston
 
-using PlotsBase.Annotations
-using PlotsBase.DataSeries
-using PlotsBase.Colorbars
-using PlotsBase.Surfaces
-using PlotsBase.Subplots
-using PlotsBase.Commons
-using PlotsBase.Colors
-using PlotsBase.Plots
-using PlotsBase.Ticks
-using PlotsBase.Fonts
-using PlotsBase.Axes
+ PlotsBase.Annotations
+ PlotsBase.DataSeries
+ PlotsBase.Colorbars
+ PlotsBase.Surfaces
+ PlotsBase.Subplots
+ PlotsBase.Commons
+ PlotsBase.Colors
+ PlotsBase.Plots
+ PlotsBase.Ticks
+ PlotsBase.Fonts
+ PlotsBase.Axes
 
-struct GastonBackend <: PlotsBase.AbstractBackend end
+ GastonBackend <: PlotsBase.AbstractBackend end
 PlotsBase.@extension_static GastonBackend gaston
 
-const _gaston_attrs = PlotsBase.merge_with_base_supported([
+ _gaston_attrs = PlotsBase.merge_with_base_supported([
     :annotations,
     # :background_color_legend,
     # :background_color_inside,
@@ -72,7 +72,7 @@ const _gaston_attrs = PlotsBase.merge_with_base_supported([
     :connections,
 ])
 
-const _gaston_seriestypes = [
+     _gaston_seriestypes = [
     :path,
     :path3d,
     :scatter,
@@ -93,9 +93,9 @@ const _gaston_seriestypes = [
     :image,
 ]
 
-const _gaston_styles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+      _gaston_styles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 
-const _gaston_markers = [
+      _gaston_markers = [
     :none,
     :auto,
     :pixel,
@@ -114,58 +114,58 @@ const _gaston_markers = [
     # :vline,
 ]
 
-const _gaston_scales = [:identity, :ln, :log2, :log10]
+     _gaston_scales = [:identity, :ln, :log2, :log10]
 
 # https://github.com/mbaz/Gaston.
 
 PlotsBase.should_warn_on_unsupported(::GastonBackend) = false
 
 # Create the window/figure for this backend.
-function PlotsBase._create_backend_figure(plt::Plot{GastonBackend})
+        PlotsBase._create_backend_figure(plt::Plot{GastonBackend})
     state_handle = Gaston.nexthandle() # for now all the figures will be kept
     plt.o = Gaston.newfigure(state_handle)
-end
 
-function PlotsBase._before_layout_calcs(plt::Plot{GastonBackend})
+
+         PlotsBase._before_layout_calcs(plt::Plot{GastonBackend})
     # initialize all the subplots first
     plt.o.subplots = Gaston.SubPlot[]
 
     foreach(sp -> gaston_init_subplot(plt, sp), unique(plt.inset_subplots))
 
-    if length(plt.subplots) > 0
+       length(plt.subplots) > 0
         n, sps = gaston_get_subplots(0, plt.subplots, plt.layout)
-    end
+    
 
     plt.o.layout = gaston_init_subplots(plt, sps)
 
     # then add the series (curves in gaston)
     foreach(series -> gaston_add_series(plt, series), plt.series_list)
 
-    for sp ∈ plt.subplots
-        sp ≡ nothing && continue
-        for ann ∈ sp[:annotations]
+       sp ∈ plt.subplots
+        sp ≡ nothing && 
+           ann ∈ sp[:annotations]
             x, y, val = locate_annotation(sp, ann...)
             sp.o.axesconf *= "; set label '$(val.str)' at $x,$y $(gaston_font(val.font))"
-        end
-        if _debug[]
+        
+           _debug[]
             sp.o.axesconf = replace(sp.o.axesconf, "; " => "\n")
             println(sp.o.axesconf)
             foreach(x -> println("== n°$(x[1]) ==\n", x[2].conf), enumerate(sp.o.curves))
-        end
-    end
+        
+    
     nothing
-end
+
 
 PlotsBase._update_min_padding!(sp::Subplot{GastonBackend}) = sp.minpad = 0mm, 0mm, 0mm, 0mm
 
-function PlotsBase._update_plot_object(plt::Plot{GastonBackend})
+          v PlotsBase._update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
     dat = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1))
     gaston_multiplot_pos_size!(dat)
     nothing
-end
 
-for (mime, term) ∈ (
+
+   (mime, term) ∈ (
     "application/eps"        => "epscairo",
     "image/eps"              => "epscairo",
     "application/pdf"        => "pdfcairo",
@@ -176,9 +176,9 @@ for (mime, term) ∈ (
     "application/x-tex"      => "cairolatex",
     "text/plain"             => "dumb",
 )
-    @eval function PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
+    @eval      PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         term = String($term)
-        if plt.o ≢ nothing
+           plt.o ≢ nothing
             tmpfile = tempname() * ".$term"
             ret = Gaston.save(;
                 saveopts = gaston_saveopts(plt),
@@ -186,16 +186,16 @@ for (mime, term) ∈ (
                 output = tmpfile,
                 term,
             )
-            if ret ≡ nothing || ret
-                while !isfile(tmpfile)
-                end  # avoid race condition with read in next line
+               ret ≡ nothing || ret
+                     !isfile(tmpfile)
+                     # avoid race condition with read in next line
                 write(io, read(tmpfile))
-            end
+            
             isfile(tmpfile) && rm(tmpfile, force = true)
-        end
+        
         nothing
-    end
-end
+    
+
 
 PlotsBase._display(plt::Plot{GastonBackend}) = display(plt.o)
 
@@ -203,7 +203,7 @@ PlotsBase._display(plt::Plot{GastonBackend}) = display(plt.o)
 # These functions are gaston specific
 # --------------------------------------------
 
-function gaston_saveopts(plt::Plot{GastonBackend})
+         gaston_saveopts(plt::Plot{GastonBackend})
     saveopts = ["size " * join(plt[:size], ',')]
 
     # scale all plot elements to match PlotsBase.jl DPI standard
@@ -224,39 +224,39 @@ function gaston_saveopts(plt::Plot{GastonBackend})
     )
 
     join(saveopts, " ")
-end
 
-function gaston_get_subplots(n, plt_subplots, layout)
+
+        gaston_get_subplots(n, plt_subplots, layout)
     nr, nc = size(layout)
     sps = Array{Any}(nothing, nr, nc)
-    for r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
+        r ∈ 1:nr, c ∈ 1:nc  # NOTE: col major
         sps[r, c] = if (l = layout[r, c]) isa GridLayout
             n, sub = gaston_get_subplots(n, plt_subplots, l)
             size(sub) == (1, 1) ? only(sub) : sub
-        else
-            if get(l.attr, :blank, false)
+         
+               get(l.attr, :blank, false)
                 nothing
-            else
+            
                 n += 1
                 l
-            end
-        end
-    end
+            
+        
+    
     n, sps
-end
 
-function gaston_init_subplots(plt, sps)
+
+         gaston_init_subplots(plt, sps)
     sz = nr, nc = size(sps)
-    for c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
-        if (sp = sps[r, c]) isa Subplot || sp ≡ nothing
+        c ∈ 1:nc, r ∈ 1:nr  # NOTE: row major
+           (sp = sps[r, c]) isa Subplot || sp ≡ nothing
             gaston_init_subplot(plt, sp)
-        else
+        
             gaston_init_subplots(plt, sp)
             sz = max.(sz, size(sp))
-        end
-    end
+        
+
     sz
-end
+
 
 function gaston_init_subplot(
     plt::Plot{GastonBackend},
