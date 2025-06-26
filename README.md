@@ -2,80 +2,44 @@
   <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
-________________________________
-
-[![PyPI version](https://badge.fury.io/py/u8darts.svg)](https://badge.fury.io/py/darts)
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/u8darts-all.svg)](https://anaconda.org/conda-forge/u8darts-all)
-![Supported versions](https://img.shields.io/badge/python-3.9+-blue.svg)
-[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/unit8/darts?label=docker&sort=date)](https://hub.docker.com/r/unit8/darts)
-![GitHub Release Date](https://img.shields.io/github/release-date/unit8co/darts)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/unit8co/darts/release.yml?branch=master)
-
-________________________________
-
-[![npm version](https://badge.fury.io/js/typescript.svg)](https://www.npmjs.com/package/typescript)
-[![Downloads](https://img.shields.io/npm/dm/typescript.svg)](https://www.npmjs.com/package/typescript)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/microsoft/TypeScript/badge)](https://securityscorecards.dev/viewer/?uri=github.com/microsoft/TypeScript)
-
-________________________________
-
-[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/latest/generated/statsplots/)
-
-[![Project Chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
-
-[![Aqua.Jl QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-
-[![ci](https://github.com/Own65/Plots.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/Own65/Plots.jl/actions/workflows/ci.yml)
-
-[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges
-
-[pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
-
-[gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-
-[![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
-
-________________________________
-
-
-<a href='https://codespaces.new/JuliaPlots/Plots.jl?quickstart=1'><img src='https://github.com/codespaces/badge.svg' alt='Open in GitHub Codespaces' style='max-width: 100%;'></a>
-
-
-## Summary
-In this repository, a graph is a network of connected nodes (although sometimes people use the same word to refer to a plot). If you want to do plotting, then use [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
-
-For a given graph, there are many legitimate ways to display and visualize the graph. However, some graph layouts will convey the structure of the underlying graph much more clearly than other layouts. GraphRecipes provides many options for producing graph layouts including  (un)directed graphs, tree graphs and arc/chord diagrams. For each layout type the `graphplot` function will try to create a default layout that optimizes visual clarity. However, the user can tweak the default layout through a large number of powerful keyword arguments, see the [documentation](https://docs.juliaplots.org/stable/GraphRecipes/introduction) for more details and some examples.
-
 # Plots
 
-## Installation
-```julia
-] add GraphRecipes
-```
+[gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2
+[gh-ci-url]: https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
 
-## An example
-```julia
-using GraphRecipes
-using PlotsBase
+[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
+[pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
 
-import GR; gr()
+[gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
+[gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-g = [0 1 1;
-     1 0 1;
-     1 1 0]
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]: https://docs.juliaplots.org/stable
 
-graphplot(g,
-          x=[0,-1/tan(π/3),1/tan(π/3)], y=[1,0,0],
-          nodeshape=:circle, nodesize=1.1,
-          axis_buffer=0.6,
-          curves=false,
-          color=:black,
-          nodecolor=[colorant"#389826",colorant"#CB3C33",colorant"#9558B2"],
-          linewidth=10)
-```
-![](assets/readme_julia_logo_pun.png)
+[docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docs-dev-url]: https://docs.juliaplots.org/dev
 
+[![][gh-ci-img]][gh-ci-url]
+[![][pkgeval-img]][pkgeval-url]
+[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
+[![][docs-stable-img]][docs-stable-url]
+[![][docs-dev-img]][docs-dev-url]
+[![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
+[![Plots Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FPlots&query=total_requests&suffix=%2Fmonth&label=Downloads)](https://juliapkgstats.com/pkg/Plots)
 
-This repo maintains a collection of recipes for graph analysis, and is a reduced and refactored version of the previous PlotRecipes. It uses the powerful machinery of [Plots](https://github.com/JuliPlots/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/Plots.jl/tree/master/RecipesBase) to turn simple transformations into flexible visualizations.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725317.svg)](https://doi.org/10.5281/zenodo.4725317)
+This is the DOI for all Versions, please follow the link to get the DOI for a specific version.
 
+#### Created by Tom Breloff (@tbreloff)
 
+#### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
+
+Plots is a plotting API and toolset.  My goals with the package are:
+
+- **Powerful**.  Do more with less.  Complex visualizations become easy.
+- **Intuitive**.  Stop reading so much documentation.  Commands should "just work".
+- **Concise**.  Less code means fewer mistakes and more efficient development/analysis.
+- **Flexible**.  Produce your favorite plots from your favorite package, but quicker and simpler.
+- **Consistent**.  Don't commit to one graphics package, use the same code everywhere.
+- **Lightweight**.  Very few dependencies.
+- **Smart**. Attempts to figure out what you **want** it to do... not just what you **tell** it.
