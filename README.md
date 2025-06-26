@@ -33,6 +33,7 @@ https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=mast
 [gh-ci-url]: https://github.com/JuliaPlots/GraphRecipes.jl/actions?query=workflow%3Aci
 <a href='https://codespaces.new/JuliaPlots/Plots.jl?quickstart=1'><img src='https://github.com/codespaces/badge.svg' alt='Open in GitHub Codespaces' style='max-width: 100%;'></a>
 
+[![Plots Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FPlots&query=total_requests&suffix=%2Fmonth&label=Downloads)](https://juliapkgstats.com/pkg/Plots)
 
 ## Summary
 In this repository, a graph is a network of connected nodes (although sometimes people use the same word to refer to a plot). If you want to do plotting, then use [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
