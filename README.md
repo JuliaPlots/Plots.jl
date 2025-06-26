@@ -16,9 +16,6 @@
 
 [![Plots Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FPlots&query=total_requests&suffix=%2Fmonth&label=Downloads)](https://juliapkgstats.com/pkg/Plots)
 
-
-[docs-dev-url]: https://docs.juliaplots.org/dev
-
 [![][pkgeval-img]][pkgeval-url]
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 
