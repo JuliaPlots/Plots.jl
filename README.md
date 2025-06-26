@@ -18,7 +18,7 @@
 
 
 [docs-dev-url]: https://docs.juliaplots.org/dev
-[![][gh-ci-img]][gh-ci-url]
+
 [![][pkgeval-img]][pkgeval-url]
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 [![][docs-stable-img]][docs-stable-url]
