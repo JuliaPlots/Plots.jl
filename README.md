@@ -1,7 +1,8 @@
 
-<a> <img> src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 
+<a> <img
+href="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 
      href="https://opencollective.com/rei_de_roma" 
-   </href > </img>
+   
 </a>
 
 [gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
