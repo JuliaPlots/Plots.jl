@@ -3,8 +3,6 @@
 </a>
 
 
-[![gh-ci-format-img](https://github.com/Own65/Plots.jl/actions/workflows/format_check.yml/badge.svg)](https://github.com/Own65/Plots.jl/actions/workflows/format_check.yml)
-
 [![ci](https://github.com/Own65/Plots.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/Own65/Plots.jl/actions/workflows/ci.yml)
 
 [![Aqua.Jl QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
