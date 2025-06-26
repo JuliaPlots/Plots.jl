@@ -1,4 +1,30 @@
+<a href="https://opencollective.com/plotsjl/donate" target="_blank">
+  <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
+</a>
 
+# Plots
+
+[gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2
+[gh-ci-url]: https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
+
+[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
+[pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
+
+[gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
+[gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]: https://docs.juliaplots.org/stable
+
+[docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docs-dev-url]: https://docs.juliaplots.org/dev
+
+[![][gh-ci-img]][gh-ci-url]
+[![][pkgeval-img]][pkgeval-url]
+[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
+[![][docs-stable-img]][docs-stable-url]
+[![][docs-dev-img]][docs-dev-url]
+[![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
 
 
 [gh-ci-img]: https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
