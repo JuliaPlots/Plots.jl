@@ -4,8 +4,11 @@
 
 # Plots
 
-[gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2
-[gh-ci-url]: https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
+
+[gh-ci-url]: 
+https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
+
+https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
 
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
