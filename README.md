@@ -12,7 +12,6 @@ ________________________________
 
 [![OpenSSF Scorecard]
 (https://api.securityscorecards.dev/projects/github.com/microsoft/TypeScript/badge)]
-
 (https://securityscorecards.dev/viewer/?uri=github.com/microsoft/TypeScript)
 
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/latest/generated/statsplots/)
