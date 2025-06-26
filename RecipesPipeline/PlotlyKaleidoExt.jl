@@ -1,4 +1,4 @@
-   PlotlyKaleidoExt
+module PlotlyKaleidoExt
 
  PlotsBase: PlotsBase, Plot, PlotlyBackend
  PlotlyKaleido
