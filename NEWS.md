@@ -10,8 +10,8 @@
 - deprecated keyword `orientation` removed
 - backends are extensions now so the backend code must be explicitly loaded using `import` with the backend package, e.g. 
     ```julia
-          Plots
-          GR # loads backend code
+    using Plots
+    import GR # loads backend code
 
     ```
 - Types are no longer part of the Plots API this affects
