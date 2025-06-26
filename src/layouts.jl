@@ -569,6 +569,8 @@ function link_axes!(axes::Axis...)
     a1 = axes[1]
     for i in 2:length(axes)
         a2 = axes[i]
+        a1[:unit] ≡ a2[:unit] || 
+            error("Cannot link axes with different units: $(a1[:unit]) and $(a2[:unit])",)
         expand_extrema!(a1, ignorenan_extrema(a2))
         for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
@@ -662,6 +664,8 @@ function twin(sp, letter)
     tax[:grid] = false
     tax[:showaxis] = false
     tax[:ticks] = :none
+    tax[:unit] = orig_sp[get_attr_symbol(letter, :axis)][:unit]
+    tax[:guide] = nothing
     oax[:grid] = false
     oax[:mirror] = true
     twin_sp[:background_color_inside] = RGBA{Float64}(0, 0, 0, 0)

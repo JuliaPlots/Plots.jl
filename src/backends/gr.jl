@@ -765,7 +765,7 @@ function gr_axis_height(sp, axis)
         ticks in (nothing, false, :none) ? 0 :
         last(gr_get_ticks_size(ticks, axis[:rotation]))
     )
-    if (guide = axis[:guide]) != ""
+    if (guide = Plots.get_guide(axis)) != ""
         gr_set_font(guidefont(axis), sp)
         h += last(gr_text_size(guide))
     end
@@ -781,7 +781,7 @@ function gr_axis_width(sp, axis)
         ticks in (nothing, false, :none) ? 0 :
         first(gr_get_ticks_size(ticks, axis[:rotation]))
     )
-    if (guide = axis[:guide]) != ""
+    if (guide = Plots.get_guide(axis)) != ""
         gr_set_font(guidefont(axis), sp)
         w += last(gr_text_size(guide))
     end
@@ -846,7 +846,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         # Add margin for x or y label
         m = 0mm
         for ax in (xaxis, yaxis)
-            (guide = ax[:guide] == "") && continue
+            (guide = Plots.get_guide(ax) == "") && continue
             gr_set_font(guidefont(ax), sp)
             l = last(gr_text_size(guide))
             m = max(m, 1mm + height * l * px)
@@ -856,7 +856,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             padding[mirrored(xaxis, :top) ? :top : :bottom][] += m
         end
         # Add margin for z label
-        if (guide = zaxis[:guide]) != ""
+        if (guide = Plots.get_guide(zaxis)) != ""
             gr_set_font(guidefont(zaxis), sp)
             l = last(gr_text_size(guide))
             padding[mirrored(zaxis, :right) ? :right : :left][] += 1mm + height * l * px  # NOTE:  why `height` here ?
@@ -872,7 +872,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
                 l = 0.01 + (isy ? first(ts) : last(ts))
                 padding[ax[:mirror] ? a : b][] += 1mm + sp_size[isy ? 1 : 2] * l * px
             end
-            if (guide = ax[:guide]) != ""
+            if (guide = Plots.get_guide(ax)) != ""
                 gr_set_font(guidefont(ax), sp)
                 l = last(gr_text_size(guide))
                 padding[mirrored(ax, a) ? a : b][] += 1mm + height * l * px  # NOTE: using `height` is arbitrary
@@ -1645,8 +1645,9 @@ function gr_label_ticks_3d(sp, letter, ticks)
     end
 end
 
-gr_label_axis(sp, letter, vp) =
-    if (ax = sp[get_attr_symbol(letter, :axis)])[:guide] != ""
+function gr_label_axis(sp, letter, vp)
+    ax = sp[get_attr_symbol(letter, :axis)]
+    if Plots.get_guide(ax) != ""
         mirror = ax[:mirror]
         GR.savestate()
         guide_position = ax[:guide_position]
@@ -1673,12 +1674,14 @@ gr_label_axis(sp, letter, vp) =
                 end
         end
         gr_set_font(guidefont(ax), sp; rotation, halign, valign)
-        gr_text(xpos, ypos, ax[:guide])
+        gr_text(xpos, ypos, Plots.get_guide(ax))
         GR.restorestate()
     end
+end
 
-gr_label_axis_3d(sp, letter) =
-    if (ax = sp[get_attr_symbol(letter, :axis)])[:guide] != ""
+function gr_label_axis_3d(sp, letter)
+    ax = sp[get_attr_symbol(letter, :axis)]
+    if Plots.get_guide(ax) != ""
         letters = axes_letters(sp, letter)
         (amin, amax), (namin, namax), (famin, famax) = map(l -> axis_limits(sp, l), letters)
         n0, n1 = letter === :y ? (namax, namin) : (namin, namax)
@@ -1706,9 +1709,10 @@ gr_label_axis_3d(sp, letter) =
         end
         letter === :z && GR.setcharup(-1, 0)
         sgn = ax[:mirror] ? -1 : 1
-        gr_text(x + sgn * x_offset, y + sgn * y_offset, ax[:guide])
+        gr_text(x + sgn * x_offset, y + sgn * y_offset, Plots.get_guide(ax))
         GR.restorestate()
     end
+end
 
 gr_add_title(sp, vp_plt, vp_sp) =
     if (title = sp[:title]) != ""

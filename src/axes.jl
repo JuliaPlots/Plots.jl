@@ -93,6 +93,15 @@ function attr!(axis::Axis, args...; kw...)
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
         elseif k === :lims && isa(v, NTuple{2,TimeType})
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
+        elseif k === :guide && v isa AbstractString && isempty(v) &&
+            !haskey(kw, :unitformat)
+            plotattributes[:unitformat] = :nounit
+            plotattributes[k] = v
+        elseif k === :unit 
+            if !isnothing(plotattributes[k]) && plotattributes[k] != v
+                @warn "Overriding unit for $(axis[:letter]) axis: $(plotattributes[k]) -> $v.  This will produce a plot, but series plotted before the override cannot update and will therefore be incorrectly treated as if they had the new units."
+            end
+            plotattributes[k] = v
         else
             plotattributes[k] = v
         end
@@ -110,6 +119,57 @@ end
 
 Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
+
+function get_guide(axis::Axis)
+    if isnothing(axis[:guide])
+        return ""
+    elseif isnothing(axis[:unit]) || axis[:guide] isa ProtectedString ||
+        axis[:unitformat] == :nounit 
+        return axis[:guide]
+    else
+        unit = if axis[:unitformat] isa Function
+            axis[:unit]
+        elseif Plots.backend_name() ≡ :pgfplotsx
+            Latexify.latexify(axis[:unit])
+        else
+            string(axis[:unit])
+        end
+        isempty(axis[:guide]) && return unit
+        return format_unit_label(
+            axis[:guide],
+            unit,
+            axis[:unitformat])
+    end
+end
+
+
+# Keyword options for unit formats
+const UNIT_FORMATS = Dict(
+    :round => ('(', ')'),
+    :square => ('[', ']'),
+    :curly => ('{', '}'),
+    :angle => ('<', '>'),
+    :slash => '/',
+    :slashround => (" / (", ")"),
+    :slashsquare => (" / [", "]"),
+    :slashcurly => (" / {", "}"),
+    :slashangle => (" / <", ">"),
+    :verbose => " in units of ",
+    :none => nothing,
+    :nounit => (l,u)->l
+)
+
+# All options for unit formats
+format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
+format_unit_label(l, u, f::Function)                   = f(l, u)
+format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
+format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
+format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
+format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
+format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
+format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
 
 const _label_func =
     Dict{Symbol,Function}(:log10 => x -> "10^$x", :log2 => x -> "2^$x", :ln => x -> "e^$x")

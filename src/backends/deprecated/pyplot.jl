@@ -1211,7 +1211,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                          5py_thickness_scale(plt, intensity),
             )
 
-            getproperty(ax, Symbol("set_", letter, "label"))(axis[:guide])
+            getproperty(ax, Symbol("set_", letter, "label"))(Plots.get_guide(axis))
             if get(axis.plotattributes, :flip, false)
                 getproperty(ax, Symbol("invert_", letter, "axis"))()
             end

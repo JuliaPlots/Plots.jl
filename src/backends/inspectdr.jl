@@ -375,8 +375,8 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
 
     a = plot.annotation
     a.title = texmath2unicode(sp[:title])
-    a.xlabel = texmath2unicode(xaxis[:guide])
-    a.ylabels = [texmath2unicode(yaxis[:guide])]
+    a.xlabel = Plots.get_guide(texmath2unicode(xaxis))
+    a.ylabels = [texmath2unicode(Plots.getguide(yaxis))]
 
     #Modify base layout of new object:
     l = plot.layout.defaults = deepcopy(InspectDR.defaults.plotlayout)

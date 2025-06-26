@@ -1250,8 +1250,34 @@ macro ext_imp_use(imp_use::QuoteNode, mod::Symbol, args...)
     Expr(imp_use.value, ex) |> esc
 end
 
-# for UnitfulExt - cannot reside in `UnitfulExt` (macro)
-function protectedstring end  # COV_EXCL_LINE
+# for UnitfulExt 
+abstract type AbstractProtectedString <: AbstractString end
+struct ProtectedString{S} <: AbstractProtectedString
+    content::S
+end
+const APS = AbstractProtectedString
+# Minimum required AbstractString interface to work with PlotsBase
+Base.iterate(n::APS) = iterate(n.content)
+Base.iterate(n::APS, i::Integer) = iterate(n.content, i)
+Base.codeunit(n::APS) = codeunit(n.content)
+Base.ncodeunits(n::APS) = ncodeunits(n.content)
+Base.isvalid(n::APS, i::Integer) = isvalid(n.content, i)
+Base.pointer(n::APS) = pointer(n.content)
+Base.pointer(n::APS, i::Integer) = pointer(n.content, i)
+function protectedstring(s)
+    Base.depwarn("""
+    `protectedstring` and the `P_str` macro (used for Unitful plots) are deprecated, 
+    and will be dropped in Plots.jl 2.0 . 
+
+    To suppress all axis labels, pass an empty string to `xlabel`, etc. 
+    To suppress units in axis labels pass `unitformat = :nounit` or `unitformat=(l,u)->l`
+    (equivalently for `xunitformat`, `yunitformat`, etc.).
+        """, :protectedstring, force=true)
+    return ProtectedString(s)
+end
+
+
+
 
 """
     P_str(s)

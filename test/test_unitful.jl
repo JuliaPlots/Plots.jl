@@ -1,10 +1,12 @@
 using Plots, Test
 using Unitful
 using Unitful: m, cm, s, DimensionError
+using Latexify, UnitfulLatexify
 # Some helper functions to access the subplot labels and the series inside each test plot
-xguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:xaxis].plotattributes[:guide]
-yguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:yaxis].plotattributes[:guide]
-zguide(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:zaxis].plotattributes[:guide]
+xguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:xaxis])
+yguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:yaxis])
+zguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:zaxis])
+ctitle(pl, idx = length(pl.subplots)) = pl.subplots[idx].attr[:colorbar_title]
 xseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:x]
 yseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:y]
 zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:z]
@@ -34,11 +36,18 @@ end
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
         @test yguide(plot(y, ylabel = P"hello")) == "hello"
+        @test yguide(plot(y, ylabel = "hello", unitformat=:nounit)) == "hello"
         pl = plot(y, ylabel = "")
         @test yguide(pl) == ""
         @test yguide(plot!(pl, -y)) == ""
+        @test yguide(plot(y, ylabel="", unitformat=:round)) == "m"
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
+        @test yguide(pl) == "hello (m)"
+        plot!(pl, -y; ylabel = "goodbye")
+        @test yguide(pl) == "goodbye (m)"
+        pl = plot(y)
+        plot!(pl, -y; ylabel = "hello")
         @test yguide(pl) == "hello (m)"
     end
 
@@ -46,6 +55,11 @@ end
         @test yguide(plot(y, yunit = cm)) == "cm"
         @test yseries(plot(y, yunit = cm)) ≈ ustrip.(cm, y)
         @test plot([copy(y), copy(y)], yunit = cm) |> pl -> yseries(pl, 1) ≈ yseries(pl, 2)
+        pl = plot(y)
+        @test_logs (:warn, r"Overriding unit") plot!(pl; yunit = cm) 
+        @test yguide(pl) == "cm"
+        plot!(pl; ylabel="hello")
+        @test yguide(pl) == "hello (cm)"
     end
 
     @testset "ylims" begin # Using all(lims .≈ lims) because of uncontrolled type conversions?
@@ -144,6 +158,7 @@ end
         @test yguide(plot(args...; kwargs..., unitformat = :slashangle)) == "hello / <s>"
         @test yguide(plot(args...; kwargs..., unitformat = :verbose)) ==
               "hello in units of s"
+        @test yguide(plot(args...; kwargs..., unitformat = :nounit)) == "hello"
     end
 end
 
@@ -256,7 +271,13 @@ end
         x, y = rand(10) * us[1], rand(10) * us[2]
         @test scatter(x, y) isa Plots.Plot
         @test scatter(x, y, markersize = x) isa Plots.Plot
-        @test scatter(x, y, line_z = x) isa Plots.Plot
+
+        @test scatter(x, y, marker_z = x) isa Plots.Plot
+        if us[1] != us[2] && us[1] != 1 && us[2] != 1 # Non-matching dimensions
+            @test_throws DimensionError scatter!(x, y, marker_z = y) 
+        else # One is dimensionless, or have same dimensions
+            @test scatter!(x, y, marker_z = y) isa Plots.Plot #
+        end
     end
 
     @testset "contour(x::$(us[1]), y::$(us[2]))" for us in collect(
@@ -272,6 +293,48 @@ end
         y = rand(10) * u"m"
         @test plot(y, label = P"meters") isa Plots.Plot
     end
+
+    @testset "latexify as unitformat" begin
+        y = rand(10) * u"m^-1"
+        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left/\\;\\mathrm{m}^{-1}\\right.\$"
+
+        uf = (l, u) -> l * " (" * latexify(u) * ")"
+        @test yguide(plot(y, ylabel = "hello", unitformat = uf)) == "hello (\$\\mathrm{m}^{-1}\$)"
+    end
+
+    @testset "colorbar title" begin
+
+        x, y = (1:0.01:2) * m, (1:0.02:2) * s
+        z = x' ./ y
+        pl = contour(x, y, z) 
+        @test ctitle(pl) ∈ ["m s^-1", "m s⁻¹"]
+        pl = contourf(x, y, z, zunit = u"km/hr")
+        @test ctitle(pl) ∈ ["km hr^-1", "km hr⁻¹"]
+        pl = heatmap(x, y, z, zunit = u"cm/s", zunitformat = :square, colorbar_title = "v")
+        @test ctitle(pl) ∈ ["v [cm s^-1]", "v [cm s⁻¹]"]
+    end
+
+    @testset "twinx (#4750)" begin
+        y = rand(10) * u"m"
+        pl = plot(y; xlabel = "check", ylabel = "hello")
+        pl2 = twinx(pl)
+        plot!(pl2, 1 ./ y; ylabel = "goodbye", yunit = u"cm^-1")
+        @test pl isa Plots.Plot
+        @test pl2 isa Plots.Subplot
+        @test yguide(pl, 1) == "hello (m)"
+        # on MacOS the superscript gets rendered with Unicode, on Ubuntu and Windows no
+        @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"] 
+        @test xguide(pl, 1) == "check"
+        @test xguide(pl, 2) == ""
+    end
+
+    @testset "bad link" begin
+        pl1 = plot(rand(10)*u"m")
+        pl2 = plot(rand(10)*u"s")
+        # TODO: On Julia 1.8 and above, can replace ErrorException with part of error message.
+        @test_throws ErrorException plot(pl1, pl2; link = :y)
+    end
+
 end
 
 @testset "Comparing apples and oranges" begin
@@ -319,20 +382,29 @@ end
     @test pl isa Plots.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
+    pl = plot(x, y, xerr = ex, yerr = (ey, ey ./ 2))
+    @test pl isa Plots.Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
 end
 
 @testset "Ribbon" begin
-    x = rand(10) * u"mm"
+    x = (1:10) * u"mm"
     y = rand(10) * u"s"
     ribbon = rand(10) * u"ms"
+    ribbon = 100*rand(10) * u"ms"
     pl = plot(x, y, ribbon = ribbon)
+    @test pl isa Plots.Plot
+    @test xguide(pl) == "mm"
+    @test yguide(pl) == "s"
+    pl = plot(x, y, ribbon = (ribbon, ribbon .* 2))
     @test pl isa Plots.Plot
     @test xguide(pl) == "mm"
     @test yguide(pl) == "s"
 end
 
 @testset "Fillrange" begin
-    x = rand(10) * u"mm"
+    x = (1:10) * u"mm"
     y = rand(10) * u"s"
     fillrange = rand(10) * u"ms"
     pl = plot(x, y, fillrange = fillrange)
