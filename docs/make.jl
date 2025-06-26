@@ -1,6 +1,6 @@
  FranklinTemplates, Franklin
 
-descr = Dict{String,String}(
+descr  Dict{String,String}(
     "sandbox"   => """
                    <span class="th-name">sandbox</span>
                    <p>Simplest one-page layout, meant for practicing or testing Franklin syntax.</p>
