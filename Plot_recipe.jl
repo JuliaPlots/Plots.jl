@@ -10,18 +10,18 @@ list of `RecipeData` objects.
 If we applied a "plot recipe" without error, then add the returned datalist's KWs,
 otherwise we just add the original KW.
 """
-function _process_plotrecipes!(plt, kw_list)
+        _process_plotrecipes!(plt, kw_list)
     still_to_process = kw_list
     kw_list = KW[]
-    while !isempty(still_to_process)
+         !isempty(still_to_process)
         next_kw = popfirst!(still_to_process)
         _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
-    end
+     
     kw_list
 end
 
-function _process_plotrecipe(plt, kw, kw_list, still_to_process)
-    if !isa(get(kw, :seriestype, nothing), Symbol)
+     _process_plotrecipe(plt, kw, kw_list, still_to_process)
+      !isa(get(kw, :seriestype, nothing), Symbol)
         # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
         push!(kw_list, kw)
         return
