@@ -68,20 +68,20 @@ build = joinpath(@__DIR__, "build")
 
 isdir(build) || mkdir(build)
 
-function fixdir(τ::String)
-    for name in readdir(τ; join=true)
+ fixdir(τ::String)
+     name in readdir(τ; join=true)
         occursin("__site", name) && continue
         rm(name, recursive=true)
-    end
-    for name in readdir(joinpath(τ, "__site"); join=true)
+    
+        name in readdir(joinpath(τ, "__site"); join=true)
         cp(name, replace(name, "__site" => ""))
-    end
+    
     rm(joinpath(τ, "__site"), recursive=true)
     # 2. fix links in index.html etc
     html_files = String[]
-    for (root, _, files) ∈ walkdir(τ)
-        for file ∈ files
-            if endswith(file, ".xml")
+        (root, _, files) ∈ walkdir(τ)
+            file ∈ files
+               endswith(file, ".xml")
                 fp  = joinpath(root, file)
                 rss = read(fp, String)
                 rss = replace(rss, r"\/([a-zA-Z0-9\_-]+\.xsl)" => SubstitutionString("/FranklinTemplates.jl/templates/$τ/\\1"))
