@@ -8,7 +8,7 @@
 [gh-ci-url]: 
 https://github.com/JuliaPlots/GraphRecipes.jl/workflows/ci/badge.svg?branch=master
 
-[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
+[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
 
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
