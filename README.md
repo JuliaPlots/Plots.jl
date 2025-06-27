@@ -8,6 +8,7 @@ ___________________________________________
 
 [![Code style](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/code-style.yml/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/code-style.yml)
 [![CI](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml/badge.svg?event=discussion)](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml) 
+[![Documentation](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/docs.yml/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/docs.yml)
 ![CircleCI Status](https://circleci.com/gh/pingcap/tidb.svg?style=shield)
 [![GitHub Actions](https://github.com/JuliaTesting/Aqua.jl/workflows/Run%20tests/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions?query=workflow%3ARun+tests)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
