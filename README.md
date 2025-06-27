@@ -1,10 +1,16 @@
-<a href="https://opencollective.com/plotsjl/donate" target="_blank">
-  <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
-</a>
+__________________________________________
+
+# Plots . Julia Language. 
 
 __________________________________________
 
-# Plots
+[![Test](https://github.com/fredrikekre/Runic.jl/actions/workflows/Test.yml/badge.svg?branch=master&event=push)](https://github.com/fredrikekre/Runic.jl/actions/workflows/Test.yml)
+[![codecov](https://codecov.io/gh/fredrikekre/Runic.jl/graph/badge.svg?token=GWKJKBZ5FB)](https://codecov.io/gh/fredrikekre/Runic.jl)
+[![code style: runic](https://img.shields.io/badge/code_style-%E1%9A%B1%E1%9A%A2%E1%9A%BE%E1%9B%81%E1%9A%B2-black)](https://github.com/fredrikekre/Runic.jl)
+
+
+__________________________________________
+
 
 [![Code style](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/code-style.yml/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/code-style.yml)
 [![Enforce PR labels](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/enforce-labels.yml/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/enforce-labels.yml)
