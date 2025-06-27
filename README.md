@@ -4,10 +4,7 @@
 
 # Plots
 
-[ci-img]: 
-(https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml/badge.svg)
-[ci-url]:
-(https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml)
+
 
 [gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
