@@ -6,9 +6,6 @@
 
 [![CI](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml/badge.svg?event=discussion)](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml) 
 
-[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
-[pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
-
 [gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
