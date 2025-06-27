@@ -20,7 +20,6 @@ ___________________________________________
 [![GitHub issues](https://img.shields.io/github/issues/yangwenmai/how-to-add-badge-in-github-readme.svg)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/issues)
 [![license](https://img.shields.io/github/license/yangwenmai/how-to-add-badge-in-github-readme.svg?maxAge=2592000)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/LICENSE)
 [![Release](https://img.shields.io/github/release/yangwenmai/how-to-add-badge-in-github-readme.svg?label=Release)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/releases)
-
 [gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
