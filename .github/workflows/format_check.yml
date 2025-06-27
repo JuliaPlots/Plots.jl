@@ -1,44 +1,19 @@
-name: format
+name: Enforce PR labels
 
+permissions:
+  contents: read
 on:
-  workflow_dispatch:
   pull_request:
-  push:
-    branches: [master, v2]
-      
-concurrency: 
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
-
+    types: [labeled, unlabeled, opened, reopened, edited, synchronize]
 jobs:
-  check:
+  enforce-labels:
+    name: Check for blocking labels
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@latest
-      - name: format Julia files
-        run: |
-          julia --color=yes --compile=min -O0 -e '
-            using Pkg; Pkg.add("JuliaFormatter")
-            using JuliaFormatter
-            format(["RecipesBase", "RecipesPipeline", "PlotsBase", "src", "test", "GraphRecipes", "StatsPlots", "PlotThemes"])
-          '
-          if [ "$(git diff --name-only)" != "" ]; then
-            echo "Some files have not been formatted !!"
-            git diff
-            exit 1
-          fi
-      - name: suggester
-        if: success() && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/v2' )
-        uses: reviewdog/action-suggester@v1
-        with:
-          tool_name: JuliaFormatter
-          fail_on_error: true
-
-      # reviewdog/action-suggester not using `cleanup` flag?
-      - name: cleanup
-        if: success() || failure()
-        run: |
-          git checkout -- .
-          git clean --force
-        shell: bash
+    - uses: yogevbd/enforce-label-action@2.2.2
+      with:
+        REQUIRED_LABELS_ANY: "changelog: added,changelog: not needed,release"
+        REQUIRED_LABELS_ANY_DESCRIPTION: "Select at least one label ['changelog: added','changelog: not needed','release']"
+        BANNED_LABELS: "changelog: missing,DO NOT MERGE"
+        BANNED_LABELS_DESCRIPTION: "A PR should not be merged with `DO NOT MERGE` or `changelog: missing` labels"
