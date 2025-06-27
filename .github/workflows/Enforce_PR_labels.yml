@@ -1,0 +1,19 @@
+name: Enforce PR labels
+
+permissions:
+  contents: read
+on:
+  pull_request:
+    types: [labeled, unlabeled, opened, reopened, edited, synchronize]
+jobs:
+  enforce-labels:
+    name: Check for blocking labels
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+    - uses: yogevbd/enforce-label-action@2.2.2
+      with:
+        REQUIRED_LABELS_ANY: "changelog: added,changelog: not needed,release"
+        REQUIRED_LABELS_ANY_DESCRIPTION: "Select at least one label ['changelog: added','changelog: not needed','release']"
+        BANNED_LABELS: "changelog: missing,DO NOT MERGE"
+        BANNED_LABELS_DESCRIPTION: "A PR should not be merged with `DO NOT MERGE` or `changelog: missing` labels"
