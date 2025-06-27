@@ -4,9 +4,9 @@
 
 # Plots
 
-[!gh-ci-img]: 
-(https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml/badge.svg)]
-[gh-ci-url]:
+[ci-img]: 
+(https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml/badge.svg)
+[ci-url]:
 (https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml)
 
 [gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
