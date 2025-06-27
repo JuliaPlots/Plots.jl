@@ -8,6 +8,13 @@
 
 ![CircleCI Status](https://circleci.com/gh/pingcap/tidb.svg?style=shield)
 
+[![GitHub Actions](https://github.com/JuliaTesting/Aqua.jl/workflows/Run%20tests/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions?query=workflow%3ARun+tests)
+
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
+
+
+
+
 [![Build Status](https://travis-ci.org/yangwenmai/how-to-add-badge-in-github-readme.svg?branch=master)](https://travis-ci.org/yangwenmai/how-to-add-badge-in-github-readme)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yangwenmai/how-to-add-badge-in-github-readme)](https://goreportcard.com/report/github.com/yangwenmai/how-to-add-badge-in-github-readme)
 [![Documentation](https://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme?status.svg)](http://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme)
@@ -30,7 +37,7 @@
 [![][docs-stable-img]][docs-stable-url]
 [![][docs-dev-img]][docs-dev-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
-[![Coverage Status](https://coveralls.io/repos/github/pingcap/tidb/badge.svg?branch=master)](https://coveralls.io/github/pingcap/tidb?branch=master)
+
 
 #### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
 
