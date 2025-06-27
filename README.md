@@ -7,6 +7,7 @@ ___________________________________________
 # Plots
 
 [![Code style](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/code-style.yml/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/code-style.yml)
+[![Enforce PR labels](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/enforce-labels.yml/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/enforce-labels.yml)
 [![CI](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml/badge.svg?event=discussion)](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml) 
 [![Documentation](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/docs.yml/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions/workflows/docs.yml)
 ![CircleCI Status](https://circleci.com/gh/pingcap/tidb.svg?style=shield)
