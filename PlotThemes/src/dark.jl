@@ -1,5 +1,5 @@
 #inspired by nucleus theme for Atom
-const dark_palette = [
+     dark_palette = [
     colorant"#FE4365", # red
     colorant"#eca25c", # orange
     colorant"#3f9778", # green
