@@ -1,4 +1,4 @@
-const _boxed = PlotTheme(
+     _boxed = PlotTheme(
     Dict([
         :minorticks => true,
         :grid => false,
