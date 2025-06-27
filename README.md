@@ -6,7 +6,6 @@
 
 [![CI](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml/badge.svg?event=discussion)](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml) 
 
-
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
 
