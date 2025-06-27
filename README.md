@@ -67,8 +67,8 @@ ___________________________________________
 [![Package - Vue](https://img.shields.io/github/package-json/dependency-version/MichaelCurrin/badge-generator/vue?logo=vue.js&logoColor=white)](https://www.npmjs.com/package/vue "Go to Vue on NPM")
 [![Package - Typescript](https://img.shields.io/github/package-json/dependency-version/MichaelCurrin/badge-generator/dev/typescript?logo=typescript&logoColor=white)](https://www.npmjs.com/package/typescript "Go to TypeScript on NPM")
 
-___________________________________________
-___________________________________________
+__________________________________________
+__________________________________________
 
 
 #### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
