@@ -5,8 +5,6 @@
 # Plots
 
 
-
-
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://docs.juliaplots.org/stable
 
