@@ -1,0 +1,10 @@
+name: Code style
+
+on:
+  pull_request:
+
+jobs:
+  code-style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tkf/julia-code-style-suggesters@v1

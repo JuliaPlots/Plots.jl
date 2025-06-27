@@ -1,4 +1,4 @@
-const dao_palette = [
+dao_palette = [
     colorant"#d77255",
     colorant"#009afa",
     colorant"#707070",
