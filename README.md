@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml/badge.svg?event=discussion)](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml) 
 
-[![CircleCI Status](https://circleci.com/gh/pingcap/tidb.svg?style=shield)]
+![CircleCI Status](https://circleci.com/gh/pingcap/tidb.svg?style=shield)
 
 
 
