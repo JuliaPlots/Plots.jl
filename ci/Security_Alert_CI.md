@@ -3,7 +3,7 @@
 To switch to the `PGFPlotsX` backend, you can use:
 
 ```julia
-using Plots
+     Plots
 pgfplotsx()
 ```
 
