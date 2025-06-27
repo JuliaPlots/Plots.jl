@@ -6,9 +6,6 @@
 
 [![ci-Fork](https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml/badge.svg)](https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml)
 
-[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-stable-url]: https://docs.juliaplots.org/stable
-
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-dev-url]: https://docs.juliaplots.org/dev
 
