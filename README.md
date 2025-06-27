@@ -2,6 +2,7 @@
   <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
+__________________________________________
 ___________________________________________
 
 # Plots
@@ -16,7 +17,7 @@ ___________________________________________
 [![Build Status](https://travis-ci.org/yangwenmai/how-to-add-badge-in-github-readme.svg?branch=master)](https://travis-ci.org/yangwenmai/how-to-add-badge-in-github-readme)
 
 ___________________________________________
-
+__________________________________________
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/yangwenmai/how-to-add-badge-in-github-readme)](https://goreportcard.com/report/github.com/yangwenmai/how-to-add-badge-in-github-readme)
 [![Documentation](https://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme?status.svg)](http://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme)
@@ -37,23 +38,14 @@ ___________________________________________
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
 
 ___________________________________________
-
+__________________________________________
 
 [![Python](https://img.shields.io/pypi/pyversions/tensorflow.svg)](https://badge.fury.io/py/tensorflow)
 [![PyPI](https://badge.fury.io/py/tensorflow.svg)](https://badge.fury.io/py/tensorflow)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/1486/badge)](https://bestpractices.coreinfrastructure.org/projects/1486)
 
 ___________________________________________
-
-[TensorFlow](https://www.tensorflow.org/) is an end-to-end open source platform
-for machine learning. It has a comprehensive, flexible ecosystem of
-[tools](https://www.tensorflow.org/resources/tools),
-[libraries](https://www.tensorflow.org/resources/libraries-extensions), and
-[community](https://www.tensorflow.org/community) resources that lets
-researchers push the state-of-the-art in ML and developers easily build and
-deploy ML-powered applications.
-
-___________________________________________
+__________________________________________
 
 [![GH Pages Deploy](https://github.com/MichaelCurrin/badge-generator/workflows/GH%20Pages%20Deploy/badge.svg)](https://github.com/MichaelCurrin/badge-generator/actions/workflows/main.yml "GitHub Actions workflow status")
 [![GitHub tag](https://img.shields.io/github/tag/MichaelCurrin/badge-generator)](https://github.com/MichaelCurrin/badge-generator/releases/?include_prereleases&sort=semver "View GitHub releases")
@@ -70,6 +62,17 @@ ___________________________________________
 __________________________________________
 __________________________________________
 
+
+[TensorFlow](https://www.tensorflow.org/) is an end-to-end open source platform
+for machine learning. It has a comprehensive, flexible ecosystem of
+[tools](https://www.tensorflow.org/resources/tools),
+[libraries](https://www.tensorflow.org/resources/libraries-extensions), and
+[community](https://www.tensorflow.org/community) resources that lets
+researchers push the state-of-the-art in ML and developers easily build and
+deploy ML-powered applications.
+
+__________________________________________
+__________________________________________
 
 #### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
 
