@@ -2,6 +2,8 @@
   <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
+___________________________________________
+
 # Plots
 
 [![CI](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml/badge.svg?event=discussion)](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml) 
@@ -12,17 +14,19 @@
 
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
-
-
-
 [![Build Status](https://travis-ci.org/yangwenmai/how-to-add-badge-in-github-readme.svg?branch=master)](https://travis-ci.org/yangwenmai/how-to-add-badge-in-github-readme)
-[![Go Report Card](https://goreportcard.com/badge/github.com/yangwenmai/how-to-add-badge-in-github-readme)](https://goreportcard.com/report/github.com/yangwenmai/how-to-add-badge-in-github-readme)
-[![Documentation](https://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme?status.svg)](http://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme)
-[![Coverage Status](https://coveralls.io/repos/github/yangwenmai/how-to-add-badge-in-github-readme/badge.svg?branch=master)](https://coveralls.io/github/yangwenmai/how-to-add-badge-in-github-readme?branch=master)
-[![GitHub issues](https://img.shields.io/github/issues/yangwenmai/how-to-add-badge-in-github-readme.svg)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/issues)
-[![license](https://img.shields.io/github/license/yangwenmai/how-to-add-badge-in-github-readme.svg?maxAge=2592000)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/LICENSE)
-[![Release](https://img.shields.io/github/release/yangwenmai/how-to-add-badge-in-github-readme.svg?label=Release)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/releases)
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/yangwenmai/how-to-add-badge-in-github-readme)](https://goreportcard.com/report/github.com/yangwenmai/how-to-add-badge-in-github-readme)
+
+[![Documentation](https://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme?status.svg)](http://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme)
+
+[![Coverage Status](https://coveralls.io/repos/github/yangwenmai/how-to-add-badge-in-github-readme/badge.svg?branch=master)](https://coveralls.io/github/yangwenmai/how-to-add-badge-in-github-readme?branch=master)
+
+[![GitHub issues](https://img.shields.io/github/issues/yangwenmai/how-to-add-badge-in-github-readme.svg)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/issues)
+
+[![license](https://img.shields.io/github/license/yangwenmai/how-to-add-badge-in-github-readme.svg?maxAge=2592000)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/LICENSE)
+
+[![Release](https://img.shields.io/github/release/yangwenmai/how-to-add-badge-in-github-readme.svg?label=Release)](https://github.com/yangwenmai/how-to-add-badge-in-github-readme/releases)
 
 [gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
@@ -37,6 +41,8 @@
 [![][docs-stable-img]][docs-stable-url]
 [![][docs-dev-img]][docs-dev-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
+
+___________________________________________
 
 
 #### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
