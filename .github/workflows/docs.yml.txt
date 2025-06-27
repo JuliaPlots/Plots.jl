@@ -1,0 +1,31 @@
+name: docs
+
+on:
+ workflow_dispatch:
+ push:
+  branches: [v2]
+  tags: '*'
+
+jobs:
+  Build_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@latest
+      - name: Cache artifacts
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts 
+          key: ${{runner.os}}-test-${{env.cache-name}}-${{hashFiles('**/Project.toml')}}
+          restore-keys: |
+            ${{runner.os}}-test-${{env.cache-name}}-
+            ${{runner.os}}-test-
+            ${{runner.os}}-
+      - name: Build documentation
+        env:
+          PYTHON: ""
+          DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: bash ci/build-docs.sh
