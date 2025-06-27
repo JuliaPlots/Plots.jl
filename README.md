@@ -4,8 +4,8 @@ __________________________________________
 
 __________________________________________
 
-[![Test](https://github.com/fredrikekre/Runic.jl/actions/workflows/Test.yml/badge.svg?branch=master&event=push)](https://github.com/fredrikekre/Runic.jl/actions/workflows/Test.yml)
-[![codecov](https://codecov.io/gh/fredrikekre/Runic.jl/graph/badge.svg?token=GWKJKBZ5FB)](https://codecov.io/gh/fredrikekre/Runic.jl)
+
+[(Compiler) TypeScript](https://github.com/facebook/react/actions/workflows/compiler_typescript.yml/badge.svg?branch=main)](https://github.com/facebook/react/actions/workflows/compiler_typescript.yml)
 [![code style: runic](https://img.shields.io/badge/code_style-%E1%9A%B1%E1%9A%A2%E1%9A%BE%E1%9B%81%E1%9A%B2-black)](https://github.com/fredrikekre/Runic.jl)
 
 
