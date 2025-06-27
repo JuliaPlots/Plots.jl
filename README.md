@@ -14,6 +14,10 @@ ___________________________________________
 [![GitHub Actions](https://github.com/JuliaTesting/Aqua.jl/workflows/Run%20tests/badge.svg)](https://github.com/JuliaTesting/Aqua.jl/actions?query=workflow%3ARun+tests)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![Build Status](https://travis-ci.org/yangwenmai/how-to-add-badge-in-github-readme.svg?branch=master)](https://travis-ci.org/yangwenmai/how-to-add-badge-in-github-readme)
+
+___________________________________________
+
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/yangwenmai/how-to-add-badge-in-github-readme)](https://goreportcard.com/report/github.com/yangwenmai/how-to-add-badge-in-github-readme)
 [![Documentation](https://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme?status.svg)](http://godoc.org/github.com/yangwenmai/how-to-add-badge-in-github-readme)
 [![Coverage Status](https://coveralls.io/repos/github/yangwenmai/how-to-add-badge-in-github-readme/badge.svg?branch=master)](https://coveralls.io/github/yangwenmai/how-to-add-badge-in-github-readme?branch=master)
