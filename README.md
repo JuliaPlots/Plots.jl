@@ -53,6 +53,10 @@ for machine learning. It has a comprehensive, flexible ecosystem of
 researchers push the state-of-the-art in ML and developers easily build and
 deploy ML-powered applications.
 
+___________________________________________
+
+## Now let's talk about Julia Language...
+
 
 
 
