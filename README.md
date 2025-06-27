@@ -4,11 +4,10 @@
 
 # Plots
 
-[gh-ci-img]: https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2
-[gh-ci-url]: https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
-
-[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
-[pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
+[!gh-ci-img]: 
+(https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml/badge.svg)]
+[gh-ci-url]:
+(https://github.com/Jaxelr/VueSimpleTemplate/actions/workflows/ci.yml)
 
 [gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
