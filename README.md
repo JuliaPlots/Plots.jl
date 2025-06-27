@@ -31,6 +31,7 @@ ___________________________________________
 [![][docs-stable-img]][docs-stable-url]
 [![][docs-dev-img]][docs-dev-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
+![JS](https://img.shields.io/badge/-JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=ffffff) ![Node.JS](https://img.shields.io/badge/-Node.js-339933?style=flat&logo=Node.js&logoColor=white) ![Python](https://img.shields.io/badge/-Python-black?style=flat&logo=python&logoColor=3776AB) ![C#](https://img.shields.io/badge/-C%23-239120?logo=c+sharp&logoColor=white) ![PHP](https://img.shields.io/badge/-PHP-777BB4?style=flat&logo=php&logoColor=ffffff) ![Racket](https://img.shields.io/badge/-Racket-blue?style=flat&logo=racket&logoColor=ffffff) ![OCaml](https://img.shields.io/badge/-OCaml-f08a2b?style=flat&logo=ocaml&logoColor=ffffff)
 
 ___________________________________________
 
