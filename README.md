@@ -6,6 +6,10 @@
 
 [![CI](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml/badge.svg?event=discussion)](https://github.com/JuliaPlots/StatsPlots.jl/actions/workflows/CI.yml) 
 
+[![CircleCI Status](https://circleci.com/gh/pingcap/tidb.svg?style=shield)]
+
+
+
 [gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
 [gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
@@ -19,7 +23,7 @@
 [![][docs-stable-img]][docs-stable-url]
 [![][docs-dev-img]][docs-dev-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2)
-
+[![Coverage Status](https://coveralls.io/repos/github/pingcap/tidb/badge.svg?branch=master)](https://coveralls.io/github/pingcap/tidb?branch=master)
 
 #### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
 
