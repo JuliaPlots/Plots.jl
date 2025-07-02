@@ -55,47 +55,7 @@ export JULIA_CONDAPKG_BACKEND=MicroMamba
 
 julia='xvfb-run -a julia --color=yes --project=docs'
 
-JULIA_PKG_PRECOMPILE_AUTO=0 $julia -e '
-  using Pkg; Pkg.add("CondaPkg")
-  using CondaPkg; CondaPkg.resolve()
-  libgcc = if Sys.islinux()
-    # see discourse.julialang.org/t/glibcxx-version-not-found/82209/8
-    # julia 1.8.3 is built with libstdc++.so.6.0.29, so we must restrict to this version (gcc 11.3.0, not gcc 12.2.0)
-    # see gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html
-    specs = Dict(
-      v"3.4.29" => ">=11.1,<12.1",
-      v"3.4.30" => ">=12.1,<13.1",
-      v"3.4.31" => ">=13.1,<14.1",
-      v"3.4.32" => ">=14.1,<15.1",
-      v"3.4.33" => ">=15.1,<16.1",
-      v"3.4.34" => ">=16.1,<17.1",
-      # ... keep this up-to-date with gcc 18
-    )[Base.BinaryPlatforms.detect_libstdcxx_version()]
-    ("libgcc-ng$specs", "libstdcxx-ng$specs")
-  else
-    ()
-  end
-  CondaPkg.PkgREPL.add([libgcc..., "matplotlib"])
-  CondaPkg.status()
-'
+JULIA_PKG_PRECOMPILE_AUTO=0 $julia -e ci/matplotlib.jl
 
 echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
-JULIA_PKG_PRECOMPILE_AUTO=0 $julia -e '
-using Pkg
-
-rev = split(ENV["GITHUB_REF"], "/", limit=3)[3]
-println("rev=$rev")
-
-Pkg.develop([
-  (; path="./RecipesBase"),
-  (; path="./RecipesPipeline"),
-  (; path="./PlotsBase"),
-  (; path="."),
-  (; path="./GraphRecipes"),
-  (; path="./StatsPlots"),
-])
-Pkg.add(PackageSpec(; name="Plots", rev))
-Pkg.instantiate()
-Pkg.precompile()
-'
 $julia docs/make.jl
