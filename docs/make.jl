@@ -638,7 +638,7 @@ function main(args)
     gallery_assets, gallery_callbacks, user_gallery = map(_ -> [], 1:3)
     needs_rng_fix = Dict{Symbol,Any}()
 
-    for pkg ∈ packages
+    @time for pkg ∈ packages
         be = packages_backends[pkg]
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
         let (path, cb, assets) = makedemos(
@@ -742,7 +742,7 @@ function main(args)
     @show debug selected_pages length(gallery) pages
 
     n = 0
-    for (root, dirs, files) ∈ walkdir(SRC_DIR)
+    @time for (root, dirs, files) ∈ walkdir(SRC_DIR)
         foreach(dir -> mkpath(joinpath(WORK_DIR, dir)), dirs)
         for file ∈ files
             _, ext = splitext(file)
@@ -760,7 +760,7 @@ function main(args)
 
     execute = true  # set to true for executing notebooks and documenter
     nb = false      # set to true to generate the notebooks
-    for (root, _, files) ∈ walkdir(unitfulext), file ∈ files
+    @time for (root, _, files) ∈ walkdir(unitfulext), file ∈ files
         last(splitext(file)) == ".jl" || continue
         ipath = joinpath(root, file)
         opath = replace(ipath, src_unitfulext => "$work/generated") |> splitdir |> first
