@@ -120,26 +120,21 @@ end
 Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
-function get_guide(axis::Axis)
-    if isnothing(axis[:guide])
-        return ""
-    elseif isnothing(axis[:unit]) || axis[:guide] isa ProtectedString ||
-        axis[:unitformat] == :nounit 
-        return axis[:guide]
+get_guide(axis::Axis)::String = if isnothing(axis[:guide])
+    ""
+elseif isnothing(axis[:unit]) || axis[:guide] isa ProtectedString ||
+    axis[:unitformat] ≡ :nounit
+    axis[:guide]
+else
+    unit = if axis[:unitformat] isa Function
+        axis[:unit]
+    elseif Plots.backend_name() ≡ :pgfplotsx
+        Latexify.latexify(axis[:unit])
     else
-        unit = if axis[:unitformat] isa Function
-            axis[:unit]
-        elseif Plots.backend_name() ≡ :pgfplotsx
-            Latexify.latexify(axis[:unit])
-        else
-            string(axis[:unit])
-        end
-        isempty(axis[:guide]) && return unit
-        return format_unit_label(
-            axis[:guide],
-            unit,
-            axis[:unitformat])
+        string(axis[:unit])
     end
+    isempty(axis[:guide]) && return unit
+    format_unit_label(axis[:guide], unit, axis[:unitformat])
 end
 
 
