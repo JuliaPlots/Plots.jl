@@ -1,6 +1,6 @@
 ```@setup pipeline
 using Plots; gr()
-Plots.reset_defaults()
+PlotsBase.reset_defaults()
 ```
 
 # [Processing Pipeline](@id pipeline)
@@ -97,7 +97,7 @@ where each item represents the data for one plot series.  Under the hood, it mak
 Inputs are recursively processed until a matching recipe is found.  This means you can make modular and hierarchical recipes which are processed just like anything built into Plots.
 
 ```@example pipeline
-Plots.reset_defaults() # hide
+PlotsBase.reset_defaults() #hide
 mutable struct MyVecWrapper
   v::Vector{Float64}
 end

@@ -147,7 +147,7 @@ function generate_cards(
 
             i ∈ skip && @goto write_file
             write(jl, """
-                Plots.reset_defaults()  #hide
+                PlotsBase.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(PlotsBase.SEED))  #hide
                 nothing  #hide

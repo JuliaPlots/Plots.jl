@@ -1,6 +1,6 @@
 ```@setup ecosystem
 using StatsPlots, Plots, RDatasets, Distributions; gr()
-Plots.reset_defaults()
+PlotsBase.reset_defaults()
 
 iris = dataset("datasets", "iris")
 singers = dataset("lattice","singer")
