@@ -1,7 +1,7 @@
 ```@setup backends
 using StatsPlots
 using Plots, RecipesBase, Statistics; gr()
-Plots.Commons.reset_defaults()
+Plots.reset_defaults()
 
 @userplot BackendPlot
 

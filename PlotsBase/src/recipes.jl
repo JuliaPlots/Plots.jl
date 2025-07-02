@@ -1110,7 +1110,7 @@ Commons.@attributes function error_style!(plotattributes::AKW)
     msc = if (msc = plotattributes[:markerstrokecolor]) ≡ :match
         plotattributes[:subplot][:foreground_color_subplot]
     elseif msc ≡ :auto
-        get_series_color(
+        PlotsBase.get_series_color(
             plotattributes[:linecolor],
             plotattributes[:subplot],
             plotattributes[:series_plotindex],
