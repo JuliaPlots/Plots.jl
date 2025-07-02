@@ -45,18 +45,18 @@ jobs:
           - os: ubuntu-latest
             experimental: false
             prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-          - os: ubuntu-latest
-            experimental: false
-            prefix: xvfb-run
-            version:  '1.7' # only test intermediate release on `ubuntu` to spare resources
-          - os: ubuntu-latest
-            experimental: false
-            prefix: xvfb-run
-            version:  '1.8' # only test intermediate release on `ubuntu` to spare resources
-          - os: ubuntu-latest
-            experimental: false
-            prefix: xvfb-run
-            version:  '1.9' # only test intermediate release on `ubuntu` to spare resources
+          # - os: ubuntu-latest
+          #   experimental: false
+          #   prefix: xvfb-run
+          #   version:  '1.7' # only test intermediate release on `ubuntu` to spare resources
+          # - os: ubuntu-latest
+          #   experimental: false
+          #   prefix: xvfb-run
+          #   version:  '1.8' # only test intermediate release on `ubuntu` to spare resources
+          # - os: ubuntu-latest
+          #   experimental: false
+          #   prefix: xvfb-run
+          #   version:  '1.9' # only test intermediate release on `ubuntu` to spare resources
           - os: ubuntu-latest
             experimental: true
             prefix: xvfb-run
