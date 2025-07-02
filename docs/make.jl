@@ -1,18 +1,25 @@
 # oneliner debug PLOTS_DOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
+import Pkg; Pkg.precompile()
 
-using PlotThemes, Plots, PlotsBase, RecipesBase, RecipesPipeline
-using Documenter, DemoCards, Literate, StableRNGs, Glob, JSON
+using RecipesBase, RecipesPipeline, PlotsBase, Plots
+using DemoCards, Literate, Documenter
 
 import OrderedCollections
 import UnicodePlots
+import GraphRecipes
+import StableRNGs
 import PythonPlot
 import StatsPlots
 import MacroTools
 import DataFrames
+import PlotThemes
 import PGFPlotsX
 import PlotlyJS
+import Unitful
 import Gaston
 import Dates
+import JSON
+import Glob
 
 eval(PlotsBase.WEAKDEPS)
 
@@ -33,7 +40,7 @@ const ATTRIBUTE_SEARCH = Dict{String,Any}()  # search terms
         info = "[src=$(rec.src) fragment=$(rec.fragment) title=$(rec.title) page_title=$(rec.page_title)]"
         if (m = match(r"generated/attributes_(\w+)", lowercase(rec.src))) ≢ nothing
             # fix attributes search terms: `Series`, `Plot`, `Subplot` and `Axis` (github.com/JuliaPlots/Plots.jl/issues/2337)
-            @info "$info: fix attribute search"
+            @info "$info: fix attribute search" maxlog=1
             for (attr, alias) ∈ $(ATTRIBUTE_SEARCH)[first(m.captures)]
                 push!(
                     ctx.search_index,
@@ -49,7 +56,7 @@ const ATTRIBUTE_SEARCH = Dict{String,Any}()  # search terms
             if add_to_index
                 push!(ctx.search_index, rec)
             else
-                @info "$info: skip adding to `search_index`"
+                @info "$info: skip adding to `search_index`" maxlog=1
             end
         end
         # end addition
@@ -219,7 +226,7 @@ function generate_cards(
         sec_config["title"]  = ""  # avoid `# Generated` section in gallery
         sec_config["description"] = "[Supported attributes](@ref $(backend)_attributes)"
         push!(sec_config["order"], attr_name)
-        write(config, json(sec_config))
+        write(config, JSON.json(sec_config))
     end
     needs_rng_fix
 end
@@ -577,7 +584,9 @@ function to_html(df::DataFrames.AbstractDataFrame; table_style=Dict("font-size" 
     read(io, String)
 end
 
-function main()
+function main(args)
+    length(args) > 0 && return  # split precompilation and actual docs build
+
     get!(ENV, "MPLBACKEND", "agg")  # set matplotlib gui backend
     get!(ENV, "GKSwstype", "nul")  # disable default GR ws
 
@@ -629,21 +638,26 @@ function main()
     gallery_assets, gallery_callbacks, user_gallery = map(_ -> [], 1:3)
     needs_rng_fix = Dict{Symbol,Any}()
 
-    for pkg ∈ packages
+    @time for pkg ∈ packages
         be = packages_backends[pkg]
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
-        let (path, cb, assets) = makedemos(joinpath("gallery", string(be)); src="$work/gallery", edit_branch=BRANCH)
+        let (path, cb, assets) = makedemos(
+            joinpath("gallery", string(be));
+            root=@__DIR__, src=joinpath(work, "gallery"), edit_branch=BRANCH
+        )
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
             push!(gallery_assets, assets)
         end
     end
-    user_gallery, cb, assets = makedemos(joinpath("user_gallery"); src=work, edit_branch=BRANCH)
+    user_gallery, cb, assets = makedemos(
+        joinpath("user_gallery");
+        root=@__DIR__, src=work, edit_branch=BRANCH
+    )
     push!(gallery_callbacks, cb)
     push!(gallery_assets, assets)
     unique!(gallery_assets)
     @show user_gallery gallery_assets
-
 
     pages = if (debug = length(packages) ≤ 1)  # debug
         ["Home" => "index.md", "Gallery" => gallery, "User Gallery" => user_gallery]
@@ -728,7 +742,7 @@ function main()
     @show debug selected_pages length(gallery) pages
 
     n = 0
-    for (root, dirs, files) ∈ walkdir(SRC_DIR)
+    @time for (root, dirs, files) ∈ walkdir(SRC_DIR)
         foreach(dir -> mkpath(joinpath(WORK_DIR, dir)), dirs)
         for file ∈ files
             _, ext = splitext(file)
@@ -746,7 +760,7 @@ function main()
 
     execute = true  # set to true for executing notebooks and documenter
     nb = false      # set to true to generate the notebooks
-    for (root, _, files) ∈ walkdir(unitfulext), file ∈ files
+    @time for (root, _, files) ∈ walkdir(unitfulext), file ∈ files
         last(splitext(file)) == ".jl" || continue
         ipath = joinpath(root, file)
         opath = replace(ipath, src_unitfulext => "$work/generated") |> splitdir |> first
@@ -793,7 +807,7 @@ function main()
         be = packages_backends[pkg]
         prefix = joinpath(@__DIR__, "build", "gallery", string(be), "generated")
         must_fix = needs_rng_fix[pkg]
-        for file ∈ glob("*/index.html", prefix)
+        for file ∈ Glob.glob("*/index.html", prefix)
             (m = match(r"-ref(\d+)", file)) ≡ nothing && continue
             idx = parse(Int, first(m.captures))
             get(must_fix, idx, false) || continue
@@ -814,7 +828,7 @@ function main()
                     occursin("</code>", trailing) && (in_code = false)
                     write(io, line)
                 end
-                count > 0 && @info "replaced $count `rng` occurrence(s) in $file"
+                count > 0 && @info "replaced $count `rng` occurrence(s) in $file" maxlog=1
                 @assert count > 0 "idx=$idx - count=$count - file=$file"
             end
         end
@@ -822,10 +836,10 @@ function main()
 
     @info "post-process temporary work dir"
     src = basename(SRC_DIR)
-    for file ∈ glob("*/index.html", joinpath(@__DIR__, "build"))
+    for file ∈ Glob.glob("*/index.html", joinpath(@__DIR__, "build"))
         lines = readlines(file; keep=true)
         any(line -> occursin("blob/$BRANCH/docs", line), lines) || continue
-        @info "fixing $file"
+        @info "fixing $file" maxlog=1
         open(file, "w") do io
             for line ∈ lines
                 write(io, replace(line, "blob/$BRANCH/docs/$work" => "blob/$BRANCH/docs/$src"))
@@ -846,4 +860,4 @@ function main()
     @info "done !"
 end
 
-main()
+@main

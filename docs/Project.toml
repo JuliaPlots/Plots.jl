@@ -66,6 +66,7 @@ OrderedCollections = "1"
 Pkg = "1"
 PlotlyKaleido = "2"
 Plots = "2"
+PlotThemes = "3"
 PGFPlotsX = "1"
 PythonPlot = "1"
 SparseArrays = "1"
@@ -79,6 +80,7 @@ Unitful = "1"
 [sources]
 Plots = {path = ".."}
 PlotsBase = {path = "../PlotsBase"}
+PlotThemes = {path = "../PlotThemes"}
 RecipesBase = {path = "../RecipesBase"}
 RecipesPipeline = {path = "../RecipesPipeline"}
 StatsPlots = {path = "../StatsPlots"}

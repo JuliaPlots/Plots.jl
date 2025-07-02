@@ -22,13 +22,14 @@ jobs:
       pull-requests: read
       statuses: write
     runs-on: ubuntu-latest
+    env:
+      PYTHON: ""
+      DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
       - uses: julia-actions/cache@v2
-      - name: Build and deploy
-        run: bash ci/build-docs.sh
-        env:
-          PYTHON: ""
-          DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - run: bash -c '. ci/build-docs.sh; install_ubuntu_deps'
+      - run: bash -c '. ci/build-docs.sh; install_and_precompile_julia_deps'
+      - run: bash -c '. ci/build-docs.sh; build_documenter_docs'
