@@ -1,16 +1,18 @@
 # oneliner debug PLOTS_DOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
-
-using PlotThemes, Plots, PlotsBase, RecipesBase, RecipesPipeline
+using Plots, PlotsBase, RecipesBase, RecipesPipeline
 using Documenter, DemoCards, Literate, StableRNGs, Glob, JSON
 
 import OrderedCollections
 import UnicodePlots
+import GraphRecipes
 import PythonPlot
 import StatsPlots
 import MacroTools
 import DataFrames
+import PlotThemes
 import PGFPlotsX
 import PlotlyJS
+import Unitful
 import Gaston
 import Dates
 
@@ -634,13 +636,19 @@ function main(args)
     for pkg ∈ packages
         be = packages_backends[pkg]
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
-        let (path, cb, assets) = makedemos(joinpath("gallery", string(be)); src="$work/gallery", edit_branch=BRANCH)
+        let (path, cb, assets) = makedemos(
+            joinpath("gallery", string(be));
+            root=@__DIR__, src=joinpath(work, "gallery"), edit_branch=BRANCH
+        )
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
             push!(gallery_assets, assets)
         end
     end
-    user_gallery, cb, assets = makedemos(joinpath("user_gallery"); src=work, edit_branch=BRANCH)
+    user_gallery, cb, assets = makedemos(
+        joinpath("user_gallery");
+        root=@__DIR__, src=work, edit_branch=BRANCH
+    )
     push!(gallery_callbacks, cb)
     push!(gallery_assets, assets)
     unique!(gallery_assets)
