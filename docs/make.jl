@@ -1,10 +1,13 @@
 # oneliner debug PLOTS_DOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
-using Plots, PlotsBase, RecipesBase, RecipesPipeline
-using Documenter, DemoCards, Literate, StableRNGs, Glob, JSON
+import Pkg; Pkg.precompile()
+
+using RecipesBase, RecipesPipeline, PlotsBase, Plots
+using DemoCards, Literate, Documenter
 
 import OrderedCollections
 import UnicodePlots
 import GraphRecipes
+import StableRNGs
 import PythonPlot
 import StatsPlots
 import MacroTools
@@ -15,6 +18,8 @@ import PlotlyJS
 import Unitful
 import Gaston
 import Dates
+import JSON
+import Glob
 
 eval(PlotsBase.WEAKDEPS)
 
@@ -35,7 +40,7 @@ const ATTRIBUTE_SEARCH = Dict{String,Any}()  # search terms
         info = "[src=$(rec.src) fragment=$(rec.fragment) title=$(rec.title) page_title=$(rec.page_title)]"
         if (m = match(r"generated/attributes_(\w+)", lowercase(rec.src))) ≢ nothing
             # fix attributes search terms: `Series`, `Plot`, `Subplot` and `Axis` (github.com/JuliaPlots/Plots.jl/issues/2337)
-            @info "$info: fix attribute search"
+            @info "$info: fix attribute search" maxlog=1
             for (attr, alias) ∈ $(ATTRIBUTE_SEARCH)[first(m.captures)]
                 push!(
                     ctx.search_index,
@@ -51,7 +56,7 @@ const ATTRIBUTE_SEARCH = Dict{String,Any}()  # search terms
             if add_to_index
                 push!(ctx.search_index, rec)
             else
-                @info "$info: skip adding to `search_index`"
+                @info "$info: skip adding to `search_index`" maxlog=1
             end
         end
         # end addition
@@ -221,7 +226,7 @@ function generate_cards(
         sec_config["title"]  = ""  # avoid `# Generated` section in gallery
         sec_config["description"] = "[Supported attributes](@ref $(backend)_attributes)"
         push!(sec_config["order"], attr_name)
-        write(config, json(sec_config))
+        write(config, JSON.json(sec_config))
     end
     needs_rng_fix
 end
@@ -802,7 +807,7 @@ function main(args)
         be = packages_backends[pkg]
         prefix = joinpath(@__DIR__, "build", "gallery", string(be), "generated")
         must_fix = needs_rng_fix[pkg]
-        for file ∈ glob("*/index.html", prefix)
+        for file ∈ Glob.glob("*/index.html", prefix)
             (m = match(r"-ref(\d+)", file)) ≡ nothing && continue
             idx = parse(Int, first(m.captures))
             get(must_fix, idx, false) || continue
@@ -823,7 +828,7 @@ function main(args)
                     occursin("</code>", trailing) && (in_code = false)
                     write(io, line)
                 end
-                count > 0 && @info "replaced $count `rng` occurrence(s) in $file"
+                count > 0 && @info "replaced $count `rng` occurrence(s) in $file" maxlog=1
                 @assert count > 0 "idx=$idx - count=$count - file=$file"
             end
         end
@@ -831,10 +836,10 @@ function main(args)
 
     @info "post-process temporary work dir"
     src = basename(SRC_DIR)
-    for file ∈ glob("*/index.html", joinpath(@__DIR__, "build"))
+    for file ∈ Glob.glob("*/index.html", joinpath(@__DIR__, "build"))
         lines = readlines(file; keep=true)
         any(line -> occursin("blob/$BRANCH/docs", line), lines) || continue
-        @info "fixing $file"
+        @info "fixing $file" maxlog=1
         open(file, "w") do io
             for line ∈ lines
                 write(io, replace(line, "blob/$BRANCH/docs/$work" => "blob/$BRANCH/docs/$src"))
