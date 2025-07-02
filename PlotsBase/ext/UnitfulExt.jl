@@ -223,7 +223,7 @@ end
 #=======================================
 Label string containing unit information
 Used only for colorbars, etc., which don't 
-have a bettter place for storing units
+have a better place for storing units
 =======================================#
 
 struct UnitfulString{S,U} <: AbstractString
