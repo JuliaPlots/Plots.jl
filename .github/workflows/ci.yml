@@ -84,6 +84,7 @@ jobs:
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
           ])
+          Pkg.precompile()
 
       - name: Test Plots stack
         timeout-minutes: 60
