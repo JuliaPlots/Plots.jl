@@ -174,7 +174,7 @@ function make_batman()
             map(PlotsBase.BezierCurves.BezierCurve([p[i], m[i], p[i + 1]]), range(0, 1, length = 30))
         )
     end
-    x, y = Plots.unzip(Tuple.(pts))
+    x, y = PlotsBase.unzip(Tuple.(pts))
     Shape(vcat(x, -reverse(x)), vcat(y, reverse(y)))
 end
 
@@ -192,7 +192,7 @@ plt = plot(
 ```@example input_data
 # create an ellipse in the sky
 pts = PlotsBase.partialcircle(0, 2π, 100, 0.1)
-x, y = Plots.unzip(pts)
+x, y = PlotsBase.unzip(pts)
 x = 1.5x .+ 0.7
 y .+= 1.3
 pts = collect(zip(x, y))

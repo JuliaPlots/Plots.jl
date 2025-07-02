@@ -74,6 +74,7 @@ Use `px`/`mm`/`inch` for absolute coords, `w`/`h` for percentage relative to the
 
 ```@example layouts_2
 # boxplot is defined in StatsPlots
+using PlotsBase # hide
 using StatsPlots
 gr(leg = false, bg = :lightgrey)
 
@@ -96,7 +97,7 @@ histogram!(
 # relative to a subplot)
 sticks!(
     randn(100),
-    inset = bbox(0, -0.2, 200Plots.px, 100Plots.px, :center),
+    inset = bbox(0, -0.2, 20PlotsBase.px, 100PlotsBase.px, :center),
     ticks = nothing,
     subplot = 4
 )
