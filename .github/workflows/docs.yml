@@ -30,6 +30,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
       - uses: julia-actions/cache@v2
-      - run: bash -c '. ci/build-docs.sh; prepare_build'
+      - run: bash -c '. ci/build-docs.sh; install_ubuntu_deps'
       - run: bash -c '. ci/build-docs.sh; install_and_precompile_julia_deps'
       - run: bash -c '. ci/build-docs.sh; build_documenter_docs'

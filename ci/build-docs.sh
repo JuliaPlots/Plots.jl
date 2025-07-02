@@ -18,29 +18,6 @@ if $key_unset && $tok_unset; then
   exit 1
 fi
 
-echo '== install system dependencies =='
-sudo apt -y update
-sudo apt -y install \
-  texlive-{latex-{base,extra},binaries,pictures,luatex} \
-  ttf-mscorefonts-installer \
-  poppler-utils \
-  ghostscript-x \
-  qtbase5-dev \
-  pdf2svg \
-  gnuplot \
-  g++
-
-echo '== install fonts =='
-mkdir -p ~/.fonts
-repo="https://github.com/cormullion/juliamono"
-ver="$(git -c 'versionsort.suffix=-' ls-remote --tags --sort='v:refname' "$repo.git" | tail -n 1 | awk '{ print $2 }' | sed 's,refs/tags/,,')"
-url="$repo/releases/download/$ver/JuliaMono-ttf.tar.gz"
-echo "downloading & extract url=$url"
-wget -q "$url" -O - | tar -xz -C ~/.fonts
-sudo fc-cache -vr
-fc-list | grep 'JuliaMono'
-
-echo "== install julia dependencies =="
 if true; then
   export JULIA_DEBUG='Documenter,Literate,DemoCards'
   export DOCUMENTER_DEBUG=true  # Democards.jl
@@ -53,9 +30,42 @@ export COLORTERM=truecolor  # UnicodePlots.jl
 export PLOTDOCS_ANSICOLOR=true
 export JULIA_CONDAPKG_BACKEND=MicroMamba
 
-julia='xvfb-run -a julia --color=yes --project=docs'
+julia_project() {
+  xvfb-run -a julia --color=yes --project=docs "$@"
+}
 
-JULIA_PKG_PRECOMPILE_AUTO=0 $julia ci/matplotlib.jl
+install_ubuntu_deps() {
+  echo '== install system dependencies =='
+  sudo apt -y update
+  sudo apt -y install \
+    texlive-{latex-{base,extra},binaries,pictures,luatex} \
+    ttf-mscorefonts-installer \
+    poppler-utils \
+    ghostscript-x \
+    qtbase5-dev \
+    pdf2svg \
+    gnuplot \
+    g++
 
-echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
-$julia docs/make.jl
+  echo '== install fonts =='
+  mkdir -p ~/.fonts
+  repo="https://github.com/cormullion/juliamono"
+  ver="$(git -c 'versionsort.suffix=-' ls-remote --tags --sort='v:refname' "$repo.git" | tail -n 1 | awk '{ print $2 }' | sed 's,refs/tags/,,')"
+  url="$repo/releases/download/$ver/JuliaMono-ttf.tar.gz"
+  echo "downloading & extract url=$url"
+  wget -q "$url" -O - | tar -xz -C ~/.fonts
+  sudo fc-cache -vr
+  fc-list | grep 'JuliaMono'
+}
+
+install_and_precompile_julia_deps() {
+  echo "== install julia dependencies =="
+  JULIA_PKG_PRECOMPILE_AUTO=0 julia_project ci/matplotlib.jl
+  echo '== precompile docs dependencies =='
+  julia_project docs/make.jl none
+}
+
+build_documenter_docs() {
+  echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
+  julia_project docs/make.jl
+}

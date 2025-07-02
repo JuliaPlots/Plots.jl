@@ -577,7 +577,9 @@ function to_html(df::DataFrames.AbstractDataFrame; table_style=Dict("font-size" 
     read(io, String)
 end
 
-function main()
+function main(args)
+    length(args) > 0 && return  # split precompilation and actual docs build
+
     get!(ENV, "MPLBACKEND", "agg")  # set matplotlib gui backend
     get!(ENV, "GKSwstype", "nul")  # disable default GR ws
 
@@ -643,7 +645,6 @@ function main()
     push!(gallery_assets, assets)
     unique!(gallery_assets)
     @show user_gallery gallery_assets
-
 
     pages = if (debug = length(packages) ≤ 1)  # debug
         ["Home" => "index.md", "Gallery" => gallery, "User Gallery" => user_gallery]
@@ -846,4 +847,4 @@ function main()
     @info "done !"
 end
 
-main()
+@main
