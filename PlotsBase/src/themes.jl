@@ -15,7 +15,7 @@ end
 
 function _theme(s::Symbol, defaults::AKW; kw...)
     # Reset to defaults to overwrite active theme
-    Commons.reset_defaults()
+    reset_defaults()
 
     # Set the theme's gradient as default
     if haskey(defaults, :colorgradient)

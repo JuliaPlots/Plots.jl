@@ -38,7 +38,7 @@ export anynan,
 export istuple, isvector, ismatrix, isscalar, is_2tuple
 export default, wraptuple, merge_with_base_supported
 
-export px, pct, plotarea, plotarea!
+export px, pct, plotarea, plotarea!, reset_defaults
 export width, height, leftpad, toppad, bottompad, rightpad
 export origin, left, right, bottom, top, bbox, bbox!
 export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH

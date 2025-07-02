@@ -1,6 +1,6 @@
 ```@setup histogram
 using Plots; gr()
-Plots.Commons.reset_defaults()
+Plots.reset_defaults()
 ```
 
 # [Histograms](@id histogram)

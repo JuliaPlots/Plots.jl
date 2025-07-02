@@ -1,6 +1,6 @@
 ```@setup graphexamples
 using Plots, GraphRecipes, Graphs, LinearAlgebra, SparseArrays, AbstractTrees; gr()
-Plots.Commons.reset_defaults()
+Plots.reset_defaults()
 ```
 # [Examples](@id graph_examples)
 ### Undirected graph

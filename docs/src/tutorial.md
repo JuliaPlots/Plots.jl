@@ -1,6 +1,6 @@
 ```@setup tutorial
 using Plots; gr()
-Plots.Commons.reset_defaults()
+Plots.reset_defaults()
 ```
 
 # [Tutorial](@id tutorial)

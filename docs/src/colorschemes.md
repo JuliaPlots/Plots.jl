@@ -1,6 +1,6 @@
 ```@setup colors
 using Plots; gr()
-Plots.Commons.reset_defaults()
+Plots.reset_defaults()
 ```
 
 # Colorschemes

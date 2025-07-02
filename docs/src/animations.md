@@ -1,6 +1,6 @@
 ```@setup animations
 using Plots; gr()
-Plots.Commons.reset_defaults()
+PlotsBase.reset_defaults()
 ```
 
 ### [Animations](@id animations)

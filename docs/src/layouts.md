@@ -1,6 +1,6 @@
 ```@setup layouts
 using Plots; gr()
-Plots.Commons.reset_defaults()
+Plots.reset_defaults()
 ```
 
 # [Layouts](@id layouts)

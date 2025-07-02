@@ -1,6 +1,6 @@
 ```@setup contour
 using Plots
-Plots.Commons.reset_defaults()
+Plots.reset_defaults()
 ```
 
 # [Contour Plots](@id contour)
