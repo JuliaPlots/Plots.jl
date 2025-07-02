@@ -5,15 +5,28 @@ on:
  push:
   branches: [v2]
   tags: '*'
+  release:
+    types: [published]
+  pull_request:
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.head_ref && github.ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
-  Build_docs:
+  build:
+    if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'documentation') }}
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: read
+      statuses: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
       - uses: julia-actions/cache@v2
-      - name: Build documentation
+      - name: Build and deploy
         env:
           PYTHON: ""
           DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
