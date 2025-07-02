@@ -55,7 +55,7 @@ export JULIA_CONDAPKG_BACKEND=MicroMamba
 
 julia='xvfb-run -a julia --color=yes --project=docs'
 
-JULIA_PKG_PRECOMPILE_AUTO=0 $julia -e ci/matplotlib.jl
+JULIA_PKG_PRECOMPILE_AUTO=0 $julia ci/matplotlib.jl
 
 echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
 $julia docs/make.jl
