@@ -1,6 +1,6 @@
 ```@setup index
 using Plots; gr()
-Plots.reset_defaults()
+PlotsBase.reset_defaults()
 ```
 
 # Plots - powerful convenience for visualization in Julia
