@@ -86,7 +86,7 @@ jobs:
               (; path="./GraphRecipes"),
               (; path="./StatsPlots"),
             ])
-            [Base.julia_cmd().exec..., joinpath("ci", "matplotlib.jl")] |> Cmd |> run
+            include(joinpath("ci", "matplotlib.jl")
             Pkg.precompile()  # // precompilation
           '
 
