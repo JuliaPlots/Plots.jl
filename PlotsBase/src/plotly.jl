@@ -1280,17 +1280,18 @@ function plotly_html_body(plt, style = nothing)
         requirejs_suffix = "});"
     end
 
-    uuid = UUIDs.uuid4()
+    uuid = replace(UUIDs.uuid4(), '-' => '_')
+    
     html = """
         <div id=\"$(uuid)\" style=\"$(style)\"></div>
-        <script src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js" onload="plots_jl_plotly_init()"></script>
         <script>
-        function plots_jl_plotly_init() {
+        function plots_jl_plotly_$(uuid)() {
             $(requirejs_prefix)
             $(js_body(plt, uuid))
             $(requirejs_suffix)
         }
         </script>
+        <script src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js" onload="plots_jl_plotly_$(uuid)()"></script>
     """
     return html
 end
@@ -1313,7 +1314,7 @@ PlotsBase._show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{Plotl
 PlotsBase._show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) =
     write(io, PlotsBase.embeddable_html(plt))
 
-PlotsBase._display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
+PlotsBase._display(plt::Plot{PlotlyBackend}) = PlotsBase.standalone_html_window(plt)
 
 function _ijulia__extra_mime_info!(plt::Plot{PlotlyBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =
