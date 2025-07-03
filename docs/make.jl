@@ -539,36 +539,34 @@ function generate_graph_attr_markdown()
     end
 end
 
-function generate_colorschemes_markdown()
-    return open(joinpath(GEN_DIR, "colorschemes.md"), "w") do md
-        write(
-            md, """
-            ```@meta
-            EditURL = "$(edit_url())"
-            ```
-            """
-        )
-        for line in readlines(joinpath(SRC_DIR, "colorschemes.md"))
-            write(md, line * '\n')
-        end
-        write(
-            md, """
-            ## misc
+generate_colorschemes_markdown() = open(joinpath(GEN_DIR, "colorschemes.md"), "w") do md
+    write(
+        md, """
+        ```@meta
+        EditURL = "$(edit_url())"
+        ```
+        """
+    )
+    for line in readlines(joinpath(SRC_DIR, "colorschemes.md"))
+        write(md, line * '\n')
+    end
+    write(
+        md, """
+        ## misc
 
-            These colorschemes are not defined or provide different colors in ColorSchemes.jl
-            They are kept for compatibility with Plots behavior before v1.1.0.
-            """
-        )
-        write(md, "```@raw html\n")
-        ks = [:default; sort(collect(keys(PlotUtils.MISC_COLORSCHEMES)))]
+        These colorschemes are not defined or provide different colors in ColorSchemes.jl
+        They are kept for compatibility with Plots behavior before v1.1.0.
+        """
+    )
+    write(md, "```@raw html\n")
+    ks = [:default; sort(collect(keys(PlotUtils.MISC_COLORSCHEMES)))]
+    write(md, to_html(make_colorschemes_df(ks); allow_html_in_cells = true))
+    write(md, "\n```\n\nThe following colorschemes are defined by ColorSchemes.jl.\n\n")
+    for cs in ("cmocean", "scientific", "matplotlib", "colorbrewer", "gnuplot", "colorcet", "seaborn", "general")
+        ks = sort([k for (k, v) in PlotUtils.ColorSchemes.colorschemes if occursin(cs, v.category)])
+        write(md, "\n## $cs\n\n```@raw html\n")
         write(md, to_html(make_colorschemes_df(ks); allow_html_in_cells = true))
-        write(md, "\n```\n\nThe following colorschemes are defined by ColorSchemes.jl.\n\n")
-        for cs in ("cmocean", "scientific", "matplotlib", "colorbrewer", "gnuplot", "colorcet", "seaborn", "general")
-            ks = sort([k for (k, v) in PlotUtils.ColorSchemes.colorschemes if occursin(cs, v.category)])
-            write(md, "\n## $cs\n\n```@raw html\n")
-            write(md, to_html(make_colorschemes_df(ks); allow_html_in_cells = true))
-            write(md, "\n```\n")
-        end
+        write(md, "\n```\n")
     end
 end
 
@@ -666,11 +664,13 @@ function main(args)
     build = basename(BLD_DIR)
     src = basename(SRC_DIR)
 
-    @info "generate markdown"
-    generate_attr_markdown()
-    generate_supported_markdown(; default_backends = backends)
-    generate_graph_attr_markdown()
-    generate_colorschemes_markdown()
+    if !debug
+        @info "generate markdown"
+        generate_attr_markdown()
+        generate_supported_markdown(; default_backends = backends)
+        generate_graph_attr_markdown()
+        generate_colorschemes_markdown()
+    end
 
     for (pkg, dest) in (
             (PlotThemes, "plotthemes.md"),
@@ -917,7 +917,8 @@ function main(args)
             repo,
         )
     end
-    return @info "done !"
+    @info "done !"
+    return nothing
 end
 
 main(ARGS)
