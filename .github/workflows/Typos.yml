@@ -1,6 +1,6 @@
 name: Spelling
 
-on: [pull_request, workflow_dispatch]
+on: [pull_request, workflow_dispatch, push]
 
 env:
   CLICOLOR: 1
