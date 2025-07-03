@@ -1,4 +1,4 @@
-name: TagBot
+name: tagbot
 on:
   issue_comment:
     types:
@@ -21,7 +21,7 @@ permissions:
   security-events: read
   statuses: read
 jobs:
-  TagBot:
+  tagbot:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
     runs-on: ubuntu-latest
     steps:

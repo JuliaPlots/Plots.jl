@@ -70,10 +70,11 @@ jobs:
           version: ${{ matrix.version }}
 
       - uses: julia-actions/cache@v2
-      - run: JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=@. --color=yes ci/matplotlib.jl
 
       - name: develop downstream packages
-        shell: JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=@. --color=yes {0}
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
+        shell: julia --project=@. --color=yes {0}
         run: |
           using Pkg
           Pkg.develop([
@@ -84,7 +85,9 @@ jobs:
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
           ])
+          [Base.julia_cmd(), joinpath("ci", "matplotlib.jl")] |> Cmd |> run
 
+      - run: JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=@. --color=yes 
       # NOTE: test is using `--check-bounds=yes` !
       - run: julia --project=@. --check-bounds=yes --color=yes 'using Pkg; Pkg.precompile()'
 
