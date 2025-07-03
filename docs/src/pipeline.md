@@ -75,8 +75,6 @@ nothing  #hide
 
 ---
 
-
-
 ### [Step 1: Preprocess Attributes](@id step-1-replace-aliases)
 
 See [replacing aliases](@ref aliases) and [magic arguments](@ref magic-arguments) for details.
@@ -84,8 +82,6 @@ See [replacing aliases](@ref aliases) and [magic arguments](@ref magic-arguments
 Afterwards, there are some arguments which are simplified and compressed, such as converting the boolean setting `colorbar = false` to the internal description `colorbar = :none` as to allow complex behavior without complex interface, replacing `nothing` with the invisible `RGBA(0,0,0,0)`, and similar.
 
 ---
-
-
 
 ### [Step 2: Process input data: User Recipes, Grouping, and more](@id step-2-handle-magic-arguments)
 
@@ -129,16 +125,11 @@ scatter(rand(100), group = rand(1:3, 100), marker = (10,0.3, [:s :o :x]))
 
 ---
 
-
-
 ### Step 3:  Initialize and update Plot and Subplots
 
 Attributes which apply to Plot, Subplot, or Axis objects are pulled out and processed.  Backend methods for initializing the figure/window are triggered, and the [layout](@ref layouts) is built.
 
-
 ---
-
-
 
 ### Step 4: Series Recipes
 
@@ -148,16 +139,11 @@ The result is that one can create generic recipes (converting a histogram to a b
 
 ---
 
-
-
 ### Step 5: Preparing for output
 
 Much of the heavy processing is offloaded until it's needed.  Plots will try to avoid expensive graphical updates until you actually choose to [display](@ref output) the plot.  Just before display, we will compute the layout specifics and bounding boxes of the subplots and other plot components, then trigger the callback to the backend code to draw/update the plot.
 
 ---
-
-
-
 
 ### Step 6: Display it
 

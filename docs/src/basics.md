@@ -62,3 +62,11 @@ plot(1:10, Any[rand(10), sin])               # 2 series: rand(10) and map(sin,x)
     Call `gui()` to display the plot in a window. Interactivity depends on backend. Plotting at the REPL (without semicolon) implicitly calls `gui()`.
 
 ---
+
+### Environment variables
+
+A few environment variables control `PlotsBase` internals:
+- `PLOTSBASE_DEFAULT_BACKEND`: default backend, preempting the one set through the `Preferences` based mecanism;
+- `PLOTSBASE_TMPDIR`: temporay files prefix for (html) files (some browser are denied access to temporary directorie such as `/tmp`);
+- `PLOTSBASE_HOST_DEPENDENCY_LOCAL`: use a local `plotly` ressource instead of a cloud hosted one.
+
