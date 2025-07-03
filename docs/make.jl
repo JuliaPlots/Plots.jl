@@ -629,6 +629,9 @@ function main(args)
     get!(ENV, "MPLBACKEND", "agg")  # set matplotlib gui backend
     get!(ENV, "GKSwstype", "nul")  # disable default GR ws
 
+    # cleanup
+    isdir(WORK_DIR) && rm(WORK_DIR; recursive = true)
+    isdir(BLD_DIR) && rm(BLD_DIR; recursive = true)
     mkpath(GEN_DIR)
 
     # initialize all backends
