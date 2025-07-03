@@ -34,9 +34,13 @@ jobs:
           - '1' # latest stable
         experimental:
           - false
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-14]  # cannot use macos-latest on x64 (only aarch64)
         arch: [x64]
         include:
+          - os: macos-latest
+            experimental: false
+            arch: aarch64
+            version: '1'
           - os: ubuntu-latest
             experimental: false
             prefix: xvfb-run  # add `xvfb-run` prefix julia-actions/julia-runtest/blob/master/README.md
