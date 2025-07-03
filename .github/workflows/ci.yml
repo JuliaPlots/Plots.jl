@@ -4,11 +4,16 @@ on:
   workflow_dispatch:
   pull_request:
   push:
-    branches: [master, v2]
+    branches: [v2]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
+
+# needed to allow julia-actions/cache to delete old caches that it has created
+permissions:
+  actions: write
+  contents: read
 
 defaults:
   run:
@@ -23,7 +28,7 @@ jobs:
       MPLBACKEND: agg
       GKS_ENCODING: utf8
       GKSwstype: nul
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
+    name: julia ${{ matrix.version }} - ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -52,48 +57,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ubuntu dependencies
+      - name: setup ubuntu dependencies
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get -y update
           sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}  # LaTeX
           sudo fc-cache -vr
-
-      - name: Set LD_PRELOAD
-        if: startsWith(matrix.os, 'ubuntu')
-        run: echo "LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)" >> $GITHUB_ENV
+          echo "LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)" >>$GITHUB_ENV
 
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
 
       - uses: julia-actions/cache@v2
+      - run: JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=@. --color=yes ci/matplotlib.jl
 
-      - name: Install conda based matplotlib
-        env:
-          JULIA_PKG_PRECOMPILE_AUTO: 0
-        run: julia --color=yes ci/matplotlib.jl
-
-      - name: Develop downstream packages
-        env:
-          JULIA_PKG_PRECOMPILE_AUTO: 0
-        shell: julia --project=@. --color=yes {0}
+      - name: develop downstream packages
+        shell: JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=@. --color=yes {0}
         run: |
           using Pkg
           Pkg.develop([
-            (; path="./RecipesBase"),  # compat for LTS [sources], remove later
+            (; path="./RecipesBase"),      # compat for LTS [sources], remove later
             (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
-            (; path="./PlotThemes"),  # compat for LTS [sources], remove later
-            (; path="./PlotsBase"),  # compat for LTS [sources], remove later
+            (; path="./PlotThemes"),       # compat for LTS [sources], remove later
+            (; path="./PlotsBase"),        # compat for LTS [sources], remove later
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
           ])
-          Pkg.precompile()
 
-      - name: Test Plots stack
+      # NOTE: test is using `--check-bounds=yes` !
+      - run: julia --project=@. --check-bounds=yes --color=yes 'using Pkg; Pkg.precompile()'
+
+      - name: test Plots stack
         timeout-minutes: 60
         run: |
-          cmd=(julia --project=@. --color=yes --depwarn=yes)
+          cmd=(julia --project=@. --check-bounds=yes --color=yes --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
             cmd=(xvfb-run ${cmd[@]})
           fi

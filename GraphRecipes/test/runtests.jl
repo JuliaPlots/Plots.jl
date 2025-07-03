@@ -6,14 +6,13 @@ using GraphRecipes
 using SparseArrays
 using ImageMagick
 using StableRNGs
-using PlotsBase
 using Logging
 using Graphs
+using Plots
 using Test
 using Gtk  # for popup
 
-import GR
-gr()
+const PlotsBase = Plots.PlotsBase
 
 isci() = get(ENV, "CI", "false") == "true"
 itol(tol = nothing) = something(tol, isci() ? 1.0e-3 : 1.0e-5)

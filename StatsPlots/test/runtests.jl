@@ -2,16 +2,15 @@ using MultivariateStats
 using Distributions
 using StableRNGs
 using Clustering
-using PlotsBase
+using StatsPlots
 using StatsBase
 using RDatasets
 using Interact
 using NaNMath
+using Plots
 using Test
 
-using StatsPlots
-import GR
-gr()
+const PlotsBase = Plots.PlotsBase
 
 const iris = dataset("datasets", "iris")
 const singers = dataset("lattice", "singer")
