@@ -34,29 +34,12 @@ jobs:
           - '1' # latest stable
         experimental:
           - false
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
         include:
-          # In its place, test Julia 1.6 on x86 macOS
-          - os: macos-latest
-            experimental: false
-            arch: aarch64
-            version: '1'
           - os: ubuntu-latest
             experimental: false
-            prefix: xvfb-run  # julia-actions/julia-runtest/blob/master/README.md
-          # - os: ubuntu-latest
-          #   experimental: false
-          #   prefix: xvfb-run
-          #   version:  '1.7' # only test intermediate release on `ubuntu` to spare resources
-          # - os: ubuntu-latest
-          #   experimental: false
-          #   prefix: xvfb-run
-          #   version:  '1.8' # only test intermediate release on `ubuntu` to spare resources
-          # - os: ubuntu-latest
-          #   experimental: false
-          #   prefix: xvfb-run
-          #   version:  '1.9' # only test intermediate release on `ubuntu` to spare resources
+            prefix: xvfb-run  # add `xvfb-run` prefix julia-actions/julia-runtest/blob/master/README.md
           - os: ubuntu-latest
             experimental: true
             prefix: xvfb-run
