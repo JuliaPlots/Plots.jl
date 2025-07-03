@@ -135,7 +135,7 @@ function generate_cards(
     @show backend
     # create folder: for each backend we generate a DemoSection "generated" under "gallery"
     cards_path = let dn = joinpath(prefix, "$backend", "generated")
-        isdir(dn) && rm(dn; recursive=true)
+        isdir(dn) && rm(dn; recursive = true)
         mkpath(dn)
     end
     sec_config = Dict{String, Any}("order" => [])
@@ -915,4 +915,3 @@ function main(args)
 end
 
 main(ARGS)
-
