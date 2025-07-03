@@ -670,13 +670,13 @@ function main(args)
         generate_supported_markdown(; default_backends = backends)
         generate_graph_attr_markdown()
         generate_colorschemes_markdown()
-    end
 
-    for (pkg, dest) in (
-            (PlotThemes, "plotthemes.md"),
-            (StatsPlots, "statsplots.md"),
-        )
-        cp(pkgdir(pkg, "README.md"), joinpath(GEN_DIR, dest); force = true)
+        for (pkg, dest) in (
+                (PlotThemes, "plotthemes.md"),
+                (StatsPlots, "statsplots.md"),
+            )
+            cp(pkgdir(pkg, "README.md"), joinpath(GEN_DIR, dest); force = true)
+        end
     end
 
     @info "gallery"
