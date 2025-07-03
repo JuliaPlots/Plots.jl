@@ -66,7 +66,6 @@ import RecipesPipeline:
     Volume,
     is3d
 
-#! format: off
 export
     grid,
     bbox,
@@ -135,7 +134,6 @@ export
     scalefontsizes,
     resetfontsizes
 
-#! format: on
 const _project = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
 const _version = _project.version
 const _compat  = _project.compat

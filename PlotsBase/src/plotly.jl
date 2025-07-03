@@ -535,7 +535,6 @@ function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     )
 end
 
-#! format: off
 plotly_legend_position_mapping = let center = 0.5,
     xcenter = 0.55, ycenter = 0.52,
     xleft = 0.07, xright = 1.0,
@@ -574,7 +573,6 @@ plotly_legend_position_mapping = let center = 0.5,
         default = (coords = [xright, ytop], xanchor = "auto", yanchor = "auto"),
     )
 end
-#! format: on
 
 plotly_legend_pos(pos::Symbol) =
     get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)

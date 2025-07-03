@@ -243,7 +243,7 @@ Power up your favorite editor (maybe [Juno](https://junolab.org/)?) and make som
 
 Format your changes (code style consistency) using:
 ```bash
-$ julia -e 'using JuliaFormatter; format(["src", "test"])'
+$ julia -e 'using Runic; exit(Runic.main(ARGS))'
 ```
 
 #### Commit
