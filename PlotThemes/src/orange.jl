@@ -11,17 +11,13 @@ const orange_palette = reverse(
 )
 const _black = orange_palette[5]
 
-const _orange = PlotTheme(
-    Dict(
-        [
-            :bg => _black,
-            :bginside => _black,
-            :fg => orange_palette[1],
-            :fgtext => orange_palette[2],
-            :fgguide => orange_palette[2],
-            :fglegend => orange_palette[2],
-            :palette => expand_palette(black, orange_palette[1:4]),
-            :colorgradient => :viridis,
-        ]
-    ),
-)
+const _orange = [
+    :bg => _black,
+    :bginside => _black,
+    :fg => orange_palette[1],
+    :fgtext => orange_palette[2],
+    :fgguide => orange_palette[2],
+    :fglegend => orange_palette[2],
+    :palette => expand_palette(black, orange_palette[1:4]),
+    :colorgradient => :viridis,
+] |> Dict |> PlotTheme

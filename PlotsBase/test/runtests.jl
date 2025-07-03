@@ -1,8 +1,7 @@
 using Pkg
 Pkg.status(; outdated = true, mode = Pkg.PKGMODE_MANIFEST)
 
-const TEST_PACKAGES =
-let val = get(
+const TEST_PACKAGES = let val = get(
         ENV,
         "PLOTSBASE_TEST_PACKAGES",
         "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",

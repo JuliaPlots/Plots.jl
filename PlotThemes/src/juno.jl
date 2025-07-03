@@ -8,18 +8,14 @@ const juno_palette = [
 
 const juno_bg = colorant"#282C34"
 
-const _juno = PlotTheme(
-    Dict(
-        [
-            :bg => juno_bg,
-            :bginside => colorant"#21252B",
-            :fg => colorant"#ADB2B7",
-            :fgtext => colorant"#9EB1BE",
-            :fgguide => colorant"#9EB1BE",
-            :fglegend => colorant"#9EB1BE",
-            :palette =>
-                expand_palette(juno_bg, juno_palette; lchoices = [57], cchoices = [100]),
-            :colorgradient => :fire,
-        ]
-    ),
-)
+const _juno = [
+    :bg => juno_bg,
+    :bginside => colorant"#21252B",
+    :fg => colorant"#ADB2B7",
+    :fgtext => colorant"#9EB1BE",
+    :fgguide => colorant"#9EB1BE",
+    :fglegend => colorant"#9EB1BE",
+    :palette =>
+        expand_palette(juno_bg, juno_palette; lchoices = [57], cchoices = [100]),
+    :colorgradient => :fire,
+] |> Dict |> PlotTheme
