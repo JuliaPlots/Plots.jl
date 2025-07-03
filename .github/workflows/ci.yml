@@ -71,7 +71,7 @@ jobs:
 
       - uses: julia-actions/cache@v2
 
-      - name: develop downstream packages
+      - name: dev downstream pkgs and install mpl deps
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         shell: julia --project=@. --color=yes {0}
@@ -87,7 +87,6 @@ jobs:
           ])
           [Base.julia_cmd().exec..., joinpath("ci", "matplotlib.jl")] |> Cmd |> run
 
-      - run: JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=@. --color=yes 
       # NOTE: test is using `--check-bounds=yes` !
       - run: julia --project=@. --check-bounds=yes --color=yes 'using Pkg; Pkg.precompile()'
 
