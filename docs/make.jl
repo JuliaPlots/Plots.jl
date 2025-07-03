@@ -69,7 +69,7 @@ end
 @eval DemoCards get_logopath() = $(joinpath(SRC_DIR, "assets", "axis_logo_600x400.png"))
 
 @eval Documenter gitrm_copy(src, dst) = begin
-    println("gitrm_copy")
+    @debug "gitrm_copy $(dst)"
     # Remove individual entries since with versions=nothing the root
     # would be removed and we want to preserve previews
     if isdir(dst)
@@ -84,6 +84,7 @@ end
     # Copy individual entries rather then the full folder since with
     # versions=nothing it would replace the root including e.g. the .git folder
     for x in readdir(src)
+        @debug "$(joinpath(src, x)) -> $(joinpath(dst, x))"
         println(joinpath(src, x), joinpath(dst, x))
         cp(joinpath(src, x), joinpath(dst, x); force = true)
     end
@@ -899,13 +900,14 @@ function main(args)
     end
 
     @info "deploydocs"
-    repo = "github.com/JuliaPlots/PlotDocs.jl.git"  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
+    repo = "github.com/JuliaPlots/Plots.jl.git"  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
     withenv("GITHUB_REPOSITORY" => repo) do
         deploydocs(;
             root = @__DIR__,
             target = build,
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
             # devbranch = BRANCH,
+            deploy_repo = "github.com/JuliaPlots/PlotDocs.jl.git",
             push_preview = true,
             forcepush = true,
             repo,
