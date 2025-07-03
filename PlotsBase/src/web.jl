@@ -33,9 +33,16 @@ function open_browser_window(filename::AbstractString)
     end
 end
 
+# browsers can have issue opening files in /tmp (chromium, firefox, ...), let the user decide.
+html_tempdir() = if haskey(ENV, "PLOTSBASE_TMPDIR")
+    ENV["PLOTSBASE_TMPDIR"]
+else
+    tempdir()
+end
+
 function write_temp_html(plt::AbstractPlot)
     html = standalone_html(plt; title = plt.attr[:window_title])
-    filename = tempname() * ".html"
+    filename = tempname(html_tempdir()) * ".html"
     write(filename, html)
     return filename
 end
@@ -62,7 +69,7 @@ function show_png_from_html(io::IO, plt::AbstractPlot)
     html_fn = write_temp_html(plt)
 
     # convert that html file to a temporary png file using wkhtmltoimage
-    png_fn = tempname() * ".png"
+    png_fn = tempname(html_tempdir()) * ".png"
     w, h = plt.attr[:size]
     html_to_png(html_fn, png_fn, w, h)
 
