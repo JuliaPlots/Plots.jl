@@ -1,4 +1,4 @@
-# oneliner debug PLOTS_DOCS_DEV=1 PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
+# oneliner debug PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
 import Pkg; Pkg.precompile()
 
 using RecipesBase, RecipesPipeline, PlotsBase, Plots
