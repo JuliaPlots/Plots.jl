@@ -1,8 +1,7 @@
 using VisualRegressionTests
 using AbstractTrees
 using LinearAlgebra
-using GraphRecipes.AbstractTrees
-using GraphRecipes.Colors
+using GraphRecipes
 using GraphRecipes
 using SparseArrays
 using ImageMagick

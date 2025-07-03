@@ -37,13 +37,13 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
         include:
+          - os: macos-latest  # NOTE: macos-latest resolves to macos-14 (only aarch64), use macos-13 for x86.
+            arch: aarch64
+            version: ['lts', '1']
+            experimental: false
           - os: ubuntu-latest
             experimental: true
             version: 'pre'  # upcoming julia version (`alpha`, `beta` or `rc`)
-          - os: macos-latest
-            arch: aarch64
-            version: '1'
-            experimental: false
             
     steps:
       - uses: actions/checkout@v4

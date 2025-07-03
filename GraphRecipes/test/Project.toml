@@ -1,9 +1,9 @@
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+GraphRecipes = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
-GraphRecipes = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"

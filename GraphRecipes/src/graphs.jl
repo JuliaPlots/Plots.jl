@@ -988,7 +988,7 @@ more details.
         edgecolor = process_edge_attribute(edgecolor, source, destiny, weights)
         edgestyle = process_edge_attribute(edgestyle, source, destiny, weights)
 
-        !isnothing(edge_z) && (line_z := edge_z)
+        isnothing(edge_z) || (line_z := edge_z)
         linewidthattr = get(plotattributes, :linewidth, 1)
         linewidth := linewidthattr * edgewidth
         fillalpha := 1
@@ -1075,14 +1075,14 @@ more details.
             N = length(x)
             angles = Vector{Float64}(undef, N)
             for i in 1:N
-                if y[i] > 0
-                    angles[i] = acos(x[i])
+                angles[i] = if y[i] > 0
+                    acos(x[i])
                 else
-                    angles[i] = 2pi - acos(x[i])
+                    2pi - acos(x[i])
                 end
             end
             δ = 0.4 * (angles[2] - angles[1])
-            vec_vec_xy = [arcshape(Θ - δ, Θ + δ) for Θ in angles] # Shape
+            vec_vec_xy = [arcshape(Θ - δ, Θ + δ) for Θ in angles]  # Shape
             [[xy[1] for xy in vec_xy] for vec_xy in vec_vec_xy],
                 [[xy[2] for xy in vec_xy] for vec_xy in vec_vec_xy]
         end
@@ -1133,31 +1133,28 @@ more details.
                 markersize := 0
                 markeralpha := 0
                 markerstrokesize := 0
-                !isnothing(edgelabel) && (annotations --> edge_label_array)
+                isnothing(edgelabel) || (annotations --> edge_label_array)
             else
                 seriestype := :scatter
-
+                append!(
+                    edge_label_array, (
+                            x[i],
+                            y[i],
+                            names[
+                                ifelse(
+                                    i % length(names) == 0,
+                                    length(names),
+                                    i % length(names),
+                                ),
+                            ],
+                            fontsize,
+                        ) for i in eachindex(x)
+                )
                 colorbar_entry --> false
                 markersize := 0
                 markeralpha := 0
                 markerstrokesize := 0
-                annotations --> [
-                    edge_label_array
-                    [
-                        (
-                                x[i],
-                                y[i],
-                                names[
-                                    ifelse(
-                                        i % length(names) == 0,
-                                        length(names),
-                                        i % length(names),
-                                    ),
-                                ],
-                                fontsize,
-                            ) for i in eachindex(x)
-                    ]
-                ]
+                annotations --> edge_label_array
             end
         end
     end

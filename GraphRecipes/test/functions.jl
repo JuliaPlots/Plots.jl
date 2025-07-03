@@ -10,7 +10,7 @@ function random_labelled_graph()
     y = rand(rng, n)
     z = rand(rng, n)
     p = graphplot(
-        A,
+        A;
         nodesize = 0.2,
         node_weights = 1:n,
         nodecolor = range(colorant"yellow", stop = colorant"red", length = n),
@@ -18,7 +18,7 @@ function random_labelled_graph()
         fontsize = 10,
         linecolor = :darkgrey,
         layout_kw = Dict(:x => x, :y => y),
-        rng = rng,
+        rng,
     )
     return p, n, A, x, y, z
 end
@@ -95,21 +95,21 @@ function arc_chord_diagrams()
     adjmat = Symmetric(sparse(rand(rng, 0:1, 8, 8)))
     return plot(
         graphplot(
-            adjmat,
+            adjmat;
             method = :chorddiagram,
             names = [text(string(i), 8) for i in 1:8],
             linecolor = :black,
             fillcolor = :lightgray,
-            rng = rng,
+            rng
         ),
         graphplot(
-            adjmat,
+            adjmat;
             method = :arcdiagram,
             markersize = 0.5,
             markershape = :circle,
             linecolor = :black,
             markercolor = :black,
-            rng = rng,
+            rng,
         ),
     )
 end
