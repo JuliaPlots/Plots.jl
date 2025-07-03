@@ -67,5 +67,7 @@ install_and_precompile_julia_deps() {
 
 build_documenter_docs() {
   echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
+  export PLOTDOCS_PACKAGES='UnicodePlots'
+  export PLOTDOCS_EXAMPLES=1
   julia_project docs/make.jl
 }
