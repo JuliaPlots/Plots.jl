@@ -15,7 +15,7 @@ end
 
 const ANIM_PATTERN = "plots-anim-%06d.png"
 
-Animation(dir = convert(String, mktempdir())) = Animation(dir, String[])
+Animation(dir = convert(String, mktempdir(plotsbase_tmpdir()))) = Animation(dir, String[])
 
 """
     frame(animation[, plot])
@@ -32,7 +32,7 @@ anim_filename(ext, parent = nothing) =
     if isijulia()
     "tmp"
 else
-    tempname(parent ≡ nothing ? tempdir() : parent)
+    tempname(parent ≡ nothing ? tempdir(plotsbase_tmpdir()) : parent)
 end * ext
 
 giffn(parent = nothing) = anim_filename(".gif", parent)

@@ -1,3 +1,10 @@
+# browsers can have issue opening files in /tmp (chromium, firefox, ...), so let the user decide.
+plotsbase_tmpdir() = if haskey(ENV, "PLOTSBASE_TMPDIR")
+    ENV["PLOTSBASE_TMPDIR"]
+else
+    tempdir()
+end
+
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
 
