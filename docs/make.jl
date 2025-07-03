@@ -26,7 +26,7 @@ eval(PlotsBase.WEAKDEPS)
 const SRC_DIR = joinpath(@__DIR__, "src")
 const WORK_DIR = joinpath(@__DIR__, "work")
 const GEN_DIR = joinpath(WORK_DIR, "generated")
-const BRANCH = ("master", "v2")[2]  # transition to v2
+const DEV_BRANCH = ("master", "v2")[2]  # transition to v2
 
 const ATTRIBUTE_SEARCH = Dict{String, Any}()  # search terms
 
@@ -70,7 +70,7 @@ end
 # ----------------------------------------------------------------------
 
 edit_url(args...) =
-    "https://github.com/JuliaPlots/Plots.jl/blob/$BRANCH/docs/" * if length(args) == 0
+    "https://github.com/JuliaPlots/Plots.jl/blob/$DEV_BRANCH/docs/" * if length(args) == 0
     "make.jl"
 else
     joinpath("src", args...)
@@ -655,7 +655,7 @@ function main(args)
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
         let (path, cb, assets) = makedemos(
                 joinpath("gallery", string(be));
-                root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = BRANCH
+                root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = DEV_BRANCH
             )
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
@@ -664,7 +664,7 @@ function main(args)
     end
     user_gallery, cb, assets = makedemos(
         joinpath("user_gallery");
-        root = @__DIR__, src = work, edit_branch = BRANCH
+        root = @__DIR__, src = work, edit_branch = DEV_BRANCH
     )
     push!(gallery_callbacks, cb)
     push!(gallery_assets, assets)
@@ -850,11 +850,11 @@ function main(args)
     src = basename(SRC_DIR)
     for file in Glob.glob("*/index.html", joinpath(@__DIR__, "build"))
         lines = readlines(file; keep = true)
-        any(line -> occursin("blob/$BRANCH/docs", line), lines) || continue
+        any(line -> occursin("blob/$DEV_BRANCH/docs", line), lines) || continue
         @info "fixing $file" maxlog = 1
         open(file, "w") do io
             for line in lines
-                write(io, replace(line, "blob/$BRANCH/docs/$work" => "blob/$BRANCH/docs/$src"))
+                write(io, replace(line, "blob/$DEV_BRANCH/docs/$work" => "blob/$DEV_BRANCH/docs/$src"))
             end
         end
     end
@@ -864,6 +864,7 @@ function main(args)
     withenv("GITHUB_REPOSITORY" => repo) do
         deploydocs(;
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
+            devbranch = DEV_BRANCH,
             push_preview = true,
             forcepush = true,
             repo,
