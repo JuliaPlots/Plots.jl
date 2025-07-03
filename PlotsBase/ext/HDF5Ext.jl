@@ -296,7 +296,7 @@ function _write_typed(grp::Group, name::String, v::T) where {T}
     try # Check to see if type is supported
         typestr = HDF5PLOT_MAP_TELEM2STR[MT]
     catch
-        @warn "HDF5Plots does not yet support structs of type `$MT`\n\n$grp"
+        @maxlog_warn "HDF5Plots does not yet support structs of type `$MT`\n\n$grp"
         return
     end
 
@@ -425,7 +425,7 @@ function _read(::Type{KW}, grp::Group)
             v = _read_typed(grp, k)
             d[Symbol(k)] = v
         catch e
-            @warn "Could not read field $k" e grp
+            @maxlog_warn "Could not read field $k" e grp
         end
     end
     return d
@@ -473,7 +473,7 @@ function _read(::Type{DefaultsDict}, grp::Group)
     # User should set DefaultsDict.defaults to one of:
     #    _plot_defaults, _subplot_defaults, _axis_defaults, _series_defaults
     path = HDF5.name(ds)
-    return @warn "Cannot yet read DefaultsDict using _read_typed():\n    $path\nCannot fully reconstruct plot."
+    return @maxlog_warn "Cannot yet read DefaultsDict using _read_typed():\n    $path\nCannot fully reconstruct plot."
 end
 
 # 1st arg appears to be ref to subplots. Seems to work without it.
@@ -561,7 +561,7 @@ function PlotsBase._update_plot_object(plt::Plot{HDF5Backend}) end
 function PlotsBase._display(plt::Plot{HDF5Backend})
     msg = "HDF5 interface does not support `display()` function."
     msg *= "\nUse `PlotsBase.hdf5plot_write(::String)` method to write to .HDF5 \"plot\" file instead."
-    @warn msg
+    @maxlog_warn msg
     return
 end
 

@@ -3,13 +3,13 @@ module Colorbars
 export colorbar_style, update_clims, hascolorbar
 export get_colorbar_ticks, _update_subplot_colorbars
 
-import ..Commons
 import ..Surfaces
 import ..NaNMath
 import ..Ticks
 
 using ..Subplots: Subplot, series_list
 using ..DataSeries
+using ..Commons
 
 Commons.get_clims(series::Series)::Tuple{Float64, Float64} =
     haskey(series.plotattributes, :clims_calculated) ?
@@ -104,7 +104,7 @@ _update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zma
 function colorbar_style(series::Series)
     colorbar_entry = series[:colorbar_entry]
     if !(colorbar_entry isa Bool)
-        @warn "Non-boolean colorbar_entry ignored."
+        @maxlog_warn "Non-boolean colorbar_entry ignored."
         colorbar_entry = true
     end
 

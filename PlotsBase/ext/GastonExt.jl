@@ -476,7 +476,7 @@ function gaston_seriesconf!(
     elseif st ≡ :quiver
         curveconf *= "w vectors filled"
     else
-        @warn "PlotsBase(Gaston): $st is not implemented yet"
+        @maxlog_warn "PlotsBase(Gaston): $st is not implemented yet"
     end
 
     return [curveconf, extra_curves...]

@@ -491,7 +491,7 @@ end
         for k in _segmenting_vector_attributes ∪ _segmenting_array_attributes
             if (v = get(plotattributes, k, nothing)) isa AVec
                 if eachindex(v) != eachindex(y)
-                    @warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
+                    @maxlog_warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
                 end
                 # Each segment is 6 elements long, including the NaN separator.
                 # One segment is created for each non-NaN element of `procy`.
@@ -714,7 +714,7 @@ end
 @deps stepbins path
 
 function wand_edges(x...)
-    @warn """"
+    @maxlog_warn """"
     Load the StatsPlots package in order to use :wand bins.
     Defaulting to :auto
     """ once = true
@@ -1383,7 +1383,7 @@ end
     for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
         v = get(plotattributes, attr, nothing)
         if v isa AVec || v isa AMat && size(v, 2) == 1
-            @warn """
+            @maxlog_warn """
             Column vector attribute `$attr` reinterpreted as row vector (one value per shape).
             Pass a row vector instead (e.g. using `permutedims`) to suppress this warning.
             """

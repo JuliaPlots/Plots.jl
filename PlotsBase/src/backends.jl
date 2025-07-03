@@ -16,7 +16,7 @@ for sym in _default_supported_syms
 end
 
 _display(::Plot{NoneBackend}) =
-    @warn "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
+    @maxlog_warn "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
 
 const _backendSymbol = Dict{DataType, Symbol}(NoneBackend => :none)
 const _backendType = Dict{Symbol, DataType}(:none => NoneBackend)
@@ -27,7 +27,7 @@ const _initialized_backends = Set([:none])
 function _check_installed(pkg::Union{Module, AbstractString, Symbol}; warn = true)
     name = Symbol(lowercase(string(pkg)))
     if warn && !haskey(_backend_packages, name)
-        @warn "backend `$name` is not compatible with `PlotsBase`."
+        @maxlog_warn "backend `$name` is not compatible with `PlotsBase`."
         return
     end
     # lowercase -> CamelCase, falling back to the given input for `PlotlyBase` ...
@@ -35,7 +35,7 @@ function _check_installed(pkg::Union{Module, AbstractString, Symbol}; warn = tru
     pkg_str == "Plotly" && (pkg_str *= "Base")  # FIXME: `PlotsBase` inconsistency, `plotly` should be named `plotlybase`
     # check supported
     if warn && !haskey(_compat, pkg_str)
-        @warn "package `$pkg_str` is not compatible with `PlotsBase`."
+        @maxlog_warn "package `$pkg_str` is not compatible with `PlotsBase`."
         return
     end
     # check installed
@@ -44,7 +44,7 @@ function _check_installed(pkg::Union{Module, AbstractString, Symbol}; warn = tru
     else
         get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
     end
-    version ≡ nothing && @warn "`package $pkg_str` is not installed."
+    version ≡ nothing && @maxlog_warn "`package $pkg_str` is not installed."
     return version
 end
 
@@ -108,7 +108,7 @@ if name ∈ _supported_backends
         backend(backend_type(name))
     else
         pkg_name = backend_package_name(name)
-        @warn "`:$name` is not initialized, import it first to trigger the extension --- e.g. `$(pkg_name ≡ nothing ? "" : "import $pkg_name; ")$name()`."
+        @maxlog_warn "`:$name` is not initialized, import it first to trigger the extension --- e.g. `$(pkg_name ≡ nothing ? "" : "import $pkg_name; ")$name()`."
         backend()
     end
 else
@@ -223,12 +223,12 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
         for k in sort!(collect(_to_warn))
             push!(already_warned, k)
             if k in keys(Commons._deprecated_attributes)
-                @warn """
+                @maxlog_warn """
                 Keyword argument `$k` is deprecated.
                 Please use `$(Commons._deprecated_attributes[k])` instead.
                 """
             else
-                @warn "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
+                @maxlog_warn "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
             end
         end
     end
@@ -238,11 +238,11 @@ end
 function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
     get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
     is_seriestype_supported(pkg, plotattributes[:seriestype]) ||
-        @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
+        @maxlog_warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
     is_style_supported(pkg, plotattributes[:linestyle]) ||
-        @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
+        @maxlog_warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
     return is_marker_supported(pkg, plotattributes[:markershape]) ||
-        @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
+        @maxlog_warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
@@ -251,7 +251,7 @@ function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
         haskey(plotattributes, k) || continue
         v = plotattributes[k]
         if !all(is_scale_supported.(Ref(pkg), v))
-            @warn """
+            @maxlog_warn """
             scale $v is unsupported with $pkg.
             Choose from: $(supported_scales(pkg))
             """

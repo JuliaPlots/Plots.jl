@@ -296,7 +296,7 @@ function addUnicodeSeries!(
         z = Array(series[:z])
         if st ≡ :contour
             isfilledcontour(series) &&
-                @warn "PlotsBase(UnicodePlots): filled contour is not implemented"
+                @maxlog_warn "PlotsBase(UnicodePlots): filled contour is not implemented"
             return UnicodePlots.contourplot(x, y, z; kw..., levels = series[:levels])
         elseif st ≡ :heatmap
             return UnicodePlots.heatmap(z; fix_ar = fix_ar, kw...)
@@ -400,7 +400,7 @@ function PlotsBase._show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBacken
         end
     end
     if canvas_type ≡ nothing
-        @warn "PlotsBase(UnicodePlots) failed to render `png` from plot (font issue)."
+        @maxlog_warn "PlotsBase(UnicodePlots) failed to render `png` from plot (font issue)."
     else
         m1 = maximum(s1; dims = 2)
         m2 = maximum(s2; dims = 1)

@@ -270,7 +270,7 @@ function hasgrid(arg::Symbol, letter)
     return if arg in _all_grid_syms
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
-        @warn "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
+        @maxlog_warn "Unknown grid argument $arg; $(get_attr_symbol(letter, :grid)) was set to `true` instead."
         true
     end
 end
@@ -308,7 +308,7 @@ function showaxis(arg::Symbol, letter)
     return if arg in _all_grid_syms
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
-        @warn "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
+        @maxlog_warn "Unknown showaxis argument $arg; $(get_attr_symbol(letter, :showaxis)) was set to `true` instead."
         true
     end
 end
@@ -801,7 +801,7 @@ function process_line_attr(plotattributes::AKW, arg)
 
         # color
     elseif !handle_colors!(plotattributes, arg, :linecolor)
-        @warn "Skipped line arg $arg."
+        @maxlog_warn "Skipped line arg $arg."
     end
 end
 
@@ -845,7 +845,7 @@ function process_marker_attr(plotattributes::AKW, arg)
 
         # markercolor
     elseif !handle_colors!(plotattributes, arg, :markercolor)
-        @warn "Skipped marker arg $arg."
+        @maxlog_warn "Skipped marker arg $arg."
     end
 end
 
@@ -913,7 +913,7 @@ function process_grid_attr!(plotattributes::AKW, arg, letter)
             arg,
             get_attr_symbol(letter, :foreground_color_grid),
         )
-        @warn "Skipped grid arg $arg."
+        @maxlog_warn "Skipped grid arg $arg."
     end
 end
 
@@ -956,7 +956,7 @@ function process_minor_grid_attr!(plotattributes::AKW, arg, letter)
         )
         plotattributes[get_attr_symbol(letter, :minorgrid)] = true
     else
-        @warn "Skipped grid arg $arg."
+        @maxlog_warn "Skipped grid arg $arg."
     end
 end
 
@@ -1003,7 +1003,7 @@ end
     elseif typeof(arg) <: Real
         Symbol(fontname, :rotation) --> convert(Float64, arg)
     else
-        @warn "Skipped font arg: $arg ($(typeof(arg)))"
+        @maxlog_warn "Skipped font arg: $arg ($(typeof(arg)))"
     end
 end
 

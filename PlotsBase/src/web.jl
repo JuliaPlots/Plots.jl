@@ -29,7 +29,7 @@ function open_browser_window(filename::AbstractString)
     elseif Sys.iswindows()
         return run(`$(ENV["COMSPEC"]) /c start "" "$filename"`)
     else
-        @warn "Unknown OS... cannot open browser window."
+        @maxlog_warn "Unknown OS... cannot open browser window."
     end
 end
 

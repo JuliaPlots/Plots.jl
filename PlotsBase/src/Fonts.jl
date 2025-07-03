@@ -72,7 +72,7 @@ function font(args...; kw...)
         elseif T <: Real
             rotation = convert(Float64, arg)
         else
-            @warn "Unused font arg: $arg ($T)"
+            @maxlog_warn "Unused font arg: $arg ($T)"
         end
     end
 
@@ -95,7 +95,7 @@ function font(args...; kw...)
             col = kw[sym]
             color = col isa Colorant ? col : parse(Colorant, col)
         else
-            @warn "Unused font kwarg: $sym"
+            @maxlog_warn "Unused font kwarg: $sym"
         end
     end
 

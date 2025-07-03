@@ -570,7 +570,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
             Base.loaded_modules,
             Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
         )
-        @warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
+        @maxlog_warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
     end
     return nothing
 end

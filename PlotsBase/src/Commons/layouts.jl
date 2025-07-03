@@ -22,7 +22,7 @@ function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
         elseif oarg in (:top, :bottom, :vcenter)
             origver = oarg
         else
-            @warn "Unused origin arg in bbox construction: $oarg"
+            @maxlog_warn "Unused origin arg in bbox construction: $oarg"
         end
     end
     return bbox(x, y, w, h; h_anchor = orighor, v_anchor = origver)

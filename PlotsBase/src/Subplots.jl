@@ -275,7 +275,7 @@ function PlotsBase.attr!(sp::Subplot; kw...)
         if haskey(Commons._subplot_defaults, k)
             sp[k] = v
         else
-            @warn "unused key $k in subplot attr"
+            @maxlog_warn "unused key $k in subplot attr"
         end
     end
     return sp

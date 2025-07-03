@@ -199,7 +199,7 @@ if style in (:box, :axes, :zerolines, :grid, :none)
     style
 else
     default_style = get((semi = :box, origin = :zerolines), style, :axes)
-    @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
+    @maxlog_warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
     default_style
 end
 
@@ -804,7 +804,7 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:contours][:start] = first(levels_range)
                 plotattributes_out[:contours][:end] = last(levels_range)
                 plotattributes_out[:contours][:size] = step(levels_range)
-                @warn """
+                @maxlog_warn """
                 setting arbitrary contour levels with Plotly backend is not supported;
                 use a range to set equally-spaced contours or an integer to set the
                 approximate number of contours with the keyword `levels`.
@@ -885,7 +885,7 @@ function plotly_series(plt::Plot, series::Series)
         end
         plotattributes_out[:showscale] = hascolorbar(sp)
     else
-        @warn "Plotly: seriestype $st isn't supported."
+        @maxlog_warn "Plotly: seriestype $st isn't supported."
         return KW()
     end
 
@@ -1038,7 +1038,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 )
             elseif !(series[:fillrange] in (false, nothing))
-                @warn "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
+                @maxlog_warn "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
             end
             plotattributes_out[:x], plotattributes_out[:y] = x[rng], y[rng]
 

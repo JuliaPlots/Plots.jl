@@ -267,7 +267,7 @@ function _update_subplot_attrs(
         if !lims_warned &&
                 haskey(plotattributes_in, lk) &&
                 plotattributes_in[lk] isa AbstractRange
-            @warn "lims should be a Tuple, not $(typeof(plotattributes_in[lk]))."
+            @maxlog_warn "lims should be a Tuple, not $(typeof(plotattributes_in[lk]))."
             lims_warned = true
         end
     end

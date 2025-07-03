@@ -1424,7 +1424,7 @@ function test_examples(
             if strict
                 rethrow(ex)
             else
-                @warn "Example $pkgname:$i:$(_examples[i].header) failed with: $ex"
+                @maxlog_warn "Example $pkgname:$i:$(_examples[i].header) failed with: $ex"
             end
             # COV_EXCL_STOP
         end

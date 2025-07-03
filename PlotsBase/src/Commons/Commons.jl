@@ -44,7 +44,7 @@ export origin, left, right, bottom, top, bbox, bbox!
 export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
 export MM_PER_PX, MM_PER_INCH, DPI, PX_PER_INCH
 
-export GridLayout, EmptyLayout, RootLayout
+export GridLayout, EmptyLayout, RootLayout, @maxlog_warn
 export BBox, BoundingBox, mm, cm, inch, pt, w, h
 export bbox_to_pcts, xy_mm_to_pcts
 export Length, AbsoluteLength, Measure
@@ -102,11 +102,16 @@ const _segmenting_vector_attributes = (
 )
 const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 const _debug = Ref(false)
+const _max_log = Ref(1)
+
+macro maxlog_warn(exs...)
+    :(@warn $(exs...) maxlog = $(_max_log[]))
+end
 
 # docs.julialang.org/en/v1/manual/methods/#Empty-generic-functions
-macro generic_functions(args...)
+macro generic_functions(exs...)
     blk = Expr(:block)
-    foreach(arg -> push!(blk.args, :(function $arg end)), args)
+    foreach(ex -> push!(blk.args, :(function $ex end)), exs)
     return blk |> esc
 end
 
