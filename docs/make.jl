@@ -908,6 +908,7 @@ function main(args)
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
             # devbranch = BRANCH,
             deploy_repo = "github.com/JuliaPlots/PlotDocs.jl.git",
+            repo_previews = repo,
             push_preview = true,
             forcepush = true,
             repo,
