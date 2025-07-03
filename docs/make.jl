@@ -1,4 +1,4 @@
-# oneliner debug PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES=1 julia --project -e 'include("make.jl")'
+# oneliner fast build PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES=1 julia --project make.jl
 import Pkg; Pkg.precompile()
 
 using RecipesBase, RecipesPipeline, PlotsBase, Plots
@@ -41,7 +41,7 @@ const ATTRIBUTE_SEARCH = Dict{String, Any}()  # search terms
         info = "[src=$(rec.src) fragment=$(rec.fragment) title=$(rec.title) page_title=$(rec.page_title)]"
         if (m = match(r"generated/attributes_(\w+)", lowercase(rec.src))) ≢ nothing
             # fix attributes search terms: `Series`, `Plot`, `Subplot` and `Axis` (github.com/JuliaPlots/Plots.jl/issues/2337)
-            @info "$info: fix attribute search" maxlog = 1
+            @info "$info: fix attribute search" maxlog = 10
             for (attr, alias) in $(ATTRIBUTE_SEARCH)[first(m.captures)]
                 push!(
                     ctx.search_index,
@@ -57,7 +57,7 @@ const ATTRIBUTE_SEARCH = Dict{String, Any}()  # search terms
             if add_to_index
                 push!(ctx.search_index, rec)
             else
-                @info "$info: skip adding to `search_index`" maxlog = 1
+                @info "$info: skip adding to `search_index`" maxlog = 10
             end
         end
         # end addition
@@ -70,8 +70,7 @@ end
 
 # ----------------------------------------------------------------------
 
-edit_url(args...) =
-    "https://github.com/JuliaPlots/Plots.jl/blob/$BRANCH/docs/" * if length(args) == 0
+edit_url(args...) = "https://github.com/JuliaPlots/Plots.jl/blob/$BRANCH/docs/" * if length(args) == 0
     "make.jl"
 else
     joinpath(basename(SRC_DIR), args...)
@@ -88,8 +87,7 @@ function recursive_rmlines(x::Expr)
     return x
 end
 
-pretty_print_expr(io::IO, expr::Expr) =
-if expr.head ≡ :block
+pretty_print_expr(io::IO, expr::Expr) = if expr.head ≡ :block
     foreach(arg -> println(io, arg), recursive_rmlines(expr).args)
 else
     println(io, recursive_rmlines(expr))
@@ -101,9 +99,6 @@ markdown_code_to_string(arr, prefix = "") =
 markdown_symbols_to_string(arr) = isempty(arr) ? "" : markdown_code_to_string(arr, ":")
 
 # ----------------------------------------------------------------------
-
-# NOTE: keep consistent with `Plots`
-ref_name(i) = "ref" * lpad(i, 3, '0')
 
 function generate_cards(
         prefix::AbstractString, backend::Symbol, slice;
@@ -122,7 +117,7 @@ function generate_cards(
     for (i, example) in enumerate(PlotsBase._examples)
         (slice ≢ nothing && i ∉ slice) && continue
         # write out the header, description, code block, and image link
-        jlname = "$backend-$(ref_name(i)).jl"
+        jlname = "$backend-$(PlotsBase.ref_name(i)).jl"
         jl = PipeBuffer()
         if !isempty(example.header)
             push!(sec_config["order"], jlname)
@@ -132,9 +127,9 @@ function generate_cards(
             # DemoCards YAML frontmatter
             # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
             asset = if i ∈ PlotsBase._animation_examples
-                "anim_$(backend)_$(ref_name(i)).gif"
+                "anim_$(backend)_$(PlotsBase.ref_name(i)).gif"
             else
-                "$(backend)_$(ref_name(i)).png"
+                "$(backend)_$(PlotsBase.ref_name(i)).png"
             end
             extra = if backend ≡ :unicodeplots
                 "import FileIO, FreeType  #hide"  # weak deps for png export
@@ -145,7 +140,7 @@ function generate_cards(
                 jl, """
                 # ---
                 # title: $(example.header)
-                # id: $(backend)_$(ref_name(i)) $(i ∈ skip ? "" : "\n# cover: assets/$asset")
+                # id: $(backend)_$(PlotsBase.ref_name(i)) $(i ∈ skip ? "" : "\n# cover: assets/$asset")
                 # author: "$(author())"
                 # description: ""
                 # date: $(Dates.now())
@@ -178,9 +173,9 @@ function generate_cards(
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
         asset = if i ∈ PlotsBase._animation_examples
-            "gif(anim, \"assets/anim_$(backend)_$(ref_name(i)).gif\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
+            "gif(anim, \"assets/anim_$(backend)_$(PlotsBase.ref_name(i)).gif\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
         else
-            "png(\"assets/$(backend)_$(ref_name(i)).png\")  #src\n"
+            "png(\"assets/$(backend)_$(PlotsBase.ref_name(i)).png\")  #src\n"
         end
         write(
             jl, """
@@ -191,13 +186,13 @@ function generate_cards(
         backend ≡ :plotlyjs && write(
             jl, """
             nothing  #hide
-            # ![plot](assets/$(backend)_$(ref_name(i)).png)
+            # ![plot](assets/$(backend)_$(PlotsBase.ref_name(i)).png)
             """
         )
 
         @label write_file
         fn, mode = if isempty(example.header)
-            "$backend-$(ref_name(i - 1)).jl", "a"  # continued example
+            "$backend-$(PlotsBase.ref_name(i - 1)).jl", "a"  # continued example
         else
             jlname, "w"
         end
@@ -767,29 +762,38 @@ function main(args)
 
     n = 0
     @time for (root, dirs, files) in walkdir(SRC_DIR)
+        prefix = replace(root, SRC_DIR => WORK_DIR)
         foreach(dir -> mkpath(joinpath(WORK_DIR, dir)), dirs)
         for file in files
             _, ext = splitext(file)
             (ext == ".md" && file ∉ selected_pages) && continue
-            cp(joinpath(root, file), joinpath(replace(root, SRC_DIR => WORK_DIR), file); force = true)
+            src = joinpath(root, file)
+            dst = joinpath(prefix, file)
+            if debug
+                endswith(root, r"RecipesBase|RecipesPipeline|UnitfulExt|GraphRecipes|StatsPlots") && continue
+                println('\t', src, " -> ", dst)
+            end
+            cp(src, dst; force = true)
             n += 1
         end
     end
     @info "copied $n source file(s) to scratch directory `$work`"
 
-    @info "UnitfulExt"
-    src_unitfulext = "src/UnitfulExt"
-    unitfulext = joinpath(@__DIR__, src_unitfulext)
-    notebooks = joinpath(unitfulext, "notebooks")
+    if !debug
+        @info "UnitfulExt"
+        src_unitfulext = "src/UnitfulExt"
+        unitfulext = joinpath(@__DIR__, src_unitfulext)
+        notebooks = joinpath(unitfulext, "notebooks")
 
-    execute = true  # set to true for executing notebooks and documenter
-    nb = false      # set to true to generate the notebooks
-    debug || @time for (root, _, files) in walkdir(unitfulext), file in files
-        last(splitext(file)) == ".jl" || continue
-        ipath = joinpath(root, file)
-        opath = replace(ipath, src_unitfulext => "$work/generated") |> splitdir |> first
-        Literate.markdown(ipath, opath; documenter = execute)
-        nb && Literate.notebook(ipath, notebooks; execute)
+        execute = true  # set to true for executing notebooks and documenter
+        nb = false      # set to true to generate the notebooks
+        @time for (root, _, files) in walkdir(unitfulext), file in files
+            last(splitext(file)) == ".jl" || continue
+            ipath = joinpath(root, file)
+            opath = replace(ipath, src_unitfulext => "$work/generated") |> splitdir |> first
+            Literate.markdown(ipath, opath; documenter = execute)
+            nb && Literate.notebook(ipath, notebooks; execute)
+        end
     end
 
     ansicolor = Base.get_bool_env("PLOTDOCS_ANSICOLOR", true)
@@ -853,7 +857,7 @@ function main(args)
                     occursin("</code>", trailing) && (in_code = false)
                     write(io, line)
                 end
-                count > 0 && @info "replaced $count `rng` occurrence(s) in $file" maxlog = 1
+                count > 0 && @info "replaced $count `rng` occurrence(s) in $file" maxlog = 10
                 @assert count > 0 "idx=$idx - count=$count - file=$file"
             end
         end
@@ -862,20 +866,24 @@ function main(args)
     @info "post-process temporary work dir"
     for file in Glob.glob("*/index.html", BLD_DIR)
         lines = readlines(file; keep = true)
-        any(line -> occursin("blob/$BRANCH/docs", line), lines) || continue
-        @info "fixing $file" maxlog = 1
+        any(line -> occursin(joinpath("blob", BRANCH, "docs"), line), lines) || continue
+        @info "fixing $file" maxlog = 10
         open(file, "w") do io
-            for line in lines
-                write(io, replace(line, "blob/$BRANCH/docs/$work" => "blob/$BRANCH/docs/$src"))
-            end
+            old = joinpath("blob", BRANCH, "docs", work)
+            new = joinpath("blob", BRANCH, "docs", src)
+            foreach(line -> write(io, replace(line, old => new)), lines)
         end
     end
 
-    for (r, dirs, fns) in walkdir(BLD_DIR)
-        println("dirs in $r")
-        foreach(d -> println(joinpath(r, d)), dirs)
-        println("files in $r")
-        foreach(f -> println(joinpath(r, f)), fns)
+    debug && for (rt, dirs, fns) in walkdir(BLD_DIR)
+        if length(dirs) > 0
+            println("dirs in $rt:")
+            foreach(d -> println('\t', joinpath(rt, d)), dirs)
+        end
+        if length(fns) > 0
+            println("files in $rt:")
+            foreach(f -> println('\t', joinpath(rt, f)), fns)
+        end
     end
 
     @info "deploydocs"

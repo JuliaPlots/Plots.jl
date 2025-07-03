@@ -57,7 +57,7 @@ end
 function reference_file(backend, version, i)
     # NOTE: keep ref[...].png naming consistent with `PlotDocs`
     refdir = mkpath(reference_dir("PlotsBase", string(backend)))
-    fn = ref_name(i) * ".png"
+    fn = PlotsBase.ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
     for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
         if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
@@ -82,7 +82,7 @@ function image_comparison_tests(
     ver = PlotsBase._version
     ver = VersionNumber(ver.major, ver.minor, ver.patch)
     reffn = reference_file(pkg, ver, idx)
-    newfn = joinpath(reference_path(pkg, ver), ref_name(idx) * ".png")
+    newfn = joinpath(reference_path(pkg, ver), PlotsBase.ref_name(idx) * ".png")
 
     imports = something(example.imports, :())
     exprs = quote

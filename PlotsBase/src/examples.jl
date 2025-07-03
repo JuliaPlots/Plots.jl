@@ -9,6 +9,8 @@ mutable struct PlotExample
     exprs::Expr
 end
 
+ref_name(i) = "ref" * lpad(i, 3, '0')
+
 # COV_EXCL_START
 PlotExample(header::AbstractString, expr::Expr) = PlotExample(header, "", expr)
 PlotExample(header::AbstractString, imports::Expr, expr::Expr) =
