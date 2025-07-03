@@ -653,6 +653,7 @@ function main(args)
     end
     packages_backends = NamedTuple(p => Symbol(lowercase(string(p))) for p in packages)
     backends = values(packages_backends) |> collect
+    debug = length(packages) ≤ 1
 
     @info "selected packages: $packages"
     @info "selected backends: $backends"
@@ -706,7 +707,7 @@ function main(args)
         @show user_gallery gallery_assets
     end
 
-    pages = if (debug = length(packages) ≤ 1)  # debug
+    pages = if debug
         ["Home" => "index.md", "Gallery" => gallery]
     else  # release
         [
@@ -909,7 +910,7 @@ function main(args)
             target = build,
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
             # devbranch = BRANCH,
-            deploy_repo = "github.com/JuliaPlots/PlotDocs.jl.git",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
+            deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
             repo_previews = repo,
             push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
             forcepush = true,
