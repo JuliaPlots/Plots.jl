@@ -23,7 +23,7 @@ jobs:
   ci:
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.pull_request.labels.*.name, 'skip ci') }}
     env:
-      JULIA_PROJECT: julia --project=@. --check-bounds=yes --color=yes
+      JULIA_PROJECT_CMD: julia --project=@. --check-bounds=yes --color=yes
       JULIA_CONDAPKG_LIBSTDCXX_NG_VERSION : 'ignore'  # handled ourselves in ci/matplotlib.jl
       JULIA_CONDAPKG_BACKEND: MicroMamba
       MPLBACKEND: agg
@@ -76,7 +76,7 @@ jobs:
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
         run: |
-          ${{ env.JULIA_PROJECT }} -e '
+          ${{ env.JULIA_PROJECT_CMD }} -e '
             using Pkg
             Pkg.develop([
               (; path="./RecipesBase"),      # compat for LTS [sources], remove later
@@ -93,7 +93,7 @@ jobs:
       - name: test Plots stack
         timeout-minutes: 60
         run: |
-          cmd=(${{ env.JULIA_PROJECT }} --depwarn=yes)
+          cmd=(${{ env.JULIA_PROJECT_CMD }} --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
             cmd=(xvfb-run ${cmd[@]})
           fi
