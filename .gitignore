@@ -17,5 +17,5 @@ test/tmpplotsave.hdf5
 
 # docs
 **/generated/
-docs/build/
-docs/work/
+docs/build*/
+docs/work*/

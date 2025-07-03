@@ -23,9 +23,10 @@ import Glob
 
 eval(PlotsBase.WEAKDEPS)
 
+const suffix = get(ENV, "PLOTDOCS_SUFFIX", "")
 const SRC_DIR = joinpath(@__DIR__, "src")
-const BLD_DIR = joinpath(@__DIR__, "build")
-const WORK_DIR = joinpath(@__DIR__, "work")
+const BLD_DIR = joinpath(@__DIR__, "build" * suffix)
+const WORK_DIR = joinpath(@__DIR__, "work" * suffix)
 const GEN_DIR = joinpath(WORK_DIR, "generated")
 const BRANCH = ("master", "v2")[2]  # transition to v2
 
