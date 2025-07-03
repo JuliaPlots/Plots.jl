@@ -5,7 +5,7 @@ should_warn_on_unsupported(::GastonBackend) = false
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
     state_handle = Gaston.nexthandle() # for now all the figures will be kept
-    plt.o = Gaston.newfigure(state_handle)
+    return plt.o = Gaston.newfigure(state_handle)
 end
 
 function _before_layout_calcs(plt::Plot{GastonBackend})
@@ -35,7 +35,7 @@ function _before_layout_calcs(plt::Plot{GastonBackend})
             foreach(x -> println("== n°$(x[1]) ==\n", x[2].conf), enumerate(sp.o.curves))
         end
     end
-    nothing
+    return nothing
 end
 
 _update_min_padding!(sp::Subplot{GastonBackend}) = sp.minpad = 0mm, 0mm, 0mm, 0mm
@@ -44,20 +44,20 @@ function _update_plot_object(plt::Plot{GastonBackend})
     # respect the layout ratio
     dat = gaston_multiplot_pos_size(plt.layout, (0, 0, 1, 1))
     gaston_multiplot_pos_size!(dat)
-    nothing
+    return nothing
 end
 
 for (mime, term) in (
-    "application/eps"        => "epscairo",
-    "image/eps"              => "epslatex",
-    "application/pdf"        => "pdfcairo",
-    "application/postscript" => "postscript",
-    "image/png"              => "png",
-    "image/svg+xml"          => "svg",
-    "text/latex"             => "tikz",
-    "application/x-tex"      => "epslatex",
-    "text/plain"             => "dumb",
-)
+        "application/eps" => "epscairo",
+        "image/eps" => "epslatex",
+        "application/pdf" => "pdfcairo",
+        "application/postscript" => "postscript",
+        "image/png" => "png",
+        "image/svg+xml" => "svg",
+        "text/latex" => "tikz",
+        "application/x-tex" => "epslatex",
+        "text/plain" => "dumb",
+    )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         term = String($term)
         tmpfile = tempname() * ".$term"
@@ -74,7 +74,7 @@ for (mime, term) in (
             write(io, read(tmpfile))
             rm(tmpfile, force = true)
         end
-        nothing
+        return nothing
     end
 end
 
@@ -104,7 +104,7 @@ function gaston_saveopts(plt::Plot{GastonBackend})
         "fontscale $scaling lw $scaling dl $scaling",  # ps $scaling
     )
 
-    join(saveopts, " ")
+    return join(saveopts, " ")
 end
 
 function gaston_get_subplots(n, plt_subplots, layout)
@@ -123,7 +123,7 @@ function gaston_get_subplots(n, plt_subplots, layout)
             end
         end
     end
-    n, sps
+    return n, sps
 end
 
 function gaston_init_subplots(plt, sps)
@@ -136,13 +136,13 @@ function gaston_init_subplots(plt, sps)
             sz = max.(sz, size(sp))
         end
     end
-    sz
+    return sz
 end
 
 function gaston_init_subplot(
-    plt::Plot{GastonBackend},
-    sp::Union{Nothing,Subplot{GastonBackend}},
-)
+        plt::Plot{GastonBackend},
+        sp::Union{Nothing, Subplot{GastonBackend}},
+    )
     obj = if sp === nothing
         sp
     else
@@ -159,7 +159,7 @@ function gaston_init_subplot(
         sp.o = Gaston.Plot(; dims, curves = [], axesconf)
     end
     push!(plt.o.subplots, obj)
-    nothing
+    return nothing
 end
 
 function gaston_multiplot_pos_size(layout, parent_xy_wh)
@@ -188,7 +188,7 @@ function gaston_multiplot_pos_size(layout, parent_xy_wh)
             end
         end
     end
-    dat
+    return dat
 end
 
 function gaston_multiplot_pos_size!(dat)
@@ -206,7 +206,7 @@ function gaston_multiplot_pos_size!(dat)
             sp.o.axesconf = "set origin $gx, $gy; set size $w, $h; " * sp.o.axesconf
         end
     end
-    nothing
+    return nothing
 end
 
 function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
@@ -259,15 +259,15 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
         push!(gsp.curves, c)
         Gaston.write_data(c, gsp.dims, gsp.datafile; append)
     end
-    nothing
+    return nothing
 end
 
 function gaston_seriesconf!(
-    sp::Subplot{GastonBackend},
-    series::Series,
-    add_to_legend::Bool,
-    i::Int,
-)
+        sp::Subplot{GastonBackend},
+        series::Series,
+        add_to_legend::Bool,
+        i::Int,
+    )
     #=
     gnuplot abbreviations (see gnuplot/src/set.c)
     ---------------------------------------------
@@ -359,23 +359,23 @@ function gaston_seriesconf!(
         @warn "Plots(Gaston): $st is not implemented yet"
     end
 
-    [curveconf, extra_curves...]
+    return [curveconf, extra_curves...]
 end
 
 const gp_borders = (
-    bottom_left_front  = 1 << 0,
-    bottom_left_back   = 1 << 1,
+    bottom_left_front = 1 << 0,
+    bottom_left_back = 1 << 1,
     bottom_right_front = 1 << 2,
-    bottom_right_back  = 1 << 3,
-    left_vertical      = 1 << 4,
-    back_vertical      = 1 << 5,
-    right_vertical     = 1 << 6,
-    front_vertical     = 1 << 7,
-    top_left_back      = 1 << 8,
-    top_right_back     = 1 << 9,
-    top_left_front     = 1 << 10,
-    top_right_front    = 1 << 11,
-    polar              = 1 << 11,
+    bottom_right_back = 1 << 3,
+    left_vertical = 1 << 4,
+    back_vertical = 1 << 5,
+    right_vertical = 1 << 6,
+    front_vertical = 1 << 7,
+    top_left_back = 1 << 8,
+    top_right_back = 1 << 9,
+    top_left_front = 1 << 10,
+    top_right_front = 1 << 11,
+    polar = 1 << 11,
 )
 
 const gp_fillstyle = Dict(
@@ -386,18 +386,18 @@ const gp_fillstyle = Dict(
 )
 
 gaston_fillstyle(x) =
-    if haskey(gp_fillstyle, x)
-        "pattern $(gp_fillstyle[x])"
-    else
-        "solid"
-    end
+if haskey(gp_fillstyle, x)
+    "pattern $(gp_fillstyle[x])"
+else
+    "solid"
+end
 
 function gaston_parse_axes_args(
-    plt::Plot{GastonBackend},
-    sp::Subplot{GastonBackend},
-    dims::Int,
-    any_label::Bool,
-)
+        plt::Plot{GastonBackend},
+        sp::Subplot{GastonBackend},
+        dims::Int,
+        any_label::Bool,
+    )
     # axesconf = ["set margins 2, 2, 2, 2"]  # left, right, bottom, top
     axesconf = String[]
 
@@ -512,9 +512,9 @@ function gaston_parse_axes_args(
         gp_borders[:polar]
     elseif dims == 2
         bottom = gp_borders[:bottom_left_front]
-        left   = gp_borders[:bottom_left_back]
-        top    = gp_borders[:bottom_right_front]
-        right  = gp_borders[:bottom_right_back]
+        left = gp_borders[:bottom_left_back]
+        top = gp_borders[:bottom_right_front]
+        right = gp_borders[:bottom_right_back]
         if fs === :box
             bottom + left + top + right
         elseif fs === :semi
@@ -527,10 +527,10 @@ function gaston_parse_axes_args(
     else  # 3D
         (
             gp_borders[:bottom_left_front] +
-            gp_borders[:bottom_left_back] +
-            gp_borders[:bottom_right_front] +
-            gp_borders[:bottom_right_back] +
-            gp_borders[:left_vertical]
+                gp_borders[:bottom_left_back] +
+                gp_borders[:bottom_right_front] +
+                gp_borders[:bottom_right_back] +
+                gp_borders[:left_vertical]
         )
     end
     push!(axesconf, border > 0 ? "set border $border back" : "unset border")
@@ -571,7 +571,7 @@ function gaston_parse_axes_args(
         )
     end
 
-    join(axesconf, "; ")
+    return join(axesconf, "; ")
 end
 
 function gaston_fix_ticks_overflow(ticks::AbstractVector)
@@ -584,7 +584,7 @@ function gaston_fix_ticks_overflow(ticks::AbstractVector)
         end
         any(t -> abs(t) > of, ticks) && return float.(ticks)
     end
-    ticks
+    return ticks
 end
 
 function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
@@ -611,7 +611,7 @@ function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
     if gaston_ticks !== nothing
         push!(axesconf, "set $(letter)$(I)tics $add (" * join(gaston_ticks, ", ") * ")")
     end
-    nothing
+    return nothing
 end
 
 function gaston_set_legend!(axesconf, sp, any_label)
@@ -635,7 +635,7 @@ function gaston_set_legend!(axesconf, sp, any_label)
         end
         pos *= sp[:legend_column] == 1 ? "vertical" : "horizontal"
         push!(axesconf, "set key $pos box lw 1 opaque noautotitle")
-        push!(axesconf, "set key $(gaston_font(legendfont(sp), rot=false, align=false))")
+        push!(axesconf, "set key $(gaston_font(legendfont(sp), rot = false, align = false))")
         if sp[:legend_title] !== nothing
             # NOTE: cannot use legendtitlefont(sp) as it will override legendfont
             push!(axesconf, "set key title '$(sp[:legend_title])'")
@@ -643,7 +643,7 @@ function gaston_set_legend!(axesconf, sp, any_label)
     else
         push!(axesconf, "set key off")
     end
-    nothing
+    return nothing
 end
 
 # --------------------------------------------
@@ -675,13 +675,13 @@ function gaston_font(f; rot = true, align = true, color = true, scale = 1)
     align && (font *= " $(gaston_halign(f.halign))")
     rot && (font *= " rotate by $(f.rotation)")
     color && (font *= " textcolor $(gaston_color(f.color))")
-    font
+    return font
 end
 
 gaston_palette(gradient) =
-    let palette = ["$(n - 1) $(c.r) $(c.g) $(c.b)" for (n, c) in enumerate(gradient)]
-        '(' * join(palette, ", ") * ')'
-    end
+let palette = ["$(n - 1) $(c.r) $(c.g) $(c.b)" for (n, c) in enumerate(gradient)]
+    '(' * join(palette, ", ") * ')'
+end
 
 gaston_palette_conf(series) =
     "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
@@ -701,13 +701,13 @@ function gaston_marker(marker, alpha)
     marker === :diamond && return filled ? 13 : 12
     marker === :pentagon && return filled ? 15 : 14
     # @debug "Plots(Gaston): unsupported marker $marker"
-    1
+    return 1
 end
 
 function gaston_color(col, alpha = 0)
     col = single_color(col)  # in case of gradients
     col = alphacolor(col, gaston_alpha(alpha))  # add a default alpha if non existent
-    "rgbcolor '#$(hex(col, :aarrggbb))'"
+    return "rgbcolor '#$(hex(col, :aarrggbb))'"
 end
 
 function gaston_linestyle(style)
@@ -716,11 +716,11 @@ function gaston_linestyle(style)
     style === :dot && return 3
     style === :dashdot && return 4
     style === :dashdotdot && return 5
-    1
+    return 1
 end
 
 function gaston_enclose_tick_string(tick_string)
     findfirst('^', tick_string) === nothing && return tick_string
     base, power = split(tick_string, '^')
-    "$base^{$power}"
+    return "$base^{$power}"
 end

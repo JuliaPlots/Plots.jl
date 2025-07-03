@@ -9,7 +9,7 @@ export BBox, BoundingBox, mm, cm, inch, px, pct, pt, w, h
 
 # allow pixels and percentages
 const px = AbsoluteLength(0.254)
-const pct = Length{:pct,Float64}(1.0)
+const pct = Length{:pct, Float64}(1.0)
 
 Base.convert(::Type{<:Measure}, x::Float64) = x * pct
 

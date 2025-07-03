@@ -17,15 +17,15 @@ function plotlybase_syncplot(plt::Plot)
 end
 
 for (mime, fmt) in (
-    "application/pdf" => "pdf",
-    "image/png" => "png",
-    "image/svg+xml" => "svg",
-    "image/eps" => "eps",
-)
+        "application/pdf" => "pdf",
+        "image/png" => "png",
+        "image/svg+xml" => "svg",
+        "image/eps" => "eps",
+    )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend})
         if !PlotlyKaleido.is_running()
             PlotlyKaleido.restart()
         end
-        PlotlyKaleido.savefig(io, plotlybase_syncplot(plt), format = $fmt)
+        return PlotlyKaleido.savefig(io, plotlybase_syncplot(plt), format = $fmt)
     end
 end

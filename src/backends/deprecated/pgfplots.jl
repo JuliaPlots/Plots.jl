@@ -68,13 +68,13 @@ end
 # takes in color,alpha, and returns color and alpha appropriate for pgf style
 function pgf_color(c::Colorant)
     cstr = @sprintf "{rgb,1:red,%.8f;green,%.8f;blue,%.8f}" red(c) green(c) blue(c)
-    cstr, alpha(c)
+    return cstr, alpha(c)
 end
 
 function pgf_color(grad::ColorGradient)
     # Can't handle ColorGradient here, fallback to defaults.
     cstr = @sprintf "{rgb,1:red,%.8f;green,%.8f;blue,%.8f}" 0.0 0.60560316 0.97868012
-    cstr, 1
+    return cstr, 1
 end
 
 # Generates a colormap for pgfplots based on a ColorGradient
@@ -93,12 +93,12 @@ function pgf_fillstyle(plotattributes, i = 1)
     if fa !== nothing
         a = fa
     end
-    "fill = $cstr, fill opacity=$a"
+    return "fill = $cstr, fill opacity=$a"
 end
 
 function pgf_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
     cstr, a = pgf_color(plot_color(color, α))
-    """
+    return """
     color = $cstr,
     draw opacity = $a,
     line width = $linewidth,
@@ -147,18 +147,18 @@ function pgf_add_annotation!(o, x, y, val, thickness_scaling = 1)
     # Construct the style string.
     # Currently supports color and orientation
     cstr, a = pgf_color(val.font.color)
-    push!(
+    return push!(
         o,
         PGFPlots.Plots.Node(
             val.str, # Annotation Text
             x,
             y,
             style = """
-              $(get(_pgf_annotation_halign,val.font.halign,"")),
-              color=$cstr, draw opacity=$(convert(Float16,a)),
-              rotate=$(val.font.rotation),
-              font=$(pgf_font(val.font.pointsize, thickness_scaling))
-              """,
+            $(get(_pgf_annotation_halign, val.font.halign, "")),
+            color=$cstr, draw opacity=$(convert(Float16, a)),
+            rotate=$(val.font.rotation),
+            font=$(pgf_font(val.font.pointsize, thickness_scaling))
+            """,
         ),
     )
 end
@@ -270,7 +270,7 @@ function pgf_series(sp::Subplot, series::Series)
             push!(series_collection, func(seg_args...; kw...))
         end
     end
-    series_collection
+    return series_collection
 end
 
 function pgf_fillrange_series(series, i, fillrange, args...)
@@ -523,7 +523,7 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     # return the style list and KW args
-    style, kw
+    return style, kw
 end
 
 # ----------------------------------------------------------------
@@ -556,10 +556,10 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         push!(
             style,
             """
-    xshift = $(left(bb).value)mm,
-    yshift = $(round((total_height - (bottom(bb))).value, digits=2))mm,
-    axis background/.style={fill=$(pgf_color(sp[:background_color_inside])[1])}
-""",
+                xshift = $(left(bb).value)mm,
+                yshift = $(round((total_height - (bottom(bb))).value, digits = 2))mm,
+                axis background/.style={fill=$(pgf_color(sp[:background_color_inside])[1])}
+            """,
         )
         kw[:width] = "$(width(bb).value)mm"
         kw[:height] = "$(height(bb).value)mm"
@@ -692,6 +692,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         # add the PGFPlots.Axis to the list
         push!(plt.o, o)
     end
+    return
 end
 
 _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend}) = show(io, mime, plt.o)
@@ -708,7 +709,7 @@ function _show(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsBackend})
     write(io, read(open(fn), String))
 
     # cleanup
-    PGFPlots.cleanup(plt.o)
+    return PGFPlots.cleanup(plt.o)
 end
 
 function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsBackend})
@@ -718,7 +719,7 @@ function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsBackend}
         backend_object(plt),
         include_preamble = plt.attr[:tex_output_standalone],
     )
-    write(io, read(open(fn), String))
+    return write(io, read(open(fn), String))
 end
 
 function _display(plt::Plot{PGFPlotsBackend})
@@ -733,7 +734,7 @@ function _display(plt::Plot{PGFPlotsBackend})
     open_browser_window(fn)
 
     # cleanup
-    PGFPlots.cleanup(plt.o)
+    return PGFPlots.cleanup(plt.o)
 end
 
 # COV_EXCL_STOP

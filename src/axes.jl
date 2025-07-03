@@ -1,4 +1,3 @@
-
 # xaxis(args...; kw...) = Axis(:x, args...; kw...)
 # yaxis(args...; kw...) = Axis(:y, args...; kw...)
 # zaxis(args...; kw...) = Axis(:z, args...; kw...)
@@ -19,12 +18,12 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     attr = DefaultsDict(explicit, _axis_defaults_byletter[letter])
 
     # update the defaults
-    attr!(Axis([sp], attr), args...; kw...)
+    return attr!(Axis([sp], attr), args...; kw...)
 end
 
 function get_axis(sp::Subplot, letter::Symbol)
     axissym = get_attr_symbol(letter, :axis)
-    if haskey(sp.attr, axissym)
+    return if haskey(sp.attr, axissym)
         sp.attr[axissym]
     else
         sp.attr[axissym] = Axis(sp, letter)
@@ -34,7 +33,7 @@ end
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scaleAliases, arg, arg)
-    if typeof(arg) <: Font
+    return if typeof(arg) <: Font
         plotattributes[get_attr_symbol(letter, :tickfont)] = arg
         plotattributes[get_attr_symbol(letter, :guidefont)] = arg
 
@@ -69,10 +68,10 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
         plotattributes[get_attr_symbol(letter, :formatter)] = arg
 
     elseif !handleColors!(
-        plotattributes,
-        arg,
-        get_attr_symbol(letter, :foreground_color_axis),
-    )
+            plotattributes,
+            arg,
+            get_attr_symbol(letter, :foreground_color_axis),
+        )
         @warn "Skipped $(letter)axis arg $arg"
     end
 end
@@ -91,13 +90,13 @@ function attr!(axis::Axis, args...; kw...)
         haskey(plotattributes, k) || continue
         if k === :discrete_values
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
-        elseif k === :lims && isa(v, NTuple{2,TimeType})
+        elseif k === :lims && isa(v, NTuple{2, TimeType})
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
         elseif k === :guide && v isa AbstractString && isempty(v) &&
-            !haskey(kw, :unitformat)
+                !haskey(kw, :unitformat)
             plotattributes[:unitformat] = :nounit
             plotattributes[k] = v
-        elseif k === :unit 
+        elseif k === :unit
             if !isnothing(plotattributes[k]) && plotattributes[k] != v
                 @warn "Overriding unit for $(axis[:letter]) axis: $(plotattributes[k]) -> $v.  This will produce a plot, but series plotted before the override cannot update and will therefore be incorrectly treated as if they had the new units."
             end
@@ -112,7 +111,7 @@ function attr!(axis::Axis, args...; kw...)
         plotattributes[:scale] = _scaleAliases[plotattributes[:scale]]
     end
 
-    axis
+    return axis
 end
 
 # -------------------------------------------------------------------------
@@ -123,7 +122,7 @@ ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 get_guide(axis::Axis)::String = if isnothing(axis[:guide])
     ""
 elseif isnothing(axis[:unit]) || axis[:guide] isa ProtectedString ||
-    axis[:unitformat] ≡ :nounit
+        axis[:unitformat] ≡ :nounit
     axis[:guide]
 else
     unit = if axis[:unitformat] isa Function
@@ -151,26 +150,26 @@ const UNIT_FORMATS = Dict(
     :slashangle => (" / <", ">"),
     :verbose => " in units of ",
     :none => nothing,
-    :nounit => (l,u)->l
+    :nounit => (l, u) -> l
 )
 
 # All options for unit formats
-format_unit_label(l, u, f::Nothing)                    = string(l, ' ', u)
-format_unit_label(l, u, f::Function)                   = f(l, u)
-format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
-format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
-format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
-format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
-format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
-format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
+format_unit_label(l, u, f::Nothing) = string(l, ' ', u)
+format_unit_label(l, u, f::Function) = f(l, u)
+format_unit_label(l, u, f::AbstractString) = string(l, f, u)
+format_unit_label(l, u, f::NTuple{2, <:AbstractString}) = string(l, f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3, <:AbstractString}) = string(f[1], l, f[2], u, f[3])
+format_unit_label(l, u, f::Char) = string(l, ' ', f, ' ', u)
+format_unit_label(l, u, f::NTuple{2, Char}) = string(l, ' ', f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3, Char}) = string(f[1], l, ' ', f[2], u, f[3])
+format_unit_label(l, u, f::Bool) = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
+format_unit_label(l, u, f::Symbol) = format_unit_label(l, u, UNIT_FORMATS[f])
 
 const _label_func =
-    Dict{Symbol,Function}(:log10 => x -> "10^$x", :log2 => x -> "2^$x", :ln => x -> "e^$x")
+    Dict{Symbol, Function}(:log10 => x -> "10^$x", :log2 => x -> "2^$x", :ln => x -> "e^$x")
 labelfunc(scale::Symbol, backend::AbstractBackend) = get(_label_func, scale, string)
 
-const _label_func_tex = Dict{Symbol,Function}(
+const _label_func_tex = Dict{Symbol, Function}(
     :log10 => x -> "10^{$x}",
     :log2 => x -> "2^{$x}",
     :ln => x -> "e^{$x}",
@@ -200,9 +199,9 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # being passed to optimize_datetime_ticks.
             # (convert(Int, convert(DateTime, convert(Date, i))) == 87600000*i)
             ticks, labels =
-                optimize_datetime_ticks(864e5 * amin, 864e5 * amax; k_min = 2, k_max = 4)
+                optimize_datetime_ticks(864.0e5 * amin, 864.0e5 * amax; k_min = 2, k_max = 4)
             # Now the ticks are converted back to floats corresponding to Dates.
-            return ticks / 864e5, labels
+            return ticks / 864.0e5, labels
         elseif formatter == RecipesPipeline.datetimeformatter
             return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
         end
@@ -240,7 +239,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
         String[]  # no finite ticks to show...
     end
 
-    unscaled_ticks, labels
+    return unscaled_ticks, labels
 end
 
 function get_labels(formatter::Symbol, scaled_ticks, scale)
@@ -271,21 +270,21 @@ function get_ticks(sp::Subplot, axis::Axis; update = true, formatter = axis[:for
         dvals = axis[:discrete_values]
         ticks = _transform_ticks(axis[:ticks], axis)
         axis.plotattributes[:optimized_ticks] =
-            if (
+        if (
                 axis[:letter] === :x &&
-                ticks isa Symbol &&
-                ticks !== :none &&
-                !isempty(dvals) &&
-                ispolar(sp)
+                    ticks isa Symbol &&
+                    ticks !== :none &&
+                    !isempty(dvals) &&
+                    ispolar(sp)
             )
-                collect(0:(π / 4):(7π / 4)), string.(0:45:315)
-            else
-                cvals = axis[:continuous_values]
-                alims = axis_limits(sp, axis[:letter])
-                get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
-            end
+            collect(0:(π / 4):(7π / 4)), string.(0:45:315)
+        else
+            cvals = axis[:continuous_values]
+            alims = axis_limits(sp, axis[:letter])
+            get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
+        end
     end
-    axis.plotattributes[:optimized_ticks]
+    return axis.plotattributes[:optimized_ticks]
 end
 
 # Ticks getter functions
@@ -349,30 +348,30 @@ get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, :axis)])
 get_ticks(p::Plot, s::Symbol) = map(sp -> get_ticks(sp, s), p.subplots)
 
 get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
-    if ticks === :none
-        T[], String[]
-    elseif !isempty(dvals)
-        n = length(dvals)
-        if ticks === :all || n < 16
-            cvals, string.(dvals)
-        else
-            Δ = ceil(Int, n / 10)
-            rng = Δ:Δ:n
-            cvals[rng], string.(dvals[rng])
-        end
+if ticks === :none
+    T[], String[]
+elseif !isempty(dvals)
+    n = length(dvals)
+    if ticks === :all || n < 16
+        cvals, string.(dvals)
     else
-        optimal_ticks_and_labels(nothing, args...)
+        Δ = ceil(Int, n / 10)
+        rng = Δ:Δ:n
+        cvals[rng], string.(dvals[rng])
     end
+else
+    optimal_ticks_and_labels(nothing, args...)
+end
 
 get_ticks(ticks::AVec, cvals, dvals, args...) = optimal_ticks_and_labels(ticks, args...)
 get_ticks(ticks::Int, dvals, cvals, args...) =
-    if isempty(dvals)
-        optimal_ticks_and_labels(ticks, args...)
-    else
-        rng = round.(Int, range(1, stop = length(dvals), length = ticks))
-        cvals[rng], string.(dvals[rng])
-    end
-get_ticks(ticks::NTuple{2,Any}, args...) = ticks
+if isempty(dvals)
+    optimal_ticks_and_labels(ticks, args...)
+else
+    rng = round.(Int, range(1, stop = length(dvals), length = ticks))
+    cvals[rng], string.(dvals[rng])
+end
+get_ticks(ticks::NTuple{2, Any}, args...) = ticks
 get_ticks(::Nothing, cvals::T, args...) where {T} = T[], String[]
 get_ticks(ticks::Bool, args...) =
     ticks ? get_ticks(:auto, args...) : get_ticks(nothing, args...)
@@ -381,7 +380,7 @@ get_ticks(::T, args...) where {T} =
 
 # do not specify array item type to also catch e.g. "xlabel=[]" and "xlabel=([],[])"
 _has_ticks(v::AVec) = !isempty(v)
-_has_ticks(t::Tuple{AVec,AVec}) = !isempty(t[1])
+_has_ticks(t::Tuple{AVec, AVec}) = !isempty(t[1])
 _has_ticks(s::Symbol) = s !== :none
 _has_ticks(b::Bool) = b
 _has_ticks(::Nothing) = false
@@ -390,9 +389,9 @@ _has_ticks(::Any) = true
 has_ticks(axis::Axis) = get(axis, :ticks, nothing) |> _has_ticks
 
 _transform_ticks(ticks, axis) = ticks
-_transform_ticks(ticks::AbstractArray{T}, axis) where {T<:Dates.TimeType} =
+_transform_ticks(ticks::AbstractArray{T}, axis) where {T <: Dates.TimeType} =
     Dates.value.(ticks)
-_transform_ticks(ticks::NTuple{2,Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
+_transform_ticks(ticks::NTuple{2, Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
 const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
 
@@ -400,7 +399,7 @@ function num_minor_intervals(axis)
     # FIXME: `minorticks` should be fixed in `2.0` to be the number of ticks, not intervals
     # see github.com/JuliaPlots/Plots.jl/pull/4528
     n_intervals = axis[:minorticks]
-    if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
+    return if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
         max(1, n_intervals)  # 0 intervals makes no sense
     else   # `:auto` or `true`
         if (base = get(_logScaleBases, axis[:scale], nothing)) == 10
@@ -412,15 +411,15 @@ function num_minor_intervals(axis)
 end
 
 no_minor_intervals(axis) =
-    if (n_intervals = axis[:minorticks]) === false
-        true  # must be tested with `===` since Bool <: Integer
-    elseif n_intervals ∈ (:none, nothing)
-        true
-    elseif (n_intervals === :auto && !axis[:minorgrid])
-        true
-    else
-        false
-    end
+if (n_intervals = axis[:minorticks]) === false
+    true  # must be tested with `===` since Bool <: Integer
+elseif n_intervals ∈ (:none, nothing)
+    true
+elseif (n_intervals === :auto && !axis[:minorgrid])
+    true
+else
+    false
+end
 
 function get_minor_ticks(sp, axis, ticks_and_labels)
     no_minor_intervals(axis) && return
@@ -462,7 +461,7 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
             append!(minorticks, collect((lo + step):step:(hi - step / 2)))
         end
     end
-    minorticks[amin .≤ minorticks .≤ amax]
+    return minorticks[amin .≤ minorticks .≤ amax]
 end
 
 # -------------------------------------------------------------------------
@@ -474,12 +473,13 @@ function reset_extrema!(sp::Subplot)
     for series in sp.series_list
         expand_extrema!(sp, series.plotattributes)
     end
+    return
 end
 
 function expand_extrema!(ex::Extrema, v::Number)
     ex.emin = isfinite(v) ? min(v, ex.emin) : ex.emin
     ex.emax = isfinite(v) ? max(v, ex.emax) : ex.emax
-    ex
+    return ex
 end
 
 expand_extrema!(axis::Axis, v::Number) = expand_extrema!(axis[:extrema], v)
@@ -488,16 +488,16 @@ expand_extrema!(axis::Axis, v::Number) = expand_extrema!(axis[:extrema], v)
 expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
-function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
+function expand_extrema!(axis::Axis, v::Tuple{MIN, MAX}) where {MIN <: Number, MAX <: Number}
     ex = axis[:extrema]::Extrema
     ex.emin = isfinite(v[1]) ? min(v[1], ex.emin) : ex.emin
     ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
-    ex
+    return ex
 end
-function expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
+function expand_extrema!(axis::Axis, v::AVec{N}) where {N <: Number}
     ex = axis[:extrema]::Extrema
     foreach(vi -> expand_extrema!(ex, vi), v)
-    ex
+    return ex
 end
 
 function expand_extrema!(sp::Subplot, plotattributes::AKW)
@@ -505,18 +505,20 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # first expand for the data
     for letter in (:x, :y, :z)
-        data = plotattributes[if vert
-            letter
-        else
-            letter === :x ? :y : letter === :y ? :x : :z
-        end]
+        data = plotattributes[
+            if vert
+                letter
+            else
+                letter === :x ? :y : letter === :y ? :x : :z
+            end,
+        ]
         if (
-            letter !== :z &&
-            plotattributes[:seriestype] === :straightline &&
-            any(series[:seriestype] !== :straightline for series in series_list(sp)) &&
-            length(data) > 1 &&
-            data[1] != data[2]
-        )
+                letter !== :z &&
+                    plotattributes[:seriestype] === :straightline &&
+                    any(series[:seriestype] !== :straightline for series in series_list(sp)) &&
+                    length(data) > 1 &&
+                    data[1] != data[2]
+            )
             data = [NaN]
         end
         axis = sp[get_attr_symbol(letter, :axis)]
@@ -526,7 +528,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             expand_extrema!(sp[:yaxis], data.y_extents)
             expand_extrema!(sp[:zaxis], data.z_extents)
         elseif eltype(data) <: Number ||
-               (isa(data, Surface) && all(di -> isa(di, Number), data.surf))
+                (isa(data, Surface) && all(di -> isa(di, Number), data.surf))
             if !(eltype(data) <: Number)
                 # huh... must have been a mis-typed surface? lets swap it out
                 data = plotattributes[letter] = Surface(Matrix{Float64}(data.surf))
@@ -537,7 +539,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
             plotattributes[letter],
-            plotattributes[get_attr_symbol(letter, :(_discrete_indices))] =
+                plotattributes[get_attr_symbol(letter, :(_discrete_indices))] =
                 discrete_value!(axis, data)
             expand_extrema!(axis, plotattributes[letter])
         end
@@ -578,7 +580,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
     end
 
     # expand for heatmaps
-    if plotattributes[:seriestype] === :heatmap
+    return if plotattributes[:seriestype] === :heatmap
         for letter in (:x, :y)
             data = plotattributes[letter]
             axis = sp[get_attr_symbol(letter, :axis)]
@@ -590,14 +592,14 @@ end
 
 function expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
     expand_extrema!(sp[:xaxis], (xmin, xmax))
-    expand_extrema!(sp[:yaxis], (ymin, ymax))
+    return expand_extrema!(sp[:yaxis], (ymin, ymax))
 end
 
 # -------------------------------------------------------------------------
 
 function scale_lims(from, to, factor)
     mid, span = (from + to) / 2, (to - from) / 2
-    mid .+ (-span, span) .* factor
+    return mid .+ (-span, span) .* factor
 end
 
 _scale_lims(::Val{true}, ::Function, ::Function, from, to, factor) =
@@ -607,7 +609,7 @@ _scale_lims(::Val{false}, f::Function, invf::Function, from, to, factor) =
 
 function scale_lims(from, to, factor, scale)
     f, invf, noop = scale_inverse_scale_func(scale)
-    _scale_lims(Val(noop), f, invf, from, to, factor)
+    return _scale_lims(Val(noop), f, invf, from, to, factor)
 end
 
 """
@@ -620,16 +622,16 @@ If `letter` is omitted, all axes are affected.
 function scale_lims!(sp::Subplot, letter, factor)
     axis = Plots.get_axis(sp, letter)
     from, to = Plots.get_sp_lims(sp, letter)
-    axis[:lims] = scale_lims(from, to, factor, axis[:scale])
+    return axis[:lims] = scale_lims(from, to, factor, axis[:scale])
 end
 function scale_lims!(plt::Plot, letter, factor)
     foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
-    plt
+    return plt
 end
 scale_lims!(letter::Symbol, factor) = scale_lims!(current(), letter, factor)
-function scale_lims!(plt::Union{Plot,Subplot}, factor)
+function scale_lims!(plt::Union{Plot, Subplot}, factor)
     foreach(letter -> scale_lims!(plt, letter, factor), (:x, :y, :z))
-    plt
+    return plt
 end
 scale_lims!(factor::Number) = scale_lims!(current(), factor)
 
@@ -675,7 +677,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     for sp in axis.sps, series in series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end
-    nothing
+    return nothing
 end
 
 function round_limits(amin, amax, scale)
@@ -683,29 +685,29 @@ function round_limits(amin, amax, scale)
     factor = base^(1 - round(log(base, amax - amin)))
     amin = floor(amin * factor) / factor
     amax = ceil(amax * factor) / factor
-    amin, amax
+    return amin, amax
 end
 
 # NOTE: cannot use `NTuple` here ↓
-process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
+process_limits(lims::Tuple{<:Union{Symbol, Real}, <:Union{Symbol, Real}}, axis) = lims
 process_limits(lims::Symbol, axis) = lims
 process_limits(lims::AVec, axis) =
-    length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) :
+    length(lims) == 2 && all(map(x -> x isa Union{Symbol, Real}, lims)) ? Tuple(lims) :
     nothing
 process_limits(lims, axis) = nothing
 
 warn_invalid_limits(lims, letter) = @warn """
-        Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
-        $(letter)lims = $lims
-        """
+Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
+$(letter)lims = $lims
+"""
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
 function axis_limits(
-    sp,
-    letter,
-    lims_factor = widen_factor(get_axis(sp, letter)),
-    consider_aspect = true,
-)
+        sp,
+        letter,
+        lims_factor = widen_factor(get_axis(sp, letter)),
+        consider_aspect = true,
+    )
     axis = get_axis(sp, letter)
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
@@ -750,11 +752,11 @@ function axis_limits(
 
     aspect_ratio = get_aspect_ratio(sp)
     if (
-        !has_user_lims &&
-        consider_aspect &&
-        letter in (:x, :y) &&
-        !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
-    )
+            !has_user_lims &&
+                consider_aspect &&
+                letter in (:x, :y) &&
+                !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
+        )
         aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
         area = plotarea(sp)
         plot_ratio = height(area) / width(area)
@@ -777,7 +779,7 @@ function axis_limits(
         end
     end
 
-    amin, amax
+    return amin, amax
 end
 
 # -------------------------------------------------------------------------
@@ -786,28 +788,28 @@ end
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
 discrete_value!(plotattributes, letter::Symbol, dv) =
-    let l = if plotattributes[:permute] !== :none
-            filter(!=(letter), plotattributes[:permute]) |> only
-        else
-            letter
-        end
-        discrete_value!(plotattributes[:subplot][get_attr_symbol(l, :axis)], dv)
+let l = if plotattributes[:permute] !== :none
+        filter(!=(letter), plotattributes[:permute]) |> only
+    else
+        letter
     end
+    discrete_value!(plotattributes[:subplot][get_attr_symbol(l, :axis)], dv)
+end
 
 discrete_value!(axis::Axis, dv) =
-    if (cv_idx = get(axis[:discrete_map], dv, -1)) == -1
-        ex = axis[:extrema]
-        cv = NaNMath.max(0.5, ex.emax + 1)
-        expand_extrema!(axis, cv)
-        push!(axis[:discrete_values], dv)
-        push!(axis[:continuous_values], cv)
-        cv_idx = length(axis[:discrete_values])
-        axis[:discrete_map][dv] = cv_idx
-        cv, cv_idx
-    else
-        cv = axis[:continuous_values][cv_idx]
-        cv, cv_idx
-    end
+if (cv_idx = get(axis[:discrete_map], dv, -1)) == -1
+    ex = axis[:extrema]
+    cv = NaNMath.max(0.5, ex.emax + 1)
+    expand_extrema!(axis, cv)
+    push!(axis[:discrete_values], dv)
+    push!(axis[:continuous_values], cv)
+    cv_idx = length(axis[:discrete_values])
+    axis[:discrete_map][dv] = cv_idx
+    cv, cv_idx
+else
+    cv = axis[:continuous_values][cv_idx]
+    cv, cv_idx
+end
 
 # continuous value... just pass back with axis negative index
 discrete_value!(axis::Axis, cv::Number) = (cv, -1)
@@ -819,7 +821,7 @@ function discrete_value!(axis::Axis, v::AVec)
     for i in eachindex(v)
         cvec[i], discrete_indices[i] = discrete_value!(axis, v[i])
     end
-    cvec, discrete_indices
+    return cvec, discrete_indices
 end
 
 # add the discrete value for each item.  return the continuous values and the indices
@@ -829,7 +831,7 @@ function discrete_value!(axis::Axis, v::AMat)
     for I in eachindex(v)
         cmat[I], discrete_indices[I] = discrete_value!(axis, v[I])
     end
-    cmat, discrete_indices
+    return cmat, discrete_indices
 end
 
 discrete_value!(axis::Axis, v::Surface) = map(Surface, discrete_value!(axis, v.surf))
@@ -840,18 +842,18 @@ const grid_factor_2d = Ref(1.2)
 const grid_factor_3d = Ref(grid_factor_2d[] / 100)
 
 function add_major_or_minor_segments_2d(
-    sp,
-    ax,
-    oax,
-    oas,
-    oamM,
-    ticks,
-    grid,
-    tick_segments,
-    segments,
-    factor,
-    cond,
-)
+        sp,
+        ax,
+        oax,
+        oas,
+        oamM,
+        ticks,
+        grid,
+        tick_segments,
+        segments,
+        factor,
+        cond,
+    )
     ticks === nothing && return
     if cond
         f, invf = scale_inverse_scale_func(oax[:scale])
@@ -879,6 +881,7 @@ function add_major_or_minor_segments_2d(
             reverse_if((tick, last(oamM)), isy),
         )
     end
+    return
 end
 
 # compute the line segments which should be drawn for this axis
@@ -907,10 +910,10 @@ function axis_drawing_info(sp, letter)
                 push!(segments, reverse_if((amin, oa1), isy), reverse_if((amax, oa1), isy))
                 # don't show the 0 tick label for the origin framestyle
                 if (
-                    sp[:framestyle] === :origin &&
-                    ticks ∉ (:none, nothing, false) &&
-                    length(ticks) > 1
-                )
+                        sp[:framestyle] === :origin &&
+                            ticks ∉ (:none, nothing, false) &&
+                            length(ticks) > 1
+                    )
                     if (i = findfirst(==(0), ticks[1])) !== nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
@@ -991,7 +994,7 @@ function axis_drawing_info(sp, letter)
         end
     end
 
-    (
+    return (
         ticks = ticks,
         segments = segments,
         tick_segments = tick_segments,
@@ -1002,19 +1005,19 @@ function axis_drawing_info(sp, letter)
 end
 
 function add_major_or_minor_segments_3d(
-    sp,
-    ax,
-    nax,
-    nas,
-    fas,
-    namM,
-    ticks,
-    grid,
-    tick_segments,
-    segments,
-    factor,
-    cond,
-)
+        sp,
+        ax,
+        nax,
+        nas,
+        fas,
+        namM,
+        ticks,
+        grid,
+        tick_segments,
+        segments,
+        factor,
+        cond,
+    )
     ticks === nothing && return
     if cond
         f, invf = scale_inverse_scale_func(nax[:scale])
@@ -1049,6 +1052,7 @@ function add_major_or_minor_segments_3d(
             sort_3d_axes(tick, ga1_, fa1_, letter),
         )
     end
+    return
 end
 
 function axis_drawing_info_3d(sp, letter)
@@ -1066,10 +1070,10 @@ function axis_drawing_info_3d(sp, letter)
     if sp[:framestyle] !== :none  # && letter === :x
         na0, na1 =
             nas = if sp[:framestyle] in (:origin, :zerolines)
-                0, 0
-            else
-                reverse_if(reverse_if(namM, letter === :y), xor(ax[:mirror], nax[:flip]))
-            end
+            0, 0
+        else
+            reverse_if(reverse_if(namM, letter === :y), xor(ax[:mirror], nax[:flip]))
+        end
         fa0, fa1 = fas = if sp[:framestyle] in (:origin, :zerolines)
             0, 0
         else
@@ -1084,10 +1088,10 @@ function axis_drawing_info_3d(sp, letter)
                 )
                 # don't show the 0 tick label for the origin framestyle
                 if (
-                    sp[:framestyle] === :origin &&
-                    ticks ∉ (:none, nothing, false) &&
-                    length(ticks) > 1
-                )
+                        sp[:framestyle] === :origin &&
+                            ticks ∉ (:none, nothing, false) &&
+                            length(ticks) > 1
+                    )
                     if (i = findfirst(==(0), ticks[1])) !== nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
@@ -1138,7 +1142,7 @@ function axis_drawing_info_3d(sp, letter)
         end
     end
 
-    (
+    return (
         ticks = ticks,
         segments = segments,
         tick_segments = tick_segments,

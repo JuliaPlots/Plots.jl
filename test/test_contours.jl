@@ -35,7 +35,7 @@ end
 
     @testset "Default number" begin
         @test contour(x, y, z)[1][1].plotattributes[:levels] ==
-              Plots._series_defaults[:levels]
+            Plots._series_defaults[:levels]
     end
 
     @testset "Number" begin

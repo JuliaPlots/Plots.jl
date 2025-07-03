@@ -4,14 +4,14 @@
         @test Plots.get_xs(square) == [0, 1, 1, 0]
         @test Plots.get_ys(square) == [0, 0, 1, 1]
         @test Plots.vertices(square) == [(0, 0), (1, 0), (1, 1), (0, 1)]
-        @test isa(square, Shape{Int64,Float64})
-        @test coords(square) isa Tuple{Vector{S},Vector{T}} where {T,S}
+        @test isa(square, Shape{Int64, Float64})
+        @test coords(square) isa Tuple{Vector{S}, Vector{T}} where {T, S}
         @test Shape(:circle) isa Shape
 
         xs = view([0.0, 1.0, 2.0, 1.25], 1:3)
         ys = view([6 4 7; 9 9 9], 1, :)
         tri = Shape(xs, ys)
-        @test isa(tri, Shape{Float64,Int64})
+        @test isa(tri, Shape{Float64, Int64})
         @test Plots.vertices(tri) == [(0.0, 6), (1.0, 4), (2.0, 7)]
     end
 
@@ -61,7 +61,7 @@
         ang = range(0, 2π, length = 60)
         ellipse(x, y, w, h) = Shape(w * sin.(ang) .+ x, h * cos.(ang) .+ y)
         myshapes = [ellipse(x, rand(), rand(), rand()) for x in 1:4]
-        @test coords(myshapes) isa Tuple{Vector{Vector{S}},Vector{Vector{T}}} where {T,S}
+        @test coords(myshapes) isa Tuple{Vector{Vector{S}}, Vector{Vector{T}}} where {T, S}
         local pl
         @test_nowarn pl = plot(myshapes)
         @test pl[1][1][:seriestype] === :shape
@@ -247,7 +247,7 @@ end
     )
     for i in 1:5
         @test only(spl.series_list[i].plotattributes[:series_annotations].strs).str ==
-              "1/$i"
+            "1/$i"
     end
 
     series_anns(pl, series) = pl.series_list[series].plotattributes[:series_annotations]
@@ -275,10 +275,12 @@ end
     let pl = plot(
             ones(3, 2),
             series_annotations = (
-                permutedims([
-                    (["x", "y", "z"], [10, 20, 30], (14, 15), square),
-                    [("a", 42), "b", "c"],
-                ]),
+                permutedims(
+                    [
+                        (["x", "y", "z"], [10, 20, 30], (14, 15), square),
+                        [("a", 42), "b", "c"],
+                    ]
+                ),
                 (12, 13),
             ),
         )

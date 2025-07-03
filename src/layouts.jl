@@ -1,4 +1,3 @@
-
 # NOTE: (0,0) is the top-left !!!
 
 to_pixels(m::AbsoluteLength) = m.value / 0.254
@@ -29,7 +28,7 @@ function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
     t = min(top(bb1), top(bb2))
     r = max(right(bb1), right(bb2))
     b = max(bottom(bb1), bottom(bb2))
-    BoundingBox(l, t, r - l, b - t)
+    return BoundingBox(l, t, r - l, b - t)
 end
 
 # convert x,y coordinates from absolute coords to percentages...
@@ -39,7 +38,7 @@ function xy_mm_to_pcts(x::AbsoluteLength, y::AbsoluteLength, figw, figh, flipy =
     if flipy
         ymm = figh.value - ymm  # flip y when origin in bottom-left
     end
-    xmm / figw.value, ymm / figh.value
+    return xmm / figw.value, ymm / figh.value
 end
 
 # convert a bounding box from absolute coords to percentages...
@@ -49,7 +48,7 @@ function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
     if flipy
         mms[2] = figh.value - mms[2]  # flip y when origin in bottom-left
     end
-    mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
+    return mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
 end
 
 Base.show(io::IO, bbox::BoundingBox) = print(
@@ -89,7 +88,7 @@ function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
             @warn "Unused origin arg in bbox construction: $oarg"
         end
     end
-    bbox(x, y, w, h; h_anchor = orighor, v_anchor = origver)
+    return bbox(x, y, w, h; h_anchor = orighor, v_anchor = origver)
 end
 
 # create a new bbox
@@ -112,7 +111,7 @@ function bbox(x, y, width, height; h_anchor = :left, v_anchor = :top)
     else
         1h - y - height
     end
-    BoundingBox(left, top, width, height)
+    return BoundingBox(left, top, width, height)
 end
 
 # this is the available area for drawing everything in this layout... as percentages of total canvas
@@ -150,9 +149,9 @@ attr(layout::AbstractLayout, k::Symbol, v) = get(layout.attr, k, v)
 attr!(layout::AbstractLayout, v, k::Symbol) = (layout.attr[k] = v)
 hasattr(layout::AbstractLayout, k::Symbol) = haskey(layout.attr, k)
 
-leftpad(layout::AbstractLayout)   = 0mm
-toppad(layout::AbstractLayout)    = 0mm
-rightpad(layout::AbstractLayout)  = 0mm
+leftpad(layout::AbstractLayout) = 0mm
+toppad(layout::AbstractLayout) = 0mm
+rightpad(layout::AbstractLayout) = 0mm
 bottompad(layout::AbstractLayout) = 0mm
 
 # -----------------------------------------------------------
@@ -209,12 +208,12 @@ columns of different width.
 grid(args...; kw...) = GridLayout(args...; kw...)
 
 function GridLayout(
-    dims...;
-    parent = RootLayout(),
-    widths = nothing,
-    heights = nothing,
-    kw...,
-)
+        dims...;
+        parent = RootLayout(),
+        widths = nothing,
+        heights = nothing,
+        kw...,
+    )
     # Check the values for heights and widths if values are provided
     all_between_one(xs) = all(x -> 0 < x < 1, xs)
     if heights !== nothing
@@ -247,7 +246,7 @@ function GridLayout(
     for i in eachindex(grid)
         grid[i] = EmptyLayout(layout)
     end
-    layout
+    return layout
 end
 
 Base.size(layout::GridLayout) = size(layout.grid)
@@ -256,14 +255,14 @@ Base.getindex(layout::GridLayout, r::Int, c::Int) = layout.grid[r, c]
 Base.setindex!(layout::GridLayout, v, r::Int, c::Int) = layout.grid[r, c] = v
 Base.setindex!(layout::GridLayout, v, ci::CartesianIndex) = layout.grid[ci] = v
 
-leftpad(pad)   = pad[1]
-toppad(pad)    = pad[2]
-rightpad(pad)  = pad[3]
+leftpad(pad) = pad[1]
+toppad(pad) = pad[2]
+rightpad(pad) = pad[3]
 bottompad(pad) = pad[4]
 
-leftpad(layout::GridLayout)   = leftpad(layout.minpad)
-toppad(layout::GridLayout)    = toppad(layout.minpad)
-rightpad(layout::GridLayout)  = rightpad(layout.minpad)
+leftpad(layout::GridLayout) = leftpad(layout.minpad)
+toppad(layout::GridLayout) = toppad(layout.minpad)
+rightpad(layout::GridLayout) = rightpad(layout.minpad)
 bottompad(layout::GridLayout) = bottompad(layout.minpad)
 
 # here's how this works... first we recursively "update the minimum padding" (which
@@ -276,7 +275,7 @@ bottompad(layout::GridLayout) = bottompad(layout.minpad)
 function paddings(args...)
     funcs = (leftpad, toppad, rightpad, bottompad)
     args = length(args) == 1 ? ntuple(i -> first(args), Val(4)) : args
-    map(i -> map(funcs[i], args[i]), Tuple(1:4))
+    return map(i -> map(funcs[i], args[i]), Tuple(1:4))
 end
 
 compute_minpad(args...) = map(maximum, paddings(args...))
@@ -284,10 +283,10 @@ compute_minpad(args...) = map(maximum, paddings(args...))
 _update_inset_padding!(layout::GridLayout) = map(_update_inset_padding!, layout.grid)
 _update_inset_padding!(sp::Subplot) =
     for isp in sp.plt.inset_subplots
-        parent(isp) == sp || continue
-        _update_min_padding!(isp)
-        sp.minpad = max.(sp.minpad, isp.minpad)
-    end
+    parent(isp) == sp || continue
+    _update_min_padding!(isp)
+    sp.minpad = max.(sp.minpad, isp.minpad)
+end
 
 # leftpad, toppad, rightpad, bottompad
 function _update_min_padding!(layout::GridLayout)
@@ -299,7 +298,7 @@ function _update_min_padding!(layout::GridLayout)
         layout.grid[:, end],
         layout.grid[end, :],
     )
-    layout.minpad
+    return layout.minpad
 end
 
 update_position!(layout::GridLayout) = map(update_position!, layout.grid)
@@ -324,7 +323,7 @@ function recompute_lengths(v)
     end
 
     # now fill in the blanks
-    map(x -> x == 0pct ? leftover / cnt : x, v)
+    return map(x -> x == 0pct ? leftover / cnt : x, v)
 end
 
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
@@ -337,24 +336,24 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
     # get the max horizontal (left and right) padding over columns,
     # and max vertical (bottom and top) padding over rows
     # TODO: add extra padding here
-    pad_left   = maximum(minpad_left, dims = 1)
-    pad_top    = maximum(minpad_top, dims = 2)
-    pad_right  = maximum(minpad_right, dims = 1)
+    pad_left = maximum(minpad_left, dims = 1)
+    pad_top = maximum(minpad_top, dims = 2)
+    pad_right = maximum(minpad_right, dims = 1)
     pad_bottom = maximum(minpad_bottom, dims = 2)
 
     # make sure the perimeter match the parent
-    pad_left[1]     = max(pad_left[1], leftpad(minimum_perimeter))
-    pad_top[1]      = max(pad_top[1], toppad(minimum_perimeter))
-    pad_right[end]  = max(pad_right[end], rightpad(minimum_perimeter))
+    pad_left[1] = max(pad_left[1], leftpad(minimum_perimeter))
+    pad_top[1] = max(pad_top[1], toppad(minimum_perimeter))
+    pad_right[end] = max(pad_right[end], rightpad(minimum_perimeter))
     pad_bottom[end] = max(pad_bottom[end], bottompad(minimum_perimeter))
 
     # scale this up to the total padding in each direction, and limit padding to 95%
     total_pad_horizontal = min(0.95width(layout), sum(pad_left + pad_right))
-    total_pad_vertical   = min(0.95height(layout), sum(pad_top + pad_bottom))
+    total_pad_vertical = min(0.95height(layout), sum(pad_top + pad_bottom))
 
     # now we can compute the total plot area in each direction
     total_plotarea_horizontal = width(layout) - total_pad_horizontal
-    total_plotarea_vertical   = height(layout) - total_pad_vertical
+    total_plotarea_vertical = height(layout) - total_pad_vertical
 
     @assert total_plotarea_horizontal > 0mm
     @assert total_plotarea_vertical > 0mm
@@ -369,19 +368,19 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
 
         # get the top-left corner of this child... the first one is top-left of the parent (i.e. layout)
         child_left = c == 1 ? left(layout.bbox) : right(layout[r, c - 1].bbox)
-        child_top  = r == 1 ? top(layout.bbox) : bottom(layout[r - 1, c].bbox)
+        child_top = r == 1 ? top(layout.bbox) : bottom(layout[r - 1, c].bbox)
 
         # compute plot area
-        plotarea_left   = child_left + pad_left[c]
-        plotarea_top    = child_top + pad_top[r]
-        plotarea_width  = total_plotarea_horizontal * layout.widths[c]
+        plotarea_left = child_left + pad_left[c]
+        plotarea_top = child_top + pad_top[r]
+        plotarea_width = total_plotarea_horizontal * layout.widths[c]
         plotarea_height = total_plotarea_vertical * layout.heights[r]
 
         bb = BoundingBox(plotarea_left, plotarea_top, plotarea_width, plotarea_height)
         plotarea!(child, bb)
 
         # compute child bbox
-        child_width  = pad_left[c] + plotarea_width + pad_right[c]
+        child_width = pad_left[c] + plotarea_width + pad_right[c]
         child_height = pad_top[r] + plotarea_height + pad_bottom[r]
         bbox!(child, BoundingBox(child_left, child_top, child_width, child_height))
 
@@ -396,25 +395,26 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm, 0mm,
         # recursively update the child's children
         update_child_bboxes!(child, min_child_perim)
     end
+    return
 end
 
 # for each inset (floating) subplot, resolve the relative position
 # to absolute canvas coordinates, relative to the parent's plotarea
 update_inset_bboxes!(plt::Plot) =
     for sp in plt.inset_subplots
-        p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
-        plotarea!(sp, p_area)
-        # NOTE: `lens` example, `pgfplotsx` for non-regression
-        bbox!(
-            sp,
-            bbox(
-                left(p_area) - leftpad(sp),
-                top(p_area) - toppad(sp),
-                width(p_area) + leftpad(sp) + rightpad(sp),
-                height(p_area) + toppad(sp) + bottompad(sp),
-            ),
-        )
-    end
+    p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
+    plotarea!(sp, p_area)
+    # NOTE: `lens` example, `pgfplotsx` for non-regression
+    bbox!(
+        sp,
+        bbox(
+            left(p_area) - leftpad(sp),
+            top(p_area) - toppad(sp),
+            width(p_area) + leftpad(sp) + rightpad(sp),
+            height(p_area) + toppad(sp) + bottompad(sp),
+        ),
+    )
+end
 # ----------------------------------------------------------------------
 
 calc_num_subplots(layout::AbstractLayout) = get(layout.attr, :blank, false) ? 0 : 1
@@ -432,7 +432,7 @@ function compute_gridsize(numplts::Int, nr::Int, nc::Int)
     else
         nc = ceil(Int, numplts / nr)
     end
-    nr, nc
+    return nr, nc
 end
 
 # ----------------------------------------------------------------------
@@ -448,38 +448,38 @@ function layout_args(plotattributes::AKW, n_override::Integer)
             "When doing layout, n ($n) < n_override ($(n_override)).  You're probably trying to force existing plots into a layout that doesn't fit them.",
         )
     end
-    layout, n
+    return layout, n
 end
 
 function layout_args(n::Integer)
     nr, nc = compute_gridsize(n, -1, -1)
-    GridLayout(nr, nc), n
+    return GridLayout(nr, nc), n
 end
 
-function layout_args(sztup::NTuple{2,Integer})
+function layout_args(sztup::NTuple{2, Integer})
     nr, nc = sztup
-    GridLayout(nr, nc), nr * nc
+    return GridLayout(nr, nc), nr * nc
 end
 
 layout_args(n_override::Integer, n::Integer) = layout_args(n)
-layout_args(n, sztup::NTuple{2,Integer}) = layout_args(sztup)
+layout_args(n, sztup::NTuple{2, Integer}) = layout_args(sztup)
 
-function layout_args(n, sztup::Tuple{Colon,Integer})
+function layout_args(n, sztup::Tuple{Colon, Integer})
     nc = sztup[2]
     nr = ceil(Int, n / nc)
-    GridLayout(nr, nc), n
+    return GridLayout(nr, nc), n
 end
 
-function layout_args(n, sztup::Tuple{Integer,Colon})
+function layout_args(n, sztup::Tuple{Integer, Colon})
     nr = sztup[1]
     nc = ceil(Int, n / nr)
-    GridLayout(nr, nc), n
+    return GridLayout(nr, nc), n
 end
 
-function layout_args(sztup::NTuple{3,Integer})
+function layout_args(sztup::NTuple{3, Integer})
     n, nr, nc = sztup
     nr, nc = compute_gridsize(n, nr, nc)
-    GridLayout(nr, nc), n
+    return GridLayout(nr, nc), n
 end
 
 layout_args(nt::NamedTuple) = EmptyLayout(; nt...), 1
@@ -492,20 +492,20 @@ function layout_args(m::AbstractVecOrMat)
     for ci in CartesianIndices(m)
         gl[ci] = layout_args(m[ci])[1]
     end
-    layout_args(gl)
+    return layout_args(gl)
 end
 
 # recursively get the size of the grid
 layout_args(layout::GridLayout) = layout, calc_num_subplots(layout)
 
-layout_args(n_override::Integer, layout::Union{AbstractVecOrMat,GridLayout}) =
+layout_args(n_override::Integer, layout::Union{AbstractVecOrMat, GridLayout}) =
     layout_args(layout)
 
 # ----------------------------------------------------------------------
 
 function build_layout(args...)
     layout, n = layout_args(args...)
-    build_layout(layout, n, Array{Plot}(undef, 0))
+    return build_layout(layout, n, Array{Plot}(undef, 0))
 end
 
 # n is the number of subplots...
@@ -558,7 +558,7 @@ function build_layout(layout::GridLayout, n::Integer, plts::AVec{Plot})
         i ≥ n && break  # only add n subplots
     end
 
-    layout, subplots, spmap
+    return layout, subplots, spmap
 end
 
 # -------------------------------------------------------------------------
@@ -569,8 +569,8 @@ function link_axes!(axes::Axis...)
     a1 = axes[1]
     for i in 2:length(axes)
         a2 = axes[i]
-        a1[:unit] ≡ a2[:unit] || 
-            error("Cannot link axes with different units: $(a1[:unit]) and $(a2[:unit])",)
+        a1[:unit] ≡ a2[:unit] ||
+            error("Cannot link axes with different units: $(a1[:unit]) and $(a2[:unit])")
         expand_extrema!(a1, ignorenan_extrema(a2))
         for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
@@ -583,6 +583,7 @@ function link_axes!(axes::Axis...)
         end
         a2.sps = a1.sps
     end
+    return
 end
 
 # figure out which subplots to link
@@ -595,14 +596,14 @@ function link_subplots(a::AbstractArray{AbstractLayout}, axissym::Symbol)
             push!(subplots, l[1, 1])
         end
     end
-    subplots
+    return subplots
 end
 
 # for some vector or matrix of layouts, filter only the Subplots and link those axes
 function link_axes!(a::AbstractArray{AbstractLayout}, axissym::Symbol)
     subplots = link_subplots(a, axissym)
     axes = [sp.attr[axissym] for sp in subplots]
-    length(axes) > 0 && link_axes!(axes...)
+    return length(axes) > 0 && link_axes!(axes...)
 end
 
 # don't do anything for most layout types
@@ -634,7 +635,7 @@ function link_axes!(layout::GridLayout, link::Symbol)
         link_axes!(layout.grid, :xaxis)
         link_axes!(layout.grid, :yaxis)
     end
-    foreach(l -> link_axes!(l, link), layout.grid)
+    return foreach(l -> link_axes!(l, link), layout.grid)
 end
 
 # -------------------------------------------------------------------------
@@ -670,7 +671,7 @@ function twin(sp, letter)
     oax[:mirror] = true
     twin_sp[:background_color_inside] = RGBA{Float64}(0, 0, 0, 0)
     link_axes!(sp[get_attr_symbol(letter, :axis)], tax)
-    twin_sp
+    return twin_sp
 end
 
 """

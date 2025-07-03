@@ -141,6 +141,7 @@ function _before_layout_calcs(plt::Plot{UnicodePlotsBackend})
 
         push!(plt.o, o)  # save the object
     end
+    return
 end
 
 up_color(col::UnicodePlots.UserColorType) = col
@@ -155,13 +156,13 @@ up_cmap(series) = map(
 
 # add a single series
 function addUnicodeSeries!(
-    sp::Subplot{UnicodePlotsBackend},
-    up::UnicodePlots.Plot,
-    kw,
-    series,
-    addlegend::Bool,
-    plot_3d::Bool,
-)
+        sp::Subplot{UnicodePlotsBackend},
+        up::UnicodePlots.Plot,
+        kw,
+        series,
+        addlegend::Bool,
+        plot_3d::Bool,
+    )
     st = series[:seriestype]
     se_kw = series[:extra_kwargs]
 
@@ -261,7 +262,7 @@ function addUnicodeSeries!(
         )
     end
 
-    up
+    return up
 end
 
 function unsupported_layout_error()
@@ -269,9 +270,9 @@ function unsupported_layout_error()
     Plots(UnicodePlots): complex nested layout is currently unsupported.
     Consider using plain `UnicodePlots` commands and `grid` from Term.jl as an alternative.
     """ |>
-    ArgumentError |>
-    throw
-    nothing
+        ArgumentError |>
+        throw
+    return nothing
 end
 
 # ------------------------------------------------------------------------------------------
@@ -318,7 +319,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBackend})
         end
         UnicodePlots.save_image(io, img)
     end
-    nothing
+    return nothing
 end
 
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
@@ -336,7 +337,7 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
         end
     else
         have_color = Base.get_have_color()
-        lines_colored = Array{Union{Nothing,Vector{String}}}(nothing, nr, nc)
+        lines_colored = Array{Union{Nothing, Vector{String}}}(nothing, nr, nc)
         lines_uncolored = have_color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
@@ -382,11 +383,11 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
             r < nr && println(io)
         end
     end
-    nothing
+    return nothing
 end
 
 # we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
 function _display(plt::Plot{UnicodePlotsBackend})
     show(stdout, plt)
-    println(stdout)
+    return println(stdout)
 end

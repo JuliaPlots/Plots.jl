@@ -1,5 +1,4 @@
-
-const _deprecated_attributes = Dict{Symbol,Symbol}(:orientation => :permute)
+const _deprecated_attributes = Dict{Symbol, Symbol}(:orientation => :permute)
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 
 const _initial_defaults = deepcopy(_all_defaults)
@@ -10,11 +9,11 @@ const _axis_defaults_byletter = KW()
 
 reset_axis_defaults_byletter!() =
     for letter in (:x, :y, :z)
-        _axis_defaults_byletter[letter] = KW()
-        for (k, v) in _axis_defaults
-            _axis_defaults_byletter[letter][k] = v
-        end
+    _axis_defaults_byletter[letter] = KW()
+    for (k, v) in _axis_defaults
+        _axis_defaults_byletter[letter][k] = v
     end
+end
 reset_axis_defaults_byletter!()
 
 # to be able to reset font sizes to initial values
@@ -31,7 +30,7 @@ const _initial_sp_fontsizes = Dict(
 )
 
 const _initial_ax_fontsizes = Dict(
-    :tickfontsize  => _axis_defaults[:tickfontsize],
+    :tickfontsize => _axis_defaults[:tickfontsize],
     :guidefontsize => _axis_defaults[:guidefontsize],
 )
 
@@ -76,7 +75,7 @@ end
 
 # fill symbol cache
 for letter in (:x, :y, :z)
-    _attrsymbolcache[letter] = Dict{Symbol,Symbol}()
+    _attrsymbolcache[letter] = Dict{Symbol, Symbol}()
     for k in _axis_args
         # populate attribute cache
         lk = Symbol(letter, k)

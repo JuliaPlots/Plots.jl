@@ -37,26 +37,26 @@ is_pkgeval() = Plots.bool_env("JULIA_PKGEVAL", "false")
 is_ci() = Plots.bool_env("CI", "false")
 
 for name in (
-    "quality",
-    "misc",
-    "utils",
-    "args",
-    "defaults",
-    "dates",
-    "axes",
-    "layouts",
-    "contours",
-    "components",
-    "shorthands",
-    "recipes",
-    "unitful",
-    "hdf5plots",
-    "pgfplotsx",
-    "plotly",
-    "animations",
-    "output",
-    "backends",
-)
+        "quality",
+        "misc",
+        "utils",
+        "args",
+        "defaults",
+        "dates",
+        "axes",
+        "layouts",
+        "contours",
+        "components",
+        "shorthands",
+        "recipes",
+        "unitful",
+        "hdf5plots",
+        "pgfplotsx",
+        "plotly",
+        "animations",
+        "output",
+        "backends",
+    )
     @testset "$name" begin
         if is_auto() || is_pkgeval()
             # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)

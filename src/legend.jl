@@ -31,25 +31,25 @@ so :topleft exactly corresponds to (45, :inner) etc.
 If `leg` is a (::Real,::Real) tuple, keep it as is.
 """
 legend_angle(leg::Real) = (leg, :inner)
-legend_angle(leg::Tuple{S,T}) where {S<:Real,T<:Real} = leg
-legend_angle(leg::Tuple{S,Symbol}) where {S<:Real} = leg
+legend_angle(leg::Tuple{S, T}) where {S <: Real, T <: Real} = leg
+legend_angle(leg::Tuple{S, Symbol}) where {S <: Real} = leg
 legend_angle(leg::Symbol) = get(
     (
-        topleft          = (135, :inner),
-        top              = (90, :inner),
-        topright         = (45, :inner),
-        left             = (180, :inner),
-        right            = (0, :inner),
-        bottomleft       = (225, :inner),
-        bottom           = (270, :inner),
-        bottomright      = (315, :inner),
-        outertopleft     = (135, :outer),
-        outertop         = (90, :outer),
-        outertopright    = (45, :outer),
-        outerleft        = (180, :outer),
-        outerright       = (0, :outer),
-        outerbottomleft  = (225, :outer),
-        outerbottom      = (270, :outer),
+        topleft = (135, :inner),
+        top = (90, :inner),
+        topright = (45, :inner),
+        left = (180, :inner),
+        right = (0, :inner),
+        bottomleft = (225, :inner),
+        bottom = (270, :inner),
+        bottomright = (315, :inner),
+        outertopleft = (135, :outer),
+        outertop = (90, :outer),
+        outertopright = (45, :outer),
+        outerleft = (180, :outer),
+        outerright = (0, :outer),
+        outerbottomleft = (225, :outer),
+        outerbottom = (270, :outer),
         outerbottomright = (315, :outer),
     ),
     leg,

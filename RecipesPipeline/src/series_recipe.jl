@@ -26,6 +26,7 @@ function _process_seriesrecipes!(plt, kw_list)
         # histogram plots (and any recipes that use those components).
         _process_seriesrecipe(plt, series_attr)
     end
+    return
 end
 
 # this method recursively applies series recipes when the seriestype is not supported
@@ -66,7 +67,7 @@ function _process_seriesrecipe(plt, plotattributes)
             end
         end
     end
-    nothing
+    return nothing
 end
 
 @specialize

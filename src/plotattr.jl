@@ -1,4 +1,3 @@
-
 const _attribute_defaults = Dict(
     :Series => _series_defaults,
     :Subplot => _subplot_defaults,
@@ -52,19 +51,21 @@ function plotattr()
     end
 
     d = default(attr)
-    print("""
-    # $letter$attr
+    return print(
+        """
+        # $letter$attr
 
-    - $attrtype attribute
-    - Default: `$(d isa Symbol ? string(':', d) : d)`.
-    - $(_argument_description(attr))
-    """)
+        - $attrtype attribute
+        - Default: `$(d isa Symbol ? string(':', d) : d)`.
+        - $(_argument_description(attr))
+        """
+    )
 end
 # COV_EXCL_STOP
 
 function plotattr(attrtype::Symbol)
     attrtype ∈ keys(_attribute_defaults) || error("Viable options are $(attrtypes())")
-    println("Defined $attrtype attributes are:\n$(join(attributes(attrtype), ", "))")
+    return println("Defined $attrtype attributes are:\n$(join(attributes(attrtype), ", "))")
 end
 
 function plotattr(attribute::AbstractString)
@@ -90,7 +91,7 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
     end
 
     # Looks up the different elements and plots them
-    println(
+    return println(
         ":$attribute\n\n",
         "$desc\n\n",
         aliases,

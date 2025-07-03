@@ -5,7 +5,7 @@ mutable struct PlotExample
     header::AbstractString
     desc::AbstractString
     external::Bool  # requires external optional dependencies not listed in [deps]
-    imports::Union{Nothing,Expr}
+    imports::Union{Nothing, Expr}
     exprs::Expr
 end
 
@@ -261,11 +261,11 @@ const _examples = PlotExample[
             closepct = rand(n)
             y = OHLC[
                 (
-                    openpct[i] * hgt[i] + bot[i],
-                    bot[i] + hgt[i],
-                    bot[i],
-                    closepct[i] * hgt[i] + bot[i],
-                ) for i in 1:n
+                        openpct[i] * hgt[i] + bot[i],
+                        bot[i] + hgt[i],
+                        bot[i],
+                        closepct[i] * hgt[i] + bot[i],
+                    ) for i in 1:n
             ]
             ohlc(y)
         end,
@@ -296,10 +296,12 @@ const _examples = PlotExample[
             y = rand(10)
             plot(y, annotations = (3, y[3], Plots.text("this is #3", :left)), leg = false)
             # single vector of annotation tuples
-            annotate!([
-                (5, y[5], ("this is #5", 16, :red, :center)),
-                (10, y[10], ("this is #10", :right, 20, "courier")),
-            ])
+            annotate!(
+                [
+                    (5, y[5], ("this is #5", 16, :red, :center)),
+                    (10, y[10], ("this is #10", :right, 20, "courier")),
+                ]
+            )
             # `x, y, text` vectors
             annotate!([2, 8], y[[2, 8]], ["#2", "#8"])
             scatter!(
@@ -707,18 +709,18 @@ const _examples = PlotExample[
             value(m::Measurement) = m.val
             uncertainty(m::Measurement) = m.err
 
-            @recipe function f(::Type{T}, m::T) where {T<:AbstractArray{<:Measurement}}
+            @recipe function f(::Type{T}, m::T) where {T <: AbstractArray{<:Measurement}}
                 if !(
-                    get(plotattributes, :seriestype, :path) in (
-                        :contour,
-                        :contourf,
-                        :contour3d,
-                        :heatmap,
-                        :surface,
-                        :wireframe,
-                        :image,
+                        get(plotattributes, :seriestype, :path) in (
+                            :contour,
+                            :contourf,
+                            :contour3d,
+                            :heatmap,
+                            :surface,
+                            :wireframe,
+                            :image,
+                        )
                     )
-                )
                     error_sym = Symbol(plotattributes[:letter], :error)
                     plotattributes[error_sym] = uncertainty.(m)
                 end
@@ -1238,11 +1240,13 @@ const _examples = PlotExample[
     PlotExample( # 66
         "Specifying edges and missing values for barplots",
         "In `bar(x, y)`, `x` may be the same length as `y` to specify bar centers, or one longer to specify bar edges.",
-        :(plot(
-            bar(-5:5, randn(10)),                  # bar edges at -5:5
-            bar(-2:2, [2, -2, NaN, -1, 1], color = 1:5), # bar centers at -2:2, one missing value
-            legend = false,
-        )),
+        :(
+            plot(
+                bar(-5:5, randn(10)),                  # bar edges at -5:5
+                bar(-2:2, [2, -2, NaN, -1, 1], color = 1:5), # bar centers at -2:2, one missing value
+                legend = false,
+            )
+        ),
     ),
 ]
 
@@ -1343,34 +1347,36 @@ function replace_rand(ex::Expr)
         pushfirst!(expr.args, ex.args[1])
         expr.args[2] = :rng
     end
-    expr
+    return expr
 end
 
 # make and display one plot
 test_examples(i::Integer; kw...) = test_examples(backend_name(), i; kw...)
 
 function test_examples(
-    pkgname::Symbol,
-    i::Integer;
-    debug = false,
-    disp = false,
-    rng = nothing,
-    callback = nothing,
-)
+        pkgname::Symbol,
+        i::Integer;
+        debug = false,
+        disp = false,
+        rng = nothing,
+        callback = nothing,
+    )
     @info "Testing plot: $pkgname:$i:$(_examples[i].header)"
 
     m = Module(Symbol(:PlotsExamples, pkgname))
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
-    Base.eval(m, quote
-        using Random
-        using Plots
-        Plots.debug!($debug)
-        backend($(QuoteNode(pkgname)))
-        rng = $rng
-        rng === nothing || Random.seed!(rng, Plots.PLOTS_SEED)
-        theme(:default)
-    end)
+    Base.eval(
+        m, quote
+            using Random
+            using Plots
+            Plots.debug!($debug)
+            backend($(QuoteNode(pkgname)))
+            rng = $rng
+            rng === nothing || Random.seed!(rng, Plots.PLOTS_SEED)
+            theme(:default)
+        end
+    )
     (imp = _examples[i].imports) === nothing || Base.eval(m, imp)
     exprs = _examples[i].exprs
     rng === nothing || (exprs = Plots.replace_rand(exprs))
@@ -1378,7 +1384,7 @@ function test_examples(
 
     disp && Base.eval(m, :(gui(current())))
     callback === nothing || Base.invokelatest(callback, m, pkgname, i)
-    Base.eval(m, :(current()))
+    return Base.eval(m, :(current()))
 end
 
 # generate all plots and create a dict mapping idx --> plt
@@ -1388,15 +1394,15 @@ test_examples(pkgname[, idx]; debug=false, disp=false, sleep=nothing, skip=[], o
 Run the `idx` test example for a given backend, or all examples if `idx` is not specified.
 """
 function test_examples(
-    pkgname::Symbol;
-    debug = false,
-    disp = false,
-    sleep = nothing,
-    skip = [],
-    only = nothing,
-    callback = nothing,
-    strict = false,
-)
+        pkgname::Symbol;
+        debug = false,
+        disp = false,
+        sleep = nothing,
+        skip = [],
+        only = nothing,
+        callback = nothing,
+        strict = false,
+    )
     plts = Dict()
     for i in eachindex(_examples)
         i ∈ something(only, (i,)) || continue
@@ -1414,5 +1420,5 @@ function test_examples(
         end
         sleep === nothing || Base.sleep(sleep)
     end
-    plts
+    return plts
 end

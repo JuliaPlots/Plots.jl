@@ -469,7 +469,7 @@ for letter in ("x", "y", "z")
             plot!(; $(Symbol(letter, :lims)) = lims, kw...)
         $(Symbol(letter, :lims!))(xmin::Real, xmax::Real; kw...) =
             plot!(; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
-        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, lims::Tuple{<:Real,<:Real}; kw...) =
+        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, lims::Tuple{<:Real, <:Real}; kw...) =
             plot!(plt; $(Symbol(letter, :lims)) = lims, kw...)
         $(Symbol(letter, :lims!))(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...) =
             plot!(plt; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
@@ -482,7 +482,7 @@ for letter in ("x", "y", "z")
             ticks::AVec{T},
             labels::AVec{S};
             kw...,
-        ) where {T<:Real,S<:AbstractString} =
+        ) where {T <: Real, S <: AbstractString} =
             plot!(; $(Symbol(letter, :ticks)) = (ticks, labels), kw...)
         $(Symbol(letter, :ticks!))(plt::PlotOrSubplot, v::TicksArgs; kw...) =
             plot!(plt; $(Symbol(letter, :ticks)) = v, kw...)
@@ -491,7 +491,7 @@ for letter in ("x", "y", "z")
             ticks::AVec{T},
             labels::AVec{S};
             kw...,
-        ) where {T<:Real,S<:AbstractString} =
+        ) where {T <: Real, S <: AbstractString} =
             plot!(plt; $(Symbol(letter, :ticks)) = (ticks, labels), kw...)
         export $(Symbol(letter, :ticks!))
 
@@ -548,10 +548,10 @@ julia> annotate!([2,5], [6,3], ["text at (2,6)", "text at (5,3)"])
 ```
 """
 annotate!(anns...; kw...) = plot!(; annotation = anns, kw...)
-annotate!(anns::Tuple...; kw...)                          = plot!(; annotation = collect(anns), kw...)
-annotate!(anns::AVec{<:Tuple}; kw...)                     = plot!(; annotation = anns, kw...)
-annotate!(plt::PlotOrSubplot, anns...; kw...)             = plot!(plt; annotations = anns, kw...)
-annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...)      = plot!(plt; annotations = collect(anns), kw...)
+annotate!(anns::Tuple...; kw...) = plot!(; annotation = collect(anns), kw...)
+annotate!(anns::AVec{<:Tuple}; kw...) = plot!(; annotation = anns, kw...)
+annotate!(plt::PlotOrSubplot, anns...; kw...) = plot!(plt; annotations = anns, kw...)
+annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...) = plot!(plt; annotations = collect(anns), kw...)
 annotate!(plt::PlotOrSubplot, anns::AVec{<:Tuple}; kw...) = plot!(plt; annotations = anns, kw...)
 
 @doc """

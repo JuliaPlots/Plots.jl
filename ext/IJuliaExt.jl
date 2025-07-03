@@ -12,7 +12,7 @@ function _init_ijulia_plotting()
         Plots._plotly_local_file_path[] === nothing ? false :
         isfile(Plots._plotly_local_file_path[])
 
-    ENV["MPLBACKEND"] = "Agg"
+    return ENV["MPLBACKEND"] = "Agg"
 end
 
 """
@@ -27,13 +27,13 @@ _ijulia__extra_mime_info!(plt::Plot, out::Dict) = out
 function _ijulia__extra_mime_info!(plt::Plot{Plots.PlotlyJSBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =
         Dict(:data => Plots.plotly_series(plt), :layout => Plots.plotly_layout(plt))
-    out
+    return out
 end
 
 function _ijulia__extra_mime_info!(plt::Plot{Plots.PlotlyBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =
         Dict(:data => Plots.plotly_series(plt), :layout => Plots.plotly_layout(plt))
-    out
+    return out
 end
 
 function _ijulia_display_dict(plt::Plot)
@@ -62,7 +62,7 @@ function _ijulia_display_dict(plt::Plot)
     else
         error("Unsupported output type $output_type")
     end
-    out
+    return out
 end
 
 if IJulia.inited
@@ -73,7 +73,7 @@ end
 # IJulia only... inline display
 function Plots.inline(plt::Plot = Plots.current())
     IJulia.clear_output(true)
-    display(IJulia.InlineDisplay(), plt)
+    return display(IJulia.InlineDisplay(), plt)
 end
 
 end  # module

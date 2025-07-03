@@ -16,17 +16,17 @@ function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     layout = plotly_layout(plt)
     w, h = plt[:size]
     PlotlyJS.relayout!(plt.o, layout, width = w, height = h)
-    plt.o
+    return plt.o
 end
 
 # ------------------------------------------------------------------------------
 
 for (mime, fmt) in (
-    "application/pdf" => "pdf",
-    "image/png"       => "png",
-    "image/svg+xml"   => "svg",
-    "image/eps"       => "eps",
-)
+        "application/pdf" => "pdf",
+        "image/png" => "png",
+        "image/svg+xml" => "svg",
+        "image/eps" => "eps",
+    )
     @eval _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyJSBackend}) =
         PlotlyJS.savefig(io, plotlyjs_syncplot(plt), format = $fmt)
 end
@@ -47,8 +47,8 @@ PlotlyJS.WebIO.render(plt::Plot{PlotlyJSBackend}) =
     PlotlyJS.WebIO.render(plotlyjs_syncplot(plt))
 
 closeall(::PlotlyJSBackend) =
-    if !isplotnull() && isa(current().o, PlotlyJS.SyncPlot)
-        close(current().o)
-    end
+if !isplotnull() && isa(current().o, PlotlyJS.SyncPlot)
+    close(current().o)
+end
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyJSBackend}) = true

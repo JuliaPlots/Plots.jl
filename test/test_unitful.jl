@@ -14,15 +14,15 @@ zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:
 testfile = tempname() * ".png"
 
 macro isplot(ex) # @isplot macro to streamline tests
-    :(@test $(esc(ex)) isa Plots.Plot)
+    return :(@test $(esc(ex)) isa Plots.Plot)
 end
 
 @testset "heatmap" begin
     x = (1:3)m
     @isplot heatmap(x * x', clims = (1, 7)) # unitless
     @isplot heatmap(x * x', clims = (2m^2, 8m^2)) # units
-    @isplot heatmap(x * x', clims = (2e6u"mm^2", 7e-6u"km^2")) # conversion
-    @isplot heatmap(1:3, (1:3)m, x * x', clims = (1m^2, 7e-6u"km^2")) # mixed
+    @isplot heatmap(x * x', clims = (2.0e6u"mm^2", 7.0e-6u"km^2")) # conversion
+    @isplot heatmap(1:3, (1:3)m, x * x', clims = (1m^2, 7.0e-6u"km^2")) # mixed
 end
 
 @testset "plot(y)" begin
@@ -36,11 +36,11 @@ end
     @testset "ylabel" begin
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
         @test yguide(plot(y, ylabel = P"hello")) == "hello"
-        @test yguide(plot(y, ylabel = "hello", unitformat=:nounit)) == "hello"
+        @test yguide(plot(y, ylabel = "hello", unitformat = :nounit)) == "hello"
         pl = plot(y, ylabel = "")
         @test yguide(pl) == ""
         @test yguide(plot!(pl, -y)) == ""
-        @test yguide(plot(y, ylabel="", unitformat=:round)) == "m"
+        @test yguide(plot(y, ylabel = "", unitformat = :round)) == "m"
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
         @test yguide(pl) == "hello (m)"
@@ -56,9 +56,9 @@ end
         @test yseries(plot(y, yunit = cm)) ≈ ustrip.(cm, y)
         @test plot([copy(y), copy(y)], yunit = cm) |> pl -> yseries(pl, 1) ≈ yseries(pl, 2)
         pl = plot(y)
-        @test_logs (:warn, r"Overriding unit") plot!(pl; yunit = cm) 
+        @test_logs (:warn, r"Overriding unit") plot!(pl; yunit = cm)
         @test yguide(pl) == "cm"
-        plot!(pl; ylabel="hello")
+        plot!(pl; ylabel = "hello")
         @test yguide(pl) == "hello (cm)"
     end
 
@@ -138,7 +138,7 @@ end
         ) == "s is the unit of hello"
         @test yguide(plot(args...; kwargs..., unitformat = ", dear ")) == "hello, dear s"
         @test yguide(plot(args...; kwargs..., unitformat = (", dear ", " esq."))) ==
-              "hello, dear s esq."
+            "hello, dear s esq."
         @test yguide(
             plot(args...; kwargs..., unitformat = ("well ", ", dear ", " esq.")),
         ) == "well hello, dear s esq."
@@ -157,7 +157,7 @@ end
         @test yguide(plot(args...; kwargs..., unitformat = :slashcurly)) == "hello / {s}"
         @test yguide(plot(args...; kwargs..., unitformat = :slashangle)) == "hello / <s>"
         @test yguide(plot(args...; kwargs..., unitformat = :verbose)) ==
-              "hello in units of s"
+            "hello in units of s"
         @test yguide(plot(args...; kwargs..., unitformat = :nounit)) == "hello"
     end
 end
@@ -195,7 +195,7 @@ end
 
 @testset "More plots" begin
     @testset "data as $dtype" for dtype in
-                                  [:Vectors, :Matrices, Symbol("Vectors of vectors")]
+        [:Vectors, :Matrices, Symbol("Vectors of vectors")]
         if dtype == :Vectors
             x, y, z = randn(10), randn(10), randn(10)
         elseif dtype == :Matrices
@@ -252,13 +252,13 @@ end
             mystr(x::Array{<:Quantity}) = "Q"
             mystr(x::Array) = "A"
             @testset "plot($(mystr(xs)), $(mystr(ys)))" for xs in [x, x * m],
-                ys in [y, y * s]
+                    ys in [y, y * s]
 
                 @test plot(xs, ys) isa Plots.Plot
             end
             @testset "plot($(mystr(xs)), $(mystr(ys)), $(mystr(zs)))" for xs in [x, x * m],
-                ys in [y, y * s],
-                zs in [z, z * (m / s)]
+                    ys in [y, y * s],
+                    zs in [z, z * (m / s)]
 
                 @test plot(xs, ys, zs) isa Plots.Plot
             end
@@ -266,23 +266,23 @@ end
     end
 
     @testset "scatter(x::$(us[1]), y::$(us[2]))" for us in collect(
-        Iterators.product(fill([1, u"m", u"s"], 2)...),
-    )
+            Iterators.product(fill([1, u"m", u"s"], 2)...),
+        )
         x, y = rand(10) * us[1], rand(10) * us[2]
         @test scatter(x, y) isa Plots.Plot
         @test scatter(x, y, markersize = x) isa Plots.Plot
 
         @test scatter(x, y, marker_z = x) isa Plots.Plot
         if us[1] != us[2] && us[1] != 1 && us[2] != 1 # Non-matching dimensions
-            @test_throws DimensionError scatter!(x, y, marker_z = y) 
+            @test_throws DimensionError scatter!(x, y, marker_z = y)
         else # One is dimensionless, or have same dimensions
             @test scatter!(x, y, marker_z = y) isa Plots.Plot #
         end
     end
 
     @testset "contour(x::$(us[1]), y::$(us[2]))" for us in collect(
-        Iterators.product(fill([1, u"m", u"s"], 2)...),
-    )
+            Iterators.product(fill([1, u"m", u"s"], 2)...),
+        )
         x, y = (1:0.01:2) * us[1], (1:0.02:2) * us[2]
         z = x' ./ y
         @test contour(x, y, z) isa Plots.Plot
@@ -306,7 +306,7 @@ end
 
         x, y = (1:0.01:2) * m, (1:0.02:2) * s
         z = x' ./ y
-        pl = contour(x, y, z) 
+        pl = contour(x, y, z)
         @test ctitle(pl) ∈ ["m s^-1", "m s⁻¹"]
         pl = contourf(x, y, z, zunit = u"km/hr")
         @test ctitle(pl) ∈ ["km hr^-1", "km hr⁻¹"]
@@ -323,14 +323,14 @@ end
         @test pl2 isa Plots.Subplot
         @test yguide(pl, 1) == "hello (m)"
         # on MacOS the superscript gets rendered with Unicode, on Ubuntu and Windows no
-        @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"] 
+        @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"]
         @test xguide(pl, 1) == "check"
         @test xguide(pl, 2) == ""
     end
 
     @testset "bad link" begin
-        pl1 = plot(rand(10)*u"m")
-        pl2 = plot(rand(10)*u"s")
+        pl1 = plot(rand(10) * u"m")
+        pl2 = plot(rand(10) * u"s")
         # TODO: On Julia 1.8 and above, can replace ErrorException with part of error message.
         @test_throws ErrorException plot(pl1, pl2; link = :y)
     end
@@ -392,7 +392,7 @@ end
     x = (1:10) * u"mm"
     y = rand(10) * u"s"
     ribbon = rand(10) * u"ms"
-    ribbon = 100*rand(10) * u"ms"
+    ribbon = 100 * rand(10) * u"ms"
     pl = plot(x, y, ribbon = ribbon)
     @test pl isa Plots.Plot
     @test xguide(pl) == "mm"

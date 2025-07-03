@@ -3,11 +3,11 @@
 ## Warnings
 
 function RecipesPipeline.warn_on_recipe_aliases!(
-    plt::Plot,
-    plotattributes::AKW,
-    recipe_type::Symbol,
-    @nospecialize(args)
-)
+        plt::Plot,
+        plotattributes::AKW,
+        recipe_type::Symbol,
+        @nospecialize(args)
+    )
     pkeys = keys(plotattributes)
     for k in pkeys
         if (dk = get(_keyAliases, k, nothing)) !== nothing
@@ -15,6 +15,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
             dk ∈ pkeys || (plotattributes[dk] = kv)
         end
     end
+    return
 end
 
 ## Grouping
@@ -24,22 +25,22 @@ RecipesPipeline.splittable_attribute(plt::Plot, key, val::SeriesAnnotations, len
 
 RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices) =
     SeriesAnnotations(
-        RecipesPipeline.split_attribute(plt, key, val.strs, indices),
-        val.font,
-        val.baseshape,
-        val.scalefactor,
-    )
+    RecipesPipeline.split_attribute(plt, key, val.strs, indices),
+    val.font,
+    val.baseshape,
+    val.scalefactor,
+)
 
 ## Preprocessing attributes
 function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
     # Fix letter for seriestypes that are x only but data gets passed as y
     if treats_y_as_x(get(plotattributes, :seriestype, :path)) &&
-       get(plotattributes, :orientation, :vertical) === :vertical
+            get(plotattributes, :orientation, :vertical) === :vertical
         letter = :x
     end
 
     plotattributes[:letter] = letter
-    RecipesPipeline.preprocess_axis_args!(plt, plotattributes)
+    return RecipesPipeline.preprocess_axis_args!(plt, plotattributes)
 end
 
 RecipesPipeline.is_axis_attribute(plt::Plot, attr) = is_axis_attr_noletter(attr) # in src/args.jl
@@ -58,7 +59,7 @@ function RecipesPipeline.process_userrecipe!(plt::Plot, kw_list, kw)
     push!(kw_list, kw)
     _add_errorbar_kw(kw_list, kw)
     _add_smooth_kw(kw_list, kw)
-    nothing
+    return nothing
 end
 
 function _preprocess_userrecipe(kw::AKW)
@@ -90,7 +91,7 @@ function _preprocess_userrecipe(kw::AKW)
             map(kw[:line_z], kw[:x], kw[:y], kw[:z])
     end
 
-    nothing
+    return nothing
 end
 
 function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
@@ -98,7 +99,7 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     # the same recipedata index as the recipedata they are copied from
     st = get(kw, :seriestype, :none)
     errors = (:xerror, :yerror, :zerror)
-    if st ∉ errors
+    return if st ∉ errors
         for esym in errors
             if get(kw, esym, nothing) !== nothing
                 # we make a copy of the KW and apply an errorbar recipe
@@ -114,7 +115,7 @@ end
 
 function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
     # handle smoothing by adding a new series
-    if get(kw, :smooth, false)
+    return if get(kw, :smooth, false)
         x, y = kw[:x], kw[:y]
         β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
         sx = [ignorenan_minimum(x), ignorenan_maximum(x)]
@@ -147,7 +148,7 @@ RecipesPipeline.type_alias(plt::Plot, st) = get(_typeAliases, st, st)
 function RecipesPipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
     _plot_setup(plt, plotattributes, kw_list)
     _subplot_setup(plt, plotattributes, kw_list)
-    nothing
+    return nothing
 end
 
 function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_list)
@@ -189,7 +190,7 @@ function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_l
             kw[:fillrange] = map(fr, kw[:x])
         end
     end
-    nothing
+    return nothing
 end
 
 # TODO: Should some of this logic be moved to RecipesPipeline?
@@ -234,7 +235,7 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
             sp.attr[:subplot_index] = length(plt.subplots)
         end
     end
-    plt[:inset_subplots] = nothing
+    return plt[:inset_subplots] = nothing
 end
 
 function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
@@ -242,7 +243,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # Subplot/Axis attributes set by a user/series recipe apply only to the
     # Subplot object which they belong to.
     # TODO: allow matrices to still apply to all subplots
-    sp_attrs = Dict{Subplot,Any}()
+    sp_attrs = Dict{Subplot, Any}()
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
@@ -296,7 +297,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
 
     # do we need to link any axes together?
     link_axes!(plt.layout, plt[:link])
-    nothing
+    return nothing
 end
 
 series_idx(kw_list::AVec{KW}, kw::AKW) =
@@ -336,7 +337,7 @@ function _add_plot_title!(plt)
         end
     end
 
-    plot_titleindex
+    return plot_titleindex
 end
 
 ## Series recipes
@@ -346,7 +347,7 @@ function RecipesPipeline.slice_series_attributes!(plt::Plot, kw_list, kw)
     # in series attributes given as vector with one element per series,
     # select the value for current series
     _slice_series_args!(kw, plt, sp, series_idx(kw_list, kw))
-    nothing
+    return nothing
 end
 
 RecipesPipeline.series_defaults(plt::Plot) = _series_defaults # in args.jl
@@ -366,7 +367,7 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
         if plotattributes[:seriestype] === :bar # bar calls expand_extrema! in its recipe...
             sp = plotattributes[:subplot]
             sp[get_attr_symbol(letter1, :axis)][:lims],
-            sp[get_attr_symbol(letter2, :axis)][:lims] =
+                sp[get_attr_symbol(letter2, :axis)][:lims] =
                 sp[get_attr_symbol(letter2, :axis)][:lims],
                 sp[get_attr_symbol(letter1, :axis)][:lims]
         end
@@ -375,7 +376,7 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     end
     _expand_subplot_extrema(sp, plotattributes, plotattributes[:seriestype])
     _update_series_attributes!(plotattributes, plt, sp)
-    _add_the_series(plt, sp, plotattributes)
+    return _add_the_series(plt, sp, plotattributes)
 end
 
 # getting ready to add the series... last update to subplot from anything
@@ -390,9 +391,9 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
 
     # change to a 3d projection for this subplot?
     if (
-        RecipesPipeline.needs_3d_axes(st) ||
-        (st === :quiver && plotattributes[:z] !== nothing)
-    )
+            RecipesPipeline.needs_3d_axes(st) ||
+                (st === :quiver && plotattributes[:z] !== nothing)
+        )
         sp.attr[:projection] = "3d"
     end
 
@@ -401,25 +402,25 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
         _initialize_subplot(plt, sp)
         sp.attr[:init] = true
     end
-    sp
+    return sp
 end
 
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
     if !RecipesPipeline.is3d(st) && st ∉ (:contour, :contour3d, :quiver)
         if (z = plotattributes[:z]) !== nothing &&
-           size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)
+                size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)
             st = st === :scatter ? :scatter3d : :path3d
             plotattributes[:seriestype] = st
         end
     end
-    st
+    return st
 end
 
 needs_any_3d_axes(sp::Subplot) = any(
     RecipesPipeline.needs_3d_axes(
-        _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
-    ) for s in series_list(sp)
+            _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
+        ) for s in series_list(sp)
 )
 
 function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
@@ -437,7 +438,7 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
         expand_extrema!(sp[:xaxis], 0.0)
         expand_extrema!(sp[:yaxis], 0.0)
     end
-    nothing
+    return nothing
 end
 
 function _add_the_series(plt, sp, plotattributes)
@@ -468,5 +469,5 @@ function _add_the_series(plt, sp, plotattributes)
         @error "Wrong type $(typeof(z_order)) for attribute z_order"
     end
     _series_added(plt, series)
-    _update_subplot_colorbars(sp, series)
+    return _update_subplot_colorbars(sp, series)
 end

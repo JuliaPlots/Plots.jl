@@ -20,8 +20,8 @@
     data = randn(100, 100)
     @test op1(data) == op2(data)
     @test Plots.process_clims(nothing) ==
-          Plots.process_clims(missing) ==
-          Plots.process_clims(:auto)
+        Plots.process_clims(missing) ==
+        Plots.process_clims(:auto)
 
     @test (==)(
         Plots.texmath2unicode(

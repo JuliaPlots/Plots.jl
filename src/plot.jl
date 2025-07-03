@@ -1,6 +1,5 @@
-
 mutable struct CurrentPlot
-    nullableplot::Union{AbstractPlot,Nothing}
+    nullableplot::Union{AbstractPlot, Nothing}
 end
 const CURRENT_PLOT = CurrentPlot(nothing)
 
@@ -12,7 +11,7 @@ Returns the Plot object for the current plot
 """
 function current()
     isplotnull() && error("No current plot/subplot")
-    CURRENT_PLOT.nullableplot
+    return CURRENT_PLOT.nullableplot
 end
 current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
 
@@ -26,8 +25,8 @@ function Base.show(io::IO, plt::Plot)
     s_ekwargs = getindex.(plt.series_list, :extra_kwargs)
     (
         isempty(plt[:extra_plot_kwargs]) &&
-        all(isempty, sp_ekwargs) &&
-        all(isempty, s_ekwargs)
+            all(isempty, sp_ekwargs) &&
+            all(isempty, s_ekwargs)
     ) && return
     print(io, "\nCaptured extra kwargs:\n")
     do_show = true
@@ -53,6 +52,7 @@ function Base.show(io::IO, plt::Plot)
         end
         do_show = true
     end
+    return
 end
 
 getplot(plt::Plot) = plt
@@ -99,23 +99,23 @@ function RecipesBase.plot(args...; kw...)
     # create an empty Plot then process
     plt = Plot()
     # plt.user_attr = plotattributes
-    _plot!(plt, plotattributes, args)
+    return _plot!(plt, plotattributes, args)
 end
 
 # build a new plot from existing plots
 # note: we split into plt1, plt2 and plts_tail so we can dispatch correctly
 plot(
     plt1::Plot,
-    plt2::Union{PlaceHolder,Plot},
-    plts_tail::Union{PlaceHolder,Plot}...;
+    plt2::Union{PlaceHolder, Plot},
+    plts_tail::Union{PlaceHolder, Plot}...;
     kw...,
 ) = plot!(deepcopy(plt1), deepcopy(plt2), deepcopy.(plts_tail)...; kw...)
 function plot!(
-    plt1::Plot,
-    plt2::Union{PlaceHolder,Plot},
-    plts_tail::Union{PlaceHolder,Plot}...;
-    kw...,
-)
+        plt1::Plot,
+        plt2::Union{PlaceHolder, Plot},
+        plts_tail::Union{PlaceHolder, Plot}...;
+        kw...,
+    )
     @nospecialize
     plotattributes = KW(kw)
     Plots.preprocess_attributes!(plotattributes)
@@ -187,7 +187,7 @@ function plot!(
     # finish up
     current(plt)
     _do_plot_show(plt, get(plotattributes, :show, default(:show)))
-    plt
+    return plt
 end
 
 # this adds to the current plot, or creates a new plot if none are current
@@ -199,7 +199,7 @@ function plot!(args...; kw...)
     catch
         return plot(args...; kw...)
     end
-    plot!(current(), args...; kw...)
+    return plot!(current(), args...; kw...)
 end
 
 # this adds to a specific plot... most plot commands will flow through here
@@ -210,7 +210,7 @@ function plot!(plt::Plot, args...; kw...)
     plotattributes = KW(kw)
     Plots.preprocess_attributes!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
-    _plot!(plt, plotattributes, args)
+    return _plot!(plt, plotattributes, args)
 end
 
 # -------------------------------------------------------------------------------
@@ -248,7 +248,7 @@ function prepare_output(plt::Plot)
     isempty(force_minpad) || for i in eachindex(plt.layout.grid)
         plt.layout.grid[i].minpad = Tuple(
             i === nothing ? j : i for
-            (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
+                (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
         )
     end
 
@@ -259,7 +259,7 @@ function prepare_output(plt::Plot)
     update_inset_bboxes!(plt)
 
     # the backend callback, to reposition subplots, etc
-    _update_plot_object(plt)
+    return _update_plot_object(plt)
 end
 
 """
@@ -270,7 +270,7 @@ Returns `nothing` if the backend does not support this.
 """
 function backend_object(plt::Plot)
     prepare_output(plt)
-    plt.o
+    return plt.o
 end
 
 # --------------------------------------------------------------------
@@ -290,12 +290,12 @@ julia> plot(pl.subplots[2])  # extract 2nd subplot as a standalone plot
 function plot(sp::Subplot, args...; kw...)
     @nospecialize
     plt = Plots.Plot(sp)
-    plot(plt, PlaceHolder(), PlaceHolder(), args...; kw...)
+    return plot(plt, PlaceHolder(), PlaceHolder(), args...; kw...)
 end
 
 # plot to a Subplot
 function plot!(sp::Subplot, args...; kw...)
     @nospecialize
     plt = sp.plt
-    plot!(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
+    return plot!(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
 end
