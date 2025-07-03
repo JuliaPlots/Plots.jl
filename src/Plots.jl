@@ -145,11 +145,11 @@ using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 
-const PLOTS_SEED  = 1234
+const PLOTS_SEED = 1234
 const PX_PER_INCH = 100
-const DPI         = PX_PER_INCH
+const DPI = PX_PER_INCH
 const MM_PER_INCH = 25.4
-const MM_PER_PX   = MM_PER_INCH / PX_PER_INCH
+const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
 
 include("types.jl")
 include("utils.jl")

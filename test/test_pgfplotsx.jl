@@ -12,7 +12,7 @@ end
 
 function get_pgf_axes(pl)
     Plots._update_plot_object(pl)
-    Plots.pgfx_axes(pl.o)
+    return Plots.pgfx_axes(pl.o)
 end
 
 Plots.with(:pgfplotsx) do
@@ -106,9 +106,13 @@ Plots.with(:pgfplotsx) do
     end
 
     @testset "Marker types" begin
-        markers = filter((m -> begin
-            m in Plots.supported_markers()
-        end), Plots._shape_keys)
+        markers = filter(
+            (
+                m -> begin
+                    m in Plots.supported_markers()
+                end
+            ), Plots._shape_keys
+        )
         markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = (range(0, stop = 10, length = n + 2))[2:(end - 1)]
@@ -274,10 +278,12 @@ Plots.with(:pgfplotsx) do
                 @test count(s -> occursin("node", s), lines) == 1
             end
         end
-        annotate!([
-            (5, y[5], Plots.text("this is \\#5", 16, :red, :center)),
-            (10, y[10], Plots.text("this is \\#10", :right, 20, "courier")),
-        ])
+        annotate!(
+            [
+                (5, y[5], Plots.text("this is \\#5", 16, :red, :center)),
+                (10, y[10], Plots.text("this is \\#10", :right, 20, "courier")),
+            ]
+        )
         axis_content = first(get_pgf_axes(pl)).contents
         nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
         @test length(nodes) == 3
@@ -398,12 +404,12 @@ Plots.with(:pgfplotsx) do
         @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
         axis_contents = first(get_pgf_axes(pl)).contents
         @test filter(x -> x isa String, axis_contents)[1] ==
-              raw"\node at (0,0.5) {\huge hi};"
+            raw"\node at (0,0.5) {\huge hi};"
         plot!(pl)
         @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
         axis_contents = first(get_pgf_axes(pl)).contents
         @test filter(x -> x isa String, axis_contents)[1] ==
-              raw"\node at (0,0.5) {\huge hi};"
+            raw"\node at (0,0.5) {\huge hi};"
     end
 
     @testset "Titlefonts" begin
@@ -430,9 +436,9 @@ Plots.with(:pgfplotsx) do
 
     @testset "Latexify - LaTeXStrings" begin
         @test Plots.pgfx_sanitize_string("A string, with 2 punctuation chars.") ==
-              "A string, with 2 punctuation chars."
+            "A string, with 2 punctuation chars."
         @test Plots.pgfx_sanitize_string("Interpolação polinomial") ==
-              raw"Interpola$\textnormal{\c{c}}$$\tilde{a}$o polinomial"
+            raw"Interpola$\textnormal{\c{c}}$$\tilde{a}$o polinomial"
         @test Plots.pgfx_sanitize_string("∫∞ ∂x") == raw"$\int$$\infty$ $\partial$x"
 
         # special LaTeX characters
@@ -472,6 +478,6 @@ Plots.with(:pgfplotsx) do
         pl2_tex = String(repr("application/x-tex", pl2))
         @test pl1_tex[findfirst(yreg, pl1_tex)] == "ylabel={diameter (\$\\mathrm{m}\$)}"
         @test pl2_tex[findfirst(yreg, pl2_tex)] ==
-              "ylabel={\$\\mathrm{m}\\,\\mathrm{s}^{-2}\$}"
+            "ylabel={\$\\mathrm{m}\\,\\mathrm{s}^{-2}\$}"
     end
 end

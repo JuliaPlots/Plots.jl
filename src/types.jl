@@ -1,13 +1,12 @@
-
 # TODO: I declare lots of types here because of the lacking ability to do forward declarations in current Julia
 # I should move these to the relevant files when something like "extern" is implemented
 
 const AVec = AbstractVector
 const AMat = AbstractMatrix
-const KW = Dict{Symbol,Any}
-const AKW = AbstractDict{Symbol,Any}
+const KW = Dict{Symbol, Any}
+const AKW = AbstractDict{Symbol, Any}
 const TicksArgs =
-    Union{AVec{T},Tuple{AVec{T},AVec{S}},Symbol} where {T<:Real,S<:AbstractString}
+    Union{AVec{T}, Tuple{AVec{T}, AVec{S}}, Symbol} where {T <: Real, S <: AbstractString}
 
 struct PlotsDisplay <: AbstractDisplay end
 
@@ -28,7 +27,7 @@ end
 end
 
 # a single subplot
-mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
+mutable struct Subplot{T <: AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
     series_list::Vector{Series}  # arguments for each series
     primary_series_count::Int # Number of primary series in the series list
@@ -39,7 +38,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
 
-    Subplot(::T; parent = RootLayout()) where {T<:AbstractBackend} = new{T}(
+    Subplot(::T; parent = RootLayout()) where {T <: AbstractBackend} = new{T}(
         parent,
         Series[],
         0,
@@ -65,9 +64,9 @@ end
 
 Extrema() = Extrema(Inf, -Inf)
 
-const SubplotMap = Dict{Any,Subplot}
+const SubplotMap = Dict{Any, Subplot}
 
-mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
+mutable struct Plot{T <: AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
     n::Int                       # number of series
     attr::DefaultsDict            # arguments for the whole plot
@@ -81,7 +80,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
 
     function Plot()
         be = backend()
-        new{typeof(be)}(
+        return new{typeof(be)}(
             be,
             0,
             DefaultsDict(KW(), _plot_defaults),
@@ -106,12 +105,12 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         sp.plotarea = DEFAULT_BBOX[]
         sp.plt = plt  # change the enclosing plot
         push!(plt.subplots, sp)
-        plt
+        return plt
     end
 end
 
 struct PlaceHolder end
-const PlotOrSubplot = Union{Plot,Subplot}
+const PlotOrSubplot = Union{Plot, Subplot}
 
 # -----------------------------------------------------------
 
@@ -126,24 +125,24 @@ should_add_to_legend(series::Series) =
     series.plotattributes[:primary] &&
     series.plotattributes[:label] != "" &&
     series.plotattributes[:seriestype] ∉ (
-        :hexbin,
-        :bins2d,
-        :histogram2d,
-        :hline,
-        :vline,
-        :contour,
-        :contourf,
-        :contour3d,
-        :surface,
-        :wireframe,
-        :heatmap,
-        :image,
-    )
+    :hexbin,
+    :bins2d,
+    :histogram2d,
+    :hline,
+    :vline,
+    :contour,
+    :contourf,
+    :contour3d,
+    :surface,
+    :wireframe,
+    :heatmap,
+    :image,
+)
 
 # -----------------------------------------------------------------------
 Base.iterate(plt::Plot) = iterate(plt.subplots)
 
-Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
+Base.getindex(plt::Plot, i::Union{Vector{<:Integer}, Integer}) = plt.subplots[i]
 Base.length(plt::Plot) = length(plt.subplots)
 Base.lastindex(plt::Plot) = length(plt)
 
@@ -158,7 +157,7 @@ Base.empty!(plt::Plot) = foreach(sp -> empty!(sp.series_list), plt.subplots)
 # attr(plt::Plot, k::Symbol) = plt.attr[k]
 # attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 
-Base.getindex(sp::Subplot, i::Union{Vector{<:Integer},Integer}) = series_list(sp)[i]
+Base.getindex(sp::Subplot, i::Union{Vector{<:Integer}, Integer}) = series_list(sp)[i]
 Base.lastindex(sp::Subplot) = length(series_list(sp))
 
 Base.empty!(sp::Subplot) = empty!(sp.series_list)
@@ -179,9 +178,9 @@ Base.size(sp::Subplot) = (1, 1)
 Base.length(sp::Subplot) = 1
 Base.getindex(sp::Subplot, r::Int, c::Int) = sp
 
-leftpad(sp::Subplot)   = sp.minpad[1]
-toppad(sp::Subplot)    = sp.minpad[2]
-rightpad(sp::Subplot)  = sp.minpad[3]
+leftpad(sp::Subplot) = sp.minpad[1]
+toppad(sp::Subplot) = sp.minpad[2]
+rightpad(sp::Subplot) = sp.minpad[3]
 bottompad(sp::Subplot) = sp.minpad[4]
 
 get_subplot(plt::Plot, sp::Subplot) = sp

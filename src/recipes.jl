@@ -18,11 +18,11 @@ function seriestype_supported(pkg::AbstractBackend, st::Symbol)
             break
         end
     end
-    supported ? :recipe : :no
+    return supported ? :recipe : :no
 end
 
 macro deps(st, args...)
-    :(Plots.series_recipe_dependencies($(quot(st)), $(map(quot, args)...)))
+    return :(Plots.series_recipe_dependencies($(quot(st)), $(map(quot, args)...)))
 end
 
 # get a list of all seriestypes
@@ -32,7 +32,7 @@ function all_seriestypes()
         btype = _backendType[bsym]
         sts = union(sts, Set{Symbol}(supported_seriestypes(btype())))
     end
-    sts |> collect |> sort
+    return sts |> collect |> sort
 end
 
 # ----------------------------------------------------------------------------------
@@ -321,10 +321,10 @@ end
     fillrange := nothing
     seriestype := :path
     if (
-        plotattributes[:linecolor] === :auto &&
-        plotattributes[:marker_z] !== nothing &&
-        plotattributes[:line_z] === nothing
-    )
+            plotattributes[:linecolor] === :auto &&
+                plotattributes[:marker_z] !== nothing &&
+                plotattributes[:line_z] === nothing
+        )
         line_z := plotattributes[:marker_z]
     end
 
@@ -359,7 +359,7 @@ function bezier_value(pts::AVec, t::Real)
     for (i, p) in enumerate(pts)
         val += p * binomial(n, i - 1) * (1 - t)^(n - i + 1) * t^(i - 1)
     end
-    val
+    return val
 end
 
 @nospecialize
@@ -552,32 +552,32 @@ _scale_adjusted_values(
     ::Type{T},
     V::AbstractVector,
     scale::Symbol,
-) where {T<:AbstractFloat} = scale in _logScales ? _positive_else_nan.(T, V) : T.(V)
+) where {T <: AbstractFloat} = scale in _logScales ? _positive_else_nan.(T, V) : T.(V)
 
-_binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real} =
-    if scale in _logScales
-        isnan(min_value) ? T(1e-3) : floor_base(min_value, _logScaleBases[scale])
-    else
-        zero(T)
-    end
+_binbarlike_baseline(min_value::T, scale::Symbol) where {T <: Real} =
+if scale in _logScales
+    isnan(min_value) ? T(1.0e-3) : floor_base(min_value, _logScaleBases[scale])
+else
+    zero(T)
+end
 
 function _preprocess_binbarlike_weights(
-    ::Type{T},
-    w,
-    wscale::Symbol,
-) where {T<:AbstractFloat}
+        ::Type{T},
+        w,
+        wscale::Symbol,
+    ) where {T <: AbstractFloat}
     w_adj = _scale_adjusted_values(T, w, wscale)
     w_min = ignorenan_minimum(w_adj)
     w_max = ignorenan_maximum(w_adj)
     baseline = _binbarlike_baseline(w_min, wscale)
-    w_adj, baseline
+    return w_adj, baseline
 end
 
 function _preprocess_barlike(plotattributes, x, y)
     xscale = get(plotattributes, :xscale, :identity)
     yscale = get(plotattributes, :yscale, :identity)
     weights, baseline = _preprocess_binbarlike_weights(float(eltype(y)), y, yscale)
-    x, weights, xscale, yscale, baseline
+    return x, weights, xscale, yscale, baseline
 end
 
 function _preprocess_binlike(plotattributes, x, y)
@@ -586,7 +586,7 @@ function _preprocess_binlike(plotattributes, x, y)
     T = float(promote_type(eltype(x), eltype(y)))
     edge = T.(x)
     weights, baseline = _preprocess_binbarlike_weights(T, y, yscale)
-    edge, weights, xscale, yscale, baseline
+    return edge, weights, xscale, yscale, baseline
 end
 
 @nospecialize
@@ -673,7 +673,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
         push!(y, baseline)
     end
 
-    (x, y)
+    return (x, y)
 end
 
 @recipe function f(::Type{Val{:stepbins}}, x, y, z)  # COV_EXCL_LINE
@@ -715,14 +715,14 @@ function wand_edges(x...)
     Load the StatsPlots package in order to use :wand bins.
     Defaulting to :auto
     """ once = true
-    :auto
+    return :auto
 end
 
 function _auto_binning_nbins(
-    vs::NTuple{N,AbstractVector},
-    dim::Integer;
-    mode::Symbol = :auto,
-) where {N}
+        vs::NTuple{N, AbstractVector},
+        dim::Integer;
+        mode::Symbol = :auto,
+    ) where {N}
     max_bins = 10_000
     _cl(x) = min(ceil(Int, max(x, one(x))), max_bins)
     _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
@@ -741,7 +741,7 @@ function _auto_binning_nbins(
     v = vs[dim]
     mode === :auto && (mode = :fd)
 
-    if mode === :sqrt  # Square-root choice
+    return if mode === :sqrt  # Square-root choice
         _cl(sqrt(n_samples))
     elseif mode === :sturges  # Sturges' formula
         _cl(log2(n_samples) + 1)
@@ -758,57 +758,57 @@ function _auto_binning_nbins(
     end
 end
 
-_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) where {N} =
+_hist_edge(vs::NTuple{N, AbstractVector}, dim::Integer, binning::Integer) where {N} =
     StatsBase.histrange(vs[dim], binning, :left)
-_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N} =
+_hist_edge(vs::NTuple{N, AbstractVector}, dim::Integer, binning::Symbol) where {N} =
     _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
-_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) where {N} =
+_hist_edge(vs::NTuple{N, AbstractVector}, dim::Integer, binning::AbstractVector) where {N} =
     binning
 
-_hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N,Any}) where {N} =
+_hist_edges(vs::NTuple{N, AbstractVector}, binning::NTuple{N, Any}) where {N} =
     map(dim -> _hist_edge(vs, dim, binning[dim]), Tuple(1:N))
 
 _hist_edges(
-    vs::NTuple{N,AbstractVector},
-    binning::Union{Integer,Symbol,AbstractVector},
+    vs::NTuple{N, AbstractVector},
+    binning::Union{Integer, Symbol, AbstractVector},
 ) where {N} = map(dim -> _hist_edge(vs, dim, binning), Tuple(1:N))
 
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
-_filternans(vs::NTuple{1,AbstractVector}) = filter!.(isfinite, vs)
-function _filternans(vs::NTuple{N,AbstractVector}) where {N}
+_filternans(vs::NTuple{1, AbstractVector}) = filter!.(isfinite, vs)
+function _filternans(vs::NTuple{N, AbstractVector}) where {N}
     _invertedindex(v, not) = [j for (i, j) in enumerate(v) if !(i ∈ not)]
     nots = union(Set.(findall.(!isfinite, vs))...)
-    _invertedindex.(vs, Ref(nots))
+    return _invertedindex.(vs, Ref(nots))
 end
 
 function _make_hist(
-    vs::NTuple{N,AbstractVector},
-    binning;
-    normed = false,
-    weights = nothing,
-) where {N}
+        vs::NTuple{N, AbstractVector},
+        binning;
+        normed = false,
+        weights = nothing,
+    ) where {N}
     localvs = _filternans(vs)
     edges = _hist_edges(localvs, binning)
     h = float(
         weights === nothing ?
-        StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
-        StatsBase.fit(
-            StatsBase.Histogram,
-            localvs,
-            StatsBase.Weights(weights),
-            edges,
-            closed = :left,
-        ),
+            StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
+            StatsBase.fit(
+                StatsBase.Histogram,
+                localvs,
+                StatsBase.Weights(weights),
+                edges,
+                closed = :left,
+            ),
     )
-    normalize!(h, mode = _hist_norm_mode(normed))
+    return normalize!(h, mode = _hist_norm_mode(normed))
 end
 
 @nospecialize
 
 @recipe function f(::Type{Val{:histogram}}, x, y, z)  # COV_EXCL_LINE
-    seriestype := length(y) > 1e6 ? :stephist : :barhist
+    seriestype := length(y) > 1.0e6 ? :stephist : :barhist
     ()
 end
 @deps histogram barhist
@@ -855,7 +855,7 @@ end
 end
 @deps scatterhist scatterbins
 
-@recipe function f(h::StatsBase.Histogram{T,1,E}) where {T,E}  # COV_EXCL_LINE
+@recipe function f(h::StatsBase.Histogram{T, 1, E}) where {T, E}  # COV_EXCL_LINE
     seriestype --> :barbins
 
     st_map = Dict(
@@ -878,12 +878,12 @@ end
     end
 end
 
-@recipe f(hv::AbstractVector{H}) where {H<:StatsBase.Histogram} =  # COV_EXCL_LINE
+@recipe f(hv::AbstractVector{H}) where {H <: StatsBase.Histogram} =  # COV_EXCL_LINE
     for h in hv
-        @series begin
-            h
-        end
+    @series begin
+        h
     end
+end
 
 # ---------------------------------------------------------------------------
 # Histogram 2D
@@ -924,7 +924,7 @@ Plots.@deps bins2d heatmap
 end
 @deps histogram2d bins2d
 
-@recipe function f(h::StatsBase.Histogram{T,2,E}) where {T,E}  # COV_EXCL_LINE
+@recipe function f(h::StatsBase.Histogram{T, 2, E}) where {T, E}  # COV_EXCL_LINE
     seriestype --> :bins2d
     (h.edges[1], h.edges[2], Surface(h.weights))
 end
@@ -960,8 +960,8 @@ end
     seriestype := :surface
     if plotattributes[:connections] !== nothing
         "Giving triangles using the connections argument is only supported on Plotly backend." |>
-        ArgumentError |>
-        throw
+            ArgumentError |>
+            throw
     end
     ()
 end
@@ -987,7 +987,7 @@ lens!(args...; kwargs...) = plot!(args...; seriestype = :lens, kwargs...)
 export lens!
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)  # COV_EXCL_LINE
     sp_index, inset_bbox = plotattributes[:inset_subplots]
-    width(inset_bbox) isa Measures.Length{:w,<:Real} ||
+    width(inset_bbox) isa Measures.Length{:w, <:Real} ||
         throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
     sp = plt.subplots[sp_index]
     xscale = sp[:xaxis][:scale]
@@ -1067,7 +1067,7 @@ function intersection_point(xA, yA, xB, yB, h, w)
     s = (yA - yB) / (xA - xB)
     hh, hw = h / 2, w / 2
     # left or right?
-    if -hh <= s * hw <= hh
+    return if -hh <= s * hw <= hh
         if xA > xB  # right
             xB + hw, yB + s * hw
         else  # left
@@ -1252,7 +1252,7 @@ function quiver_using_arrows(plotattributes::AKW)
         is_3d && nanappend!(z, [zi, zi + vz, NaN])
     end
     plotattributes[:x], plotattributes[:y] = x, y
-    is_3d && (plotattributes[:z] = z)
+    return is_3d && (plotattributes[:z] = z)
     # KW[plotattributes]
 end
 
@@ -1298,7 +1298,7 @@ function quiver_using_hack(plotattributes::AKW)
         nanappend!(pts, P2[p, ppv .- U1, ppv .- U1 .+ U2, ppv, ppv .- U1 .- U2, ppv .- U1])
     end
 
-    plotattributes[:x], plotattributes[:y] = RecipesPipeline.unzip(pts[2:end])
+    return plotattributes[:x], plotattributes[:y] = RecipesPipeline.unzip(pts[2:end])
 end
 
 # function apply_series_recipe(plotattributes::AKW, ::Type{Val{:quiver}})
@@ -1323,7 +1323,7 @@ function clamp_greys!(mat::AMat{<:Gray})
         mat[i].val < 0 && (mat[i] = Gray(0))
         mat[i].val > 1 && (mat[i] = Gray(1))
     end
-    mat
+    return mat
 end
 
 @recipe function f(mat::AMat{<:Gray})  # COV_EXCL_LINE
@@ -1345,7 +1345,7 @@ end
 @nospecialize
 
 # images - colors
-@recipe function f(mat::AMat{T}) where {T<:Colorant}  # COV_EXCL_LINE
+@recipe function f(mat::AMat{T}) where {T <: Colorant}  # COV_EXCL_LINE
     n, m = map(a -> range(first(a) - 0.5, stop = last(a) + 0.5), axes(mat))
 
     if is_seriestype_supported(:image)
@@ -1398,7 +1398,7 @@ end
 # --------------------------------------------------------------------
 
 # images - grays
-@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T<:Gray}  # COV_EXCL_LINE
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T <: Gray}  # COV_EXCL_LINE
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
@@ -1413,7 +1413,7 @@ end
 end
 
 # images - colors
-@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T<:Colorant}  # COV_EXCL_LINE
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T <: Colorant}  # COV_EXCL_LINE
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
@@ -1434,7 +1434,7 @@ end
 # TODO: move OHLC to PlotRecipes finance.jl
 
 "Represent Open High Low Close data (used in finance)"
-mutable struct OHLC{T<:Real}
+mutable struct OHLC{T <: Real}
     open::T
     high::T
     low::T
@@ -1448,7 +1448,7 @@ function get_xy(o::OHLC, x, xdiff)
     xl, xm, xr = x - xdiff, x, x + xdiff
     ox = [xl, xm, NaN, xm, xm, NaN, xm, xr]
     oy = [o.open, o.open, NaN, o.low, o.high, NaN, o.close, o.close]
-    ox, oy
+    return ox, oy
 end
 
 # get the joined vector
@@ -1460,7 +1460,7 @@ function get_xy(v::AVec{OHLC}, x = eachindex(v))
         nanappend!(x_out, ox)
         nanappend!(y_out, oy)
     end
-    x_out, y_out
+    return x_out, y_out
 end
 
 # these are for passing in a vector of OHLC objects
@@ -1469,7 +1469,7 @@ end
 
 @nospecialize
 
-@recipe f(x::AVec, ohlc::AVec{NTuple{N,<:Number}}) where {N} = x, map(t -> OHLC(t...), ohlc)
+@recipe f(x::AVec, ohlc::AVec{NTuple{N, <:Number}}) where {N} = x, map(t -> OHLC(t...), ohlc)
 
 @recipe f(xyuv::AVec{NTuple}) =
     get(plotattributes, :seriestype, :path) === :ohlc ? map(t -> OHLC(t...), xyuv) :
@@ -1549,7 +1549,7 @@ function findnz(A::AbstractMatrix)
     rs = map(k -> k[1], keysnz)
     cs = map(k -> k[2], keysnz)
     zs = A[keysnz]
-    rs, cs, zs
+    return rs, cs, zs
 end
 
 # -------------------------------------------------
@@ -1564,7 +1564,7 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Complex Numbers
 
-@recipe function f(A::AbstractArray{Complex{T}}) where {T<:Number}  # COV_EXCL_LINE
+@recipe function f(A::AbstractArray{Complex{T}}) where {T <: Number}  # COV_EXCL_LINE
     xguide --> "Re(x)"
     yguide --> "Im(x)"
     real.(A), imag.(A)

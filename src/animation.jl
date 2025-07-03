@@ -20,11 +20,11 @@ Animation(dir = convert(String, mktempdir())) = Animation(dir, String[])
 
 Add a plot (the current plot if not specified) to an existing animation
 """
-function frame(anim::Animation, plt::P = current()) where {P<:AbstractPlot}
+function frame(anim::Animation, plt::P = current()) where {P <: AbstractPlot}
     i = length(anim.frames) + 1
     filename = @sprintf "%06d.png" i
     png(plt, joinpath(anim.dir, filename))
-    push!(anim.frames, filename)
+    return push!(anim.frames, filename)
 end
 
 giffn() = isijulia() ? "tmp.gif" : tempname() * ".gif"
@@ -51,7 +51,7 @@ function animate(fitr::FrameIterator, fn = giffn(); kw...)
             frame(anim)
         end
     end
-    gif(anim, fn; kw...)
+    return gif(anim, fn; kw...)
 end
 
 # most things will implement this
@@ -114,15 +114,15 @@ ffmpeg_framerate(fps) = "$fps"
 ffmpeg_framerate(fps::Rational) = "$(fps.num)/$(fps.den)"
 
 function buildanimation(
-    anim::Animation,
-    fn::AbstractString,
-    is_animated_gif::Bool = true;
-    fps::Real = 20,
-    loop::Integer = 0,
-    variable_palette::Bool = false,
-    verbose = false,
-    show_msg::Bool = true,
-)
+        anim::Animation,
+        fn::AbstractString,
+        is_animated_gif::Bool = true;
+        fps::Real = 20,
+        loop::Integer = 0,
+        variable_palette::Bool = false,
+        verbose = false,
+        show_msg::Bool = true,
+    )
     length(anim.frames) == 0 && throw(ArgumentError("Cannot build empty animations"))
 
     fn = abspath(expanduser(fn))
@@ -135,26 +135,26 @@ function buildanimation(
             # generate a colorpalette for each frame for highest quality, but larger filesize
             palette = "palettegen=stats_mode=single[pal],[0:v][pal]paletteuse=new=1"
             `-v $verbose_level -framerate $framerate -i $animdir/%06d.png -lavfi "$palette" -loop $loop -y $fn` |>
-            ffmpeg_exe
+                ffmpeg_exe
         else
             # generate a colorpalette first so ffmpeg does not have to guess it
             `-v $verbose_level -i $animdir/%06d.png -vf "palettegen=stats_mode=full" -y "$animdir/palette.bmp"` |>
-            ffmpeg_exe
+                ffmpeg_exe
             # then apply the palette to get better results
             `-v $verbose_level -framerate $framerate -i $animdir/%06d.png -i "$animdir/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -loop $loop -y $fn` |>
-            ffmpeg_exe
+                ffmpeg_exe
         end
     elseif file_extension(fn) in ("png", "apng")
         # FFMPEG specific command for APNG (Animated PNG) animations
         `-v $verbose_level -framerate $framerate -i $animdir/%06d.png -plays $loop -f apng  -y $fn` |>
-        ffmpeg_exe
+            ffmpeg_exe
     else
         `-v $verbose_level -framerate $framerate -i $animdir/%06d.png -vf format=yuv420p -loop $loop -y $fn` |>
-        ffmpeg_exe
+            ffmpeg_exe
     end
 
     show_msg && @info "Saved animation to $fn"
-    AnimatedGif(fn)
+    return AnimatedGif(fn)
 end
 
 # write out html to view the gif
@@ -171,15 +171,15 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     end
 
     write(io, html)
-    nothing
+    return nothing
 end
 
 # Only gifs can be shown via image/gif
 Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
 Base.showable(::MIME"image/png", agif::AnimatedGif) =
-    let ext = file_extension(agif.filename)
-        ext == "apng" || ext == "png"
-    end
+let ext = file_extension(agif.filename)
+    ext == "apng" || ext == "png"
+end
 
 Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif) =
     open(fio -> write(io, fio), agif.filename)
@@ -227,11 +227,13 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
         i += 1
     end
 
-    push!(block.args, :(
-        if $filterexpr
-            Plots.frame($animsym)
-        end
-    ))
+    push!(
+        block.args, :(
+            if $filterexpr
+                Plots.frame($animsym)
+            end
+        )
+    )
     push!(block.args, :($countersym += 1))
 
     # add a final call to `gif(anim)`?
@@ -244,7 +246,7 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     end
 
     # full expression:
-    quote
+    return quote
         $freqassert                     # if filtering, check frequency is an Integer > 0
         $animsym = Plots.Animation()    # init animation object
         let $countersym = 1             # init iteration counter
@@ -272,7 +274,7 @@ This macro supports additional parameters, that may be added after the main loop
     frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro gif(forloop::Expr, args...)
-    _animate(forloop, args...; type = :gif)
+    return _animate(forloop, args...; type = :gif)
 end
 
 """
@@ -293,7 +295,7 @@ This macro supports additional parameters, that may be added after the main loop
     frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro apng(forloop::Expr, args...)
-    _animate(forloop, args...; type = :apng)
+    return _animate(forloop, args...; type = :apng)
 end
 
 """
@@ -314,5 +316,5 @@ This macro supports additional parameters, that may be added after the main loop
     frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro animate(forloop::Expr, args...)
-    _animate(forloop, args...)
+    return _animate(forloop, args...)
 end

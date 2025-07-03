@@ -8,7 +8,7 @@ end
 
 # this is when given a vector-type of values to group by
 function _extract_group_attributes(v::AVec, args...; legend_entry = string)
-    res = Dict{eltype(v),Vector{Int}}()
+    res = Dict{eltype(v), Vector{Int}}()
     for (i, label) in enumerate(v)
         if haskey(res, label)
             push!(res[label], i)
@@ -19,7 +19,7 @@ function _extract_group_attributes(v::AVec, args...; legend_entry = string)
     group_labels = (sort ∘ collect ∘ keys)(res)
     group_indices = getindex.(Ref(res), group_labels)
 
-    GroupBy(map(legend_entry, group_labels), group_indices)
+    return GroupBy(map(legend_entry, group_labels), group_indices)
 end
 legend_entry_from_tuple(ns::Tuple) = join(ns, ' ')
 
@@ -27,7 +27,7 @@ legend_entry_from_tuple(ns::Tuple) = join(ns, ' ')
 function _extract_group_attributes(vs::Tuple, args...)
     isempty(vs) && return GroupBy([""], [axes(args[1], 1)])
     v = map(tuple, vs...)
-    _extract_group_attributes(v, args...; legend_entry = legend_entry_from_tuple)
+    return _extract_group_attributes(v, args...; legend_entry = legend_entry_from_tuple)
 end
 
 # allow passing NamedTuples for a named legend entry
@@ -36,14 +36,14 @@ legend_entry_from_tuple(ns::NamedTuple) = join(["$k = $v" for (k, v) in pairs(ns
 function _extract_group_attributes(vs::NamedTuple, args...)
     isempty(vs) && return GroupBy([""], [axes(args[1], 1)])
     v = map(NamedTuple{keys(vs)} ∘ tuple, values(vs)...)
-    _extract_group_attributes(v, args...; legend_entry = legend_entry_from_tuple)
+    return _extract_group_attributes(v, args...; legend_entry = legend_entry_from_tuple)
 end
 
 # expecting a mapping of "group label" to "group indices"
-function _extract_group_attributes(idxmap::Dict{T,V}, args...) where {T,V<:AVec{Int}}
+function _extract_group_attributes(idxmap::Dict{T, V}, args...) where {T, V <: AVec{Int}}
     group_labels = (sort ∘ collect ∘ keys)(idxmap)
     group_indices = Vector{Int}[collect(idxmap[k]) for k in group_labels]
-    GroupBy(group_labels, group_indices)
+    return GroupBy(group_labels, group_indices)
 end
 
 filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
@@ -53,11 +53,12 @@ function filter_data!(plotattributes::AKW, idxfilter)
     for s in (:x, :y, :z)
         plotattributes[s] = filter_data(get(plotattributes, s, nothing), idxfilter)
     end
+    return
 end
 
 function _filter_input_data!(plotattributes::AKW)
     idxfilter = pop!(plotattributes, :idxfilter, nothing)
-    idxfilter ≡ nothing || filter_data!(plotattributes, idxfilter)
+    return idxfilter ≡ nothing || filter_data!(plotattributes, idxfilter)
 end
 
 function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
@@ -72,7 +73,7 @@ function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
         yi = y[groupby.group_indices[i]]
         y_mat[getindex.(Ref(x_ind), xi), i] = yi
     end
-    y_mat
+    return y_mat
 end
 
 groupedvec2mat(x_ind, x, y::Tuple, groupby) =
@@ -116,9 +117,11 @@ group_as_matrix(t) = false  # used in `StatsPlots`
             end
         end
         label --> reshape(groupby.group_labels, 1, :)
-        typeof(g)((
-            x_u,
-            (groupedvec2mat(x_ind, x, arg, groupby, NaN) for arg in last_args)...,
-        ))
+        typeof(g)(
+            (
+                x_u,
+                (groupedvec2mat(x_ind, x, arg, groupby, NaN) for arg in last_args)...,
+            )
+        )
     end
 end

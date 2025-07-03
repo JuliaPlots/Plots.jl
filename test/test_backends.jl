@@ -1,11 +1,11 @@
 ci_tol() =
-    if Sys.islinux()
-        is_pkgeval() ? "1e-2" : "5e-4"
-    elseif Sys.isapple()
-        "1e-3"
-    else
-        "1e-1"
-    end
+if Sys.islinux()
+    is_pkgeval() ? "1e-2" : "5e-4"
+elseif Sys.isapple()
+    "1e-3"
+else
+    "1e-1"
+end
 
 const TESTS_MODULE = Module(:PlotsTestsModule)
 const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol() : "1e-5"))
@@ -13,11 +13,11 @@ const PLOTS_IMG_TOL = parse(Float64, get(ENV, "PLOTS_IMG_TOL", is_ci() ? ci_tol(
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, Plots))
 
 reference_dir(args...) =
-    if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) !== nothing
-        ref_dir
-    else
-        joinpath(first(Base.DEPOT_PATH), "dev", "PlotReferenceImages.jl", args...)
-    end
+if (ref_dir = get(ENV, "PLOTS_REFERENCE_DIR", nothing)) !== nothing
+    ref_dir
+else
+    joinpath(first(Base.DEPOT_PATH), "dev", "PlotReferenceImages.jl", args...)
+end
 reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
 
 function checkout_reference_dir(dn::AbstractString)
@@ -45,7 +45,7 @@ function checkout_reference_dir(dn::AbstractString)
         end
     end
     LibGit2.peel(LibGit2.head(repo)) |> println  # print some information
-    nothing
+    return nothing
 end
 
 let dn = reference_dir()
@@ -70,13 +70,13 @@ function reference_file(backend, version, i)
 end
 
 function image_comparison_tests(
-    pkg::Symbol,
-    idx::Int;
-    debug = false,
-    popup = !is_ci(),
-    sigma = [1, 1],
-    tol = 1e-2,
-)
+        pkg::Symbol,
+        idx::Int;
+        debug = false,
+        popup = !is_ci(),
+        sigma = [1, 1],
+        tol = 1.0e-2,
+    )
     example = Plots._examples[idx]
     @info "Testing plot: $pkg:$idx:$(example.header)"
 
@@ -96,7 +96,7 @@ function image_comparison_tests(
     @debug imports exprs
 
     func = fn -> Base.eval.(Ref(TESTS_MODULE), (imports, exprs, :(png($fn))))
-    test_images(
+    return test_images(
         VisualTest(func, reffn),
         newfn = newfn,
         popup = popup,
@@ -106,18 +106,19 @@ function image_comparison_tests(
 end
 
 function image_comparison_facts(
-    pkg::Symbol;
-    skip = [],          # skip these examples (int index)
-    only = nothing,     # limit to these examples (int index)
-    debug = false,      # print debug information ?
-    sigma = [1, 1],     # number of pixels to "blur"
-    tol = 1e-2,         # acceptable error (percent)
-)
+        pkg::Symbol;
+        skip = [],          # skip these examples (int index)
+        only = nothing,     # limit to these examples (int index)
+        debug = false,      # print debug information ?
+        sigma = [1, 1],     # number of pixels to "blur"
+        tol = 1.0e-2,         # acceptable error (percent)
+    )
     for i in setdiff(1:length(Plots._examples), skip)
         if only === nothing || i in only
             @test success(image_comparison_tests(pkg, i; debug, sigma, tol))
         end
     end
+    return
 end
 
 ## Uncomment the following lines to update reference images for different backends

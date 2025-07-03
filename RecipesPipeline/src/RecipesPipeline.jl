@@ -102,14 +102,14 @@ function recipe_pipeline!(plt, plotattributes, args)
     # Return processed plot object
     # --------------------------------
 
-    plt
+    return plt
 end
 
 # COV_EXCL_START
 using PrecompileTools
 
 @setup_workload begin
-    plotattributes = Dict{Symbol,Any}[
+    plotattributes = Dict{Symbol, Any}[
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path),
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :surface),
     ]

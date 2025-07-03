@@ -1,4 +1,3 @@
-
 # https://github.com/ma-laforge/InspectDR.jl
 
 #=TODO:
@@ -20,36 +19,36 @@ is_marker_supported(::InspectDRBackend, shape::Shape) = true
 #Do we avoid Map to avoid possible pre-comile issues?
 function _inspectdr_mapglyph(s::Symbol)
     s === :rect && return :square
-    s
+    return s
 end
 
 function _inspectdr_mapglyph(s::Shape)
     x, y = coords(s)
-    InspectDR.GlyphPolyline(x, y)
+    return InspectDR.GlyphPolyline(x, y)
 end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
 function _inspectdr_mapglyph(markers::AVec)
     @warn "Vectors of markers are currently unsupported in InspectDR."
-    _inspectdr_mapglyph(markers[1])
+    return _inspectdr_mapglyph(markers[1])
 end
 
 _inspectdr_mapglyphsize(v::Real) = v
 function _inspectdr_mapglyphsize(v::Vector)
     @warn "Vectors of marker sizes are currently unsupported in InspectDR."
-    _inspectdr_mapglyphsize(v[1])
+    return _inspectdr_mapglyphsize(v[1])
 end
 
 _inspectdr_mapcolor(v::Colorant) = v
 function _inspectdr_mapcolor(g::PlotUtils.ColorGradient)
     @warn "Color gradients are currently unsupported in InspectDR."
     # Pick middle color:
-    _inspectdr_mapcolor(g.colors[div(1 + end, 2)])
+    return _inspectdr_mapcolor(g.colors[div(1 + end, 2)])
 end
 function _inspectdr_mapcolor(v::AVec)
     @warn "Vectors of colors are currently unsupported in InspectDR."
     # Pick middle color:
-    _inspectdr_mapcolor(v[div(1 + end, 2)])
+    return _inspectdr_mapcolor(v[div(1 + end, 2)])
 end
 
 # Hack: suggested point size does not seem adequate relative to plot size, for some reason.
@@ -59,8 +58,8 @@ _inspectdr_add_annotations(plot, sp::Subplot, x, y, val) = nothing  # What kind 
 
 #plot::InspectDR.Plot2D
 function _inspectdr_add_annotations(plot, sp::Subplot, x, y, val::PlotText)
-    vmap = Dict{Symbol,Symbol}(:top => :t, :bottom => :b)  # :vcenter
-    hmap = Dict{Symbol,Symbol}(:left => :l, :right => :r)  # :hcenter
+    vmap = Dict{Symbol, Symbol}(:top => :t, :bottom => :b)  # :vcenter
+    hmap = Dict{Symbol, Symbol}(:left => :l, :right => :r)  # :hcenter
     align = Symbol(get(vmap, val.font.valign, :c), get(hmap, val.font.halign, :c))
     fnt = InspectDR.Font(
         val.font.family,
@@ -76,18 +75,18 @@ function _inspectdr_add_annotations(plot, sp::Subplot, x, y, val::PlotText)
         align = align,
     )
     InspectDR.add(plot, ann)
-    nothing
+    return nothing
 end
 
 # placement relative to figure
 function _inspectdr_add_annotations(
-    plot,
-    sp::Subplot,
-    pos::Union{Tuple,Symbol},
-    val::PlotText,
-)
+        plot,
+        sp::Subplot,
+        pos::Union{Tuple, Symbol},
+        val::PlotText,
+    )
     x, y, val = locate_annotation(sp, pos, val)
-    _inspectdr_add_annotations(plot, sp, x, y, val)
+    return _inspectdr_add_annotations(plot, sp, x, y, val)
 end
 
 # ---------------------------------------------------------------------------
@@ -120,7 +119,7 @@ function _inspectdr_getaxisticks(ticks, gridlines, xfrm)
         # keep current
     end
 
-    gridlines  # keep current
+    return gridlines  # keep current
 end
 
 function _inspectdr_setticks(sp::Subplot, plot, strip, xaxis, yaxis)
@@ -138,7 +137,7 @@ function _inspectdr_setticks(sp::Subplot, plot, strip, xaxis, yaxis)
         _inspectdr_getaxisticks(xticks, grid.xlines, InspectDR.InputXfrm1D(plot.xscale))
     grid.ylines =
         _inspectdr_getaxisticks(yticks, grid.ylines, InspectDR.InputXfrm1D(strip.yscale))
-    strip.grid = grid
+    return strip.grid = grid
 end
 
 # ---------------------------------------------------------------------------
@@ -146,7 +145,7 @@ end
 function _inspectdr_getscale(s::Symbol, yaxis::Bool)
     #TODO: Support :asinh, :sqrt
     kwargs = yaxis ? (:tgtmajor => 8, :tgtminor => 2) : () #More grid lines on y-axis
-    if :log2 == s
+    return if :log2 == s
         InspectDR.AxisScale(:log2; kwargs...)
     elseif :log10 == s
         InspectDR.AxisScale(:log10; kwargs...)
@@ -164,8 +163,8 @@ INSPECTDR_GLYPH_SHAPE =
     InspectDR.GlyphPolyline(2 * InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y)
 
 mutable struct InspecDRPlotRef
-    mplot::Union{Nothing,InspectDR.Multiplot}
-    gui::Union{Nothing,InspectDR.GtkPlot}
+    mplot::Union{Nothing, InspectDR.Multiplot}
+    gui::Union{Nothing, InspectDR.GtkPlot}
 end
 
 _inspectdr_getmplot(::Any) = nothing
@@ -197,7 +196,7 @@ function _create_backend_figure(plt::Plot{InspectDRBackend})
     # break link with old subplots
     foreach(sp -> sp.o = nothing, plt.subplots)
 
-    InspecDRPlotRef(mplot, gplot)
+    return InspecDRPlotRef(mplot, gplot)
 end
 
 # ---------------------------------------------------------------------------
@@ -209,7 +208,7 @@ function _initialize_subplot(plt::Plot{InspectDRBackend}, sp::Subplot{InspectDRB
     plot === nothing && return
     plot.data = []
     plot.userannot = [] #Clear old markers/text annotation/polyline "annotation"
-    plot
+    return plot
 end
 
 # ---------------------------------------------------------------------------
@@ -332,6 +331,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     for (xi, yi, str, fnt) in EachAnn(anns, x, y)
         _inspectdr_add_annotations(plot, sp, xi, yi, PlotText(str, fnt))
     end
+    return
 end
 
 # ---------------------------------------------------------------------------
@@ -410,7 +410,7 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
     )
     l.frame_legend.fillcolor = _inspectdr_mapcolor(sp[:legend_background_color])
     #_round!() ensures values use integer spacings (looks better on screen):
-    InspectDR._round!(InspectDR.autofit2font!(l, legend_width = 10.0)) #10 "em"s wide
+    return InspectDR._round!(InspectDR.autofit2font!(l, legend_width = 10.0)) #10 "em"s wide
 end
 
 # called just before updating layout bounding boxes... in case you need to prep
@@ -456,7 +456,7 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
     end
 
     foreach(series -> _series_added(plt, series), plt.series_list)
-    nothing
+    return nothing
 end
 
 # ----------------------------------------------------------------
@@ -472,11 +472,11 @@ function _update_min_padding!(sp::Subplot{InspectDRBackend})
     # TODO: possibly zero-out items not in use??
 
     # add in the user-specified margin to InspectDR padding:
-    leftpad   = abs(bb.xmin) * px + sp[:left_margin]
-    toppad    = abs(bb.ymin) * px + sp[:top_margin]
-    rightpad  = abs(bb.xmax) * px + sp[:right_margin]
+    leftpad = abs(bb.xmin) * px + sp[:left_margin]
+    toppad = abs(bb.ymin) * px + sp[:top_margin]
+    rightpad = abs(bb.xmax) * px + sp[:right_margin]
     bottompad = abs(bb.ymax) * px + sp[:bottom_margin]
-    sp.minpad = (leftpad, toppad, rightpad, bottompad)
+    return sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
 # ----------------------------------------------------------------
@@ -500,7 +500,7 @@ function _update_plot_object(plt::Plot{InspectDRBackend})
 
     gplot.src = mplot #Ensure still references current plot
     InspectDR.refresh(gplot)
-    nothing
+    return nothing
 end
 
 # ----------------------------------------------------------------
@@ -512,17 +512,17 @@ _inspectdr_show(io::IO, mime::MIME, mplot, w, h) =
 
 function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{InspectDRBackend})
     dpi = plt[:dpi] # TODO: support
-    _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
+    return _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
 end
 for (mime, fmt) in (
-    "image/svg+xml" => "svg",
-    "application/eps" => "eps",
-    "image/eps" => "eps",
-    # "application/postscript" => "ps", # TODO: support once Cairo supports PSSurface
-    "application/pdf" => "pdf",
-)
+        "image/svg+xml" => "svg",
+        "application/eps" => "eps",
+        "image/eps" => "eps",
+        # "application/postscript" => "ps", # TODO: support once Cairo supports PSSurface
+        "application/pdf" => "pdf",
+    )
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{InspectDRBackend})
-        _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
+        return _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
     end
 end
 
@@ -539,5 +539,5 @@ function _display(plt::Plot{InspectDRBackend})
         # InspectDR.refresh(gplot)
     end
     plt.o = InspecDRPlotRef(mplot, gplot)
-    gplot
+    return gplot
 end

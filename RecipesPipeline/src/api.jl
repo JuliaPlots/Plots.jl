@@ -9,28 +9,29 @@ Warn if an alias is detected in `plotattributes` after a recipe of type `recipe_
 applied to 'args'. `recipe_type` is either `:user`, `:type`, `:plot` or `:series`.
 """
 function warn_on_recipe_aliases!(
-    plt,
-    plotattributes::AKW,
-    recipe_type::Symbol,
-    @nospecialize(args)
-) end
+        plt,
+        plotattributes::AKW,
+        recipe_type::Symbol,
+        @nospecialize(args)
+    ) end
 function warn_on_recipe_aliases!(
-    plt,
-    v::AbstractVector,
-    recipe_type::Symbol,
-    @nospecialize(args)
-)
+        plt,
+        v::AbstractVector,
+        recipe_type::Symbol,
+        @nospecialize(args)
+    )
     for x in v
         warn_on_recipe_aliases!(plt, x, recipe_type, args)
     end
+    return
 end
 function warn_on_recipe_aliases!(
-    plt,
-    rd::RecipeData,
-    recipe_type::Symbol,
-    @nospecialize(args)
-)
-    warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args)
+        plt,
+        rd::RecipeData,
+        recipe_type::Symbol,
+        @nospecialize(args)
+    )
+    return warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args)
 end
 
 # ## Grouping
@@ -100,6 +101,7 @@ function preprocess_axis_args!(plt, plotattributes)
             get!(plotattributes, Symbol(letter, k), v)
         end
     end
+    return
 end
 
 """
@@ -109,7 +111,7 @@ This version additionally stores the letter name in  `plotattributes[:letter]`.
 """
 function preprocess_axis_args!(plt, plotattributes, letter)
     plotattributes[:letter] = letter
-    preprocess_axis_args!(plt, plotattributes)
+    return preprocess_axis_args!(plt, plotattributes)
 end
 
 # axis args in type recipes should only be applied to the current axis
@@ -126,6 +128,7 @@ function postprocess_axis_args!(plt, plotattributes, letter)
         pop!(plotattributes, k)
         get!(plotattributes, Symbol(letter, k), v)
     end
+    return
 end
 
 # ## User recipes
@@ -189,7 +192,7 @@ function process_sliced_series_attributes!(plt, kw_list) end
 
 Returns a `Dict` storing the defaults for series attributes.
 """
-series_defaults(plt) = Dict{Symbol,Any}()
+series_defaults(plt) = Dict{Symbol, Any}()
 
 # TODO: Add a more sensible fallback including e.g. path, scatter, ...
 

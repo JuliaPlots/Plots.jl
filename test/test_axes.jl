@@ -5,7 +5,7 @@
     @test Plots.discrete_value!(axis, "HI") == (0.5, 1)
     @test Plots.discrete_value!(axis, :yo) == (1.5, 2)
     @test Plots.ignorenan_extrema(axis) == (0.5, 1.5)
-    @test axis[:discrete_map] == Dict{Any,Any}(:yo => 2, "HI" => 1)
+    @test axis[:discrete_map] == Dict{Any, Any}(:yo => 2, "HI" => 1)
 
     Plots.discrete_value!(axis, map(i -> "x$i", 1:5))
     Plots.discrete_value!(axis, map(i -> "x$i", 0:2))
@@ -23,9 +23,9 @@
 
     @test Plots.get_labels(:auto, 1:3, :identity) == ["1", "2", "3"]
     @test Plots.get_labels(:scientific, float.(500:500:1500), :identity) ==
-          ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
+        ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
     @test Plots.get_labels(:engineering, float.(500:500:1500), :identity) ==
-          ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
+        ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
     @test Plots.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
     # GR is used during tests and it correctly overrides labelfunc(), but PGFPlotsX did not
     Plots.with(:pgfplotsx) do
@@ -35,18 +35,18 @@
     @test Plots.get_labels(:auto, 1:3, :log2) == ["2^{1}", "2^{2}", "2^{3}"]
     @test Plots.get_labels(:auto, 1:3, :ln) == ["e^{1}", "e^{2}", "e^{3}"]
     @test Plots.get_labels(:latex, 1:3, :log10) ==
-          ["\$10^{1}\$", "\$10^{2}\$", "\$10^{3}\$"]
+        ["\$10^{1}\$", "\$10^{2}\$", "\$10^{3}\$"]
     @test Plots.get_labels(:latex, 1:3, :log2) == ["\$2^{1}\$", "\$2^{2}\$", "\$2^{3}\$"]
     @test Plots.get_labels(:latex, 1:3, :ln) == ["\$e^{1}\$", "\$e^{2}\$", "\$e^{3}\$"]
 
-    @test Plots.get_labels(x -> 1e3x, 1:3, :identity) == ["1000", "2000", "3000"]
-    @test Plots.get_labels(x -> 1e3x, 1:3, :log10) == ["10^{4}", "10^{5}", "10^{6}"]
+    @test Plots.get_labels(x -> 1.0e3x, 1:3, :identity) == ["1000", "2000", "3000"]
+    @test Plots.get_labels(x -> 1.0e3x, 1:3, :log10) == ["10^{4}", "10^{5}", "10^{6}"]
     @test Plots.get_labels(x -> 8x, 1:3, :log2) == ["2^{4}", "2^{5}", "2^{6}"]
     @test Plots.get_labels(x -> ℯ * x, 1:3, :ln) == ["e^{2}", "e^{3}", "e^{4}"]
     @test Plots.get_labels(x -> string(x, " MB"), 1:3, :identity) ==
-          ["1.0 MB", "2.0 MB", "3.0 MB"]
+        ["1.0 MB", "2.0 MB", "3.0 MB"]
     @test Plots.get_labels(x -> string(x, " MB"), 1:3, :log10) ==
-          ["10.0 MB", "100.0 MB", "1000.0 MB"]
+        ["10.0 MB", "100.0 MB", "1000.0 MB"]
 end
 
 @testset "Showaxis" begin
@@ -107,8 +107,8 @@ end
         pl = plot(1:5; xlims)
         plims =
             @test_logs (:warn, r"Invalid limits for x axis") match_mode = :any Plots.xlims(
-                pl,
-            )
+            pl,
+        )
         @test plims == default_widen(1, 5)
     end
 

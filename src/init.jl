@@ -5,19 +5,19 @@ import Base64
 """
 Reference to hold path of local plotly temp file. Initialized to `nothing`.
 """
-const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+const _plotly_local_file_path = Ref{Union{Nothing, String}}(nothing)
 
 """
 Reference to hold cached plotly data URL. Initialized to `nothing`.
 """
-const _plotly_data_url_cached = Ref{Union{Nothing,String}}(nothing)
+const _plotly_data_url_cached = Ref{Union{Nothing, String}}(nothing)
 
 _plotly_data_url() =
-    if _plotly_data_url_cached[] === nothing
-        _plotly_data_url_cached[] = "data:text/javascript;base64,$(Base64.base64encode(read(_plotly_local_file_path)))"
-    else
-        _plotly_data_url_cached[]
-    end
+if _plotly_data_url_cached[] === nothing
+    _plotly_data_url_cached[] = "data:text/javascript;base64,$(Base64.base64encode(read(_plotly_local_file_path)))"
+else
+    _plotly_data_url_cached[]
+end
 
 """
 use fixed version of Plotly instead of the latest one for stable dependency
@@ -37,15 +37,15 @@ Whether to use local plotly.js files instead of CDN.
 const _use_local_plotlyjs = Ref(false)
 
 _plots_defaults() =
-    if isdefined(Main, :PLOTS_DEFAULTS)
-        copy(Dict{Symbol,Any}(Main.PLOTS_DEFAULTS))
-    else
-        Dict{Symbol,Any}()
-    end
+if isdefined(Main, :PLOTS_DEFAULTS)
+    copy(Dict{Symbol, Any}(Main.PLOTS_DEFAULTS))
+else
+    Dict{Symbol, Any}()
+end
 
 function _plots_theme_defaults()
     user_defaults = _plots_defaults()
-    theme(pop!(user_defaults, :theme, :default); user_defaults...)
+    return theme(pop!(user_defaults, :theme, :default); user_defaults...)
 end
 
 function _plots_plotly_defaults()
@@ -56,7 +56,7 @@ function _plots_plotly_defaults()
             Downloads.download("https://cdn.plot.ly/$(_plotly_min_js_filename)", fn)
         _use_local_plotlyjs[] = true
     end
-    _use_local_dependencies[] = _use_local_plotlyjs[]
+    return _use_local_dependencies[] = _use_local_plotlyjs[]
 end
 
 function __init__()
@@ -73,16 +73,16 @@ function __init__()
     )
 
     i ->
-        begin
-            while PlotsDisplay() in Base.Multimedia.displays
-                popdisplay(PlotsDisplay())
-            end
-            insert!(
-                Base.Multimedia.displays,
-                findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
-                PlotsDisplay(),
-            )
-        end |> atreplinit
+    begin
+        while PlotsDisplay() in Base.Multimedia.displays
+            popdisplay(PlotsDisplay())
+        end
+        insert!(
+            Base.Multimedia.displays,
+            findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
+            PlotsDisplay(),
+        )
+    end |> atreplinit
 
     @static if !isdefined(Base, :get_extension)  # COV_EXCL_LINE
         @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" include(
@@ -103,7 +103,7 @@ function __init__()
     end
 
     _runtime_init(backend())
-    nothing
+    return nothing
 end
 
 ##################################################################

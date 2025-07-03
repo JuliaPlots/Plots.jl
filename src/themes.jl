@@ -8,9 +8,9 @@ function theme(s::Symbol; kw...)
         copy(PlotThemes._themes[s].defaults)
     else
         @warn ":$s is not a known theme, using :default"
-        Dict{Symbol,Any}()
+        Dict{Symbol, Any}()
     end
-    _theme(s, defaults; kw...)
+    return _theme(s, defaults; kw...)
 end
 
 function _theme(s::Symbol, defaults::AKW; kw...)

@@ -27,15 +27,15 @@ end
 
         @testset "plot" begin
             for pl in [
-                histogram([1, 0, 0, 0, 0, 0]),
-                plot([missing]),
-                plot([missing, missing]),
-                plot(fill(missing, 10)),
-                plot([missing; 1:4]),
-                plot([fill(missing, 10); 1:4]),
-                plot([1 1; 1 missing]),
-                plot(["a" "b"; missing "d"], [1 2; 3 4]),
-            ]
+                    histogram([1, 0, 0, 0, 0, 0]),
+                    plot([missing]),
+                    plot([missing, missing]),
+                    plot(fill(missing, 10)),
+                    plot([missing; 1:4]),
+                    plot([fill(missing, 10); 1:4]),
+                    plot([1 1; 1 missing]),
+                    plot(["a" "b"; missing "d"], [1 2; 3 4]),
+                ]
                 display(dsp, pl)
             end
             @test_nowarn plot(x -> x^2, 0, 2)
@@ -103,7 +103,7 @@ end
 @testset "legend" begin
     @test isa(
         Plots.legend_pos_from_angle(20, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0),
-        NTuple{2,<:AbstractFloat},
+        NTuple{2, <:AbstractFloat},
     )
     @test Plots.legend_anchor_index(-1) == 1
     @test Plots.legend_anchor_index(+0) == 2
@@ -123,7 +123,7 @@ end
     data = MyType.(sort(randn(20)))
 
     # A recipe that puts the axis letter in the title
-    @recipe function f(::Type{T}, m::T) where {T<:AbstractArray{<:MyType}}
+    @recipe function f(::Type{T}, m::T) where {T <: AbstractArray{<:MyType}}
         title --> string(plotattributes[:letter])
         value.(m)
     end
@@ -333,9 +333,9 @@ Plots.with(:gr) do
     @testset "legends" begin
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa Plots.Plot
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa
-              Plots.Plot
+            Plots.Plot
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa
-              Plots.Plot
+            Plots.Plot
         @test_logs (:warn, r"n° of legend_column.*") png(
             plot(1:2, legend_columns = 10),
             tempname(),

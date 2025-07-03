@@ -28,12 +28,12 @@ end
 
 @testset "coverage" begin
     @test RecipesPipeline.userrecipe_signature_string((missing, 1)) ==
-          "(::Missing, ::Int64)"
+        "(::Missing, ::Int64)"
     @test RecipesPipeline.typerecipe_signature_string(1) == "(::Type{Int64}, ::Int64)"
     @test RecipesPipeline.plotrecipe_signature_string(:wireframe) ==
-          "(::Type{Val{:wireframe}}, ::AbstractPlot)"
+        "(::Type{Val{:wireframe}}, ::AbstractPlot)"
     @test RecipesPipeline.seriesrecipe_signature_string(:wireframe) ==
-          "(::Type{Val{:wireframe}}, x, y, z)"
+        "(::Type{Val{:wireframe}}, x, y, z)"
 
     plt = nothing
     plotattributes = Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path)
@@ -50,7 +50,7 @@ end
     @test slice_series_attributes!(plt, kw_list, kw) isa Nothing
     @test process_sliced_series_attributes!(plt, kw_list) isa Nothing
 
-    @test RecipesPipeline.series_defaults(plt) == Dict{Symbol,Any}()
+    @test RecipesPipeline.series_defaults(plt) == Dict{Symbol, Any}()
     @test !RecipesPipeline.is_seriestype_supported(plt, :wireframe)
     @test RecipesPipeline.add_series!(plt, kw) isa Nothing
 
@@ -88,7 +88,7 @@ end
     @test _prepare_series_data((1.0, 2.0)) ≡ (1.0, 2.0)
     @test _prepare_series_data(identity) ≡ identity
     @test _prepare_series_data(1:5:10) ≡ 1:5:10
-    a = ones(Union{Missing,Float64}, 100, 100)
+    a = ones(Union{Missing, Float64}, 100, 100)
     sd = _prepare_series_data(a)
     @test sd == a
     @test eltype(sd) == Float64
@@ -108,7 +108,7 @@ end
 @testset "unzip" begin
     x, y, z = unzip([(1.0, 2.0, 3.0), (1.0, 2.0, 3.0)])
     @test all(x .== 1.0) && all(y .== 2.0) && all(z .== 3.0)
-    x, y, z = unzip(Tuple{Float64,Float64,Float64}[])
+    x, y, z = unzip(Tuple{Float64, Float64, Float64}[])
     @test isempty(x) && isempty(y) && isempty(z)
 end
 

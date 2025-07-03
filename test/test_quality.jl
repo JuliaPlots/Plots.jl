@@ -14,7 +14,7 @@
                 :Requires,
                 :Pkg,
                 :UnitfulLatexify,
-            ]
+            ],
         ),
         ambiguities = false,
         deps_compat = false,  # FIXME: fails `CondaPkg`

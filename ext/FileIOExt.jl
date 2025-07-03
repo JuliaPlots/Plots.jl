@@ -22,12 +22,12 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     _fileio_save(pngfn, s)
 
     # now write from the file
-    write(io, read(open(pngfn), String))
+    return write(io, read(open(pngfn), String))
 end
 
 for be in (
-    Plots.PGFPlotsBackend,  # NOTE: I guess this can be removed in Plots@2.0
-)
+        Plots.PGFPlotsBackend,  # NOTE: I guess this can be removed in Plots@2.0
+    )
     showable(MIME"image/png"(), Plot{be}) && continue
     @eval Plots._show(io::IO, mime::MIME"image/png", plt::Plot{$be}) =
         _show_pdfbackends(io, mime, plt)
