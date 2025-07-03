@@ -911,7 +911,7 @@ function main(args)
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
             # devbranch = BRANCH,
             deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
-            repo_previews = repo,
+            repo_previews = "github.com/JuliaPlots/PlotDocs.jl",
             push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
             forcepush = true,
             repo,
