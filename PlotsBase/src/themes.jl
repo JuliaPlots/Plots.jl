@@ -7,7 +7,7 @@ function theme(s::Symbol; kw...)
     defaults = if haskey(PlotThemes._themes, s)
         copy(PlotThemes._themes[s].defaults)
     else
-        @warn ":$s is not a known theme, using :default"
+        @maxlog_warn ":$s is not a known theme, using :default"
         Dict{Symbol, Any}()
     end
     return _theme(s, defaults; kw...)

@@ -1108,7 +1108,7 @@ if style in (:box, :axes, :origin, :zerolines, :grid, :none)
     style
 else
     default_style = style ≡ :semi ? :box : :axes
-    @warn "Framestyle :$style is not (yet) supported by the PGFPlotsX backend. :$default_style was chosen instead."
+    @maxlog_warn "Framestyle :$style is not (yet) supported by the PGFPlotsX backend. :$default_style was chosen instead."
     default_style
 end
 

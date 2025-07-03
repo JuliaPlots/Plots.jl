@@ -68,7 +68,7 @@ function PlotsBase.extension_init(::PythonPlotBackend)
         end
     end
     if PythonPlot.version < v"3.4"
-        @warn """You are using Matplotlib $(PythonPlot.version), which is no longer
+        @maxlog_warn """You are using Matplotlib $(PythonPlot.version), which is no longer
         officially supported by the Plots community. To ensure smooth PlotsBase.jl
         integration update your Matplotlib library to a version ≥ 3.4.0
         """
@@ -261,7 +261,7 @@ function _py_linestyle(seriestype::Symbol, linestyle::Symbol)
     linestyle ≡ :dash && return "--"
     linestyle ≡ :dot && return ":"
     linestyle ≡ :dashdot && return "-."
-    @warn "Unknown linestyle $linestyle"
+    @maxlog_warn "Unknown linestyle $linestyle"
     return "-"
 end
 
@@ -297,13 +297,13 @@ function _py_marker(marker::Symbol)
     let _shapes = Shapes._shapes
         haskey(_shapes, marker) && return _py_marker(_shapes[marker])
     end
-    @warn "Unknown marker $marker"
+    @maxlog_warn "Unknown marker $marker"
     return "o"
 end
 
 # _py_marker(markers::AVec) = map(_py_marker, markers)
 function _py_marker(markers::AVec)
-    @warn "Vectors of markers are currently unsupported in PythonPlot: $markers"
+    @maxlog_warn "Vectors of markers are currently unsupported in PythonPlot: $markers"
     return markers |> first |> _py_marker
 end
 
@@ -597,7 +597,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
 
         if (a = series[:arrow]) ≢ nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
             if typeof(a) != Arrow
-                @warn "Unexpected type for arrow: $(typeof(a))"
+                @maxlog_warn "Unexpected type for arrow: $(typeof(a))"
             else
                 arrowprops = Dict(
                     "arrowstyle" => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
@@ -985,7 +985,7 @@ end
 
 function _py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     scale ∈ PlotsBase.supported_scales() ||
-        return @warn "Unhandled scale value in PythonPlot: $scale"
+        return @maxlog_warn "Unhandled scale value in PythonPlot: $scale"
     scl, kw = if scale ≡ :identity
         "linear", KW()
     else
@@ -1628,7 +1628,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
         nseries
     elseif lc > 1
         lc == nseries ||
-            @warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
+            @maxlog_warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
         nseries
     else
         1

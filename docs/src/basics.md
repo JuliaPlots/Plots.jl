@@ -67,7 +67,7 @@ plot(1:10, Any[rand(10), sin])               # 2 series: rand(10) and map(sin,x)
 
 A few environment variables control `PlotsBase` internals:
 - `PLOTSBASE_DEFAULT_BACKEND`: default backend, preempting the one set through the `Preferences` based mechanism
-- `PLOTSBASE_TMPDIR`: temporay files prefix for (html) files (some browser are denied access to temporary directorie such as `/tmp`)
+- `PLOTSBASE_TMPDIR`: temporary files prefix for (html) files (some browser are denied access to temporary directorie such as `/tmp`)
 - `PLOTSBASE_HOST_DEPENDENCY_LOCAL`: use a local `plotly` resource instead of a cloud hosted one
 
 #### For testing purposes
@@ -79,7 +79,9 @@ A few environment variables control `PlotsBase` internals:
 #### For building documentation
 - `PLOTDOCS_PACKAGES`: restrict the docs build to these backends
 - `PLOTDOCS_EXAMPLES`: restrict the docs build to these examples
+- `PLOTDOCS_PUSH_PREVIEW`: allow pushing the docs previews for pull requests
 - `PLOTDOCS_ANSICOLOR`: use ansicolor in julia code output, mostly for `unicodeplots`
+- `PLOTDOCS_SUFFIX`: docs build suffix in order to build multiple docs versions at a time
 
 ### Special julia variables
 - `PLOTSBASE_DEFAULTS`: a way to set default values for plotattributes (e.g. in your `startup.jl` file) : it should be a dictionary.

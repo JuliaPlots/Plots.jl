@@ -720,7 +720,7 @@ end
 function _cbar_unique(values, propname)
     out = last(values)
     if any(x != out for x in values)
-        @warn """
+        @maxlog_warn """
         Multiple series with different $propname share a colorbar.
         Colorbar may not reflect all series correctly.
         """
@@ -769,7 +769,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         # GR implicitly uses the maximal z value as the highest level
         if last(levels) < z_max
-            @warn "GR: highest contour level less than maximal z value is not supported."
+            @maxlog_warn "GR: highest contour level less than maximal z value is not supported."
             # replace levels, rather than assign to last(levels), to ensure type
             # promotion in case levels is an integer array
             pop!(levels)
@@ -1426,10 +1426,10 @@ function gr_get_legend_geometry(vp, sp)
     column_layout = if legend_column == -1
         (1, has_title + nseries)
     elseif legend_column > nseries && nseries != 0 # catch plot_title here
-        @warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
+        @maxlog_warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
         (1 + has_title, nseries)
     elseif legend_column == 0
-        @warn "n° of legend_column=$legend_column. Assuming vertical layout."
+        @maxlog_warn "n° of legend_column=$legend_column. Assuming vertical layout."
         vertical = true
         (has_title + nseries, 1)
     else
@@ -2240,7 +2240,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
         GR.drawimage(first(x), last(x), last(y), first(y), w, h, gr_color.(colors))
     else
         if something(series[:fillalpha], 1) < 1
-            @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
+            @maxlog_warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
         end
         _z, z_normalized = if (scale = sp[:colorbar_scale]) ≡ :identity
             z, get_z_normalized.(z, clims...)
@@ -2253,7 +2253,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
             isnan(_z[i]) && (rgba[i] = bg_rgba)
         end
         if ispolar(series)
-            y[1] < 0 && @warn "'y[1] < 0' (rmin) is not yet supported."
+            y[1] < 0 && @maxlog_warn "'y[1] < 0' (rmin) is not yet supported."
             rad_max = gr_y_axislims(sp)[2]
             GR.setwindow(-rad_max, rad_max, -rad_max, rad_max)  # square ar
             # nonuniformpolarcellarray(θ, ρ, nx, ny, color)

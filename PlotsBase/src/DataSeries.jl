@@ -265,7 +265,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
                 continue
             for (i, v) in enumerate(s)
                 if v ≤ 0
-                    @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
+                    @maxlog_warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
                     @debug "" exception = (DomainError(v), stacktrace())
                     break
                 end
@@ -301,7 +301,7 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
     for attr in PlotsBase.Commons._segmenting_vector_attributes
         if (v = get(series, attr, nothing)) isa PlotsBase.Commons.AVec &&
                 eachindex(v) != seg_range
-            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
+            @maxlog_warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
             if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
                 If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
@@ -320,7 +320,7 @@ function warn_on_inconsistent_shape_attrs(series, x, y, z, r)
     for attr in PlotsBase.Commons._segmenting_vector_attributes
         v = get(series, attr, nothing)
         if v isa PlotsBase.Commons.AVec && length(unique(v[r])) > 1
-            @warn "Different values of `$attr` specified for different shape vertices. Only first one will be used."
+            @maxlog_warn "Different values of `$attr` specified for different shape vertices. Only first one will be used."
             break
         end
     end
@@ -336,7 +336,7 @@ function PlotsBase.attr!(series::Series; kw...)
         if haskey(Commons._series_defaults, k)
             series[k] = v
         else
-            @warn "unused key $k in series attr"
+            @maxlog_warn "unused key $k in series attr"
         end
     end
     PlotsBase._series_updated(series[:subplot].plt, series)

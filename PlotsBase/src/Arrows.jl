@@ -40,7 +40,7 @@ function arrow(args...)
         elseif T <: Tuple && length(arg) == 2
             headlength, headwidth = Float64(arg[1]), Float64(arg[2])
         else
-            @warn "Skipped arrow arg $arg"
+            @maxlog_warn "Skipped arrow arg $arg"
         end
     end
     return Arrow(style, side, headlength, headwidth)

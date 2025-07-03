@@ -3,7 +3,7 @@ module Strokes
 export Stroke, Brush, stroke, brush
 
 import ..Colors: Colorant
-import ..Commons
+using ..Commons
 
 struct Stroke
     width
@@ -40,7 +40,7 @@ function stroke(args...; alpha = nothing)
         elseif Commons.all_reals(arg)
             width = arg
         else
-            @warn "Unused stroke arg: $arg ($(typeof(arg)))"
+            @maxlog_warn "Unused stroke arg: $arg ($(typeof(arg)))"
         end
     end
 
@@ -72,7 +72,7 @@ function brush(args...; alpha = nothing)
         elseif Commons.all_reals(arg)
             size = arg
         else
-            @warn "Unused brush arg: $arg ($(typeof(arg)))"
+            @maxlog_warn "Unused brush arg: $arg ($(typeof(arg)))"
         end
     end
 

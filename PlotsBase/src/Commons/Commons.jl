@@ -44,7 +44,7 @@ export origin, left, right, bottom, top, bbox, bbox!
 export DEFAULT_BBOX, DEFAULT_MINPAD, DEFAULT_LINEWIDTH
 export MM_PER_PX, MM_PER_INCH, DPI, PX_PER_INCH
 
-export GridLayout, EmptyLayout, RootLayout
+export GridLayout, EmptyLayout, RootLayout, @maxlog_warn
 export BBox, BoundingBox, mm, cm, inch, pt, w, h
 export bbox_to_pcts, xy_mm_to_pcts
 export Length, AbsoluteLength, Measure
@@ -102,11 +102,16 @@ const _segmenting_vector_attributes = (
 )
 const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 const _debug = Ref(false)
+const _max_log = Ref(1)
+
+macro maxlog_warn(exs...)
+    return :(@warn $(exs...) maxlog = $(_max_log[])) |> esc
+end
 
 # docs.julialang.org/en/v1/manual/methods/#Empty-generic-functions
-macro generic_functions(args...)
+macro generic_functions(exs...)
     blk = Expr(:block)
-    foreach(arg -> push!(blk.args, :(function $arg end)), args)
+    foreach(ex -> push!(blk.args, :(function $ex end)), exs)
     return blk |> esc
 end
 
@@ -162,34 +167,6 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     end
     return st
 end
-
-# macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
-#     import_ex = Expr(
-#         :import,
-#         Expr(
-#             :(:),
-#             Expr(:., :., :., parent),
-#             (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
-#         ),
-#     )
-#     export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
-#     return Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
-# end
-
-# "these should only be needed in frontend modules"
-# @ScopeModule(
-#     Frontend,
-#     Commons,
-#     _subplot_defaults,
-#     _axis_defaults,
-#     _plot_defaults,
-#     _series_defaults,
-#     _match_map,
-#     _match_map2,
-#     @add_attributes,
-#     preprocess_attributes!,
-#     _override_seriestype_check
-# )
 
 function fg_color(plotattributes::AKW)
     fg = get(plotattributes, :foreground_color, :auto)

@@ -78,7 +78,7 @@ function series_annotations(strs::AVec, args...)
         elseif isa(arg, AVec)
             strs = collect(zip(strs, arg))
         else
-            @warn "Unused SeriesAnnotations arg: $arg ($(typeof(arg)))"
+            @maxlog_warn "Unused SeriesAnnotations arg: $arg ($(typeof(arg)))"
         end
     end
     return SeriesAnnotations(map(s -> _text_label(s, fnt), strs), fnt, shp, scalefactor)

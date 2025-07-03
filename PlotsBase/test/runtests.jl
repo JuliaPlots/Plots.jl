@@ -93,8 +93,6 @@ is_ci() = Base.get_bool_env("CI", false)
 
 is_ci() || @eval using Gtk  # see JuliaPlots/VisualRegressionTests.jl/issues/30
 
-ref_name(i) = "ref" * lpad(i, 3, '0')
-
 # skip the majority of tests if we only want to update reference images or under `PkgEval` (timeout limit)
 names = if is_auto()
     ["reference"]

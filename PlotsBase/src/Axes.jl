@@ -126,12 +126,12 @@ function Commons.axis_limits(
         if lmin isa Number && isfinite(lmin)
             amin = lmin
         elseif lmin isa Symbol
-            lmin ≡ :auto || @warn "Invalid min $(letter)limit" lmin
+            lmin ≡ :auto || @maxlog_warn "Invalid min $(letter)limit" lmin
         end
         if lmax isa Number && isfinite(lmax)
             amax = lmax
         elseif lmax isa Symbol
-            lmax ≡ :auto || @warn "Invalid max $(letter)limit" lmax
+            lmax ≡ :auto || @maxlog_warn "Invalid max $(letter)limit" lmax
         end
     end
     if lims ≡ :symmetric
@@ -198,7 +198,7 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     elseif widen isa Number
         return widen
     else
-        widen ≡ :auto || @warn "Invalid value specified for `widen`: $widen"
+        widen ≡ :auto || @maxlog_warn "Invalid value specified for `widen`: $widen"
     end
 
     # automatic behavior: widen if limits aren't specified and series type is appropriate
@@ -226,7 +226,7 @@ process_limits(lims::AVec, axis) =
     nothing
 process_limits(lims, axis) = nothing
 
-warn_invalid_limits(lims, letter) = @warn """
+warn_invalid_limits(lims, letter) = @maxlog_warn """
 Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
 $(letter)lims = $lims
 """
@@ -304,7 +304,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
             arg,
             get_attr_symbol(letter, :foreground_color_axis),
         )
-        @warn "Skipped $(letter)axis arg $arg"
+        @maxlog_warn "Skipped $(letter)axis arg $arg"
     end
 end
 
@@ -331,7 +331,7 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
             plotattributes[k] = v
         elseif k ≡ :unit
             if !isnothing(plotattributes[k]) && plotattributes[k] != v
-                @warn "Overriding unit for $(axis[:letter]) axis: $(plotattributes[k]) -> $v.  This will produce a plot, but series plotted before the override cannot update and will therefore be incorrectly treated as if they had the new units."
+                @maxlog_warn "Overriding unit for $(axis[:letter]) axis: $(plotattributes[k]) -> $v.  This will produce a plot, but series plotted before the override cannot update and will therefore be incorrectly treated as if they had the new units."
             end
             plotattributes[k] = v
         else

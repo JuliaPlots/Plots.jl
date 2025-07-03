@@ -9,6 +9,8 @@ mutable struct PlotExample
     exprs::Expr
 end
 
+ref_name(i) = "ref" * lpad(i, 3, '0')
+
 # COV_EXCL_START
 PlotExample(header::AbstractString, expr::Expr) = PlotExample(header, "", expr)
 PlotExample(header::AbstractString, imports::Expr, expr::Expr) =
@@ -1422,7 +1424,7 @@ function test_examples(
             if strict
                 rethrow(ex)
             else
-                @warn "Example $pkgname:$i:$(_examples[i].header) failed with: $ex"
+                @maxlog_warn "Example $pkgname:$i:$(_examples[i].header) failed with: $ex"
             end
             # COV_EXCL_STOP
         end

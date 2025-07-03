@@ -61,7 +61,7 @@ is_pkgeval() || @testset "Backends" begin
         fn = Base.invokelatest(
             get(save_func, pkgname, mod.PlotsBase.png),
             pl,
-            tempname() * ref_name(i),
+            tempname() * PlotsBase.ref_name(i),
         )
         @test filesize(fn) > 1_000
     end

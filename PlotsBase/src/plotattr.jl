@@ -26,7 +26,7 @@ The information is the same as that given on https://docs.juliaplots.org/latest/
 """
 function plotattr()
     if isijulia()
-        @warn "Fuzzy finding of attributes is disabled in notebooks."
+        @maxlog_warn "Fuzzy finding of attributes is disabled in notebooks."
         return
     end
     attr = Symbol(JLFzf.inter_fzf(collect(Commons._all_attrs), "--read0", "--height=80%"))
