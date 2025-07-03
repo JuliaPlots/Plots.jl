@@ -200,9 +200,9 @@ end
 @testset "More plots" begin
     @testset "data as $dtype" for dtype in
         [:Vectors, :Matrices, Symbol("Vectors of vectors")]
-        if dtype == :Vectors
+        if dtype ≡ :Vectors
             x, y, z = randn(10), randn(10), randn(10)
-        elseif dtype == :Matrices
+        elseif dtype ≡ :Matrices
             x, y, z = randn(10, 2), randn(10, 2), randn(10, 2)
         else
             x, y, z = [rand(10), rand(20)], [rand(10), rand(20)], [rand(10), rand(20)]

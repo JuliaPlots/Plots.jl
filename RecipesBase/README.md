@@ -91,7 +91,7 @@ gr()
 # processing pipeline (see the Pipeline section of the Plots documentation).
 #   It will plot 5 line plots (a 5-column matrix is returned from the recipe).
 #   All will have black circles:
-#       - user override for markershape: :c == :circle
+#       - user override for markershape: :c ≡ :circle
 #       - customcolor overridden to :black, and markercolor is forced to be customcolor
 #   If markershape is an unsupported keyword, the call will error.
 #   By default, a warning will be shown for an unsupported keyword.

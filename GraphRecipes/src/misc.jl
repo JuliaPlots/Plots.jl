@@ -3,7 +3,7 @@
 
 function add_ast(adjlist, names, depthdict, depthlists, nodetypes, ex::Expr, parent_idx)
     idx = length(names) + 1
-    iscall = ex.head == :call
+    iscall = ex.head ≡ :call
     push!(names, iscall ? string(ex.args[1]) : string(ex.head))
     push!(nodetypes, iscall ? :call : :expr)
     l = Int[]
@@ -53,7 +53,7 @@ end
     method := :buchheim
     root --> :top
 
-    # markercolor --> Symbol[(nt == :call ? :pink : nt == :leaf ? :white : :lightgreen) for nt in nodetypes]
+    # markercolor --> Symbol[(nt ≡ :call ? :pink : nt ≡ :leaf ? :white : :lightgreen) for nt in nodetypes]
 
     # # compute the y-values from the depthdict dict
     # n = length(depthlists)-1

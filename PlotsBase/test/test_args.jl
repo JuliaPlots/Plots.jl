@@ -121,14 +121,14 @@ end
     ts = range(DateTime(today()), step = Hour(1), length = 24)
     p1 = plot(ts, 100randn(24))
     vline!(p1, [now()])
-    @test p1[1][:yaxis][:formatter] == :auto
+    @test p1[1][:yaxis][:formatter] ≡ :auto
     @test p1[1][:xaxis][:formatter] == PlotsBase.datetimeformatter
     p2 = plot(rand(4) .* 10^6, rand(4) .* 10^6, xformatter = :plain, yformatter = :plain)
     vline!(p2, [10^6])
-    @test p2[1][:yaxis][:formatter] == :plain
-    @test p2[1][:xaxis][:formatter] == :plain
+    @test p2[1][:yaxis][:formatter] ≡ :plain
+    @test p2[1][:xaxis][:formatter] ≡ :plain
     p3 = plot(rand(4) .* 10^6, rand(4) .* 10^6, yformatter = :plain)
     vline!(p3, [10^6], xformatter = :plain)
-    @test p3[1][:yaxis][:formatter] == :plain
-    @test p3[1][:xaxis][:formatter] == :plain
+    @test p3[1][:yaxis][:formatter] ≡ :plain
+    @test p3[1][:xaxis][:formatter] ≡ :plain
 end

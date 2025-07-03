@@ -74,7 +74,7 @@ end
         elseif qqline ≡ :fit
             itc, slp = hcat(fill!(similar(h.qx), 1), h.qx) \ h.qy
             ys = slp .* xs .+ itc
-        else # if qqline ≡ :quantile || qqline == :R
+        else # if qqline ≡ :quantile || qqline ≡ :R
             quantx, quanty = quantile(h.qx, [0.25, 0.75]), quantile(h.qy, [0.25, 0.75])
             slp = diff(quanty) ./ diff(quantx)
             ys = quanty .+ slp .* (xs .- quantx)

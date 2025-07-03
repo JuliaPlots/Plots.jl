@@ -223,7 +223,7 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
                 error("Can only specify one filterexpression (one of 'when' or 'every')")
 
             filterexpr =  #    when          every
-                arg == :when ? args[i + 1] : :(mod1($countersym, $(args[i + 1])) == 1)
+                arg ≡ :when ? args[i + 1] : :(mod1($countersym, $(args[i + 1])) == 1)
 
             i += 1
         elseif arg isa Expr && arg.head == Symbol("=")

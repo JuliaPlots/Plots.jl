@@ -37,7 +37,7 @@ function _process_seriesrecipe(plt, plotattributes)
     st = plotattributes[:seriestype] = type_alias(plt, st)
 
     # shapes shouldn't have fillrange set
-    if plotattributes[:seriestype] == :shape
+    if plotattributes[:seriestype] ≡ :shape
         plotattributes[:fillrange] = nothing
     end
 

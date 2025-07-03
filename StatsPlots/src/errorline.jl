@@ -74,7 +74,7 @@ function compute_error(
     # Takes 2d matrix [x,y] and computes the desired error type for each row (value of x)
     if errortype ≡ :std || errortype ≡ :sem
         y_error = mapslices(NaNMath.std, y, dims = 2)
-        if errortype == :sem
+        if errortype ≡ :sem
             y_error = y_error ./ sqrt(size(y, 2))
         end
 

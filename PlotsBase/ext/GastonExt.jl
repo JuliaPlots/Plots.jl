@@ -577,7 +577,7 @@ function gaston_parse_axes_attrs(
                     end
                     push!(axesconf, "set $(letter)$(I)range [$lo:$hi]")
 
-                    offset = if dims == 2 && letter == :y
+                    offset = if dims == 2 && letter ≡ :y
                         # ticks appear too close to the border, offset them by 1 character
                         "offset " * string(axis[:mirror] ? 1 : -1)
                     else
