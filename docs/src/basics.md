@@ -79,6 +79,7 @@ A few environment variables control `PlotsBase` internals:
 #### For building documentation
 - `PLOTDOCS_PACKAGES`: restrict the docs build to these backends
 - `PLOTDOCS_EXAMPLES`: restrict the docs build to these examples
+- `PLOTDOCS_PUSH_PREVIEW`: allow pushing the docs previews for pull requests
 - `PLOTDOCS_ANSICOLOR`: use ansicolor in julia code output, mostly for `unicodeplots`
 
 ### Special julia variables

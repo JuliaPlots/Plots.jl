@@ -695,17 +695,19 @@ function main(args)
             push!(gallery_assets, assets)
         end
     end
-    user_gallery, cb, assets = makedemos(
-        joinpath("user_gallery");
-        root = @__DIR__, src = work, edit_branch = BRANCH
-    )
-    push!(gallery_callbacks, cb)
-    push!(gallery_assets, assets)
-    unique!(gallery_assets)
-    @show user_gallery gallery_assets
+    if !debug
+        user_gallery, cb, assets = makedemos(
+            joinpath("user_gallery");
+            root = @__DIR__, src = work, edit_branch = BRANCH
+        )
+        push!(gallery_callbacks, cb)
+        push!(gallery_assets, assets)
+        unique!(gallery_assets)
+        @show user_gallery gallery_assets
+    end
 
     pages = if (debug = length(packages) ≤ 1)  # debug
-        ["Home" => "index.md", "Gallery" => gallery, "User Gallery" => user_gallery]
+        ["Home" => "index.md", "Gallery" => gallery]
     else  # release
         [
             "Home" => "index.md",
@@ -805,7 +807,7 @@ function main(args)
 
     execute = true  # set to true for executing notebooks and documenter
     nb = false      # set to true to generate the notebooks
-    @time for (root, _, files) in walkdir(unitfulext), file in files
+    debug || @time for (root, _, files) in walkdir(unitfulext), file in files
         last(splitext(file)) == ".jl" || continue
         ipath = joinpath(root, file)
         opath = replace(ipath, src_unitfulext => "$work/generated") |> splitdir |> first
@@ -900,16 +902,16 @@ function main(args)
     end
 
     @info "deploydocs"
-    repo = "github.com/JuliaPlots/Plots.jl.git"  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
+    repo = "JuliaPlots/Plots.jl"
     withenv("GITHUB_REPOSITORY" => repo) do
         deploydocs(;
             root = @__DIR__,
             target = build,
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
             # devbranch = BRANCH,
-            deploy_repo = "github.com/JuliaPlots/PlotDocs.jl.git",
+            deploy_repo = "github.com/JuliaPlots/PlotDocs.jl.git",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
             repo_previews = repo,
-            push_preview = true,
+            push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
             forcepush = true,
             repo,
         )
