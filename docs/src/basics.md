@@ -81,6 +81,7 @@ A few environment variables control `PlotsBase` internals:
 - `PLOTDOCS_EXAMPLES`: restrict the docs build to these examples
 - `PLOTDOCS_PUSH_PREVIEW`: allow pushing the docs previews for pull requests
 - `PLOTDOCS_ANSICOLOR`: use ansicolor in julia code output, mostly for `unicodeplots`
+- `PLOTDOCS_SUFFIX`: docs build suffix in order to build multiple docs versions at a time
 
 ### Special julia variables
 - `PLOTSBASE_DEFAULTS`: a way to set default values for plotattributes (e.g. in your `startup.jl` file) : it should be a dictionary.
