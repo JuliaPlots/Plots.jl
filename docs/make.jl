@@ -655,7 +655,7 @@ function main(args)
     gallery_assets, gallery_callbacks, user_gallery = map(_ -> [], 1:3)
     needs_rng_fix = Dict{Symbol, Any}()
 
-    @time for pkg in packages
+    @time "gallery" for pkg in packages
         be = packages_backends[pkg]
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
         let (path, cb, assets) = makedemos(
@@ -761,7 +761,7 @@ function main(args)
     @show debug selected_pages length(gallery) pages SRC_DIR WORK_DIR BLD_DIR
 
     n = 0
-    @time for (root, dirs, files) in walkdir(SRC_DIR)
+    @time "copy to src" for (root, dirs, files) in walkdir(SRC_DIR)
         prefix = replace(root, SRC_DIR => WORK_DIR)
         foreach(dir -> mkpath(joinpath(WORK_DIR, dir)), dirs)
         for file in files
@@ -787,7 +787,7 @@ function main(args)
 
         execute = true  # set to true for executing notebooks and documenter
         nb = false      # set to true to generate the notebooks
-        @time for (root, _, files) in walkdir(unitfulext), file in files
+        @time "UnitfulExt" for (root, _, files) in walkdir(unitfulext), file in files
             last(splitext(file)) == ".jl" || continue
             ipath = joinpath(root, file)
             opath = replace(ipath, src_unitfulext => "$work/generated") |> splitdir |> first
@@ -800,7 +800,7 @@ function main(args)
     @info "makedocs ansicolor=$ansicolor"
     failed = false
     try
-        @time makedocs(;
+        @time "makedocs" makedocs(;
             format = Documenter.HTML(;
                 size_threshold = nothing,
                 prettyurls = Base.get_bool_env("CI", false),
@@ -822,8 +822,8 @@ function main(args)
         e isa InterruptException || rethrow()
     end
 
-    @info "gallery_callbacks"
-    foreach(gallery_callbacks) do cb
+    @info "gallery callbacks"
+    @time "gallery callbacks" foreach(gallery_callbacks) do cb
         cb()  # URL redirection for DemoCards-generated gallery
     end
 
@@ -832,7 +832,7 @@ function main(args)
     @info "post-process gallery html files to remove `rng` in user displayed code"
     # non-exhaustive list of examples to be fixed:
     # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
-    for pkg in packages
+    @time "post-process `rng`" for pkg in packages
         be = packages_backends[pkg]
         prefix = joinpath(BLD_DIR, "gallery", string(be), "generated")
         must_fix = needs_rng_fix[pkg]
@@ -863,8 +863,8 @@ function main(args)
         end
     end
 
-    @info "post-process temporary work dir"
-    for file in Glob.glob("*/index.html", BLD_DIR)
+    @info "post-process work dir"
+    @time "post-process work dir" for file in Glob.glob("*/index.html", BLD_DIR)
         lines = readlines(file; keep = true)
         any(line -> occursin(joinpath("blob", BRANCH, "docs"), line), lines) || continue
         @info "fixing $file" maxlog = 10
@@ -888,7 +888,7 @@ function main(args)
 
     @info "deploydocs"
     repo = "JuliaPlots/Plots.jl"
-    withenv("GITHUB_REPOSITORY" => repo) do
+    @time "deploydocs" withenv("GITHUB_REPOSITORY" => repo) do
         deploydocs(;
             root = @__DIR__,
             target = build,
