@@ -34,7 +34,7 @@ jobs:
           - '1' # latest stable
         experimental:
           - false
-        os: [ubuntu-latest, windows-latest, macos-14]  # cannot use macos-latest on x64 (only aarch64)
+        os: [ubuntu-latest, windows-latest, macos-13]  # cannot use macos-latest a.k.a macos-14 on x64 (only aarch64)
         arch: [x64]
         include:
           - os: macos-latest
