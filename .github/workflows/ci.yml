@@ -29,19 +29,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        experimental: [false]
         version:
           - 'lts'  # minimal declared julia compat in `Project.toml`
           - '1'  # latest stable
-        experimental:
-          - false
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
         include:
           # NOTE: macos-latest resolves to macos-14 (only aarch64), use macos-13 for x86.
           - os: macos-latest
+            experimental: false
             arch: aarch64
             version: 'lts'
           - os: macos-latest
+            experimental: false
             arch: aarch64
             version: '1'
           - os: ubuntu-latest
