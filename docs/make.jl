@@ -68,30 +68,6 @@ end
 
 @eval DemoCards get_logopath() = $(joinpath(SRC_DIR, "assets", "axis_logo_600x400.png"))
 
-@eval Documenter gitrm_copy(src, dst) = begin
-    @debug "gitrm_copy $(dst)"
-    # Remove individual entries since with versions=nothing the root
-    # would be removed and we want to preserve previews
-    if isdir(dst)
-        for x in filter!(!in((".git", "previews")), readdir(dst))
-            # --ignore-unmatch so that we wouldn't get errors if dst does not exist
-            run(`$(git()) rm -rf --ignore-unmatch $(joinpath(dst, x))`)
-        end
-    end
-    # git rm also remove parent directories
-    # if they are empty so need to mkpath after
-    mkpath(dst)
-    # Copy individual entries rather then the full folder since with
-    # versions=nothing it would replace the root including e.g. the .git folder
-    for x in readdir(src)
-        @debug "$(joinpath(src, x)) -> $(joinpath(dst, x))"
-        println(joinpath(src, x), joinpath(dst, x))
-        cp(joinpath(src, x), joinpath(dst, x); force = true)
-    end
-    return
-end
-
-
 # ----------------------------------------------------------------------
 
 edit_url(args...) =
