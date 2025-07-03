@@ -14,7 +14,7 @@ function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
     oargs = vcat(oarg1, originargs...)
     orighor = :left
     origver = :top
-    for oarg ∈ oargs
+    for oarg in oargs
         if oarg ≡ :center
             orighor = origver = oarg
         elseif oarg in (:left, :right, :hcenter)
@@ -25,7 +25,7 @@ function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
             @warn "Unused origin arg in bbox construction: $oarg"
         end
     end
-    bbox(x, y, w, h; h_anchor = orighor, v_anchor = origver)
+    return bbox(x, y, w, h; h_anchor = orighor, v_anchor = origver)
 end
 
 # create a new bbox
@@ -46,7 +46,7 @@ function bbox(x, y, width, height; h_anchor = :left, v_anchor = :top)
     else
         1h - y - height
     end
-    BoundingBox(left, top, width, height)
+    return BoundingBox(left, top, width, height)
 end
 
 # NOTE: (0,0) is the top-left !!!
@@ -67,14 +67,14 @@ bottom(layout::AbstractLayout) = bottom(bbox(layout))
 width(layout::AbstractLayout) = width(bbox(layout))
 height(layout::AbstractLayout) = height(bbox(layout))
 
-leftpad(::AbstractLayout)   = 0mm
-toppad(::AbstractLayout)    = 0mm
-rightpad(::AbstractLayout)  = 0mm
+leftpad(::AbstractLayout) = 0mm
+toppad(::AbstractLayout) = 0mm
+rightpad(::AbstractLayout) = 0mm
 bottompad(::AbstractLayout) = 0mm
 
-leftpad(pad)   = pad[1]
-toppad(pad)    = pad[2]
-rightpad(pad)  = pad[3]
+leftpad(pad) = pad[1]
+toppad(pad) = pad[2]
+rightpad(pad) = pad[3]
 bottompad(pad) = pad[4]
 
 Base.show(io::IO, layout::AbstractLayout) = print(io, "$(typeof(layout))$(size(layout))")
@@ -128,18 +128,18 @@ mutable struct GridLayout <: AbstractLayout
     attr::KW
 end
 
-leftpad(layout::GridLayout)   = leftpad(layout.minpad)
-toppad(layout::GridLayout)    = toppad(layout.minpad)
-rightpad(layout::GridLayout)  = rightpad(layout.minpad)
+leftpad(layout::GridLayout) = leftpad(layout.minpad)
+toppad(layout::GridLayout) = toppad(layout.minpad)
+rightpad(layout::GridLayout) = rightpad(layout.minpad)
 bottompad(layout::GridLayout) = bottompad(layout.minpad)
 
 function GridLayout(
-    dims...;
-    parent = RootLayout(),
-    heights = nothing,
-    widths = nothing,
-    kw...,
-)
+        dims...;
+        parent = RootLayout(),
+        heights = nothing,
+        widths = nothing,
+        kw...,
+    )
     # Check the values for heights and widths if values are provided
     all_between_one(xs) = all(x -> 0 < x < 1, xs)
     if heights ≢ nothing
@@ -162,14 +162,14 @@ function GridLayout(
         DEFAULT_MINPAD[],
         DEFAULT_BBOX[],
         grid,
-        Measure[w * pct for w ∈ widths],
-        Measure[h * pct for h ∈ heights],
+        Measure[w * pct for w in widths],
+        Measure[h * pct for h in heights],
         KW(kw),
     )
-    for i ∈ eachindex(grid)
+    for i in eachindex(grid)
         grid[i] = EmptyLayout(layout)
     end
-    layout
+    return layout
 end
 
 Base.size(layout::GridLayout) = size(layout.grid)

@@ -37,12 +37,12 @@ end
 
 const all_pkgs = Pkg.available()
 @show all_pkgs
-const deplists = Dict(pkg => Pkg.dependents(pkg) for pkg ∈ all_pkgs)
+const deplists = Dict(pkg => Pkg.dependents(pkg) for pkg in all_pkgs)
 @show deplists
 
-const childlists = Dict(pkg => Set{String}() for pkg ∈ all_pkgs)
-for pkg ∈ all_pkgs
-    for dep ∈ deplists[pkg]
+const childlists = Dict(pkg => Set{String}() for pkg in all_pkgs)
+for pkg in all_pkgs
+    for dep in deplists[pkg]
         if haskey(childlists, dep)
             push!(childlists[dep], pkg)
         else
@@ -55,33 +55,33 @@ end
 @show childlists
 
 function add_deps(pkg, deps = Set([pkg]))
-    for dep ∈ deplists[pkg]
+    for dep in deplists[pkg]
         if !(dep in deps)
             push!(deps, dep)
             add_deps(dep, deps)
         end
     end
-    deps
+    return deps
 end
 
 function add_children(pkg, children = Set([pkg]))
-    for child ∈ childlists[pkg]
+    for child in childlists[pkg]
         if !(child in children)
             push!(children, child)
             add_children(child, children)
         end
     end
-    children
+    return children
 end
 
 function plotdeps(pkg)
     pkgs = unique(union(add_deps(pkg), add_children(pkg)))
-    idxmap = Dict(p => i for (i, p) ∈ enumerate(pkgs))
+    idxmap = Dict(p => i for (i, p) in enumerate(pkgs))
 
     source, destiny = Int[], Int[]
-    for pkg ∈ pkgs
+    for pkg in pkgs
         i = idxmap[pkg]
-        for dep ∈ deplists[pkg]
+        for dep in deplists[pkg]
             # if !haskey(_idxmap, dep)
             # 	push!(pkgs, dep)
             # 	push!(_alist, [])
@@ -97,7 +97,7 @@ function plotdeps(pkg)
             # push!(_alist[j], i)
         end
     end
-    depsgraph(source, destiny, pkgs, root = :bottom)
+    return depsgraph(source, destiny, pkgs, root = :bottom)
 end
 
 # # pkgs = Set([pkg])

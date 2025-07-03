@@ -27,7 +27,7 @@ function _show_pdfbackends(io::IO, ::MIME"image/png", plt::Plot)
     # cleanup
     rm("$fn.pdf")
     rm("$fn.png")
-    nothing
+    return nothing
 end
 
 # Possibly need to create another extension that has both pgfplotsx and showio

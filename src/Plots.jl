@@ -11,7 +11,7 @@ end
 function __init__()
     ccall(:jl_generating_output, Cint, ()) == 1 && return
     PlotsBase.default_backend()
-    nothing
+    return nothing
 end
 
 end  # module

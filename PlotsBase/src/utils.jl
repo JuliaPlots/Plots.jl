@@ -1,11 +1,10 @@
-
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
 
 function replace_image_with_heatmap(z::AbstractMatrix{<:Colorant})
     n, m = size(z)
     colors = palette(vec(z))
-    reshape(1:(n * m), n, m), colors
+    return reshape(1:(n * m), n, m), colors
 end
 
 "Build line segments for plotting"
@@ -17,36 +16,36 @@ end
 
 Segments() = Segments(Float64)
 Segments(::Type{T}) where {T} = Segments(T[])
-Segments(p::Int) = Segments(NTuple{p,Float64}[])
+Segments(p::Int) = Segments(NTuple{p, Float64}[])
 
 # Segments() = Segments(zeros(0))
 
 to_nan(::Type{Float64}) = NaN
-to_nan(::Type{NTuple{2,Float64}}) = (NaN, NaN)
-to_nan(::Type{NTuple{3,Float64}}) = (NaN, NaN, NaN)
+to_nan(::Type{NTuple{2, Float64}}) = (NaN, NaN)
+to_nan(::Type{NTuple{3, Float64}}) = (NaN, NaN, NaN)
 
 Commons.coords(segs::Segments{Float64}) = segs.pts
-Commons.coords(segs::Segments{NTuple{2,Float64}}) =
+Commons.coords(segs::Segments{NTuple{2, Float64}}) =
     (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
-Commons.coords(segs::Segments{NTuple{3,Float64}}) =
+Commons.coords(segs::Segments{NTuple{3, Float64}}) =
     (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
     foreach(v -> push!(segments.pts, convert(T, v)), vs)
-    segments
+    return segments
 end
 
 function Base.push!(segments::Segments{T}, vs::AVec) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
     foreach(v -> push!(segments.pts, convert(T, v)), vs)
-    segments
+    return segments
 end
 
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
 
-float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
+float_extended_type(x::AbstractArray{T}) where {T} = Union{T, Float64}
 float_extended_type(x::AbstractArray{Real}) = Float64
 
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
@@ -70,7 +69,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     )
 
     # update alphas
-    for asym ∈ (:linealpha, :markeralpha, :fillalpha)
+    for asym in (:linealpha, :markeralpha, :fillalpha)
         if plotattributes[asym] ≡ nothing
             plotattributes[asym] = plotattributes[:seriesalpha]
         end
@@ -85,14 +84,16 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
     # update other colors (`linecolor`, `markercolor`, `fillcolor`) <- for grep
-    for s ∈ (:line, :marker, :fill)
+    for s in (:line, :marker, :fill)
         csym, asym = Symbol(s, :color), Symbol(s, :alpha)
         plotattributes[csym] = if plotattributes[csym] ≡ :auto
-            plot_color(if Commons.has_black_border_for_default(stype) && s ≡ :line
-                sp[:foreground_color_subplot]
-            else
-                scolor
-            end)
+            plot_color(
+                if Commons.has_black_border_for_default(stype) && s ≡ :line
+                    sp[:foreground_color_subplot]
+                else
+                    scolor
+                end
+            )
         elseif plotattributes[csym] ≡ :match
             plot_color(scolor)
         else
@@ -137,7 +138,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     plotattributes[:label] = Commons.label_to_string.(plotattributes[:label], globalIndex)
 
     Commons._replace_linewidth(plotattributes)
-    plotattributes
+    return plotattributes
 end
 """
 1-row matrices will give an element
@@ -148,10 +149,10 @@ function slice_arg(v::AMat, idx::Int)
     isempty(v) && return v
     c = mod1(idx, size(v, 2))
     m, n = axes(v)
-    size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
+    return size(v, 1) == 1 ? v[first(m), n[c]] : v[:, n[c]]
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
-slice_arg(v::NTuple{2,AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
+slice_arg(v::NTuple{2, AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
 slice_arg(v, idx) = v
 
 """
@@ -160,12 +161,12 @@ and set into plotattributes[k]. Matrices are sliced by column.
 if nothing is set (or container is empty), return the existing value.
 """
 function slice_arg!(
-    plotattributes_in,
-    plotattributes_out,
-    k::Symbol,
-    idx::Int,
-    remove_pair::Bool,
-)
+        plotattributes_in,
+        plotattributes_out,
+        k::Symbol,
+        idx::Int,
+        remove_pair::Bool,
+    )
     v = get(plotattributes_in, k, plotattributes_out[k])
     plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ Commons._plot_attrs
         slice_arg(v, idx)
@@ -173,20 +174,20 @@ function slice_arg!(
         v
     end
     remove_pair && RecipesPipeline.reset_kw!(plotattributes_in, k)
-    nothing
+    return nothing
 end
 
 function _slice_series_attrs!(
-    plotattributes::AKW,
-    plt::Plot,
-    sp::Subplot,
-    commandIndex::Int,
-)
-    for k ∈ keys(_series_defaults)
+        plotattributes::AKW,
+        plt::Plot,
+        sp::Subplot,
+        commandIndex::Int,
+    )
+    for k in keys(_series_defaults)
         haskey(plotattributes, k) &&
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
     end
-    plotattributes
+    return plotattributes
 end
 # -----------------------------------------------------------------------------
 
@@ -198,7 +199,7 @@ function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
     vmin, vmax = ignorenan_extrema(v)
     extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
     extra_max = 0.5(v[n] - v[n - 1])
-    vcat(vmin - extra_min, 0.5(v[1:(n - 1)] + v[2:n]), vmax + extra_max)
+    return vcat(vmin - extra_min, 0.5(v[1:(n - 1)] + v[2:n]), vmax + extra_max)
 end
 
 _heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
@@ -206,7 +207,7 @@ _heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
 
 function _heatmap_edges(::Val{false}, v::AVec, scale::Symbol, isedges::Bool, ispolar::Bool)
     f, invf = scale_inverse_scale_func(scale)
-    invf.(__heatmap_edges(f.(v), isedges, ispolar))
+    return invf.(__heatmap_edges(f.(v), isedges, ispolar))
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
@@ -218,13 +219,13 @@ heatmap_edges(
 ) = _heatmap_edges(Val(scale ≡ :identity), v, scale, isedges, ispolar)
 
 function heatmap_edges(
-    x::AVec,
-    xscale::Symbol,
-    y::AVec,
-    yscale::Symbol,
-    z_size::NTuple{2,Int},
-    ispolar::Bool = false,
-)
+        x::AVec,
+        xscale::Symbol,
+        y::AVec,
+        yscale::Symbol,
+        z_size::NTuple{2, Int},
+        ispolar::Bool = false,
+    )
     nx, ny = length(x), length(y)
     # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
     # the correct check, since (4, 3) != (3, 4) and a misleading plot is produced.
@@ -232,45 +233,45 @@ function heatmap_edges(
     isedges = z_size == (ny - 1, nx - 1)
     (ismidpoints || isedges) ||
         """
-        Length of x & y does not match the size of z.
-        Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
-        or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).
-        """ |>
+    Length of x & y does not match the size of z.
+    Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+    or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).
+    """ |>
         ArgumentError |>
         throw
-    (
+    return (
         _heatmap_edges(Val(xscale ≡ :identity), x, xscale, isedges, false),
         _heatmap_edges(Val(yscale ≡ :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
     )
 end
 
-is_uniformly_spaced(v; tol = 1e-6) =
-    let dv = diff(v)
-        maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
-    end
+is_uniformly_spaced(v; tol = 1.0e-6) =
+let dv = diff(v)
+    maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     rmin, rmax = r_extrema
     r = @. (r - rmin) / (rmax - rmin)
     x = @. r * cos(theta)
     y = @. r * sin(theta)
-    x, y
+    return x, y
 end
 
 fakedata(sz::Int...) = fakedata(Random.seed!(SEED), sz...)
 
 function fakedata(rng::Random.AbstractRNG, sz...)
     y = zeros(sz...)
-    for r ∈ 2:size(y, 1)
+    for r in 2:size(y, 1)
         y[r, :] = 0.95vec(y[r - 1, :]) + randn(rng, size(y, 2))
     end
-    y
+    return y
 end
 
 isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
 isatom() = :Atom in nameof.(collect(values(Base.loaded_modules)))
 
-limsType(lims::Tuple{<:Real,<:Real}) = :limits
+limsType(lims::Tuple{<:Real, <:Real}) = :limits
 limsType(lims::Symbol) = lims ≡ :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
@@ -298,22 +299,22 @@ function nansplit(v::AVec)
         end
         v = v[(idx + 1):end]
     end
-    vs
+    return vs
 end
 
 function nanvcat(vs::AVec)
     v_out = zeros(0)
     foreach(v -> nanappend!(v_out, v), vs)
-    v_out
+    return v_out
 end
 
 # compute one side of a fill range from a ribbon
 function make_fillrange_side(y::AVec, rib)
     frs = zeros(axes(y))
-    for (i, yi) ∈ pairs(y)
+    for (i, yi) in pairs(y)
         frs[i] = yi + _cycle(rib, i)
     end
-    frs
+    return frs
 end
 
 # turn a ribbon into a fillrange
@@ -323,13 +324,13 @@ function make_fillrange_from_ribbon(kw::AKW)
     rib1, rib2 = -first(rib), last(rib)
     # kw[:ribbon] = nothing
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
-    (get(kw, :fillalpha, nothing) ≡ nothing) && (kw[:fillalpha] = 0.5)
+    return (get(kw, :fillalpha, nothing) ≡ nothing) && (kw[:fillalpha] = 0.5)
 end
 
 #turn tuple of fillranges to one path
 function concatenate_fillrange(x, y::Tuple)
     rib1, rib2 = collect(first(y)), collect(last(y)) # collect needed until https://github.com/JuliaLang/julia/pull/37629 is merged
-    vcat(x, reverse(x)), vcat(rib1, reverse(rib2))  # x, y
+    return vcat(x, reverse(x)), vcat(rib1, reverse(rib2))  # x, y
 end
 
 get_sp_lims(sp::Subplot, letter::Symbol) = axis_limits(sp, letter)
@@ -369,17 +370,17 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # handle axis args common to all axis
     args = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :axis, ()))
     showarg = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :showaxis, ()))
-    for arg ∈ wraptuple((args..., showarg...))
-        for letter ∈ (:x, :y, :z)
+    for arg in wraptuple((args..., showarg...))
+        for letter in (:x, :y, :z)
             process_axis_arg!(plotattributes, arg, letter)
         end
     end
     # handle axis args
-    for letter ∈ (:x, :y, :z)
+    for letter in (:x, :y, :z)
         asym = get_attr_symbol(letter, :axis)
         args = RecipesPipeline.pop_kw!(plotattributes, asym, ())
         if !(typeof(args) <: Axis)
-            for arg ∈ wraptuple(args)
+            for arg in wraptuple(args)
                 process_axis_arg!(plotattributes, arg, letter)
             end
         end
@@ -399,39 +400,39 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # handle grid args common to all axes
     processGridArg! = Commons.process_grid_attr!
     args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
-    for arg ∈ wraptuple(args)
-        for letter ∈ (:x, :y, :z)
+    for arg in wraptuple(args)
+        for letter in (:x, :y, :z)
             processGridArg!(plotattributes, arg, letter)
         end
     end
     # handle individual axes grid args
-    for letter ∈ (:x, :y, :z)
+    for letter in (:x, :y, :z)
         gridsym = get_attr_symbol(letter, :grid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
-        for arg ∈ wraptuple(args)
+        for arg in wraptuple(args)
             processGridArg!(plotattributes, arg, letter)
         end
     end
     # handle minor grid args common to all axes
     args = RecipesPipeline.pop_kw!(plotattributes, :minorgrid, ())
-    for arg ∈ wraptuple(args)
-        for letter ∈ (:x, :y, :z)
+    for arg in wraptuple(args)
+        for letter in (:x, :y, :z)
             Commons.process_minor_grid_attr!(plotattributes, arg, letter)
         end
     end
     # handle individual axes grid args
-    for letter ∈ (:x, :y, :z)
+    for letter in (:x, :y, :z)
         gridsym = get_attr_symbol(letter, :minorgrid)
         args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
-        for arg ∈ wraptuple(args)
+        for arg in wraptuple(args)
             Commons.process_minor_grid_attr!(plotattributes, arg, letter)
         end
     end
     # handle font args common to all axes
-    for fontname ∈ (:tickfont, :guidefont)
+    for fontname in (:tickfont, :guidefont)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
-        for arg ∈ wraptuple(args)
-            for letter ∈ (:x, :y, :z)
+        for arg in wraptuple(args)
+            for letter in (:x, :y, :z)
                 Commons.process_font_attr!(
                     plotattributes,
                     get_attr_symbol(letter, fontname),
@@ -441,14 +442,14 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
     # handle individual axes font args
-    for letter ∈ (:x, :y, :z)
-        for fontname ∈ (:tickfont, :guidefont)
+    for letter in (:x, :y, :z)
+        for fontname in (:tickfont, :guidefont)
             args = RecipesPipeline.pop_kw!(
                 plotattributes,
                 get_attr_symbol(letter, fontname),
                 (),
             )
-            for arg ∈ wraptuple(args)
+            for arg in wraptuple(args)
                 Commons.process_font_attr!(
                     plotattributes,
                     get_attr_symbol(letter, fontname),
@@ -458,10 +459,10 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
     # handle axes args
-    for k ∈ Commons._axis_attrs
+    for k in Commons._axis_attrs
         if haskey(plotattributes, k) && k ≢ :link
             v = plotattributes[k]
-            for letter ∈ (:x, :y, :z)
+            for letter in (:x, :y, :z)
                 lk = get_attr_symbol(letter, k)
                 if !is_explicit(plotattributes, lk)
                     plotattributes[lk] = v
@@ -471,27 +472,27 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
 
     # fonts
-    for fontname ∈
+    for fontname in
         (:titlefont, :legend_title_font, :plot_titlefont, :colorbar_titlefont, :legend_font)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
-        for arg ∈ wraptuple(args)
+        for arg in wraptuple(args)
             Commons.process_font_attr!(plotattributes, fontname, arg)
         end
     end
 
     # handle line args
-    for arg ∈ wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
+    for arg in wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
         Commons.process_line_attr(plotattributes, arg)
     end
 
     if haskey(plotattributes, :seriestype) &&
-       haskey(Commons._typeAliases, plotattributes[:seriestype])
+            haskey(Commons._typeAliases, plotattributes[:seriestype])
         plotattributes[:seriestype] = Commons._typeAliases[plotattributes[:seriestype]]
     end
 
     # handle marker args... default to ellipse if shape not set
     anymarker = false
-    for arg ∈ wraptuple(get(plotattributes, :marker, ()))
+    for arg in wraptuple(get(plotattributes, :marker, ()))
         Commons.process_marker_attr(plotattributes, arg)
         anymarker = true
     end
@@ -500,8 +501,8 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         plotattributes[:markershape] =
             Commons._replace_markershape(plotattributes[:markershape])
         if plotattributes[:markershape] ≡ :none &&
-           get(plotattributes, :seriestype, :path) in
-           (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
+                get(plotattributes, :seriestype, :path) in
+                (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
             plotattributes[:markershape] = :circle
         end
     elseif anymarker
@@ -509,7 +510,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
 
     # handle fill
-    for arg ∈ wraptuple(get(plotattributes, :fill, ()))
+    for arg in wraptuple(get(plotattributes, :fill, ()))
         Commons.process_fill_attr(plotattributes, arg)
     end
     RecipesPipeline.reset_kw!(plotattributes, :fill)
@@ -545,7 +546,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
 
     # framestyle
     if haskey(plotattributes, :framestyle) &&
-       haskey(Commons._framestyle_aliases, plotattributes[:framestyle])
+            haskey(Commons._framestyle_aliases, plotattributes[:framestyle])
         plotattributes[:framestyle] =
             Commons._framestyle_aliases[plotattributes[:framestyle]]
     end
@@ -558,13 +559,13 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # warnings for moved recipes
     st = get(plotattributes, :seriestype, :path)
     if st in (:boxplot, :violin, :density) &&
-       !haskey(
-        Base.loaded_modules,
-        Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
-    )
+            !haskey(
+            Base.loaded_modules,
+            Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
+        )
         @warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
     end
-    nothing
+    return nothing
 end
 
 """
@@ -588,14 +589,14 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
 
     # dict to store old and new keyword args for anything that changes
     old_defs = KW()
-    for k ∈ keys(new_defs)
+    for k in keys(new_defs)
         old_defs[k] = default(k)
     end
 
     # save the backend
     old_backend = backend_name()
 
-    for arg ∈ args
+    for arg in args
         # change backend ?
         arg isa Symbol && if arg ∈ backends()
             if (pkg = backend_package_name(arg)) ≢ nothing  # :plotly
@@ -636,7 +637,7 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
     old_backend != backend_name() && backend(old_backend)
 
     # return the result of the function
-    ret
+    return ret
 end
 
 const _convert_sci_unicode_dict = Dict(
@@ -658,11 +659,11 @@ const _convert_sci_unicode_dict = Dict(
 # to a tex-like format (supported by gr, pyplot, and pgfplots).
 
 function convert_sci_unicode(label::AbstractString)
-    for key ∈ keys(_convert_sci_unicode_dict)
+    for key in keys(_convert_sci_unicode_dict)
         label = replace(label, key => _convert_sci_unicode_dict[key])
     end
     occursin("×10^{", label) && (label = string(label, "}"))
-    label
+    return label
 end
 
 function ___straightline_data(xl, yl, x, y, exp_fact)
@@ -681,51 +682,51 @@ function ___straightline_data(xl, yl, x, y, exp_fact)
         a = (y[1] - y[2]) / (x[1] - x[2])
         # get the data values
         xdata = [
-            clamp(x[1] + (x[1] - x[2]) * (ylim - y[1]) / (y[1] - y[2]), xl...) for ylim ∈ yl
+            clamp(x[1] + (x[1] - x[2]) * (ylim - y[1]) / (y[1] - y[2]), xl...) for ylim in yl
         ]
 
         xdata, a .* xdata .+ b
     end
     # expand the data outside the axis limits, by a certain factor too improve
     # plotly(js) and interactive behaviour
-    (
+    return (
         x_vals .+ (x_vals[2] - x_vals[1]) .* exp_fact,
         y_vals .+ (y_vals[2] - y_vals[1]) .* exp_fact,
     )
 end
 
 __straightline_data(xl, yl, x, y, exp_fact) =
-    if (n = length(x)) == 2
-        ___straightline_data(xl, yl, x, y, exp_fact)
-    else
-        k, r = divrem(n, 3)
-        @assert r == 0 "Malformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
-        xdata, ydata = fill(NaN, n), fill(NaN, n)
-        for i ∈ 1:k
-            inds = (3i - 2):(3i - 1)
-            xdata[inds], ydata[inds] =
-                ___straightline_data(xl, yl, x[inds], y[inds], exp_fact)
-        end
-        xdata, ydata
+if (n = length(x)) == 2
+    ___straightline_data(xl, yl, x, y, exp_fact)
+else
+    k, r = divrem(n, 3)
+    @assert r == 0 "Malformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
+    xdata, ydata = fill(NaN, n), fill(NaN, n)
+    for i in 1:k
+        inds = (3i - 2):(3i - 1)
+        xdata[inds], ydata[inds] =
+            ___straightline_data(xl, yl, x[inds], y[inds], exp_fact)
     end
+    xdata, ydata
+end
 
 _straightline_data(::Val{true}, ::Function, ::Function, ::Function, ::Function, args...) =
     __straightline_data(args...)
 
 function _straightline_data(
-    ::Val{false},
-    xf::Function,
-    xinvf::Function,
-    yf::Function,
-    yinvf::Function,
-    xl,
-    yl,
-    x,
-    y,
-    exp_fact,
-)
+        ::Val{false},
+        xf::Function,
+        xinvf::Function,
+        yf::Function,
+        yinvf::Function,
+        xl,
+        yl,
+        x,
+        y,
+        exp_fact,
+    )
     xdata, ydata = __straightline_data(xf.(xl), yf.(yl), xf.(x), yf.(y), exp_fact)
-    xinvf.(xdata), yinvf.(ydata)
+    return xinvf.(xdata), yinvf.(ydata)
 end
 
 function straightline_data(series, expansion_factor = 1)
@@ -736,7 +737,7 @@ function straightline_data(series, expansion_factor = 1)
     xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
     yf, yinvf, ynoop = scale_inverse_scale_func(sp[:yaxis][:scale])
 
-    _straightline_data(
+    return _straightline_data(
         Val(xnoop && ynoop),
         xf,
         xinvf,
@@ -751,25 +752,25 @@ function straightline_data(series, expansion_factor = 1)
 end
 
 function _shape_data!(::Val{false}, xf::Function, xinvf::Function, x, xl, exp_fact)
-    @inbounds for i ∈ eachindex(x)
+    @inbounds for i in eachindex(x)
         if x[i] == -Inf
             x[i] = xinvf(xf(xl[1]) - exp_fact * (xf(xl[2]) - xf(xl[1])))
         elseif x[i] == +Inf
             x[i] = xinvf(xf(xl[2]) + exp_fact * (xf(xl[2]) - xf(xl[1])))
         end
     end
-    x
+    return x
 end
 
 function _shape_data!(::Val{true}, ::Function, ::Function, x, xl, exp_fact)
-    @inbounds for i ∈ eachindex(x)
+    @inbounds for i in eachindex(x)
         if x[i] == -Inf
             x[i] = xl[1] - exp_fact * (xl[2] - xl[1])
         elseif x[i] == +Inf
             x[i] = xl[2] + exp_fact * (xl[2] - xl[1])
         end
     end
-    x
+    return x
 end
 
 function shape_data(series, expansion_factor = 1)
@@ -780,7 +781,7 @@ function shape_data(series, expansion_factor = 1)
     xf, xinvf, xnoop = scale_inverse_scale_func(sp[:xaxis][:scale])
     yf, yinvf, ynoop = scale_inverse_scale_func(sp[:yaxis][:scale])
 
-    (
+    return (
         _shape_data!(Val(xnoop), xf, xinvf, copy(series[:x]), xl, expansion_factor),
         _shape_data!(Val(ynoop), yf, yinvf, copy(series[:y]), yl, expansion_factor),
     )
@@ -800,30 +801,30 @@ function _add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
     X[o] = x[k]
     Y[o] = y[k]
     Z[o] = z[k]
-    nothing
+    return nothing
 end
 
-function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
+function mesh3d_triangles(x, y, z, cns::Tuple{Array, Array, Array})
     ci, cj, ck = cns
     length(ci) == length(cj) == length(ck) ||
         throw(ArgumentError("Argument connections must consist of equally sized arrays."))
     X = zeros(eltype(x), 4length(ci))
     Y = zeros(eltype(y), 4length(cj))
     Z = zeros(eltype(z), 4length(ck))
-    @inbounds for I ∈ eachindex(ci)  # connections are 0-based
+    @inbounds for I in eachindex(ci)  # connections are 0-based
         _add_triangle!(I, ci[I] + 1, cj[I] + 1, ck[I] + 1, x, y, z, X, Y, Z)
     end
-    X, Y, Z
+    return X, Y, Z
 end
 
-function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
+function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3, Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
-    @inbounds for I ∈ eachindex(cns)  # connections are 1-based
+    @inbounds for I in eachindex(cns)  # connections are 1-based
         _add_triangle!(I, cns[I]..., x, y, z, X, Y, Z)
     end
-    X, Y, Z
+    return X, Y, Z
 end
 
 texmath2unicode(s::AbstractString, pat = r"\$([^$]+)\$") =
@@ -833,15 +834,15 @@ _fmt_paragraph(paragraph::AbstractString; kw...) =
     _fmt_paragraph(PipeBuffer(), paragraph, 0; kw...)
 
 function _fmt_paragraph(
-    io::IOBuffer,
-    remaining_text::AbstractString,
-    column_count::Integer;
-    fillwidth = 60,
-    leadingspaces = 0,
-)
+        io::IOBuffer,
+        remaining_text::AbstractString,
+        column_count::Integer;
+        fillwidth = 60,
+        leadingspaces = 0,
+    )
     kw = (; fillwidth, leadingspaces)
 
-    if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
+    return if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
         if column_count + length(remaining_text) ≤ fillwidth
             print(io, remaining_text)
         else
@@ -860,17 +861,17 @@ function _fmt_paragraph(
 end
 
 _argument_description(s::Symbol) =
-    if s ∈ keys(_arg_desc)
-        aliases = if (al = PlotsBase.Commons.aliases(s)) |> length > 0
-            " Aliases: " * string(Tuple(al)) * '.'
-        else
-            ""
-        end
-        "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." *
-        aliases
+if s ∈ keys(_arg_desc)
+    aliases = if (al = PlotsBase.Commons.aliases(s)) |> length > 0
+        " Aliases: " * string(Tuple(al)) * '.'
     else
         ""
     end
+    "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." *
+        aliases
+else
+    ""
+end
 
 _document_argument(s::Symbol) =
     _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
@@ -881,7 +882,7 @@ function d_point(x, y, lim, scale)
     p_scaled = (x / scale[1], y / scale[2])
     d = sum(abs2, lim .- p_scaled)
     isnan(d) && return 0.0
-    d
+    return d
 end
 # Function barrier because lims are type-unstable
 function _guess_best_legend_position(xl, yl, plt, weight = 100)
@@ -889,18 +890,18 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
     u = zeros(4)  # faster than tuple
     # quadrants where the points will be tested
     quadrants = (
-        ((0.00, 0.25), (0.00, 0.25)),   # bottomleft
-        ((0.75, 1.00), (0.00, 0.25)),   # bottomright
-        ((0.00, 0.25), (0.75, 1.00)),   # topleft
-        ((0.75, 1.00), (0.75, 1.00)),   # topright
+        ((0.0, 0.25), (0.0, 0.25)),   # bottomleft
+        ((0.75, 1.0), (0.0, 0.25)),   # bottomright
+        ((0.0, 0.25), (0.75, 1.0)),   # topleft
+        ((0.75, 1.0), (0.75, 1.0)),   # topright
     )
-    for series ∈ plt.series_list
+    for series in plt.series_list
         x = series[:x]
         y = series[:y]
         yoffset = firstindex(y) - firstindex(x)
-        for (i, lim) ∈ enumerate(Iterators.product(xl, yl))
+        for (i, lim) in enumerate(Iterators.product(xl, yl))
             lim = lim ./ scale
-            for ix ∈ eachindex(x)
+            for ix in eachindex(x)
                 xi, yi = x[ix], _cycle(y, ix + yoffset)
                 # ignore y points outside quadrant visible quadrant
                 xi < xl[1] + quadrants[i][1][1] * (xl[2] - xl[1]) && continue
@@ -916,7 +917,7 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
     u[ibest] ≈ u[4] && return :topright
     u[ibest] ≈ u[3] && return :topleft
     u[ibest] ≈ u[2] && return :bottomright
-    :bottomleft
+    return :bottomleft
 end
 
 """
@@ -925,7 +926,7 @@ the ranges, and places the legend at the corner where the maximum distance to th
 """
 function _guess_best_legend_position(lp::Symbol, plt)
     lp ≡ :best || return lp
-    _guess_best_legend_position(xlims(plt), ylims(plt), plt)
+    return _guess_best_legend_position(xlims(plt), ylims(plt), plt)
 end
 
 _generate_doclist(attributes) =
@@ -938,5 +939,5 @@ function extrema_plus_buffer(v, buffmult = 0.2)
     vmin, vmax = ignorenan_extrema(v)
     vdiff = vmax - vmin
     buffer = vdiff * buffmult
-    vmin - buffer, vmax + buffer
+    return vmin - buffer, vmax + buffer
 end

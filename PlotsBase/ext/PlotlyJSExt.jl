@@ -10,7 +10,7 @@ import PlotlyJS: PlotlyJS, WebIO
 struct PlotlyJSBackend <: PlotsBase.AbstractBackend end
 
 function PlotsBase.extension_init(::PlotlyJSBackend)
-    if Base.get_bool_env("PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON", false)
+    return if Base.get_bool_env("PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON", false)
         (Sys.islinux() && isdefined(PlotlyJS, :unsafe_electron)) &&
             PlotlyJS.unsafe_electron()
     end
@@ -28,7 +28,7 @@ function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     plt[:overwrite_figure] && PlotsBase.closeall()
     plt.o = PlotlyJS.plot()
     traces = PlotlyJS.GenericTrace[]
-    for series_dict ∈ plotly_series(plt)
+    for series_dict in plotly_series(plt)
         plotly_type = pop!(series_dict, :type)
         series_dict[:transpose] = false
         push!(traces, PlotlyJS.GenericTrace(plotly_type; series_dict...))
@@ -37,17 +37,17 @@ function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     layout = plotly_layout(plt)
     w, h = plt[:size]
     PlotlyJS.relayout!(plt.o, layout, width = w, height = h)
-    plt.o
+    return plt.o
 end
 
 # ------------------------------------------------------------------------------
 
-for (mime, fmt) ∈ (
-    "application/pdf" => "pdf",
-    "image/png"       => "png",
-    "image/svg+xml"   => "svg",
-    "image/eps"       => "eps",
-)
+for (mime, fmt) in (
+        "application/pdf" => "pdf",
+        "image/png" => "png",
+        "image/svg+xml" => "svg",
+        "image/eps" => "eps",
+    )
     @eval PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyJSBackend}) =
         PlotlyJS.savefig(io, plotlyjs_syncplot(plt), format = $fmt)
 end
@@ -70,16 +70,16 @@ PlotsBase._display(plt::Plot{PlotlyJSBackend}) = display(plotlyjs_syncplot(plt))
 WebIO.render(plt::Plot{PlotlyJSBackend}) = WebIO.render(plotlyjs_syncplot(plt))
 
 PlotsBase.closeall(::PlotlyJSBackend) =
-    if !PlotsBase.isplotnull() && isa(PlotsBase.current().o, PlotlyJS.SyncPlot)
-        close(PlotsBase.current().o)
-    end
+if !PlotsBase.isplotnull() && isa(PlotsBase.current().o, PlotlyJS.SyncPlot)
+    close(PlotsBase.current().o)
+end
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyJSBackend}) = true
 
 function PlotsBase._ijulia__extra_mime_info!(plt::Plot{PlotlyJSBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =
         Dict(:data => plotly_series(plt), :layout => plotly_layout(plt))
-    out
+    return out
 end
 
 PlotsBase.@precompile_backend PlotlyJS

@@ -3,13 +3,13 @@ autopick_ignore_none_auto(arr::AVec, idx::Integer) =
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
 function aliases_and_autopick(
-    plotattributes::AKW,
-    sym::Symbol,
-    aliases::Dict{Symbol,Symbol},
-    options::AVec,
-    plotIndex::Int,
-)
-    if plotattributes[sym] ≡ :auto
+        plotattributes::AKW,
+        sym::Symbol,
+        aliases::Dict{Symbol, Symbol},
+        options::AVec,
+        plotIndex::Int,
+    )
+    return if plotattributes[sym] ≡ :auto
         plotattributes[sym] = autopick_ignore_none_auto(options, plotIndex)
     elseif haskey(aliases, plotattributes[sym])
         plotattributes[sym] = aliases[plotattributes[sym]]
@@ -17,7 +17,7 @@ function aliases_and_autopick(
 end
 
 aliases(val) = aliases(_keyAliases, val)
-aliases(aliasMap::Dict{Symbol,Symbol}, val) =
+aliases(aliasMap::Dict{Symbol, Symbol}, val) =
     filter(x -> x.second == val, aliasMap) |> keys |> collect |> sort
 
 # -----------------------------------------------------------------------------

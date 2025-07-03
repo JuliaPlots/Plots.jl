@@ -26,15 +26,15 @@ If `showaxes` is true, the two axes of the ellipse are also plotted.
 end
 
 function _covellipse_args(
-    (μ, Σ)::Tuple{AbstractVector{<:Real},AbstractMatrix{<:Real}};
-    n_std::Real,
-)
+        (μ, Σ)::Tuple{AbstractVector{<:Real}, AbstractMatrix{<:Real}};
+        n_std::Real,
+    )
     size(μ) == (2,) && size(Σ) == (2, 2) ||
         error("covellipse requires mean of length 2 and covariance of size 2×2.")
     λ, U = eigen(Σ)
-    μ, n_std * U * diagm(.√λ)
+    return μ, n_std * U * diagm(.√λ)
 end
 _covellipse_args(args; n_std) = error(
     "Wrong inputs for covellipse: $(typeof.(args)). " *
-    "Expected real-valued vector μ, real-valued matrix Σ.",
+        "Expected real-valued vector μ, real-valued matrix Σ.",
 )

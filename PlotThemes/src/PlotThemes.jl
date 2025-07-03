@@ -12,7 +12,7 @@ function expand_palette(bg, cs; kwargs...)
     return palette(c)
 end
 
-const KW = Dict{Symbol,Any}
+const KW = Dict{Symbol, Any}
 
 struct PlotTheme
     defaults::KW
@@ -25,11 +25,11 @@ PlotTheme(base::PlotTheme; kw...) = PlotTheme(KW(base.defaults..., KW(kw)...))
 
 "Get the palette of a PlotTheme"
 theme_palette(s::Symbol) =
-    if haskey(_themes, s) && haskey(_themes[s].defaults, :palette)
-        _themes[s].defaults[:palette]
-    else
-        palette(:default)
-    end
+if haskey(_themes, s) && haskey(_themes[s].defaults, :palette)
+    _themes[s].defaults[:palette]
+else
+    palette(:default)
+end
 
 # add themes
 include("dark.jl")
@@ -47,29 +47,31 @@ include("dao.jl")
 include("dracula.jl")
 include("rose_pine.jl")
 
-const _themes = Dict{Symbol,PlotTheme}([
-    :default => PlotTheme(),
-    :dao => _dao,
-    :dark => _dark,
-    :ggplot2 => _ggplot2,
-    :gruvbox_light => _gruvbox_light,
-    :gruvbox_dark => _gruvbox_dark,
-    :solarized => _solarized,
-    :solarized_light => _solarized_light,
-    :sand => _sand,
-    :bright => _bright,
-    :vibrant => _vibrant,
-    :mute => _mute,
-    :wong => _wong,
-    :wong2 => _wong2,
-    :boxed => _boxed,
-    :juno => _juno,
-    :lime => _lime,
-    :orange => _orange,
-    :dracula => _dracula,
-    :rose_pine => _rose_pine,
-    :rose_pine_dawn => _rose_pine_dawn,
-])
+const _themes = Dict{Symbol, PlotTheme}(
+    [
+        :default => PlotTheme(),
+        :dao => _dao,
+        :dark => _dark,
+        :ggplot2 => _ggplot2,
+        :gruvbox_light => _gruvbox_light,
+        :gruvbox_dark => _gruvbox_dark,
+        :solarized => _solarized,
+        :solarized_light => _solarized_light,
+        :sand => _sand,
+        :bright => _bright,
+        :vibrant => _vibrant,
+        :mute => _mute,
+        :wong => _wong,
+        :wong2 => _wong2,
+        :boxed => _boxed,
+        :juno => _juno,
+        :lime => _lime,
+        :orange => _orange,
+        :dracula => _dracula,
+        :rose_pine => _rose_pine,
+        :rose_pine_dawn => _rose_pine_dawn,
+    ]
+)
 
 add_theme(s::Symbol, thm::PlotTheme) = _themes[s] = thm
 

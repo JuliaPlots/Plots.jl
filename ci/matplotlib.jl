@@ -32,7 +32,7 @@ libgcc = if Sys.islinux()
     lo, hi = extrema(keys(versions))
     _, ub = versions[Base.BinaryPlatforms.detect_libstdcxx_version(Int(hi.patch))]
     specs = ">=$(VersionNumber(lo.major, lo.minor)),$ub"
-    ("libgcc-ng$specs", "libstdcxx-ng$specs")  
+    ("libgcc-ng$specs", "libstdcxx-ng$specs")
 else
     ()
 end

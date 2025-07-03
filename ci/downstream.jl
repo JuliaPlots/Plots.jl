@@ -3,7 +3,7 @@ using Pkg
 const LibGit2 = Pkg.GitTools.LibGit2
 const TOML = Pkg.TOML
 
-failsafe_clone_checkout(path, url; branch="master", stable=true) = begin
+failsafe_clone_checkout(path, url; branch = "master", stable = true) = begin
     local repo
     for i in 1:6
         try
@@ -70,7 +70,7 @@ test_stable(pkg::AbstractString) = begin
 
         pkg_dir = joinpath(tmpd, "$pkg.jl")
         if true  # v2, remove when stable
-            failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl"; branch="v2", stable=false)
+            failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl"; branch = "v2", stable = false)
         else
             failsafe_clone_checkout(pkg_dir, "https://github.com/JuliaPlots/$pkg.jl")
         end

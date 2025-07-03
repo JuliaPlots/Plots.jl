@@ -13,7 +13,7 @@ function _init_ijulia_plotting()
         PlotsBase._plotly_local_file_path[] ≡ nothing ? false :
         isfile(PlotsBase._plotly_local_file_path[])
 
-    ENV["MPLBACKEND"] = "Agg"
+    return ENV["MPLBACKEND"] = "Agg"
 end
 
 function _ijulia_display_dict(plt::Plot)
@@ -42,7 +42,7 @@ function _ijulia_display_dict(plt::Plot)
     else
         error("Unsupported output type $output_type")
     end
-    out
+    return out
 end
 
 if IJulia.inited
@@ -53,7 +53,7 @@ end
 # IJulia only... inline display
 function PlotsBase.inline(plt::Plot = PlotsBase.current())
     IJulia.clear_output(true)
-    display(IJulia.InlineDisplay(), plt)
+    return display(IJulia.InlineDisplay(), plt)
 end
 
 end  # module

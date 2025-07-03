@@ -17,7 +17,7 @@ function _process_plotrecipes!(plt, kw_list)
         next_kw = popfirst!(still_to_process)
         _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
     end
-    kw_list
+    return kw_list
 end
 
 function _process_plotrecipe(plt, kw, kw_list, still_to_process)
@@ -31,7 +31,7 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
     datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
     if !isnothing(datalist)
         warn_on_recipe_aliases!(plt, datalist, :plot, st)
-        for data ∈ datalist
+        for data in datalist
             preprocess_attributes!(plt, data.plotattributes)
             if data.plotattributes[:seriestype] == st
                 error(
@@ -43,7 +43,7 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
     else
         push!(kw_list, kw)
     end
-    nothing
+    return nothing
 end
 
 @specialize

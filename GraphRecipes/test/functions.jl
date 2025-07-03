@@ -1,9 +1,8 @@
-
 function random_labelled_graph()
     n = 15
     rng = StableRNG(1)
-    A = Float64[rand(rng) < 0.5 ? 0 : rand(rng) for i ∈ 1:n, j ∈ 1:n]
-    for i ∈ 1:n
+    A = Float64[rand(rng) < 0.5 ? 0 : rand(rng) for i in 1:n, j in 1:n]
+    for i in 1:n
         A[i, 1:(i - 1)] = A[1:(i - 1), i]
         A[i, i] = 0
     end
@@ -21,12 +20,12 @@ function random_labelled_graph()
         layout_kw = Dict(:x => x, :y => y),
         rng = rng,
     )
-    p, n, A, x, y, z
+    return p, n, A, x, y, z
 end
 
 function random_3d_graph()
     n, A, x, y, z = random_labelled_graph()[2:end]
-    graphplot(
+    return graphplot(
         A,
         node_weights = 1:n,
         markercolor = :darkgray,
@@ -42,7 +41,7 @@ end
 
 function light_graphs()
     g = wheel_graph(10)
-    graphplot(g, curves = false, rng = StableRNG(1))
+    return graphplot(g, curves = false, rng = StableRNG(1))
 end
 
 function directed()
@@ -51,20 +50,20 @@ function directed()
         0 0 1
         0 1 0
     ]
-    graphplot(g, names = 1:3, curvature_scalar = 0.1, rng = StableRNG(1))
+    return graphplot(g, names = 1:3, curvature_scalar = 0.1, rng = StableRNG(1))
 end
 
 function edgelabel()
     n = 8
     g = wheel_digraph(n)
     edgelabel_dict = Dict()
-    for i ∈ 1:n
-        for j ∈ 1:n
+    for i in 1:n
+        for j in 1:n
             edgelabel_dict[(i, j)] = string("edge ", i, " to ", j)
         end
     end
 
-    graphplot(
+    return graphplot(
         g,
         names = 1:n,
         edgelabel = edgelabel_dict,
@@ -80,7 +79,7 @@ function selfedges()
         0 0 1
         0 0 1
     ]
-    graphplot(DiGraph(g), self_edge_size = 0.2, rng = StableRNG(1))
+    return graphplot(DiGraph(g), self_edge_size = 0.2, rng = StableRNG(1))
 end
 
 multigraphs() = graphplot(
@@ -94,11 +93,11 @@ multigraphs() = graphplot(
 function arc_chord_diagrams()
     rng = StableRNG(1)
     adjmat = Symmetric(sparse(rand(rng, 0:1, 8, 8)))
-    plot(
+    return plot(
         graphplot(
             adjmat,
             method = :chorddiagram,
-            names = [text(string(i), 8) for i ∈ 1:8],
+            names = [text(string(i), 8) for i in 1:8],
             linecolor = :black,
             fillcolor = :lightgray,
             rng = rng,
@@ -120,8 +119,8 @@ function marker_properties()
     seed = 42
     rng = StableRNG(seed)
     g = barabasi_albert(N, 1; rng = rng)
-    weights = [length(neighbors(g, i)) for i ∈ 1:nv(g)]
-    graphplot(
+    weights = [length(neighbors(g, i)) for i in 1:nv(g)]
+    return graphplot(
         g,
         curvature_scalar = 0,
         node_weights = weights,
@@ -141,14 +140,16 @@ function marker_properties()
 end
 
 function ast_example()
-    code = :(function mysum(list)
-        out = 0
-        for value ∈ list
-            out += value
+    code = :(
+        function mysum(list)
+            out = 0
+            for value in list
+                out += value
+            end
+            return out
         end
-        out
-    end)
-    plot(
+    )
+    return plot(
         code,
         fontsize = 10,
         shorten = 0.01,
@@ -168,16 +169,16 @@ julia_type_tree() = plot(
     rng = StableRNG(1),
 )
 
-@eval AbstractTrees children(d::AbstractDict) = [p for p ∈ d]
+@eval AbstractTrees children(d::AbstractDict) = [p for p in d]
 @eval AbstractTrees children(p::Pair) = AbstractTrees.children(p[2])
 @eval AbstractTrees function printnode(io::IO, p::Pair)
     str = isempty(children(p[2])) ? string(p[1], ": ", p[2]) : string(p[1], ": ")
-    print(io, str)
+    return print(io, str)
 end
 
 function julia_dict_tree()
     d = Dict(:a => 2, :d => Dict(:b => 4, :c => "Hello"), :e => 5.0)
-    plot(
+    return plot(
         TreePlot(d),
         method = :tree,
         fontsize = 10,
@@ -188,11 +189,11 @@ function julia_dict_tree()
 end
 
 diamond_nodeshape(x_i, y_i, s) =
-    [(x_i + 0.5s * dx, y_i + 0.5s * dy) for (dx, dy) ∈ [(1, 1), (-1, 1), (-1, -1), (1, -1)]]
+    [(x_i + 0.5s * dx, y_i + 0.5s * dy) for (dx, dy) in [(1, 1), (-1, 1), (-1, -1), (1, -1)]]
 
 function diamond_nodeshape_wh(x_i, y_i, h, w)
-    out = Tuple{Float64,Float64}[(-0.5, 0), (0, -0.5), (0.5, 0), (0, 0.5)]
-    map(out) do t
+    out = Tuple{Float64, Float64}[(-0.5, 0), (0, -0.5), (0.5, 0), (0, 0.5)]
+    return map(out) do t
         x = t[1] * h
         y = t[2] * w
         (x + x_i, y + y_i)
@@ -203,20 +204,20 @@ function custom_nodeshapes_single()
     rng = StableRNG(1)
     g = rand(rng, 5, 5)
     g[g .> 0.5] .= 0
-    for i ∈ 1:5
+    for i in 1:5
         g[i, i] = 0
     end
-    graphplot(g, nodeshape = diamond_nodeshape, rng = rng)
+    return graphplot(g, nodeshape = diamond_nodeshape, rng = rng)
 end
 
 function custom_nodeshapes_various()
     rng = StableRNG(1)
     g = rand(rng, 5, 5)
     g[g .> 0.5] .= 0
-    for i ∈ 1:5
+    for i in 1:5
         g[i, i] = 0
     end
-    graphplot(
+    return graphplot(
         g,
         nodeshape = [
             :circle,
@@ -242,14 +243,14 @@ function funky_edge_and_marker_args()
     curviness_matrix = zeros(n, n)
     edgewidth_matrix = zeros(n, n)
     edgestyle_dict = Dict()
-    for e ∈ edges(g)
+    for e in edges(g)
         curviness_matrix[e.src, e.dst] = 0.5sin(e.src)
         edgewidth_matrix[e.src, e.dst] = 0.8e.dst
         edgestyle_dict[(e.src, e.dst)] = e.src < 2.0 ? :solid : e.src > 3.0 ? :dash : :dot
     end
     edge_z_function = (s, d, w) -> curviness_matrix[s, d]
 
-    graphplot(
+    return graphplot(
         g,
         names = [" I ", " am ", " a ", "funky", "graph"],
         x = [1, 2, 3, 4, 5],

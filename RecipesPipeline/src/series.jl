@@ -1,17 +1,17 @@
 # # Series handling
 
-const FuncOrFuncs{F} = Union{F,Vector{F},Matrix{F}}
-const MaybeNumber = Union{Number,Missing}
-const MaybeString = Union{AbstractString,Missing}
-const DataPoint = Union{MaybeNumber,MaybeString}
+const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
+const MaybeNumber = Union{Number, Missing}
+const MaybeString = Union{AbstractString, Missing}
+const DataPoint = Union{MaybeNumber, MaybeString}
 
 _prepare_series_data(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
 _prepare_series_data(::Nothing) = nothing
-_prepare_series_data(t::Tuple{T,T}) where {T<:Number} = t
+_prepare_series_data(t::Tuple{T, T}) where {T <: Number} = t
 _prepare_series_data(f::Function) = f
 _prepare_series_data(ar::AbstractRange{<:Number}) = ar
 _prepare_series_data(nt::NamedTuple) = nt
-function _prepare_series_data(a::AbstractArray{T}) where {T<:MaybeNumber}
+function _prepare_series_data(a::AbstractArray{T}) where {T <: MaybeNumber}
     # Get a non-missing AbstractFloat type for the array
     # There may be a better way to do this?
     F = typeof(float(zero(nonmissingtype(T))))
@@ -21,7 +21,7 @@ function _prepare_series_data(a::AbstractArray{T}) where {T<:MaybeNumber}
     broadcast!(float_a, a) do x
         ismissing(x) || isinf(x) ? NaN : x
     end
-    float_a
+    return float_a
 end
 _prepare_series_data(a::Base.SkipMissing) = collect(a)
 _prepare_series_data(a::AbstractArray{<:Missing}) = fill(NaN, axes(a))
@@ -37,28 +37,28 @@ _prepare_series_data(v::Volume) =
 _series_data_vector(x, plotattributes) = [_prepare_series_data(x)]
 
 # fixed number of blank series
-_series_data_vector(n::Integer, plotattributes) = [zeros(0) for i ∈ 1:n]
+_series_data_vector(n::Integer, plotattributes) = [zeros(0) for i in 1:n]
 
 # vector of data points is a single series
 _series_data_vector(v::AVec{<:DataPoint}, plotattributes) = [_prepare_series_data(v)]
 
 # list of things (maybe other vectors, functions, or something else)
 function _series_data_vector(v::AVec, plotattributes)
-    if all(x -> x isa MaybeNumber, v)
+    return if all(x -> x isa MaybeNumber, v)
         _series_data_vector(Vector{MaybeNumber}(v), plotattributes)
     elseif all(x -> x isa MaybeString, v)
         _series_data_vector(Vector{MaybeString}(v), plotattributes)
     else
-        vcat((_series_data_vector(vi, plotattributes) for vi ∈ v)...)
+        vcat((_series_data_vector(vi, plotattributes) for vi in v)...)
     end
 end
 
 # Matrix is split into columns
 function _series_data_vector(v::AMat{<:DataPoint}, plotattributes)
-    if is3d(plotattributes)
+    return if is3d(plotattributes)
         [_prepare_series_data(Surface(v))]
     else
-        [_prepare_series_data(v[:, i]) for i ∈ axes(v, 2)]
+        [_prepare_series_data(v[:, i]) for i in axes(v, 2)]
     end
 end
 
@@ -91,9 +91,9 @@ _nobigs(v) = v
         n = size(x, 1)
         !isnothing(y) &&
             size(y, 1) != n &&
-            error("Expects $n elements in each col of y, found $(size(y,1)).")
+            error("Expects $n elements in each col of y, found $(size(y, 1)).")
     end
-    _nobigs(x), _nobigs(y), _nobigs(z)
+    return _nobigs(x), _nobigs(y), _nobigs(z)
 end
 
 # --------------------------------------------------------------------
@@ -135,7 +135,7 @@ struct SliceIt end
     my = length(ys)
     mz = length(zs)
     if mx > 0 && my > 0 && mz > 0
-        for i ∈ 1:max(mx, my, mz)
+        for i in 1:max(mx, my, mz)
             # add a new series
             di = copy(plotattributes)
             xi, yi, zi = xs[mod1(i, mx)], ys[mod1(i, my)], zs[mod1(i, mz)]

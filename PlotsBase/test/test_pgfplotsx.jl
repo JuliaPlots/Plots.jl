@@ -13,7 +13,7 @@ end
 
 function get_pgf_axes(pl)
     PlotsBase._update_plot_object(pl)
-    PlotsBase.get_backend_module(:PGFPlotsX)[1].pgfx_axes(pl.o)
+    return PlotsBase.get_backend_module(:PGFPlotsX)[1].pgfx_axes(pl.o)
 end
 
 with(:pgfplotsx) do
@@ -108,9 +108,11 @@ with(:pgfplotsx) do
 
     @testset "Marker types" begin
         markers = filter(
-            (m -> begin
-                m in PlotsBase.supported_markers()
-            end),
+            (
+                m -> begin
+                    m in PlotsBase.supported_markers()
+                end
+            ),
             PlotsBase.Commons._shape_keys,
         )
         markers = reshape(markers, 1, length(markers))
@@ -184,8 +186,8 @@ with(:pgfplotsx) do
     end
 
     @testset "Heatmap-like" begin
-        xs = [string("x", i) for i ∈ 1:10]
-        ys = [string("y", i) for i ∈ 1:4]
+        xs = [string("x", i) for i in 1:10]
+        ys = [string("y", i) for i in 1:4]
         z = float((1:4) * reshape(1:10, 1, :))
         pl = heatmap(xs, ys, z, aspect_ratio = 1)
         axis = first(get_pgf_axes(pl))
@@ -236,7 +238,7 @@ with(:pgfplotsx) do
             markerstrokewidth = 0,
             ticks = -2:2,
         )
-        for (i, axis) ∈ enumerate(get_pgf_axes(pl))
+        for (i, axis) in enumerate(get_pgf_axes(pl))
             opts = axis.options
             # just check by indexing (not defined -> throws)
             opts["x axis line style"]
@@ -278,10 +280,12 @@ with(:pgfplotsx) do
                 @test count(s -> occursin("node", s), lines) == 1
             end
         end
-        annotate!([
-            (5, y[5], PlotsBase.text("this is \\#5", 16, :red, :center)),
-            (10, y[10], PlotsBase.text("this is \\#10", :right, 20, "courier")),
-        ])
+        annotate!(
+            [
+                (5, y[5], PlotsBase.text("this is \\#5", 16, :red, :center)),
+                (10, y[10], PlotsBase.text("this is \\#10", :right, 20, "courier")),
+            ]
+        )
         axis_content = first(get_pgf_axes(pl)).contents
         nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
         @test length(nodes) == 3
@@ -402,12 +406,12 @@ with(:pgfplotsx) do
         @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
         axis_contents = first(get_pgf_axes(pl)).contents
         @test filter(x -> x isa String, axis_contents)[1] ==
-              raw"\node at (0,0.5) {\huge hi};"
+            raw"\node at (0,0.5) {\huge hi};"
         plot!(pl)
         @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
         axis_contents = first(get_pgf_axes(pl)).contents
         @test filter(x -> x isa String, axis_contents)[1] ==
-              raw"\node at (0,0.5) {\huge hi};"
+            raw"\node at (0,0.5) {\huge hi};"
     end
 
     @testset "Titlefonts" begin
@@ -434,9 +438,9 @@ with(:pgfplotsx) do
 
     @testset "Latexify - LaTeXStrings" begin
         @test PlotsBase.pgfx_sanitize_string("A string, with 2 punctuation chars.") ==
-              "A string, with 2 punctuation chars."
+            "A string, with 2 punctuation chars."
         @test PlotsBase.pgfx_sanitize_string("Interpolação polynomial") ==
-              raw"Interpola$\textnormal{\c{c}}$$\tilde{a}$o polynomial"
+            raw"Interpola$\textnormal{\c{c}}$$\tilde{a}$o polynomial"
         @test PlotsBase.pgfx_sanitize_string("∫∞ ∂x") == raw"$\int$$\infty$ $\partial$x"
 
         # special LaTeX characters
@@ -476,6 +480,6 @@ with(:pgfplotsx) do
         pl2_tex = String(repr("application/x-tex", pl2))
         @test pl1_tex[findfirst(yreg, pl1_tex)] == "ylabel={diameter (\$\\mathrm{m}\$)}"
         @test pl2_tex[findfirst(yreg, pl2_tex)] ==
-              "ylabel={\$\\mathrm{m}\\,\\mathrm{s}^{-2}\$}"
+            "ylabel={\$\\mathrm{m}\\,\\mathrm{s}^{-2}\$}"
     end
 end

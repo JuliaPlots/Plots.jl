@@ -13,15 +13,15 @@ zseries(pl, idx = length(pl.series_list)) = pl.series_list[idx].plotattributes[:
 testfile = tempname() * ".png"
 
 macro isplot(ex) # @isplot macro to streamline tests
-    :(@test $(esc(ex)) isa PlotsBase.Plot)
+    return :(@test $(esc(ex)) isa PlotsBase.Plot)
 end
 
 @testset "heatmap" begin
     x = (1:3)m
     @isplot heatmap(x * x', clims = (1, 7)) # unitless
     @isplot heatmap(x * x', clims = (2m^2, 8m^2)) # units
-    @isplot heatmap(x * x', clims = (2e6u"mm^2", 7e-6u"km^2")) # conversion
-    @isplot heatmap(1:3, (1:3)m, x * x', clims = (1m^2, 7e-6u"km^2")) # mixed
+    @isplot heatmap(x * x', clims = (2.0e6u"mm^2", 7.0e-6u"km^2")) # conversion
+    @isplot heatmap(1:3, (1:3)m, x * x', clims = (1m^2, 7.0e-6u"km^2")) # mixed
 end
 
 @testset "plot(y)" begin
@@ -139,7 +139,7 @@ end
         ) == "s is the unit of hello"
         @test yguide(plot(args...; kwargs..., unitformat = ", dear ")) == "hello, dear s"
         @test yguide(plot(args...; kwargs..., unitformat = (", dear ", " esq."))) ==
-              "hello, dear s esq."
+            "hello, dear s esq."
         @test yguide(
             plot(args...; kwargs..., unitformat = ("well ", ", dear ", " esq.")),
         ) == "well hello, dear s esq."
@@ -162,7 +162,7 @@ end
         @test yguide(plot(args...; kwargs..., unitformat = :slashangle)) == "hello / <s>"
         @test yguide(plot(args...; kwargs..., unitformat = :space)) == "hello s"
         @test yguide(plot(args...; kwargs..., unitformat = :verbose)) ==
-              "hello in units of s"
+            "hello in units of s"
     end
 end
 
@@ -198,8 +198,8 @@ end
 end
 
 @testset "More plots" begin
-    @testset "data as $dtype" for dtype ∈
-                                  [:Vectors, :Matrices, Symbol("Vectors of vectors")]
+    @testset "data as $dtype" for dtype in
+        [:Vectors, :Matrices, Symbol("Vectors of vectors")]
         if dtype == :Vectors
             x, y, z = randn(10), randn(10), randn(10)
         elseif dtype == :Matrices
@@ -247,7 +247,7 @@ end
             @test plot(x * m, y * s, z * (m / s), zlabel = "z") isa PlotsBase.Plot
             @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1)) isa PlotsBase.Plot
             @test plot(x * m, y * s, z * (m / s), zlims = (-1, 1) .* (m / s)) isa
-                  PlotsBase.Plot
+                PlotsBase.Plot
             @test plot(x * m, y * s, z * (m / s), zunit = u"km/hr") isa PlotsBase.Plot
             @test plot(x * m, y * s, z * (m / s), zticks = (1:2) * m / s) isa PlotsBase.Plot
             @test scatter(x * m, y * s, z * (m / s)) isa PlotsBase.Plot
@@ -256,21 +256,21 @@ end
         @testset "Unitful/unitless combinations" begin
             mystr(x::Array{<:Quantity}) = "Q"
             mystr(x::Array) = "A"
-            @testset "plot($(mystr(xs)), $(mystr(ys)))" for xs ∈ [x, x * m], ys ∈ [y, y * s]
+            @testset "plot($(mystr(xs)), $(mystr(ys)))" for xs in [x, x * m], ys in [y, y * s]
                 @test plot(xs, ys) isa PlotsBase.Plot
             end
-            @testset "plot($(mystr(xs)), $(mystr(ys)), $(mystr(zs)))" for xs ∈ [x, x * m],
-                ys ∈ [y, y * s],
-                zs ∈ [z, z * (m / s)]
+            @testset "plot($(mystr(xs)), $(mystr(ys)), $(mystr(zs)))" for xs in [x, x * m],
+                    ys in [y, y * s],
+                    zs in [z, z * (m / s)]
 
                 @test plot(xs, ys, zs) isa PlotsBase.Plot
             end
         end
     end
 
-    @testset "scatter(x::$(us[1]), y::$(us[2]))" for us ∈ collect(
-        Iterators.product(fill([1, u"m", u"s"], 2)...),
-    )
+    @testset "scatter(x::$(us[1]), y::$(us[2]))" for us in collect(
+            Iterators.product(fill([1, u"m", u"s"], 2)...),
+        )
         x, y = rand(10) * us[1], rand(10) * us[2]
         @test scatter(x, y) isa PlotsBase.Plot
         @test scatter(x, y, markersize = x) isa PlotsBase.Plot
@@ -283,9 +283,9 @@ end
         end
     end
 
-    @testset "contour(x::$(us[1]), y::$(us[2]))" for us ∈ collect(
-        Iterators.product(fill([1, u"m", u"s"], 2)...),
-    )
+    @testset "contour(x::$(us[1]), y::$(us[2]))" for us in collect(
+            Iterators.product(fill([1, u"m", u"s"], 2)...),
+        )
         x, y = (1:0.01:2) * us[1], (1:0.02:2) * us[2]
         z = x' ./ y
         @test contour(x, y, z) isa PlotsBase.Plot
@@ -318,8 +318,8 @@ end
     end
 
     @testset "bad link" begin
-        pl1 = plot(rand(10)*u"m")
-        pl2 = plot(rand(10)*u"s")
+        pl1 = plot(rand(10) * u"m")
+        pl2 = plot(rand(10) * u"s")
         # TODO: On Julia 1.8 and above, can replace ErrorException with part of error message.
         @test_throws ErrorException plot(pl1, pl2; link = :y)
     end

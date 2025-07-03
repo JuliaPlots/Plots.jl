@@ -1,4 +1,3 @@
-
 # -------------------------------------------------------------------
 # AST trees
 
@@ -17,13 +16,13 @@ function add_ast(adjlist, names, depthdict, depthlists, nodetypes, ex::Expr, par
     end
     push!(depthlists[depth], idx)
 
-    for arg ∈ (iscall ? ex.args[2:end] : ex.args)
+    for arg in (iscall ? ex.args[2:end] : ex.args)
         if isa(arg, LineNumberNode)
             continue
         end
         push!(l, add_ast(adjlist, names, depthdict, depthlists, nodetypes, arg, idx))
     end
-    idx
+    return idx
 end
 
 function add_ast(adjlist, names, depthdict, depthlists, nodetypes, x, parent_idx)
@@ -39,13 +38,13 @@ function add_ast(adjlist, names, depthdict, depthlists, nodetypes, x, parent_idx
     end
     push!(depthlists[depth], idx)
 
-    idx
+    return idx
 end
 
 @recipe function f(ex::Expr)
     names = String[]
     adjlist = Vector{Int}[]
-    depthdict = Dict{Int,Int}()
+    depthdict = Dict{Int, Int}()
     depthlists = Vector{Int}[]
     nodetypes = Symbol[]
     add_ast(adjlist, names, depthdict, depthlists, nodetypes, ex, 0)
@@ -79,20 +78,21 @@ end
 # Type trees
 
 function add_subs!(nodes, source, destiny, ::Type{T}, supidx) where {T}
-    for sub ∈ subtypes(T)
+    for sub in subtypes(T)
         push!(nodes, sub)
         subidx = length(nodes)
         push!(source, supidx)
         push!(destiny, subidx)
         add_subs!(nodes, source, destiny, sub, subidx)
     end
+    return
 end
 
 # recursively build a graph of subtypes of T
 @recipe function f(
-    ::Type{T};
-    namefunc = node -> isa(node, UnionAll) ? split(string(node), '.')[end] : node.name.name,
-) where {T}
+        ::Type{T};
+        namefunc = node -> isa(node, UnionAll) ? split(string(node), '.')[end] : node.name.name,
+    ) where {T}
     # get the supertypes
     sups = Any[T]
     sup = T

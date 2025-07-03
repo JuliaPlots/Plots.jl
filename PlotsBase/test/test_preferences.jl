@@ -14,7 +14,7 @@ end
 withenv("PLOTSBASE_DEFAULT_BACKEND" => "unicodeplots") do
     @test_logs (:info, r".*environment variable") PlotsBase.diagnostics(devnull)
     @test PlotsBase.default_backend() ==
-          Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlotsBackend()
+        Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlotsBackend()
 end
 
 @test PlotsBase.default_backend() == Base.get_extension(PlotsBase, :GRExt).GRBackend()
@@ -59,7 +59,7 @@ const DEBUG = false
     @test run(```$(Base.julia_cmd()) $script```) |> success
 end
 
-(!is_pkgeval() && is_latest("release")) && for pkg ∈ TEST_PACKAGES
+(!is_pkgeval() && is_latest("release")) && for pkg in TEST_PACKAGES
     @testset "persistent backend $pkg" begin
         be = TEST_BACKENDS[pkg]
         if is_ci()

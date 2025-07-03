@@ -23,18 +23,18 @@ const Widgets = Base.get_extension(StatsPlots, :InteractExt).Widgets
     gpl = groupedhist(
         rand(StableRNG(1337), 1000),
         yscale = :log10,
-        ylims = (1e-2, 1e4),
+        ylims = (1.0e-2, 1.0e4),
         bar_position = :stack,
     )
-    @test NaNMath.minimum(gpl[1][1][:y]) ≤ 1e-2
+    @test NaNMath.minimum(gpl[1][1][:y]) ≤ 1.0e-2
     @test NaNMath.minimum(gpl[1][1][:y]) > 0
     gpl = groupedhist(
         rand(StableRNG(1337), 1000),
         yscale = :log10,
-        ylims = (1e-2, 1e4),
+        ylims = (1.0e-2, 1.0e4),
         bar_position = :dodge,
     )
-    @test NaNMath.minimum(gpl[1][1][:y]) ≤ 1e-2
+    @test NaNMath.minimum(gpl[1][1][:y]) ≤ 1.0e-2
     @test NaNMath.minimum(gpl[1][1][:y]) > 0
 
     data = [1, 1, 1, 1, 2, 1]
@@ -108,7 +108,7 @@ end
         @test ppois_unbounded[1][1][:x][4:5] == ones(2)
         @test ppois_unbounded[1][1][:y][[1, 4]] == zeros(2)
         @test ppois_unbounded[1][1][:y][[2, 5]] ==
-              pdf.(Poisson(1), ppois_unbounded[1][1][:x][[1, 4]])
+            pdf.(Poisson(1), ppois_unbounded[1][1][:x][[1, 4]])
 
         pnonint = plot(Bernoulli(0.75) - 1 // 2)
         @test pnonint[1][1][:x][1:2] == [-1 // 2, -1 // 2]
@@ -166,18 +166,18 @@ end
         @test errorline(x, y)[1][1][:x] == x # x-input
         @test all(
             round.(errorline(x, y)[1][1][:y], digits = 3) .==
-            round.(mean(y, dims = 2), digits = 3),
+                round.(mean(y, dims = 2), digits = 3),
         ) # mean of y
         @test all(
             round.(errorline(x, y)[1][1][:ribbon], digits = 3) .==
-            round.(std(y, dims = 2), digits = 3),
+                round.(std(y, dims = 2), digits = 3),
         ) # std of y
         # test for ints
         y = reshape(1:100, 10, 10)
         @test all(errorline(x, y)[1][1][:y] .== mean(y, dims = 2))
         @test all(
             round.(errorline(x, y)[1][1][:ribbon], digits = 3) .==
-            round.(std(y, dims = 2), digits = 3),
+                round.(std(y, dims = 2), digits = 3),
         )
         # test colors
         y = rand(StableRNG(1337), 10, 100, 3) .* collect(1:2:20)
@@ -192,7 +192,7 @@ end
         rng = StableRNG(1337)
         x = 1:10
         y = fill(NaN, 10, 100, 6)
-        for i ∈ axes(y, 3)
+        for i in axes(y, 3)
             y[:, :, i] =
                 collect(1:2:20) .+ 5rand(rng, 10, 100) .* collect(1:2:20) .+ 100rand(rng)
         end
@@ -246,7 +246,7 @@ end
 end
 
 @testset "violin" begin
-    y = [i * randn(StableRNG(1337), 100) for i ∈ 1:4]
+    y = [i * randn(StableRNG(1337), 100) for i in 1:4]
     violin(y, median = true)
     violin(y, quantiles = [0.1, 0.5, 0.9], linecolor = :white, linewidth = 3)
     violin(y, quantiles = 3, mean = true)
@@ -305,7 +305,7 @@ end
     M = randn(StableRNG(1337), 1_000, 4)
     @. M[:, 2] += 0.8sqrt(abs(M[:, 1])) - 0.5M[:, 3] + 5
     @. M[:, 3] -= 0.7M[:, 1]^2 + 2
-    pl = corrplot(M; label = ["x$i" for i ∈ 1:4])
+    pl = corrplot(M; label = ["x$i" for i in 1:4])
     @test show(devnull, pl) isa Nothing
 
     pl = cornerplot(M)

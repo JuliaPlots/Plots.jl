@@ -1,13 +1,13 @@
 function _extract_group_attributes_old_slow_known_good_implementation(
-    v,
-    args...;
-    legend_entry = string,
-)
+        v,
+        args...;
+        legend_entry = string,
+    )
     group_labels = collect(unique(sort(v)))
     n = length(group_labels)
     group_indices =
-        Vector{Int}[filter(i -> v[i] == glab, eachindex(v)) for glab ∈ group_labels]
-    RecipesPipeline.GroupBy(map(legend_entry, group_labels), group_indices)
+        Vector{Int}[filter(i -> v[i] == glab, eachindex(v)) for glab in group_labels]
+    return RecipesPipeline.GroupBy(map(legend_entry, group_labels), group_indices)
 end
 
 sc = ["C", "C", "C", "A", "A", "A", "B", "B", "D"]
@@ -43,18 +43,18 @@ lp = map(i -> "xx" * "$(i % 599)", 1:2_000)
 
     @test RecipesPipeline._extract_group_attributes(Tuple(sc)) isa RecipesPipeline.GroupBy
     @test RecipesPipeline._extract_group_attributes((; A = [1], B = [2])) isa
-          RecipesPipeline.GroupBy
+        RecipesPipeline.GroupBy
     @test RecipesPipeline._extract_group_attributes(Dict(:A => [1], :B => [2])) isa
-          RecipesPipeline.GroupBy
+        RecipesPipeline.GroupBy
 
     @testset "_filter_input_data!" begin
         filtered_keys = [:x, :y, :z, :xerror, :yerror, :zerror]
-        orig_akw = Dict{Symbol,Any}(k => rand(10) for k ∈ filtered_keys)
+        orig_akw = Dict{Symbol, Any}(k => rand(10) for k in filtered_keys)
         orig_akw[:idxfilter] = [1, 4, 10]
 
         akw = deepcopy(orig_akw)
         RecipesPipeline._filter_input_data!(akw)
-        for k ∈ filtered_keys
+        for k in filtered_keys
             @test akw[k] == orig_akw[k][orig_akw[:idxfilter]]
         end
     end

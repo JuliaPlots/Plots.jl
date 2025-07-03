@@ -1,11 +1,11 @@
 ci_tol() =
-    if Sys.islinux()
-        is_pkgeval() ? "1e-2" : "5e-4"
-    elseif Sys.isapple()
-        "1e-3"
-    else
-        "1e-1"
-    end
+if Sys.islinux()
+    is_pkgeval() ? "1e-2" : "5e-4"
+elseif Sys.isapple()
+    "1e-3"
+else
+    "1e-1"
+end
 
 const TESTS_MODULE = Module(:PlotsBaseTestModule)
 const PLOTSBASE_IMG_TOL =
@@ -14,18 +14,18 @@ const PLOTSBASE_IMG_TOL =
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, PlotsBase))
 
 reference_dir(args...) =
-    if (ref_dir = get(ENV, "PLOTSBASE_REFERENCE_DIR", nothing)) ≢ nothing
-        joinpath(ref_dir, args...)
-    else
-        joinpath(first(Base.DEPOT_PATH), "dev", "PlotReferenceImages.jl", args...)
-    end
+if (ref_dir = get(ENV, "PLOTSBASE_REFERENCE_DIR", nothing)) ≢ nothing
+    joinpath(ref_dir, args...)
+else
+    joinpath(first(Base.DEPOT_PATH), "dev", "PlotReferenceImages.jl", args...)
+end
 reference_path(backend, version) =
     reference_dir("PlotsBase", string(backend), string(version))
 
 function checkout_reference_dir(dn::AbstractString)
     mkpath(dn)
     local repo
-    for i ∈ 1:6
+    for i in 1:6
         try
             repo = LibGit2.clone(
                 "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
@@ -47,7 +47,7 @@ function checkout_reference_dir(dn::AbstractString)
         end
     end
     LibGit2.peel(LibGit2.head(repo)) |> println  # print some information
-    nothing
+    return nothing
 end
 
 let dn = reference_dir()
@@ -59,7 +59,7 @@ function reference_file(backend, version, i)
     refdir = mkpath(reference_dir("PlotsBase", string(backend)))
     fn = ref_name(i) * ".png"
     reffn = joinpath(refdir, string(version), fn)
-    for ver ∈ sort(VersionNumber.(readdir(refdir)), rev = true)
+    for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
         if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
             reffn = tmpfn
             break
@@ -69,13 +69,13 @@ function reference_file(backend, version, i)
 end
 
 function image_comparison_tests(
-    pkg::Symbol,
-    idx::Int;
-    debug = false,
-    popup = !is_ci(),
-    sigma = [1, 1],
-    tol = 1e-2,
-)
+        pkg::Symbol,
+        idx::Int;
+        debug = false,
+        popup = !is_ci(),
+        sigma = [1, 1],
+        tol = 1.0e-2,
+    )
     example = PlotsBase._examples[idx]
     @info "Testing plot: $pkg:$idx:$(example.header)"
 
@@ -95,7 +95,7 @@ function image_comparison_tests(
     @debug imports exprs
 
     func = fn -> Base.eval.(Ref(TESTS_MODULE), (imports, exprs, :(png($fn))))
-    test_images(
+    return test_images(
         VisualTest(func, reffn),
         newfn = newfn,
         popup = popup,
@@ -105,15 +105,15 @@ function image_comparison_tests(
 end
 
 function image_comparison_facts(
-    pkg::Symbol;
-    skip = [],          # skip these examples (int index)
-    broken = [],        # known broken examples (int index)
-    only = nothing,     # limit to these examples (int index)
-    debug = false,      # print debug information ?
-    sigma = [1, 1],     # number of pixels to "blur"
-    tol = 1e-2,         # acceptable error (percent)
-)
-    for i ∈ setdiff(1:length(PlotsBase._examples), skip)
+        pkg::Symbol;
+        skip = [],          # skip these examples (int index)
+        broken = [],        # known broken examples (int index)
+        only = nothing,     # limit to these examples (int index)
+        debug = false,      # print debug information ?
+        sigma = [1, 1],     # number of pixels to "blur"
+        tol = 1.0e-2,         # acceptable error (percent)
+    )
+    for i in setdiff(1:length(PlotsBase._examples), skip)
         if only ≡ nothing || i in only
             test = image_comparison_tests(pkg, i; debug, sigma, tol)
             if i ∈ broken
@@ -125,6 +125,7 @@ function image_comparison_facts(
             end
         end
     end
+    return
 end
 
 ## Uncomment the following lines to update reference images for different backends

@@ -51,11 +51,11 @@ errorline(1:10, y)
 errorline
 
 function compute_error(
-    y::AbstractMatrix,
-    centertype::Symbol,
-    errortype::Symbol,
-    percentiles::AbstractVector,
-)
+        y::AbstractMatrix,
+        centertype::Symbol,
+        errortype::Symbol,
+        percentiles::AbstractVector,
+    )
     y_central = fill(NaN, size(y, 1))
 
     # NaNMath doesn't accept Ints so convert to AbstractFloat if necessary
@@ -82,7 +82,7 @@ function compute_error(
         y_lower = fill(NaN, size(y, 1))
         y_upper = fill(NaN, size(y, 1))
         if any(isnan.(y)) # NaNMath does not have a percentile function so have to go via StatsBase
-            for i ∈ axes(y, 1)
+            for i in axes(y, 1)
                 yi = y[i, .!isnan.(y[i, :])]
                 y_lower[i] = percentile(yi, percentiles[1])
                 y_upper[i] = percentile(yi, percentiles[2])
@@ -101,18 +101,18 @@ function compute_error(
 end
 
 @recipe function f(
-    e::ErrorLine;
-    errorstyle = :ribbon,
-    centertype = :mean,
-    errortype = :std,
-    percentiles = [25, 75],
-    groupcolor = nothing,
-    secondarycolor = nothing,
-    stickwidth = 0.01,
-    secondarylinealpha = 0.1,
-    numsecondarylines = 100,
-    secondarylinewidth = 1,
-)
+        e::ErrorLine;
+        errorstyle = :ribbon,
+        centertype = :mean,
+        errortype = :std,
+        percentiles = [25, 75],
+        groupcolor = nothing,
+        secondarycolor = nothing,
+        stickwidth = 0.01,
+        secondarylinealpha = 0.1,
+        numsecondarylines = 100,
+        secondarylinewidth = 1,
+    )
     if length(e.args) == 1  # If only one input is given assume it is y-values in the form [x,obs]
         y = e.args[1]
         x = 1:size(y, 1)
@@ -150,10 +150,10 @@ end
     if (groupcolor ≢ nothing && ndims(y) > 2) && length(groupcolor) == 1
         groupcolor = repeat(groupcolor, size(y, 3)) # Use the same color for all groups
     elseif (groupcolor ≢ nothing && ndims(y) > 2) && length(groupcolor) < size(y, 3)
-        error("$(length(groupcolor)) colors given for a matrix with $(size(y,3)) groups")
+        error("$(length(groupcolor)) colors given for a matrix with $(size(y, 3)) groups")
     elseif groupcolor ≡ nothing
         gsi_counter = 0
-        for i ∈ 1:length(plotattributes[:plot_object].series_list)
+        for i in 1:length(plotattributes[:plot_object].series_list)
             if plotattributes[:plot_object].series_list[i].plotattributes[:primary]
                 gsi_counter += 1
             end
@@ -169,7 +169,7 @@ end
         numsecondarylines = size(y, 2)
     end
 
-    for g ∈ axes(y, 3) # Iterate through 3rd dimension
+    for g in axes(y, 3) # Iterate through 3rd dimension
         # Compute center and distribution for each value of x
         y_central, y_error = compute_error(y[:, :, g], centertype, errortype, percentiles)
 
@@ -188,7 +188,7 @@ end
         elseif errorstyle ≡ :stick
             x_offset = diff(extrema(x) |> collect)[1] * stickwidth
             seriestype := :path
-            for (i, xi) ∈ enumerate(x)
+            for (i, xi) in enumerate(x)
                 # Error sticks
                 @series begin
                     primary := false
@@ -237,7 +237,7 @@ end
                 y_sub_sample = y[:, :, g]
             end
             seriestype := :path
-            for i ∈ 1:numsecondarylines
+            for i in 1:numsecondarylines
                 # Background paths
                 @series begin
                     primary := false

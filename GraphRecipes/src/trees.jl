@@ -29,19 +29,20 @@ struct TreePlot{T}
 end
 
 function add_children!(nodes, source, destiny, node, parent_idx)
-    for child ∈ children(node)
+    for child in children(node)
         push!(nodes, child)
         child_idx = length(nodes)
         push!(source, parent_idx)
         push!(destiny, child_idx)
         add_children!(nodes, source, destiny, child, child_idx)
     end
+    return
 end
 
 function string_from_node(node)
     io = IOBuffer()
     AbstractTrees.printnode(io, node)
-    String(take!(io))
+    return String(take!(io))
 end
 
 # recursively build a graph of children of `tree_wrapper.root`

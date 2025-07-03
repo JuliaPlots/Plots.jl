@@ -1,4 +1,3 @@
-
 const DEFAULT_BBOX = Ref(BoundingBox(0mm, 0mm, 0mm, 0mm))
 const DEFAULT_MINPAD = Ref((20mm, 5mm, 2mm, 10mm))
 const DEFAULT_LINEWIDTH = Ref(1)
@@ -11,7 +10,7 @@ const _cbar_width = 5mm
 
 # allow pixels and percentages
 const px = Measures.AbsoluteLength(0.254)
-const pct = Measures.Length{:pct,Float64}(1.0)
+const pct = Measures.Length{:pct, Float64}(1.0)
 
 const BBox = Measures.Absolute2DBox
 
@@ -24,17 +23,17 @@ function xy_mm_to_pcts(x::AbsoluteLength, y::AbsoluteLength, figw, figh, flipy =
     if flipy
         ymm = figh.value - ymm  # flip y when origin in bottom-left
     end
-    xmm / figw.value, ymm / figh.value
+    return xmm / figw.value, ymm / figh.value
 end
 
 # convert a bounding box from absolute coords to percentages...
 # returns an array of percentages of figure size: [left, bottom, width, height]
 function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
-    mms = Float64[f(bb).value for f ∈ (left, bottom, width, height)]
+    mms = Float64[f(bb).value for f in (left, bottom, width, height)]
     if flipy
         mms[2] = figh.value - mms[2]  # flip y when origin in bottom-left
     end
-    mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
+    return mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
 end
 
 Base.show(io::IO, bbox::BoundingBox) = print(
@@ -57,7 +56,7 @@ function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
     t = min(top(bb1), top(bb2))
     r = max(right(bb1), right(bb2))
     b = max(bottom(bb1), bottom(bb2))
-    BoundingBox(l, t, r - l, b - t)
+    return BoundingBox(l, t, r - l, b - t)
 end
 
 Base.convert(::Type{<:Measure}, x::Float64) = x * pct
@@ -68,8 +67,8 @@ Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.val
 Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
 
 inch2px(inches::Real) = float(inches * PX_PER_INCH)
-px2inch(px::Real)     = float(px / PX_PER_INCH)
+px2inch(px::Real) = float(px / PX_PER_INCH)
 inch2mm(inches::Real) = float(inches * MM_PER_INCH)
-mm2inch(mm::Real)     = float(mm / MM_PER_INCH)
-px2mm(px::Real)       = float(px * MM_PER_PX)
-mm2px(mm::Real)       = float(mm / MM_PER_PX)
+mm2inch(mm::Real) = float(mm / MM_PER_INCH)
+px2mm(px::Real) = float(px * MM_PER_PX)
+mm2px(mm::Real) = float(mm / MM_PER_PX)

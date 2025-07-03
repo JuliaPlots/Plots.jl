@@ -26,16 +26,16 @@ end
         dsp = TextDisplay(IOContext(IOBuffer(), :color => true))
 
         @testset "plot" begin
-            for pl ∈ [
-                histogram([1, 0, 0, 0, 0, 0]),
-                plot([missing]),
-                plot([missing, missing]),
-                plot(fill(missing, 10)),
-                plot([missing; 1:4]),
-                plot([fill(missing, 10); 1:4]),
-                plot([1 1; 1 missing]),
-                plot(["a" "b"; missing "d"], [1 2; 3 4]),
-            ]
+            for pl in [
+                    histogram([1, 0, 0, 0, 0, 0]),
+                    plot([missing]),
+                    plot([missing, missing]),
+                    plot(fill(missing, 10)),
+                    plot([missing; 1:4]),
+                    plot([fill(missing, 10); 1:4]),
+                    plot([1 1; 1 missing]),
+                    plot(["a" "b"; missing "d"], [1 2; 3 4]),
+                ]
                 display(dsp, pl)
             end
             @test_nowarn plot(x -> x^2, 0, 2)
@@ -96,7 +96,7 @@ end
 @testset "legend" begin
     @test isa(
         PlotsBase.legend_pos_from_angle(20, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0),
-        NTuple{2,<:AbstractFloat},
+        NTuple{2, <:AbstractFloat},
     )
     @test PlotsBase.legend_anchor_index(-1) == 1
     @test PlotsBase.legend_anchor_index(+0) == 2
@@ -104,8 +104,8 @@ end
 
     @test PlotsBase.legend_angle(:foo_bar) == (45, :inner)
     @test PlotsBase.legend_angle(20.0) ==
-          PlotsBase.legend_angle((20.0, :inner)) ==
-          (20.0, :inner)
+        PlotsBase.legend_angle((20.0, :inner)) ==
+        (20.0, :inner)
     @test PlotsBase.legend_angle((20.0, 10.0)) == (20.0, 10.0)
 end
 
@@ -118,16 +118,16 @@ end
     data = MyType.(sort(randn(20)))
 
     # a recipe that puts the axis letter in the title
-    @recipe function f(::Type{T}, m::T) where {T<:AbstractArray{<:MyType}}
+    @recipe function f(::Type{T}, m::T) where {T <: AbstractArray{<:MyType}}
         title --> string(plotattributes[:letter])
         value.(m)
     end
 
-    @testset "$f" for f ∈ (hline, hspan)
+    @testset "$f" for f in (hline, hspan)
         @test f(data).subplots[1].attr[:title] == "y"
     end
 
-    @testset "$f" for f ∈ (vline, vspan)
+    @testset "$f" for f in (vline, vspan)
         @test f(data).subplots[1].attr[:title] == "x"
     end
 end
@@ -154,8 +154,8 @@ end
     data4 = rand(4, 4)
     mat = reshape(1:8, 2, 4)
     sp = plot(data4, ribbon = (mat, mat))[1]
-    for i ∈ axes(data4, 1)
-        for attribute ∈ (:fillrange, :ribbon)
+    for i in axes(data4, 1)
+        for attribute in (:fillrange, :ribbon)
             nt = NamedTuple{tuple(attribute)}
             get_attrs(pl) = pl[1][i][attribute]
             @test plot(data4; nt(0)...) |> get_attrs == 0
@@ -339,11 +339,11 @@ with(:gr) do
 
     @testset "legends" begin
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, 0.5)) isa
-              PlotsBase.Plot
+            PlotsBase.Plot
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :outer)) isa
-              PlotsBase.Plot
+            PlotsBase.Plot
         @test plot([0:1 reverse(0:1)]; labels = ["a" "b"], leg = (0.5, :inner)) isa
-              PlotsBase.Plot
+            PlotsBase.Plot
         @test_logs (:warn, r"n° of legend_column.*") png(
             plot(1:2, legend_columns = 10, label = :auto),
             tempname(),

@@ -1,4 +1,3 @@
-
 const _attribute_defaults = Dict(
     :Series => _series_defaults,
     :Subplot => _subplot_defaults,
@@ -52,7 +51,7 @@ function plotattr()
     end
 
     d = default(attr)
-    """
+    return """
     # $letter$attr
 
     - $attrtype attribute
@@ -64,13 +63,13 @@ end
 
 function plotattr(attrtype::Symbol)
     attrtype ∈ keys(_attribute_defaults) || error("Viable options are $(attrtypes())")
-    println("Defined $attrtype attributes are:\n$(join(attributes(attrtype), ", "))")
+    return println("Defined $attrtype attributes are:\n$(join(attributes(attrtype), ", "))")
 end
 
 function plotattr(attribute::AbstractString)
     attribute = Symbol(attribute)
     attribute = get(Commons._keyAliases, attribute, attribute)
-    for (k, v) ∈ _attribute_defaults
+    for (k, v) in _attribute_defaults
         attribute ∈ keys(v) && return plotattr(k, attribute)
     end
     error("There is no attribute named $attribute")
@@ -90,7 +89,7 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
     end
 
     # Looks up the different elements and plots them
-    println(
+    return println(
         ":$attribute\n\n",
         "$desc\n\n",
         aliases,

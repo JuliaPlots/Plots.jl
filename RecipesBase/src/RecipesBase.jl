@@ -14,11 +14,11 @@ export @recipe,
 
 # Common abstract types for the Plots ecosystem
 abstract type AbstractBackend end
-abstract type AbstractPlot{T<:AbstractBackend} end
+abstract type AbstractPlot{T <: AbstractBackend} end
 abstract type AbstractLayout end
 
-const KW = Dict{Symbol,Any}
-const AKW = AbstractDict{Symbol,Any}
+const KW = Dict{Symbol, Any}
+const AKW = AbstractDict{Symbol, Any}
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.plot since RecipesBase is the common
@@ -45,18 +45,18 @@ group_as_matrix(t) = false
 # This holds the recipe definitions to be dispatched on
 # the function takes in an attribute dict `d` and a list of args.
 # This default definition specifies the "no-arg" case.
-apply_recipe(plotattributes::AbstractDict{Symbol,Any}) = ()
+apply_recipe(plotattributes::AbstractDict{Symbol, Any}) = ()
 
 # Is a key explicitly provided by the user?
 # Should be overridden for subtypes representing plot attributes.
-is_explicit(d::AbstractDict{Symbol,Any}, k) = haskey(d, k)
+is_explicit(d::AbstractDict{Symbol, Any}, k) = haskey(d, k)
 function is_default end
 
 # --------------------------------------------------------------------------
 
 # this holds the data and attributes of one series, and is returned from apply_recipe
 struct RecipeData
-    plotattributes::AbstractDict{Symbol,Any}
+    plotattributes::AbstractDict{Symbol, Any}
     args::Tuple
 end
 
@@ -82,13 +82,13 @@ _equals_symbol(x, sym::Symbol) = false
 # build an apply_recipe function header from the recipe function header
 function get_function_def(func_signature::Expr, args::Vector)
     front = func_signature.args[1]
-    if func_signature.head ≡ :where
+    return if func_signature.head ≡ :where
         Expr(:where, get_function_def(front, args), esc.(func_signature.args[2:end])...)
     elseif func_signature.head ≡ :call
         func = Expr(
             :call,
             :($RecipesBase.apply_recipe),
-            esc.([:(plotattributes::AbstractDict{Symbol,Any}); args])...,
+            esc.([:(plotattributes::AbstractDict{Symbol, Any}); args])...,
         )
         if isa(front, Expr) && front.head ≡ :curly
             Expr(:where, func, esc.(front.args[2:end])...)
@@ -110,7 +110,7 @@ function create_kw_body(func_signature::Expr)
     kw_body, cleanup_body = map(_ -> Expr(:block), 1:2)
     arg1 = args[1]
     if isa(arg1, Expr) && arg1.head ≡ :parameters
-        for kwpair ∈ arg1.args
+        for kwpair in arg1.args
             k, v = kwpair.args
             if isa(k, Expr) && k.head ≡ :(::)
                 k = k.args[1]
@@ -124,13 +124,13 @@ function create_kw_body(func_signature::Expr)
                 cleanup_body.args,
                 :(
                     $RecipesBase.is_key_supported($(QuoteNode(k))) ||
-                    delete!(plotattributes, $(QuoteNode(k)))
+                        delete!(plotattributes, $(QuoteNode(k)))
                 ),
             )
         end
         args = args[2:end]
     end
-    args, kw_body, cleanup_body
+    return args, kw_body, cleanup_body
 end
 
 # process the body of the recipe recursively.
@@ -143,13 +143,13 @@ end
 # and we push this block onto the series_blocks list.
 # then at the end we push the main body onto the series list
 function process_recipe_body!(expr::Expr)
-    for (i, e) ∈ enumerate(expr.args)
+    for (i, e) in enumerate(expr.args)
         if isa(e, Expr)
             # process trailing flags, like:
             #   a --> b, :quiet, :force
             quiet, require, force = false, false, false
             if _is_arrow_tuple(e)
-                for flag ∈ e.args
+                for flag in e.args
                     if _equals_symbol(flag, :quiet)
                         quiet = true
                     elseif _equals_symbol(flag, :require)
@@ -191,11 +191,11 @@ function process_recipe_body!(expr::Expr)
                     # error when not supported by the backend
                     :(
                         $RecipesBase.is_key_supported($k) ? $set_expr :
-                        error(
-                            "In recipe: required keyword ",
-                            $k,
-                            " is not supported by backend $(backend_name())",
-                        )
+                            error(
+                                "In recipe: required keyword ",
+                                $k,
+                                " is not supported by backend $(backend_name())",
+                            )
                     )
                 else
                     set_expr
@@ -212,6 +212,7 @@ function process_recipe_body!(expr::Expr)
             end
         end
     end
+    return
 end
 
 # --------------------------------------------------------------------------
@@ -335,7 +336,7 @@ end
 ```
 """
 macro series(expr::Expr)
-    quote
+    return quote
         let plotattributes = copy(plotattributes)
             args = $expr
             push!(
@@ -362,7 +363,7 @@ grouphist(rand(1_000, 4))
 ```
 """
 macro userplot(expr)
-    _userplot(expr)
+    return _userplot(expr)
 end
 
 function _userplot(expr::Expr)
@@ -374,7 +375,7 @@ function _userplot(expr::Expr)
     funcname2 = Symbol(funcname, "!")
 
     # return a code block with the type definition and convenience plotting methods
-    quote
+    return quote
         $expr
         export $funcname, $funcname2
         Core.@__doc__ $funcname(args...; kw...) =
@@ -386,15 +387,19 @@ function _userplot(expr::Expr)
     end |> esc
 end
 
-_userplot(sym::Symbol) = _userplot(:(mutable struct $sym
-    args
-end))
+_userplot(sym::Symbol) = _userplot(
+    :(
+        mutable struct $sym
+            args
+        end
+    )
+)
 
 gettypename(sym::Symbol) = sym
 
 function gettypename(expr::Expr)
     expr.head ≡ :curly || @error "Unexpected struct name: $expr"
-    expr.args[1]
+    return expr.args[1]
 end
 
 #----------------------------------------------------------------------------
@@ -422,7 +427,7 @@ Plot my series type!
 """
 macro shorthands(funcname::Symbol)
     funcname2 = Symbol(funcname, "!")
-    quote
+    return quote
         export $funcname, $funcname2
         Core.@__doc__ $funcname(args...; kw...) =
             $RecipesBase.plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
@@ -481,34 +486,34 @@ iscol(v) = isa(v, Expr) && v.head ≡ :vcat
 rowsize(v) = isrow(v) ? length(v.args) : 1
 
 create_grid(expr::Expr) =
-    if iscol(expr)
-        create_grid_vcat(expr)
-    elseif isrow(expr)
-        sub(x) = :(cell[1, $(first(x))] = $(create_grid(last(x))))
-        quote
-            let cell = Matrix(undef, 1, $(length(expr.args)))
-                $(map(sub, enumerate(expr.args))...)
-                cell
-            end
+if iscol(expr)
+    create_grid_vcat(expr)
+elseif isrow(expr)
+    sub(x) = :(cell[1, $(first(x))] = $(create_grid(last(x))))
+    quote
+        let cell = Matrix(undef, 1, $(length(expr.args)))
+            $(map(sub, enumerate(expr.args))...)
+            cell
         end
-    elseif expr.head ≡ :curly
-        create_grid_curly(expr)
-    else
-        esc(expr)  # if it's something else, just return that (might be an existing layout?)
     end
+elseif expr.head ≡ :curly
+    create_grid_curly(expr)
+else
+    esc(expr)  # if it's something else, just return that (might be an existing layout?)
+end
 
 function create_grid_vcat(expr::Expr)
     rowsizes = map(rowsize, expr.args)
     rmin, rmax = extrema(rowsizes)
-    if rmin > 0 && rmin == rmax
+    return if rmin > 0 && rmin == rmax
         # we have a grid... build the whole thing
         # note: rmin is the number of columns
         nr = length(expr.args)
         nc = rmin
         body = Expr(:block)
-        for r ∈ 1:nr
+        for r in 1:nr
             if (arg = expr.args[r]) |> isrow
-                for (c, item) ∈ enumerate(arg.args)
+                for (c, item) in enumerate(arg.args)
                     push!(body.args, :(cell[$r, $c] = $(create_grid(item))))
                 end
             else
@@ -535,11 +540,11 @@ end
 
 function create_grid_curly(expr::Expr)
     kw = KW()
-    for (i, arg) ∈ enumerate(expr.args[2:end])
+    for (i, arg) in enumerate(expr.args[2:end])
         add_layout_pct!(kw, arg, i, length(expr.args) - 1)
     end
     s = expr.args[1]
-    if isa(s, Expr) && s.head ≡ :call && s.args[1] ≡ :grid
+    return if isa(s, Expr) && s.head ≡ :call && s.args[1] ≡ :grid
         create_grid(
             quote
                 grid(
@@ -593,7 +598,7 @@ julia> @layout [_ ° _; ° ° °; ° ° °]
 ```
 """
 macro layout(mat::Expr)
-    create_grid(mat)
+    return create_grid(mat)
 end
 
 # COV_EXCL_START

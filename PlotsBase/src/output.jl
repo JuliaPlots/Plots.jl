@@ -5,7 +5,7 @@ default_output_format(plt::Plot) = "png"
 function png(plt::Plot, fn)
     fn = addExtension(fn, "png")
     open(io -> show(io, MIME("image/png"), plt), fn, "w")
-    fn
+    return fn
 end
 png(fn) = png(current(), fn)
 
@@ -15,7 +15,7 @@ png(io::IO) = png(current(), io)
 function svg(plt::Plot, fn)
     fn = addExtension(fn, "svg")
     open(io -> show(io, MIME("image/svg+xml"), plt), fn, "w")
-    fn
+    return fn
 end
 
 svg(fn) = svg(current(), fn)
@@ -26,7 +26,7 @@ svg(io::IO) = svg(current(), io)
 function pdf(plt::Plot, fn)
     fn = addExtension(fn, "pdf")
     open(io -> show(io, MIME("application/pdf"), plt), fn, "w")
-    fn
+    return fn
 end
 pdf(fn) = pdf(current(), fn)
 
@@ -36,7 +36,7 @@ pdf(io::IO) = pdf(current(), io)
 function ps(plt::Plot, fn)
     fn = addExtension(fn, "ps")
     open(io -> show(io, MIME("application/postscript"), plt), fn, "w")
-    fn
+    return fn
 end
 ps(fn) = ps(current(), fn)
 
@@ -46,7 +46,7 @@ ps(io::IO) = ps(current(), io)
 function eps(plt::Plot, fn)
     fn = addExtension(fn, "eps")
     open(io -> show(io, MIME("image/eps"), plt), fn, "w")
-    fn
+    return fn
 end
 eps(fn) = eps(current(), fn)
 
@@ -56,7 +56,7 @@ eps(io::IO) = eps(current(), io)
 function tex(plt::Plot, fn)
     fn = addExtension(fn, "tex")
     open(io -> show(io, MIME("application/x-tex"), plt), fn, "w")
-    fn
+    return fn
 end
 tex(fn) = tex(current(), fn)
 
@@ -66,7 +66,7 @@ tex(io::IO) = tex(current(), io)
 function json(plt::Plot, fn)
     fn = addExtension(fn, "json")
     open(io -> show(io, MIME("application/vnd.plotly.v1+json"), plt), fn, "w")
-    fn
+    return fn
 end
 json(fn) = json(current(), fn)
 
@@ -76,7 +76,7 @@ json(io::IO) = json(current(), io)
 function html(plt::Plot, fn)
     fn = addExtension(fn, "html")
     open(io -> show(io, MIME("text/html"), plt), fn, "w")
-    fn
+    return fn
 end
 html(fn) = html(current(), fn)
 
@@ -86,7 +86,7 @@ html(io::IO) = html(current(), io)
 function txt(plt::Plot, fn; color::Bool = true)
     fn = addExtension(fn, "txt")
     open(io -> show(IOContext(io, :color => color), MIME("text/plain"), plt), fn, "w")
-    fn
+    return fn
 end
 txt(fn) = txt(current(), fn)
 
@@ -108,7 +108,7 @@ const _savemap = Dict(
     "txt" => txt,
 )
 
-for out ∈ Symbol.(unique(values(_savemap)))
+for out in Symbol.(unique(values(_savemap)))
     @eval @doc """
         $($out)([plot,], filename)
     Save plot as $($out)-file.
@@ -126,7 +126,7 @@ function addExtension(fp, ext::AbstractString)
     dn, fn = splitdir(fp)
     _, oldext = splitext(fn)
     oldext = chop(oldext, head = 1, tail = 0)
-    get(_extension_map, oldext, oldext) == ext ? fp : joinpath(dn, string(fn, ".", ext))
+    return get(_extension_map, oldext, oldext) == ext ? fp : joinpath(dn, string(fn, ".", ext))
 end
 
 """
@@ -165,13 +165,13 @@ gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
-    _display(plt)
+    return _display(plt)
 end
 
 _do_plot_show(plt, showval::Bool) = showval && gui(plt)
 function _do_plot_show(plt, showval::Symbol)
     showval ≡ :gui && gui(plt)
-    showval in (:inline, :ijulia) && inline(plt)
+    return showval in (:inline, :ijulia) && inline(plt)
 end
 
 # ---------------------------------------------------------
@@ -185,7 +185,7 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
     if output_type ≡ :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
     end
-    if output_type ≡ :png
+    return if output_type ≡ :png
         # @info "writing png to html output"
         print(
             io,
@@ -204,25 +204,25 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
 end
 
 # delegate showable to _show instead
-Base.showable(m::M, ::P) where {M<:MIME,P<:Plot} = showable(m, P)
-Base.showable(::M, ::Type{P}) where {M<:MIME,P<:Plot} = hasmethod(_show, Tuple{IO,M,P})
+Base.showable(m::M, ::P) where {M <: MIME, P <: Plot} = showable(m, P)
+Base.showable(::M, ::Type{P}) where {M <: MIME, P <: Plot} = hasmethod(_show, Tuple{IO, M, P})
 
 _display(plt::Plot) = @warn "_display is not defined for this backend."
 
 Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback
-for mime ∈ (
-    "text/html",
-    "text/latex",
-    "image/png",
-    "image/eps",
-    "image/svg+xml",
-    "application/eps",
-    "application/pdf",
-    "application/postscript",
-    "application/x-tex",
-    "application/vnd.plotly.v1+json",
-)
+for mime in (
+        "text/html",
+        "text/latex",
+        "image/png",
+        "image/eps",
+        "image/svg+xml",
+        "application/eps",
+        "application/pdf",
+        "application/postscript",
+        "application/x-tex",
+        "application/vnd.plotly.v1+json",
+    )
     @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         if haskey(io, :juno_plotsize)
             showjuno(io, m, plt)
@@ -265,7 +265,7 @@ function showjuno(io::IO, m, plt)
     plt[:dpi] = get(io, :juno_dpi_ratio, 1) * PlotsBase.DPI
 
     prepare_output(plt)
-    try
+    return try
         _showjuno(io, m, plt)
     finally
         plt[:dpi] = dpi
@@ -273,11 +273,11 @@ function showjuno(io::IO, m, plt)
 end
 
 _showjuno(io::IO, m::MIME"image/svg+xml", plt) =
-    if Symbol(plt.attr[:html_output_format]) ≠ :svg
-        throw(MethodError(show, (typeof(m), typeof(plt))))
-    else
-        _show(io, m, plt)
-    end
+if Symbol(plt.attr[:html_output_format]) ≠ :svg
+    throw(MethodError(show, (typeof(m), typeof(plt))))
+else
+    _show(io, m, plt)
+end
 
 Base.showable(::MIME"application/prs.juno.plotpane+html", ::Plot) = false
 

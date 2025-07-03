@@ -5,7 +5,7 @@ mutable struct PlotExample
     header::AbstractString
     desc::AbstractString
     external::Bool  # requires external optional dependencies not listed in [deps]
-    imports::Union{Nothing,Expr}
+    imports::Union{Nothing, Expr}
     exprs::Expr
 end
 
@@ -39,7 +39,7 @@ const _examples = PlotExample[
         quote
             p = plot([sin, cos], zeros(0), leg = false, xlims = (0, 2π), ylims = (-1, 1))
             anim = Animation()
-            for x ∈ range(0, stop = 2π, length = 20)
+            for x in range(0, stop = 2π, length = 20)
                 push!(p, x, Float64[sin(x), cos(x)])
                 frame(anim)
             end
@@ -264,11 +264,11 @@ const _examples = PlotExample[
             closepct = rand(n)
             y = OHLC[
                 (
-                    openpct[i] * hgt[i] + bot[i],
-                    bot[i] + hgt[i],
-                    bot[i],
-                    closepct[i] * hgt[i] + bot[i],
-                ) for i ∈ 1:n
+                        openpct[i] * hgt[i] + bot[i],
+                        bot[i] + hgt[i],
+                        bot[i],
+                        closepct[i] * hgt[i] + bot[i],
+                    ) for i in 1:n
             ]
             ohlc(y)
         end,
@@ -303,10 +303,12 @@ const _examples = PlotExample[
                 leg = false,
             )
             # single vector of annotation tuples
-            annotate!([
-                (5, y[5], ("this is #5", 16, :red, :center)),
-                (10, y[10], ("this is #10", :right, 20, "courier")),
-            ])
+            annotate!(
+                [
+                    (5, y[5], ("this is #5", 16, :red, :center)),
+                    (10, y[10], ("this is #10", :right, 20, "courier")),
+                ]
+            )
             # `x, y, text` vectors
             annotate!([2, 8], y[[2, 8]], ["#2", "#8"])
             scatter!(
@@ -452,8 +454,8 @@ const _examples = PlotExample[
     PlotExample( # 28
         "Heatmap, categorical axes, and aspect_ratio",
         quote
-            xs = [string("x", i) for i ∈ 1:10]
-            ys = [string("y", i) for i ∈ 1:4]
+            xs = [string("x", i) for i in 1:10]
+            ys = [string("y", i) for i in 1:4]
             z = float((1:4) * reshape(1:10, 1, :))
             heatmap(xs, ys, z, aspect_ratio = 1)
         end,
@@ -503,7 +505,7 @@ const _examples = PlotExample[
             )
 
             anim = Animation()
-            for x ∈ range(1, stop = 2π, length = 20)
+            for x in range(1, stop = 2π, length = 20)
                 plot(push!(p, x, Float64[sin(x), cos(x), atan(x), cos(x), log(x)]))
                 frame(anim)
             end
@@ -714,18 +716,18 @@ const _examples = PlotExample[
             value(m::Measurement) = m.val
             uncertainty(m::Measurement) = m.err
 
-            @recipe function f(::Type{T}, m::T) where {T<:AbstractArray{<:Measurement}}
+            @recipe function f(::Type{T}, m::T) where {T <: AbstractArray{<:Measurement}}
                 if !(
-                    get(plotattributes, :seriestype, :path) in (
-                        :contour,
-                        :contourf,
-                        :contour3d,
-                        :heatmap,
-                        :surface,
-                        :wireframe,
-                        :image,
+                        get(plotattributes, :seriestype, :path) in (
+                            :contour,
+                            :contourf,
+                            :contour3d,
+                            :heatmap,
+                            :surface,
+                            :wireframe,
+                            :image,
+                        )
                     )
-                )
                     error_sym = Symbol(plotattributes[:letter], :error)
                     plotattributes[error_sym] = uncertainty.(m)
                 end
@@ -847,8 +849,8 @@ const _examples = PlotExample[
             xs = collect(0.1:0.05:2.0)
             ys = collect(0.2:0.1:2.0)
 
-            X = [x for x ∈ xs for _ ∈ ys]
-            Y = [y for _ ∈ xs for y ∈ ys]
+            X = [x for x in xs for _ in ys]
+            Y = [y for _ in xs for y in ys]
 
             Z = (x, y) -> 1 / x + y * x^2
 
@@ -889,13 +891,13 @@ const _examples = PlotExample[
             θs = range(0, π, length = 25)
             θqs = range(1, π - 1, length = 25)
 
-            x = vec([sin(θ) * cos(ϕ) for (ϕ, θ) ∈ Iterators.product(ϕs, θs)])
-            y = vec([sin(θ) * sin(ϕ) for (ϕ, θ) ∈ Iterators.product(ϕs, θs)])
-            z = vec([cos(θ) for (ϕ, θ) ∈ Iterators.product(ϕs, θs)])
+            x = vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+            y = vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+            z = vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
 
-            u = 0.1vec([sin(θ) * cos(ϕ) for (ϕ, θ) ∈ Iterators.product(ϕs, θqs)])
-            v = 0.1vec([sin(θ) * sin(ϕ) for (ϕ, θ) ∈ Iterators.product(ϕs, θqs)])
-            w = 0.1vec([cos(θ) for (ϕ, θ) ∈ Iterators.product(ϕs, θqs)])
+            u = 0.1vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            v = 0.1vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            w = 0.1vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
 
             quiver(x, y, z, quiver = (u, v, w))
         end,
@@ -958,7 +960,7 @@ const _examples = PlotExample[
 
                 plots = [wireframe(args..., title = "wire"; kw...)]
 
-                for ax ∈ (:x, :y, :z)
+                for ax in (:x, :y, :z)
                     push!(
                         plots,
                         wireframe(
@@ -972,7 +974,7 @@ const _examples = PlotExample[
                     )
                 end
 
-                for ax ∈ (:x, :y, :z)
+                for ax in (:x, :y, :z)
                     push!(
                         plots,
                         wireframe(
@@ -1247,11 +1249,13 @@ const _examples = PlotExample[
     PlotExample( # 66
         "Specifying edges and missing values for barplots",
         "In `bar(x, y)`, `x` may be the same length as `y` to specify bar centers, or one longer to specify bar edges.",
-        :(plot(
-            bar(-5:5, randn(10)),  # bar edges at -5:5
-            bar(-2:2, [2, -2, NaN, -1, 1], color = 1:5),  # bar centers at -2:2, one missing value
-            legend = false,
-        )),
+        :(
+            plot(
+                bar(-5:5, randn(10)),  # bar edges at -5:5
+                bar(-2:2, [2, -2, NaN, -1, 1], color = 1:5),  # bar centers at -2:2, one missing value
+                legend = false,
+            )
+        ),
     ),
 ]
 
@@ -1316,7 +1320,7 @@ _backend_skips = Dict(
 )
 _backend_skips[:plotly] = _backend_skips[:plotlyjs]
 # 25 and 30 require StatsPlots, which doesn't support Plots v2 yet
-for backend ∈ keys(_backend_skips)
+for backend in keys(_backend_skips)
     append!(_backend_skips[backend], [25, 30])
 end
 
@@ -1331,7 +1335,7 @@ function replace_rand(ex::Expr)
         pushfirst!(expr.args, first(ex.args))
         expr.args[2] = :rng
     end
-    expr
+    return expr
 end
 
 replace_module(ex) = ex
@@ -1339,7 +1343,7 @@ replace_module(ex) = ex
 function replace_module(ex::Expr)
     if Meta.isexpr(ex, :import) || Meta.isexpr(ex, :using)
         expr = Expr(ex.head)
-        for arg ∈ ex.args
+        for arg in ex.args
             mod = last(arg.args)
             new_arg = if Meta.isexpr(arg, :.)
                 mod ≡ :PlotsBase ? arg : Expr(:., :PlotsBase, mod)
@@ -1351,34 +1355,36 @@ function replace_module(ex::Expr)
     else
         expr = ex
     end
-    expr
+    return expr
 end
 
 # make and display one plot
 test_examples(i::Integer; kw...) = test_examples(backend_name(), i; kw...)
 
 function test_examples(
-    pkgname::Symbol,
-    i::Integer;
-    debug = false,
-    disp = false,
-    rng = nothing,
-    callback = nothing,
-)
+        pkgname::Symbol,
+        i::Integer;
+        debug = false,
+        disp = false,
+        rng = nothing,
+        callback = nothing,
+    )
     @info "Testing plot: $pkgname:$i:$(_examples[i].header)"
 
     m = Module(Symbol(:PlotsExamples, pkgname))
 
     # prevent leaking variables (esp. functions) directly into Plots namespace
-    Base.eval(m, quote
-        using Random
-        using PlotsBase
-        PlotsBase.Commons.debug!($debug)
-        backend($(QuoteNode(pkgname)))
-        rng = $rng
-        rng ≡ nothing || Random.seed!(rng, PlotsBase.SEED)
-        theme(:default)
-    end)
+    Base.eval(
+        m, quote
+            using Random
+            using PlotsBase
+            PlotsBase.Commons.debug!($debug)
+            backend($(QuoteNode(pkgname)))
+            rng = $rng
+            rng ≡ nothing || Random.seed!(rng, PlotsBase.SEED)
+            theme(:default)
+        end
+    )
     (imp = _examples[i].imports) ≡ nothing || Base.eval(m, imp)
     exprs = _examples[i].exprs
     rng ≡ nothing || (exprs = PlotsBase.replace_rand(exprs))
@@ -1386,7 +1392,7 @@ function test_examples(
 
     disp && Base.eval(m, :(gui(current())))
     callback ≡ nothing || Base.invokelatest(callback, m, pkgname, i)
-    Base.eval(m, :(current()))
+    return Base.eval(m, :(current()))
 end
 
 # generate all plots and create a dict mapping idx --> plt
@@ -1396,17 +1402,17 @@ test_examples(pkgname[, idx]; debug=false, disp=false, sleep=nothing, skip=[], o
 Run the `idx` test example for a given backend, or all examples if `idx` is not specified.
 """
 function test_examples(
-    pkgname::Symbol;
-    debug = false,
-    disp = false,
-    sleep = nothing,
-    skip = [],
-    only = nothing,
-    callback = nothing,
-    strict = false,
-)
+        pkgname::Symbol;
+        debug = false,
+        disp = false,
+        sleep = nothing,
+        skip = [],
+        only = nothing,
+        callback = nothing,
+        strict = false,
+    )
     plts = Dict()
-    for i ∈ eachindex(_examples)
+    for i in eachindex(_examples)
         i ∈ something(only, (i,)) || continue
         i ∈ skip && continue
         try
@@ -1422,5 +1428,5 @@ function test_examples(
         end
         sleep ≡ nothing || Base.sleep(sleep)
     end
-    plts
+    return plts
 end

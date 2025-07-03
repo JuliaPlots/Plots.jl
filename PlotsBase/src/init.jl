@@ -1,7 +1,7 @@
 using Scratch: @get_scratch!
 using REPL
 
-const _plotly_local_file_path = Ref{Union{Nothing,String}}(nothing)
+const _plotly_local_file_path = Ref{Union{Nothing, String}}(nothing)
 # use fixed version of Plotly instead of the latest one for stable dependency
 # see github.com/JuliaPlots/Plots.jl/pull/2779
 const _plotly_min_js_filename = "plotly-2.3.0.min.js"  # must match https://github.com/JuliaPlots/PlotlyJS.jl/blob/master/deps/plotly_cdn_version.jl
@@ -12,15 +12,15 @@ const _use_local_dependencies = Ref(false)
 const _use_local_plotlyjs = Ref(false)
 
 _plots_defaults() =
-    if isdefined(Main, :PLOTSBASE_DEFAULTS)
-        copy(Dict{Symbol,Any}(Main.PLOTSBASE_DEFAULTS))
-    else
-        Dict{Symbol,Any}()
-    end
+if isdefined(Main, :PLOTSBASE_DEFAULTS)
+    copy(Dict{Symbol, Any}(Main.PLOTSBASE_DEFAULTS))
+else
+    Dict{Symbol, Any}()
+end
 
 function _plots_theme_defaults()
     user_defaults = _plots_defaults()
-    theme(pop!(user_defaults, :theme, :default); user_defaults...)
+    return theme(pop!(user_defaults, :theme, :default); user_defaults...)
 end
 
 function _plots_plotly_defaults()
@@ -31,7 +31,7 @@ function _plots_plotly_defaults()
             Downloads.download("https://cdn.plot.ly/$(_plotly_min_js_filename)", fn)
         _use_local_plotlyjs[] = true
     end
-    _use_local_dependencies[] = _use_local_plotlyjs[]
+    return _use_local_dependencies[] = _use_local_plotlyjs[]
 end
 
 function __init__()
@@ -48,18 +48,18 @@ function __init__()
     )
 
     i ->
-        begin
-            while PlotsDisplay() in Base.Multimedia.displays
-                popdisplay(PlotsDisplay())
-            end
-            insert!(
-                Base.Multimedia.displays,
-                findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
-                PlotsDisplay(),
-            )
-        end |> atreplinit
+    begin
+        while PlotsDisplay() in Base.Multimedia.displays
+            popdisplay(PlotsDisplay())
+        end
+        insert!(
+            Base.Multimedia.displays,
+            findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
+            PlotsDisplay(),
+        )
+    end |> atreplinit
 
-    nothing
+    return nothing
 end
 
 # from github.com/JuliaPackaging/Preferences.jl/blob/master/README.md:
@@ -72,14 +72,14 @@ const DEFAULT_BACKEND =
 function default_backend()
     # environment variable preempts the `Preferences` based mechanism
     name = get(ENV, "PLOTSBASE_DEFAULT_BACKEND", DEFAULT_BACKEND) |> lowercase |> Symbol
-    backend(name)
+    return backend(name)
 end
 
 function set_default_backend!(
-    backend::Union{Nothing,AbstractString,Symbol} = nothing;
-    force = true,
-    kw...,
-)
+        backend::Union{Nothing, AbstractString, Symbol} = nothing;
+        force = true,
+        kw...,
+    )
     if backend ≡ nothing
         Preferences.delete_preferences!(PlotsBase, "default_backend"; force, kw...)
     else
@@ -93,7 +93,7 @@ function set_default_backend!(
             )
         end
     end
-    nothing
+    return nothing
 end
 
 function diagnostics(io::IO = stdout)
@@ -115,12 +115,12 @@ function diagnostics(io::IO = stdout)
             io,
         )
     end
-    nothing
+    return nothing
 end
 
 macro precompile_backend(backend_package)
     abstract_backend = Symbol(backend_package, :Backend)
-    quote
+    return quote
         PrecompileTools.@setup_workload begin
             using PlotsBase  # for extensions
             backend($abstract_backend())
@@ -130,11 +130,11 @@ macro precompile_backend(backend_package)
             imports = sizehint!(Expr[], n)
             examples = sizehint!(Expr[], 10n)
             scratch_dir = mktempdir()
-            for i ∈ setdiff(
-                1:n,
-                PlotsBase._backend_skips[backend_name()],
-                PlotsBase._animation_examples,
-            )
+            for i in setdiff(
+                    1:n,
+                    PlotsBase._backend_skips[backend_name()],
+                    PlotsBase._animation_examples,
+                )
                 PlotsBase._examples[i].external && continue
                 (imp = PlotsBase._examples[i].imports) ≡ nothing ||
                     push!(imports, PlotsBase.replace_module(imp))

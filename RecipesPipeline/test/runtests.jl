@@ -30,12 +30,12 @@ end
 
 @testset "coverage" begin
     @test RecipesPipeline.userrecipe_signature_string((missing, 1)) ==
-          "(::Missing, ::Int64)"
+        "(::Missing, ::Int64)"
     @test RecipesPipeline.typerecipe_signature_string(1) == "(::Type{Int64}, ::Int64)"
     @test RecipesPipeline.plotrecipe_signature_string(:wireframe) ==
-          "(::Type{Val{:wireframe}}, ::AbstractPlot)"
+        "(::Type{Val{:wireframe}}, ::AbstractPlot)"
     @test RecipesPipeline.seriesrecipe_signature_string(:wireframe) ==
-          "(::Type{Val{:wireframe}}, x, y, z)"
+        "(::Type{Val{:wireframe}}, x, y, z)"
 
     plt = nothing
     plotattributes = Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path)
@@ -52,7 +52,7 @@ end
     @test slice_series_attributes!(plt, kw_list, kw) isa Nothing
     @test process_sliced_series_attributes!(plt, kw_list) isa Nothing
 
-    @test RecipesPipeline.series_defaults(plt) == Dict{Symbol,Any}()
+    @test RecipesPipeline.series_defaults(plt) == Dict{Symbol, Any}()
     @test !RecipesPipeline.is_seriestype_supported(plt, :wireframe)
     @test RecipesPipeline.add_series!(plt, kw) isa Nothing
 
@@ -86,7 +86,7 @@ end
 
 @testset "_apply_type_recipe" begin
     plt = nothing
-    plotattributes = Dict{Symbol,Any}(:plot_object => plt)
+    plotattributes = Dict{Symbol, Any}(:plot_object => plt)
     @test _apply_type_recipe(plotattributes, [1, 2, 3], :x) == [1, 2, 3]
     @test _apply_type_recipe(plotattributes, [[1, 2], [3, 4]], :x) == [[1, 2], [3, 4]]
     res = _apply_type_recipe(plotattributes, [Dates.Date(2001)], :x)
@@ -103,7 +103,7 @@ end
         val::Float64
     end
 
-    @recipe f(::Type{T}, v::T) where {T<:AbstractVector{<:Test1}} = map(x -> x.val + 1, v)
+    @recipe f(::Type{T}, v::T) where {T <: AbstractVector{<:Test1}} = map(x -> x.val + 1, v)
 
     @test _apply_type_recipe(plotattributes, Test1.([1, 2, 3]), :x) == [2.0, 3.0, 4.0]
     @test _apply_type_recipe(plotattributes, [Test1.([1, 2, 3])], :x) == [[2.0, 3.0, 4.0]]
@@ -112,7 +112,7 @@ end
         val::Float64
     end
 
-    @recipe f(::Type{T}, v::T) where {T<:AbstractVector{<:AbstractVector{<:Test2}}} =
+    @recipe f(::Type{T}, v::T) where {T <: AbstractVector{<:AbstractVector{<:Test2}}} =
         map(x -> map(y -> y.val + 2, x), v)
 
     @test _apply_type_recipe(plotattributes, Test2.([1, 2, 3]), :x) == Test2.([1, 2, 3])
@@ -125,7 +125,7 @@ end
     @test _prepare_series_data((1.0, 2.0)) ≡ (1.0, 2.0)
     @test _prepare_series_data(identity) ≡ identity
     @test _prepare_series_data(1:5:10) ≡ 1:5:10
-    a = ones(Union{Missing,Float64}, 100, 100)
+    a = ones(Union{Missing, Float64}, 100, 100)
     sd = _prepare_series_data(a)
     @test sd == a
     @test eltype(sd) == Float64
@@ -145,7 +145,7 @@ end
 @testset "unzip" begin
     x, y, z = unzip([(1.0, 2.0, 3.0), (1.0, 2.0, 3.0)])
     @test all(x .== 1.0) && all(y .== 2.0) && all(z .== 3.0)
-    x, y, z = unzip(Tuple{Float64,Float64,Float64}[])
+    x, y, z = unzip(Tuple{Float64, Float64, Float64}[])
     @test isempty(x) && isempty(y) && isempty(z)
 end
 

@@ -9,14 +9,14 @@ const Shapes = PlotsBase.Shapes
         @test get_xs(square) == [0, 1, 1, 0]
         @test get_ys(square) == [0, 0, 1, 1]
         @test vertices(square) == [(0, 0), (1, 0), (1, 1), (0, 1)]
-        @test isa(square, Shape{Int64,Float64})
-        @test coords(square) isa Tuple{Vector{S},Vector{T}} where {T,S}
+        @test isa(square, Shape{Int64, Float64})
+        @test coords(square) isa Tuple{Vector{S}, Vector{T}} where {T, S}
         @test Shape(:circle) isa Shape
 
         xs = view([0.0, 1.0, 2.0, 1.25], 1:3)
         ys = view([6 4 7; 9 9 9], 1, :)
         tri = Shape(xs, ys)
-        @test isa(tri, Shape{Float64,Int64})
+        @test isa(tri, Shape{Float64, Int64})
         @test vertices(tri) == [(0.0, 6), (1.0, 4), (2.0, 7)]
     end
 
@@ -65,8 +65,8 @@ const Shapes = PlotsBase.Shapes
     @testset "Plot" begin
         ang = range(0, 2π, length = 60)
         ellipse(x, y, w, h) = Shape(w * sin.(ang) .+ x, h * cos.(ang) .+ y)
-        myshapes = [ellipse(x, rand(), rand(), rand()) for x ∈ 1:4]
-        @test coords(myshapes) isa Tuple{Vector{Vector{S}},Vector{Vector{T}}} where {T,S}
+        myshapes = [ellipse(x, rand(), rand(), rand()) for x in 1:4]
+        @test coords(myshapes) isa Tuple{Vector{Vector{S}}, Vector{Vector{T}}} where {T, S}
         local pl
         @test_nowarn pl = plot(myshapes)
         @test pl[1][1][:seriestype] ≡ :shape
@@ -125,7 +125,7 @@ end
     @test text("bar", f).str == "bar"
     @test text(true).str == "true"
 
-    for rotation ∈ -180:5:180
+    for rotation in -180:5:180
         t = text("foo"; rotation)
         if abs(rotation) ≤ 45 || abs(rotation) ≥ 135
             @test PlotsBase.is_horizontal(t)
@@ -171,30 +171,30 @@ end
         annotate!(sp = 2, (0.03, 0.95), text("Cats&Dogs", :left))
     end
 
-    for scale ∈ PlotsBase._log_scales
+    for scale in PlotsBase._log_scales
         pl = plot(xlim = (1, 10), xscale = scale)
         annotate!(pl, (0.5, 0.5), "hello")
     end
 
     let pl = plot(1:2)
-        for loc ∈
+        for loc in
             (:topleft, :topcenter, :topright, :bottomleft, :bottomcenter, :bottomright)
             annotate!(pl, loc, string(loc))
         end
     end
     let pl = plot(1:2)
-        for loc ∈ (:N, :NE, :E, :SE, :S, :SW, :W, :NW, :N)
+        for loc in (:N, :NE, :E, :SE, :S, :SW, :W, :NW, :N)
             annotate!(pl, loc, string(loc))
         end
     end
 
     let p = scatter([4], [4], plot_title = "x", xlims = (0, 10), ylims = (0, 10))
-        for sp ∈ p.subplots
+        for sp in p.subplots
             @test sp[:annotations] == []
         end
         annotate!(4, 4, "4")
 
-        for (i, sp) ∈ enumerate(p.subplots)
+        for (i, sp) in enumerate(p.subplots)
             if i == p.attr[:plot_titleindex]
                 @test sp[:annotations] == []
             else
@@ -214,7 +214,7 @@ end
             ylims = (0, 10),
             annotations = (4, 4, "4"),
         )
-        for (i, sp) ∈ enumerate(p.subplots)
+        for (i, sp) in enumerate(p.subplots)
             if i == p.attr[:plot_titleindex]
                 @test sp[:annotations] == []
             else
@@ -231,12 +231,12 @@ end
             scatter([4], [4], xlims = (0, 10), ylims = (0, 10)),
             plot_title = "x",
         )
-        for sp ∈ p.subplots
+        for sp in p.subplots
             @test sp[:annotations] == []
         end
         annotate!(4, 4, "4")
 
-        for (i, sp) ∈ enumerate(p.subplots)
+        for (i, sp) in enumerate(p.subplots)
             if i == p.attr[:plot_titleindex]
                 @test sp[:annotations] == []
             else
@@ -263,20 +263,20 @@ end
             :zguidefontsize,
         ]
         # get initial font sizes
-        initialSizes = [PlotsBase.default(s) for s ∈ sizesToCheck]
+        initialSizes = [PlotsBase.default(s) for s in sizesToCheck]
 
         #scale up font sizes
         scalefontsizes(2)
 
         # get initial font sizes
-        doubledSizes = [PlotsBase.default(s) for s ∈ sizesToCheck]
+        doubledSizes = [PlotsBase.default(s) for s in sizesToCheck]
 
         @test doubledSizes == initialSizes * 2
 
         # reset font sizes
         resetfontsizes()
 
-        finalSizes = [PlotsBase.default(s) for s ∈ sizesToCheck]
+        finalSizes = [PlotsBase.default(s) for s in sizesToCheck]
 
         @test finalSizes == initialSizes
     end
@@ -313,14 +313,14 @@ end
         xlims = (0, 5),
         series_annotations = permutedims([["1/1"], ["1/2"], ["1/3"], ["1/4"], ["1/5"]]),
     )
-    for i ∈ 1:5
+    for i in 1:5
         @test only(spl.series_list[i].plotattributes[:series_annotations].strs).str ==
-              "1/$i"
+            "1/$i"
     end
 
     series_anns(pl, series) = pl.series_list[series].plotattributes[:series_annotations]
-    ann_strings(ann) = [s.str for s ∈ ann.strs]
-    ann_pointsizes(ann) = [s.font.pointsize for s ∈ ann.strs]
+    ann_strings(ann) = [s.str for s in ann.strs]
+    ann_pointsizes(ann) = [s.font.pointsize for s in ann.strs]
 
     let pl = plot(ones(3, 2), series_annotations = ["a" "d"; "b" "e"; "c" "f"])
         ann1 = series_anns(pl, 1)
@@ -343,10 +343,12 @@ end
     let pl = plot(
             ones(3, 2),
             series_annotations = (
-                permutedims([
-                    (["x", "y", "z"], [10, 20, 30], (14, 15), square),
-                    [("a", 42), "b", "c"],
-                ]),
+                permutedims(
+                    [
+                        (["x", "y", "z"], [10, 20, 30], (14, 15), square),
+                        [("a", 42), "b", "c"],
+                    ]
+                ),
                 (12, 13),
             ),
         )
