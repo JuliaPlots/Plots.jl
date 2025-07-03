@@ -1283,15 +1283,15 @@ function plotly_html_body(plt, style = nothing)
     unique_tag = replace(string(UUIDs.uuid4()), '-' => '_')
 
     return """
-    <div id=\"$unique_tag\" style=\"$style\"></div>
-    <script>
-    function plots_jl_plotly_$unique_tag() {
-        $requirejs_prefix
-        $(js_body(plt, unique_tag))
-        $requirejs_suffix
-    }
-    </script>
-    <script src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js" onload="plots_jl_plotly_$unique_tag()"></script>
+        <div id=\"$unique_tag\" style=\"$style\"></div>
+        <script>
+        function plots_jl_plotly_$unique_tag() {
+            $requirejs_prefix
+            $(js_body(plt, unique_tag))
+            $requirejs_suffix
+        }
+        </script>
+        <script src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js" onload="plots_jl_plotly_$unique_tag()"></script>
     """
 end
 
