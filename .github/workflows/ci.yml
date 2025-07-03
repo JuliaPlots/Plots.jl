@@ -85,7 +85,7 @@ jobs:
             (; path="./GraphRecipes"),
             (; path="./StatsPlots"),
           ])
-          [Base.julia_cmd(), joinpath("ci", "matplotlib.jl")] |> Cmd |> run
+          [Base.julia_cmd().exec..., joinpath("ci", "matplotlib.jl")] |> Cmd |> run
 
       - run: JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=@. --color=yes 
       # NOTE: test is using `--check-bounds=yes` !
