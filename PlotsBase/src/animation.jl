@@ -15,7 +15,7 @@ end
 
 const ANIM_PATTERN = "plots-anim-%06d.png"
 
-Animation(dir = convert(String, mktempdir(plotsbase_tmpdir_name()))) = Animation(dir, String[])
+Animation(dir = convert(String, mktempdir(tmpdir_name()))) = Animation(dir, String[])
 
 """
     frame(animation[, plot])
@@ -28,18 +28,17 @@ function frame(anim::Animation, plt::P = current()) where {P <: AbstractPlot}
     return push!(anim.frames, filename)
 end
 
-anim_filename(ext, parent = nothing) =
-    if isijulia()
+anim_filename(ext, parent = tmpdir_name()) = if isijulia()
     "tmp"
 else
-    tempname(parent ≡ nothing ? tempdir(plotsbase_tmpdir_name()) : parent)
+    tempname(parent)
 end * ext
 
-giffn(parent = nothing) = anim_filename(".gif", parent)
-movfn(parent = nothing) = anim_filename(".mov", parent)
-mp4fn(parent = nothing) = anim_filename(".mp4", parent)
-webmfn(parent = nothing) = anim_filename(".webm", parent)
-apngfn(parent = nothing) = anim_filename(".png", parent)
+giffn(parent = tmpdir_name()) = anim_filename(".gif", parent)
+movfn(parent = tmpdir_name()) = anim_filename(".mov", parent)
+mp4fn(parent = tmpdir_name()) = anim_filename(".mp4", parent)
+webmfn(parent = tmpdir_name()) = anim_filename(".webm", parent)
+apngfn(parent = tmpdir_name()) = anim_filename(".png", parent)
 
 mutable struct FrameIterator
     itr
