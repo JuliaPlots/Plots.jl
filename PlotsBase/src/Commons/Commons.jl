@@ -105,7 +105,7 @@ const _debug = Ref(false)
 const _max_log = Ref(1)
 
 macro maxlog_warn(exs...)
-    :(@warn $(exs...) maxlog = $(_max_log[]))
+    :(@warn $(exs...) maxlog = $(_max_log[])) |> esc
 end
 
 # docs.julialang.org/en/v1/manual/methods/#Empty-generic-functions

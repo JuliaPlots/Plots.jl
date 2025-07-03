@@ -241,8 +241,9 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
         @maxlog_warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
     is_style_supported(pkg, plotattributes[:linestyle]) ||
         @maxlog_warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
-    return is_marker_supported(pkg, plotattributes[:markershape]) ||
+    is_marker_supported(pkg, plotattributes[:markershape]) ||
         @maxlog_warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
+    return nothing
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
