@@ -1,5 +1,5 @@
 # browsers can have issue opening files in /tmp (chromium, firefox, ...), so let the user decide.
-plotsbase_tmpdir()::String = if haskey(ENV, "PLOTSBASE_TMPDIR")
+plotsbase_tmpdir_name()::String = if haskey(ENV, "PLOTSBASE_TMPDIR")
     ENV["PLOTSBASE_TMPDIR"]
 else
     tempdir()

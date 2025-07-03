@@ -35,7 +35,7 @@ end
 
 function write_temp_html(plt::AbstractPlot)
     html = standalone_html(plt; title = plt.attr[:window_title])
-    filename = tempname(plotsbase_tmpdir()) * ".html"
+    filename = tempname(plotsbase_tmpdir_name()) * ".html"
     write(filename, html)
     return filename
 end
@@ -62,7 +62,7 @@ function show_png_from_html(io::IO, plt::AbstractPlot)
     html_fn = write_temp_html(plt)
 
     # convert that html file to a temporary png file using wkhtmltoimage
-    png_fn = tempname(plotsbase_tmpdir()) * ".png"
+    png_fn = tempname(plotsbase_tmpdir_name()) * ".png"
     w, h = plt.attr[:size]
     html_to_png(html_fn, png_fn, w, h)
 
