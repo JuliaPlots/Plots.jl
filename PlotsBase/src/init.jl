@@ -129,7 +129,7 @@ macro precompile_backend(backend_package)
             n = length(PlotsBase._examples)
             imports = sizehint!(Expr[], n)
             examples = sizehint!(Expr[], 10n)
-            scratch_dir = mktempdir(plotsbase_tmpdir())
+            scratch_dir = mktempdir(PlotsBase.plotsbase_tmpdir())
             for i in setdiff(
                     1:n,
                     PlotsBase._backend_skips[backend_name()],
