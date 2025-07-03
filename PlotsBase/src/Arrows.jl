@@ -62,4 +62,4 @@ function add_arrows(func::Function, x::AVec, y::AVec)
     return
 end
 
-end  # module
+end

@@ -848,4 +848,4 @@ end
 
 PlotsBase.@precompile_backend Gaston
 
-end  # module
+end

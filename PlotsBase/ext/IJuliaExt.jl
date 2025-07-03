@@ -56,4 +56,4 @@ function PlotsBase.inline(plt::Plot = PlotsBase.current())
     return display(IJulia.InlineDisplay(), plt)
 end
 
-end  # module
+end

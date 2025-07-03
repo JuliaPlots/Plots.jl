@@ -40,4 +40,4 @@ end
 #         _show_pdfbackends(io, mime, plt)
 # end
 
-end  # module
+end

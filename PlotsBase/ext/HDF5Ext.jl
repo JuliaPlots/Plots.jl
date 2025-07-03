@@ -586,4 +586,4 @@ end
 
 PlotsBase.@precompile_backend HDF5
 
-end  # module
+end

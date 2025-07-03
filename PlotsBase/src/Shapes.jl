@@ -230,4 +230,4 @@ function rotate(shape::Shape, θ::Real, c = center(shape))
     return Shape(x_new, y_new)
 end
 
-end  # module
+end

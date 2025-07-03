@@ -17,4 +17,4 @@ RecipesPipeline.unzip(points::AbstractVector{GeometryBasics.Point{N, T}}) where 
 @recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
 @recipe f(p::GeometryBasics.Point) = [p]  # Special case for 4-tuples in :ohlc series
 
-end  # module
+end

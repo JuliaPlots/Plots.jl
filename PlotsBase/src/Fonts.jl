@@ -178,4 +178,4 @@ Base.length(t::PlotText) = length(t.str)
 
 is_horizontal(t::PlotText) = abs(sind(t.font.rotation)) ≤ sind(45)
 
-end  # module
+end

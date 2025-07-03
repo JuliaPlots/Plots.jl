@@ -495,4 +495,4 @@ end
 
 PlotsBase.@precompile_backend UnicodePlots
 
-end  # module
+end

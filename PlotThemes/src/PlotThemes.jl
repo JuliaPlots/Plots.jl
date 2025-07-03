@@ -75,4 +75,4 @@ const _themes = Dict{Symbol, PlotTheme}(
 
 add_theme(s::Symbol, thm::PlotTheme) = _themes[s] = thm
 
-end  # module
+end

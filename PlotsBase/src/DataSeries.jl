@@ -344,4 +344,4 @@ function PlotsBase.attr!(series::Series; kw...)
     return series
 end
 
-end  # module
+end

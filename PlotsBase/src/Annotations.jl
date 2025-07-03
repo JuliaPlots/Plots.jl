@@ -279,4 +279,4 @@ PlotsBase.annotate!(plt::PlotOrSubplot, anns...; kw...) = plot!(plt; annotations
 PlotsBase.annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...) = plot!(plt; annotations = collect(anns), kw...)
 PlotsBase.annotate!(plt::PlotOrSubplot, anns::AVec{<:Tuple}; kw...) = plot!(plt; annotations = anns, kw...)
 
-end  # module
+end

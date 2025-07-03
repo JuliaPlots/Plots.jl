@@ -2328,4 +2328,4 @@ PlotsBase.closeall(::GRBackend) = GR.emergencyclosegks()
 
 PlotsBase.@precompile_backend GR
 
-end  # module
+end

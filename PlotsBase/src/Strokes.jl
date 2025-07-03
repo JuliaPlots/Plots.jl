@@ -79,4 +79,4 @@ function brush(args...; alpha = nothing)
     return Brush(size, color, alpha)
 end
 
-end  # module
+end

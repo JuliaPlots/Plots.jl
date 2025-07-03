@@ -294,4 +294,4 @@ end
 Commons.get_size(plt::Plot) = get_size(plt.attr)
 Commons.get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
 
-end  # module
+end

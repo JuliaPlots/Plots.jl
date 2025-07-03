@@ -344,4 +344,4 @@ end
 PlotsBase.pgfx_sanitize_string(s::UnitfulString) =
     UnitfulString(PlotsBase.pgfx_sanitize_string(s.content), s.unit)
 
-end  # module
+end

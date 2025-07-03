@@ -230,4 +230,4 @@ function extract_columns_and_names(df, syms...)
     return Tuple(get_col(s, cols, names) for s in syms), names
 end
 
-end  # module
+end

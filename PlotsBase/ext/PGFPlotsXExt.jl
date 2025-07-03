@@ -1605,4 +1605,4 @@ end
 
 PlotsBase.@precompile_backend PGFPlotsX
 
-end  # module
+end

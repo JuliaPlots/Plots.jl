@@ -150,11 +150,14 @@ include("Ticks.jl")
 using .Ticks
 include("DataSeries.jl")
 using .DataSeries
-
 include("Subplots.jl")
+using .Subplots
 include("Axes.jl")
+using .Axes
 include("Surfaces.jl")
+using .Surfaces
 include("Colorbars.jl")
+using .Colorbars
 include("Plots.jl")
 using .Plots
 include("layouts.jl")

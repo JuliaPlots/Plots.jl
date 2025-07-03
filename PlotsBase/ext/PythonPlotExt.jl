@@ -1734,4 +1734,4 @@ PlotsBase.closeall(::PythonPlotBackend) = PythonPlot.close("all")
 
 PlotsBase.@precompile_backend PythonPlot
 
-end  # module
+end

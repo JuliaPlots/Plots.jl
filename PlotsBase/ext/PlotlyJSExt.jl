@@ -84,4 +84,4 @@ end
 
 PlotsBase.@precompile_backend PlotlyJS
 
-end  # module
+end

@@ -104,4 +104,4 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
     return minorticks[amin .≤ minorticks .≤ amax]
 end
 
-end  # module
+end

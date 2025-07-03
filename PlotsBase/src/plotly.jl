@@ -1321,4 +1321,4 @@ function _ijulia__extra_mime_info!(plt::Plot{PlotlyBackend}, out::Dict)
     return out
 end
 
-end  # module
+end

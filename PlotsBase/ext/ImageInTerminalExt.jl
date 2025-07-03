@@ -28,4 +28,4 @@ if ImageInTerminal.ENCODER_BACKEND[] == :Sixel
     end
 end
 
-end  # module
+end
