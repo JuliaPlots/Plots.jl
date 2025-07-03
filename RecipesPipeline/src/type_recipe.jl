@@ -6,7 +6,7 @@
 @recipe f(::Type{T}, v::T) where {T} = v
 
 # this should catch unhandled "series recipes" and error with a nice message
-@recipe f(::Type{V}, x, y, z) where {V<:Val} = error(
+@recipe f(::Type{V}, x, y, z) where {V <: Val} = error(
     "The backend must not support the series type $V, and there isn't a series recipe defined.",
 )
 
@@ -21,7 +21,7 @@ function _apply_type_recipe(plotattributes, v, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
     warn_on_recipe_aliases!(plotattributes[:plot_object], plotattributes, :type, v)
     postprocess_axis_attrs!(plt, plotattributes, letter)
-    rdvec[1].args[1]
+    return rdvec[1].args[1]
 end
 
 # Handle type recipes when the recipe is defined on the elements.
@@ -51,15 +51,15 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
         end
     end
     postprocess_axis_attrs!(plt, plotattributes, letter)
-    w
+    return w
 end
 
-# Specialisation to apply type recipes on a vector of vectors. The type recipe can either 
+# Specialisation to apply type recipes on a vector of vectors. The type recipe can either
 # apply to the vector of elements or the elements themselves
 function _apply_type_recipe(plotattributes, v::AVec{<:AVec}, letter)
     plt = plotattributes[:plot_object]
     preprocess_axis_attrs!(plt, plotattributes, letter)
-    # First we attempt on the vector of vector type recipe across everything. 
+    # First we attempt on the vector of vector type recipe across everything.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
     warn_on_recipe_aliases!(plt, plotattributes, :type, v)
     if typeof(v) != typeof(w)
@@ -67,7 +67,7 @@ function _apply_type_recipe(plotattributes, v::AVec{<:AVec}, letter)
         return w
     end
     # Next we attempt the array type recipe and if any of the vector elements applies,
-    # we will stop there. Note we use the same type equivalency test as for a general array 
+    # we will stop there. Note we use the same type equivalency test as for a general array
     # to check if changes applied
     did_replace = false
     w = map(v) do u
@@ -97,18 +97,18 @@ function _apply_type_recipe(plotattributes, v::AVec{<:AVec}, letter)
     end
 
     postprocess_axis_attrs!(plt, plotattributes, letter)
-    w
+    return w
 end
 
 # special handling for Surface... need to properly unwrap and re-wrap
 _apply_type_recipe(
     plotattributes,
-    v::Surface{<:AMat{<:Union{AbstractFloat,Integer,AbstractString,Missing}}},
+    v::Surface{<:AMat{<:Union{AbstractFloat, Integer, AbstractString, Missing}}},
     letter,
 ) = v
 function _apply_type_recipe(plotattributes, v::Surface, letter)
     ret = _apply_type_recipe(plotattributes, v.surf, letter)
-    if typeof(ret) <: Formatted
+    return if typeof(ret) <: Formatted
         Formatted(Surface(ret.data), ret.formatter)
     else
         Surface(ret)
@@ -118,7 +118,7 @@ end
 # don't do anything for datapoints or nothing
 _apply_type_recipe(
     plotattributes,
-    v::AbstractArray{<:Union{AbstractFloat,Integer,AbstractString,Missing}},
+    v::AbstractArray{<:Union{AbstractFloat, Integer, AbstractString, Missing}},
     letter,
 ) = v
 _apply_type_recipe(plotattributes, v::Nothing, letter) = v

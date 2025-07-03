@@ -1,15 +1,14 @@
 using Pkg
 Pkg.status(; outdated = true, mode = Pkg.PKGMODE_MANIFEST)
 
-const TEST_PACKAGES =
-    let val = get(
-            ENV,
-            "PLOTSBASE_TEST_PACKAGES",
-            "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",
-        )
-        Symbol.(strip.(split(val, ",")))
-    end
-const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p ∈ TEST_PACKAGES)
+const TEST_PACKAGES = let val = get(
+        ENV,
+        "PLOTSBASE_TEST_PACKAGES",
+        "GR,UnicodePlots,PythonPlot,PGFPlotsX,PlotlyJS,Gaston",
+    )
+    Symbol.(strip.(split(val, ",")))
+end
+const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p in TEST_PACKAGES)
 
 get!(ENV, "MPLBACKEND", "agg")
 get!(ENV, "PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON", "true")
@@ -18,7 +17,7 @@ using PlotsBase
 eval(PlotsBase.WEAKDEPS)
 
 # initialize all backends
-for pkg ∈ TEST_PACKAGES
+for pkg in TEST_PACKAGES
     @eval begin
         import $pkg  # trigger extension
         $(TEST_BACKENDS[pkg])()
@@ -56,7 +55,7 @@ push!(skipped_examples, 62)  # TODO: remove when new GR release is out and lands
 
 function available_channels()
     juliaup = "https://julialang-s3.julialang.org/juliaup"
-    for i ∈ 1:6
+    for i in 1:6
         buf = PipeBuffer()
         Downloads.download("$juliaup/DBVERSION", buf)
         dbversion = VersionNumber(readline(buf))
@@ -71,6 +70,7 @@ function available_channels()
         return json["AvailableChannels"]
         sleep(10i)
     end
+    return
 end
 
 """
@@ -81,7 +81,7 @@ function is_latest(variant)
     channels = available_channels()
     ver = VersionNumber(split(channels[variant]["Version"], '+') |> first)
     dev = occursin("DEV", string(VERSION))  # or length(VERSION.prerelease) < 2
-    !dev &&
+    return !dev &&
         VersionNumber(ver.major, ver.minor, 0, ("",)) ≤
         VERSION <
         VersionNumber(ver.major, ver.minor + 1)
@@ -126,7 +126,7 @@ else
     ]
 end
 
-for name ∈ names
+for name in names
     @testset "$name" begin
         haskey(TEST_BACKENDS, :GR) && gr()  # reset to default backend
         include("test_$name.jl")

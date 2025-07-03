@@ -102,14 +102,14 @@ function recipe_pipeline!(plt, plotattributes, args)
     # Return processed plot object
     # --------------------------------
 
-    plt
+    return plt
 end
 
 # COV_EXCL_START
 using PrecompileTools
 
 @setup_workload begin
-    plotattributes = Dict{Symbol,Any}[
+    plotattributes = Dict{Symbol, Any}[
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :path),
         Dict(:x => 1, :y => "", :z => nothing, :seriestype => :surface),
     ]
@@ -127,7 +127,7 @@ using PrecompileTools
         mats = (Int[1 2; 3 4], Float64[1 2; 3 4])
         surfs = Surface.(mats)
         vols = Volume(ones(Int, 1, 2, 3)), Volume(ones(Float64, 1, 2, 3))
-        for pl_attrs ∈ plotattributes
+        for pl_attrs in plotattributes
             _series_data_vector(1, pl_attrs)
             _series_data_vector([1], pl_attrs)
             _series_data_vector(["a"], pl_attrs)

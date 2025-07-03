@@ -3,23 +3,23 @@ module ImageInTerminalExt
 import ImageInTerminal
 import PlotsBase
 
-if ImageInTerminal.ENCODER_BACKEND[] == :Sixel
+if ImageInTerminal.ENCODER_BACKEND[] ≡ :Sixel
     get!(ENV, "GKSwstype", "nul")  # disable `gr` output, we display in the terminal instead
-    for be ∈ (
-        PlotsBase.GRBackend,
-        PlotsBase.PythonPlotBackend,
-        # PlotsBase.UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
-        PlotsBase.PGFPlotsXBackend,
-        PlotsBase.PlotlyJSBackend,
-        PlotsBase.PlotlyBackend,
-        PlotsBase.GastonBackend,
-        PlotsBase.InspectDRBackend,
-    )
+    for be in (
+            PlotsBase.GRBackend,
+            PlotsBase.PythonPlotBackend,
+            # PlotsBase.UnicodePlotsBackend,  # better and faster as MIME("text/plain") in terminal
+            PlotsBase.PGFPlotsXBackend,
+            PlotsBase.PlotlyJSBackend,
+            PlotsBase.PlotlyBackend,
+            PlotsBase.GastonBackend,
+            PlotsBase.InspectDRBackend,
+        )
         @eval function Base.display(::PlotsBase.PlotsDisplay, plt::PlotsBase.Plot{$be})
             PlotsBase.prepare_output(plt)
             buf = PipeBuffer()
             show(buf, MIME("image/png"), plt)
-            display(
+            return display(
                 ImageInTerminal.TerminalGraphicDisplay(stdout),
                 MIME("image/png"),
                 read(buf),
@@ -28,4 +28,4 @@ if ImageInTerminal.ENCODER_BACKEND[] == :Sixel
     end
 end
 
-end  # module
+end

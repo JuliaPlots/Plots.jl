@@ -5,15 +5,15 @@ It assumes the view is [0,1]. That can be modified using the `xview` and
 `yview` keyword arguments (default: `0:1`).
 """
 function directed_curve(
-    x1,
-    x2,
-    y1,
-    y2;
-    xview = 0:1,
-    yview = 0:1,
-    root::Symbol = :bottom,
-    rng = nothing,
-)
+        x1,
+        x2,
+        y1,
+        y2;
+        xview = 0:1,
+        yview = 0:1,
+        root::Symbol = :bottom,
+        rng = nothing,
+    )
     if root in (:left, :right)
         # flip x/y to simplify
         x1, x2, y1, y2, xview, yview = y1, y2, x1, x2, yview, xview
@@ -25,7 +25,7 @@ function directed_curve(
     miny, maxy = extrema(yview)
     dist = sqrt((x2 - x1)^2 + (y2 - y1)^2)
     flip = root in (:top, :right)
-    need_loop = (flip && y1 <= y2) || (!flip && y1 >= y2)
+    need_loop = (flip && y1 ≤ y2) || (!flip && y1 ≥ y2)
 
     # these points give the initial/final "rise"
     # note: this is a function of distance between points and axis scale
@@ -66,13 +66,13 @@ function directed_curve(
         # flip x/y to simplify
         x, y = y, x
     end
-    x, y
+    return x, y
 end
 
 function shorten_segment(x1, y1, x2, y2, shorten)
     xshort = shorten * (x2 - x1)
     yshort = shorten * (y2 - y1)
-    x1 + xshort, y1 + yshort, x2 - xshort, y2 - yshort
+    return x1 + xshort, y1 + yshort, x2 - xshort, y2 - yshort
 end
 
 # """
@@ -106,14 +106,14 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
     ret = Vector{Float64}(undef, 2)
     A = Array{Float64}(undef, 2, 2)
     nearest = Inf
-    for i ∈ 1:(length(vec_xy_d) - 1)
+    for i in 1:(length(vec_xy_d) - 1)
         xvec .= [vec_xy_d[i][1], vec_xy_d[i + 1][1]]
         yvec .= [vec_xy_d[i][2], vec_xy_d[i + 1][2]]
-        A .= [-xs+xd -xvec[1]+xvec[2]; -ys+yd -yvec[1]+yvec[2]]
+        A .= [-xs + xd -xvec[1] + xvec[2]; -ys + yd -yvec[1] + yvec[2]]
         t .= (A + eps() * I) \ [xs - xvec[1]; ys - yvec[1]]
         xy_d_edge .=
             [(1 - t[2]) * xvec[1] + t[2] * xvec[2], (1 - t[2]) * yvec[1] + t[2] * yvec[2]]
-        if 0 <= t[2] <= 1
+        if 0 ≤ t[2] ≤ 1
             tmp = abs2(xy_d_edge[1] - xs) + abs2(xy_d_edge[2] - ys)
             if tmp < nearest
                 ret .= xy_d_edge
@@ -121,7 +121,7 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
             end
         end
     end
-    xs, ys, ret[1], ret[2]
+    return xs, ys, ret[1], ret[2]
 end
 
 function nearest_intersection(xs, ys, xd, yd, vec_xy_d::GeometryTypes.Circle)
@@ -133,7 +133,7 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d::GeometryTypes.Circle)
     xd = xd + vec_xy_d.r * cos(α)
     yd = yd + vec_xy_d.r * sin(α)
 
-    xs, ys, xd, yd
+    return xs, ys, xd, yd
 end
 
 function nearest_intersection(xs, ys, zs, xd, yd, zd, vec_xyz_d)
@@ -146,13 +146,13 @@ which is both equidistant between the endpoints and normally distributed
 around the midpoint.
 """
 function random_control_point(
-    xi,
-    xj,
-    yi,
-    yj,
-    curvature_scalar;
-    rng = rng_from_rng_or_seed(rng, nothing),
-)
+        xi,
+        xj,
+        yi,
+        yj,
+        curvature_scalar;
+        rng = rng_from_rng_or_seed(rng, nothing),
+    )
     xmid = 0.5 * (xi + xj)
     ymid = 0.5 * (yi + yj)
 
@@ -164,7 +164,7 @@ function random_control_point(
     dist_from_mid = curvature_scalar * (rand(rng) - 0.5) * dist
 
     # now we have polar coords, we can compute the position, adding to the midpoint
-    (xmid + dist_from_mid * cos(theta), ymid + dist_from_mid * sin(theta))
+    return (xmid + dist_from_mid * cos(theta), ymid + dist_from_mid * sin(theta))
 end
 
 function control_point(xi, xj, yi, yj, dist_from_mid)
@@ -178,7 +178,7 @@ function control_point(xi, xj, yi, yj, dist_from_mid)
     # dist_from_mid = curvature_scalar * 0.5dist
 
     # now we have polar coords, we can compute the position, adding to the midpoint
-    (xmid + dist_from_mid * cos(theta), ymid + dist_from_mid * sin(theta))
+    return (xmid + dist_from_mid * cos(theta), ymid + dist_from_mid * sin(theta))
 end
 
 function annotation_extent(p, annotation; width_scalar = 0.06, height_scalar = 0.096)
@@ -191,7 +191,7 @@ function annotation_extent(p, annotation; width_scalar = 0.06, height_scalar = 0
     yextent_length = height_scalar * (400 / plot_size[2]) * fontsize
     yextent = [position[2] - yextent_length, position[2] + yextent_length]
 
-    [xextent, yextent]
+    return [xextent, yextent]
 end
 
 clockwise_difference(angle1, angle2) = pi - abs(abs(angle1 - angle2) - pi)
@@ -220,8 +220,8 @@ function unoccupied_angle(x1, y1, x, y)
     max_range = zeros(2)
     # Calculate all angles between the point [x1,y1] and all points [x[i],y[i]], make sure
     # that all of the angles are between 0 and 2pi
-    angles = [atan(y[i] - y1, x[i] - x1) for i ∈ 1:length(x)]
-    for i ∈ 1:length(angles)
+    angles = [atan(y[i] - y1, x[i] - x1) for i in 1:length(x)]
+    for i in 1:length(angles)
         if angles[i] < 0
             angles[i] += 2pi
         end
@@ -229,17 +229,17 @@ function unoccupied_angle(x1, y1, x, y)
     # Sort all of the angles and calculate which two angles subtend the largest gap.
     sort!(angles)
     max_range .= [angles[end], angles[1]]
-    for i ∈ 2:length(x)
+    for i in 2:length(x)
         if (
-            clockwise_difference(angles[i], angles[i - 1]) >
-            clockwise_difference(max_range[2], max_range[1])
-        )
+                clockwise_difference(angles[i], angles[i - 1]) >
+                    clockwise_difference(max_range[2], max_range[1])
+            )
             max_range .= [angles[i - 1], angles[i]]
         end
     end
     # Return the angle that is in the middle of the two angles subtending the largest
     # empty angle.
-    clockwise_mean(max_range)
+    return clockwise_mean(max_range)
 end
 
 function process_edge_attribute(attr, source, destiny, weights)
@@ -247,64 +247,64 @@ function process_edge_attribute(attr, source, destiny, weights)
         return attr
     elseif attr isa Graphs.AbstractGraph
         mat = incidence_matrix(attr)
-        attr = [mat[si, di] for (si, di) ∈ zip(source, destiny)][:] |> permutedims
+        attr = [mat[si, di] for (si, di) in zip(source, destiny)][:] |> permutedims
     elseif attr isa Function
         attr =
             [
-                attr(si, di, wi) for
-                (i, (si, di, wi)) ∈ enumerate(zip(source, destiny, weights))
-            ][:] |> permutedims
+            attr(si, di, wi) for
+                (i, (si, di, wi)) in enumerate(zip(source, destiny, weights))
+        ][:] |> permutedims
     elseif attr isa Dict
-        attr = [attr[(si, di)] for (si, di) ∈ zip(source, destiny)][:] |> permutedims
+        attr = [attr[(si, di)] for (si, di) in zip(source, destiny)][:] |> permutedims
     elseif all(size(attr) .!= 1)
-        attr = [attr[si, di] for (si, di) ∈ zip(source, destiny)][:] |> permutedims
+        attr = [attr[si, di] for (si, di) in zip(source, destiny)][:] |> permutedims
     end
-    attr
+    return attr
 end
 # Function from Plots/src/components.jl
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r = 1)
-    Tuple{Float64,Float64}[
-        (r * cos(u), r * sin(u)) for u ∈ range(start_θ, stop = end_θ, length = n)
+    return Tuple{Float64, Float64}[
+        (r * cos(u), r * sin(u)) for u in range(start_θ, stop = end_θ, length = n)
     ]
 end
 
-function partialcircle(start_θ, end_θ, circle_center::Array{T,1}, n = 20, r = 1) where {T}
-    Tuple{Float64,Float64}[
+function partialcircle(start_θ, end_θ, circle_center::Array{T, 1}, n = 20, r = 1) where {T}
+    return Tuple{Float64, Float64}[
         (r * cos(u) + circle_center[1], r * sin(u) + circle_center[2]) for
-        u ∈ range(start_θ, stop = end_θ, length = n)
+            u in range(start_θ, stop = end_θ, length = n)
     ]
 end
 
 function partialellipse(start_θ, end_θ, n = 20, major_axis = 2, minor_axis = 1)
-    Tuple{Float64,Float64}[
+    return Tuple{Float64, Float64}[
         (major_axis * cos(u), minor_axis * sin(u)) for
-        u ∈ range(start_θ, stop = end_θ, length = n)
+            u in range(start_θ, stop = end_θ, length = n)
     ]
 end
 
 function partialellipse(
-    start_θ,
-    end_θ,
-    ellipse_center::Array{T,1},
-    n = 20,
-    major_axis = 2,
-    minor_axis = 1,
-) where {T}
-    Tuple{Float64,Float64}[
+        start_θ,
+        end_θ,
+        ellipse_center::Array{T, 1},
+        n = 20,
+        major_axis = 2,
+        minor_axis = 1,
+    ) where {T}
+    return Tuple{Float64, Float64}[
         (major_axis * cos(u) + ellipse_center[1], minor_axis * sin(u) + ellipse_center[2])
-        for u ∈ range(start_θ, stop = end_θ, length = n)
+            for u in range(start_θ, stop = end_θ, length = n)
     ]
 end
 
 # for chord diagrams:
 function arcshape(θ1, θ2)
-    vcat(partialcircle(θ1, θ2, 15, 1.05), reverse(partialcircle(θ1, θ2, 15, 0.95)))
+    return vcat(partialcircle(θ1, θ2, 15, 1.05), reverse(partialcircle(θ1, θ2, 15, 0.95)))
 end
 
 # x and y limits for arc diagram ()
 function arcdiagram_limits(x, source, destiny)
-    @assert length(x) >= 2
+    @assert length(x) ≥ 2
     margin = abs(0.1 * (x[2] - x[1]))
     xmin, xmax = extrema(x)
     r = abs(0.5 * (xmax - xmin))
@@ -316,23 +316,23 @@ function arcdiagram_limits(x, source, destiny)
     else
         (-r - margin, r + margin)
     end
-    (xmin - margin, xmax + margin), ylims
+    return (xmin - margin, xmax + margin), ylims
 end
 
 function islabel(item)
     ismissing(item) && return false
     ((item isa AbstractFloat) && isnan(item)) && return false
-    !in(item, (nothing, false, ""))
+    return !in(item, (nothing, false, ""))
 end
 
 function replacement_kwarg(sym, name, plotattributes, graph_aliases)
     replacement = name
-    for alias ∈ graph_aliases[sym]
+    for alias in graph_aliases[sym]
         if haskey(plotattributes, alias)
             replacement = plotattributes[alias]
         end
     end
-    replacement
+    return replacement
 end
 
 macro process_aliases(plotattributes, graph_aliases)
@@ -340,25 +340,27 @@ macro process_aliases(plotattributes, graph_aliases)
     attributes = getfield(__module__, graph_aliases) |> keys
     ex.args = [
         Expr(
-            :(=),
-            esc(sym),
-            :($(esc(replacement_kwarg))(
-                $(QuoteNode(sym)),
-                $(esc(sym)),
-                $(esc(plotattributes)),
-                $(esc(graph_aliases)),
-            )),
-        ) for sym ∈ attributes
+                :(=),
+                esc(sym),
+                :(
+                    $(esc(replacement_kwarg))(
+                        $(QuoteNode(sym)),
+                        $(esc(sym)),
+                        $(esc(plotattributes)),
+                        $(esc(graph_aliases)),
+                    )
+                ),
+            ) for sym in attributes
     ]
-    ex
+    return ex
 end
 
 remove_aliases!(sym, plotattributes, graph_aliases) =
-    for alias ∈ graph_aliases[sym]
-        if haskey(plotattributes, alias)
-            delete!(plotattributes, alias)
-        end
+    for alias in graph_aliases[sym]
+    if haskey(plotattributes, alias)
+        delete!(plotattributes, alias)
     end
+end
 
 # From Plots/src/utils.jl
 isnothing(x::Nothing) = true
@@ -367,12 +369,12 @@ isnothing(x) = false
 # From Plots/src/Plots.jl
 ignorenan_extrema(x) = Base.extrema(x)
 # From Plots/src/utils.jl
-ignorenan_extrema(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.extrema(x)
+ignorenan_extrema(x::AbstractArray{F}) where {F <: AbstractFloat} = NaNMath.extrema(x)
 # From Plots/src/components.jl
 function extrema_plus_buffer(v, buffmult = 0.2)
     vmin, vmax = extrema(v)
     vdiff = vmax - vmin
     zero_buffer = vdiff == 0 ? 1.0 : 0.0
     buffer = (vdiff + zero_buffer) * buffmult
-    vmin - buffer, vmax + buffer
+    return vmin - buffer, vmax + buffer
 end

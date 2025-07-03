@@ -1,8 +1,8 @@
 const _label_func =
-    Dict{Symbol,Function}(:log10 => x -> "10^$x", :log2 => x -> "2^$x", :ln => x -> "e^$x")
+    Dict{Symbol, Function}(:log10 => x -> "10^$x", :log2 => x -> "2^$x", :ln => x -> "e^$x")
 labelfunc(scale::Symbol, ::AbstractBackend) = get(_label_func, scale, string)
 
-const _label_func_tex = Dict{Symbol,Function}(
+const _label_func_tex = Dict{Symbol, Function}(
     :log10 => x -> "10^{$x}",
     :log2 => x -> "2^{$x}",
     :ln => x -> "e^{$x}",
@@ -32,9 +32,9 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             # being passed to optimize_datetime_ticks.
             # (convert(Int, convert(DateTime, convert(Date, i))) == 87600000*i)
             ticks, labels =
-                optimize_datetime_ticks(864e5 * amin, 864e5 * amax; k_min = 2, k_max = 4)
+                optimize_datetime_ticks(864.0e5 * amin, 864.0e5 * amax; k_min = 2, k_max = 4)
             # Now the ticks are converted back to floats corresponding to Dates.
-            return ticks / 864e5, labels
+            return ticks / 864.0e5, labels
         elseif formatter == RecipesPipeline.datetimeformatter
             return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
         end
@@ -72,46 +72,46 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
         String[]  # no finite ticks to show...
     end
 
-    unscaled_ticks, labels
+    return unscaled_ticks, labels
 end
 
 Commons.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
-    if ticks ≡ :none
-        T[], String[]
-    elseif !isempty(dvals)
-        n = length(dvals)
-        if ticks ≡ :all || n < 16
-            cvals, string.(dvals)
-        else
-            Δ = ceil(Int, n / 10)
-            rng = Δ:Δ:n
-            cvals[rng], string.(dvals[rng])
-        end
+if ticks ≡ :none
+    T[], String[]
+elseif !isempty(dvals)
+    n = length(dvals)
+    if ticks ≡ :all || n < 16
+        cvals, string.(dvals)
     else
-        optimal_ticks_and_labels(nothing, args...)
+        Δ = ceil(Int, n / 10)
+        rng = Δ:Δ:n
+        cvals[rng], string.(dvals[rng])
     end
+else
+    optimal_ticks_and_labels(nothing, args...)
+end
 
 Commons.get_ticks(ticks::AVec, cvals, dvals, args...) =
     optimal_ticks_and_labels(ticks, args...)
 Commons.get_ticks(ticks::Int, dvals, cvals, args...) =
-    if isempty(dvals)
-        optimal_ticks_and_labels(ticks, args...)
-    else
-        rng = round.(Int, range(1, stop = length(dvals), length = ticks))
-        cvals[rng], string.(dvals[rng])
-    end
+if isempty(dvals)
+    optimal_ticks_and_labels(ticks, args...)
+else
+    rng = round.(Int, range(1, stop = length(dvals), length = ticks))
+    cvals[rng], string.(dvals[rng])
+end
 
 get_labels(formatter::Symbol, scaled_ticks, scale) =
-    if formatter in (:auto, :plain, :scientific, :engineering)
-        map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
-    elseif formatter ≡ :latex
-        map(
-            l -> string("\$", replace(convert_sci_unicode(l), '×' => "\\times"), "\$"),
-            get_labels(:auto, scaled_ticks, scale),
-        )
-    elseif formatter ≡ :none
-        String[]
-    end
+if formatter in (:auto, :plain, :scientific, :engineering)
+    map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
+elseif formatter ≡ :latex
+    map(
+        l -> string("\$", replace(convert_sci_unicode(l), '×' => "\\times"), "\$"),
+        get_labels(:auto, scaled_ticks, scale),
+    )
+elseif formatter ≡ :none
+    String[]
+end
 
 function get_labels(formatter::Function, scaled_ticks, scale)
     sf, invsf, _ = scale_inverse_scale_func(scale)
@@ -120,11 +120,11 @@ function get_labels(formatter::Function, scaled_ticks, scale)
     #   CategoricalArrays's recipe gives "missing" label to those
     filter!(!ismissing, fticks)
     eltype(fticks) <: Number && return get_labels(:auto, map(sf, fticks), scale)
-    fticks
+    return fticks
 end
 
 # Ticks getter functions
-for l ∈ (:x, :y, :z)
+for l in (:x, :y, :z)
     axis = string(l, "-axis")  # "x-axis"
     ticks = string(l, "ticks") # "xticks"
     f = Symbol(ticks)          # :xticks
@@ -190,28 +190,28 @@ end
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
 discrete_value!(plotattributes, letter::Symbol, dv) =
-    let l = if plotattributes[:permute] ≢ :none
-            filter(!=(letter), plotattributes[:permute]) |> only
-        else
-            letter
-        end
-        discrete_value!(plotattributes[:subplot][get_attr_symbol(l, :axis)], dv)
+let l = if plotattributes[:permute] ≢ :none
+        filter(!=(letter), plotattributes[:permute]) |> only
+    else
+        letter
     end
+    discrete_value!(plotattributes[:subplot][get_attr_symbol(l, :axis)], dv)
+end
 
 discrete_value!(axis::Axis, dv) =
-    if (cv_idx = get(axis[:discrete_map], dv, -1)) == -1
-        ex = axis[:extrema]
-        cv = NaNMath.max(0.5, ex.emax + 1)
-        expand_extrema!(axis, cv)
-        push!(axis[:discrete_values], dv)
-        push!(axis[:continuous_values], cv)
-        cv_idx = length(axis[:discrete_values])
-        axis[:discrete_map][dv] = cv_idx
-        cv, cv_idx
-    else
-        cv = axis[:continuous_values][cv_idx]
-        cv, cv_idx
-    end
+if (cv_idx = get(axis[:discrete_map], dv, -1)) == -1
+    ex = axis[:extrema]
+    cv = NaNMath.max(0.5, ex.emax + 1)
+    expand_extrema!(axis, cv)
+    push!(axis[:discrete_values], dv)
+    push!(axis[:continuous_values], cv)
+    cv_idx = length(axis[:discrete_values])
+    axis[:discrete_map][dv] = cv_idx
+    cv, cv_idx
+else
+    cv = axis[:continuous_values][cv_idx]
+    cv, cv_idx
+end
 
 # continuous value... just pass back with axis negative index
 discrete_value!(axis::Axis, cv::Number) = (cv, -1)
@@ -220,20 +220,20 @@ discrete_value!(axis::Axis, cv::Number) = (cv, -1)
 function discrete_value!(axis::Axis, v::AVec)
     cvec = zeros(axes(v))
     discrete_indices = similar(Array{Int}, axes(v))
-    for i ∈ eachindex(v)
+    for i in eachindex(v)
         cvec[i], discrete_indices[i] = discrete_value!(axis, v[i])
     end
-    cvec, discrete_indices
+    return cvec, discrete_indices
 end
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AMat)
     cmat = zeros(axes(v))
     discrete_indices = similar(Array{Int}, axes(v))
-    for I ∈ eachindex(v)
+    for I in eachindex(v)
         cmat[I], discrete_indices[I] = discrete_value!(axis, v[I])
     end
-    cmat, discrete_indices
+    return cmat, discrete_indices
 end
 
 discrete_value!(axis::Axis, v::Surface) = map(Surface, discrete_value!(axis, v.surf))
@@ -244,18 +244,18 @@ const grid_factor_2d = Ref(1.2)
 const grid_factor_3d = Ref(grid_factor_2d[] / 100)
 
 function add_major_or_minor_segments_2d(
-    sp,
-    ax,
-    oax,
-    oas,
-    oamM,
-    ticks,
-    grid,
-    tick_segments,
-    segments,
-    factor,
-    cond,
-)
+        sp,
+        ax,
+        oax,
+        oas,
+        oamM,
+        ticks,
+        grid,
+        tick_segments,
+        segments,
+        factor,
+        cond,
+    )
     ticks ≡ nothing && return
     if cond
         f, invf = scale_inverse_scale_func(oax[:scale])
@@ -271,7 +271,7 @@ function add_major_or_minor_segments_2d(
         end
     end
     isy = ax[:letter] ≡ :y
-    for tick ∈ ticks
+    for tick in ticks
         (ax[:showaxis] && cond) && push!(
             tick_segments,
             reverse_if((tick, tick_start), isy),
@@ -283,6 +283,7 @@ function add_major_or_minor_segments_2d(
             reverse_if((tick, last(oamM)), isy),
         )
     end
+    return
 end
 
 # compute the line segments which should be drawn for this axis
@@ -311,10 +312,10 @@ function axis_drawing_info(sp, letter)
                 push!(segments, reverse_if((amin, oa1), isy), reverse_if((amax, oa1), isy))
                 # don't show the 0 tick label for the origin framestyle
                 if (
-                    sp[:framestyle] ≡ :origin &&
-                    ticks ∉ (:none, nothing, false) &&
-                    length(ticks) > 1
-                )
+                        sp[:framestyle] ≡ :origin &&
+                            ticks ∉ (:none, nothing, false) &&
+                            length(ticks) > 1
+                    )
                     if (i = findfirst(==(0), ticks[1])) ≢ nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
@@ -395,7 +396,7 @@ function axis_drawing_info(sp, letter)
         end
     end
 
-    (
+    return (
         ticks = ticks,
         segments = segments,
         tick_segments = tick_segments,
@@ -406,19 +407,19 @@ function axis_drawing_info(sp, letter)
 end
 
 function add_major_or_minor_segments_3d(
-    sp,
-    ax,
-    nax,
-    nas,
-    fas,
-    namM,
-    ticks,
-    grid,
-    tick_segments,
-    segments,
-    factor,
-    cond,
-)
+        sp,
+        ax,
+        nax,
+        nas,
+        fas,
+        namM,
+        ticks,
+        grid,
+        tick_segments,
+        segments,
+        factor,
+        cond,
+    )
     ticks ≡ nothing && return
     if cond
         f, invf = scale_inverse_scale_func(nax[:scale])
@@ -439,7 +440,7 @@ function add_major_or_minor_segments_3d(
         ga0_, ga1_ = reverse_if(gas, ax[:mirror])
     end
     letter = ax[:letter]
-    for tick ∈ ticks
+    for tick in ticks
         (ax[:showaxis] && cond) && push!(
             tick_segments,
             sort_3d_axes(tick, tick_start, first(fas), letter),
@@ -453,6 +454,7 @@ function add_major_or_minor_segments_3d(
             sort_3d_axes(tick, ga1_, fa1_, letter),
         )
     end
+    return
 end
 
 function axis_drawing_info_3d(sp, letter)
@@ -470,10 +472,10 @@ function axis_drawing_info_3d(sp, letter)
     if sp[:framestyle] ≢ :none  # && letter ≡ :x
         na0, na1 =
             nas = if sp[:framestyle] in (:origin, :zerolines)
-                0, 0
-            else
-                reverse_if(reverse_if(namM, letter ≡ :y), xor(ax[:mirror], nax[:flip]))
-            end
+            0, 0
+        else
+            reverse_if(reverse_if(namM, letter ≡ :y), xor(ax[:mirror], nax[:flip]))
+        end
         fa0, fa1 = fas = if sp[:framestyle] in (:origin, :zerolines)
             0, 0
         else
@@ -488,10 +490,10 @@ function axis_drawing_info_3d(sp, letter)
                 )
                 # don't show the 0 tick label for the origin framestyle
                 if (
-                    sp[:framestyle] ≡ :origin &&
-                    ticks ∉ (:none, nothing, false) &&
-                    length(ticks) > 1
-                )
+                        sp[:framestyle] ≡ :origin &&
+                            ticks ∉ (:none, nothing, false) &&
+                            length(ticks) > 1
+                    )
                     if (i = findfirst(==(0), ticks[1])) ≢ nothing
                         deleteat!(ticks[1], i)
                         deleteat!(ticks[2], i)
@@ -542,7 +544,7 @@ function axis_drawing_info_3d(sp, letter)
         end
     end
 
-    (
+    return (
         ticks = ticks,
         segments = segments,
         tick_segments = tick_segments,

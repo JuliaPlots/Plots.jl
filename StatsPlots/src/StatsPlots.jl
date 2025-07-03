@@ -26,9 +26,9 @@ import KernelDensity
 export dataviewer
 
 isvertical(plotattributes) =
-    let val = get(plotattributes, :orientation, missing)
-        val ≡ missing || val in (:vertical, :v)
-    end
+let val = get(plotattributes, :orientation, missing)
+    val ≡ missing || val in (:vertical, :v)
+end
 
 include("corrplot.jl")
 include("cornerplot.jl")
@@ -50,4 +50,4 @@ include("errorline.jl")
 
 function dataviewer end  # InteractExt
 
-end  # module
+end

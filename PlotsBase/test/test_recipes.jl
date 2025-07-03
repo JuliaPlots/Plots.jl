@@ -86,8 +86,8 @@ end
     pl = plot(-1:1, -1:1, -1:1)
     sp = pl.subplots[1]
     defaultret = PlotsBase.axis_drawing_info_3d(sp, :x)
-    for letter ∈ (:x, :y, :z)
-        for framestyle ∈ [:box :semi :origin :zerolines :grid :none]
+    for letter in (:x, :y, :z)
+        for framestyle in [:box :semi :origin :zerolines :grid :none]
             prevha = UInt64(0)
             push!(sp.attr, :framestyle => framestyle)
             ret = PlotsBase.axis_drawing_info_3d(sp, letter)
@@ -117,9 +117,9 @@ with(:gr) do
         plot!(p, x, y; linestyle = :dash)
         yerror!(p, x, y; yerror, linestyle = :dot)
         @test length(p.series_list) == 3
-        @test p[1][1][:linestyle] == :solid
-        @test p[1][2][:linestyle] == :dash
-        @test p[1][3][:linestyle] == :dot
+        @test p[1][1][:linestyle] ≡ :solid
+        @test p[1][2][:linestyle] ≡ :dash
+        @test p[1][3][:linestyle] ≡ :dot
     end
 
     @testset "parametric" begin

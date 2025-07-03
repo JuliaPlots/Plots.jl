@@ -1,15 +1,14 @@
-
 # ---------------------------------------------------------------------------
 # density
 
 @recipe function f(
-    ::Type{Val{:density}},
-    x,
-    y,
-    z;
-    trim = false,
-    bandwidth = KernelDensity.default_bandwidth(y),
-)
+        ::Type{Val{:density}},
+        x,
+        y,
+        z;
+        trim = false,
+        bandwidth = KernelDensity.default_bandwidth(y),
+    )
     newx, newy =
         violin_coords(y, trim = trim, wts = plotattributes[:weights], bandwidth = bandwidth)
     if isvertical(plotattributes)
@@ -26,14 +25,14 @@ PlotsBase.@deps density path
 # cumulative density
 
 @recipe function f(
-    ::Type{Val{:cdensity}},
-    x,
-    y,
-    z;
-    trim = false,
-    npoints = 200,
-    bandwidth = KernelDensity.default_bandwidth(y),
-)
+        ::Type{Val{:cdensity}},
+        x,
+        y,
+        z;
+        trim = false,
+        npoints = 200,
+        bandwidth = KernelDensity.default_bandwidth(y),
+    )
     newx, newy =
         violin_coords(y, trim = trim, wts = plotattributes[:weights], bandwidth = bandwidth)
 
@@ -41,7 +40,7 @@ PlotsBase.@deps density path
         newx, newy = newy, newx
     end
 
-    newy = cumsum(float(yi) for yi ∈ newy)
+    newy = cumsum(float(yi) for yi in newy)
     newy ./= newy[end]
 
     x := newx
@@ -109,7 +108,7 @@ PlotsBase.group_as_matrix(g::GroupedHist) = true
 
         # compute weights (frequencies) by group using those edges
         y = fill(NaN, nbins, ngroups)
-        for i ∈ 1:ngroups
+        for i in 1:ngroups
             groupinds = idxs[i]
             v_i = filter(x -> !isnan(x), v[:, i])
             w_i = weights == nothing ? nothing : weights[groupinds]
@@ -174,7 +173,7 @@ function wand_bins(x, scalest = :minim, gridsize = 401, range_x = extrema(x), t_
         (6 / (-psi2hat * n))^(1 / 3)
     end
 
-    scalest * hpi
+    return scalest * hpi
 end
 
 function linbin(X, gpoints; t_run = true)
@@ -184,12 +183,12 @@ function linbin(X, gpoints; t_run = true)
     gcnts = zeros(M)
     delta = (b - a) / (M - 1)
 
-    for i ∈ 1:n
+    for i in 1:n
         lxi = ((X[i] - a) / delta) + 1
         li = floor(Int, lxi)
         rem = lxi - li
 
-        if 1 <= li < M
+        if 1 ≤ li < M
             gcnts[li] += 1 - rem
             gcnts[li + 1] += rem
         end
@@ -199,12 +198,12 @@ function linbin(X, gpoints; t_run = true)
             li ≥ M && (gcnts[M] += 1)
         end
     end
-    gcnts
+    return gcnts
 end
 
 "binned kernel function estimator"
 function bkfe(gcounts, drv, bandwidth, range_x)
-    bandwidth <= 0 && error("'bandwidth' must be strictly positive")
+    bandwidth ≤ 0 && error("'bandwidth' must be strictly positive")
 
     a, b = range_x
     h = bandwidth
@@ -228,8 +227,8 @@ function bkfe(gcounts, drv, bandwidth, range_x)
     hmold0, hmnew = ones(length(arg)), ones(length(arg))
     hmold1 = arg
 
-    if drv >= 2
-        for i ∈ (2:drv)
+    if drv ≥ 2
+        for i in (2:drv)
             hmnew = arg .* hmold1 .- (i - 1) .* hmold0
             hmold0 = hmold1       # Compute mth degree Hermite polynomial
             hmold1 = hmnew        # by recurrence.
@@ -238,12 +237,12 @@ function bkfe(gcounts, drv, bandwidth, range_x)
     kappam = hmnew .* kappam
 
     ## Now combine weights and counts to obtain estimate
-    ## we need P >= 2L+1L, M: L <= M.
+    ## we need P ≥ 2L+1L, M: L ≤ M.
     P = nextpow(2, M + L + 1)
     kappam = [kappam; zeros(P - 2 * L - 1); reverse(kappam[2:end])]
     Gcounts = [gcounts; zeros(P - M)]
     kappam = fft(kappam)
     Gcounts = fft(Gcounts)
 
-    sum(gcounts .* (real(ifft(kappam .* Gcounts)))[1:M]) / (n^2)
+    return sum(gcounts .* (real(ifft(kappam .* Gcounts)))[1:M]) / (n^2)
 end

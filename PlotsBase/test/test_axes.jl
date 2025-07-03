@@ -5,14 +5,14 @@
     @test PlotsBase.discrete_value!(axis, "HI") == (0.5, 1)
     @test PlotsBase.discrete_value!(axis, :yo) == (1.5, 2)
     @test PlotsBase.Axes.ignorenan_extrema(axis) == (0.5, 1.5)
-    @test axis[:discrete_map] == Dict{Any,Any}(:yo => 2, "HI" => 1)
+    @test axis[:discrete_map] == Dict{Any, Any}(:yo => 2, "HI" => 1)
 
     PlotsBase.discrete_value!(axis, map(i -> "x$i", 1:5))
     PlotsBase.discrete_value!(axis, map(i -> "x$i", 0:2))
     @test PlotsBase.Axes.ignorenan_extrema(axis) == (0.5, 7.5)
 
     # github.com/JuliaPlots/Plots.jl/issues/4375
-    for lab ∈ ("foo", :foo)
+    for lab in ("foo", :foo)
         pl = plot(1:2, xlabel = lab, ylabel = lab, title = lab)
         show(devnull, pl)
     end
@@ -27,34 +27,34 @@
         @test PlotsBase.get_labels(:auto, 1:3, :log2) == ["2^{1}", "2^{2}", "2^{3}"]
         @test PlotsBase.get_labels(:auto, 1:3, :ln) == ["e^{1}", "e^{2}", "e^{3}"]
         @test PlotsBase.get_labels(:latex, 1:3, :log10) ==
-              ["\$10^{1}\$", "\$10^{2}\$", "\$10^{3}\$"]
+            ["\$10^{1}\$", "\$10^{2}\$", "\$10^{3}\$"]
         @test PlotsBase.get_labels(:latex, 1:3, :log2) ==
-              ["\$2^{1}\$", "\$2^{2}\$", "\$2^{3}\$"]
+            ["\$2^{1}\$", "\$2^{2}\$", "\$2^{3}\$"]
         @test PlotsBase.get_labels(:latex, 1:3, :ln) ==
-              ["\$e^{1}\$", "\$e^{2}\$", "\$e^{3}\$"]
+            ["\$e^{1}\$", "\$e^{2}\$", "\$e^{3}\$"]
     end
 
-    @test PlotsBase.get_labels(x -> 1e3x, 1:3, :identity) == ["1000", "2000", "3000"]
+    @test PlotsBase.get_labels(x -> 1.0e3x, 1:3, :identity) == ["1000", "2000", "3000"]
     @test PlotsBase.get_labels(:auto, 1:3, :identity) == ["1", "2", "3"]
     with(:gr) do
         # NOTE: GR overrides `labelfunc`
         @test PlotsBase.get_labels(:scientific, float.(500:500:1500), :identity) ==
-              ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
+            ["5.00×10^{2}", "1.00×10^{3}", "1.50×10^{3}"]
         @test PlotsBase.get_labels(:engineering, float.(500:500:1500), :identity) ==
-              ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
+            ["500.×10^{0}", "1.00×10^{3}", "1.50×10^{3}"]
         @test PlotsBase.get_labels(:latex, 1:3, :identity) == ["\$1\$", "\$2\$", "\$3\$"]
-        @test PlotsBase.get_labels(x -> 1e3x, 1:3, :log10) == ["10^{4}", "10^{5}", "10^{6}"]
+        @test PlotsBase.get_labels(x -> 1.0e3x, 1:3, :log10) == ["10^{4}", "10^{5}", "10^{6}"]
         @test PlotsBase.get_labels(x -> 8x, 1:3, :log2) == ["2^{4}", "2^{5}", "2^{6}"]
         @test PlotsBase.get_labels(x -> ℯ * x, 1:3, :ln) == ["e^{2}", "e^{3}", "e^{4}"]
     end
     @test PlotsBase.get_labels(x -> string(x, " MB"), 1:3, :identity) ==
-          ["1.0 MB", "2.0 MB", "3.0 MB"]
+        ["1.0 MB", "2.0 MB", "3.0 MB"]
     @test PlotsBase.get_labels(x -> string(x, " MB"), 1:3, :log10) ==
-          ["10.0 MB", "100.0 MB", "1000.0 MB"]
+        ["10.0 MB", "100.0 MB", "1000.0 MB"]
 end
 
 @testset "Showaxis" begin
-    for value ∈ PlotsBase.Commons._all_showaxis_attrs
+    for value in PlotsBase.Commons._all_showaxis_attrs
         @test plot(1:5, showaxis = value)[1][:yaxis][:showaxis] isa Bool
     end
     @test plot(1:5, showaxis = :y)[1][:yaxis][:showaxis]
@@ -98,7 +98,7 @@ end
     pl = plot([1.05, 2.0, 2.95], ylims = :round)
     @test PlotsBase.ylims(pl) == (1, 3)
 
-    for x ∈ (1:3, -10:10), xlims ∈ ((1, 5), [1, 5])
+    for x in (1:3, -10:10), xlims in ((1, 5), [1, 5])
         pl = plot(x; xlims)
         @test PlotsBase.xlims(pl) == (1, 5)
         pl = plot(x; xlims, widen = true)
@@ -108,30 +108,30 @@ end
     pl = plot(1:5, lims = :symmetric, widen = false)
     @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5, 5)
 
-    for xlims ∈ (0, 0.0, false, true, plot())
+    for xlims in (0, 0.0, false, true, plot())
         pl = plot(1:5; xlims)
         plims =
             @test_logs (:warn, r"Invalid limits for x axis") match_mode = :any PlotsBase.xlims(
-                pl,
-            )
+            pl,
+        )
         @test plims == default_widen(1, 5)
     end
 
     @testset "#4379" begin
-        for ylims ∈ ((-5, :auto), [-5, :auto])
+        for ylims in ((-5, :auto), [-5, :auto])
             pl = plot([-2, 3], ylims = ylims, widen = false)
             @test PlotsBase.ylims(pl) == (-5.0, 3.0)
         end
-        for ylims ∈ ((:auto, 4), [:auto, 4])
+        for ylims in ((:auto, 4), [:auto, 4])
             pl = plot([-2, 3], ylims = ylims, widen = false)
             @test PlotsBase.ylims(pl) == (-2.0, 4.0)
         end
 
-        for xlims ∈ ((-3, :auto), [-3, :auto])
+        for xlims in ((-3, :auto), [-3, :auto])
             pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
             @test PlotsBase.xlims(pl) == (-3.0, 3.0)
         end
-        for xlims ∈ ((:auto, 4), [:auto, 4])
+        for xlims in ((:auto, 4), [:auto, 4])
             pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
             @test PlotsBase.xlims(pl) == (-2.0, 4.0)
         end
@@ -245,7 +245,7 @@ end
 
 @testset "minor ticks" begin
     # FIXME in 2.0: this is awful to read, because `minorticks` represent the number of `intervals`
-    for minor_intervals ∈ (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
+    for minor_intervals in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
         n_minor_ticks_per_major = if minor_intervals isa Bool
             minor_intervals ? PlotsBase.Ticks.DEFAULT_MINOR_INTERVALS[] - 1 : 0
         elseif minor_intervals ≡ :auto
@@ -257,7 +257,7 @@ end
         end
         pl = plot(1:4; minorgrid = true, minorticks = minor_intervals)
         sp = first(pl)
-        for axis ∈ (:xaxis, :yaxis)
+        for axis in (:xaxis, :yaxis)
             ticks = PlotsBase.get_ticks(sp, sp[axis], update = false)
             n_expected_minor_ticks = (length(first(ticks)) - 1) * n_minor_ticks_per_major
             minor_ticks = PlotsBase.get_minor_ticks(sp, sp[axis], ticks)

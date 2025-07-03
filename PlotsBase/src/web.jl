@@ -1,4 +1,3 @@
-
 # NOTE: backend should implement `html_body` and `html_head`
 
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
@@ -7,18 +6,18 @@ standalone_html(
     plt::AbstractPlot;
     title::AbstractString = get(plt.attr, :window_title, "Plots.jl"),
 ) = """
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>$title</title>
-            <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-            $(html_head(plt))
-        </head>
-        <body>
-            $(html_body(plt))
-        </body>
-    </html>
-    """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>$title</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        $(html_head(plt))
+    </head>
+    <body>
+        $(html_body(plt))
+    </body>
+</html>
+"""
 
 embeddable_html(plt::AbstractPlot) = html_head(plt) * html_body(plt)
 
@@ -38,7 +37,7 @@ function write_temp_html(plt::AbstractPlot)
     html = standalone_html(plt; title = plt.attr[:window_title])
     filename = tempname() * ".html"
     write(filename, html)
-    filename
+    return filename
 end
 
 function standalone_html_window(plt::AbstractPlot)
@@ -50,7 +49,7 @@ function standalone_html_window(plt::AbstractPlot)
     filename = write_temp_html(plt)
     open_browser_window(filename)
     # restore for other backends
-    _use_local_dependencies[] = old
+    return _use_local_dependencies[] = old
 end
 
 # uses wkhtmltopdf/wkhtmltoimage: http://wkhtmltopdf.org/downloads.html
@@ -71,5 +70,5 @@ function show_png_from_html(io::IO, plt::AbstractPlot)
     write(io, readall(png_fn))
     rm(html_fn)
     rm(png_fn)
-    nothing
+    return nothing
 end

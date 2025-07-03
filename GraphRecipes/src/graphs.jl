@@ -1,4 +1,4 @@
-const _graph_funcs = Dict{Symbol,Any}(
+const _graph_funcs = Dict{Symbol, Any}(
     :spectral => spectral_graph,
     :sfdp => sfdp_graph,
     :circular => circular_graph,
@@ -11,7 +11,7 @@ const _graph_funcs = Dict{Symbol,Any}(
     :chorddiagram => chord_diagram,
 )
 
-const _graph_inputs = Dict{Symbol,Any}(
+const _graph_inputs = Dict{Symbol, Any}(
     :spectral => :adjmat,
     :sfdp => :adjmat,
     :circular => :adjmat,
@@ -26,7 +26,7 @@ const _graph_inputs = Dict{Symbol,Any}(
 
 function prepare_graph_inputs(method::Symbol, inputs...; display_n = nothing)
     input_type = get(_graph_inputs, method, :sourcedestiny)
-    if input_type ≡ :adjmat
+    return if input_type ≡ :adjmat
         mat = if display_n ≡ nothing
             get_adjacency_matrix(inputs...)
         else
@@ -42,7 +42,7 @@ end
 
 # -----------------------------------------------------
 
-function get_source_destiny_weight(mat::AbstractArray{T,2}) where {T}
+function get_source_destiny_weight(mat::AbstractArray{T, 2}) where {T}
     nrow, ncol = size(mat)    # rows are sources and columns are destinies
     @assert nrow == ncol
 
@@ -51,60 +51,60 @@ function get_source_destiny_weight(mat::AbstractArray{T,2}) where {T}
 
     L = length(mat)
 
-    source  = Array{Int}(undef, L)
+    source = Array{Int}(undef, L)
     destiny = Array{Int}(undef, L)
     weights = Array{T}(undef, L)
 
     idx = 0
-    for i ∈ 1:nrow, j ∈ 1:ncol
+    for i in 1:nrow, j in 1:ncol
         value = mat[i, j]
         if !isnan(value) && (nosparse || value != zero(T)) # TODO: deal with Nullable
             if i < j
-                idx          += 1
-                source[idx]  = i
+                idx += 1
+                source[idx] = i
                 destiny[idx] = j
                 weights[idx] = value
             elseif nosymmetric && (i > j)
-                idx          += 1
-                source[idx]  = i
+                idx += 1
+                source[idx] = i
                 destiny[idx] = j
                 weights[idx] = value
             end
         end
     end
-    resize!(source, idx), resize!(destiny, idx), resize!(weights, idx)
+    return resize!(source, idx), resize!(destiny, idx), resize!(weights, idx)
 end
 
 function get_source_destiny_weight(source::AbstractVector, destiny::AbstractVector)
     if length(source) != length(destiny)
         throw(ArgumentError("Source and destiny must have the same length."))
     end
-    source, destiny, ones(length(source))
+    return source, destiny, ones(length(source))
 end
 
 function get_source_destiny_weight(
-    source::AbstractVector,
-    destiny::AbstractVector,
-    weights::AbstractVector,
-)
+        source::AbstractVector,
+        destiny::AbstractVector,
+        weights::AbstractVector,
+    )
     if !(length(source) == length(destiny) == length(weights))
         throw(ArgumentError("Source, destiny and weights must have the same length."))
     end
-    source, destiny, weights
+    return source, destiny, weights
 end
 
 function get_source_destiny_weight(
-    adjlist::AbstractVector{V},
-) where {V<:AbstractVector{T}} where {T<:Any}
+        adjlist::AbstractVector{V},
+    ) where {V <: AbstractVector{T}} where {T <: Any}
     source = Int[]
     destiny = Int[]
-    for (i, l) ∈ enumerate(adjlist)
-        for j ∈ l
+    for (i, l) in enumerate(adjlist)
+        for j in l
             push!(source, i)
             push!(destiny, j)
         end
     end
-    get_source_destiny_weight(source, destiny)
+    return get_source_destiny_weight(source, destiny)
 end
 
 # -----------------------------------------------------
@@ -120,7 +120,7 @@ get_adjacency_matrix(
 
 get_adjacency_matrix(
     adjlist::AbstractVector{V},
-) where {V<:AbstractVector{T}} where {T<:Any} =
+) where {V <: AbstractVector{T}} where {T <: Any} =
     get_adjacency_matrix(get_source_destiny_weight(adjlist)...)
 
 # -----------------------------------------------------
@@ -128,16 +128,16 @@ get_adjacency_matrix(
 get_adjacency_list(mat::AbstractMatrix) = get_adjacency_list(get_source_destiny_weight(mat))
 
 function get_adjacency_list(
-    source::AbstractVector{Int},
-    destiny::AbstractVector{Int},
-    weights::AbstractVector,
-)
+        source::AbstractVector{Int},
+        destiny::AbstractVector{Int},
+        weights::AbstractVector,
+    )
     n = infer_size_from(source, destiny)
-    adjlist = [Int[] for i ∈ 1:n]
-    for (s, d) ∈ zip(source, destiny)
+    adjlist = [Int[] for i in 1:n]
+    for (s, d) in zip(source, destiny)
         push!(adjlist[s], d)
     end
-    adjlist
+    return adjlist
 end
 
 get_adjacency_list(adjlist::AbstractVector{<:AbstractVector{Int}}) = adjlist
@@ -146,10 +146,10 @@ get_adjacency_list(adjlist::AbstractVector{<:AbstractVector{Int}}) = adjlist
 
 function make_symmetric(A::AbstractMatrix)
     A = copy(A)
-    for i ∈ 1:size(A, 1), j ∈ (i + 1):size(A, 2)
+    for i in 1:size(A, 1), j in (i + 1):size(A, 2)
         A[i, j] = A[j, i] = A[i, j] + A[j, i]
     end
-    A
+    return A
 end
 
 function compute_laplacian(adjmat::AbstractMatrix, node_weights::AbstractVector)
@@ -165,9 +165,9 @@ function compute_laplacian(adjmat::AbstractMatrix, node_weights::AbstractVector)
     D = diagm(0 => deg)
 
     # Laplacian (L = D - adjmat)
-    L = eltype(adjmat)[i == j ? deg[i] : -adjmat[i, j] for i ∈ 1:n, j ∈ 1:n]
+    L = eltype(adjmat)[i == j ? deg[i] : -adjmat[i, j] for i in 1:n, j in 1:n]
 
-    L, D
+    return L, D
 end
 
 import Graphs
@@ -183,19 +183,19 @@ function estimate_distance(adjmat::AbstractMatrix)
     )
     tot = 0.0
     cnt = 0
-    for (i, d) ∈ enumerate(dists)
-        if d < 1e10
+    for (i, d) in enumerate(dists)
+        if d < 1.0e10
             tot += d
             cnt += 1
         end
     end
     avg = cnt > 0 ? tot / cnt : 1.0
-    for (i, d) ∈ enumerate(dists)
-        if d > 1e10
+    for (i, d) in enumerate(dists)
+        if d > 1.0e10
             dists[i] = 3avg
         end
     end
-    dists
+    return dists
 end
 
 function get_source_destiny_weight(g::Graphs.AbstractGraph)
@@ -203,11 +203,11 @@ function get_source_destiny_weight(g::Graphs.AbstractGraph)
     destiny = Vector{Int}()
     sizehint!(source, Graphs.nv(g))
     sizehint!(destiny, Graphs.nv(g))
-    for e ∈ Graphs.edges(g)
+    for e in Graphs.edges(g)
         push!(source, Graphs.src(e))
         push!(destiny, Graphs.dst(e))
     end
-    get_source_destiny_weight(source, destiny)
+    return get_source_destiny_weight(source, destiny)
 end
 
 get_adjacency_matrix(g::Graphs.AbstractGraph) = adjacency_matrix(g)
@@ -221,8 +221,8 @@ get_adjacency_matrix(
 get_adjacency_list(g::Graphs.AbstractGraph) = g.fadjlist
 
 function format_nodeproperty(prop, n_edges, edge_boxes = 0; fill_value = nothing)
-    prop isa Array ?
-    permutedims(vcat(fill(fill_value, edge_boxes + n_edges), vec(prop), fill_value)) : prop
+    return prop isa Array ?
+        permutedims(vcat(fill(fill_value, edge_boxes + n_edges), vec(prop), fill_value)) : prop
 end
 # -----------------------------------------------------
 
@@ -306,53 +306,53 @@ more details.
 @userplot GraphPlot
 
 @recipe function f(
-    g::GraphPlot;
-    dim = 2,
-    free_dims = nothing,
-    T = Float64,
-    curves = true,
-    curvature_scalar = 0.05,
-    root = :top,
-    node_weights = nothing,
-    names = [],
-    fontsize = 7,
-    nodeshape = :hexagon,
-    nodesize = 0.1,
-    node_z = nothing,
-    nodecolor = 1,
-    nodestrokealpha = 1,
-    nodealpha = 1,
-    nodestrokewidth = 1,
-    nodestrokecolor = :black,
-    nodestrokestyle = :solid,
-    nodestroke_z = nothing,
-    rng = nothing,
-    x = nothing,
-    y = nothing,
-    z = nothing,
-    method = :stress,
-    func = get(_graph_funcs, method, by_axis_local_stress_graph),
-    shorten = 0.0,
-    axis_buffer = 0.2,
-    layout_kw = Dict{Symbol,Any}(),
-    edgewidth = (s, d, w) -> 1,
-    edgelabel = nothing,
-    edgelabel_offset = 0.0,
-    self_edge_size = 0.1,
-    edge_label_box = true,
-    edge_z = nothing,
-    edgecolor = :black,
-    edgestyle = :solid,
-    trim = false,
-)
+        g::GraphPlot;
+        dim = 2,
+        free_dims = nothing,
+        T = Float64,
+        curves = true,
+        curvature_scalar = 0.05,
+        root = :top,
+        node_weights = nothing,
+        names = [],
+        fontsize = 7,
+        nodeshape = :hexagon,
+        nodesize = 0.1,
+        node_z = nothing,
+        nodecolor = 1,
+        nodestrokealpha = 1,
+        nodealpha = 1,
+        nodestrokewidth = 1,
+        nodestrokecolor = :black,
+        nodestrokestyle = :solid,
+        nodestroke_z = nothing,
+        rng = nothing,
+        x = nothing,
+        y = nothing,
+        z = nothing,
+        method = :stress,
+        func = get(_graph_funcs, method, by_axis_local_stress_graph),
+        shorten = 0.0,
+        axis_buffer = 0.2,
+        layout_kw = Dict{Symbol, Any}(),
+        edgewidth = (s, d, w) -> 1,
+        edgelabel = nothing,
+        edgelabel_offset = 0.0,
+        self_edge_size = 0.1,
+        edge_label_box = true,
+        edge_z = nothing,
+        edgecolor = :black,
+        edgestyle = :solid,
+        trim = false,
+    )
     # Process the args so that they are a Graphs.Graph.
-    if length(g.args) <= 1 &&
-       !(eltype(g.args[1]) <: AbstractArray) &&
-       !(g.args[1] isa Graphs.AbstractGraph) &&
-       method != :chorddiagram &&
-       method != :arcdiagram
+    if length(g.args) ≤ 1 &&
+            !(eltype(g.args[1]) <: AbstractArray) &&
+            !(g.args[1] isa Graphs.AbstractGraph) &&
+            method != :chorddiagram &&
+            method != :arcdiagram
         if !LinearAlgebra.issymmetric(g.args[1]) ||
-           any(diag(g.args[1]) .!= zeros(length(diag(g.args[1]))))
+                any(diag(g.args[1]) .!= zeros(length(diag(g.args[1]))))
             g.args = (Graphs.DiGraph(g.args[1]),)
         elseif LinearAlgebra.issymmetric(g.args[1])
             g.args = (Graphs.Graph(g.args[1]),)
@@ -363,7 +363,7 @@ more details.
     # plotattributes and replace the attributes with their aliases. Then delete the alias
     # names from the plotattributes dictionary.
     @process_aliases plotattributes graph_aliases
-    for arg ∈ keys(graph_aliases)
+    for arg in keys(graph_aliases)
         remove_aliases!(arg, plotattributes, graph_aliases)
     end
     # The above process will remove all marker properties from the plotattributes
@@ -395,7 +395,7 @@ more details.
             nodestrokestyle,
         ],
     )
-    for (markerproperty, nodeproperty) ∈ marker_node_collection
+    for (markerproperty, nodeproperty) in marker_node_collection
         # Make sure that the node properties are row vectors.
         nodeproperty isa Array && (nodeproperty = permutedims(vec(nodeproperty)))
         plotattributes[markerproperty] = nodeproperty
@@ -406,7 +406,7 @@ more details.
     # fact that we override the default behavior. Custom nodehapes are incompatible
     # with the backend's markershapes and thus replaced.
     if nodeshape isa Function ||
-       nodeshape isa Array && any([s isa Function for s ∈ nodeshape])
+            nodeshape isa Array && any([s isa Function for s in nodeshape])
         plotattributes[:markershape] = :circle
     end
 
@@ -426,8 +426,8 @@ more details.
     source, destiny, weights = get_source_destiny_weight(g.args...)
     if !(eltype(source) <: Integer)
         names = unique(sort(vcat(source, destiny)))
-        source = Int[findfirst(names, si) for si ∈ source]
-        destiny = Int[findfirst(names, di) for di ∈ destiny]
+        source = Int[findfirst(names, si) for si in source]
+        destiny = Int[findfirst(names, di) for di in destiny]
     end
     n = infer_size_from(source, destiny)
     display_n = trim ? n : nr  # number of displayed nodes
@@ -516,7 +516,7 @@ more details.
         nodeshape = repeat([nodeshape], length(x))
     end
     if !is3d
-        for i ∈ eachindex(x)
+        for i in eachindex(x)
             node_number =
                 i % length(nodeshape) == 0 ? length(nodeshape) : i % length(nodeshape)
             node_weight =
@@ -533,11 +533,13 @@ more details.
                     (
                         x[i],
                         y[i],
-                        names[ifelse(
-                            i % length(names) == 0,
-                            length(names),
-                            i % length(names),
-                        )],
+                        names[
+                            ifelse(
+                                i % length(names) == 0,
+                                length(names),
+                                i % length(names),
+                            ),
+                        ],
                         fontsize * nodesize * node_weight,
                     ),
                 )
@@ -590,7 +592,7 @@ more details.
     # then all of the information in node_vec_vec_xy[i] can be summarised with three
     # numbers describing the center and the radius of the circle.
     node_perimeter_info = []
-    for i ∈ eachindex(node_vec_vec_xy)
+    for i in eachindex(node_vec_vec_xy)
         if nodeshape[i] ≡ :circle
             push!(
                 node_perimeter_info,
@@ -614,7 +616,7 @@ more details.
             matrix_size = round(Int, sqrt(length(edgelabel)))
             edgelabel = reshape(edgelabel, matrix_size, matrix_size)
         end
-        for i ∈ 1:size(edgelabel)[1], j ∈ 1:size(edgelabel)[2]
+        for i in 1:size(edgelabel)[1], j in 1:size(edgelabel)[2]
             if islabel(edgelabel[i, j])
                 tmp[(i, j)] = edgelabel[i, j]
             end
@@ -625,15 +627,15 @@ more details.
     # tuples length three with last element 1. (i.e. a multigraph that has no extra
     # edges).
     if edgelabel isa Dict
-        edgelabel = convert(Dict{Any,Any}, edgelabel)
-        for key ∈ keys(edgelabel)
+        edgelabel = convert(Dict{Any, Any}, edgelabel)
+        for key in keys(edgelabel)
             if length(key) == 2
                 edgelabel[(key..., 1)] = edgelabel[key]
             end
         end
     end
     edge_has_been_seen = Dict()
-    for edge ∈ zip(source, destiny)
+    for edge in zip(source, destiny)
         edge_has_been_seen[edge] = 0
     end
     if length(curvature_scalar) == 1
@@ -654,7 +656,7 @@ more details.
         2
     end
 
-    for (edge_num, (si, di, wi)) ∈ enumerate(zip(source, destiny, weights))
+    for (edge_num, (si, di, wi)) in enumerate(zip(source, destiny, weights))
         edge_has_been_seen[(si, di)] += 1
         xseg = Float64[]
         yseg = Float64[]
@@ -703,19 +705,19 @@ more details.
                 )
                 append!(xseg, xpts)
                 append!(yseg, ypts)
-                append!(l_wg, [wi for i ∈ 1:length(xpts)])
+                append!(l_wg, [wi for i in 1:length(xpts)])
             elseif method ≡ :arcdiagram
                 r = (xdi - xsi) / 2
                 x₀ = (xdi + xsi) / 2
                 θ = range(0, stop = π, length = 30)
                 xpts = x₀ .+ r .* cos.(θ)
                 ypts = r .* sin.(θ) .+ ysi # ysi == ydi
-                for x ∈ xpts
+                for x in xpts
                     push!(xseg, x)
                     push!(l_wg, wi)
                 end
                 # push!(xseg, NaN)
-                for y ∈ ypts
+                for y in ypts
                     push!(yseg, y)
                 end
                 # push!(yseg, NaN)
@@ -727,8 +729,8 @@ more details.
                         ysi,
                         y[di],
                         edge_has_been_seen[(si, di)] *
-                        curvature_scalar[si, di] *
-                        sign(si - di),
+                            curvature_scalar[si, di] *
+                            sign(si - di),
                     )
                 else
                     (0.0, 0.0)
@@ -739,9 +741,9 @@ more details.
                 A = hcat(xpts, ypts)
                 itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
                 tfine = range(0, stop = 1, length = nsegments)
-                xpts, ypts = [itp(t, 1) for t ∈ tfine], [itp(t, 2) for t ∈ tfine]
+                xpts, ypts = [itp(t, 1) for t in tfine], [itp(t, 2) for t in tfine]
                 if !isnothing(edgelabel) &&
-                   haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
+                        haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                     q = control_point(
                         xsi,
                         x[di],
@@ -749,7 +751,7 @@ more details.
                         y[di],
                         (
                             edgelabel_offset +
-                            edge_has_been_seen[(si, di)] * curvature_scalar[si, di]
+                                edge_has_been_seen[(si, di)] * curvature_scalar[si, di]
                         ) * sign(si - di),
                     )
 
@@ -762,15 +764,17 @@ more details.
                                 fontsize,
                             ),
                         )
-                        edge_label_box_vertices = (annotation_extent(
-                            plotattributes,
-                            (
-                                q[1],
-                                q[2],
-                                edgelabel[(si, di, edge_has_been_seen[(si, di)])],
-                                0.05fontsize,
-                            ),
-                        ))
+                        edge_label_box_vertices = (
+                            annotation_extent(
+                                plotattributes,
+                                (
+                                    q[1],
+                                    q[2],
+                                    edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                    0.05fontsize,
+                                ),
+                            )
+                        )
                         push!(edge_label_box_vertices_array, edge_label_box_vertices)
                     end
                 end
@@ -790,7 +794,7 @@ more details.
             push!(yseg, ysi, ydi)
             is3d && push!(zseg, z[si], z[di])
             if !isnothing(edgelabel) &&
-               haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
+                    haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                 q = [(xsi + xdi) / 2, (ysi + ydi) / 2]
 
                 if !any(isnan.(q))
@@ -802,15 +806,17 @@ more details.
                             fontsize,
                         ),
                     )
-                    edge_label_box_vertices = (annotation_extent(
-                        plotattributes,
-                        (
-                            q[1],
-                            q[2],
-                            edgelabel[(si, di, edge_has_been_seen[(si, di)])],
-                            0.05fontsize,
-                        ),
-                    ))
+                    edge_label_box_vertices = (
+                        annotation_extent(
+                            plotattributes,
+                            (
+                                q[1],
+                                q[2],
+                                edgelabel[(si, di, edge_has_been_seen[(si, di)])],
+                                0.05fontsize,
+                            ),
+                        )
+                    )
                     push!(edge_label_box_vertices_array, edge_label_box_vertices)
                 end
             end
@@ -858,7 +864,7 @@ more details.
                 A = hcat(xpts, ypts)
                 itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
                 tfine = range(0, stop = 1, length = nsegments)
-                xpts, ypts = [itp(t, 1) for t ∈ tfine], [itp(t, 2) for t ∈ tfine]
+                xpts, ypts = [itp(t, 1) for t in tfine], [itp(t, 2) for t in tfine]
             else
                 _, _, start_point1, start_point2 = nearest_intersection(
                     xsi,
@@ -869,9 +875,9 @@ more details.
                 )
                 _, _, end_point1, end_point2 = nearest_intersection(
                     xsi +
-                    edge_has_been_seen[(si, di)] * (nodewidth + self_edge_size) * cos(θ2),
+                        edge_has_been_seen[(si, di)] * (nodewidth + self_edge_size) * cos(θ2),
                     ysi +
-                    edge_has_been_seen[(si, di)] * (nodewidth + self_edge_size) * sin(θ2),
+                        edge_has_been_seen[(si, di)] * (nodewidth + self_edge_size) * sin(θ2),
                     xsi,
                     ysi,
                     node_vec_vec_xy[si],
@@ -900,7 +906,7 @@ more details.
                 A = hcat(xpts, ypts)
                 itp = scale(interpolate(A, BSpline(Cubic(Natural(OnGrid())))), t, 1:2)
                 tfine = range(0, stop = 1, length = nsegments)
-                xpts, ypts = [itp(t, 1) for t ∈ tfine], [itp(t, 2) for t ∈ tfine]
+                xpts, ypts = [itp(t, 1) for t in tfine], [itp(t, 2) for t in tfine]
             end
             append!(xseg, xpts)
             append!(yseg, ypts)
@@ -910,7 +916,7 @@ more details.
                 ypts[mid_ind] + edgelabel_offset * sin((θ1 + θ2) / 2),
             ]
             if !isnothing(edgelabel) &&
-               haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
+                    haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                 push!(
                     edge_label_array,
                     (
@@ -954,8 +960,8 @@ more details.
             ),
         )
         edges_list = (
-            [edges_list[1][:, j] for j ∈ 1:size(edges_list[1], 2)],
-            [edges_list[2][:, j] for j ∈ 1:size(edges_list[2], 2)],
+            [edges_list[1][:, j] for j in 1:size(edges_list[1], 2)],
+            [edges_list[2][:, j] for j in 1:size(edges_list[2], 2)],
         )
     end
 
@@ -982,7 +988,7 @@ more details.
         edgecolor = process_edge_attribute(edgecolor, source, destiny, weights)
         edgestyle = process_edge_attribute(edgestyle, source, destiny, weights)
 
-        !isnothing(edge_z) && (line_z := edge_z)
+        isnothing(edge_z) || (line_z := edge_z)
         linewidthattr = get(plotattributes, :linewidth, 1)
         linewidth := linewidthattr * edgewidth
         fillalpha := 1
@@ -1001,12 +1007,12 @@ more details.
     # The boxes around edge labels are defined as another list of series that sits on top
     # of the series for the edges.
     edge_has_been_seen = Dict()
-    for edge ∈ zip(source, destiny)
+    for edge in zip(source, destiny)
         edge_has_been_seen[edge] = 0
     end
     index = 0
     if edge_label_box && !isnothing(edgelabel)
-        for (edge_num, (si, di, wi)) ∈ enumerate(zip(source, destiny, weights))
+        for (edge_num, (si, di, wi)) in enumerate(zip(source, destiny, weights))
             edge_has_been_seen[(si, di)] += 1
             if haskey(edgelabel, (si, di, edge_has_been_seen[(si, di)]))
                 index += 1
@@ -1062,23 +1068,23 @@ more details.
         markeralpha := 0
         aspect_ratio --> :equal
         if length(names) == length(x)
-            annotations := [(x[i], y[i], names[i]) for i ∈ eachindex(x)]
+            annotations := [(x[i], y[i], names[i]) for i in eachindex(x)]
         end
         @series begin
             seriestype := :shape
             N = length(x)
             angles = Vector{Float64}(undef, N)
-            for i ∈ 1:N
-                if y[i] > 0
-                    angles[i] = acos(x[i])
+            for i in 1:N
+                angles[i] = if y[i] > 0
+                    acos(x[i])
                 else
-                    angles[i] = 2pi - acos(x[i])
+                    2pi - acos(x[i])
                 end
             end
             δ = 0.4 * (angles[2] - angles[1])
-            vec_vec_xy = [arcshape(Θ - δ, Θ + δ) for Θ ∈ angles] # Shape
-            [[xy[1] for xy ∈ vec_xy] for vec_xy ∈ vec_vec_xy],
-            [[xy[2] for xy ∈ vec_xy] for vec_xy ∈ vec_vec_xy]
+            vec_vec_xy = [arcshape(Θ - δ, Θ + δ) for Θ in angles]  # Shape
+            [[xy[1] for xy in vec_xy] for vec_xy in vec_vec_xy],
+                [[xy[2] for xy in vec_xy] for vec_xy in vec_vec_xy]
         end
     else
         if is3d
@@ -1105,9 +1111,9 @@ more details.
                 line_z := nodestroke_z
 
                 nodeperimeters = (Any[], Any[])
-                for vec_xy ∈ node_vec_vec_xy
-                    push!(nodeperimeters[1], [xy[1] for xy ∈ vec_xy])
-                    push!(nodeperimeters[2], [xy[2] for xy ∈ vec_xy])
+                for vec_xy in node_vec_vec_xy
+                    push!(nodeperimeters[1], [xy[1] for xy in vec_xy])
+                    push!(nodeperimeters[2], [xy[2] for xy in vec_xy])
                 end
 
                 nodeperimeters
@@ -1127,29 +1133,28 @@ more details.
                 markersize := 0
                 markeralpha := 0
                 markerstrokesize := 0
-                !isnothing(edgelabel) && (annotations --> edge_label_array)
+                isnothing(edgelabel) || (annotations --> edge_label_array)
             else
                 seriestype := :scatter
-
+                append!(
+                    edge_label_array, (
+                            x[i],
+                            y[i],
+                            names[
+                                ifelse(
+                                    i % length(names) == 0,
+                                    length(names),
+                                    i % length(names),
+                                ),
+                            ],
+                            fontsize,
+                        ) for i in eachindex(x)
+                )
                 colorbar_entry --> false
                 markersize := 0
                 markeralpha := 0
                 markerstrokesize := 0
-                annotations --> [
-                    edge_label_array
-                    [
-                        (
-                            x[i],
-                            y[i],
-                            names[ifelse(
-                                i % length(names) == 0,
-                                length(names),
-                                i % length(names),
-                            )],
-                            fontsize,
-                        ) for i ∈ eachindex(x)
-                    ]
-                ]
+                annotations --> edge_label_array
             end
         end
     end

@@ -18,7 +18,7 @@ for strings and symbols respectively.
 `x` can be either a plot command or a block of plot commands.
 """
 macro df(d, x)
-    esc(Expr(:call, df_helper(x), d))
+    return esc(Expr(:call, df_helper(x), d))
 end
 
 """
@@ -27,19 +27,19 @@ end
 Curried version of `@df d x`. Outputs an anonymous function `d -> @df d x`.
 """
 macro df(x)
-    esc(df_helper(x))
+    return esc(df_helper(x))
 end
 
 function df_helper(x)
     i = gensym()
-    Expr(:(->), i, df_helper(i, x))
+    return Expr(:(->), i, df_helper(i, x))
 end
 
 function df_helper(d, x)
     if isa(x, Expr) && x.head ≡ :block # meaning that there were multiple plot commands
         commands = [
-            df_helper(d, xx) for xx ∈ x.args if
-            !(isa(xx, Expr) && xx.head ≡ :line || isa(xx, LineNumberNode))
+            df_helper(d, xx) for xx in x.args if
+                !(isa(xx, Expr) && xx.head ≡ :line || isa(xx, LineNumberNode))
         ] # apply the helper recursively
         return Expr(:block, commands...)
 
@@ -54,9 +54,9 @@ function df_helper(d, x)
             Expr(:call, :($(@__MODULE__).extract_columns_and_names), d, syms...),
         )
         argnames = _argnames(names, x)
-        if (length(plot_call.args) >= 2) &&
-           isa(plot_call.args[2], Expr) &&
-           (plot_call.args[2].head ≡ :parameters)
+        if (length(plot_call.args) ≥ 2) &&
+                isa(plot_call.args[2], Expr) &&
+                (plot_call.args[2].head ≡ :parameters)
             label_plot_call = Expr(
                 :call,
                 :($(@__MODULE__).add_label),
@@ -104,7 +104,7 @@ function parse_table_call!(d, x::Expr, syms, vars)
     elseif x.head ≡ :braces  # From Query: use curly brackets to simplify writing named tuples
         new_ex = Expr(:tuple, x.args...)
 
-        for (j, field_in_NT) ∈ enumerate(new_ex.args)
+        for (j, field_in_NT) in enumerate(new_ex.args)
             if isa(field_in_NT, Expr) && field_in_NT.head == :(=)
                 new_ex.args[j] = Expr(:(=), field_in_NT.args...)
             elseif field_in_NT isa QuoteNode
@@ -121,12 +121,12 @@ function parse_table_call!(d, x::Expr, syms, vars)
         end
         return parse_table_call!(d, new_ex, syms, vars)
     end
-    return Expr(x.head, (parse_table_call!(d, arg, syms, vars) for arg ∈ x.args)...)
+    return Expr(x.head, (parse_table_call!(d, arg, syms, vars) for arg in x.args)...)
 end
 
 function column_names(t)
     s = Tables.schema(t)
-    s ≡ nothing ? propertynames(first(Tables.rows(t))) : s.names
+    return s ≡ nothing ? propertynames(first(Tables.rows(t))) : s.names
 end
 
 not_kw(x) = true
@@ -134,29 +134,29 @@ not_kw(x::Expr) = !(x.head in [:kw, :parameters])
 
 function insert_kw!(x::Expr, s::Symbol, v)
     index = isa(x.args[2], Expr) && x.args[2].head ≡ :parameters ? 3 : 2
-    x.args = vcat(x.args[1:(index - 1)], Expr(:kw, s, v), x.args[index:end])
+    return x.args = vcat(x.args[1:(index - 1)], Expr(:kw, s, v), x.args[index:end])
 end
 
 _argnames(names, x::Expr) =
-    Expr(:vect, [_arg2string(names, s) for s ∈ x.args[2:end] if not_kw(s)]...)
+    Expr(:vect, [_arg2string(names, s) for s in x.args[2:end] if not_kw(s)]...)
 
 _arg2string(names, x) = stringify(x)
 _arg2string(names, x::Expr) =
-    if x.head ≡ :call && x.args[1] ≡ :cols
-        :($(@__MODULE__).compute_name($names, $(x.args[2])))
-    elseif x.head ≡ :call && x.args[1] ≡ :hcat
-        hcat(stringify.(x.args[2:end])...)
-    elseif x.head ≡ :hcat
-        hcat(stringify.(x.args)...)
-    else
-        stringify(x)
-    end
+if x.head ≡ :call && x.args[1] ≡ :cols
+    :($(@__MODULE__).compute_name($names, $(x.args[2])))
+elseif x.head ≡ :call && x.args[1] ≡ :hcat
+    hcat(stringify.(x.args[2:end])...)
+elseif x.head ≡ :hcat
+    hcat(stringify.(x.args)...)
+else
+    stringify(x)
+end
 
 stringify(x) = filter(t -> t != ':', string(x))
 
 compute_name(names, i::Int) = names[i]
 compute_name(names, i::Symbol) = i
-compute_name(names, i) = reshape([compute_name(names, ii) for ii ∈ i], 1, :)
+compute_name(names, i) = reshape([compute_name(names, ii) for ii in i], 1, :)
 
 """
     add_label(argnames, f, args...; kwargs...)
@@ -171,7 +171,7 @@ then it will error.
 """
 function add_label(argnames, f, args...; kwargs...)
     i = findlast(t -> isa(t, Expr) || isa(t, AbstractArray), argnames)
-    try
+    return try
         if i ≡ nothing
             return f(args...; kwargs...)
         else
@@ -179,7 +179,7 @@ function add_label(argnames, f, args...; kwargs...)
         end
     catch e
         if e isa MethodError ||
-           (e isa ErrorException && occursin("does not accept keyword arguments", e.msg))
+                (e isa ErrorException && occursin("does not accept keyword arguments", e.msg))
             # check if the user has supplied kwargs, then we need to rethrow the error
             isempty(kwargs) || rethrow(e)
             # transmit only args to `f`
@@ -192,7 +192,7 @@ end
 
 get_col(s::Int, col_nt, names) = col_nt[names[s]]
 get_col(s::Symbol, col_nt, names) = get(col_nt, s, s)
-get_col(syms, col_nt, names) = hcat((get_col(s, col_nt, names) for s ∈ syms)...)
+get_col(syms, col_nt, names) = hcat((get_col(s, col_nt, names) for s in syms)...)
 
 # get the appropriate name when passed an Integer
 add_sym!(cols, i::Integer, names) = push!(cols, names[i])
@@ -200,10 +200,10 @@ add_sym!(cols, i::Integer, names) = push!(cols, names[i])
 add_sym!(cols, s::Symbol, names) = s in names ? push!(cols, s) : cols
 # recursively extract column names
 function add_sym!(cols, s, names)
-    for si ∈ s
+    for si in s
         add_sym!(cols, si, names)
     end
-    cols
+    return cols
 end
 
 """
@@ -227,11 +227,7 @@ function extract_columns_and_names(df, syms...)
     selected_cols = add_sym!(Symbol[], syms, names)
 
     cols = Tables.columntable(TableOperations.select(df, unique(selected_cols)...))
-    return Tuple(get_col(s, cols, names) for s ∈ syms), names
+    return Tuple(get_col(s, cols, names) for s in syms), names
 end
 
-end  # module
-
-# -----------------------------------------------------------------------------
-
-using .DF
+end

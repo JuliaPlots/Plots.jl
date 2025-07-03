@@ -36,7 +36,7 @@ function update_ticks_guides(d::KW, labs, i, j, n)
     # d[:xticks] = (i==n)
     d[:xguide] = (i == n ? _cycle(labs, j) : "")
     # d[:yticks] = (j==1)
-    d[:yguide] = (j == 1 ? _cycle(labs, i) : "")
+    return d[:yguide] = (j == 1 ? _cycle(labs, i) : "")
 end
 
 @recipe function f(cp::CorrPlot)
@@ -55,13 +55,13 @@ end
     linecolor --> PlotsBase.fg_color(plotattributes)
     markeralpha := 0.4
     grad = cgrad(get(plotattributes, :markercolor, :RdYlBu))
-    indices = reshape(1:(n ^ 2), n, n)'
+    indices = reshape(1:(n^2), n, n)'
     title = get(plotattributes, :title, "")
     title_location = get(plotattributes, :title_location, :center)
     title := ""
 
     # histograms on the diagonal
-    for i ∈ 1:n
+    for i in 1:n
         @series begin
             if title != "" && title_location ≡ :left && i == 1
                 title := title
@@ -77,10 +77,10 @@ end
     end
 
     # scatters
-    for i ∈ 1:n
+    for i in 1:n
         ylink := setdiff(vec(indices[i, :]), indices[i, i])
         vi = view(mat, :, i)
-        for j ∈ 1:n
+        for j in 1:n
             j == i && continue
             vj = view(mat, :, j)
             subplot := indices[i, j]
@@ -101,11 +101,11 @@ end
                 @series begin
                     seriestype := get(plotattributes, :seriestype, :histogram2d)
                     if title != "" &&
-                       i == 1 &&
-                       (
-                           (title_location ≡ :center && j == div(n, 2) + 1) ||
-                           (title_location ≡ :right && j == n)
-                       )
+                            i == 1 &&
+                            (
+                            (title_location ≡ :center && j == div(n, 2) + 1) ||
+                                (title_location ≡ :right && j == n)
+                        )
                         if iseven(n)
                             title_location := :left
                         end

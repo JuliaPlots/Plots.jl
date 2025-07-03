@@ -17,7 +17,7 @@ Sys.isunix() && with(:plotly) do
         @testset "Contour numbers" begin
             @testset "Default" begin
                 @test PlotsBase.plotly_series(contour(x, y, z))[1][:ncontours] ==
-                      PlotsBase._series_defaults[:levels] + 2
+                    PlotsBase._series_defaults[:levels] + 2
             end
             @testset "Specified number" begin
                 cont = contour(x, y, z, levels = 10)
@@ -44,11 +44,11 @@ Sys.isunix() && with(:plotly) do
                 series_dict = @test_logs (
                     :warn,
                     """
-             setting arbitrary contour levels with Plotly backend is not supported;
-             use a range to set equally-spaced contours or an integer to set the
-             approximate number of contours with the keyword `levels`.
-             Setting levels to -1.0:0.5:1.0
-             """,
+                    setting arbitrary contour levels with Plotly backend is not supported;
+                    use a range to set equally-spaced contours or an integer to set the
+                    approximate number of contours with the keyword `levels`.
+                    Setting levels to -1.0:0.5:1.0
+                    """,
                 ) PlotsBase.plotly_series(pl)
                 @test series_dict[1][:contours][:start] == first(levels_range)
                 @test series_dict[1][:contours][:end] == last(levels_range)

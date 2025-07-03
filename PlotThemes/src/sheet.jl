@@ -1,14 +1,16 @@
-const sheet_args = Dict{Symbol,Any}([
-    :fglegend => plot_color(colorant"#225", 0.1),
-    :bglegend => plot_color(:white, 0.9),
-    :gridcolor => colorant"#225",
-    :minorgridcolor => colorant"#225",
-    :framestyle => :grid,
-    :minorgrid => true,
-    :linewidth => 1.2,
-    :markersize => 6,
-    :markerstrokewidth => 0,
-])
+const sheet_args = Dict{Symbol, Any}(
+    [
+        :fglegend => plot_color(colorant"#225", 0.1),
+        :bglegend => plot_color(:white, 0.9),
+        :gridcolor => colorant"#225",
+        :minorgridcolor => colorant"#225",
+        :framestyle => :grid,
+        :minorgrid => true,
+        :linewidth => 1.2,
+        :markersize => 6,
+        :markerstrokewidth => 0,
+    ]
+)
 
 #= NOTE ========================================================================
 Colors are taken from https://personal.sron.nl/~pault/
@@ -59,10 +61,12 @@ const ylorbr_gradient = [
 
 const _mute = PlotTheme(
     merge!(
-        Dict{Symbol,Any}([
-            :palette => mute_palette,
-            :colorgradient => reverse(ylorbr_gradient),
-        ]),
+        Dict{Symbol, Any}(
+            [
+                :palette => mute_palette,
+                :colorgradient => reverse(ylorbr_gradient),
+            ]
+        ),
         sheet_args,
     ),
 )
@@ -126,10 +130,12 @@ const iridescent_gradient = [
 
 const _bright = PlotTheme(
     merge!(
-        Dict{Symbol,Any}([
-            :palette => bright_palette,
-            :colorgradient => reverse(iridescent_gradient),
-        ]),
+        Dict{Symbol, Any}(
+            [
+                :palette => bright_palette,
+                :colorgradient => reverse(iridescent_gradient),
+            ]
+        ),
         sheet_args,
     ),
 )

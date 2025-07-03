@@ -20,7 +20,7 @@
     grid --> false
     layout --> @layout [
         topscatter _
-        scatter2d{0.9w,0.9h} rightscatter
+        scatter2d{0.9w, 0.9h} rightscatter
     ]
 
     # main scatter2d

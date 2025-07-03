@@ -1,23 +1,21 @@
 using VisualRegressionTests
 using AbstractTrees
 using LinearAlgebra
-using GraphRecipes.AbstractTrees
-using GraphRecipes.Colors
+using GraphRecipes
 using GraphRecipes
 using SparseArrays
 using ImageMagick
 using StableRNGs
-using PlotsBase
 using Logging
 using Graphs
+using Plots
 using Test
 using Gtk  # for popup
 
-import GR
-gr()
+const PlotsBase = Plots.PlotsBase
 
 isci() = get(ENV, "CI", "false") == "true"
-itol(tol = nothing) = something(tol, isci() ? 1e-3 : 1e-5)
+itol(tol = nothing) = something(tol, isci() ? 1.0e-3 : 1.0e-5)
 
 include("functions.jl")
 include("parse_readme.jl")
@@ -26,7 +24,7 @@ default(show = false, reuse = true)
 
 @testset "functions" begin
     rng = StableRNG(1)
-    for method ∈ keys(GraphRecipes._graph_funcs)
+    for method in keys(GraphRecipes._graph_funcs)
         method ≡ :spectral && continue  # FIXME
         dat = if (inp = GraphRecipes._graph_inputs[method]) ≡ :adjmat
             [
@@ -105,7 +103,7 @@ end
 @testset "utils.jl" begin
     rng = StableRNG(1)
     @test GraphRecipes.directed_curve(0.0, 1.0, 0.0, 1.0; rng) ==
-          GraphRecipes.directed_curve(0, 1, 0, 1; rng)
+        GraphRecipes.directed_curve(0, 1, 0, 1; rng)
 
     @test GraphRecipes.isnothing(nothing) == PlotsBase.isnothing(nothing)
     @test GraphRecipes.isnothing(missing) == PlotsBase.isnothing(missing)
@@ -115,13 +113,13 @@ end
     @test GraphRecipes.isnothing(0.0) == PlotsBase.isnothing(0.0)
     @test GraphRecipes.isnothing(1.0) == PlotsBase.isnothing(1.0)
 
-    for (s, e) ∈ [(rand(rng), rand(rng)) for i ∈ 1:100]
+    for (s, e) in [(rand(rng), rand(rng)) for i in 1:100]
         @test GraphRecipes.partialcircle(s, e) == PlotsBase.partialcircle(s, e)
     end
 
     @testset "nearest_intersection" begin
         @test GraphRecipes.nearest_intersection(0, 0, 3, 3, [(1, 0), (0, 1)]) ==
-              (0, 0, 0.5, 0.5)
+            (0, 0, 0.5, 0.5)
         @test GraphRecipes.nearest_intersection(1, 2, 1, 2, []) == (1, 2, 1, 2)
     end
 
@@ -178,7 +176,7 @@ cd(joinpath(@__DIR__, "..", "assets")) do
 
         @plottest ast_example() "ast_example.png" popup = !isci() tol = itol()
 
-        @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol(2e-2)
+        @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol(2.0e-2)
         @plottest julia_dict_tree() "julia_dict_tree.png" popup = !isci() tol = itol()
 
         @plottest funky_edge_and_marker_args() "funky_edge_and_marker_args.png" popup =

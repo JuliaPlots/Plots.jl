@@ -1,21 +1,20 @@
-
 # ---------------------------------------------------------------------------
 # Box Plot
 
 notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
 
 @recipe function f(
-    ::Type{Val{:boxplot}},
-    x,
-    y,
-    z;
-    notch = false,
-    whisker_range = 1.5,
-    outliers = true,
-    whisker_width = :half,
-    sort_labels_by = identity,
-    xshift = 0.0,
-)
+        ::Type{Val{:boxplot}},
+        x,
+        y,
+        z;
+        notch = false,
+        whisker_range = 1.5,
+        outliers = true,
+        whisker_width = :half,
+        sort_labels_by = identity,
+        xshift = 0.0,
+    )
     # if only y is provided, then x will be UnitRange 1:size(y,2)
     if typeof(x) <: AbstractRange
         x = if step(x) == first(x) == 1
@@ -31,9 +30,9 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
     outliers_x, outliers_y = zeros(0), zeros(0)
     bw = plotattributes[:bar_width]
     isnothing(bw) && (bw = 0.8)
-    @assert whisker_width ≡ :match || whisker_width == :half || whisker_width >= 0 "whisker_width must be :match, :half, or a positive number"
-    ww = whisker_width ≡ :match ? bw : whisker_width == :half ? bw / 2 : whisker_width
-    for (i, glabel) ∈ enumerate(sort(glabels; by = sort_labels_by))
+    @assert whisker_width ≡ :match || whisker_width ≡ :half || whisker_width ≥ 0 "whisker_width must be :match, :half, or a positive number"
+    ww = whisker_width ≡ :match ? bw : whisker_width ≡ :half ? bw / 2 : whisker_width
+    for (i, glabel) in enumerate(sort(glabels; by = sort_labels_by))
         # filter y
         values = y[filter(i -> _cycle(x, i) == glabel, 1:length(y))]
 
@@ -63,7 +62,7 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
         if Float64(whisker_range) != 0.0  # if the range is 0.0, the whiskers will extend to the data
             limit = whisker_range * (q4 - q2)
             inside = Float64[]
-            for value ∈ values
+            for value in values
                 if (value < (q2 - limit)) || (value > (q4 + limit))
                     if outliers
                         push!(outliers_y, value)
@@ -232,7 +231,7 @@ recipetype(::Val{:groupedboxplot}, args...) = GroupedBoxplot(args)
         float.(x)
     else
         bar_width --> 0.8
-        xnums = [findfirst(isequal(xi), ux) for xi ∈ x] .- 0.5
+        xnums = [findfirst(isequal(xi), ux) for xi in x] .- 0.5
         xticks --> (eachindex(ux) .- 0.5, ux)
         xnums
     end
@@ -245,7 +244,7 @@ recipetype(::Val{:groupedboxplot}, args...) = GroupedBoxplot(args)
         n = length(labels)
         bws = plotattributes[:bar_width] / n
         bar_width := bws * clamp(1 - spacing, 0, 1)
-        for i ∈ 1:n
+        for i in 1:n
             groupinds = idxs[i]
             Δx = _cycle(bws, i) * (i - (n + 1) / 2)
             x[groupinds] .+= Δx

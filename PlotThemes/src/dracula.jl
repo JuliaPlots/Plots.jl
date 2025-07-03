@@ -13,18 +13,16 @@ const dracula_palette = [
 const dracula_bg = colorant"#282a36"
 const dracula_fg = colorant"#f8f8f2"
 
-const _dracula = PlotTheme(
-    Dict([
-        :bg => dracula_bg,
-        :bginside => colorant"#30343B",
-        :fg => dracula_fg,
-        :fgtext => dracula_fg,
-        :fgguide => dracula_fg,
-        :fglegend => dracula_fg,
-        :legendfontcolor => dracula_fg,
-        :legendtitlefontcolor => dracula_fg,
-        :titlefontcolor => dracula_fg,
-        :palette => expand_palette(dracula_bg, dracula_palette),
-        :colorgradient => :viridis,
-    ]),
-)
+const _dracula = [
+    :bg => dracula_bg,
+    :bginside => colorant"#30343B",
+    :fg => dracula_fg,
+    :fgtext => dracula_fg,
+    :fgguide => dracula_fg,
+    :fglegend => dracula_fg,
+    :legendfontcolor => dracula_fg,
+    :legendtitlefontcolor => dracula_fg,
+    :titlefontcolor => dracula_fg,
+    :palette => expand_palette(dracula_bg, dracula_palette),
+    :colorgradient => :viridis,
+] |> Dict |> PlotTheme

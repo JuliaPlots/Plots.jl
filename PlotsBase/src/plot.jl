@@ -1,8 +1,7 @@
-
 struct PlaceHolder end
 
 mutable struct CurrentPlot
-    nullableplot::Union{AbstractPlot,Nothing}
+    nullableplot::Union{AbstractPlot, Nothing}
 end
 const CURRENT_PLOT = CurrentPlot(nothing)
 
@@ -14,7 +13,7 @@ Returns the Plot object for the current plot
 """
 function current()
     isplotnull() && error("No current plot/subplot")
-    CURRENT_PLOT.nullableplot
+    return CURRENT_PLOT.nullableplot
 end
 current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
 
@@ -30,33 +29,34 @@ function Base.show(io::IO, plt::Plot)
     s_ekwargs = getindex.(plt.series_list, :extra_kwargs)
     (
         isempty(plt[:extra_plot_kwargs]) &&
-        all(isempty, sp_ekwargs) &&
-        all(isempty, s_ekwargs)
+            all(isempty, sp_ekwargs) &&
+            all(isempty, s_ekwargs)
     ) && return
     print(io, "\nCaptured extra kwargs:\n")
     do_show = true
-    for (key, value) ∈ plt[:extra_plot_kwargs]
+    for (key, value) in plt[:extra_plot_kwargs]
         do_show && println(io, "  Plot:")
         println(io, " "^4, key, ": ", value)
         do_show = false
     end
     do_show = true
-    for (i, ekwargs) ∈ enumerate(sp_ekwargs)
-        for (key, value) ∈ pairs(ekwargs)
+    for (i, ekwargs) in enumerate(sp_ekwargs)
+        for (key, value) in pairs(ekwargs)
             do_show && println(io, "  SubplotPlot{$i}:")
             println(io, " "^4, key, ": ", value)
             do_show = false
         end
         do_show = true
     end
-    for (i, ekwargs) ∈ enumerate(s_ekwargs)
-        for (key, value) ∈ pairs(ekwargs)
+    for (i, ekwargs) in enumerate(s_ekwargs)
+        for (key, value) in pairs(ekwargs)
             do_show && println(io, "  Series{$i}:")
             println(io, " "^4, key, ": ", value)
             do_show = false
         end
         do_show = true
     end
+    return
 end
 
 getplot(plt::Plot) = plt
@@ -103,24 +103,24 @@ function RecipesBase.plot(args...; kw...)
     # create an empty Plot then process
     plt = Plot()
     # plt.user_attrs = plotattributes
-    _plot!(plt, plotattributes, args)
+    return _plot!(plt, plotattributes, args)
 end
 
 # build a new plot from existing plots
 # note: we split into plt1, plt2 and plts_tail so we can dispatch correctly
 plot(
     plt1::Plot,
-    plt2::Union{PlaceHolder,Plot},
-    plts_tail::Union{PlaceHolder,Plot}...;
+    plt2::Union{PlaceHolder, Plot},
+    plts_tail::Union{PlaceHolder, Plot}...;
     kw...,
 ) = plot!(deepcopy(plt1), deepcopy(plt2), deepcopy.(plts_tail)...; kw...)
 
 function plot!(
-    plt1::Plot,
-    plt2::Union{PlaceHolder,Plot},
-    plts_tail::Union{PlaceHolder,Plot}...;
-    kw...,
-)
+        plt1::Plot,
+        plt2::Union{PlaceHolder, Plot},
+        plts_tail::Union{PlaceHolder, Plot}...;
+        kw...,
+    )
     @nospecialize
     plotattributes = KW(kw)
     PlotsBase.Commons.preprocess_attributes!(plotattributes)
@@ -133,7 +133,7 @@ function plot!(
 
     # compute the layout
     layout = layout_attrs(plotattributes, n)[1]
-    num_sp = sum(length(p.subplots) for p ∈ plts)
+    num_sp = sum(length(p.subplots) for p in plts)
 
     # create a new plot object, with subplot list/map made of existing subplots.
     # note: we create a new backend figure for this new plot object
@@ -144,7 +144,7 @@ function plot!(
 
     # TODO: replace this with proper processing from a merged user_attrs KW
     # update plot args
-    for p ∈ plts
+    for p in plts
         plt.attr = merge(p.attr, plt.attr)  # plt.attr preempts p.attr (for `twinx`)
         plt.n += p.n
     end
@@ -156,7 +156,7 @@ function plot!(
     plt.init = true
 
     series_attrs = KW()
-    for (k, v) ∈ plotattributes
+    for (k, v) in plotattributes
         Commons.is_series_attrs(k) && (series_attrs[k] = pop!(plotattributes, k))
     end
 
@@ -168,13 +168,13 @@ function plot!(
 
     # initialize the subplots
     cmdidx = 1
-    for (idx, sp) ∈ enumerate(plt.subplots)
+    for (idx, sp) in enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
         serieslist = series_list(sp)
         append!(plt.inset_subplots, sp.plt.inset_subplots)
         sp.plt = plt
         sp.attr[:subplot_index] = idx
-        for series ∈ serieslist
+        for series in serieslist
             merge!(series.plotattributes, series_attrs)
             _slice_series_attrs!(series.plotattributes, plt, sp, cmdidx)
             push!(plt.series_list, series)
@@ -185,7 +185,7 @@ function plot!(
     ttl_idx = _add_plot_title!(plt)
 
     # first apply any args for the subplots
-    for (idx, sp) ∈ enumerate(plt.subplots)
+    for (idx, sp) in enumerate(plt.subplots)
         Plots._update_subplot_attrs(
             plt,
             sp,
@@ -198,7 +198,7 @@ function plot!(
     # finish up
     current(plt)
     _do_plot_show(plt, get(plotattributes, :show, default(:show)))
-    plt
+    return plt
 end
 
 # this adds to the current plot, or creates a new plot if none are current
@@ -210,7 +210,7 @@ function plot!(args...; kw...)
     catch
         return plot(args...; kw...)
     end
-    plot!(current(), args...; kw...)
+    return plot!(current(), args...; kw...)
 end
 
 # this adds to a specific plot... most plot commands will flow through here
@@ -221,7 +221,7 @@ function plot!(plt::Plot, args...; kw...)
     plotattributes = KW(kw)
     PlotsBase.Commons.preprocess_attributes!(plotattributes)
     # merge!(plt.user_attrs, plotattributes)
-    _plot!(plt, plotattributes, args)
+    return _plot!(plt, plotattributes, args)
 end
 
 # -------------------------------------------------------------------------------
@@ -256,9 +256,9 @@ function prepare_output(plt::Plot)
 
     # specific to :plot_title see _add_plot_title!
     force_minpad = get(plt, :force_minpad, ())
-    isempty(force_minpad) || for i ∈ eachindex(plt.layout.grid)
+    isempty(force_minpad) || for i in eachindex(plt.layout.grid)
         plt.layout.grid[i].minpad = Tuple(
-            i ≡ nothing ? j : i for (i, j) ∈ zip(force_minpad, plt.layout.grid[i].minpad)
+            i ≡ nothing ? j : i for (i, j) in zip(force_minpad, plt.layout.grid[i].minpad)
         )
     end
 
@@ -269,7 +269,7 @@ function prepare_output(plt::Plot)
     update_inset_bboxes!(plt)
 
     # the backend callback, to reposition subplots, etc
-    _update_plot_object(plt)
+    return _update_plot_object(plt)
 end
 
 """
@@ -280,7 +280,7 @@ Returns `nothing` if the backend does not support this.
 """
 function backend_object(plt::Plot)
     prepare_output(plt)
-    plt.o
+    return plt.o
 end
 
 # --------------------------------------------------------------------
@@ -300,12 +300,12 @@ julia> plot(pl.subplots[2])  # extract 2nd subplot as a standalone plot
 function plot(sp::Subplot, args...; kw...)
     @nospecialize
     plt = PlotsBase.Plot(sp)
-    plot(plt, PlaceHolder(), PlaceHolder(), args...; kw...)
+    return plot(plt, PlaceHolder(), PlaceHolder(), args...; kw...)
 end
 
 # plot to a Subplot
 function plot!(sp::Subplot, args...; kw...)
     @nospecialize
     plt = sp.plt
-    plot!(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
+    return plot!(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
 end

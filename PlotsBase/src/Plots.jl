@@ -3,28 +3,25 @@ module Plots
 export Plot,
     PlotOrSubplot,
     plottitlefont,
-    ignorenan_extrema,
     _update_plot_attrs,
     InputWrapper,
     protect
 
 import ..RecipesBase: AbstractLayout, AbstractBackend, AbstractPlot
 import ..RecipesPipeline: RecipesPipeline, DefaultsDict
-import ..Subplots: Subplot, _update_subplot_colors, _update_margins
-import ..Colorbars: _update_subplot_colorbars
-import ..Commons: ignorenan_extrema, _cycle
+import ..Colorbars
 
-using ..PlotUtils
 using ..DataSeries
-using ..Commons.Frontend
+using ..PlotUtils
+using ..Subplots
 using ..Commons
 using ..Fonts
 using ..Ticks
 using ..Axes
 
-const SubplotMap = Dict{Any,Subplot}
+const SubplotMap = Dict{Any, Subplot}
 
-mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
+mutable struct Plot{T <: AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
     n::Int                       # number of series
     attr::DefaultsDict           # arguments for the whole plot
@@ -38,7 +35,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
 
     function Plot()
         be = PlotsBase.backend()
-        new{typeof(be)}(
+        return new{typeof(be)}(
             be,
             0,
             DefaultsDict(KW(), PlotsBase._plot_defaults),
@@ -63,11 +60,11 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
         sp.plotarea = DEFAULT_BBOX[]
         sp.plt = plt  # change the enclosing plot
         push!(plt.subplots, sp)
-        plt
+        return plt
     end
 end
 
-const PlotOrSubplot = Union{Plot,Subplot}
+const PlotOrSubplot = Union{Plot, Subplot}
 # -----------------------------------------------------------
 
 struct InputWrapper{T}
@@ -75,8 +72,8 @@ struct InputWrapper{T}
 end
 protect(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(::InputWrapper) = false
-_cycle(wrapper::InputWrapper, ::Int) = wrapper.obj
-_cycle(wrapper::InputWrapper, ::AVec{Int}) = wrapper.obj
+Commons._cycle(wrapper::InputWrapper, ::Int) = wrapper.obj
+Commons._cycle(wrapper::InputWrapper, ::AVec{Int}) = wrapper.obj
 
 # -----------------------------------------------------------
 
@@ -101,10 +98,10 @@ Base.append!(plt::Plot, i::Integer, t::Tuple) = append!(plt, i, t...)
 # push y[i] to the ith series
 function Base.push!(plt::Plot, y::AVec)
     ny = length(y)
-    for i ∈ 1:(plt.n)
+    for i in 1:(plt.n)
         push!(plt, i, y[mod1(i, ny)])
     end
-    plt
+    return plt
 end
 
 "push y[i] to the ith series, same x for each series"
@@ -114,10 +111,10 @@ Base.push!(plt::Plot, x::Real, y::AVec) = push!(plt, [x], y)
 function Base.push!(plt::Plot, x::AVec, y::AVec)
     nx = length(x)
     ny = length(y)
-    for i ∈ 1:(plt.n)
+    for i in 1:(plt.n)
         push!(plt, i, x[mod1(i, nx)], y[mod1(i, ny)])
     end
-    plt
+    return plt
 end
 
 "push (x[i], y[i], z[i]) to the ith series"
@@ -125,37 +122,37 @@ function Base.push!(plt::Plot, x::AVec, y::AVec, z::AVec)
     nx = length(x)
     ny = length(y)
     nz = length(z)
-    for i ∈ 1:(plt.n)
+    for i in 1:(plt.n)
         push!(plt, i, x[mod1(i, nx)], y[mod1(i, ny)], z[mod1(i, nz)])
     end
-    plt
+    return plt
 end
 
 # ---------------------------------------------------------------
 
 "smallest x in plot"
-xmin(plt::Plot) = ignorenan_minimum([
-    ignorenan_minimum(series.plotattributes[:x]) for series ∈ plt.series_list
-])
+xmin(plt::Plot) =
+    ignorenan_minimum([ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list])
+
 "largest x in plot"
-xmax(plt::Plot) = ignorenan_maximum([
-    ignorenan_maximum(series.plotattributes[:x]) for series ∈ plt.series_list
-])
+xmax(plt::Plot) =
+    ignorenan_maximum([ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list])
+
 
 "extrema of x-values in plot"
-ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
+Commons.ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 
 # ---------------------------------------------------------------
 # indexing notation
 # properly retrieve from plt.attr, passing `:match` to the correct key
 
 Base.getindex(plt::Plot, k::Symbol) =
-    if (v = plt.attr[k]) ≡ :match
-        plt[Commons._match_map[k]]
-    else
-        v
-    end
-Base.getindex(plt::Plot, i::Union{Vector{<:Integer},Integer}) = plt.subplots[i]
+if (v = plt.attr[k]) ≡ :match
+    plt[Commons._match_map[k]]
+else
+    v
+end
+Base.getindex(plt::Plot, i::Union{Vector{<:Integer}, Integer}) = plt.subplots[i]
 Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r, c]
 Base.setindex!(plt::Plot, xy::NTuple{2}, i::Integer) = (setxy!(plt, xy, i); plt)
 Base.setindex!(plt::Plot, xyz::Tuple{3}, i::Integer) = (setxyz!(plt, xyz, i); plt)
@@ -192,34 +189,34 @@ plottitlefont(plt::Plot) = font(;
 
 # update attr from an input dictionary
 function _update_plot_attrs(plt::Plot, plotattributes_in::AKW)
-    for (k, v) ∈ PlotsBase._plot_defaults
+    for (k, v) in PlotsBase._plot_defaults
         PlotsBase.slice_arg!(plotattributes_in, plt.attr, k, 1, true)
     end
 
     # handle colors
     plt[:background_color] = plot_color(plt.attr[:background_color])
     plt[:foreground_color] = fg_color(plt.attr)
-    color_or_nothing!(plt.attr, :background_color_outside)
+    return color_or_nothing!(plt.attr, :background_color_outside)
 end
 
 function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
     # handle linking here.  if we're passed a list of
     # other subplots to link to, link them together
     (link = axis[:link]) |> isempty && return
-    for other_sp ∈ link
+    for other_sp in link
         PlotsBase.link_axes!(axis, get_axis(get_subplot(plt, other_sp), letter))
     end
     axis.plotattributes[:link] = []
-    nothing
+    return nothing
 end
 
 function Axes._update_axis(
-    plt::Plot,
-    sp::Subplot,
-    plotattributes_in::AKW,
-    letter::Symbol,
-    subplot_index::Int,
-)
+        plt::Plot,
+        sp::Subplot,
+        plotattributes_in::AKW,
+        letter::Symbol,
+        subplot_index::Int,
+    )
     # get (maybe initialize) the axis
     axis = get_axis(sp, letter)
 
@@ -232,66 +229,61 @@ function Axes._update_axis(
 
     Axes._update_axis_colors(axis)
     _update_axis_links(plt, axis, letter)
-    nothing
+    return nothing
 end
 
 # update a subplots args and axes
 function _update_subplot_attrs(
-    plt::Plot,
-    sp::Subplot,
-    plotattributes_in,
-    subplot_index::Int,
-    remove_pair::Bool,
-)
+        plt::Plot,
+        sp::Subplot,
+        plotattributes_in,
+        subplot_index::Int,
+        remove_pair::Bool,
+    )
     anns = RecipesPipeline.pop_kw!(sp.attr, :annotations)
 
     # grab those args which apply to this subplot
-    for k ∈ keys(_subplot_defaults)
+    for k in keys(Commons._subplot_defaults)
         # We don't apply annotations to the plot-title sub-plot
-        if k == :annotations && get(plt.attr, :plot_titleindex, 0) == subplot_index
+        if k ≡ :annotations && get(plt.attr, :plot_titleindex, 0) == subplot_index
             continue
         end
         PlotsBase.slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
     end
 
-    _update_subplot_colors(sp)
-    _update_margins(sp)
-    colorbar_update_keys =
-        (:clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry)
-    if any(haskey.(Ref(plotattributes_in), colorbar_update_keys))
-        _update_subplot_colorbars(sp)
+    Subplots._update_subplot_colors(sp)
+    Subplots._update_margins(sp)
+    cbar_update_keys = :clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry
+    if any(haskey.(Ref(plotattributes_in), cbar_update_keys))
+        Colorbars._update_subplot_colorbars(sp)
     end
 
     lims_warned = false
-    for letter ∈ (:x, :y, :z)
+    for letter in (:x, :y, :z)
         Axes._update_axis(plt, sp, plotattributes_in, letter, subplot_index)
         lk = get_attr_symbol(letter, :lims)
 
         # warn against using `Range` in x,y,z lims
         if !lims_warned &&
-           haskey(plotattributes_in, lk) &&
-           plotattributes_in[lk] isa AbstractRange
+                haskey(plotattributes_in, lk) &&
+                plotattributes_in[lk] isa AbstractRange
             @warn "lims should be a Tuple, not $(typeof(plotattributes_in[lk]))."
             lims_warned = true
         end
     end
 
-    PlotsBase.Subplots._update_subplot_periphery(sp, anns)
+    return PlotsBase.Subplots._update_subplot_periphery(sp, anns)
 end
 
 function Commons.scale_lims!(plt::Plot, letter, factor)
     foreach(sp -> scale_lims!(sp, letter, factor), plt.subplots)
-    plt
+    return plt
 end
-function Commons.scale_lims!(plt::Union{Plot,Subplot}, factor)
+function Commons.scale_lims!(plt::Union{Plot, Subplot}, factor)
     foreach(letter -> scale_lims!(plt, letter, factor), (:x, :y, :z))
-    plt
+    return plt
 end
 Commons.get_size(plt::Plot) = get_size(plt.attr)
 Commons.get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
 
-end  # module
-
-# -----------------------------------------------------------------------------
-
-using .Plots
+end

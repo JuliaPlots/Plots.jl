@@ -66,7 +66,6 @@ import RecipesPipeline:
     Volume,
     is3d
 
-#! format: off
 export
     grid,
     bbox,
@@ -135,35 +134,46 @@ export
     scalefontsizes,
     resetfontsizes
 
-#! format: on
 const _project = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml"))
 const _version = _project.version
-const _compat  = _project.compat
+const _compat = _project.compat
 
 include("Commons/Commons.jl")
 using .Commons
-using .Commons.Frontend
-
-Commons.@generic_functions attr attr!
-
+# using .Commons.Frontend
+Commons.@generic_functions attr attr! annotate!
 include("DF.jl")
+using .DF
 include("Fonts.jl")
+Reexport.@reexport using .Fonts
 include("Ticks.jl")
+using .Ticks
 include("DataSeries.jl")
+using .DataSeries
 include("Subplots.jl")
+using .Subplots
 include("Axes.jl")
+using .Axes
 include("Surfaces.jl")
+using .Surfaces
 include("Colorbars.jl")
+using .Colorbars
 include("Plots.jl")
+using .Plots
 include("layouts.jl")
 include("utils.jl")
 include("axes_utils.jl")
 include("legend.jl")
 include("Shapes.jl")
+using .Shapes
 include("Annotations.jl")
+using .Annotations
 include("Arrows.jl")
+using .Arrows
 include("Strokes.jl")
+using .Strokes
 include("BezierCurves.jl")
+using .BezierCurves
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
@@ -178,6 +188,7 @@ include("shorthands.jl")
 include("backends.jl")
 include("web.jl")
 include("plotly.jl")
+using .Plotly
 include("init.jl")
 include("users.jl")
 

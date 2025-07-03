@@ -8,9 +8,9 @@ function theme(s::Symbol; kw...)
         copy(PlotThemes._themes[s].defaults)
     else
         @warn ":$s is not a known theme, using :default"
-        Dict{Symbol,Any}()
+        Dict{Symbol, Any}()
     end
-    _theme(s, defaults; kw...)
+    return _theme(s, defaults; kw...)
 end
 
 function _theme(s::Symbol, defaults::AKW; kw...)
@@ -57,7 +57,7 @@ _get_showtheme_attrs(thm::Symbol, func::Symbol) = thm, get(_color_functions, fun
     cp = cfunc.(RGB.(cp))
 
     # apply the theme
-    for k ∈ keys(defaults)
+    for k in keys(defaults)
         k in (:colorgradient, :palette) && continue
         def = defaults[k]
         arg = get(Commons._keyAliases, k, k)
@@ -78,7 +78,7 @@ _get_showtheme_attrs(thm::Symbol, func::Symbol) = thm, get(_color_functions, fun
     colorbar := false
     layout := (2, 3)
 
-    for j ∈ 1:4
+    for j in 1:4
         @series begin
             subplot := 1
             color_palette := cp

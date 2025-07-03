@@ -22,11 +22,10 @@ export get_linestyle,
     get_markeralpha
 
 import Base.show
-import ..Commons: get_gradient, get_subplot, _series_defaults
 import ..PlotsBase
+import ..PlotUtils
 
-using ..PlotsBase: DefaultsDict, RecipesPipeline, get_attr_symbol, KW
-using ..PlotUtils: ColorGradient, plot_color
+using ..PlotsBase: DefaultsDict, RecipesPipeline, KW
 using ..RecipesBase: @recipe
 using ..Commons
 
@@ -35,7 +34,7 @@ mutable struct Series
 end
 
 @recipe function f(s::Series)
-    for (k, v) ∈ s.plotattributes
+    for (k, v) in s.plotattributes
         k in (:subplot, :yerror, :xerror, :zerror) && continue
         plotattributes[k] = v
     end
@@ -52,19 +51,19 @@ should_add_to_legend(series::Series) =
     series.plotattributes[:primary] &&
     series.plotattributes[:label] != "" &&
     series.plotattributes[:seriestype] ∉ (
-        :hexbin,
-        :bins2d,
-        :histogram2d,
-        :hline,
-        :vline,
-        :contour,
-        :contourf,
-        :contour3d,
-        :surface,
-        :wireframe,
-        :heatmap,
-        :image,
-    )
+    :hexbin,
+    :bins2d,
+    :histogram2d,
+    :hline,
+    :vline,
+    :contour,
+    :contourf,
+    :contour3d,
+    :surface,
+    :wireframe,
+    :heatmap,
+    :image,
+)
 
 PlotsBase.get_subplot(series::Series) = series.plotattributes[:subplot]
 PlotsBase.RecipesPipeline.is3d(series::Series) = RecipesPipeline.is3d(series.plotattributes)
@@ -76,7 +75,7 @@ function extend_series!(series::Series, yi)
     y = extend_series_data!(series, yi, :y)
     x = extend_to_length!(series[:x], length(y))
     expand_extrema!(series[:subplot][:xaxis], x)
-    x, y
+    return x, y
 end
 
 extend_series!(series::Series, xi, yi) =
@@ -91,29 +90,30 @@ extend_series!(series::Series, xi, yi, zi) = (
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
     d = extend_by_data!(series[letter], v)
-    expand_extrema!(series[:subplot][get_attr_symbol(letter, :axis)], d)
-    d
+    expand_extrema!(series[:subplot][Commons.get_attr_symbol(letter, :axis)], d)
+    return d
 end
 
 function copy_series!(series, letter)
     plt = series[:plot_object]
-    for s ∈ plt.series_list, l ∈ (:x, :y, :z)
+    for s in plt.series_list, l in (:x, :y, :z)
         if (s ≢ series || l ≢ letter) && s[l] ≡ series[letter]
             series[letter] = copy(series[letter])
         end
     end
+    return
 end
 
 extend_to_length!(v::AbstractRange, n) = range(first(v), step = step(v), length = n)
 function extend_to_length!(v::AbstractVector, n)
     vmax = isempty(v) ? 0 : ignorenan_maximum(v)
-    extend_by_data!(v, vmax .+ (1:(n - length(v))))
+    return extend_by_data!(v, vmax .+ (1:(n - length(v))))
 end
 extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x)
 extend_by_data!(v::AbstractVector, x::AbstractVector) =
     isimmutable(v) ? vcat(v, x) : append!(v, x)
 
-for comp ∈ (:line, :fill, :marker)
+for comp in (:line, :fill, :marker)
     compcolor = string(comp, :color)
     get_compcolor = Symbol(:get_, compcolor)
     comp_z = string(comp, :_z)
@@ -124,18 +124,18 @@ for comp ∈ (:line, :fill, :marker)
     @eval begin
         # defines `get_linecolor`, `get_fillcolor` and `get_markercolor` <- for grep
         function $get_compcolor(
-            series,
-            cmin::Real,
-            cmax::Real,
-            i::Integer = 1,
-            s::Symbol = :identity,
-        )
+                series,
+                cmin::Real,
+                cmax::Real,
+                i::Integer = 1,
+                s::Symbol = :identity,
+            )
             c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
-            if z ≡ nothing
-                isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
+            return if z ≡ nothing
+                isa(c, PlotUtils.ColorGradient) ? c : PlotUtils.plot_color(_cycle(c, i))
             else
-                grad = get_gradient(c)
+                grad = Commons.get_gradient(c)
                 if s ≡ :identity
                     get(grad, z[i], (cmin, cmax))
                 else
@@ -146,14 +146,14 @@ for comp ∈ (:line, :fill, :marker)
         end
 
         function $get_compcolor(series, i::Integer = 1, s::Symbol = :identity)
-            if series[$Symbol($comp_z)] ≡ nothing
+            return if series[$Symbol($comp_z)] ≡ nothing
                 $get_compcolor(series, 0, 1, i, s)
             else
                 $get_compcolor(series, get_clims(series[:subplot]), i, s)
             end
         end
 
-        $get_compcolor(series, clims::NTuple{2,<:Number}, args...) =
+        $get_compcolor(series, clims::NTuple{2, <:Number}, args...) =
             $get_compcolor(series, clims[1], clims[2], args...)
 
         $get_compalpha(series, i::Integer = 1) = _cycle(series[$Symbol($compalpha)], i)
@@ -165,15 +165,15 @@ get_linestyle(series, i::Integer = 1) = _cycle(series[:linestyle], i)
 get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
 
 get_markerstrokecolor(series, i::Integer = 1) =
-    let msc = series[:markerstrokecolor]
-        msc isa ColorGradient ? msc : _cycle(msc, i)
-    end
+let msc = series[:markerstrokecolor]
+    msc isa PlotUtils.ColorGradient ? msc : _cycle(msc, i)
+end
 
 get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
 get_markerstrokewidth(series, i::Integer = 1) = _cycle(series[:markerstrokewidth], i)
 
 function get_colorgradient(series::Series)
-    if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)
+    return if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)
         series[:fillcolor]
     elseif st in (:contour, :wireframe, :contour3d)
         series[:linecolor]
@@ -197,7 +197,7 @@ function contour_levels(series::Series, clims)
         levels = range(zmin, stop = zmax, length = levels + 2)
         isfilledcontour(series) || (levels = levels[2:(end - 1)])
     end
-    levels
+    return levels
 end
 # -------------------------------------------------------
 Commons.get_size(series::Series) = Commons.get_size(series.plotattributes[:subplot])
@@ -227,7 +227,7 @@ function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
     j = findfirst(PlotsBase.Commons.anynan(itr.args), nextval:(itr.n2))
     nextnan = j ≡ nothing ? itr.n2 + 1 : nextval + j - 1
 
-    nextval:(nextnan - 1), nextnan
+    return nextval:(nextnan - 1), nextnan
 end
 
 Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()  # COV_EXCL_LINE
@@ -236,7 +236,7 @@ function iter_segments(args...)
     tup = PlotsBase.wraptuple(args)
     n1 = minimum(map(firstindex, tup))
     n2 = maximum(map(lastindex, tup))
-    NaNSegmentsIterator(tup, n1, n2)
+    return NaNSegmentsIterator(tup, n1, n2)
 end
 
 # we want to check if a series needs to be split into segments just because
@@ -244,12 +244,12 @@ end
 # check relevant attributes if they have multiple inputs
 has_attribute_segments(series::Series) =
     any(
-        series[attr] isa AbstractVector && length(series[attr]) > 1 for
-        attr ∈ PlotsBase.Commons._segmenting_vector_attributes
-    ) || any(
-        series[attr] isa AbstractArray for
-        attr ∈ PlotsBase.Commons._segmenting_array_attributes
-    )
+    series[attr] isa AbstractVector && length(series[attr]) > 1 for
+        attr in PlotsBase.Commons._segmenting_vector_attributes
+) || any(
+    series[attr] isa AbstractArray for
+        attr in PlotsBase.Commons._segmenting_array_attributes
+)
 
 function series_segments(series::Series, seriestype::Symbol = :path; check = false)
     x, y, z = series[:x], series[:y], series[:z]
@@ -260,11 +260,11 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
 
     if check
         scales = :xscale, :yscale, :zscale
-        for (n, s) ∈ enumerate(args)
+        for (n, s) in enumerate(args)
             (scale = get(series, scales[n], :identity)) ∈ PlotsBase.Commons._log_scales ||
                 continue
-            for (i, v) ∈ enumerate(s)
-                if v <= 0
+            for (i, v) in enumerate(s)
+                if v ≤ 0
                     @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
                     @debug "" exception = (DomainError(v), stacktrace())
                     break
@@ -279,17 +279,17 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
                 warn_on_inconsistent_shape_attrs(series, x, y, z, r)
                 (SeriesSegment(r, first(r)),)
             elseif seriestype in (:scatter, :scatter3d)
-                (SeriesSegment(i:i, i) for i ∈ r)
+                (SeriesSegment(i:i, i) for i in r)
             else
-                (SeriesSegment(i:(i + 1), i) for i ∈ first(r):(last(r) - 1))
+                (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
             end
         end |> Iterators.flatten
     else
-        (SeriesSegment(r, 1) for r ∈ nan_segments)
+        (SeriesSegment(r, 1) for r in nan_segments)
     end
 
     warn_on_attr_dim_mismatch(series, x, y, z, segments)
-    segments
+    return segments
 end
 
 function warn_on_attr_dim_mismatch(series, x, y, z, segments)
@@ -298,52 +298,49 @@ function warn_on_attr_dim_mismatch(series, x, y, z, segments)
         minimum(map(seg -> first(seg.range), segments)),
         maximum(map(seg -> last(seg.range), segments)),
     )
-    for attr ∈ PlotsBase.Commons._segmenting_vector_attributes
+    for attr in PlotsBase.Commons._segmenting_vector_attributes
         if (v = get(series, attr, nothing)) isa PlotsBase.Commons.AVec &&
-           eachindex(v) != seg_range
+                eachindex(v) != seg_range
             @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
             if any(v -> !isnothing(v) && any(isnan, v), (x, y, z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
-                    If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
-                    pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
-                    may be suppressed by passing an empty label.
-                    For example,
-                        plot([1:2,1:3], [[4,5],[3,4,5]], label=["y" ""], $attr=[1 2])
-                    """
+                If you intend elements of `$attr` to apply to individual NaN-separated segments in the data,
+                pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries
+                may be suppressed by passing an empty label.
+                For example,
+                    plot([1:2,1:3], [[4,5],[3,4,5]], label=["y" ""], $attr=[1 2])
+                """
             end
         end
     end
+    return
 end
 
 function warn_on_inconsistent_shape_attrs(series, x, y, z, r)
-    for attr ∈ PlotsBase.Commons._segmenting_vector_attributes
+    for attr in PlotsBase.Commons._segmenting_vector_attributes
         v = get(series, attr, nothing)
         if v isa PlotsBase.Commons.AVec && length(unique(v[r])) > 1
             @warn "Different values of `$attr` specified for different shape vertices. Only first one will be used."
             break
         end
     end
+    return
 end
 
-end  # module
-
-# -----------------------------------------------------------------------------
-
-using .DataSeries
-
-# TODO: consider removing
-attr(series::Series, k::Symbol) = series.plotattributes[k]
-attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
-function attr!(series::Series; kw...)
+PlotsBase.attr(series::Series, k::Symbol) = series.plotattributes[k]
+PlotsBase.attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
+function PlotsBase.attr!(series::Series; kw...)
     plotattributes = KW(kw)
     Commons.preprocess_attributes!(plotattributes)
-    for (k, v) ∈ plotattributes
-        if haskey(_series_defaults, k)
+    for (k, v) in plotattributes
+        if haskey(Commons._series_defaults, k)
             series[k] = v
         else
             @warn "unused key $k in series attr"
         end
     end
-    _series_updated(series[:subplot].plt, series)
-    series
+    PlotsBase._series_updated(series[:subplot].plt, series)
+    return series
+end
+
 end

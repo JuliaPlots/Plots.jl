@@ -1,4 +1,3 @@
-# internal module
 module Annotations
 
 export SeriesAnnotations,
@@ -10,7 +9,7 @@ export SeriesAnnotations,
     annotations,
     assign_annotation_coord!
 
-import ..PlotsBase: Series, Subplot, is3d, discrete_value!
+import ..PlotsBase: Series, Subplot, PlotOrSubplot, is3d, discrete_value!, plot!
 
 using ..Commons
 using ..Shapes
@@ -20,7 +19,7 @@ using ..Fonts
 mutable struct SeriesAnnotations
     strs::AVec  # the labels/names
     font::Font
-    baseshape::Union{Shape,AVec{Shape},Nothing}
+    baseshape::Union{Shape, AVec{Shape}, Nothing}
     scalefactor::Tuple
 end
 
@@ -34,19 +33,19 @@ series_annotations(::Nothing) = nothing
 
 function series_annotations(anns::AMat{SeriesAnnotations})
     @assert size(anns, 1) == 1 "matrix of SeriesAnnotations must be a row vector"
-    anns
+    return anns
 end
 
 function series_annotations(anns::AMat, outer_attrs...)
     # Types that represent annotations for an entire series
-    whole_series = Union{AVec,Tuple{AVec,Vararg{Any}}}
+    whole_series = Union{AVec, Tuple{AVec, Vararg{Any}}}
 
     # whole_series types can only be in a row vector
     if size(anns, 1) > 1
-        for ann ∈ Iterators.filter(ann -> ann isa whole_series, anns)
+        for ann in Iterators.filter(ann -> ann isa whole_series, anns)
             "Given series annotation must be the only element in its column:\n$ann" |>
-            ArgumentError |>
-            throw
+                ArgumentError |>
+                throw
         end
     end
 
@@ -58,14 +57,14 @@ function series_annotations(anns::AMat, outer_attrs...)
         series_annotations(strs, outer_attrs..., inner_attrs...)
     end
 
-    permutedims(ann_vec)
+    return permutedims(ann_vec)
 end
 
 function series_annotations(strs::AVec, args...)
     fnt = font()
     shp = nothing
     scalefactor = 1, 1
-    for arg ∈ args
+    for arg in args
         if isa(arg, Shape) || (isa(arg, AVec) && eltype(arg) == Shape)
             shp = arg
         elseif isa(arg, Font)
@@ -82,7 +81,7 @@ function series_annotations(strs::AVec, args...)
             @warn "Unused SeriesAnnotations arg: $arg ($(typeof(arg)))"
         end
     end
-    SeriesAnnotations(map(s -> _text_label(s, fnt), strs), fnt, shp, scalefactor)
+    return SeriesAnnotations(map(s -> _text_label(s, fnt), strs), fnt, shp, scalefactor)
 end
 
 function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
@@ -94,7 +93,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         msw, msh = anns.scalefactor
         msize = Float64[]
         shapes = Vector{Shape}(undef, length(anns.strs))
-        for i ∈ eachindex(anns.strs)
+        for i in eachindex(anns.strs)
             str = _cycle(anns.strs, i)
 
             # get the width and height of the string (in mm)
@@ -118,7 +117,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         series[:markershape] = shapes
         series[:markersize] = msize
     end
-    nothing
+    return nothing
 end
 
 mutable struct EachAnn
@@ -136,7 +135,7 @@ function Base.iterate(ea::EachAnn, i = 1)
     else
         tmp, ea.anns.font
     end
-    (_cycle(ea.x, i), _cycle(ea.y, i), str, fnt), i + 1
+    return (_cycle(ea.x, i), _cycle(ea.y, i), str, fnt), i + 1
 end
 
 # -----------------------------------------------------------------------
@@ -170,12 +169,12 @@ _annotation_coords(pos) = pos
 function _process_annotation_2d(sp::Subplot, x, y, lab, font = _annotationfont(sp))
     x = assign_annotation_coord!(sp[:xaxis], x)
     y = assign_annotation_coord!(sp[:yaxis], y)
-    _annotation(sp, font, lab, x, y)
+    return _annotation(sp, font, lab, x, y)
 end
 
 _process_annotation_2d(
     sp::Subplot,
-    pos::Union{Tuple,Symbol},
+    pos::Union{Tuple, Symbol},
     lab,
     font = _annotationfont(sp),
 ) = _annotation(sp, font, lab, _annotation_coords(pos))
@@ -184,19 +183,19 @@ function _process_annotation_3d(sp::Subplot, x, y, z, lab, font = _annotationfon
     x = assign_annotation_coord!(sp[:xaxis], x)
     y = assign_annotation_coord!(sp[:yaxis], y)
     z = assign_annotation_coord!(sp[:zaxis], z)
-    _annotation(sp, font, lab, x, y, z)
+    return _annotation(sp, font, lab, x, y, z)
 end
 
 _process_annotation_3d(
     sp::Subplot,
-    pos::Union{Tuple,Symbol},
+    pos::Union{Tuple, Symbol},
     lab,
     font = _annotationfont(sp),
 ) = _annotation(sp, font, lab, _annotation_coords(pos))
 
 function _process_annotation(sp::Subplot, ann, annotation_processor::Function)
     ann = makevec.(ann)
-    [annotation_processor(sp, _cycle.(ann, i)...) for i ∈ 1:maximum(length.(ann))]
+    return [annotation_processor(sp, _cycle.(ann, i)...) for i in 1:maximum(length.(ann))]
 end
 
 # Expand arrays of coordinates, positions and labels into individual annotations
@@ -206,7 +205,7 @@ process_annotation(sp::Subplot, ann) =
 
 function _relative_position(xmin, xmax, pos::Length{:pct}, scale::Symbol)
     # !TODO Add more scales in the future (asinh, sqrt) ?
-    if scale ≡ :log || scale ≡ :ln
+    return if scale ≡ :log || scale ≡ :ln
         exp(log(xmin) + pos.value * log(xmax / xmin))
     elseif scale ≡ :log10
         exp10(log10(xmin) + pos.value * log10(xmax / xmin))
@@ -219,20 +218,20 @@ end
 
 # annotation coordinates in pct
 const position_multiplier = Dict(
-    :N            => (0.5, 0.9),
-    :NE           => (0.9, 0.9),
-    :E            => (0.9, 0.5),
-    :SE           => (0.9, 0.1),
-    :S            => (0.5, 0.1),
-    :SW           => (0.1, 0.1),
-    :W            => (0.1, 0.5),
-    :NW           => (0.1, 0.9),
-    :topleft      => (0.1, 0.9),
-    :topcenter    => (0.5, 0.9),
-    :topright     => (0.9, 0.9),
-    :bottomleft   => (0.1, 0.1),
+    :N => (0.5, 0.9),
+    :NE => (0.9, 0.9),
+    :E => (0.9, 0.5),
+    :SE => (0.9, 0.1),
+    :S => (0.5, 0.1),
+    :SW => (0.1, 0.1),
+    :W => (0.1, 0.5),
+    :NW => (0.1, 0.9),
+    :topleft => (0.1, 0.9),
+    :topcenter => (0.5, 0.9),
+    :topright => (0.9, 0.9),
+    :bottomleft => (0.1, 0.1),
     :bottomcenter => (0.5, 0.1),
-    :bottomright  => (0.9, 0.1),
+    :bottomright => (0.9, 0.1),
 )
 
 # Give each annotation coordinates based on specified position
@@ -252,9 +251,6 @@ locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
 locate_annotation(sp::Subplot, pos::Symbol, label::PlotText) =
     locate_annotation(sp, position_multiplier[pos], label)
 
-end  # module
-
-# -----------------------------------------------------------------------------
 
 """
     annotate!(anns)
@@ -275,11 +271,11 @@ julia> annotate!([(4, 4, ("More text", 8, 45.0, :bottom, :red))])
 julia> annotate!([2,5], [6,3], ["text at (2,6)", "text at (5,3)"])
 ```
 """
-annotate!(anns...; kw...) = plot!(; annotation = anns, kw...)
-annotate!(anns::Tuple...; kw...)                          = plot!(; annotation = collect(anns), kw...)
-annotate!(anns::AVec{<:Tuple}; kw...)                     = plot!(; annotation = anns, kw...)
-annotate!(plt::PlotOrSubplot, anns...; kw...)             = plot!(plt; annotations = anns, kw...)
-annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...)      = plot!(plt; annotations = collect(anns), kw...)
-annotate!(plt::PlotOrSubplot, anns::AVec{<:Tuple}; kw...) = plot!(plt; annotations = anns, kw...)
+PlotsBase.annotate!(anns...; kw...) = plot!(; annotation = anns, kw...)
+PlotsBase.annotate!(anns::Tuple...; kw...) = plot!(; annotation = collect(anns), kw...)
+PlotsBase.annotate!(anns::AVec{<:Tuple}; kw...) = plot!(; annotation = anns, kw...)
+PlotsBase.annotate!(plt::PlotOrSubplot, anns...; kw...) = plot!(plt; annotations = anns, kw...)
+PlotsBase.annotate!(plt::PlotOrSubplot, anns::Tuple...; kw...) = plot!(plt; annotations = collect(anns), kw...)
+PlotsBase.annotate!(plt::PlotOrSubplot, anns::AVec{<:Tuple}; kw...) = plot!(plt; annotations = anns, kw...)
 
-using .Annotations
+end

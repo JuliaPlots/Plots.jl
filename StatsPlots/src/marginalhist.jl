@@ -22,7 +22,7 @@
     grid --> false
     layout --> @layout [
         tophist _
-        hist2d{0.9w,0.9h} righthist
+        hist2d{0.9w, 0.9h} righthist
     ]
 
     # main histogram2d

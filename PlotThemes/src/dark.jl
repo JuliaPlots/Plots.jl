@@ -7,19 +7,17 @@ const dark_palette = [
 ]
 const dark_bg = colorant"#363D46"
 
-const _dark = PlotTheme(
-    Dict([
-        :bg => dark_bg,
-        :bginside => colorant"#30343B",
-        :fg => colorant"#ADB2B7",
-        :fgtext => colorant"#FFFFFF",
-        :fgguide => colorant"#FFFFFF",
-        :fglegend => colorant"#FFFFFF",
-        :legendfontcolor => colorant"#FFFFFF",
-        :legendtitlefontcolor => colorant"#FFFFFF",
-        :titlefontcolor => colorant"#FFFFFF",
-        :palette =>
-            expand_palette(dark_bg, dark_palette; lchoices = [57], cchoices = [100]),
-        :colorgradient => :fire,
-    ]),
-)
+const _dark = [
+    :bg => dark_bg,
+    :bginside => colorant"#30343B",
+    :fg => colorant"#ADB2B7",
+    :fgtext => colorant"#FFFFFF",
+    :fgguide => colorant"#FFFFFF",
+    :fglegend => colorant"#FFFFFF",
+    :legendfontcolor => colorant"#FFFFFF",
+    :legendtitlefontcolor => colorant"#FFFFFF",
+    :titlefontcolor => colorant"#FFFFFF",
+    :palette =>
+        expand_palette(dark_bg, dark_palette; lchoices = [57], cchoices = [100]),
+    :colorgradient => :fire,
+] |> Dict |> PlotTheme

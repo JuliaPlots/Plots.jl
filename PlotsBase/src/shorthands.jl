@@ -457,7 +457,7 @@ plot3d!(args...; kw...) = plot!(args...; kw..., seriestype = :path3d)
 title!(plt::PlotOrSubplot, s::AbstractString; kw...) = plot!(plt; title = s, kw...)
 title!(s::AbstractString; kw...) = plot!(; title = s, kw...)
 
-for letter ∈ ("x", "y", "z")
+for letter in ("x", "y", "z")
     @eval begin
         """Add $($(letter))label to an existing plot"""
         $(Symbol(letter, :label!))(s::AbstractString; kw...) =
@@ -471,7 +471,7 @@ for letter ∈ ("x", "y", "z")
             plot!(; $(Symbol(letter, :lims)) = lims, kw...)
         $(Symbol(letter, :lims!))(xmin::Real, xmax::Real; kw...) =
             plot!(; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
-        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, lims::Tuple{<:Real,<:Real}; kw...) =
+        $(Symbol(letter, :lims!))(plt::PlotOrSubplot, lims::Tuple{<:Real, <:Real}; kw...) =
             plot!(plt; $(Symbol(letter, :lims)) = lims, kw...)
         $(Symbol(letter, :lims!))(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...) =
             plot!(plt; $(Symbol(letter, :lims)) = (xmin, xmax), kw...)
@@ -484,7 +484,7 @@ for letter ∈ ("x", "y", "z")
             ticks::AVec{T},
             labels::AVec{S};
             kw...,
-        ) where {T<:Real,S<:AbstractString} =
+        ) where {T <: Real, S <: AbstractString} =
             plot!(; $(Symbol(letter, :ticks)) = (ticks, labels), kw...)
         $(Symbol(letter, :ticks!))(plt::PlotOrSubplot, v::TicksArgs; kw...) =
             plot!(plt; $(Symbol(letter, :ticks)) = v, kw...)
@@ -493,7 +493,7 @@ for letter ∈ ("x", "y", "z")
             ticks::AVec{T},
             labels::AVec{S};
             kw...,
-        ) where {T<:Real,S<:AbstractString} =
+        ) where {T <: Real, S <: AbstractString} =
             plot!(plt; $(Symbol(letter, :ticks)) = (ticks, labels), kw...)
         export $(Symbol(letter, :ticks!))
 

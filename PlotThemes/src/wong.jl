@@ -10,26 +10,22 @@ const wong_palette = [
     RGB(([204, 121, 167] / 255)...), # reddish purple
 ]
 
-const _wong = PlotTheme(
-    Dict([
-        :palette => expand_palette(
-            colorant"white",
-            wong_palette;
-            lchoices = [57],
-            cchoices = [100],
-        ),
-        :colorgradient => cgrad(:viridis).colors,
-    ]),
-)
+const _wong = [
+    :palette => expand_palette(
+        colorant"white",
+        wong_palette;
+        lchoices = [57],
+        cchoices = [100],
+    ),
+    :colorgradient => cgrad(:viridis).colors,
+] |> Dict |> PlotTheme
 
-const _wong2 = PlotTheme(
-    Dict([
-        :palette => expand_palette(
-            colorant"white",
-            [RGB(0, 0, 0); wong_palette];
-            lchoices = [57],
-            cchoices = [100],
-        ),
-        :colorgradient => :viridis,
-    ]),
-)
+const _wong2 = [
+    :palette => expand_palette(
+        colorant"white",
+        [RGB(0, 0, 0); wong_palette];
+        lchoices = [57],
+        cchoices = [100],
+    ),
+    :colorgradient => :viridis,
+] |> Dict |> PlotTheme

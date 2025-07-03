@@ -26,7 +26,7 @@ function step!(l::Lorenz)
     dz = l.x * l.y - l.β * l.z
     l.x += l.dt * dx
     l.y += l.dt * dy
-    l.z += l.dt * dz
+    return l.z += l.dt * dz
 end
 
 attractor = Lorenz()
@@ -45,7 +45,7 @@ plt = plot3d(
 
 ## build an animated gif by pushing new points to the plot, saving every 10th frame
 ## equivalently, you can use `@gif` to replace `@animate` and thus no need to explicitly call `gif(anim)`.
-anim = @animate for i = 1:1_500
+anim = @animate for i in 1:1_500
     step!(attractor)
     push!(plt, attractor.x, attractor.y, attractor.z)
 end every 10

@@ -20,33 +20,35 @@ using PlotsBase.Axes
 struct UnicodePlotsBackend <: PlotsBase.AbstractBackend end
 PlotsBase.@extension_static UnicodePlotsBackend unicodeplots
 
-const _unicodeplots_attrs = PlotsBase.merge_with_base_supported([
-    :annotations,
-    :bins,
-    :guide,
-    :widen,
-    :grid,
-    :label,
-    :layout,
-    :legend,
-    :legend_title_font_color,
-    :lims,
-    :line,
-    :linealpha,
-    :linecolor,
-    :linestyle,
-    :markershape,
-    :plot_title,
-    :quiver,
-    :arrow,
-    :seriesalpha,
-    :seriescolor,
-    :scale,
-    :flip,
-    :title,
-    # :marker_z,
-    :line_z,
-])
+const _unicodeplots_attrs = PlotsBase.merge_with_base_supported(
+    [
+        :annotations,
+        :bins,
+        :guide,
+        :widen,
+        :grid,
+        :label,
+        :layout,
+        :legend,
+        :legend_title_font_color,
+        :lims,
+        :line,
+        :linealpha,
+        :linecolor,
+        :linestyle,
+        :markershape,
+        :plot_title,
+        :quiver,
+        :arrow,
+        :seriesalpha,
+        :seriescolor,
+        :scale,
+        :flip,
+        :title,
+        # :marker_z,
+        :line_z,
+    ]
+)
 const _unicodeplots_seriestypes = [
     :path,
     :path3d,
@@ -116,7 +118,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
     up_height = UnicodePlots.DEFAULT_HEIGHT[]
 
     has_layout = prod(size(plt.layout)) > 1
-    for sp ∈ plt.subplots
+    for sp in plt.subplots
         sp_kw = sp[:extra_kwargs]
         xaxis = sp[:xaxis]
         yaxis = sp[:yaxis]
@@ -160,7 +162,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         blend = get(sp_kw, :blend, true)
         grid = xaxis[:grid] && yaxis[:grid]
         quiver = contour = false
-        for series ∈ series_list(sp)
+        for series in series_list(sp)
             st = series[:seriestype]
             blend &= get(series[:extra_kwargs], :blend, true)
             quiver |= series[:arrow] isa Arrow  # post-pipeline detection (:quiver -> :path)
@@ -220,11 +222,11 @@ function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
         )
 
         o = UnicodePlots.Plot(x, y, plot_3d ? z : nothing, _canvas_map[canvas]; kw...)
-        for series ∈ series_list(sp)
+        for series in series_list(sp)
             o = addUnicodeSeries!(sp, o, kw, series, sp[:legend_position] ≢ :none, plot_3d)
         end
 
-        for ann ∈ sp[:annotations]
+        for ann in sp[:annotations]
             x, y, val = locate_annotation(sp, ann...)
             o = UnicodePlots.annotate!(
                 o,
@@ -239,6 +241,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{UnicodePlotsBackend})
 
         push!(plt.o, o)  # save the object
     end
+    return
 end
 
 up_color(col::UnicodePlots.UserColorType) = col
@@ -253,13 +256,13 @@ up_cmap(series) = map(
 
 # add a single series
 function addUnicodeSeries!(
-    sp::Subplot{UnicodePlotsBackend},
-    up::UnicodePlots.Plot,
-    kw,
-    series,
-    addlegend::Bool,
-    plot_3d::Bool,
-)
+        sp::Subplot{UnicodePlotsBackend},
+        up::UnicodePlots.Plot,
+        kw,
+        series,
+        addlegend::Bool,
+        plot_3d::Bool,
+    )
     st = series[:seriestype]
     se_kw = series[:extra_kwargs]
 
@@ -333,7 +336,7 @@ function addUnicodeSeries!(
 
     label = addlegend ? series[:label] : ""
 
-    for (n, segment) ∈ enumerate(series_segments(series, st; check = true))
+    for (n, segment) in enumerate(series_segments(series, st; check = true))
         i, rng = segment.attr_index, segment.range
         lc = get_linecolor(series, i)
         up = func(
@@ -347,7 +350,7 @@ function addUnicodeSeries!(
         )
     end
 
-    for (xi, yi, str, fnt) ∈ EachAnn(series[:series_annotations], x, y)
+    for (xi, yi, str, fnt) in EachAnn(series[:series_annotations], x, y)
         up = UnicodePlots.annotate!(
             up,
             xi,
@@ -359,7 +362,7 @@ function addUnicodeSeries!(
         )
     end
 
-    up
+    return up
 end
 
 function unsupported_layout_error()
@@ -367,9 +370,9 @@ function unsupported_layout_error()
     PlotsBase(UnicodePlots): complex nested layout is currently unsupported.
     Consider using plain `UnicodePlots` commands and `grid` from Term.jl as an alternative.
     """ |>
-    ArgumentError |>
-    throw
-    nothing
+        ArgumentError |>
+        throw
+    return nothing
 end
 
 # ------------------------------------------------------------------------------------------
@@ -385,7 +388,7 @@ function PlotsBase._show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBacken
     canvas_type = nothing
     imgs = []
     sps = 0
-    for r ∈ 1:nr, c ∈ 1:nc
+    for r in 1:nr, c in 1:nc
         if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
             unsupported_layout_error()
         else
@@ -405,9 +408,9 @@ function PlotsBase._show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBacken
         length(img) == 0 && return  # early return on failing fonts
         sps = 0
         n1 = 1
-        for r ∈ 1:nr
+        for r in 1:nr
             n2 = 1
-            for c ∈ 1:nc
+            for c in 1:nc
                 h, w = (sp = imgs[sps += 1]) |> size
                 img[n1:(n1 + (h - 1)), n2:(n2 + (w - 1))] = sp
                 n2 += m2[c]
@@ -416,7 +419,7 @@ function PlotsBase._show(io::IO, ::MIME"image/png", plt::Plot{UnicodePlotsBacken
         end
         UnicodePlots.save_image(io, img)
     end
-    nothing
+    return nothing
 end
 
 Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
@@ -429,21 +432,21 @@ function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBacke
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
         n = length(plt.o)
-        for (i, p) ∈ enumerate(plt.o)
+        for (i, p) in enumerate(plt.o)
             show(io, p)
             i < n && println(io)
         end
     else
         have_color = Base.get_have_color()
-        lines_colored = Array{Union{Nothing,Vector{String}}}(nothing, nr, nc)
+        lines_colored = Array{Union{Nothing, Vector{String}}}(nothing, nr, nc)
         lines_uncolored = have_color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
         nsp = length(plt.o)
         sps = 0
-        for r ∈ 1:nr
+        for r in 1:nr
             lmax = 0
-            for c ∈ 1:nc
+            for c in 1:nc
                 if (l = plt.layout[r, c]) isa GridLayout && size(l) != (1, 1)
                     unsupported_layout_error()
                 else
@@ -465,9 +468,9 @@ function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBacke
             l_max[r] = lmax
         end
         empty = map(w -> ' '^w, w_max)
-        for r ∈ 1:nr
-            for n ∈ 1:l_max[r]
-                for c ∈ 1:nc
+        for r in 1:nr
+            for n in 1:l_max[r]
+                for c in 1:nc
                     pre = c == 1 ? '\0' : ' '
                     if (lc = lines_colored[r, c]) ≡ nothing || length(lc) < n
                         print(io, pre, empty[c])
@@ -481,15 +484,15 @@ function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBacke
             r < nr && println(io)
         end
     end
-    nothing
+    return nothing
 end
 
 # we only support MIME"text/plain", hence display(...) falls back to plain-text on stdout
 function PlotsBase._display(plt::Plot{UnicodePlotsBackend})
     show(stdout, plt)
-    println(stdout)
+    return println(stdout)
 end
 
 PlotsBase.@precompile_backend UnicodePlots
 
-end  # module
+end

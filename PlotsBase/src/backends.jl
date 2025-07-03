@@ -8,7 +8,7 @@ struct NoneBackend <: AbstractBackend end
 backend_name(::NoneBackend) = :none
 should_warn_on_unsupported(::NoneBackend) = false
 
-for sym ∈ _default_supported_syms
+for sym in _default_supported_syms
     @eval begin
         $(_f1_sym(sym))(::NoneBackend, $sym::Symbol) = true
         $(_f2_sym(sym))(::NoneBackend) = Commons.$(Symbol("_all_$(sym)s"))
@@ -18,13 +18,13 @@ end
 _display(::Plot{NoneBackend}) =
     @warn "No backend activated yet. Load the backend library and call the activation function to do so.\nE.g. `import GR; gr()` activates the GR backend."
 
-const _backendSymbol        = Dict{DataType,Symbol}(NoneBackend => :none)
-const _backendType          = Dict{Symbol,DataType}(:none => NoneBackend)
-const _backend_packages     = (unicodeplots = :UnicodePlots, pythonplot = :PythonPlot, pgfplotsx = :PGFPlotsX, plotlyjs = :PlotlyJS, gaston = :Gaston, plotly = nothing, none = nothing, hdf5 = :HDF5, gr = :GR)
-const _supported_backends   = keys(_backend_packages)
+const _backendSymbol = Dict{DataType, Symbol}(NoneBackend => :none)
+const _backendType = Dict{Symbol, DataType}(:none => NoneBackend)
+const _backend_packages = (unicodeplots = :UnicodePlots, pythonplot = :PythonPlot, pgfplotsx = :PGFPlotsX, plotlyjs = :PlotlyJS, gaston = :Gaston, plotly = nothing, none = nothing, hdf5 = :HDF5, gr = :GR)
+const _supported_backends = keys(_backend_packages)
 const _initialized_backends = Set([:none])
 
-function _check_installed(pkg::Union{Module,AbstractString,Symbol}; warn = true)
+function _check_installed(pkg::Union{Module, AbstractString, Symbol}; warn = true)
     name = Symbol(lowercase(string(pkg)))
     if warn && !haskey(_backend_packages, name)
         @warn "backend `$name` is not compatible with `PlotsBase`."
@@ -45,7 +45,7 @@ function _check_installed(pkg::Union{Module,AbstractString,Symbol}; warn = true)
         get(Pkg.dependencies(), pkg_id.uuid, (; version = nothing)).version
     end
     version ≡ nothing && @warn "`package $pkg_str` is not installed."
-    version
+    return version
 end
 
 _create_backend_figure(::Plot) = nothing
@@ -99,21 +99,21 @@ function backend(instance::AbstractBackend)
     else
         @error "Unsupported backend $name"
     end
-    instance
+    return instance
 end
 
 backend(name::Symbol) =
-    if name ∈ _supported_backends
-        if name ∈ _initialized_backends
-            backend(backend_type(name))
-        else
-            pkg_name = backend_package_name(name)
-            @warn "`:$name` is not initialized, import it first to trigger the extension --- e.g. `$(pkg_name ≡ nothing ? "" : "import $pkg_name; ")$name()`."
-            backend()
-        end
+if name ∈ _supported_backends
+    if name ∈ _initialized_backends
+        backend(backend_type(name))
     else
-        @error "Unsupported backend $name"
+        pkg_name = backend_package_name(name)
+        @warn "`:$name` is not initialized, import it first to trigger the extension --- e.g. `$(pkg_name ≡ nothing ? "" : "import $pkg_name; ")$name()`."
+        backend()
     end
+else
+    @error "Unsupported backend $name"
+end
 
 function get_backend_module(pkg_name::Symbol)
     ext = Base.get_extension(@__MODULE__, Symbol("$(pkg_name)Ext"))
@@ -123,15 +123,15 @@ function get_backend_module(pkg_name::Symbol)
     else
         ext.get_concrete_backend()
     end
-    ext, concrete_backend
+    return ext, concrete_backend
 end
 
 # create backend init functions by hand as the corresponding structs do not exist yet
-for be ∈ _supported_backends
+for be in _supported_backends
     @eval begin
         function $be(; kw...)
             default(; reset = false, kw...)
-            backend(Symbol($be))
+            return backend(Symbol($be))
         end
         export $be
     end
@@ -139,7 +139,7 @@ end
 
 # create the various `is_xxx_supported` and `supported_xxxs` methods
 # these methods should be overloaded (dispatched) by each backend in its init_code
-for sym ∈ _default_supported_syms
+for sym in _default_supported_syms
     f1 = _f1_sym(sym)
     f2 = _f2_sym(sym)
     @eval begin
@@ -170,7 +170,7 @@ function backend_defines(be_type::Symbol, be::Symbol)
         ...
         PlotsBase.supported_scales(::GRbackend) -> ::Vector{Symbol}
     =#
-    for sym ∈ _default_supported_syms
+    for sym in _default_supported_syms
         be_syms = Symbol("_$(be)_$(sym)s")
         push!(
             blk.args,
@@ -178,7 +178,7 @@ function backend_defines(be_type::Symbol, be::Symbol)
             :(PlotsBase.$(_f2_sym(sym))(::$be_type)::Vector = sort!(collect($be_syms))),
         )
     end
-    blk
+    return blk
 end
 
 "extra init step for an extension"
@@ -187,7 +187,7 @@ extension_init(::AbstractBackend) = nothing
 "generate extension `__init__` function, and common defines"
 macro extension_static(be_type, be)
     be_sym = QuoteNode(be)
-    quote
+    return quote
         $(PlotsBase.backend_defines(be_type, be))
         function __init__()
             PlotsBase._backendType[$be_sym] = $be_type
@@ -195,20 +195,20 @@ macro extension_static(be_type, be)
             push!(PlotsBase._initialized_backends, $be_sym)
             ccall(:jl_generating_output, Cint, ()) == 1 && return
             PlotsBase.extension_init($be_type())  # runtime init, incompatible with precompilation
-            @debug $("Initialized $be_type in PlotsBase; run `$be()` to activate it.")
+            return @debug $("Initialized $be_type in PlotsBase; run `$be()` to activate it.")
         end
     end |> esc
 end
 
 should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
 
-const _already_warned = Dict{Symbol,Set{Symbol}}()
+const _already_warned = Dict{Symbol, Set{Symbol}}()
 function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
     _to_warn = Set{Symbol}()
     bend = backend_name(pkg)
     already_warned = get!(() -> Set{Symbol}(), _already_warned, bend)
-    extra_kwargs = Dict{Symbol,Any}()
-    for k ∈ PlotsBase.explicitkeys(plotattributes)
+    extra_kwargs = Dict{Symbol, Any}()
+    for k in PlotsBase.explicitkeys(plotattributes)
         (is_attr_supported(pkg, k) && k ∉ keys(Commons._deprecated_attributes)) && continue
         k in Commons._suppress_warnings && continue
         if ismissing(default(k))
@@ -219,8 +219,8 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
     end
 
     if !isempty(_to_warn) &&
-       get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
-        for k ∈ sort!(collect(_to_warn))
+            get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
+        for k in sort!(collect(_to_warn))
             push!(already_warned, k)
             if k in keys(Commons._deprecated_attributes)
                 @warn """
@@ -232,7 +232,7 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
             end
         end
     end
-    extra_kwargs
+    return extra_kwargs
 end
 
 function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
@@ -241,13 +241,13 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
         @warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
     is_style_supported(pkg, plotattributes[:linestyle]) ||
         @warn "linestyle $(plotattributes[:linestyle]) is unsupported with $pkg. Choose from: $(supported_styles(pkg))"
-    is_marker_supported(pkg, plotattributes[:markershape]) ||
+    return is_marker_supported(pkg, plotattributes[:markershape]) ||
         @warn "markershape $(plotattributes[:markershape]) is unsupported with $pkg. Choose from: $(supported_markers(pkg))"
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
     get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
-    for k ∈ (:xscale, :yscale, :zscale, :scale)
+    for k in (:xscale, :yscale, :zscale, :scale)
         haskey(plotattributes, k) || continue
         v = plotattributes[k]
         if !all(is_scale_supported.(Ref(pkg), v))
@@ -257,4 +257,5 @@ function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
             """
         end
     end
+    return
 end

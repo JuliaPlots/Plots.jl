@@ -19,11 +19,13 @@ foo = Foo(x, sin.(x))
     @test plot(foo)[1][1][:markershape] ≡ :+
     @test plot(foo, markershape = :diamond)[1][1][:markershape] ≡ :diamond
     @test plot(foo, marker = :diamond)[1][1][:markershape] ≡ :diamond
-    @test (@test_logs (:warn, "Skipped marker arg diamond.") plot(
-        foo,
-        marker = :diamond,
-        markershape = :diamond,
-    )[1][1][:markershape]) ≡ :diamond
+    @test (
+        @test_logs (:warn, "Skipped marker arg diamond.") plot(
+            foo,
+            marker = :diamond,
+            markershape = :diamond,
+        )[1][1][:markershape]
+    ) ≡ :diamond
 end
 
 @testset "Subplot Attributes" begin
@@ -35,12 +37,12 @@ end
 @testset "Series Attributes" begin
     pl = plot([[1, 2, 3], [2, 3, 4]], lw = 5, label = :auto)
     @test hline!(deepcopy(pl), [1.75], label = :auto)[1].series_list[3][:label] ==
-          hline!(deepcopy(pl), [1.75], z_order = :front, label = :auto)[1].series_list[3][:label] ==
-          "y3"
+        hline!(deepcopy(pl), [1.75], z_order = :front, label = :auto)[1].series_list[3][:label] ==
+        "y3"
     @test hline!(deepcopy(pl), [1.75], z_order = :back, label = :auto)[1].series_list[1][:label] ==
-          "y3"
+        "y3"
     @test hline!(deepcopy(pl), [1.75], z_order = 2, label = :auto)[1].series_list[2][:label] ==
-          "y3"
+        "y3"
     sp = pl[1]
     @test isempty(sp[1][:extra_kwargs])
     @test sp[2][:series_index] == 2
@@ -50,7 +52,7 @@ end
 
 @testset "Axis Attributes" begin
     pl = @test_nowarn plot(; tickfont = font(10, "Times"))
-    for axis ∈ (:xaxis, :yaxis, :zaxis)
+    for axis in (:xaxis, :yaxis, :zaxis)
         @test pl[1][axis][:tickfontsize] == 10
         @test pl[1][axis][:tickfontfamily] == "Times"
     end
@@ -86,7 +88,7 @@ end
 
 @testset "aspect_ratio" begin
     fn = tempname()
-    for aspect_ratio ∈ (1, 1.0, 1 // 10, :auto, :none, true)
+    for aspect_ratio in (1, 1.0, 1 // 10, :auto, :none, true)
         @test_nowarn png(plot(1:2; aspect_ratio), fn)
     end
     @test_throws ArgumentError png(plot(1:2; aspect_ratio = :invalid_ar), fn)
@@ -119,14 +121,14 @@ end
     ts = range(DateTime(today()), step = Hour(1), length = 24)
     p1 = plot(ts, 100randn(24))
     vline!(p1, [now()])
-    @test p1[1][:yaxis][:formatter] == :auto
+    @test p1[1][:yaxis][:formatter] ≡ :auto
     @test p1[1][:xaxis][:formatter] == PlotsBase.datetimeformatter
     p2 = plot(rand(4) .* 10^6, rand(4) .* 10^6, xformatter = :plain, yformatter = :plain)
     vline!(p2, [10^6])
-    @test p2[1][:yaxis][:formatter] == :plain
-    @test p2[1][:xaxis][:formatter] == :plain
+    @test p2[1][:yaxis][:formatter] ≡ :plain
+    @test p2[1][:xaxis][:formatter] ≡ :plain
     p3 = plot(rand(4) .* 10^6, rand(4) .* 10^6, yformatter = :plain)
     vline!(p3, [10^6], xformatter = :plain)
-    @test p3[1][:yaxis][:formatter] == :plain
-    @test p3[1][:xaxis][:formatter] == :plain
+    @test p3[1][:yaxis][:formatter] ≡ :plain
+    @test p3[1][:xaxis][:formatter] ≡ :plain
 end

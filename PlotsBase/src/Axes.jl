@@ -3,8 +3,7 @@ module Axes
 export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
 export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide
 
-import ..PlotsBase
-import ..PlotsBase: Subplot, DefaultsDict, attr!
+import ..PlotsBase: PlotsBase, Subplot, DefaultsDict
 
 using ..RecipesPipeline
 using ..Commons
@@ -56,20 +55,20 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     attr = DefaultsDict(explicit, Commons._axis_defaults_byletter[letter])
 
     # update the defaults
-    attr!(Axis([sp], attr), args...; kw...)
+    return PlotsBase.attr!(Axis([sp], attr), args...; kw...)
 end
 
 "properly retrieve from axis.attr, passing `:match` to the correct key"
 Base.getindex(axis::Axis, k::Symbol) =
-    if (v = axis.plotattributes[k]) ≡ :match
-        if haskey(Commons._match_map2, k)
-            axis.sps[1][Commons._match_map2[k]]
-        else
-            axis[Commons._match_map[k]]
-        end
+if (v = axis.plotattributes[k]) ≡ :match
+    if haskey(Commons._match_map2, k)
+        axis.sps[1][Commons._match_map2[k]]
     else
-        v
+        axis[Commons._match_map[k]]
     end
+else
+    v
+end
 Base.setindex!(axis::Axis, v, k::Symbol) = (axis.plotattributes[k] = v)
 Base.get(axis::Axis, k::Symbol, v) = get(axis.plotattributes, k, v)
 
@@ -81,20 +80,20 @@ end
 Extrema() = Extrema(Inf, -Inf)
 
 sort_3d_axes(x, y, z, letter) =
-    if letter ≡ :x
-        x, y, z
-    elseif letter ≡ :y
-        y, x, z
-    else
-        z, y, x
-    end
+if letter ≡ :x
+    x, y, z
+elseif letter ≡ :y
+    y, x, z
+else
+    z, y, x
+end
 
 axes_letters(sp, letter) =
-    if RecipesPipeline.is3d(sp)
-        sort_3d_axes(:x, :y, :z, letter)
-    else
-        letter ≡ :x ? (:x, :y) : (:y, :x)
-    end
+if RecipesPipeline.is3d(sp)
+    sort_3d_axes(:x, :y, :z, letter)
+else
+    letter ≡ :x ? (:x, :y) : (:y, :x)
+end
 
 scale_inverse_scale_func(scale::Symbol) = (
     RecipesPipeline.scale_func(scale),
@@ -103,7 +102,7 @@ scale_inverse_scale_func(scale::Symbol) = (
 )
 function get_axis(sp::Subplot, letter::Symbol)
     axissym = get_attr_symbol(letter, :axis)
-    if haskey(sp.attr, axissym)
+    return if haskey(sp.attr, axissym)
         sp.attr[axissym]
     else
         sp.attr[axissym] = Axis(sp, letter)
@@ -111,11 +110,11 @@ function get_axis(sp::Subplot, letter::Symbol)
 end
 
 function Commons.axis_limits(
-    sp,
-    letter,
-    lims_factor = widen_factor(get_axis(sp, letter)),
-    consider_aspect = true,
-)
+        sp,
+        letter,
+        lims_factor = widen_factor(get_axis(sp, letter)),
+        consider_aspect = true,
+    )
     axis = get_axis(sp, letter)
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
@@ -160,11 +159,11 @@ function Commons.axis_limits(
 
     aspect_ratio = get_aspect_ratio(sp)
     if (
-        !has_user_lims &&
-        consider_aspect &&
-        letter in (:x, :y) &&
-        !(aspect_ratio ≡ :none || RecipesPipeline.is3d(:sp))
-    )
+            !has_user_lims &&
+                consider_aspect &&
+                letter in (:x, :y) &&
+                !(aspect_ratio ≡ :none || RecipesPipeline.is3d(:sp))
+        )
         aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
         area = PlotsBase.plotarea(sp)
         plot_ratio = PlotsBase.height(area) / PlotsBase.width(area)
@@ -187,7 +186,7 @@ function Commons.axis_limits(
         end
     end
 
-    amin, amax
+    return amin, amax
 end
 
 """
@@ -205,10 +204,10 @@ function widen_factor(axis::Axis; factor = default_widen_factor[])
     # automatic behavior: widen if limits aren't specified and series type is appropriate
     lims = process_limits(axis[:lims], axis)
     (lims isa Tuple || lims ≡ :round) && return
-    for sp ∈ axis.sps, series ∈ series_list(sp)
+    for sp in axis.sps, series in series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return factor
     end
-    nothing
+    return nothing
 end
 
 function round_limits(amin, amax, scale)
@@ -216,24 +215,24 @@ function round_limits(amin, amax, scale)
     factor = base^(1 - round(log(base, amax - amin)))
     amin = floor(amin * factor) / factor
     amax = ceil(amax * factor) / factor
-    amin, amax
+    return amin, amax
 end
 
 # NOTE: cannot use `NTuple` here ↓
-process_limits(lims::Tuple{<:Union{Symbol,Real},<:Union{Symbol,Real}}, axis) = lims
+process_limits(lims::Tuple{<:Union{Symbol, Real}, <:Union{Symbol, Real}}, axis) = lims
 process_limits(lims::Symbol, axis) = lims
 process_limits(lims::AVec, axis) =
-    length(lims) == 2 && all(map(x -> x isa Union{Symbol,Real}, lims)) ? Tuple(lims) :
+    length(lims) == 2 && all(map(x -> x isa Union{Symbol, Real}, lims)) ? Tuple(lims) :
     nothing
 process_limits(lims, axis) = nothing
 
 warn_invalid_limits(lims, letter) = @warn """
-        Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
-        $(letter)lims = $lims
-        """
+Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
+$(letter)lims = $lims
+"""
 function scale_lims(from, to, factor)
     mid, span = (from + to) / 2, (to - from) / 2
-    mid .+ (-span, span) .* factor
+    return mid .+ (-span, span) .* factor
 end
 
 _scale_lims(::Val{true}, ::Function, ::Function, from, to, factor) =
@@ -243,7 +242,7 @@ _scale_lims(::Val{false}, f::Function, invf::Function, from, to, factor) =
 
 function scale_lims(from, to, factor, scale)
     f, invf, noop = scale_inverse_scale_func(scale)
-    _scale_lims(Val(noop), f, invf, from, to, factor)
+    return _scale_lims(Val(noop), f, invf, from, to, factor)
 end
 
 """
@@ -256,7 +255,7 @@ If `letter` is omitted, all axes are affected.
 function Commons.scale_lims!(sp::Subplot, letter, factor)
     axis = get_axis(sp, letter)
     from, to = PlotsBase.get_sp_lims(sp, letter)
-    axis[:lims] = scale_lims(from, to, factor, axis[:scale])
+    return axis[:lims] = scale_lims(from, to, factor, axis[:scale])
 end
 Commons.scale_lims!(factor::Number) = scale_lims!(PlotsBase.current(), factor)
 Commons.scale_lims!(letter::Symbol, factor) =
@@ -266,7 +265,7 @@ Commons.scale_lims!(letter::Symbol, factor) =
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scale_aliases, arg, arg)
-    if typeof(arg) <: Font
+    return if typeof(arg) <: Font
         plotattributes[get_attr_symbol(letter, :tickfont)] = arg
         plotattributes[get_attr_symbol(letter, :guidefont)] = arg
 
@@ -301,10 +300,10 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
         plotattributes[get_attr_symbol(letter, :formatter)] = arg
 
     elseif !handleColors!(
-        plotattributes,
-        arg,
-        get_attr_symbol(letter, :foreground_color_axis),
-    )
+            plotattributes,
+            arg,
+            get_attr_symbol(letter, :foreground_color_axis),
+        )
         @warn "Skipped $(letter)axis arg $arg"
     end
 end
@@ -321,11 +320,11 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
     PlotsBase.Commons.preprocess_attributes!(KW(kw))
 
     # then override for any keywords... only those keywords that already exists in plotattributes
-    for (k, v) ∈ kw
+    for (k, v) in kw
         haskey(plotattributes, k) || continue
         if k ≡ :discrete_values
             foreach(x -> discrete_value!(axis, x), v)  # add these discrete values to the axis
-        elseif k ≡ :lims && isa(v, NTuple{2,Dates.TimeType})
+        elseif k ≡ :lims && isa(v, NTuple{2, Dates.TimeType})
             plotattributes[k] = (Dates.value(v[1]), Dates.value(v[2]))
         elseif k ≡ :guide && v isa AbstractString && isempty(v)
             plotattributes[:unitformat] = :nounit
@@ -345,11 +344,11 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
         plotattributes[:scale] = _scale_aliases[plotattributes[:scale]]
     end
 
-    axis
+    return axis
 end
 
 function get_guide(axis::Axis)
-    if isnothing(axis[:unit]) || axis[:unitformat] == :nounit
+    if isnothing(axis[:unit]) || axis[:unitformat] ≡ :nounit
         return axis[:guide]
     else
         ustr = if PlotsBase.backend_name() ≡ :pgfplotsx
@@ -380,20 +379,20 @@ const UNIT_FORMATS = Dict(
     :slashangle => (" / <", ">"),
     :verbose => " in units of ",
     :none => nothing,
-    :nounit => (l, u)->l, # no unit, just label
+    :nounit => (l, u) -> l, # no unit, just label
 )
 
 # All options for unit formats
-format_unit_label(l, u, f::Nothing)                    = l
-format_unit_label(l, u, f::Function)                   = f(l, u)
-format_unit_label(l, u, f::AbstractString)             = string(l, f, u)
-format_unit_label(l, u, f::NTuple{2,<:AbstractString}) = string(l, f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,<:AbstractString}) = string(f[1], l, f[2], u, f[3])
-format_unit_label(l, u, f::Char)                       = string(l, ' ', f, ' ', u)
-format_unit_label(l, u, f::NTuple{2,Char})             = string(l, ' ', f[1], u, f[2])
-format_unit_label(l, u, f::NTuple{3,Char})             = string(f[1], l, ' ', f[2], u, f[3])
-format_unit_label(l, u, f::Bool)                       = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
-format_unit_label(l, u, f::Symbol)                     = format_unit_label(l, u, UNIT_FORMATS[f])
+format_unit_label(l, u, f::Nothing) = l
+format_unit_label(l, u, f::Function) = f(l, u)
+format_unit_label(l, u, f::AbstractString) = string(l, f, u)
+format_unit_label(l, u, f::NTuple{2, <:AbstractString}) = string(l, f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3, <:AbstractString}) = string(f[1], l, f[2], u, f[3])
+format_unit_label(l, u, f::Char) = string(l, ' ', f, ' ', u)
+format_unit_label(l, u, f::NTuple{2, Char}) = string(l, ' ', f[1], u, f[2])
+format_unit_label(l, u, f::NTuple{3, Char}) = string(f[1], l, ' ', f[2], u, f[3])
+format_unit_label(l, u, f::Bool) = f ? format_unit_label(l, u, :round) : format_unit_label(l, u, nothing)
+format_unit_label(l, u, f::Symbol) = format_unit_label(l, u, UNIT_FORMATS[f])
 
 # -----------------------------------------------------------------------------
 
@@ -419,14 +418,14 @@ guidefont(ax::Axis) = font(;
 )
 
 function _update_axis(
-    axis::Axis,
-    plotattributes_in::AKW,
-    letter::Symbol,
-    subplot_index::Int,
-)
+        axis::Axis,
+        plotattributes_in::AKW,
+        letter::Symbol,
+        subplot_index::Int,
+    )
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
-    for k ∈ Commons._all_axis_attrs
+    for k in Commons._all_axis_attrs
         # first get the args without the letter: `tickfont = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
         if haskey(plotattributes_in, k)
@@ -442,8 +441,8 @@ function _update_axis(
     end
 
     # update the axis
-    attr!(axis; kw...)
-    nothing
+    PlotsBase.attr!(axis; kw...)
+    return nothing
 end
 
 function _update_axis_colors(axis::Axis)
@@ -454,52 +453,53 @@ function _update_axis_colors(axis::Axis)
     color_or_nothing!(axis.plotattributes, :foreground_color_text)
     color_or_nothing!(axis.plotattributes, :foreground_color_grid)
     color_or_nothing!(axis.plotattributes, :foreground_color_minor_grid)
-    nothing
+    return nothing
 end
 
 """
 returns (continuous_values, discrete_values) for the ticks on this axis
 """
 function Commons.get_ticks(
-    sp::Subplot,
-    axis::Axis;
-    update = true,
-    formatter = axis[:formatter],
-)
+        sp::Subplot,
+        axis::Axis;
+        update = true,
+        formatter = axis[:formatter],
+    )
     if update || !haskey(axis.plotattributes, :optimized_ticks)
         dvals = axis[:discrete_values]
         ticks = _transform_ticks(axis[:ticks], axis)
         axis.plotattributes[:optimized_ticks] =
-            if (
+        if (
                 axis[:letter] ≡ :x &&
-                ticks isa Symbol &&
-                ticks ≢ :none &&
-                !isempty(dvals) &&
-                ispolar(sp)
+                    ticks isa Symbol &&
+                    ticks ≢ :none &&
+                    !isempty(dvals) &&
+                    ispolar(sp)
             )
-                collect(0:(π / 4):(7π / 4)), string.(0:45:315)
-            else
-                cvals = axis[:continuous_values]
-                alims = axis_limits(sp, axis[:letter])
-                Commons.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
-            end
+            collect(0:(π / 4):(7π / 4)), string.(0:45:315)
+        else
+            cvals = axis[:continuous_values]
+            alims = axis_limits(sp, axis[:letter])
+            Commons.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
+        end
     end
-    axis.plotattributes[:optimized_ticks]
+    return axis.plotattributes[:optimized_ticks]
 end
 
 function reset_extrema!(sp::Subplot)
-    for asym ∈ (:x, :y, :z)
+    for asym in (:x, :y, :z)
         sp[get_attr_symbol(asym, :axis)][:extrema] = Extrema()
     end
-    for series ∈ sp.series_list
+    for series in sp.series_list
         expand_extrema!(sp, series.plotattributes)
     end
+    return
 end
 
 function PlotsBase.expand_extrema!(ex::Extrema, v::Number)
     ex.emin = isfinite(v) ? min(v, ex.emin) : ex.emin
     ex.emax = isfinite(v) ? max(v, ex.emax) : ex.emax
-    ex
+    return ex
 end
 
 PlotsBase.expand_extrema!(axis::Axis, v::Number) = expand_extrema!(axis[:extrema], v)
@@ -509,22 +509,18 @@ PlotsBase.expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
 PlotsBase.expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 function PlotsBase.expand_extrema!(
-    axis::Axis,
-    v::Tuple{MIN,MAX},
-) where {MIN<:Number,MAX<:Number}
+        axis::Axis,
+        v::Tuple{MIN, MAX},
+    ) where {MIN <: Number, MAX <: Number}
     ex = axis[:extrema]::Extrema
     ex.emin = isfinite(v[1]) ? min(v[1], ex.emin) : ex.emin
     ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
-    ex
+    return ex
 end
-function PlotsBase.expand_extrema!(axis::Axis, v::AVec{N}) where {N<:Number}
+function PlotsBase.expand_extrema!(axis::Axis, v::AVec{N}) where {N <: Number}
     ex = axis[:extrema]::Extrema
     foreach(vi -> expand_extrema!(ex, vi), v)
-    ex
+    return ex
 end
 
-end  # module
-
-# -----------------------------------------------------------------------------
-
-using .Axes
+end

@@ -22,7 +22,7 @@ function arrow(args...)
     style, side = :simple, :head
     headlength = headwidth = 1
     setlength = false
-    for arg ∈ args
+    for arg in args
         T = typeof(arg)
         if T == Symbol
             if arg in (:head, :tail, :both)
@@ -43,13 +43,13 @@ function arrow(args...)
             @warn "Skipped arrow arg $arg"
         end
     end
-    Arrow(style, side, headlength, headwidth)
+    return Arrow(style, side, headlength, headwidth)
 end
 
 # allow for do-block notation which gets called on every valid start/end pair which
 # we need to draw an arrow
 function add_arrows(func::Function, x::AVec, y::AVec)
-    for i ∈ 2:length(x)
+    for i in 2:length(x)
         xyprev = (x[i - 1], y[i - 1])
         xy = (x[i], y[i])
         if ok(xyprev) && ok(xy)
@@ -59,10 +59,7 @@ function add_arrows(func::Function, x::AVec, y::AVec)
             end
         end
     end
+    return
 end
 
-end  # module
-
-# -----------------------------------------------------------------------------
-
-using .Arrows
+end

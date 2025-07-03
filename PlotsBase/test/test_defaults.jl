@@ -76,7 +76,7 @@ end
     @test pl[1][:legend_title_font_color] ≡ :blue
     @test pl[1][:legend_background_color] == RGBA{Float64}(0.0, 1.0, 1.0, 1.0)
     @test pl[1][:legend_foreground_color] ==
-          RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
+        RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
 
     #remember settings
     plot(legend_font_pointsize = 20)

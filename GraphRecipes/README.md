@@ -21,9 +21,12 @@ For a given graph, there are many legitimate ways to display and visualize the g
 ## An example
 ```julia
 using GraphRecipes
-using PlotsBase
+using Plots
 
-import GR; gr()
+# or, for an alternate backend:
+# julia> import PythonPlot
+# julia> using GraphRecipes, PlotsBase
+# julia> pythonplot()
 
 g = [0 1 1;
      1 0 1;
