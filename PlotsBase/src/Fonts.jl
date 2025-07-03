@@ -1,9 +1,7 @@
 module Fonts
 
-using ..Colors
 using ..Commons
-using ..Commons:
-    _initial_plt_fontsizes, _initial_sp_fontsizes, _initial_ax_fontsizes, _initial_fontsizes
+using ..Colors
 
 # keep in mind: these will be reexported and are public API
 export Font, PlotText, font, scalefontsizes, resetfontsizes, text, is_horizontal
@@ -57,9 +55,9 @@ function font(args...; kw...)
         elseif arg ≡ :center
             halign = :hcenter
             valign = :vcenter
-        elseif arg ∈ _haligns
+        elseif arg ∈ Commons._haligns
             halign = arg
-        elseif arg ∈ _valigns
+        elseif arg ∈ Commons._valigns
             valign = arg
         elseif T <: Colorant
             color = arg
@@ -116,12 +114,12 @@ end
 Scales all **current** font sizes by `factor`. For example `scalefontsizes(1.1)` increases all current font sizes by 10%. To reset to initial sizes, use `scalefontsizes()`
 """
 function scalefontsizes(factor::Number)
-    for k in keys(merge(_initial_plt_fontsizes, _initial_sp_fontsizes))
+    for k in merge(Commons._initial_plt_fontsizes, Commons._initial_sp_fontsizes) |> keys
         scalefontsize(k, factor)
     end
 
     for letter in (:x, :y, :z)
-        for k in keys(_initial_ax_fontsizes)
+        for k in keys(Commons._initial_ax_fontsizes)
             scalefontsize(get_attr_symbol(letter, k), factor)
         end
     end
@@ -134,19 +132,20 @@ end
 Resets font sizes to initial default values.
 """
 function scalefontsizes()
-    for k in keys(merge(_initial_plt_fontsizes, _initial_sp_fontsizes))
+    for k in merge(Commons._initial_plt_fontsizes, Commons._initial_sp_fontsizes) |> keys
         f = default(k)
-        if k in keys(_initial_fontsizes)
-            factor = f / _initial_fontsizes[k]
+        if k in keys(Commons._initial_fontsizes)
+            factor = f / Commons._initial_fontsizes[k]
             scalefontsize(k, 1.0 / factor)
         end
     end
 
     for letter in (:x, :y, :z)
-        for k in keys(_initial_ax_fontsizes)
-            if k in keys(_initial_fontsizes)
+        keys_initial_fontsizes = keys(Commons._initial_fontsizes)
+        for k in keys(Commons._initial_ax_fontsizes)
+            if k in keys_initial_fontsizes
                 f = default(get_attr_symbol(letter, k))
-                factor = f / _initial_fontsizes[k]
+                factor = f / Commons._initial_fontsizes[k]
                 scalefontsize(get_attr_symbol(letter, k), 1.0 / factor)
             end
         end

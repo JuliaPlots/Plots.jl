@@ -1,4 +1,3 @@
-# internal module
 module Annotations
 
 export SeriesAnnotations,
@@ -10,7 +9,7 @@ export SeriesAnnotations,
     annotations,
     assign_annotation_coord!
 
-import ..PlotsBase: Series, Subplot, is3d, discrete_value!
+import ..PlotsBase: Series, Subplot, PlotOrSubplot, is3d, discrete_value!, plot!
 
 using ..Commons
 using ..Shapes

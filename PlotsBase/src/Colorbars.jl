@@ -3,13 +3,12 @@ module Colorbars
 export colorbar_style, get_clims, update_clims, hascolorbar
 export get_colorbar_ticks, _update_subplot_colorbars
 
-import ..Commons: NaNMath, ignorenan_extrema, get_clims
+import ..Commons: Commons, NaNMath, ignorenan_extrema, get_clims
+import ..Surfaces
 
 using ..Subplots: Subplot, series_list
-using ..Surfaces: AbstractSurface
 using ..Ticks: _transform_ticks
 using ..DataSeries
-using ..Commons
 using ..Ticks
 
 # these functions return an operator for use in `get_clims(::Seres, op)`
@@ -91,7 +90,7 @@ function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64, Fl
     return series[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-update_clims(zmin, zmax, vals::AbstractSurface, op)::Tuple{Float64, Float64} =
+update_clims(zmin, zmax, vals::Surfaces.AbstractSurface, op)::Tuple{Float64, Float64} =
     update_clims(zmin, zmax, vals.surf, op)
 update_clims(zmin, zmax, vals::Any, op)::Tuple{Float64, Float64} =
     _update_clims(zmin, zmax, op(vals)...)

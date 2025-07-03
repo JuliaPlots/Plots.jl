@@ -2,8 +2,8 @@ module Strokes
 
 export Stroke, Brush, stroke, brush
 
-using ..Colors: Colorant
-using ..Commons: all_alphas, all_reals, all_styles
+import ..Colors: Colorant
+import ..Commons
 
 struct Stroke
     width
@@ -26,7 +26,7 @@ function stroke(args...; alpha = nothing)
         T = typeof(arg)
 
         # if arg in _all_styles
-        if all_styles(arg)
+        if Commons.all_styles(arg)
             style = arg
         elseif T <: Colorant
             color = arg
@@ -35,9 +35,9 @@ function stroke(args...; alpha = nothing)
                 color = parse(Colorant, string(arg))
             catch
             end
-        elseif all_alphas(arg)
+        elseif Commons.all_alphas(arg)
             alpha = arg
-        elseif all_reals(arg)
+        elseif Commons.all_reals(arg)
             width = arg
         else
             @warn "Unused stroke arg: $arg ($(typeof(arg)))"
@@ -67,9 +67,9 @@ function brush(args...; alpha = nothing)
                 color = parse(Colorant, string(arg))
             catch
             end
-        elseif all_alphas(arg)
+        elseif Commons.all_alphas(arg)
             alpha = arg
-        elseif all_reals(arg)
+        elseif Commons.all_reals(arg)
             size = arg
         else
             @warn "Unused brush arg: $arg ($(typeof(arg)))"

@@ -1,8 +1,8 @@
 module Shapes
 
+import ..RecipesPipeline
 import ..PlotsBase
 
-using ..RecipesPipeline
 using ..Commons
 
 # keep in mind: these will be reexported and are public API
@@ -45,9 +45,8 @@ Construct a polygon to be plotted
 """
 Shape(verts::AVec) = Shape(RecipesPipeline.unzip(verts)...)
 Shape(s::Shape) = deepcopy(s)
-function Shape(x::AVec{X}, y::AVec{Y}) where {X, Y}
-    return Shape(convert(Vector{X}, x), convert(Vector{Y}, y))
-end
+Shape(x::AVec{X}, y::AVec{Y}) where {X, Y} =
+    Shape(convert(Vector{X}, x), convert(Vector{Y}, y))
 
 # make it broadcast like a scalar
 Base.Broadcast.broadcastable(shape::Shape) = Ref(shape)

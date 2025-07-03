@@ -3,20 +3,17 @@ module Plots
 export Plot,
     PlotOrSubplot,
     plottitlefont,
-    ignorenan_extrema,
     _update_plot_attrs,
     InputWrapper,
     protect
 
 import ..RecipesBase: AbstractLayout, AbstractBackend, AbstractPlot
 import ..RecipesPipeline: RecipesPipeline, DefaultsDict
-import ..Subplots: Subplot, _update_subplot_colors, _update_margins
-import ..Colorbars: _update_subplot_colorbars
-import ..Commons: ignorenan_extrema, _cycle
+import ..Colorbars
 
-using ..PlotUtils
 using ..DataSeries
-using ..Commons.Frontend
+using ..PlotUtils
+using ..Subplots
 using ..Commons
 using ..Fonts
 using ..Ticks
@@ -75,8 +72,8 @@ struct InputWrapper{T}
 end
 protect(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(::InputWrapper) = false
-_cycle(wrapper::InputWrapper, ::Int) = wrapper.obj
-_cycle(wrapper::InputWrapper, ::AVec{Int}) = wrapper.obj
+Commons._cycle(wrapper::InputWrapper, ::Int) = wrapper.obj
+Commons._cycle(wrapper::InputWrapper, ::AVec{Int}) = wrapper.obj
 
 # -----------------------------------------------------------
 
@@ -134,20 +131,16 @@ end
 # ---------------------------------------------------------------
 
 "smallest x in plot"
-xmin(plt::Plot) = ignorenan_minimum(
-    [
-        ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
-    ]
-)
+xmin(plt::Plot) =
+    ignorenan_minimum([ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list])
+
 "largest x in plot"
-xmax(plt::Plot) = ignorenan_maximum(
-    [
-        ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list
-    ]
-)
+xmax(plt::Plot) =
+    ignorenan_maximum([ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list])
+
 
 "extrema of x-values in plot"
-ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
+Commons.ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 
 # ---------------------------------------------------------------
 # indexing notation
@@ -250,7 +243,7 @@ function _update_subplot_attrs(
     anns = RecipesPipeline.pop_kw!(sp.attr, :annotations)
 
     # grab those args which apply to this subplot
-    for k in keys(_subplot_defaults)
+    for k in keys(Commons._subplot_defaults)
         # We don't apply annotations to the plot-title sub-plot
         if k == :annotations && get(plt.attr, :plot_titleindex, 0) == subplot_index
             continue
@@ -258,12 +251,11 @@ function _update_subplot_attrs(
         PlotsBase.slice_arg!(plotattributes_in, sp.attr, k, subplot_index, remove_pair)
     end
 
-    _update_subplot_colors(sp)
-    _update_margins(sp)
-    colorbar_update_keys =
-        (:clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry)
-    if any(haskey.(Ref(plotattributes_in), colorbar_update_keys))
-        _update_subplot_colorbars(sp)
+    Subplots._update_subplot_colors(sp)
+    Subplots._update_margins(sp)
+    cbar_update_keys = :clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry
+    if any(haskey.(Ref(plotattributes_in), cbar_update_keys))
+        Colorbars._update_subplot_colorbars(sp)
     end
 
     lims_warned = false

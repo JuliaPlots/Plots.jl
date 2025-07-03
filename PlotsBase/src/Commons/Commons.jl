@@ -50,6 +50,9 @@ export bbox_to_pcts, xy_mm_to_pcts
 export Length, AbsoluteLength, Measure
 export to_pixels, ispositive, get_ticks, scale_lims!
 
+export _subplot_defaults, _axis_defaults, _plot_defaults, _series_defaults, _match_map
+export _match_map2, @add_attributes, preprocess_attributes!, _override_seriestype_check
+
 import Measures:
     Measures, Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, w, h
 import PlotUtils: PlotUtils, ColorPalette, plot_color, isdark, ColorGradient
@@ -160,33 +163,33 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     return st
 end
 
-macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
-    import_ex = Expr(
-        :import,
-        Expr(
-            :(:),
-            Expr(:., :., :., parent),
-            (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
-        ),
-    )
-    export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
-    return Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
-end
+# macro ScopeModule(mod::Symbol, parent::Symbol, symbols...)
+#     import_ex = Expr(
+#         :import,
+#         Expr(
+#             :(:),
+#             Expr(:., :., :., parent),
+#             (Expr(:., s isa Expr ? s.args[1] : s) for s in symbols)...,
+#         ),
+#     )
+#     export_ex = Expr(:export, (s isa Expr ? s.args[1] : s for s in symbols)...)
+#     return Expr(:module, true, mod, Expr(:block, import_ex, export_ex)) |> esc
+# end
 
-"these should only be needed in frontend modules"
-@ScopeModule(
-    Frontend,
-    Commons,
-    _subplot_defaults,
-    _axis_defaults,
-    _plot_defaults,
-    _series_defaults,
-    _match_map,
-    _match_map2,
-    @add_attributes,
-    preprocess_attributes!,
-    _override_seriestype_check
-)
+# "these should only be needed in frontend modules"
+# @ScopeModule(
+#     Frontend,
+#     Commons,
+#     _subplot_defaults,
+#     _axis_defaults,
+#     _plot_defaults,
+#     _series_defaults,
+#     _match_map,
+#     _match_map2,
+#     @add_attributes,
+#     preprocess_attributes!,
+#     _override_seriestype_check
+# )
 
 function fg_color(plotattributes::AKW)
     fg = get(plotattributes, :foreground_color, :auto)

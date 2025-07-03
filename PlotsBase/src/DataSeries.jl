@@ -22,11 +22,10 @@ export get_linestyle,
     get_markeralpha
 
 import Base.show
-import ..Commons: get_gradient, get_subplot, _series_defaults
 import ..PlotsBase
+import ..PlotUtils
 
-using ..PlotsBase: DefaultsDict, RecipesPipeline, get_attr_symbol, KW
-using ..PlotUtils: ColorGradient, plot_color
+using ..PlotsBase: DefaultsDict, RecipesPipeline, KW
 using ..RecipesBase: @recipe
 using ..Commons
 
@@ -91,7 +90,7 @@ extend_series!(series::Series, xi, yi, zi) = (
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
     d = extend_by_data!(series[letter], v)
-    expand_extrema!(series[:subplot][get_attr_symbol(letter, :axis)], d)
+    expand_extrema!(series[:subplot][Commons.get_attr_symbol(letter, :axis)], d)
     return d
 end
 
@@ -134,9 +133,9 @@ for comp in (:line, :fill, :marker)
             c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
             return if z ≡ nothing
-                isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
+                isa(c, PlotUtils.ColorGradient) ? c : PlotUtils.plot_color(_cycle(c, i))
             else
-                grad = get_gradient(c)
+                grad = Commons.get_gradient(c)
                 if s ≡ :identity
                     get(grad, z[i], (cmin, cmax))
                 else
@@ -167,7 +166,7 @@ get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
 
 get_markerstrokecolor(series, i::Integer = 1) =
 let msc = series[:markerstrokecolor]
-    msc isa ColorGradient ? msc : _cycle(msc, i)
+    msc isa PlotUtils.ColorGradient ? msc : _cycle(msc, i)
 end
 
 get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
@@ -334,13 +333,13 @@ function PlotsBase.attr!(series::Series; kw...)
     plotattributes = KW(kw)
     Commons.preprocess_attributes!(plotattributes)
     for (k, v) in plotattributes
-        if haskey(_series_defaults, k)
+        if haskey(Commons._series_defaults, k)
             series[k] = v
         else
             @warn "unused key $k in series attr"
         end
     end
-    _series_updated(series[:subplot].plt, series)
+    PlotsBase._series_updated(series[:subplot].plt, series)
     return series
 end
 

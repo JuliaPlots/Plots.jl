@@ -3,8 +3,7 @@ module Axes
 export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
 export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide
 
-import ..PlotsBase
-import ..PlotsBase: Subplot, DefaultsDict
+import ..PlotsBase: PlotsBase, Subplot, DefaultsDict
 
 using ..RecipesPipeline
 using ..Commons
@@ -442,7 +441,7 @@ function _update_axis(
     end
 
     # update the axis
-    attr!(axis; kw...)
+    PlotsBase.attr!(axis; kw...)
     return nothing
 end
 

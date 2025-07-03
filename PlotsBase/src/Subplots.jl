@@ -9,13 +9,12 @@ export Subplot,
     needs_any_3d_axes
 import PlotsBase
 
-import ..Commons: BoundingBox, convert_legend_value, like_surface
-import ..RecipesPipeline: RecipesPipeline, Surface, Volume, DefaultsDict
+import ..RecipesPipeline: RecipesPipeline, DefaultsDict
 import ..RecipesBase: AbstractLayout, AbstractBackend
+import ..Commons: BoundingBox
 import ..DataSeries: Series
 import ..PlotUtils
 
-using ..Commons.Frontend
 using ..Commons
 using ..Fonts
 using ..Ticks
@@ -24,13 +23,13 @@ using ..Ticks
 mutable struct Subplot{T <: AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
     series_list::Vector{Series}  # arguments for each series
-    primary_series_count::Int # Number of primary series in the series list
-    minpad::Tuple # leftpad, toppad, rightpad, bottompad
-    bbox::BoundingBox  # the canvas area which is available to this subplot
-    plotarea::BoundingBox  # the part where the data goes
-    attr::DefaultsDict  # args specific to this subplot
-    o  # can store backend-specific data... like a pyplot ax
-    plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
+    primary_series_count::Int    # Number of primary series in the series list
+    minpad::Tuple                # leftpad, toppad, rightpad, bottompad
+    bbox::BoundingBox            # the canvas area which is available to this subplot
+    plotarea::BoundingBox        # the part where the data goes
+    attr::DefaultsDict           # args specific to this subplot
+    o                            # can store backend-specific data... like a pyplot ax
+    plt                          # the enclosing Plot object (can't give it a type because of no forward declarations)
 
     Subplot(::T; parent = RootLayout()) where {T <: AbstractBackend} = new{T}(
         parent,
@@ -39,7 +38,7 @@ mutable struct Subplot{T <: AbstractBackend} <: AbstractLayout
         DEFAULT_MINPAD[],
         DEFAULT_BBOX[],
         DEFAULT_BBOX[],
-        DefaultsDict(KW(), _subplot_defaults),
+        DefaultsDict(KW(), Commons._subplot_defaults),
         nothing,
         nothing,
     )
@@ -89,7 +88,7 @@ Commons.get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, 
 # and assigns a color automatically
 get_series_color(c, sp::Subplot, n::Int, seriestype) =
     if c ≡ :auto
-    like_surface(seriestype) ? PlotsBase.cgrad() : _cycle(sp[:color_palette], n)
+    Commons.like_surface(seriestype) ? PlotsBase.cgrad() : _cycle(sp[:color_palette], n)
 elseif isa(c, Int)
     _cycle(sp[:color_palette], c)
 else
@@ -144,8 +143,8 @@ function _update_subplot_periphery(sp::Subplot, anns::AVec)
     sp.attr[:annotations] = newanns
 
     # handle legend/colorbar
-    sp.attr[:legend_position] = convert_legend_value(sp.attr[:legend_position])
-    sp.attr[:colorbar] = convert_legend_value(sp.attr[:colorbar])
+    sp.attr[:legend_position] = Commons.convert_legend_value(sp.attr[:legend_position])
+    sp.attr[:colorbar] = Commons.convert_legend_value(sp.attr[:colorbar])
     if sp.attr[:colorbar] ≡ :legend
         sp.attr[:colorbar] = sp.attr[:legend_position]
     end
@@ -176,7 +175,7 @@ end
 
 needs_any_3d_axes(sp::Subplot) = any(
     RecipesPipeline.needs_3d_axes(
-            _override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
+            Commons._override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
         ) for s in series_list(sp)
 )
 
@@ -196,15 +195,15 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
         end
         axis = sp[get_attr_symbol(letter, :axis)]
 
-        if isa(data, PlotsBase.Volume)
+        if isa(data, RecipesPipeline.Volume)
             expand_extrema!(sp[:xaxis], data.x_extents)
             expand_extrema!(sp[:yaxis], data.y_extents)
             expand_extrema!(sp[:zaxis], data.z_extents)
         elseif eltype(data) <: Number ||
-                (isa(data, Surface) && all(di -> isa(di, Number), data.surf))
+                (isa(data, RecipesPipeline.Surface) && all(di -> isa(di, Number), data.surf))
             if !(eltype(data) <: Number)
                 # huh... must have been a mis-typed surface? lets swap it out
-                data = plotattributes[letter] = Surface(Matrix{Float64}(data.surf))
+                data = plotattributes[letter] = RecipesPipeline.Surface(Matrix{Float64}(data.surf))
             end
             expand_extrema!(axis, data)
         elseif data ≢ nothing
@@ -273,7 +272,7 @@ function PlotsBase.attr!(sp::Subplot; kw...)
     plotattributes = KW(kw)
     PlotsBase.Commons.preprocess_attributes!(plotattributes)
     for (k, v) in plotattributes
-        if haskey(_subplot_defaults, k)
+        if haskey(Commons._subplot_defaults, k)
             sp[k] = v
         else
             @warn "unused key $k in subplot attr"
