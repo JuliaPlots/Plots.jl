@@ -86,7 +86,7 @@ jobs:
               (; path="./GraphRecipes"),
               (; path="./StatsPlots"),
             ])
-            include(joinpath("ci", "matplotlib.jl")
+            include(joinpath(@__DIR__, "ci", "matplotlib.jl"))
             Pkg.precompile()  # // precompilation
           '
 
