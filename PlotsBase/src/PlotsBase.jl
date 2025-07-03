@@ -141,27 +141,36 @@ const _compat = _project.compat
 include("Commons/Commons.jl")
 using .Commons
 using .Commons.Frontend
-
-Commons.@generic_functions attr attr!
-
+Commons.@generic_functions attr attr! annotate!
 include("DF.jl")
+using .DF
 include("Fonts.jl")
+Reexport.@reexport using .Fonts
 include("Ticks.jl")
+using .Ticks
 include("DataSeries.jl")
+using .DataSeries
+
 include("Subplots.jl")
 include("Axes.jl")
 include("Surfaces.jl")
 include("Colorbars.jl")
 include("Plots.jl")
+using .Plots
 include("layouts.jl")
 include("utils.jl")
 include("axes_utils.jl")
 include("legend.jl")
 include("Shapes.jl")
+using .Shapes
 include("Annotations.jl")
+using .Annotations
 include("Arrows.jl")
+using .Arrows
 include("Strokes.jl")
+using .Strokes
 include("BezierCurves.jl")
+using .BezierCurves
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
@@ -176,6 +185,7 @@ include("shorthands.jl")
 include("backends.jl")
 include("web.jl")
 include("plotly.jl")
+using .Plotly
 include("init.jl")
 include("users.jl")
 

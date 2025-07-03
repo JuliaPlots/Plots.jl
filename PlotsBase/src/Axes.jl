@@ -4,7 +4,7 @@ module Axes
     export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide
 
     import ..PlotsBase
-    import ..PlotsBase: Subplot, DefaultsDict, attr!
+    import ..PlotsBase: Subplot, DefaultsDict
 
     using ..RecipesPipeline
     using ..Commons
@@ -56,7 +56,7 @@ module Axes
         attr = DefaultsDict(explicit, Commons._axis_defaults_byletter[letter])
 
         # update the defaults
-        return attr!(Axis([sp], attr), args...; kw...)
+        return PlotsBase.attr!(Axis([sp], attr), args...; kw...)
     end
 
     "properly retrieve from axis.attr, passing `:match` to the correct key"
