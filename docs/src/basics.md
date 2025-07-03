@@ -62,3 +62,24 @@ plot(1:10, Any[rand(10), sin])               # 2 series: rand(10) and map(sin,x)
     Call `gui()` to display the plot in a window. Interactivity depends on backend. Plotting at the REPL (without semicolon) implicitly calls `gui()`.
 
 ---
+
+### Environment variables
+
+A few environment variables control `PlotsBase` internals:
+- `PLOTSBASE_DEFAULT_BACKEND`: default backend, preempting the one set through the `Preferences` based mechanism
+- `PLOTSBASE_TMPDIR`: temporay files prefix for (html) files (some browser are denied access to temporary directorie such as `/tmp`)
+- `PLOTSBASE_HOST_DEPENDENCY_LOCAL`: use a local `plotly` resource instead of a cloud hosted one
+
+#### For testing purposes
+- `PLOTSBASE_TEST_PACKAGES`: list of backends to run the tests for
+- `PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON`: use a workaround for the `ECONNREFUSED` error when using the `plotlyjs` backend
+- `PLOTSBASE_IMG_TOL`: tolerance when comparing images during tests
+- `PLOTSBASE_REFERENCE_DIR`: where to find the reference images
+
+#### For building documentation
+- `PLOTDOCS_PACKAGES`: restrict the docs build to these backends
+- `PLOTDOCS_EXAMPLES`: restrict the docs build to these examples
+- `PLOTDOCS_ANSICOLOR`: use ansicolor in julia code output, mostly for `unicodeplots`
+
+### Special julia variables
+- `PLOTSBASE_DEFAULTS`: a way to set default values for plotattributes (e.g. in your `startup.jl` file) : it should be a dictionary.

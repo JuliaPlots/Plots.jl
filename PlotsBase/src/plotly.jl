@@ -1280,25 +1280,25 @@ function plotly_html_body(plt, style = nothing)
         requirejs_suffix = "});"
     end
 
-    uuid = UUIDs.uuid4()
-    html = """
-        <div id=\"$(uuid)\" style=\"$(style)\"></div>
-        <script src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js" onload="plots_jl_plotly_init()"></script>
+    unique_tag = replace(string(UUIDs.uuid4()), '-' => '_')
+
+    return """
+        <div id=\"$unique_tag\" style=\"$style\"></div>
         <script>
-        function plots_jl_plotly_init() {
-            $(requirejs_prefix)
-            $(js_body(plt, uuid))
-            $(requirejs_suffix)
+        function plots_jl_plotly_$unique_tag() {
+            $requirejs_prefix
+            $(js_body(plt, unique_tag))
+            $requirejs_suffix
         }
         </script>
+        <script src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js" onload="plots_jl_plotly_$unique_tag()"></script>
     """
-    return html
 end
 
 js_body(
     plt::Plot,
-    uuid,
-) = "Plotly.newPlot('$(uuid)', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));"
+    unique_tag,
+) = "Plotly.newPlot('$unique_tag', $(plotly_series_json(plt)), $(plotly_layout_json(plt)));"
 
 plotly_show_js(io::IO, plot::Plot) =
     JSON.print(io, Dict(:data => plotly_series(plot), :layout => plotly_layout(plot)))
@@ -1313,7 +1313,7 @@ PlotsBase._show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{Plotl
 PlotsBase._show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend}) =
     write(io, PlotsBase.embeddable_html(plt))
 
-PlotsBase._display(plt::Plot{PlotlyBackend}) = standalone_html_window(plt)
+PlotsBase._display(plt::Plot{PlotlyBackend}) = PlotsBase.standalone_html_window(plt)
 
 function _ijulia__extra_mime_info!(plt::Plot{PlotlyBackend}, out::Dict)
     out["application/vnd.plotly.v1+json"] =

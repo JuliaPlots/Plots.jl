@@ -63,4 +63,12 @@ Sys.isunix() && with(:plotly) do
         pl = plot(1:5, test = "me", extra_kwargs = :plot)
         @test PlotsBase.plotly_layout(pl)[:test] == "me"
     end
+
+    @testset "Requirejs" begin
+        pl = plot(sin, 0, 2pi)
+        io = PipeBuffer()
+        show(io, MIME("text/html"), pl)
+        html = read(io, String)
+        # FIXME: how can we write a test checking that the html correctly draw a plotly plot ?
+    end
 end
