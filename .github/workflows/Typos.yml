@@ -1,0 +1,17 @@
+name: Spelling
+
+on: [pull_request, workflow_dispatch]
+
+env:
+  CLICOLOR: 1
+
+jobs:
+  spelling:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4 
+      - name: typos-action
+        uses: crate-ci/typos@v1
+        
