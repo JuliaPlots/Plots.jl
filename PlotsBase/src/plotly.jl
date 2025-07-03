@@ -1280,8 +1280,8 @@ function plotly_html_body(plt, style = nothing)
         requirejs_suffix = "});"
     end
 
-    uuid = replace(UUIDs.uuid4(), '-' => '_')
-    
+    uuid = replace(string(UUIDs.uuid4()), '-' => '_')
+
     html = """
         <div id=\"$(uuid)\" style=\"$(style)\"></div>
         <script>
