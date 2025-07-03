@@ -14,7 +14,7 @@ function violin_coords(
         KernelDensity.kde(y, weights = weights(wts), npoints = 200, bandwidth = bandwidth)
     if trim
         xmin, xmax = PlotsBase.ignorenan_extrema(y)
-        inside = Bool[xmin <= x <= xmax for x in kd.x]
+        inside = Bool[xmin ≤ x ≤ xmax for x in kd.x]
         return (kd.density[inside], kd.x[inside])
     end
     return kd.density, kd.x

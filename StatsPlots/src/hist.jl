@@ -188,7 +188,7 @@ function linbin(X, gpoints; t_run = true)
         li = floor(Int, lxi)
         rem = lxi - li
 
-        if 1 <= li < M
+        if 1 ≤ li < M
             gcnts[li] += 1 - rem
             gcnts[li + 1] += rem
         end
@@ -203,7 +203,7 @@ end
 
 "binned kernel function estimator"
 function bkfe(gcounts, drv, bandwidth, range_x)
-    bandwidth <= 0 && error("'bandwidth' must be strictly positive")
+    bandwidth ≤ 0 && error("'bandwidth' must be strictly positive")
 
     a, b = range_x
     h = bandwidth
@@ -227,7 +227,7 @@ function bkfe(gcounts, drv, bandwidth, range_x)
     hmold0, hmnew = ones(length(arg)), ones(length(arg))
     hmold1 = arg
 
-    if drv >= 2
+    if drv ≥ 2
         for i in (2:drv)
             hmnew = arg .* hmold1 .- (i - 1) .* hmold0
             hmold0 = hmold1       # Compute mth degree Hermite polynomial
@@ -237,7 +237,7 @@ function bkfe(gcounts, drv, bandwidth, range_x)
     kappam = hmnew .* kappam
 
     ## Now combine weights and counts to obtain estimate
-    ## we need P >= 2L+1L, M: L <= M.
+    ## we need P ≥ 2L+1L, M: L ≤ M.
     P = nextpow(2, M + L + 1)
     kappam = [kappam; zeros(P - 2 * L - 1); reverse(kappam[2:end])]
     Gcounts = [gcounts; zeros(P - M)]

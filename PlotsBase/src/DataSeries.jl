@@ -264,7 +264,7 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
             (scale = get(series, scales[n], :identity)) ∈ PlotsBase.Commons._log_scales ||
                 continue
             for (i, v) in enumerate(s)
-                if v <= 0
+                if v ≤ 0
                     @warn "Invalid negative or zero value $v found at series index $i for $scale based $(scales[n])"
                     @debug "" exception = (DomainError(v), stacktrace())
                     break

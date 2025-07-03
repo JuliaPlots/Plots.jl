@@ -1071,7 +1071,7 @@ function check_contour_levels(levels)
         "the levels keyword argument must be an integer or AbstractVector" |>
             ArgumentError |>
             throw
-    elseif levels isa Integer && levels <= 0
+    elseif levels isa Integer && levels ≤ 0
         "must pass a positive number of contours to the levels keyword argument" |>
             ArgumentError |>
             throw

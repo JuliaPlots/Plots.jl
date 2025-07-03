@@ -54,7 +54,7 @@ function df_helper(d, x)
             Expr(:call, :($(@__MODULE__).extract_columns_and_names), d, syms...),
         )
         argnames = _argnames(names, x)
-        if (length(plot_call.args) >= 2) &&
+        if (length(plot_call.args) ≥ 2) &&
                 isa(plot_call.args[2], Expr) &&
                 (plot_call.args[2].head ≡ :parameters)
             label_plot_call = Expr(

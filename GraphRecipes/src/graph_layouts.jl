@@ -171,7 +171,7 @@ shell_graph(
 
 #     for _ in 1:maxiter
 #         x̃ = x
-#         b̃ = Float64[sum(Float64[(i==j || adjmat[i,j] == 0) ? 0.0 : ((x̃[j] <= x̃[i] ? 1.0 : -1.0) / adjmat[i,j]) for j=1:n]) for i=1:n]
+#         b̃ = Float64[sum(Float64[(i==j || adjmat[i,j] == 0) ? 0.0 : ((x̃[j] ≤ x̃[i] ? 1.0 : -1.0) / adjmat[i,j]) for j=1:n]) for i=1:n]
 #         @show x̃ b̃
 #         x = L \ b̃
 
@@ -433,7 +433,7 @@ end
 
 function shift_children!(layers, alist, placed, parent)
     for idx in alist[parent]
-        if !(idx in placed) && layers[idx] <= layers[parent]
+        if !(idx in placed) && layers[idx] ≤ layers[parent]
             layers[idx] = layers[parent] + 1
         end
     end

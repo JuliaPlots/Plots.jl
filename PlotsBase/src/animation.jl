@@ -214,7 +214,7 @@ function _animate(forloop::Expr, args...; type::Symbol = :none)
     n = length(args)
     i = 1
     # create filter and read parameters
-    while i <= n
+    while i ≤ n
         arg = args[i]
         if arg in (:when, :every)
             # specification of frame filter

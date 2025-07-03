@@ -25,7 +25,7 @@ function directed_curve(
     miny, maxy = extrema(yview)
     dist = sqrt((x2 - x1)^2 + (y2 - y1)^2)
     flip = root in (:top, :right)
-    need_loop = (flip && y1 <= y2) || (!flip && y1 >= y2)
+    need_loop = (flip && y1 ≤ y2) || (!flip && y1 ≥ y2)
 
     # these points give the initial/final "rise"
     # note: this is a function of distance between points and axis scale
@@ -113,7 +113,7 @@ function nearest_intersection(xs, ys, xd, yd, vec_xy_d)
         t .= (A + eps() * I) \ [xs - xvec[1]; ys - yvec[1]]
         xy_d_edge .=
             [(1 - t[2]) * xvec[1] + t[2] * xvec[2], (1 - t[2]) * yvec[1] + t[2] * yvec[2]]
-        if 0 <= t[2] <= 1
+        if 0 ≤ t[2] ≤ 1
             tmp = abs2(xy_d_edge[1] - xs) + abs2(xy_d_edge[2] - ys)
             if tmp < nearest
                 ret .= xy_d_edge
@@ -304,7 +304,7 @@ end
 
 # x and y limits for arc diagram ()
 function arcdiagram_limits(x, source, destiny)
-    @assert length(x) >= 2
+    @assert length(x) ≥ 2
     margin = abs(0.1 * (x[2] - x[1]))
     xmin, xmax = extrema(x)
     r = abs(0.5 * (xmax - xmin))

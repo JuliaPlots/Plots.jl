@@ -35,7 +35,7 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
     spidx = 1
     indices = zeros(Int, n, n)
     for i in 1:n, j in 1:n
-        isblank = (i == 1 && j == n) || (compact && i > 1 && j < n && j >= i)
+        isblank = (i == 1 && j == n) || (compact && i > 1 && j < n && j ≥ i)
         g[i, j].attr[:blank] = isblank
         if !isblank
             indices[i, j] = spidx
@@ -92,7 +92,7 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
         vi = view(mat, :, i)
         for j in 1:N
             # only the lower triangle
-            if compact && i <= j
+            if compact && i ≤ j
                 continue
             end
 

@@ -32,19 +32,19 @@ function update_clims(sp::Subplot, op = process_clims(sp[:clims]))::Tuple{Float6
     for series in series_list(sp)
         if series[:colorbar_entry]::Bool
             # Avoid calling the inner `update_clims` if at all possible; dynamic dispatch hell
-            if (series[:seriestype] ∈ Commons._z_colored_series && series[:z] ≢ nothing) ||
+            zmin, zmax = if (series[:seriestype] ∈ Commons._z_colored_series && series[:z] ≢ nothing) ||
                     series[:line_z] ≢ nothing ||
                     series[:marker_z] ≢ nothing ||
                     series[:fill_z] ≢ nothing
-                zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
+                _update_clims(zmin, zmax, update_clims(series, op)...)
             else
-                zmin, zmax = _update_clims(zmin, zmax, NaN, NaN)
+                _update_clims(zmin, zmax, NaN, NaN)
             end
         else
             update_clims(series, op)
         end
     end
-    return sp[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+    return sp[:clims_calculated] = zmin ≤ zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 function update_clims(
@@ -62,7 +62,7 @@ function update_clims(
     isnan(zmin) && isnan(old_zmin) && isnan(zmax) && isnan(old_zmax) ||
         zmin == old_zmin && zmax == old_zmax ||
         update_clims(sp)
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+    return zmin ≤ zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 """
@@ -87,7 +87,7 @@ function update_clims(series::Series, op = ignorenan_extrema)::Tuple{Float64, Fl
     if series[:fill_z] ≢ nothing
         zmin, zmax = update_clims(zmin, zmax, series[:fill_z], op)
     end
-    return series[:clims_calculated] = zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+    return series[:clims_calculated] = zmin ≤ zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 update_clims(zmin, zmax, vals::Surfaces.AbstractSurface, op)::Tuple{Float64, Float64} =
@@ -133,7 +133,7 @@ function get_colorbar_ticks(sp::Subplot; update = true, formatter = sp[:colorbar
         clims = get_clims(sp)
         scale = sp[:colorbar_scale]
         sp.attr[:colorbar_optimized_ticks] =
-            get_ticks(ticks, cvals, dvals, clims, scale, formatter)
+            Commons.get_ticks(ticks, cvals, dvals, clims, scale, formatter)
     end
     return sp.attr[:colorbar_optimized_ticks]
 end

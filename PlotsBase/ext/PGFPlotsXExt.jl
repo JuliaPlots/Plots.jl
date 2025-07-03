@@ -1556,15 +1556,13 @@ end
 # display calls this and then _display, its called 3 times for plot(1:5)
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
-function PlotsBase._update_min_padding!(sp::Subplot{PGFPlotsXBackend})
-    return sp.minpad =
-    if (leg = sp[:legend_position]) in
-            (:best, :outertopright, :outerright, :outerbottomright) ||
-            (leg isa Tuple && leg[1] >= 1)
-        (0mm, 0mm, 5mm, 0mm)
-    else
-        (0mm, 0mm, 0mm, 0mm)
-    end
+PlotsBase._update_min_padding!(sp::Subplot{PGFPlotsXBackend}) = sp.minpad =
+if (leg = sp[:legend_position]) in
+        (:best, :outertopright, :outerright, :outerbottomright) ||
+        (leg isa Tuple && leg[1] ≥ 1)
+    (0mm, 0mm, 5mm, 0mm)
+else
+    (0mm, 0mm, 0mm, 0mm)
 end
 
 PlotsBase._create_backend_figure(plt::Plot{PGFPlotsXBackend}) = plt.o = PGFPlotsXPlot()

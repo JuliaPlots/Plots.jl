@@ -346,7 +346,7 @@ more details.
         trim = false,
     )
     # Process the args so that they are a Graphs.Graph.
-    if length(g.args) <= 1 &&
+    if length(g.args) ≤ 1 &&
             !(eltype(g.args[1]) <: AbstractArray) &&
             !(g.args[1] isa Graphs.AbstractGraph) &&
             method != :chorddiagram &&

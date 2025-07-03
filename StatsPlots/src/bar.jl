@@ -71,7 +71,7 @@ end
 
 function groupedbar_fillrange(y)
     nr, nc = size(y)
-    # bar series fills from y[nr, nc] to fr[nr, nc], y .>= fr
+    # bar series fills from y[nr, nc] to fr[nr, nc], y .≥ fr
     fr = zeros(nr, nc)
     y = copy(y)
     y[.!isfinite.(y)] .= 0
@@ -82,7 +82,7 @@ function groupedbar_fillrange(y)
         # division subtract towards 0
         for c in 1:nc
             el = y[r, c]
-            if el >= 0
+            if el ≥ 0
                 y[r, c] = y_pos
                 y_pos -= el
                 fr[r, c] = y_pos

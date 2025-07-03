@@ -1073,14 +1073,14 @@ function intersection_point(xA, yA, xB, yB, h, w)
     s = (yA - yB) / (xA - xB)
     hh, hw = h / 2, w / 2
     # left or right?
-    return if -hh <= s * hw <= hh
+    return if -hh ≤ s * hw ≤ hh
         if xA > xB  # right
             xB + hw, yB + s * hw
         else  # left
             xB - hw, yB - s * hw
         end
         # top or bot?
-    elseif -hw <= hh / s <= hw
+    elseif -hw ≤ hh / s ≤ hw
         if yA > yB  # top
             xB + hh / s, yB + hh
         else  # bottom
@@ -1149,7 +1149,7 @@ function error_coords(errorbar, errordata, otherdata...)
 end
 
 # clamp non-NaN values in an array to Base.eps(Float64) for log-scale plots
-clamp_to_eps!(ary) = (replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary); nothing)
+clamp_to_eps!(ary) = (replace!(x -> x ≤ 0.0 ? Base.eps(Float64) : x, ary); nothing)
 
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
