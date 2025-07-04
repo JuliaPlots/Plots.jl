@@ -1,4 +1,4 @@
-# oneliner fast build PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES=1 julia --project make.jl
+# oneliner fast build PLOTDOCS_SUFFIX='' PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES='1' julia --project make.jl
 import Pkg; Pkg.precompile()
 
 using Plots, RecipesBase, RecipesPipeline
@@ -102,7 +102,7 @@ function generate_cards(
     )
     @show backend
     # create folder: for each backend we generate a DemoSection "generated" under "gallery"
-    cards_path = let dn = joinpath(prefix, "$backend", "generated")
+    cards_path = let dn = joinpath(prefix, "$backend", "generated" * suffix)
         isdir(dn) && rm(dn; recursive = true)
         mkpath(dn)
     end
@@ -111,32 +111,40 @@ function generate_cards(
     needs_rng_fix = Dict{Int, Bool}()
 
     for (i, example) in enumerate(Plots._examples)
+        i ∈ skip && continue
         (slice ≢ nothing && i ∉ slice) && continue
         # write out the header, description, code block, and image link
         jlname = "$backend-$(Plots.ref_name(i)).jl"
         jl = PipeBuffer()
+
+        # DemoCards YAML frontmatter
+        # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
+        asset_name = "$(backend)_$(Plots.ref_name(i))"
+        asset_path = asset_name * if i ∈ PlotsBase._animation_examples
+            ".gif"
+        elseif backend ∈ (:gr, :pythonplot, :gaston)
+            ".svg"
+        else
+            ".png"
+        end
+        extra = if backend ≡ :unicodeplots
+            "import FileIO, FreeType  #hide"  # weak deps for png export
+        else
+            ""
+        end
+
         if !isempty(example.header)
             push!(sec_config["order"], jlname)
             # start a new demo file
             @debug "generate demo \"$(example.header)\" - writing `$jlname`"
 
-            # DemoCards YAML frontmatter
-            # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-            asset = if i ∈ Plots._animation_examples
-                "anim_$(backend)_$(Plots.ref_name(i)).gif"
-            else
-                "$(backend)_$(Plots.ref_name(i)).png"
-            end
-            extra = if backend ≡ :unicodeplots
-                "import FileIO, FreeType  #hide"  # weak deps for png export
-            else
-                ""
-            end
+
             write(
                 jl, """
                 # ---
                 # title: $(example.header)
-                # id: $(backend)_$(Plots.ref_name(i)) $(i ∈ skip ? "" : "\n# cover: assets/$asset")
+                # id: $asset_name
+                # cover: $asset_path
                 # author: "$(author())"
                 # description: ""
                 # date: $(Dates.now())
@@ -145,12 +153,7 @@ function generate_cards(
                 using Plots
                 $backend()
                 $extra
-                """
-            )
 
-            i ∈ skip && @goto write_file
-            write(
-                jl, """
                 Plots.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(Plots.PLOTS_SEED))  #hide
@@ -168,25 +171,22 @@ function generate_cards(
         # from the docs: """
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
-        asset = if i ∈ Plots._animation_examples
-            "gif(anim, \"assets/anim_$(backend)_$(Plots.ref_name(i)).gif\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
-        else
-            "png(\"assets/$(backend)_$(Plots.ref_name(i)).png\")  #src\n"
-        end
-        write(
-            jl, """
-            mkpath("assets")  #src
-            $asset
+        asset_cmd = if i ∈ Plots._animation_examples
+            "Plots.gif(anim, \"$asset_path\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
+        elseif backend ∈ (:gr, :pythonplot, :gaston)
+            "Plots.svg(\"$asset_path\")  #src\n"
+        elseif backend ≡ :plotlyjs
             """
-        )
-        backend ≡ :plotlyjs && write(
-            jl, """
+            Plots.png("$asset_path")  #src\n
             nothing  #hide
-            # ![plot](assets/$(backend)_$(Plots.ref_name(i)).png)
+            # ![plot]($asset_path)
             """
-        )
+        else
+            "Plots.png(\"$asset_path\")  #src\n"
+        end
 
-        @label write_file
+        write(jl, """mkpath("assets")  #src\n$asset_cmd\n""")
+
         fn, mode = if isempty(example.header)
             "$backend-$(Plots.ref_name(i - 1)).jl", "a"  # continued example
         else
@@ -194,9 +194,7 @@ function generate_cards(
         end
         card = joinpath(cards_path, fn)
         # @info "writing" card
-        open(card, mode) do io
-            write(io, read(jl, String))
-        end
+        open(io -> write(io, read(jl, String)), card, mode)
         # DEBUG: sometimes the generated file is still empty when passing to `DemoCards.makedemos`
         sleep(0.01)
     end
@@ -514,9 +512,7 @@ generate_colorschemes_markdown() = open(joinpath(GEN_DIR, "colorschemes.md"), "w
         ```
         """
     )
-    for line in readlines(joinpath(SRC_DIR, "colorschemes.md"))
-        write(md, line * '\n')
-    end
+    foreach(line -> write(md, line * '\n'), readlines(joinpath(SRC_DIR, "colorschemes.md")))
     write(
         md, """
         ## misc
@@ -610,10 +606,10 @@ function main(args)
     inspectdr()
 
     # NOTE: for a faster representative test build use `PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES='1'`
-    default_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston,InspectDR"
-    packages = get(ENV, "PLOTDOCS_PACKAGES", default_packages)
-    packages = let val = packages == "ALL" ? default_packages : packages
-        Symbol.(filter(!isempty, strip.(split(val, ","))))
+    all_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston,InspectDR"
+    packages = get(ENV, "PLOTDOCS_PACKAGES", "ALL")
+    packages = let val = packages == "ALL" ? all_packages : packages
+        Symbol.(filter(!isempty, strip.(split(val))))
     end
     packages_backends = NamedTuple(p => Symbol(lowercase(string(p))) for p in packages)
     backends = values(packages_backends) |> collect
@@ -830,7 +826,7 @@ function main(args)
     # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
     @time "post-process `rng`" for pkg in packages
         be = packages_backends[pkg]
-        prefix = joinpath(BLD_DIR, "gallery", string(be), "generated")
+        prefix = joinpath(BLD_DIR, "gallery", string(be), "generated" * suffix)
         must_fix = needs_rng_fix[pkg]
         for file in Glob.glob("*/index.html", prefix)
             (m = match(r"-ref(\d+)", file)) ≡ nothing && continue
@@ -889,7 +885,7 @@ function main(args)
             root = @__DIR__,
             target = build,
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
-            # devbranch = BRANCH,
+            devbranch = BRANCH,
             deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
             repo_previews = "github.com/JuliaPlots/PlotDocs.jl",
             push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
