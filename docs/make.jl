@@ -607,9 +607,10 @@ function main(args)
     pgfplotsx()
     unicodeplots()
     gaston()
+    inspectdr()
 
     # NOTE: for a faster representative test build use `PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES='1'`
-    default_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston"
+    default_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston,InspectDR"
     packages = get(ENV, "PLOTDOCS_PACKAGES", default_packages)
     packages = let val = packages == "ALL" ? default_packages : packages
         Symbol.(filter(!isempty, strip.(split(val, ","))))
