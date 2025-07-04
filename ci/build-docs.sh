@@ -30,12 +30,19 @@ export COLORTERM=truecolor  # UnicodePlots.jl
 export PLOTDOCS_ANSICOLOR=true
 export JULIA_CONDAPKG_BACKEND=MicroMamba
 
+banner() {
+  echo "running action $GITHUB_ACTION with workflow $GITHUB_WORKFLOW for $GITHUB_REPOSITORY@$GITHUB_REF"
+  echo "triggered by actor $GITHUB_ACTOR on event $GITHUB_EVENT_NAME"
+  echo "commit SHA is $GITHUB_SHA"
+}
+
 julia_project() {
   xvfb-run -a julia --color=yes --project=docs "$@"
 }
 
 install_ubuntu_deps() {
   echo '== install system dependencies =='
+  banner
   sudo apt -y update
   sudo apt -y install \
     texlive-{latex-{base,extra},binaries,pictures,luatex} \
@@ -60,13 +67,15 @@ install_ubuntu_deps() {
 
 install_and_precompile_julia_deps() {
   echo "== install julia dependencies =="
+  banner
   JULIA_PKG_PRECOMPILE_AUTO=0 julia_project ci/matplotlib.jl
   echo '== precompile docs dependencies =='
   julia_project docs/make.jl none
 }
 
 build_documenter_docs() {
-  echo "== build documentation for $GITHUB_REPOSITORY@$GITHUB_REF, triggered by $GITHUB_ACTOR on $GITHUB_EVENT_NAME =="
+  echo "== build documentation =="
+  banner
   # export PLOTDOCS_PACKAGES='UnicodePlots'
   # export PLOTDOCS_PUSH_PREVIEW=true
   # export PLOTDOCS_EXAMPLES=1
