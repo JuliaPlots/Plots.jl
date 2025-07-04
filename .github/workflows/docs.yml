@@ -2,9 +2,9 @@ name: docs
 
 on:
   workflow_dispatch:
-  push:
-    branches: [master]
-    tags: ['v1.*']
+  # push:
+  #   branches: [master]
+  #   tags: ['v1.*']
   release:
     types: [published]
   pull_request:
