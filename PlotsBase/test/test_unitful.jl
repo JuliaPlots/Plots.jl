@@ -292,7 +292,7 @@ end
         @test contourf(x, y, z) isa PlotsBase.Plot
     end
 
-     @testset "latexify as unitformat" begin
+    @testset "latexify as unitformat" begin
         y = rand(10) * u"m^-1"
         @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left/\\;\\mathrm{m}^{-1}\\right.\$"
 
