@@ -1,4 +1,4 @@
-# oneliner fast build PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES=1 julia --project make.jl
+# oneliner fast build PLOTDOCS_SUFFIX='' PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES=1 julia --project make.jl
 import Pkg; Pkg.precompile()
 
 using RecipesBase, RecipesPipeline, PlotsBase, Plots
@@ -130,10 +130,13 @@ function generate_cards(
 
             # DemoCards YAML frontmatter
             # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-            asset = if i ∈ PlotsBase._animation_examples
-                "anim_$(backend)_$(PlotsBase.ref_name(i)).gif"
+            asset_name = "$(backend)_$(PlotsBase.ref_name(i))"
+            asset_path = asset_name * if i ∈ PlotsBase._animation_examples
+                ".gif"
+            elseif backend ∈ (:gr, :pythonplot)
+                ".svg"
             else
-                "$(backend)_$(PlotsBase.ref_name(i)).png"
+                ".png"
             end
             extra = if backend ≡ :unicodeplots
                 "import FileIO, FreeType  #hide"  # weak deps for png export
@@ -144,20 +147,18 @@ function generate_cards(
                 jl, """
                 # ---
                 # title: $(example.header)
-                # id: $(backend)_$(PlotsBase.ref_name(i))
-                # cover: assets/$asset
+                # id: $asset_name
+                # cover: $asset_path
                 # author: "$(author())"
                 # description: ""
                 # date: $(Dates.now())
                 # ---
 
                 using Plots
+                const PlotsBase = Plots.PlotsBase  #hide
                 $backend()
                 $extra
-                """
-            )
-            write(
-                jl, """
+
                 PlotsBase.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(PlotsBase.SEED))  #hide
@@ -176,22 +177,18 @@ function generate_cards(
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
         asset = if i ∈ PlotsBase._animation_examples
-            "gif(anim, \"assets/anim_$(backend)_$(PlotsBase.ref_name(i)).gif\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
-        else
-            "png(\"assets/$(backend)_$(PlotsBase.ref_name(i)).png\")  #src\n"
-        end
-        write(
-            jl, """
-            mkpath("assets")  #src
-            $asset
+            "gif(anim, \"$asset_path\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
+        elseif backend ∈ (:gr, :pythonplot)
+            "svg(\"$asset_path\")  #src\n"
+        elseif backend ≡ :plotlyjs
             """
-        )
-        backend ≡ :plotlyjs && write(
-            jl, """
             nothing  #hide
-            # ![plot](assets/$(backend)_$(PlotsBase.ref_name(i)).png)
+            # ![plot]($asset_path)
             """
-        )
+        else
+            "png(\"$asset_path\")  #src\n"
+        end
+        write(jl, """mkpath("assets")  #src\n$asset\n""")
 
         @label write_file
         fn, mode = if isempty(example.header)
@@ -201,9 +198,7 @@ function generate_cards(
         end
         card = joinpath(cards_path, fn)
         # @info "writing" card
-        open(card, mode) do io
-            write(io, read(jl, String))
-        end
+        open(io -> write(io, read(jl, String)), card, mode)
         # DEBUG: sometimes the generated file is still empty when passing to `DemoCards.makedemos`
         sleep(0.01)
     end
