@@ -1,4 +1,4 @@
-# oneliner fast build PLOTDOCS_SUFFIX='' PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES=1 julia --project make.jl
+# oneliner fast build PLOTDOCS_SUFFIX='' PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES='1' julia --project make.jl
 import Pkg; Pkg.precompile()
 
 using RecipesBase, RecipesPipeline, PlotsBase, Plots
@@ -128,7 +128,7 @@ function generate_cards(
         asset_name = "$(backend)_$(PlotsBase.ref_name(i))"
         asset_path = asset_name * if i ∈ PlotsBase._animation_examples
             ".gif"
-        elseif backend ∈ (:gr, :pythonplot)
+        elseif backend ∈ (:gr, :pythonplot, :gaston)
             ".svg"
         else
             ".png"
@@ -178,7 +178,7 @@ function generate_cards(
         # """
         asset_cmd = if i ∈ PlotsBase._animation_examples
             "PlotsBase.gif(anim, \"$asset_path\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
-        elseif backend ∈ (:gr, :pythonplot)
+        elseif backend ∈ (:gr, :pythonplot, :gaston)
             "PlotsBase.svg(\"$asset_path\")  #src\n"
         elseif backend ≡ :plotlyjs
             """
@@ -609,10 +609,10 @@ function main(args)
     gaston()
 
     # NOTE: for a faster representative test build use `PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES='1'`
-    default_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston"
-    packages = get(ENV, "PLOTDOCS_PACKAGES", default_packages)
-    packages = let val = packages == "ALL" ? default_packages : packages
-        Symbol.(filter(!isempty, strip.(split(val, ","))))
+    all_packages = "GR PythonPlot PlotlyJS PGFPlotsX UnicodePlots Gaston"
+    packages = get(ENV, "PLOTDOCS_PACKAGES", "ALL")
+    packages = let val = packages == "ALL" ? all_packages : packages
+        Symbol.(filter(!isempty, strip.(split(val))))
     end
     packages_backends = NamedTuple(p => Symbol(lowercase(string(p))) for p in packages)
     backends = values(packages_backends) |> collect
@@ -888,7 +888,7 @@ function main(args)
             root = @__DIR__,
             target = build,
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
-            # devbranch = BRANCH,
+            devbranch = BRANCH,
             deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
             repo_previews = "github.com/JuliaPlots/PlotDocs.jl",
             push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
