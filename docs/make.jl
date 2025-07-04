@@ -791,7 +791,7 @@ function main(args)
         @time "UnitfulExt" for (root, _, files) in walkdir(unitfulext), file in files
             last(splitext(file)) == ".jl" || continue
             ipath = joinpath(root, file)
-            opath = replace(ipath, src_unitfulext => "$work/generated") |> splitdir |> first
+            opath = replace(ipath, src_unitfulext => joinpath(work, "generated")) |> splitdir |> first
             Literate.markdown(ipath, opath; documenter = execute)
             nb && Literate.notebook(ipath, notebooks; execute)
         end
