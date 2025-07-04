@@ -656,7 +656,6 @@ function main(args)
                 joinpath(@__DIR__, "gallery", string(be));
                 root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = BRANCH
             )
-            @show path asset
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
             push!(gallery_assets, asset)
