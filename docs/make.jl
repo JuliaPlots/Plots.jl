@@ -109,7 +109,7 @@ function generate_cards(
     )
     @show backend
     # create folder: for each backend we generate a DemoSection "generated" under "gallery"
-    cards_path = let dn = joinpath(prefix, "$backend", "generated")
+    cards_path = let dn = joinpath(prefix, string(backend), "generated" * suffix)
         isdir(dn) && rm(dn; recursive = true)
         mkpath(dn)
     end
@@ -123,21 +123,21 @@ function generate_cards(
         # write out the header, description, code block, and image link
         jlname = "$backend-$(PlotsBase.ref_name(i)).jl"
         jl = PipeBuffer()
+        # DemoCards YAML frontmatter
+        # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
+        asset_name = "$(backend)_$(PlotsBase.ref_name(i))"
+        asset_path = asset_name * if i ∈ PlotsBase._animation_examples
+            ".gif"
+        elseif backend ∈ (:gr, :pythonplot)
+            ".svg"
+        else
+            ".png"
+        end
         if !isempty(example.header)
             push!(sec_config["order"], jlname)
             # start a new demo file
             @debug "generate demo \"$(example.header)\" - writing `$jlname`"
 
-            # DemoCards YAML frontmatter
-            # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-            asset_name = "$(backend)_$(PlotsBase.ref_name(i))"
-            asset_path = asset_name * if i ∈ PlotsBase._animation_examples
-                ".gif"
-            elseif backend ∈ (:gr, :pythonplot)
-                ".svg"
-            else
-                ".png"
-            end
             extra = if backend ≡ :unicodeplots
                 "import FileIO, FreeType  #hide"  # weak deps for png export
             else
@@ -176,19 +176,20 @@ function generate_cards(
         # from the docs: """
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
-        asset = if i ∈ PlotsBase._animation_examples
-            "gif(anim, \"$asset_path\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
+        asset_cmd = if i ∈ PlotsBase._animation_examples
+            "PlotsBase.gif(anim, \"$asset_path\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
         elseif backend ∈ (:gr, :pythonplot)
-            "svg(\"$asset_path\")  #src\n"
+            "PlotsBase.svg(\"$asset_path\")  #src\n"
         elseif backend ≡ :plotlyjs
             """
+            PlotsBase.png(\"$asset_path\")  #src
             nothing  #hide
             # ![plot]($asset_path)
             """
         else
-            "png(\"$asset_path\")  #src\n"
+            "PlotsBase.png(\"$asset_path\")  #src\n"
         end
-        write(jl, """mkpath("assets")  #src\n$asset\n""")
+        write(jl, """mkpath("assets")  #src\n$asset_cmd\n""")
 
         @label write_file
         fn, mode = if isempty(example.header)
@@ -651,13 +652,14 @@ function main(args)
     @time "gallery" for pkg in packages
         be = packages_backends[pkg]
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
-        let (path, cb, assets) = makedemos(
-                joinpath("gallery", string(be));
+        let (path, cb, asset) = makedemos(
+                joinpath(@__DIR__, "gallery", string(be));
                 root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = BRANCH
             )
+            @show path asset
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
-            push!(gallery_assets, assets)
+            push!(gallery_assets, asset)
         end
     end
     if !debug
@@ -827,7 +829,7 @@ function main(args)
     # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
     @time "post-process `rng`" for pkg in packages
         be = packages_backends[pkg]
-        prefix = joinpath(BLD_DIR, "gallery", string(be), "generated")
+        prefix = joinpath(BLD_DIR, "gallery", string(be), "generated" * suffix)
         must_fix = needs_rng_fix[pkg]
         for file in Glob.glob("*/index.html", prefix)
             (m = match(r"-ref(\d+)", file)) ≡ nothing && continue
