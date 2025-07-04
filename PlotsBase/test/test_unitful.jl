@@ -292,6 +292,16 @@ end
         @test contourf(x, y, z) isa PlotsBase.Plot
     end
 
+     @testset "latexify as unitformat" begin
+        y = rand(10) * u"m^-1"
+        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left/\\;\\mathrm{m}^{-1}\\right.\$"
+
+        uf = (l, u) -> l * " (" * latexify(u) * ")"
+        @test yguide(plot(y, ylabel = "hello", unitformat = uf)) == "hello (\$\\mathrm{m}^{-1}\$)"
+        Latexify.set_default(labelformat = :square)
+        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left[\\;\\mathrm{m}^{-1}\\right]\$"
+    end
+
     @testset "colorbar title" begin
         x, y = (1:0.01:2) * m, (1:0.02:2) * s
         z = x' ./ y
