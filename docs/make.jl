@@ -23,6 +23,8 @@ import Glob
 
 eval(PlotsBase.WEAKDEPS)
 
+PythonPlot.pygui(false)  # prevent segfault on event loop in ci
+
 const suffix = get(ENV, "PLOTDOCS_SUFFIX", "")
 const SRC_DIR = joinpath(@__DIR__, "src")
 const BLD_DIR = joinpath(@__DIR__, "build" * suffix)
@@ -612,8 +614,6 @@ function main(args)
     pgfplotsx()
     unicodeplots()
     gaston()
-
-    PythonPlot.pygui(false)  # prevent segfault on event loop in ci
 
     # NOTE: for a faster representative test build use `PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES='1'`
     default_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston"
