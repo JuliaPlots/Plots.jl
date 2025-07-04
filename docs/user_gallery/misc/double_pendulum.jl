@@ -31,8 +31,8 @@ function pendulum!(du, u, p, t)
     du[2] = (
         (
             M2 * L1 * u[2] * u[2] * sin(delta) * cos(delta) +
-            M2 * G * sin(u[3]) * cos(delta) +
-            M2 * L2 * u[4] * u[4] * sin(delta) - (M1 + M2) * G * sin(u[1])
+                M2 * G * sin(u[3]) * cos(delta) +
+                M2 * L2 * u[4] * u[4] * sin(delta) - (M1 + M2) * G * sin(u[1])
         ) / den1
     )
 
@@ -42,11 +42,11 @@ function pendulum!(du, u, p, t)
     du[4] = (
         (
             -M2 * L2 * u[4] * u[4] * sin(delta) * cos(delta) +
-            (M1 + M2) * G * sin(u[1]) * cos(delta) -
-            (M1 + M2) * L1 * u[2] * u[2] * sin(delta) - (M1 + M2) * G * sin(u[3])
+                (M1 + M2) * G * sin(u[1]) * cos(delta) -
+                (M1 + M2) * L1 * u[2] * u[2] * sin(delta) - (M1 + M2) * G * sin(u[3])
         ) / den2
     )
-    nothing
+    return nothing
 end
 
 # `th1` and `th2` are the initial angles (degrees)
@@ -93,7 +93,7 @@ anim = @animate for i in eachindex(x2)
         markerstrokewidth = 0,
         markerstrokecolor = :orange,
     )
-    annotate!(-1.25, 0.5, "time= $(rpad(round(sol.t[i]; digits=2),4,"0")) s")
+    annotate!(-1.25, 0.5, "time= $(rpad(round(sol.t[i]; digits = 2), 4, "0")) s")
 end
 gif(anim, fps = 10)
 
