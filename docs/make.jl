@@ -23,7 +23,7 @@ const SRC_DIR = joinpath(@__DIR__, "src")
 const BLD_DIR = joinpath(@__DIR__, "build" * suffix)
 const WORK_DIR = joinpath(@__DIR__, "work" * suffix)
 const GEN_DIR = joinpath(WORK_DIR, "generated")
-const BRANCH = ("master", "v2")[2]  # transition to v2
+const BRANCH = ("master", "v2")[1]  # transition to v2
 
 const ATTRIBUTE_SEARCH = Dict{String, Any}()  # search terms
 
@@ -120,7 +120,7 @@ function generate_cards(
         # DemoCards YAML frontmatter
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
         asset_name = "$(backend)_$(Plots.ref_name(i))"
-        asset_path = asset_name * if i ∈ PlotsBase._animation_examples
+        asset_path = asset_name * if i ∈ Plots._animation_examples
             ".gif"
         elseif backend ∈ (:gr, :pythonplot, :gaston)
             ".svg"
@@ -606,7 +606,7 @@ function main(args)
     inspectdr()
 
     # NOTE: for a faster representative test build use `PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES='1'`
-    all_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston,InspectDR"
+    all_packages = "GR PythonPlot PlotlyJS PGFPlotsX UnicodePlots Gaston InspectDR"
     packages = get(ENV, "PLOTDOCS_PACKAGES", "ALL")
     packages = let val = packages == "ALL" ? all_packages : packages
         Symbol.(filter(!isempty, strip.(split(val))))
