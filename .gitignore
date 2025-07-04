@@ -19,6 +19,6 @@ test/tmpplotsave.hdf5
 .CondaPkg/
 
 # docs
-**/generated/
+**/generated*/
 docs/build*/
 docs/work*/
