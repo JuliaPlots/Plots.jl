@@ -19,6 +19,8 @@ PlotExample(header::AbstractString, desc::AbstractString, imports::Expr, expr::E
     PlotExample(header, desc, false, imports, expr)
 # COV_EXCL_STOP
 
+ref_name(i) = "ref" * lpad(i, 3, '0')
+
 # the _examples we'll run for each backend
 const _examples = PlotExample[
     PlotExample( # 1
