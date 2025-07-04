@@ -1,4 +1,4 @@
-# oneliner fast build PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES=1 julia --project make.jl
+# oneliner fast build PLOTDOCS_SUFFIX='' PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES='1' julia --project make.jl
 import Pkg; Pkg.precompile()
 
 using RecipesBase, RecipesPipeline, PlotsBase, Plots
@@ -109,7 +109,7 @@ function generate_cards(
     )
     @show backend
     # create folder: for each backend we generate a DemoSection "generated" under "gallery"
-    cards_path = let dn = joinpath(prefix, "$backend", "generated")
+    cards_path = let dn = joinpath(prefix, string(backend), "generated" * suffix)
         isdir(dn) && rm(dn; recursive = true)
         mkpath(dn)
     end
@@ -118,22 +118,26 @@ function generate_cards(
     needs_rng_fix = Dict{Int, Bool}()
 
     for (i, example) in enumerate(PlotsBase._examples)
+        i ∈ skip && continue
         (slice ≢ nothing && i ∉ slice) && continue
         # write out the header, description, code block, and image link
         jlname = "$backend-$(PlotsBase.ref_name(i)).jl"
         jl = PipeBuffer()
+        # DemoCards YAML frontmatter
+        # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
+        asset_name = "$(backend)_$(PlotsBase.ref_name(i))"
+        asset_path = asset_name * if i ∈ PlotsBase._animation_examples
+            ".gif"
+        elseif backend ∈ (:gr, :pythonplot, :gaston)
+            ".svg"
+        else
+            ".png"
+        end
         if !isempty(example.header)
             push!(sec_config["order"], jlname)
             # start a new demo file
             @debug "generate demo \"$(example.header)\" - writing `$jlname`"
 
-            # DemoCards YAML frontmatter
-            # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-            asset = if i ∈ PlotsBase._animation_examples
-                "anim_$(backend)_$(PlotsBase.ref_name(i)).gif"
-            else
-                "$(backend)_$(PlotsBase.ref_name(i)).png"
-            end
             extra = if backend ≡ :unicodeplots
                 "import FileIO, FreeType  #hide"  # weak deps for png export
             else
@@ -143,21 +147,18 @@ function generate_cards(
                 jl, """
                 # ---
                 # title: $(example.header)
-                # id: $(backend)_$(PlotsBase.ref_name(i)) $(i ∈ skip ? "" : "\n# cover: assets/$asset")
+                # id: $asset_name
+                # cover: $asset_path
                 # author: "$(author())"
                 # description: ""
                 # date: $(Dates.now())
                 # ---
 
                 using Plots
+                const PlotsBase = Plots.PlotsBase  #hide
                 $backend()
                 $extra
-                """
-            )
 
-            i ∈ skip && @goto write_file
-            write(
-                jl, """
                 PlotsBase.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(PlotsBase.SEED))  #hide
@@ -175,23 +176,20 @@ function generate_cards(
         # from the docs: """
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
-        asset = if i ∈ PlotsBase._animation_examples
-            "gif(anim, \"assets/anim_$(backend)_$(PlotsBase.ref_name(i)).gif\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
-        else
-            "png(\"assets/$(backend)_$(PlotsBase.ref_name(i)).png\")  #src\n"
-        end
-        write(
-            jl, """
-            mkpath("assets")  #src
-            $asset
+        asset_cmd = if i ∈ PlotsBase._animation_examples
+            "PlotsBase.gif(anim, \"$asset_path\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
+        elseif backend ∈ (:gr, :pythonplot, :gaston)
+            "PlotsBase.svg(\"$asset_path\")  #src\n"
+        elseif backend ≡ :plotlyjs
             """
-        )
-        backend ≡ :plotlyjs && write(
-            jl, """
+            PlotsBase.png(\"$asset_path\")  #src
             nothing  #hide
-            # ![plot](assets/$(backend)_$(PlotsBase.ref_name(i)).png)
+            # ![plot]($asset_path)
             """
-        )
+        else
+            "PlotsBase.png(\"$asset_path\")  #src\n"
+        end
+        write(jl, """mkpath("assets")  #src\n$asset_cmd\n""")
 
         @label write_file
         fn, mode = if isempty(example.header)
@@ -201,9 +199,7 @@ function generate_cards(
         end
         card = joinpath(cards_path, fn)
         # @info "writing" card
-        open(card, mode) do io
-            write(io, read(jl, String))
-        end
+        open(io -> write(io, read(jl, String)), card, mode)
         # DEBUG: sometimes the generated file is still empty when passing to `DemoCards.makedemos`
         sleep(0.01)
     end
@@ -482,29 +478,28 @@ function generate_graph_attr_markdown()
             # [Graph Attributes](@id graph_attributes)
 
             Where possible, GraphRecipes will adopt attributes from Plots.jl to format visualizations.
-            For example, the `linewidth` attribute from Plots.jl has the same effect in GraphRecipes.
-            In order to give the user control over the layout of the graph visualization, GraphRecipes
-            provides a number of keyword arguments (attributes). Here we describe those attributes
-            alongside their default values.
+            For example, the `linewidth` attribute from Plots.jl has the same effect in `GraphRecipes`.
+            In order to give the user control over the layout of the graph visualization,
+            `GraphRecipes` provides a number of keyword arguments (attributes).
+            Here we describe those attributes alongside their default values.
 
             ```@raw html
             $(to_html(df))
             ```
             \n
             ## Aliases
-            Certain keyword arguments have aliases, so GraphRecipes "does what you mean, not
-            what you say".
+            Certain keyword arguments have aliases, so `GraphRecipes` does "what you mean, not what you say".
 
-            So for example, `nodeshape=:rect` and `node_shape=:rect` are equivalent. To see the
-            available aliases, type `GraphRecipes.graph_aliases`. If you are unhappy with the provided
-            aliases, then you can add your own:
+            So for example, `nodeshape=:rect` and `node_shape=:rect` are equivalent.
+            To see the available aliases, type `GraphRecipes.graph_aliases`.
+            If you are unhappy with the provided aliases, then you can add your own:
             ```julia
             using GraphRecipes, Plots
 
             push!(GraphRecipes.graph_aliases[:nodecolor],:nc)
 
             # These two calls produce the same plot, modulo some randomness in the layout.
-            plot(graphplot([0 1; 0 0], nodecolor=:red), graphplot([0 1; 0 0], nc=:red))
+            plot(graphplot([0 1; 0 0]; nodecolor=:red), graphplot([0 1; 0 0]; nc=:red))
             ```
 
             $(autogenerated())
@@ -521,9 +516,7 @@ generate_colorschemes_markdown() = open(joinpath(GEN_DIR, "colorschemes.md"), "w
         ```
         """
     )
-    for line in readlines(joinpath(SRC_DIR, "colorschemes.md"))
-        write(md, line * '\n')
-    end
+    foreach(line -> write(md, line * '\n'), readlines(joinpath(SRC_DIR, "colorschemes.md")))
     write(
         md, """
         ## misc
@@ -616,10 +609,10 @@ function main(args)
     gaston()
 
     # NOTE: for a faster representative test build use `PLOTDOCS_PACKAGES='GR' PLOTDOCS_EXAMPLES='1'`
-    default_packages = "GR,PythonPlot,PlotlyJS,PGFPlotsX,UnicodePlots,Gaston"
-    packages = get(ENV, "PLOTDOCS_PACKAGES", default_packages)
-    packages = let val = packages == "ALL" ? default_packages : packages
-        Symbol.(filter(!isempty, strip.(split(val, ","))))
+    all_packages = "GR PythonPlot PlotlyJS PGFPlotsX UnicodePlots Gaston"
+    packages = get(ENV, "PLOTDOCS_PACKAGES", "ALL")
+    packages = let val = packages == "ALL" ? all_packages : packages
+        Symbol.(filter(!isempty, strip.(split(val))))
     end
     packages_backends = NamedTuple(p => Symbol(lowercase(string(p))) for p in packages)
     backends = values(packages_backends) |> collect
@@ -659,13 +652,13 @@ function main(args)
     @time "gallery" for pkg in packages
         be = packages_backends[pkg]
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
-        let (path, cb, assets) = makedemos(
-                joinpath("gallery", string(be));
+        let (path, cb, asset) = makedemos(
+                joinpath(@__DIR__, "gallery", string(be));
                 root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = BRANCH
             )
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
-            push!(gallery_assets, assets)
+            push!(gallery_assets, asset)
         end
     end
     if !debug
@@ -835,7 +828,7 @@ function main(args)
     # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
     @time "post-process `rng`" for pkg in packages
         be = packages_backends[pkg]
-        prefix = joinpath(BLD_DIR, "gallery", string(be), "generated")
+        prefix = joinpath(BLD_DIR, "gallery", string(be), "generated" * suffix)
         must_fix = needs_rng_fix[pkg]
         for file in Glob.glob("*/index.html", prefix)
             (m = match(r"-ref(\d+)", file)) ≡ nothing && continue
@@ -894,7 +887,7 @@ function main(args)
             root = @__DIR__,
             target = build,
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
-            # devbranch = BRANCH,
+            devbranch = BRANCH,
             deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
             repo_previews = "github.com/JuliaPlots/PlotDocs.jl",
             push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
