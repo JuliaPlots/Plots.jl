@@ -102,7 +102,7 @@ function generate_cards(
     )
     @show backend
     # create folder: for each backend we generate a DemoSection "generated" under "gallery"
-    cards_path = let dn = joinpath(prefix, "$backend", "generated" * suffix)
+    cards_path = let dn = joinpath(prefix, string(backend), "generated" * suffix)
         isdir(dn) && rm(dn; recursive = true)
         mkpath(dn)
     end
@@ -649,13 +649,13 @@ function main(args)
     @time "gallery" for pkg in packages
         be = packages_backends[pkg]
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
-        let (path, cb, assets) = makedemos(
+        let (path, cb, asset) = makedemos(
                 joinpath("gallery", string(be));
                 root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = BRANCH
             )
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
-            push!(gallery_assets, assets)
+            push!(gallery_assets, asset)
         end
     end
     if !debug
