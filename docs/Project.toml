@@ -70,3 +70,8 @@ StaticArrays = "1"
 TestImages = "1"
 UnicodePlots = "3"
 Unitful = "1"
+
+[sources]
+Plots = {path = ".."}
+RecipesBase = {path = "../RecipesBase"}
+RecipesPipeline = {path = "../RecipesPipeline"}

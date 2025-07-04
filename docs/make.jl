@@ -1,7 +1,8 @@
 # oneliner fast build PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES=1 julia --project make.jl
 import Pkg; Pkg.precompile()
 
-using Plots, DemoCards, Literate, Documenter
+using Plots, RecipesBase, RecipesPipeline
+using DemoCards, Literate, Documenter
 
 import OrderedCollections
 import GraphRecipes
