@@ -1,22 +1,15 @@
 # oneliner fast build PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES=1 julia --project make.jl
 import Pkg; Pkg.precompile()
 
-using RecipesBase, RecipesPipeline, Plots
-using DemoCards, Literate, Documenter
+using Plots, DemoCards, Literate, Documenter
 
 import OrderedCollections
-import UnicodePlots
 import GraphRecipes
 import StableRNGs
-import PythonPlot
 import StatsPlots
 import MacroTools
 import DataFrames
 import PlotThemes
-import PGFPlotsX
-import PlotlyJS
-import Unitful
-import Gaston
 import Dates
 import JSON
 import Glob
@@ -739,7 +732,7 @@ function main(args)
                 ],
                 "Overview" => "ecosystem.md",
             ],
-            "Advanced Topics" => ["Plot objects" => "plot_objects.md", "Plotting pipeline" => "pipeline.md"],
+            "Advanced Topics" => ["Plotting pipeline" => "pipeline.md"],
             "Gallery" => gallery,
             "User Gallery" => user_gallery,
             "API" => "api.md",
