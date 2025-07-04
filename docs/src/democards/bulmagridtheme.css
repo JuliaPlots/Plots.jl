@@ -1,0 +1,12 @@
+.bulma-grid-card {
+    display: flex;
+    flex-direction: column;
+}
+ 
+.bulma-grid-card-cover {
+    order: -1;
+}
+
+.bulma-grid-card-cover img {
+    width: 100%;
+}

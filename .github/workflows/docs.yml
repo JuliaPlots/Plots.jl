@@ -7,29 +7,29 @@ on:
     tags: '*'
   release:
     types: [published]
+  pull_request:
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.head_ref && github.ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
-  Build_docs:
+  build:
+    if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'documentation') }}
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: read
+      statuses: write
     runs-on: ubuntu-latest
+    env:
+      PYTHON: ""
+      DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
     steps:
       - uses: actions/checkout@v4
-        with:
-          repository: JuliaPlots/PlotDocs.jl
       - uses: julia-actions/setup-julia@latest
-      - name: Cache artifacts
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts 
-          key: ${{runner.os}}-test-${{env.cache-name}}-${{hashFiles('**/Project.toml')}}
-          restore-keys: |
-            ${{runner.os}}-test-${{env.cache-name}}-
-            ${{runner.os}}-test-
-            ${{runner.os}}-
-      - name: Build documentation
-        env:
-          PYTHON: ""
-          DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        run: bash docs/ci_build.sh
+      - uses: julia-actions/cache@v2
+      - run: bash -c '. ci/build-docs.sh; install_ubuntu_deps'
+      - run: bash -c '. ci/build-docs.sh; install_and_precompile_julia_deps'
+      - run: bash -c '. ci/build-docs.sh; build_documenter_docs'
