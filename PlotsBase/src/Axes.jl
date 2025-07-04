@@ -347,22 +347,22 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
     return axis
 end
 
-function get_guide(axis::Axis)
-    if isnothing(axis[:unit]) || axis[:unitformat] ≡ :nounit
-        return axis[:guide]
+get_guide(axis::Axis)::String = if isnothing(axis[:guide]) 
+    ""
+elseif isnothing(axis[:unit]) || axis[:unitformat] ≡ :nounit
+    axis[:guide]
+else
+    unit = if axis[:unitformat] isa Function
+        axis[:unit]
+    elseif PlotsBase.backend_name() ≡ :pgfplotsx
+        pgext = Base.get_extension(PlotsBase, :PGFPlotsXExt)
+        isnothing(pgext) && error("PGFPlotsX extension not loaded. Problems")
+        pgext.Latexify.latexify(axis[:unit])
     else
-        ustr = if PlotsBase.backend_name() ≡ :pgfplotsx
-            pgext = Base.get_extension(PlotsBase, :PGFPlotsXExt)
-            isnothing(pgext) && error("PGFPlotsX extension not loaded. Problems")
-            pgext.Latexify.latexify(axis[:unit])
-        else
-            string(axis[:unit])
-        end
-        if isempty(axis[:guide])
-            return ustr
-        end
-        return format_unit_label(axis[:guide], ustr, axis[:unitformat])
+        string(axis[:unit])
     end
+    isempty(axis[:guide]) && return unit
+    format_unit_label(axis[:guide], unit, axis[:unitformat])
 end
 
 # Keyword options for unit formats
