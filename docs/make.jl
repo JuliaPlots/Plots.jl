@@ -125,7 +125,7 @@ function generate_cards(
         jl = PipeBuffer()
         # DemoCards YAML frontmatter
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-        svg_ready_backends = (:gr, :pythonplot, :plotlyjs, :gaston)
+        svg_ready_backends = (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)
         asset_name = "$(backend)_$(PlotsBase.ref_name(i))"
         asset_path = asset_name * if i ∈ PlotsBase._animation_examples
             ".gif"
