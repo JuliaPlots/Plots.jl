@@ -125,10 +125,11 @@ function generate_cards(
         jl = PipeBuffer()
         # DemoCards YAML frontmatter
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
+        svg_ready_backends = (:gr, :pythonplot, :plotlyjs, :gaston)
         asset_name = "$(backend)_$(PlotsBase.ref_name(i))"
         asset_path = asset_name * if i ∈ PlotsBase._animation_examples
             ".gif"
-        elseif backend ∈ (:gr, :pythonplot, :gaston)
+        elseif backend ∈ svg_ready_backends
             ".svg"
         else
             ".png"
@@ -177,17 +178,11 @@ function generate_cards(
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
         asset_cmd = if i ∈ PlotsBase._animation_examples
-            "PlotsBase.gif(anim, \"$asset_path\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
-        elseif backend ∈ (:gr, :pythonplot, :gaston)
-            "PlotsBase.svg(\"$asset_path\")  #src\n"
-        elseif backend ≡ :plotlyjs
-            """
-            PlotsBase.png(\"$asset_path\")  #src
-            nothing  #hide
-            # ![plot]($asset_path)
-            """
+            "PlotsBase.gif(anim, \"$asset_path\")"  # NOTE: must not be hidden, for appearance in the rendered `html`
+        elseif backend ∈ svg_ready_backends
+            "PlotsBase.svg(\"$asset_path\")  #src"
         else
-            "PlotsBase.png(\"$asset_path\")  #src\n"
+            "PlotsBase.png(\"$asset_path\")  #src"
         end
         write(jl, """mkpath("assets")  #src\n$asset_cmd\n""")
 
