@@ -4,7 +4,6 @@ PlotsBase.reset_defaults()
 ```
 
 # [Tutorial](@id tutorial)
-
 This is a guide for getting you up and running with Plots.jl. Its main goal is
 to introduce you to the terminology used in the package, how to use Plots.jl in
 common use cases, and put you in a position to easily understand the rest of
@@ -12,7 +11,6 @@ the manual. It is recommended that the code examples be followed inside
 the REPL or an interactive notebook.
 
 ## Basic Plotting: Line Plots
-
 After you have installed Plots.jl via `Pkg.add("Plots")`, the first step is to
 initialize the package. Depending on your computer, this will take a few seconds:
 
@@ -182,7 +180,6 @@ Note that `y3` is being plotted as a dotted line. This is distinct from a
 scatter plot of the data.
 
 ### Logarithmic Scale Plots
-
 Sometimes data needs to be plotted across orders of magnitude. The attributes
 `xscale` and `yscale` can be set to `:log10` in this case. They can also be
 set to `:identity` to keep them linear-scale.
@@ -205,7 +202,6 @@ More information about attributes can be found in the
 [Attributes](@ref attributes) section of the Manual.
 
 ### LaTeX Equation Strings
-
 Plots.jl works with LaTeXStrings.jl, a package that allows the user to type
 LaTeX equations in string literals. To install this, type in
 `Pkg.add("LaTeXStrings")`. The easiest way to use it is to prepend `L` to a
@@ -285,7 +281,6 @@ ylabel!("y")
 ```
 
 ## [Plotting Backends](@id plotting-backends)
-
 Plots.jl is a plotting metapackage: it's an interface over many different plotting libraries.
 What Plots.jl is actually doing is interpreting your commands and then
 generating the plots using another plotting library, called the **backend**.
@@ -344,7 +339,6 @@ For more information on backends, see the [backends page](@ref backends).
 For examples of plots from the various backends, see the Examples section.
 
 ## Plotting in Scripts
-
 At the start of the tutorial, we recommended following along the code examples
 in an interactive session for the following reason: try adding those same
 plotting commands to a script. Now call the script... and the plot doesn't
@@ -366,7 +360,6 @@ Finally, if we have a plot object `p`, we can type `display(p)` to
 display the plot.
 
 ## Combining Multiple Plots as Subplots
-
 We can combine multiple plots together as subplots using **layouts**.
 There are many methods for doing this, and we will show two simple methods
 for generating simple layouts. More advanced layouts are shown in the
@@ -413,7 +406,6 @@ individual plots, while the attribute `legend=false` in the final `plot`
 call is applied to all of the subplots.
 
 ## Plot Recipes and Recipe Libraries
-
 You now know all of the basic terminology of Plots.jl and can roam the
 documentation freely to become a plotting master. However, there is one
 thing left: **recipes**. Plotting recipes are extensions to the Plots.jl
@@ -442,7 +434,6 @@ Besides recipes, StatsPlots.jl also provides a specialized macro `@df` from plot
 directly from data tables.
 
 ### Using User Recipes
-
 A user recipe says how to interpret plotting commands on a new data type.
 In this case, StatsPlots.jl has a macro `@df` which allows you to plot
 a `DataFrame` directly by using the column names. Let's build a `DataFrame`
@@ -472,7 +463,6 @@ There's not much you have to do here: all of the commands from before
 ```
 
 ### Using a Type Recipe
-
 In addition, StatsPlots.jl extends Distributions.jl by adding a type recipe
 for its distribution types, so they can be directly interpreted as plotting
 data:
@@ -486,7 +476,6 @@ Type recipes are a very convenient way to plot a specialized type which
 requires no more intervention!
 
 ### Using Plot Recipes
-
 StatsPlots.jl adds the `marginhist` multiplot via a plot recipe. For our data,
 we will pull in the famous `iris` dataset from RDatasets:
 
@@ -507,7 +496,6 @@ Thus a plot recipe is not just a series, but also something like a new
 `plot` command.
 
 ### Using Series Recipes
-
 StatsPlots.jl also introduces new series recipes. The key is that you don't have
 to do anything differently. After `using StatsPlots`, you can simply use those
 new series recipes as though they were built into the plotting libraries. Let's
@@ -525,7 +513,6 @@ boxplot!(["Series 1" "Series 2" "Series 3" "Series 4"], y, legend=false)
 ```
 
 ## Additional Addons To Try
-
 Given the easy extendability of Plots.jl, there are many other things you can
 try. Here's a short list of very usable addons to check out:
 

@@ -201,9 +201,11 @@ Navigate to the repo site (https://github.com/JuliaPlots/Plots.jl) and click the
 
 #### Set up the git remote
 
-Navigate to the local repo.  Note: I'm assuming that you do development in your Julia directory, and using Mac/Linux.  Adjust as needed.
+Navigate to the local repo.
+Note: I'm assuming that you do development in your Julia directory, and using Mac/Linux.
+Adjust as needed.
 
-```
+```bash
 cd ~/.julia/v0.5/Plots
 git remote add forked git@github.com:user123/Plots.jl.git
 ```
@@ -214,7 +216,7 @@ After running these commands, `git remote -v` should show two remotes: `origin` 
 
 If you're just starting work on a new feature:
 
-```
+```bash
 git fetch origin
 git checkout master
 git merge --ff-only origin/master
@@ -228,7 +230,7 @@ The first three lines are meant to ensure you start from the main repo's master 
 
 If you have an ongoing development branch (say, `user123-dev`) which you'd prefer to use (and which has previously been merged into master!) then you can get that up to date with:
 
-```
+```bash
 git fetch origin
 git checkout user123-dev
 git merge --ff-only origin/master
@@ -239,7 +241,7 @@ We update our local copy of origin, checkout the dev branch, then attempt to "fa
 
 #### Write code, and format
 
-Power up your favorite editor (maybe [Juno](https://junolab.org/)?) and make some code changes to the repo.
+Power up your favorite editor (maybe [Juno](https://junolab.org)?) and make some code changes to the repo.
 
 Format your changes (code style consistency) using:
 ```bash
@@ -250,11 +252,14 @@ $ julia -e 'using Runic; exit(Runic.main(ARGS))' -- --inplace .
 
 After applying changes, you'll want to "commit" or save a snapshot of all the changes you made.  After committing, you can "push" those changes to your forked repo on Github:
 
-```
+```bash
 git add src/my_new_file.jl
 git commit -am "my commit message"
 git push forked user123-dev
 ```
+
+`Plots` has some [pre-commit](https://pre-commit.com) hooks configuration set in order to enhance code quality.
+One can run the `pre-commit` checks using `pre-commit run --all-files`, they should be automatically ran when using `git commit` if installed.
 
 The first line is optional, and is used when adding new files to the repo.  The `-a` means "commit all my changes", and the `-m` lets you write a note about the commit (you should always do this, and hopefully make it descriptive).
 
@@ -268,7 +273,7 @@ Make sure the "base" branch is JuliaPlots `master` and the "compare" branch is `
 
 After all of this, you will likely want to go back to using `master` (or possibly using a tagged release, once your feature is tagged).  To clean up:
 
-```
+```bash
 git fetch origin
 git checkout master
 git merge --ff-only origin/master
@@ -311,7 +316,7 @@ From the Julia REPL, run `Pkg.test(name="Plots")`.  This will try to plot the te
 
 After the reference images have been updated, navigate to PlotReferenceImages and push the changes to Github:
 
-```
+```bash
 cd ~/.julia/v0.5/PlotReferenceImages
 git add Plots/*
 git commit -am "a useful message"

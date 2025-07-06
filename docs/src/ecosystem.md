@@ -73,8 +73,6 @@ In a paper, Tupper presents a method for graphing two-dimensional implicit equat
 
 ![](https://camo.githubusercontent.com/950ef704a0601ed9429addb35e6b7246ca5da149/687474703a2f2f692e696d6775722e636f6d2f4c4368547a43312e706e67)
 
-
-
 ## [ControlSystems](https://github.com/JuliaControl/ControlSystems.jl)
 
 A control systems design toolbox for Julia.  This toolbox works similar to that of other major computer-aided control systems design (CACSD) toolboxes. Systems can be created in either a transfer function or a state space representation. These systems can then be combined into larger architectures, simulated in both time and frequency domain, and analyzed for stability/performance properties.
