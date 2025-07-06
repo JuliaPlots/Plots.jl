@@ -1276,10 +1276,10 @@ Base.pointer(n::APS, i::Integer) = pointer(n.content, i)
 function protectedstring(s)
     Base.depwarn(
         """
-        `protectedstring` and the `P_str` macro (used for Unitful plots) are deprecated, 
-        and will be dropped in Plots.jl 2.0 . 
+        `protectedstring` and the `P_str` macro (used for Unitful plots) are deprecated,
+        and will be dropped in Plots.jl 2.0 .
 
-        To suppress all axis labels, pass an empty string to `xlabel`, etc. 
+        To suppress all axis labels, pass an empty string to `xlabel`, etc.
         To suppress units in axis labels pass `unitformat = :nounit` or `unitformat=(l,u)->l`
         (equivalently for `xunitformat`, `yunitformat`, etc.).
             """, :protectedstring, force = true
