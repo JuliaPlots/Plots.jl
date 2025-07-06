@@ -627,9 +627,9 @@ function main(args)
 
     debug = length(packages) ≤ 1 || 1 < len_sl ≤ 3
 
-    work = basename(WORK_DIR)
-    build = basename(BLD_DIR)
-    src = basename(SRC_DIR)
+    work_dir = basename(WORK_DIR)
+    bld_dir = basename(BLD_DIR)
+    src_dir = basename(SRC_DIR)
     @show debug SRC_DIR WORK_DIR BLD_DIR
 
     @info "generate markdown"
@@ -657,7 +657,7 @@ function main(args)
         needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice; debug)
         let (path, cb, asset) = makedemos(
                 joinpath(@__DIR__, "gallery", string(be));
-                root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = BRANCH
+                root = @__DIR__, src = joinpath(work_dir, "gallery"), edit_branch = BRANCH
             )
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
@@ -667,7 +667,7 @@ function main(args)
     if !debug
         user_gallery, cb, assets = makedemos(
             joinpath("user_gallery");
-            root = @__DIR__, src = work, edit_branch = BRANCH
+            root = @__DIR__, src = work_dir, edit_branch = BRANCH
         )
         push!(gallery_callbacks, cb)
         push!(gallery_assets, assets)
@@ -679,7 +679,10 @@ function main(args)
         [
             "Home" => "index.md",
             "Gallery" => gallery,
-            "Manual" => "generated/attributes_series.md",
+            "Manual" => [
+                "Series Attributes" => "generated/attributes_series.md",
+                "Output" => "output.md",
+            ]
         ]
     else  # release
         [
@@ -778,7 +781,7 @@ function main(args)
             n += 1
         end
     end
-    @info "copied $n source file(s) to scratch directory `$work`"
+    @info "copied $n source file(s) to scratch directory `$work_dir`"
 
     if !debug
         @info "UnitfulExt"
@@ -791,7 +794,7 @@ function main(args)
         @time "UnitfulExt" for (root, _, files) in walkdir(unitfulext), file in files
             last(splitext(file)) == ".jl" || continue
             ipath = joinpath(root, file)
-            opath = replace(ipath, src_unitfulext => joinpath(work, "generated")) |> splitdir |> first
+            opath = replace(ipath, src_unitfulext => joinpath(work_dir, "generated")) |> splitdir |> first
             Literate.markdown(ipath, opath; documenter = execute)
             nb && Literate.notebook(ipath, notebooks; execute)
         end
@@ -811,8 +814,8 @@ function main(args)
                 ansicolor,
             ),
             root = @__DIR__,
-            source = work,
-            build,
+            source = work_dir,
+            build = bld_dir,
             # pagesonly = true,  # fails DemoCards, see github.com/JuliaDocs/DemoCards.jl/issues/162
             sitename = "Plots",
             authors = "Thomas Breloff",
@@ -874,11 +877,11 @@ function main(args)
         # @show file
         lines = readlines(file; keep = true)
         any(line -> occursin(joinpath("blob", BRANCH, "docs"), line), lines) || continue
-        @info "fixing $file" maxlog = 10
+        old = joinpath("blob", BRANCH, "docs", work_dir)
+        new = joinpath("blob", BRANCH, "docs", src_dir)
+        @info "fixing $file $old -> $new" maxlog = 10
         open(file, "w") do io
-            old = joinpath("blob", BRANCH, "docs", work)
-            new = joinpath("blob", BRANCH, "docs", src)
-            foreach(line -> write(io, replace(line, old => new)), lines)
+            foreach(line -> write(io, replace(line, old => new, joinpath(WORK_DIR) => new)), lines)
         end
     end
 
@@ -898,7 +901,7 @@ function main(args)
     @time "deploydocs" withenv("GITHUB_REPOSITORY" => repo) do
         deploydocs(;
             root = @__DIR__,
-            target = build,
+            target = bld_dir,
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
             devbranch = BRANCH,
             deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
