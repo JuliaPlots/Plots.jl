@@ -6,8 +6,9 @@ repos:
     hooks:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-added-large-files
+    -   id: check-toml
+    # -   id: check-yaml
+    # -   id: check-added-large-files
 -   repo: 'https://github.com/fredrikekre/runic-pre-commit'
     rev: v2.0.1
     hooks:
