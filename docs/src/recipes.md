@@ -489,5 +489,3 @@ Closest candidates are:
     Use of the `return` keyword in recipes requires RecipesBase 0.9
 
 This error is encountered if you use the `return` keyword in a recipe, which is not supported in RecipesBase up to v0.8.
-
-

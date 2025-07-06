@@ -8,7 +8,7 @@
 
 - deprecated backends `pgfplots` and `pyplot` removed
 - deprecated keyword `orientation` removed
-- backends are extensions now so the backend code must be explicitly loaded using `import` with the backend package, e.g. 
+- backends are extensions now so the backend code must be explicitly loaded using `import` with the backend package, e.g.
     ```julia
     using Plots
     import GR # loads backend code
@@ -18,9 +18,9 @@
   - `Shape`, which is now `shape`
 - The default `label` is now `:none`, use `:auto` to restore the previous behaviour
 - UnitfulExt changes:
-  - The `P_str` macro is no longer provided as API. The intended goal was simply to not put 
+  - The `P_str` macro is no longer provided as API. The intended goal was simply to not put
   units on axis labels which were "protected strings". To achieve this now, pass `unitformat=:nounit`.
-  - The axis option `unitformat=:none`, `unitformat=nothing`, and `unitformat=false` previously 
+  - The axis option `unitformat=:none`, `unitformat=nothing`, and `unitformat=false` previously
     printed the axis guide as `string(label, " ", unit)`. That behavior is now moved to `unitformat=:space`,
     and `:none`, `nothing`, and `false` print the axis guide without units.
 

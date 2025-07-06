@@ -63,7 +63,7 @@ y1, y2 = [4, 5],  [6, 7]    # vectors
 m1, m2 = [x1 y1], [x2 y2]   # 2x2 matrices
 
 plot([m1, m2])              # array of matrices -> 4 series, plots each matrix column, x assumed to be integer count
-plot([[x1,y1], [x2,y2]])    # array of array of arrays -> 4 series, plots each individual array, x assumed to be integer count 
+plot([[x1,y1], [x2,y2]])    # array of array of arrays -> 4 series, plots each individual array, x assumed to be integer count
 plot([(x1,y1), (x2,y2)])    # array of tuples of arrays -> 2 series, plots each tuple as new series
 ```
 

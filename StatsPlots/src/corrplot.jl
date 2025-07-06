@@ -1,7 +1,7 @@
 """
     corrplot
 
-This plot type shows the correlation among input variables.  
+This plot type shows the correlation among input variables.
 A correlation plot may be produced by a matrix.
 
 
@@ -12,11 +12,11 @@ using the [`@df`](@ref) macro like so:
 @df iris corrplot([:SepalLength :SepalWidth :PetalLength :PetalWidth])
 ```
 
-The marker color in scatter plots reveals the degree of correlation. 
+The marker color in scatter plots reveals the degree of correlation.
 Pass the desired colorgradient to `markercolor`.
 
-With the default gradient positive correlations are blue, neutral are yellow 
-and negative are red. In the 2d-histograms, the color gradient shows the frequency 
+With the default gradient positive correlations are blue, neutral are yellow
+and negative are red. In the 2d-histograms, the color gradient shows the frequency
 of points in that bin (as usual, controlled by `seriescolor`).
 """
 @userplot CorrPlot
@@ -26,7 +26,7 @@ recipetype(::Val{:corrplot}, args...) = CorrPlot(args)
 """
     to_corrplot_matrix(mat)
 
-Transforms the input into a correlation plot matrix.  
+Transforms the input into a correlation plot matrix.
 Meant to be overloaded by other types!
 """
 to_corrplot_matrix(x) = x

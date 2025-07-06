@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [master]
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
-  
+
       - name: Ubuntu TESTCMD
         run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
       - name: Install Plots dependencies

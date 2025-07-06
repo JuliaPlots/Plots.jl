@@ -25,7 +25,7 @@ julia> scatter([(1,4),(2,5),(3,6)])
     bar!(x,y)
 
 Make a bar plot of `y` vs `x`.
-If `y` is a named tuple the keys are used as ticklabels. 
+If `y` is a named tuple the keys are used as ticklabels.
 
 # Keyword arguments
 - $(_document_argument(:bar_position))

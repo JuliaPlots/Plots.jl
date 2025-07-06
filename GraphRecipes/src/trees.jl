@@ -21,7 +21,7 @@ end
 
 d = Dict(:a => 2,:d => Dict(:b => 4,:c => "Hello"),:e => 5.0)
 
-plot(TreePlot(d)) 
+plot(TreePlot(d))
 ````
 """
 struct TreePlot{T}
