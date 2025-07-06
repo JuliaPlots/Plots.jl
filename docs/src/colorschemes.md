@@ -4,7 +4,6 @@ PlotsBase.reset_defaults()
 ```
 
 # Colorschemes
-
 Plots supports all colorschemes from [ColorSchemes.jl](https://juliagraphics.github.io/ColorSchemes.jl/stable/basics/#Pre-defined-schemes-1).
 They can be used as a gradient or as a palette and are passed as a symbol holding their name to `cgrad` or `palette`.
 
@@ -25,7 +24,6 @@ heatmap(x, x, f, c = :thermal)
 ```
 
 ### ColorPalette
-
 Plots chooses colors for series automatically from the palette passed to the `color_palette` attribute.
 The attribute accepts symbols of colorscheme names or `ColorPalette` objects.
 Color palettes can be constructed with `palette(cs, [n])` where `cs` can be a `Symbol`, a vector of colors, a `ColorScheme`, `ColorPalette` or `ColorGradient`.
@@ -40,7 +38,6 @@ palette([:purple, :green], 7)
 ```
 
 ### ColorGradient
-
 For `heatmap`, `surface`, `contour` or `line_z`, `marker_z` and `line_z` Plots.jl chooses colors from a `ColorGradient`.
 If not specified, the default `ColorGradient` `:inferno` is used.
 A different gradient can be selected by passing a symbol for a colorscheme name to the `seriescolor` attribute.

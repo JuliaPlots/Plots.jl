@@ -4,7 +4,6 @@ PlotsBase.reset_defaults()
 ```
 
 # [Layouts](@id layouts)
-
 As of v0.7.0, Plots has taken control of subplot positioning, allowing complex, nested grids of subplots and components.  Care has been taken to keep the framework flexible and generic, so that backends need only support the ability to precisely define the absolute position of a subplot, and they get the full power of nesting, plot area alignment, and more.  Just set the `layout` keyword in a call to `plot(...)`
 
 It's helpful at this point to review terminology:
@@ -18,7 +17,6 @@ It's helpful at this point to review terminology:
 ---
 
 #### Simple Layouts
-
 Pass an integer to `layout` to allow it to automatically compute a grid size for that many subplots:
 
 ```@example layouts
@@ -49,7 +47,6 @@ plot(rand(100,4), layout = 4, label=["a" "b" "c" "d"],
 ---
 
 #### Advanced Layouts
-
 The `@layout` macro is the easiest way to define complex layouts, using Julia's [multidimensional Array construction](https://docs.julialang.org/en/v1/manual/arrays/#man-array-concatenation) as the basis for a custom layout syntax.  Precise sizing can be achieved with curly brackets, otherwise the free space is equally split between the **plot areas** of subplots.
 
 The symbols themselves (`a` and `b` in the example below) can be any valid identifier and don't have any special meaning.
