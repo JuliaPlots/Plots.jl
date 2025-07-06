@@ -98,7 +98,8 @@ markdown_symbols_to_string(arr) = isempty(arr) ? "" : markdown_code_to_string(ar
 
 function generate_cards(
         prefix::AbstractString, backend::Symbol, slice;
-        skip = get(Plots._backend_skips, backend, Int[])
+        skip = get(Plots._backend_skips, backend, Int[]),
+        debug = false
     )
     @show backend
     # create folder: for each backend we generate a DemoSection "generated" under "gallery"
@@ -107,22 +108,22 @@ function generate_cards(
         mkpath(dn)
     end
     sec_config = Dict{String, Any}("order" => [])
-
     needs_rng_fix = Dict{Int, Bool}()
 
     for (i, example) in enumerate(Plots._examples)
         i ∈ skip && continue
-        (slice ≢ nothing && i ∉ slice) && continue
+        i ∈ slice || continue
         # write out the header, description, code block, and image link
-        jlname = "$backend-$(Plots.ref_name(i)).jl"
+        jl_name = "$backend-$(Plots.ref_name(i)).jl"
         jl = PipeBuffer()
 
         # DemoCards YAML frontmatter
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-        asset_name = "$(backend)_$(Plots.ref_name(i))"
-        asset_path = asset_name * if i ∈ Plots._animation_examples
+        svg_ready_backends = (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)
+        cover_name = "$(backend)_$(Plots.ref_name(i))"
+        cover_path = cover_name * if i ∈ Plots._animation_examples
             ".gif"
-        elseif backend ∈ (:gr, :pythonplot, :gaston)
+        elseif backend ∈ svg_ready_backends
             ".svg"
         else
             ".png"
@@ -134,22 +135,20 @@ function generate_cards(
         end
 
         if !isempty(example.header)
-            push!(sec_config["order"], jlname)
+            push!(sec_config["order"], jl_name)
             # start a new demo file
-            @debug "generate demo \"$(example.header)\" - writing `$jlname`"
-
+            debug && @info "generate demo \"$(example.header)\" - writing `$jl_name`"
 
             write(
                 jl, """
                 # ---
                 # title: $(example.header)
-                # id: $asset_name
-                # cover: $asset_path
+                # id: $cover_name
+                # cover: $cover_path
                 # author: "$(author())"
                 # description: ""
                 # date: $(Dates.now())
                 # ---
-
                 using Plots
                 $backend()
                 $extra
@@ -157,7 +156,6 @@ function generate_cards(
                 Plots.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(Plots.PLOTS_SEED))  #hide
-                nothing  #hide
                 """
             )
         end
@@ -171,30 +169,31 @@ function generate_cards(
         # from the docs: """
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
-        asset_cmd = if i ∈ Plots._animation_examples
-            "Plots.gif(anim, \"$asset_path\")\n"  # NOTE: must not be hidden, for appearance in the rendered `html`
-        elseif backend ∈ (:gr, :pythonplot, :gaston)
-            "Plots.svg(\"$asset_path\")  #src\n"
-        elseif backend ≡ :plotlyjs
-            """
-            Plots.png("$asset_path")  #src\n
-            nothing  #hide
-            # ![plot]($asset_path)
-            """
+        cover_cmd = if i ∈ Plots._animation_examples
+            "Plots.gif(anim, \"$cover_path\")"
+        elseif backend ∈ svg_ready_backends
+            "Plots.svg(\"$cover_path\")"
         else
-            "Plots.png(\"$asset_path\")  #src\n"
+            "Plots.png(\"$cover_path\")"
         end
-
-        write(jl, """mkpath("assets")  #src\n$asset_cmd\n""")
+        write(
+            jl, """
+            mkpath("assets")  #src
+            $cover_cmd  #src
+            $(i ∈ Plots._animation_examples ? "Plots.gif(anim)" : "current()")  #hide
+            """
+        )
+        card_jl = read(jl, String)
+        debug && @info card_jl
 
         fn, mode = if isempty(example.header)
             "$backend-$(Plots.ref_name(i - 1)).jl", "a"  # continued example
         else
-            jlname, "w"
+            jl_name, "w"
         end
         card = joinpath(cards_path, fn)
         # @info "writing" card
-        open(io -> write(io, read(jl, String)), card, mode)
+        open(io -> write(io, card_jl), card, mode)
         # DEBUG: sometimes the generated file is still empty when passing to `DemoCards.makedemos`
         sleep(0.01)
     end
@@ -613,32 +612,34 @@ function main(args)
     end
     packages_backends = NamedTuple(p => Symbol(lowercase(string(p))) for p in packages)
     backends = values(packages_backends) |> collect
-    debug = length(packages) ≤ 1
 
     @info "selected packages: $packages"
     @info "selected backends: $backends"
 
     slice = parse.(Int, split(get(ENV, "PLOTDOCS_EXAMPLES", "")))
-    slice = length(slice) == 0 ? nothing : slice
+    slice = (len_sl = length(slice)) == 0 ? range(1; stop = length(PlotsBase._examples)) : slice
     @info "selected examples: $slice"
 
-    work = basename(WORK_DIR)
-    build = basename(BLD_DIR)
-    src = basename(SRC_DIR)
+    debug = length(packages) ≤ 1 || 1 < len_sl ≤ 3
 
-    if !debug
-        @info "generate markdown"
+    work_dir = basename(WORK_DIR)
+    bld_dir = basename(BLD_DIR)
+    src_dir = basename(SRC_DIR)
+    @show debug SRC_DIR WORK_DIR BLD_DIR
+
+    @info "generate markdown"
+    @time "generate markdown" begin
         generate_attr_markdown()
         generate_supported_markdown(; default_backends = backends)
         generate_graph_attr_markdown()
         generate_colorschemes_markdown()
+    end
 
-        for (pkg, dest) in (
-                (PlotThemes, "plotthemes.md"),
-                (StatsPlots, "statsplots.md"),
-            )
-            cp(pkgdir(pkg, "README.md"), joinpath(GEN_DIR, dest); force = true)
-        end
+    for (pkg, dest) in (
+            (PlotThemes, "plotthemes.md"),
+            (StatsPlots, "statsplots.md"),
+        )
+        cp(pkgdir(pkg, "README.md"), joinpath(GEN_DIR, dest); force = true)
     end
 
     @info "gallery"
@@ -648,10 +649,10 @@ function main(args)
 
     @time "gallery" for pkg in packages
         be = packages_backends[pkg]
-        needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
+        needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice; debug)
         let (path, cb, asset) = makedemos(
                 joinpath("gallery", string(be));
-                root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = BRANCH
+                root = @__DIR__, src = joinpath(work_dir, "gallery"), edit_branch = BRANCH
             )
             push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
@@ -661,7 +662,7 @@ function main(args)
     if !debug
         user_gallery, cb, assets = makedemos(
             joinpath("user_gallery");
-            root = @__DIR__, src = work, edit_branch = BRANCH
+            root = @__DIR__, src = work_dir, edit_branch = BRANCH
         )
         push!(gallery_callbacks, cb)
         push!(gallery_assets, assets)
@@ -670,7 +671,14 @@ function main(args)
     end
 
     pages = if debug
-        ["Home" => "index.md", "Gallery" => gallery]
+        [
+            "Home" => "index.md",
+            "Gallery" => gallery,
+            "Manual" => [
+                "Series Attributes" => "generated/attributes_series.md",
+                "Output" => "output.md",
+            ]
+        ]
     else  # release
         [
             "Home" => "index.md",
@@ -749,7 +757,7 @@ function main(args)
 
     collect_pages!(pages)
     unique!(selected_pages)
-    @show debug selected_pages length(gallery) pages SRC_DIR WORK_DIR BLD_DIR
+    @show length(gallery) selected_pages pages
 
     n = 0
     @time "copy to src" for (root, dirs, files) in walkdir(SRC_DIR)
@@ -768,7 +776,7 @@ function main(args)
             n += 1
         end
     end
-    @info "copied $n source file(s) to scratch directory `$work`"
+    @info "copied $n source file(s) to scratch directory `$work_dir`"
 
     if !debug
         @info "UnitfulExt"
@@ -781,7 +789,7 @@ function main(args)
         @time "UnitfulExt" for (root, _, files) in walkdir(unitfulext), file in files
             last(splitext(file)) == ".jl" || continue
             ipath = joinpath(root, file)
-            opath = replace(ipath, src_unitfulext => joinpath(work, "generated")) |> splitdir |> first
+            opath = replace(ipath, src_unitfulext => joinpath(work_dir, "generated")) |> splitdir |> first
             Literate.markdown(ipath, opath; documenter = execute)
             nb && Literate.notebook(ipath, notebooks; execute)
         end
@@ -798,11 +806,12 @@ function main(args)
                 assets = ["assets/favicon.ico", gallery_assets...],
                 inventory_version = pkgversion(Plots),
                 collapselevel = 2,
+                edit_link = BRANCH,
                 ansicolor,
             ),
             root = @__DIR__,
-            source = work,
-            build,
+            source = work_dir,
+            build = bld_dir,
             # pagesonly = true,  # fails DemoCards, see github.com/JuliaDocs/DemoCards.jl/issues/162
             sitename = "Plots",
             authors = "Thomas Breloff",
@@ -821,7 +830,7 @@ function main(args)
 
     failed && return  # don't deploy and post-process on failure
 
-    @info "post-process gallery html files to remove `rng` in user displayed code"
+    @info "post-process gallery html files to remove `rng` in user displayed code in gallery"
     # non-exhaustive list of examples to be fixed:
     # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
     @time "post-process `rng`" for pkg in packages
@@ -855,15 +864,20 @@ function main(args)
         end
     end
 
-    @info "post-process work dir"
-    @time "post-process work dir" for file in Glob.glob("*/index.html", BLD_DIR)
+    # post-process files for edit link
+    @info "post-process work dir to fix edit link in `html` files"
+    @time "post-process work dir" for file in vcat(
+            Glob.glob("**/*.html", BLD_DIR),  # NOTE: this does not match BLD_DIR/index.html :/
+            Glob.glob("*.html", BLD_DIR),  # I don't understand how Glob works :/
+        ) |> unique!
+        # @show file
         lines = readlines(file; keep = true)
         any(line -> occursin(joinpath("blob", BRANCH, "docs"), line), lines) || continue
-        @info "fixing $file" maxlog = 10
+        old = joinpath("blob", BRANCH, "docs", work_dir)
+        new = joinpath("blob", BRANCH, "docs", src_dir)
+        @info "fixing $file $old -> $new" maxlog = 10
         open(file, "w") do io
-            old = joinpath("blob", BRANCH, "docs", work)
-            new = joinpath("blob", BRANCH, "docs", src)
-            foreach(line -> write(io, replace(line, old => new)), lines)
+            foreach(line -> write(io, replace(line, old => new, joinpath(WORK_DIR) => new)), lines)
         end
     end
 
@@ -883,7 +897,7 @@ function main(args)
     @time "deploydocs" withenv("GITHUB_REPOSITORY" => repo) do
         deploydocs(;
             root = @__DIR__,
-            target = build,
+            target = bld_dir,
             versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
             devbranch = BRANCH,
             deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
