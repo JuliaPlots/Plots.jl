@@ -617,7 +617,7 @@ function main(args)
     @info "selected backends: $backends"
 
     slice = parse.(Int, split(get(ENV, "PLOTDOCS_EXAMPLES", "")))
-    slice = (len_sl = length(slice)) == 0 ? range(1; stop = length(PlotsBase._examples)) : slice
+    slice = (len_sl = length(slice)) == 0 ? range(1; stop = length(Plots._examples)) : slice
     @info "selected examples: $slice"
 
     debug = length(packages) ≤ 1 || 1 < len_sl ≤ 3
