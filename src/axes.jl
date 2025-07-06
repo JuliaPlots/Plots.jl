@@ -616,7 +616,7 @@ end
     scale_lims!([plt], [letter], factor)
 
 Scale the limits of the axis specified by `letter` (one of `:x`, `:y`, `:z`) by the
-given `factor` around the limits' middle point. 
+given `factor` around the limits' middle point.
 If `letter` is omitted, all axes are affected.
 """
 function scale_lims!(sp::Subplot, letter, factor)
