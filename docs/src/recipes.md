@@ -3,7 +3,6 @@ using Plots; gr()
 PlotsBase.reset_defaults()
 ```
 
-
 # [Recipes](@id recipes)
 
 Recipes are a way of defining visualizations in your own packages and code, without having to depend on Plots. The functionality relies on [RecipesBase](https://github.com/JuliaPlots/Plots.jl/tree/v2/RecipesBase), a super lightweight but powerful package which allows users to create advanced plotting logic without Plots.  The `@recipe` macro in RecipesBase will add a method definition for `RecipesBase.apply_recipe`.  Plots adds to and calls this same function, and so your package and Plots can communicate without ever knowing about the other.  Magic!
@@ -37,17 +36,13 @@ If `MyVec` was a subtype of AbstractVector, there would not be anything to do...
 
 Afterwards, all plot commands which work for vectors will also work for your datatype.
 
-
 ### Series Recipes
-
 Lets quickly discuss a mainstay of data visualization: the histogram.  Hadley Wickham has explored the nature of histograms as part of his [Layered Grammar of Graphics](https://vita.had.co.nz/papers/layered-grammar.pdf).  In it, he discusses how a histogram is really nothing more than a bar graph which has its data pre-binned.  This is true, and it can be taken further.  A bar-graph is really an extension of a step-graph, in which zeros are interwoven among the x-values.  A step-graph is really nothing more than a path (line) which can travel only horizontally or vertically.  Of course, a similar decomposition could be had by treating the bars as filled polygons.
 
 The point to be had is that a graphics package need only be able to draw lines and polygons, and they can support drawing a histogram.  The path from data to histogram is normally very complicated, but we can avoid the complexity and define a recipe to convert it to its subcomponents.  In a few lines of readable code, we can implement a key statistical visualization.  See the [tutorial on series recipes](https://github.com/tbreloff/ExamplePlots.jl/tree/master/notebooks/series_recipes.ipynb) for a better understanding of how you might use them.
 
 
-
 ## Recipe Types
-
 Above we described `Type recipes` and `Series Recipes`. In total there are four main types of recipes in Plots (listed in the order they are processed):
 
 - User Recipes
@@ -489,5 +484,3 @@ Closest candidates are:
     Use of the `return` keyword in recipes requires RecipesBase 0.9
 
 This error is encountered if you use the `return` keyword in a recipe, which is not supported in RecipesBase up to v0.8.
-
-

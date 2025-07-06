@@ -43,7 +43,6 @@ end
 ```
 
 # [Backends](@id backends)
-
 Backends are the lifeblood of Plots, and the diversity between features, approaches, and strengths/weaknesses was
 one of the primary reasons that I started this package.
 
@@ -52,7 +51,6 @@ However, you will probably have a hard time choosing the right backend for your 
 This document is meant to be a guide and introduction to make that choice.
 
 # At a glance
-
 My favorites: `GR` for speed, `Plotly(JS)` for interactivity, `UnicodePlots` for REPL/SSH and `PythonPlot` otherwise.
 
 | If you require...         | then use...                                 |
@@ -73,7 +71,6 @@ Of course this list is rather subjective and nothing in life is that simple. Lik
 ---
 
 ## [GR](https://github.com/jheinen/GR.jl)
-
 The default backend. Very fast with lots of plot types. Still actively developed and improving daily.
 
 ```@example backends
@@ -106,23 +103,19 @@ surface(
 ```
 
 #### Supported `:subplot` `:extra_kwargs`
-
 | Keyword        | Description                         |
 | :------------- | :---------------------------------- |
 | legend_hfactor | Vertical spacing factor for legends |
 | legend_wfactor | Multiplicative factor influencing the legend width |
 
 #### Supported `:series` `:extra_kwargs`
-
 | Series Type              | Keyword        | Description                                                                                      |
 | :----------------------- | :------------- | :----------------------------------------------------------------------------------------------- |
 | `:surface`               | nx             | Number of interpolation points in the x direction                                                |
 | `:surface`               | ny             | Number of interpolation points in the y direction                                                |
 | `:surface`, `:wireframe` | display_option | see [GR doc](https://gr-framework.org/julia-gr.html#GR.surface-e3e6f234cc6cd4713b8727c874a5f331) |
 
-
 ## [Plotly / PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)
-
 These are treated as separate backends, though they share much of the code and use the Plotly JavaScript API.
 `plotly()` is the only dependency-free plotting option, as the required JavaScript is bundled with Plots.
 It can create inline plots in IJulia, or open standalone browser windows when run from the Julia REPL.
@@ -154,7 +147,6 @@ Cons:
 Primary PlotlyJS.jl author: Spencer Lyon (@spencerlyon2)
 
 ### MathJax
-
 Plotly needs to load MathJax to render LaTeX strings, therefore passing extra keywords with `extra_kwargs = :plot` is implemented.
 With that it is possible to pass a header to the extra `include_mathjax` keyword.
 It has the following options:
@@ -206,7 +198,6 @@ pl = scatter(
 ```
 
 ## [PythonPlot](https://github.com/stevengj/PythonPlot.jl)
-
 A Julia wrapper around the popular python package `Matplotlib`. It uses `PythonCall.jl` to pass data with minimal overhead.
 
 ```@example backends
@@ -241,14 +232,12 @@ surface(x, y, fn, c=:viridis, extra_kwargs=Dict(:subplot=>Dict("3d_colorbar_axis
 ```
 
 #### Supported `:subplot` `:extra_kwargs`
-
 | Keyword          | Description                                                                      |
 | :--------------- | :------------------------------------------------------------------------------- |
 | 3d_colorbar_axis | Specifying the colorbar location `[ left, bottom, width, height ]` for a 3D plot |
 
 
 ## [PGFPlotsX](https://github.com/KristofferC/PGFPlotsX.jl)
-
 LaTeX plotting, based on `PGF/TikZ`.
 
 ```@example backends
@@ -279,7 +268,6 @@ Authors:
 - Plots <--> PGFPlotsX link code: Simon Christ (@BeastyBlacksmith), based on the code of Patrick Kofod Mogensen (@pkofod)
 
 ### LaTeX workflow
-
 To use the native LaTeX output of the `pgfplotsx` backend you can save your plot as a `.tex` or `.tikz` file.
 ```julia
 using Plots; pgfplotsx()
@@ -319,7 +307,6 @@ plot(1:5, add = raw"\draw (1,2) rectangle (2,3);", extra_kwargs = :subplot)
 ```
 
 ## [UnicodePlots](https://github.com/JuliaPlots/UnicodePlots.jl)
-
 Simple and lightweight. Plot directly in your terminal. You won't produce anything publication quality, but for a quick look at your data it is awesome. Allows plotting over a headless node (SSH).
 
 ```@example backends
@@ -352,7 +339,6 @@ plot!(p, 2:3, 2:3, c = :red)
 ```
 
 #### Supported `:subplot` `:extra_kwargs`
-
 | Keyword    | Description                                                                                                |
 | :--------- | :--------------------------------------------------------------------------------------------------------- |
 | width      | Plot width                                                                                                 |
@@ -365,7 +351,6 @@ plot!(p, 2:3, 2:3, c = :red)
 | blend      | Toggle canvas color blending (`true` / `false`)                                                            |
 
 #### Supported `:series` `:extra_kwargs`
-
 | Series Type      | Keyword  | Description                                                                     |
 | :--------------- | :------- | :------------------------------------------------------------------------------ |
 | `all`            | colormap | Colormap (see [Options](https://github.com/JuliaPlots/UnicodePlots.jl#options)) |
@@ -374,7 +359,6 @@ plot!(p, 2:3, 2:3, c = :red)
 | `surfaceplot`    | lines    | Use `lineplot` instead of `scatterplot` (monotonic data)                        |
 
 ## [Gaston](https://github.com/mbaz/Gaston.jl)
-
 `Gaston` is a direct interface to [gnuplot](https://gnuplot.info), a cross platform command line driven plotting utility. The integration of `Gaston` in `Plots` is recent (2021), but a lot of features are supported.
 
 ```@example backends
@@ -382,7 +366,6 @@ gaston(); backendplot()  #hide
 ```
 
 ## [InspectDR](https://github.com/ma-laforge/InspectDR.jl)
-
 Fast plotting with a responsive GUI (optional).  Target: quickly identify design/simulation issues & glitches in order to shorten design iterations.
 
 Pros:
@@ -402,7 +385,6 @@ Cons:
 Primary author: MA Laforge (@ma-laforge)
 
 ## [HDF5](https://github.com/JuliaIO/HDF5.jl) (HDF5-Plots)
-
 Write plot + data to a *single* `HDF5` file using a human-readable structure that can easily be reverse-engineered.
 
 ![](assets/hdf5_samplestruct.png)
@@ -422,7 +404,6 @@ display(pread)
 ```
 
 Pros:
-
 - Open, standard file format for complex datasets.
 - Human readable (using [HDF5view](https://support.hdfgroup.org/products/java/hdfview/)).
 - Save plot + data to a single binary file.
@@ -443,12 +424,10 @@ Primary author: MA Laforge (@ma-laforge)
 # Deprecated backends
 
 ### [PyPlot](https://github.com/stevengj/PyPlot.jl)
-
 `matplotlib` based backend, using `PyCall.jl` and `PyPlot.jl`. Superseded by `PythonCall.jl` and `PythonPlot.jl`.
 Whilst still supported in `Plots 1.X`, users are advised to transition to the `pythonplot` backend.
 
 ### [PGFPlots](https://github.com/sisl/PGFPlots.jl)
-
 LaTeX plotting, based on PGF/TikZ.
 
 !!! tip
@@ -470,9 +449,7 @@ Authors:
 - PGFPlots.jl: Mykel Kochenderfer (@mykelk),  Louis Dressel (@dressel), and others
 - Plots <--> PGFPlots link code: Patrick Kofod Mogensen (@pkofod)
 
-
 ### [Gadfly](https://github.com/dcjones/Gadfly.jl)
-
 A Julia implementation inspired by the "Grammar of Graphics".
 
 Pros:
@@ -491,7 +468,6 @@ Cons:
 Primary author: Daniel C Jones
 
 ### [Immerse](https://github.com/JuliaGraphics/Immerse.jl)
-
 Built on top of Gadfly, Immerse adds some interactivity and a standalone GUI window, including zoom/pan and a cool "point lasso" tool to save Julia vectors with the selected data points.
 
 Pros:
@@ -508,17 +484,14 @@ Cons:
 Primary author: Tim Holy
 
 ### [Qwt](https://github.com/tbreloff/Qwt.jl)
-
 My package which wraps PyQwt.  Similar to PyPlot, it uses PyCall to convert calls to python.  Though Qwt.jl was the "first draft" of Plots, the functionality is supersded by other backends, and it's not worth my time to maintain.
 
 Primary author: Thomas Breloff
 
 ### [Bokeh](https://github.com/bokeh/Bokeh.jl)
-
 Unfinished, but very similar to PlotlyJS... use that instead.
 
 ### [Winston](https://github.com/nolta/Winston.jl)
-
 Functionality incomplete... I never finished wrapping it, and I don't think it offers anything beyond other backends.  However, the plots are clean looking and it's relatively fast.
 
 ---

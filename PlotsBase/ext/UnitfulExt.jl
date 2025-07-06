@@ -222,7 +222,7 @@ end
 
 #=======================================
 Label string containing unit information
-Used only for colorbars, etc., which don't 
+Used only for colorbars, etc., which don't
 have a better place for storing units
 =======================================#
 

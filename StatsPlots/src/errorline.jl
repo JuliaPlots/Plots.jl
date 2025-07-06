@@ -3,7 +3,7 @@
 # StatsPlots.errorline(x, y, arg):
     Function for parsing inputs to easily make a [`ribbons`] (https://ggplot2.tidyverse.org/reference/geom_ribbon.html),
     stick errorbar (https://www.mathworks.com/help/matlab/ref/errorbar.html), or plume
-    (https://stackoverflow.com/questions/65510619/how-to-prepare-my-data-for-plume-plots) plot while allowing 
+    (https://stackoverflow.com/questions/65510619/how-to-prepare-my-data-for-plume-plots) plot while allowing
     for easily controlling error type and NaN handling.
 
 # Inputs: default values are indicated with *s

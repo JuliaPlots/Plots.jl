@@ -18,12 +18,10 @@ When in doubt, use this handy dandy logic designed by a [legendary open source g
 ---
 
 ## The JuliaPlots Organization
-
 [JuliaPlots](https://github.com/JuliaPlots) is the home for all things Plots. It was founded by [Tom Breloff](https://www.breloff.com), and extended through many contributions from [members](https://github.com/orgs/JuliaPlots/people) and others.  The first step in contributing will be to understand which package(s) are appropriate destinations for your code.
 
 
 ### Plots
-
 This is the core package for:
 
 - Definitions of `plot`/`plot!`
@@ -38,19 +36,15 @@ This is the core package for:
 This package depends on RecipesBase, PlotUtils, and PlotThemes.  When contributing new functionality/features, you should make best efforts to find a more appropriate home (StatsPlots, PlotUtils, etc) than contributing to core Plots. In general, the push has been to reduce the size and scope of Plots, when possible, and move features to other packages.
 
 ### Backends
-
 Backend code (such as code linking Plots with GR) lives in the `Plots/src/backends` directory. As such, backend code should be contributed to core Plots. GR and Plotly are the only backends installed by default. All other backend code is loaded conditionally using [Requires.jl](https://github.com/JuliaPackaging/Requires.jl) in `Plots/src/init.jl`.
 
 ### PlotDocs
-
 PlotDocs is the home of this documentation. The documentation is built using [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl).
 
 ### RecipesBase
-
 Seldom updated, but essential. This is the package that you would depend on to create third-party recipes. It contains the bare minimum to define new recipes.
 
 ### PlotUtils
-
 Components that could be used for other (non-Plots) packages. Anything that is sufficiently generic and useful could be contributed here.
 
 - Color (conversions, construction, conveniences)
@@ -58,25 +52,20 @@ Components that could be used for other (non-Plots) packages. Anything that is s
 - Tick computation
 
 ### PlotThemes
-
 Visual themes (i.e. attribute defaults) such as "dark", "orange", etc.
 
 ### StatsPlots
-
 An extension of Plots: Statistical plotting and tabular data.  Complex histograms and densities, correlation plots, and support for DataFrames.  Anything related to stats or special handling for table-like data should live here.
 
 ### GraphRecipes
-
 An extension of StatsPlots: Graphs, maps, and more.
 
 ---
 
 ## Choosing a Project
-
 For people new to Plots, the first step should be to read (and reread) the documentation.  Code up some examples, play with the attributes, and try out multiple backends. It's really hard to contribute to a project that you don't know how to use.
 
 ### Beginner Project Ideas
-
 - **Create a new recipe**: Preferably something you care about.  Maybe you want custom overlays of heatmaps and scatters?  Maybe you have an input format that isn't currently supported?  Make a recipe for it so you can just `plot(thing)`.
 - **Fix bugs**: There are many "bugs" which are specific to one backend, or incorrectly implement features that are infrequently used.  Some ideas can be found in the [issues marked easy](https://github.com/JuliaPlots/Plots.jl/issues?q=is%3Aissue+is%3Aopen+label%3A%22easy+-+up+for+grabs%22).
 - **Add recipes to external packages**: By depending on RecipesBase, a package can define a recipe for their custom types.  Submit a PR to a package you care about that adds a recipe for that package.  For example, see [this PR to add OHLC plots for TimeSeries.jl](https://github.com/JuliaStats/TimeSeries.jl/pull/303).
@@ -88,7 +77,6 @@ For people new to Plots, the first step should be to read (and reread) the docum
 - **Expand StatsPlots functionality**:  qqplot, DataStreams, or anything else you can think of.
 
 ### Advanced Project Ideas
-
 - **ColorBar redesign**: Colorbars [need serious love](https://github.com/JuliaPlots/Plots.jl/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20colorbar)... this would likely require a new Colorbar type that links with the appropriate Series object(s) and is independent during subplot layout.  We want to allow many series (possibly from multiple subplots) to use the same clims and to share a colorbar, or have multiple colorbars that can be flexibly positioned.
 - **PlotSpec redesign**: This [long standing redesign proposal](https://github.com/JuliaPlots/Plots.jl/issues/390) could allow generic serialization/deserialization of Plot data and attributes, as well as some improvements/optimizations when mutating plots.  For example, we could lazily compute attribute values, and intelligently flag them as "dirty" when they change, allowing backends to skip much of the wasted processing and unnecessary rebuilding that currently occurs.
 - **Improve graph recipes**: Lots to do here: clean up visuals, improve edge drawing, implement [layout algorithms](https://github.com/JuliaGraphs/NetworkLayout.jl), and much more.
@@ -96,7 +84,6 @@ For people new to Plots, the first step should be to read (and reread) the docum
 ---
 
 ## Key Design Principles
-
 Flexible and generic... these are the core principles underlying Plots development, and also tend to cause confusion when users laser-focus on their specific use case.
 
 I (Tom) have painstakingly designed the core logic to support nearly any use case that exists or may exist.  I don't pretend to know how you want to use Plots, or what type of data you might pass in, or what sort of recipe you may want to apply.  As such, I try to avoid unnecessary restriction of types, or forced conversions, or many other pitfalls of limited visualization frameworks.  The result is a highly modular framework which is limited by your imagination.
@@ -151,7 +138,6 @@ This simple example outlines a common theme when developing Plots (or really any
 ---
 
 ## Code Organization
-
 Generally speaking, similar functionality is kept within the same file.  Within the `src` directory, much of the files should be self explanatory (for example, you'll find animation methods/macros in the `animation.jl` file), but some could use a summary of contents:
 
 - `Plots.jl`: imports, exports, shorthands, and initialization
@@ -165,11 +151,9 @@ Generally speaking, similar functionality is kept within the same file.  Within 
 These files should probably be reorganized, but until then...
 
 ### Creating new backends
-
 Model new backends on `Plots/src/backends/template.jl`. Implement the callbacks that are appropriate, especially `_display` and `_show` for GUI and image output respectively.
 
 ### Style/Design Guidelines
-
 - Make every effort to minimize external dependencies and exports.  Requiring new dependencies is the most likely way to make your PR "unmergeable".
 - Be careful adding method signatures on existing methods with Base types (Array, etc) as you may override key functionality.  This is especially true with recipes.  Consider wrapping inputs in a new type (like in "user recipes").
 - Terse code is ok, as is verbose code.  What's important is understanding and context.  Will someone reading your code know what you mean?  If not, consider writing comments to describe your reason for the design, or describe the hack you just implemented in clear prose.  Sometimes [it's ok that your comments are longer than your code](https://github.com/JuliaPlots/Plots.jl/blob/master/src/pipeline.jl#L62-L67).
@@ -178,11 +162,9 @@ Model new backends on `Plots/src/backends/template.jl`. Implement the callbacks 
 ---
 
 ## Git-fu (or... the mechanics of contributing)
-
 Many people have trouble with Git.  More have trouble with Github.  I think much of the confusion happens when you run commands without understanding what they do.  We're all guilty of it, but recovering usually means "starting over".  In this section, I'll try to keep a simple, practical approach to making PRs.  It's worked well for me, though YMMV.
 
 ### Guidelines
-
 Here are some guidelines for the development workflow (Note: Even if you've made 20 PRs to Plots in the past, please read this as it may be different than past guidelines):
 
 - **Commit to a branch that belongs to you.**  Typically that means you should give your branches names that are unique to you, and that might include information on the feature you're developing.  For example, I might choose to `git checkout -b tb-fonts` when starting work on fonts.
@@ -192,18 +174,17 @@ Here are some guidelines for the development workflow (Note: Even if you've made
 ---
 
 ### Development Workflow
-
 My suggestions for a smooth development workflow:
 
 #### Fork the repo
-
 Navigate to the repo site (https://github.com/JuliaPlots/Plots.jl) and click the "Fork" button.  You might get a choice of which account or organization to place the fork.  I'll assume going forward that you forked to Github username `user123`.
 
 #### Set up the git remote
+Navigate to the local repo.
+Note: I'm assuming that you do development in your Julia directory, and using Mac/Linux.
+Adjust as needed.
 
-Navigate to the local repo.  Note: I'm assuming that you do development in your Julia directory, and using Mac/Linux.  Adjust as needed.
-
-```
+```bash
 cd ~/.julia/v0.5/Plots
 git remote add forked git@github.com:user123/Plots.jl.git
 ```
@@ -211,10 +192,9 @@ git remote add forked git@github.com:user123/Plots.jl.git
 After running these commands, `git remote -v` should show two remotes: `origin` (the main repo) and `forked` (your fork).  A remote is simply a reference/pointer to the github site hosting the repo, and a fork is simply any other git repo with a special link to the originating repo.
 
 #### Create a new branch
-
 If you're just starting work on a new feature:
 
-```
+```bash
 git fetch origin
 git checkout master
 git merge --ff-only origin/master
@@ -225,10 +205,9 @@ git push -u forked user123-myfeature
 The first three lines are meant to ensure you start from the main repo's master branch.  The `--ff-only` flag ensures you will only "fast forward" to newer commits, and avoids creating a new merge commit when you didn't mean to.  The `git checkout` line both creates a new branch (the `-b`) pointing to the current commit and makes that branch current.  The `git push` line adds this branch to your Github fork, and sets up the local branch to "track" (`-u`) the remote branch for subsequent `git push` and `git pull` calls.
 
 #### or... Reuse an old branch
-
 If you have an ongoing development branch (say, `user123-dev`) which you'd prefer to use (and which has previously been merged into master!) then you can get that up to date with:
 
-```
+```bash
 git fetch origin
 git checkout user123-dev
 git merge --ff-only origin/master
@@ -238,8 +217,7 @@ git push forked user123-dev
 We update our local copy of origin, checkout the dev branch, then attempt to "fast-forward" to the current master.  If successful, we push the branch back to our forked repo.
 
 #### Write code, and format
-
-Power up your favorite editor (maybe [Juno](https://junolab.org/)?) and make some code changes to the repo.
+Power up your favorite editor (maybe [Juno](https://junolab.org)?) and make some code changes to the repo.
 
 Format your changes (code style consistency) using:
 ```bash
@@ -247,10 +225,9 @@ $ julia -e 'using Runic; exit(Runic.main(ARGS))' -- --inplace .
 ```
 
 #### Commit
-
 After applying changes, you'll want to "commit" or save a snapshot of all the changes you made.  After committing, you can "push" those changes to your forked repo on Github:
 
-```
+```bash
 git add src/my_new_file.jl
 git commit -am "my commit message"
 git push forked user123-dev
@@ -258,17 +235,19 @@ git push forked user123-dev
 
 The first line is optional, and is used when adding new files to the repo.  The `-a` means "commit all my changes", and the `-m` lets you write a note about the commit (you should always do this, and hopefully make it descriptive).
 
-#### Submit a PR
+`Plots` has some [pre-commit](https://pre-commit.com) hooks configuration set in order to enhance code quality.
+Run `pre-commit install` in the `Plots.jl` repository to set up the git hook scripts. After this, checks should automatically run when using `git commit`.
+One can also run the `pre-commit` checks manually using `pre-commit run --all-files`.
 
+#### Submit a PR
 You're almost there!  Browse to your fork (https://github.com/user123/Plots.jl).  Most likely there will be a section just above the code that asks if you'd like to create a PR from the `user123-dev` branch.  If not, you can click the "New pull request" button.
 
 Make sure the "base" branch is JuliaPlots `master` and the "compare" branch is `user123-dev`.  Add an informative title and description, and link to relevant issues or discussions, then click "Create pull request".  You may get some questions about it, and possibly suggestions of how to fix it to be "merge-ready".  Then hopefully it gets merged... thanks for the contribution!!
 
 #### Cleanup
-
 After all of this, you will likely want to go back to using `master` (or possibly using a tagged release, once your feature is tagged).  To clean up:
 
-```
+```bash
 git fetch origin
 git checkout master
 git merge --ff-only origin/master
@@ -280,7 +259,6 @@ This catches your local master branch up to the remote master branch, then delet
 ---
 
 ### Tags
-
 New tags should represent "stable releases"... those that you are happy to distribute to end-users.  Effort should be made to ensure tests pass before creating a new tag, and ideally new tests would be added which test your new functionality.  This is, of course, a much trickier problem for visualization libraries as compared to other software.  See the [testing section](#testing) below.
 
 Only JuliaPlots members may create a new tag.  To create a new tag, we'll create a new release on Github and use [attobot](https://github.com/attobot/attobot) to generate the PR to METADATA.  Create a new release at https://github.com/JuliaPlots/Plots.jl/releases/new (of course replacing the repo name with the package you're tagging).
@@ -290,7 +268,6 @@ The version number (vMAJOR.MINOR.PATCH) should be incremented using [semver](htt
 ---
 
 ### Testing
-
 Testing individual `Plots` components suche as `PlotsBase` is as simple as :
 ```bash
 $ cd Plots.jl/PlotsBase
@@ -304,14 +281,13 @@ $ julia --project=RecipesBase -e 'using Pkg; Pkg.test()'
 ```
 
 #### VisualRegressionTests
-
 Testing in Plots is done with the help of [VisualRegressionTests](https://github.com/JuliaPlots/VisualRegressionTests.jl).  Reference images are stored in [PlotReferenceImages](https://github.com/JuliaPlots/PlotReferenceImages.jl). Sometimes the reference images need to be updated (if features change, or if the underlying backend changes).  VisualRegressionTests makes it somewhat painless to update the reference images:
 
 From the Julia REPL, run `Pkg.test(name="Plots")`.  This will try to plot the tests, and then compare the results to the stored reference images.  If the test output is sufficiently different than the reference output (using Tim Holy's excellent algorithm for the comparison), then a GTK window will pop up with a side-by-side comparison.  You can choose to replace the reference image, or not, depending on whether a real error was discovered.
 
 After the reference images have been updated, navigate to PlotReferenceImages and push the changes to Github:
 
-```
+```bash
 cd ~/.julia/v0.5/PlotReferenceImages
 git add Plots/*
 git commit -am "a useful message"
@@ -321,7 +297,6 @@ git push
 If there are mis-matches due to bugs, **don't update the reference image**.
 
 #### CI
-
 On a `git push` the tests will be run automatically as part of our continuous integration setup.
 This runs the same tests as above, downloading and comparing to the reference images, though with a larger tolerance for differences.
 When these error, it may be due to timeouts, stale reference images, or a host of other reasons.

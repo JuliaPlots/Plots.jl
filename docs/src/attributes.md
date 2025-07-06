@@ -1,4 +1,3 @@
-
 # [Attributes](@id attributes)
 
 ```@setup attr
@@ -6,7 +5,6 @@ using Plots
 ```
 
 ### Introduction to Attributes
-
 In Plots, input data is passed positionally (for example, the `y` in `plot(y)`), and attributes are passed as keywords (for example, `plot(y, color = :blue)`).
 Most of the information on this page is available from your Julia REPL.
 After one executes, `using Plots` in the REPL, one can use the function `plotattr()` to print a list of all attributes for either series, plots, subplots, or axes.
@@ -32,7 +30,6 @@ plotattr("size")
 ---
 
 ### [Aliases](@id aliases)
-
 Keywords can take a range of values through the **alias mechanic**.  For example, `plot(y, color = :blue)` is really interpreted as `plot(y, seriescolor = :blue)`.  Each attribute has a number of aliases (see the charts below), which are available to avoid the pain of constantly looking up plotting API documentation because you forgot the argument name.  `c`, `color`, and `seriescolor` all mean the same thing, and in fact those are eventually converted into the more precise attributes `linecolor`, `markercolor`, `markerstrokecolor`, and `fillcolor` (which you can then override if desired).
 
 
@@ -42,12 +39,9 @@ Keywords can take a range of values through the **alias mechanic**.  For example
 ---
 
 ### [Magic Arguments](@id magic-arguments)
-
-
 Some arguments encompass smart shorthands for setting many related arguments at the same time.  Plots uses type checking and multiple dispatch to smartly "figure out" which values apply to which argument.  Pass in a tuple of values.  Single values will be first wrapped in a tuple before processing.
 
 ##### axis (and xaxis/yaxis/zaxis)
-
 Passing a tuple of settings to the `xaxis` argument will allow the quick definition
 of `xlabel`, `xlims`, `xticks`, `xscale`, `xflip`, and `xtickfont`.  The following are equivalent:
 
@@ -75,7 +69,6 @@ yticks!([-1:1:1;], ["min", "zero", "max"])
 ```
 
 ##### line
-
 Set attributes corresponding to a series line.  Aliases: `l`.  The following are equivalent:
 
 ```julia
@@ -92,7 +85,6 @@ plot(y,
 ```
 
 ##### fill
-
 Set attributes corresponding to a series fill area.  Aliases: `f`, `area`.  The following are equivalent:
 
 ```julia
@@ -106,7 +98,6 @@ plot(y,
 ```
 
 ##### marker
-
 Set attributes corresponding to a series marker.  Aliases: `m`, `mark`.  The following are equivalent:
 
 ```julia

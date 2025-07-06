@@ -4,7 +4,6 @@ PlotsBase.reset_defaults()
 ```
 
 # Plots - powerful convenience for visualization in Julia
-
 **Author: Thomas Breloff (@tbreloff)**
 
 To get started, [see the tutorial](@ref tutorial).
@@ -15,7 +14,6 @@ Tap into the extensive visualization functionality enabled by the [Plots ecosyst
 
 
 ## Intro to Plots in Julia
-
 Data visualization has a complicated history.  Plotting software makes trade-offs between features and simplicity, speed and beauty, and a static and dynamic interface. Some packages make a display and never change it, while others make updates in real-time.
 
 Plots is a visualization interface and toolset. It sits above other backends, like GR, PythonPlot, PGFPlotsX, or Plotly, connecting commands with implementation. If one backend does not support your desired features or make the right trade-offs, you can just switch to another backend with one command. No need to change your code. No need to learn a new syntax. Plots might be the last plotting package you ever learn.
@@ -30,17 +28,15 @@ The goals with the package are:
 - **Lightweight**.  Very few dependencies, since backends are loaded and initialized dynamically.
 - **Smart**.  It's not quite AGI, but Plots should figure out what you **want** it to do... not just what you **tell** it.
 
-
 Use the [preprocessing pipeline](@ref pipeline) in Plots to describe your visualization completely before it calls the backend code.  This preprocessing maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.
 
 Please add wishlist items, bugs, or any other comments/questions to the [issues list](https://github.com/tbreloff/Plots.jl/issues), and [join the conversation on zulip](https://julialang.zulipchat.com/#streams/236493/plots.jl).
 
-Nevertheless, extreme configurability is not a goal of Plots. If you require a rather specific plotting feature, feel free to [request it](https://github.com/JuliaPlots/Plots.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aextension). However, do understand that Plots has to implement the feature across all backends which might be challenging due some backends' limitations. 
+Nevertheless, extreme configurability is not a goal of Plots. If you require a rather specific plotting feature, feel free to [request it](https://github.com/JuliaPlots/Plots.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aextension). However, do understand that Plots has to implement the feature across all backends which might be challenging due some backends' limitations.
 
 ---
 
 ### [Simple is Beautiful](@id simple-is-beautiful)
-
 Lorenz Attractor
 
 ```@example index
@@ -66,7 +62,6 @@ function step!(l::Lorenz)
 end
 
 attractor = Lorenz()
-
 
 # initialize a 3D plot with 1 empty series
 plt = plot3d(
@@ -116,7 +111,6 @@ n = 100
     plot!(p[3], zs, alpha = 0.2, palette = cgrad(:blues).colors)
 end
 ```
-
 
 Iris Dataset
 

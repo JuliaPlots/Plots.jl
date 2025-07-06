@@ -278,7 +278,7 @@ Example:
 This macro supports additional parameters, that may be added after the main loop body.
 - Add `fps=n` with positive Integer n, to specify the desired frames per second.
 - Add `every n` with positive Integer n, to take only one frame every nth iteration.
-- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a
     frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro gif(forloop::Expr, args...)
@@ -299,7 +299,7 @@ Example:
 This macro supports additional parameters, that may be added after the main loop body.
 - Add `fps=n` with positive Integer n, to specify the desired frames per second.
 - Add `every n` with positive Integer n, to take only one frame every nth iteration.
-- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a
     frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro apng(forloop::Expr, args...)
@@ -320,7 +320,7 @@ gif(anim)
 ```
 This macro supports additional parameters, that may be added after the main loop body.
 - Add `every n` with positive Integer n, to take only one frame every nth iteration.
-- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a 
+- Add `when <cond>` where `<cond>` is an Expression resulting in a Boolean, to take a
     frame only when `<cond>` returns `true`. Is incompatible with `every`.
 """
 macro animate(forloop::Expr, args...)

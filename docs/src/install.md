@@ -1,6 +1,4 @@
-
 ### Install
-
 First, add the package:
 
 ```julia
@@ -50,7 +48,6 @@ Pkg.add("GraphRecipes")
 ---
 
 ### Initialize
-
 ```julia
 using Plots # or StatsPlots
 # using GraphRecipes  # if you wish to use GraphRecipes package too

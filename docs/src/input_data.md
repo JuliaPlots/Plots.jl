@@ -4,7 +4,6 @@ PlotsBase.reset_defaults()
 ```
 
 # [Input Data](@id input-data)
-
 Part of the power of Plots lies is in the many combinations of allowed input data.
 You shouldn't spend your time transforming and massaging your data into a specific format.
 Let Plots do that for you.
@@ -12,7 +11,6 @@ Let Plots do that for you.
 There are a few rules to remember, and you'll be a power user in no time.
 
 ## Inputs are arguments, not keywords
-
 The `plot` function has several methods:
 `plot(y)`: treats the input as values for the `y`-axis and yields a unit-range as `x`-values.
 `plot(x, y)`: creates a 2D plot
@@ -22,7 +20,6 @@ The reason lies in the flexibility of Julia's multiple dispatch, where every com
 can have unique behavior, when desired.
 
 ## [Columns are series](@id columns-are-series)
-
 In most cases, passing a (`n` × `m`) matrix of values (numbers, etc) will create `m` series, each with `n` data points.  This follows a consistent rule… vectors apply to a series, matrices apply to many series.  This rule carries into keyword arguments.  `scatter(rand(10,4), markershape = [:circle, :rect])` will create 4 series, each assigned the markershape vector [:circle,:rect].  However, `scatter(rand(10,4), markershape = [:circle :rect])` will create 4 series, with series 1 and 3 having markers shaped as `:circle` and series 2 and 4 having markers shaped as `:rect` (i.e. as squares).  The difference is that in the first example, it is a length-2 column vector, and in the second example it is a (1 × 2) row vector (a Matrix).
 
 The flexibility and power of this can be illustrated by the following piece of code:
@@ -63,12 +60,11 @@ y1, y2 = [4, 5],  [6, 7]    # vectors
 m1, m2 = [x1 y1], [x2 y2]   # 2x2 matrices
 
 plot([m1, m2])              # array of matrices -> 4 series, plots each matrix column, x assumed to be integer count
-plot([[x1,y1], [x2,y2]])    # array of array of arrays -> 4 series, plots each individual array, x assumed to be integer count 
+plot([[x1,y1], [x2,y2]])    # array of array of arrays -> 4 series, plots each individual array, x assumed to be integer count
 plot([(x1,y1), (x2,y2)])    # array of tuples of arrays -> 2 series, plots each tuple as new series
 ```
 
 ## Unconnected Data within same groups
-
 As shown in the examples, you can plot a single polygon by using a single call to `plot` using the `:path` line type. You can use several calls to `plot` to draw several polygons.
 
 Now, let's say you're plotting `n` polygons grouped into `g` groups, with `n` > `g`. While you can use `plot` to draw separate polygons with each call, you cannot group two separate plots back into a single group. You'll end up with `n` groups in the legend, rather than `g` groups.
@@ -106,7 +102,6 @@ png("input_data_1") # hide
 ![](input_data_1.png)
 
 ## DataFrames support
-
 Using the [StatsPlots](https://github.com/JuliaPlots/Plots.jl/tree/v2/StatsPlots) extension package, you can pass a `DataFrame` as the first argument (similar to Gadfly or R's ggplot2).  For data fields or certain attributes (such as `group`) a symbol will be replaced with the corresponding column(s) of the `DataFrame`.  Additionally, the column name might be used as the   An example:
 
 ```@example input_data
@@ -144,7 +139,6 @@ plot(sin, cos, tmin, tmax)
 Vectors of functions are allowed as well (one series per function).
 
 ## Images
-
 Images can be directly added to plots by using the [Images.jl](https://github.com/timholy/Images.jl) library. For example, one can import a raster image and plot it with Plots via the commands:
 
 ```julia
@@ -239,7 +233,6 @@ plot!(batman, fillcolor = :black)
 ```
 
 ## [Extra keywords](@id extra_kwargs)
-
 There are some features that are very specific to a certain backend or not yet implemented in Plots.
 For these cases it is possible to forward extra keywords to the backend.
 Every keyword that is not a Plots keyword will then be collected in a `extra_kwargs` dictionary.

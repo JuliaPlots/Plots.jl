@@ -4,7 +4,6 @@ PlotsBase.reset_defaults()
 ```
 
 ### [Animations](@id animations)
-
 Animations are created in 3 steps:
 
 - Initialize an `Animation` object.
@@ -17,7 +16,6 @@ Animations are created in 3 steps:
 ---
 
 ### Convenience macros
-
 There are two macros for varying levels of convenience in creating animations: `@animate` and `@gif`.  The main difference is that `@animate` will return an `Animation` object for later processing, and `@gif` will create an animated gif file (and display it when returned to an IJulia cell).
 
 Use `@gif` for simple, one-off animations that you want to view immediately.  Use `@animate` for anything more complex.  Constructing `Animation` objects can be done when you need full control of the life-cycle of the animation (usually unnecessary though).

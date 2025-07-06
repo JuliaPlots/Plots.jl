@@ -17,24 +17,24 @@ x = randn(10^3)
 histogram(x)
 ```
 
-The default number of bins is determined by the 
+The default number of bins is determined by the
 [Freedman-Diaconis rule](https://en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis'_choice). You can select
 other bin algorithms using the attribute `bins`, which can take on values like `:sqrt`, or `:scott` for
 [Scott's rule](https://en.wikipedia.org/wiki/Histogram#Scott's_normal_reference_rule). Alternatively, you can pass
-in a range to more precisely control the number of bins and their minimum and maximum. For example, to plot 20 bins 
+in a range to more precisely control the number of bins and their minimum and maximum. For example, to plot 20 bins
 from -5 to +5, type
 
 ```julia
 range(-5, 5, length=21)
 ```
 
-where we have to add 1 to the length because the length counts the number of bin boundaries. Finally, you can also pass 
+where we have to add 1 to the length because the length counts the number of bin boundaries. Finally, you can also pass
 in an integer, like `bins=15`, but this will only be an approximation and the actual number of bins may vary.
 
 ## Normalization
 
 It is often desirable to normalize the histogram in some way. To do this, the `normalize` attribute is used, and
-we want `normalize=:pdf` (or `:true`) to normalize the total area of the bins to 1. Since we sampled from the normal 
+we want `normalize=:pdf` (or `:true`) to normalize the total area of the bins to 1. Since we sampled from the normal
 distribution, we may as well plot it too. Of course, other common attributes like the title, axis labels, and colors
 can be changed as well.
 
@@ -59,7 +59,7 @@ ylabel!("P(x)")
 ## Weighted Histograms
 
 Another common feature is to weight the values in `x`. Say that `x` consists of data sampled from a uniform
-distribution and we wanted to weight the values according to an exponential function. We would pass in a vector of 
+distribution and we wanted to weight the values according to an exponential function. We would pass in a vector of
 weights of the same length as `x`. To check that the weighting is done correctly, we plot the exponential function
 multiplied by a normalization factor.
 
@@ -96,9 +96,9 @@ Note that the Y axis of the histogram scatter plot will not start from 0 by defa
 ## 2D Histograms
 
 Two-dimensional histograms are accessed through the function `histogram2d` and its mutating variant `histogram2d!`.
-To plot them, two vectors `x` and `y` of the same length are needed. 
+To plot them, two vectors `x` and `y` of the same length are needed.
 
-The histogram is plotted in 2D as a heatmap instead of as 3D bars. The default colormap is `:inferno`, as with contour 
+The histogram is plotted in 2D as a heatmap instead of as 3D bars. The default colormap is `:inferno`, as with contour
 plots and heatmaps. Bins without any count are not plotted at all by default.
 
 ```@example histogram
@@ -109,10 +109,10 @@ histogram2d(x, y)
 
 Things like custom bin numbers, weights, and normalization work in 2D, along with changing things like the
 colormap. However, the bin numbers need to be passed in via tuples; if only one number is passed in for
-the bins, for example, it is assumed that both axes will set the same number of bins. Additionally, the weights 
+the bins, for example, it is assumed that both axes will set the same number of bins. Additionally, the weights
 only accept a single vector for the `x` values.
 
-Not plotting the bins at all may not be visually appealing, especially if a colormap is used with dark colors on the 
+Not plotting the bins at all may not be visually appealing, especially if a colormap is used with dark colors on the
 low end. To rectify this, use the attribute `show_empty_bins=true`.
 
 ```@example histogram
