@@ -119,7 +119,7 @@ function generate_cards(
 
     for (i, example) in enumerate(PlotsBase._examples)
         i ∈ skip && continue
-        (slice ≢ nothing && i ∉ slice) && continue
+        i ∈ slice || continue
         # write out the header, description, code block, and image link
         jl_name = "$backend-$(PlotsBase.ref_name(i)).jl"
         jl = PipeBuffer()
@@ -622,10 +622,10 @@ function main(args)
     @info "selected backends: $backends"
 
     slice = parse.(Int, split(get(ENV, "PLOTDOCS_EXAMPLES", "")))
-    slice = (len_sl = length(slice)) == 0 ? nothing : slice
+    slice = (len_sl = length(slice)) == 0 ? range(1; stop = length(PlotsBase._examples)) : slice
     @info "selected examples: $slice"
 
-    debug = length(packages) ≤ 1 || len_sl ≤ 2
+    debug = length(packages) ≤ 1 || 1 < len_sl ≤ 3
 
     work = basename(WORK_DIR)
     build = basename(BLD_DIR)
