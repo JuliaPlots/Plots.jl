@@ -176,8 +176,15 @@ end
 
 # ---------------------------------------------------------
 
-const _best_html_output_type =
-    KW(:pythonplot => :png, :unicodeplots => :txt, :plotlyjs => :html, :plotly => :html)
+const _best_html_output_type = KW(
+    :unicodeplots => :png,  # better rendered as :png in web pages
+    :pythonplot => :svg,
+    :pgfplotsx => :svg,
+    :plotlyjs => :html,
+    :plotly => :html,
+    :gaston => :svg,
+    :gr => :svg,
+)
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
 function _show(io::IO, ::MIME"text/html", plt::Plot)
@@ -212,16 +219,16 @@ _display(plt::Plot) = @maxlog_warn "_display is not defined for this backend."
 Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback
 for mime in (
-        "text/html",
+        "application/vnd.plotly.v1+json",
+        "application/postscript",
+        "application/x-tex",
+        "application/pdf",
+        "application/eps",
+        "image/svg+xml",
         "text/latex",
         "image/png",
         "image/eps",
-        "image/svg+xml",
-        "application/eps",
-        "application/pdf",
-        "application/postscript",
-        "application/x-tex",
-        "application/vnd.plotly.v1+json",
+        "text/html",
     )
     @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         if haskey(io, :juno_plotsize)

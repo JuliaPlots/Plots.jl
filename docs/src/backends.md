@@ -53,18 +53,18 @@ This document is meant to be a guide and introduction to make that choice.
 # At a glance
 My favorites: `GR` for speed, `Plotly(JS)` for interactivity, `UnicodePlots` for REPL/SSH and `PythonPlot` otherwise.
 
-| If you require...         | then use...                                 |
-| :------------------------ | :------------------------------------------ |
-| features                  | GR, PythonPlot, Plotly(JS), Gaston          |
-| speed                     | GR, UnicodePlots, InspectDR, Gaston         |
-| interactivity             | PythonPlot, Plotly(JS), InspectDR           |
-| beauty                    | GR, Plotly(JS), PGFPlots/ PGFPlotsX         |
-| REPL plotting             | UnicodePlots                                |
-| 3D plots                  | GR, PythonPlot, Plotly(JS), Gaston          |
-| a GUI window              | GR, PythonPlot, PlotlyJS, Gaston, InspectDR |
-| a small footprint         | UnicodePlots, Plotly                        |
-| backend stability         | PythonPlot, Gaston                          |
-| plot+data -> `.hdf5` file | HDF5                                        |
+| If you require...         | then use...                         |
+| :------------------------ | :-----------------------------------|
+| features                  | GR, PythonPlot, Plotly(JS), Gaston  |
+| speed                     | GR, UnicodePlots, Gaston            |
+| interactivity             | PythonPlot, Plotly(JS)              |
+| beauty                    | GR, Plotly(JS), PGFPlots/ PGFPlotsX |
+| REPL plotting             | UnicodePlots                        |
+| 3D plots                  | GR, PythonPlot, Plotly(JS), Gaston  |
+| a GUI window              | GR, PythonPlot, PlotlyJS, Gaston    |
+| a small footprint         | UnicodePlots, Plotly                |
+| backend stability         | PythonPlot, Gaston                  |
+| plot+data -> `.hdf5` file | HDF5                                |
 
 Of course this list is rather subjective and nothing in life is that simple. Likely there are subtle tradeoffs between backends, long hidden bugs, and more excitement. Don't be shy to try out something new !
 

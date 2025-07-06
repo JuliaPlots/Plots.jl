@@ -27,8 +27,8 @@ Plots support 2 different versions per save-command.
 Command `savefig` chooses file type automatically based on the file extension.
 
 ```julia
-savefig(filename_string) # save the most recent fig as filename_string (such as "output.png")
-savefig(plot_ref, filename_string) # save the fig referenced by plot_ref as filename_string (such as "output.png")
+savefig(filename_string)  # save the most recent fig as filename_string (such as "output.png")
+savefig(plot_ref, filename_string)  # save the fig referenced by plot_ref as filename_string (such as "output.png")
 ```
 
 In addition, `Plots` exports the convenience function `png(filename::AbstractString)`.
@@ -37,31 +37,31 @@ conflict with exports from other packages.
 In this case the string fn containing the filename does not need a file extension.
 
 ```julia
-png(filename_string) # save the current fig as png with filename filename_string (such as "output.png")
-png(plot_ref, filename_string) # save the fig referenced by plot_ref as png with filename filename_string (such as "output.png")
+png(filename_string)  # save the current fig as png with filename filename_string (such as "output.png")
+png(plot_ref, filename_string)  # save the fig referenced by plot_ref as png with filename filename_string (such as "output.png")
 ```
 
 #### File formats supported by most graphical backends
  - png (default output format for `savefig`, if no file extension is given)
  - svg
- - PDF
+ - pdf
 
 When not using `savefig`, the default output format depends on the environment (e.g., when using IJulia/Jupyter).
 
 #### Supported output file formats
-Note:   not all backends support every output file format !
+Note: not all backends support every output file format !
 A simple table showing which format is supported by which backend
 
-| format | backends                                                             |
-| :----- | :------------------------------------------------------------------- |
-| eps    | inspectdr, plotlyjs, pythonplot                                      |
-| html   | plotly,  plotlyjs                                                    |
-| json   | plotly, plotlyjs                                                     |
-| pdf    | gr, plotlyjs, pythonplot, pgfplotsx, inspectdr, gaston               |
-| png    | gr, plotlyjs, pythonplot, pgfplotsx, inspectdr, gaston, unicodeplots |
-| ps     | gr, pythonplot                                                       |
-| svg    | gr, inspectdr, pgfplotsx, plotlyjs, pythonplot, gaston               |
-| tex    | pgfplotsx, pythonplot                                                |
-| text   | hdf5, unicodeplots                                                   |
+| format | backends                                                  |
+| :----- | :-------------------------------------------------------- |
+| eps    | plotlyjs, pythonplot                                      |
+| html   | plotly, plotlyjs                                          |
+| json   | plotly, plotlyjs                                          |
+| pdf    | gr, pythonplot, plotlyjs, pgfplotsx, gaston               |
+| png    | gr, pythonplot, unicodeplots, plotlyjs, pgfplotsx, gaston |
+| ps     | gr, pythonplot                                            |
+| svg    | gr, pythonplot, pgfplotsx, plotlyjs, gaston               |
+| tex    | pythonplot, pgfplotsx                                     |
+| text   | unicodeplots, hdf5                                        |
 
 Supported file formats can be written to an IO stream via, for example, `png(myplot, pipebuffer::IO)`, so the image file can be passed via a PipeBuffer to other functions, eg. `Cairo.read_from_png(pipebuffer::IO)`.
