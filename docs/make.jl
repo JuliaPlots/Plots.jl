@@ -105,7 +105,8 @@ markdown_symbols_to_string(arr) = isempty(arr) ? "" : markdown_code_to_string(ar
 
 function generate_cards(
         prefix::AbstractString, backend::Symbol, slice;
-        skip = get(PlotsBase._backend_skips, backend, Int[])
+        skip = get(PlotsBase._backend_skips, backend, Int[]),
+        debug = false
     )
     @show backend
     # create folder: for each backend we generate a DemoSection "generated" under "gallery"
@@ -114,20 +115,20 @@ function generate_cards(
         mkpath(dn)
     end
     sec_config = Dict{String, Any}("order" => [])
-
     needs_rng_fix = Dict{Int, Bool}()
 
     for (i, example) in enumerate(PlotsBase._examples)
         i ∈ skip && continue
         (slice ≢ nothing && i ∉ slice) && continue
         # write out the header, description, code block, and image link
-        jlname = "$backend-$(PlotsBase.ref_name(i)).jl"
+        jl_name = "$backend-$(PlotsBase.ref_name(i)).jl"
         jl = PipeBuffer()
+
         # DemoCards YAML frontmatter
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
         svg_ready_backends = (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)
-        asset_name = "$(backend)_$(PlotsBase.ref_name(i))"
-        asset_path = asset_name * if i ∈ PlotsBase._animation_examples
+        cover_name = "$(backend)_$(PlotsBase.ref_name(i))"
+        cover_path = cover_name * if i ∈ PlotsBase._animation_examples
             ".gif"
         elseif backend ∈ svg_ready_backends
             ".svg"
@@ -135,9 +136,9 @@ function generate_cards(
             ".png"
         end
         if !isempty(example.header)
-            push!(sec_config["order"], jlname)
+            push!(sec_config["order"], jl_name)
             # start a new demo file
-            @debug "generate demo \"$(example.header)\" - writing `$jlname`"
+            debug && @info "generate demo \"$(example.header)\" - writing `$jl_name`"
 
             extra = if backend ≡ :unicodeplots
                 "import FileIO, FreeType  #hide"  # weak deps for png export
@@ -148,22 +149,20 @@ function generate_cards(
                 jl, """
                 # ---
                 # title: $(example.header)
-                # id: $asset_name
-                # cover: $asset_path
+                # id: $cover_name
+                # cover: $cover_path
                 # author: "$(author())"
                 # description: ""
                 # date: $(Dates.now())
                 # ---
-
                 using Plots
                 const PlotsBase = Plots.PlotsBase  #hide
                 $backend()
                 $extra
-
                 PlotsBase.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(PlotsBase.SEED))  #hide
-                nothing  #hide
+
                 """
             )
         end
@@ -177,24 +176,31 @@ function generate_cards(
         # from the docs: """
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
-        asset_cmd = if i ∈ PlotsBase._animation_examples
-            "PlotsBase.gif(anim, \"$asset_path\")"  # NOTE: must not be hidden, for appearance in the rendered `html`
+        cover_cmd = if i ∈ PlotsBase._animation_examples
+            "PlotsBase.gif(anim, \"$cover_path\")"
         elseif backend ∈ svg_ready_backends
-            "PlotsBase.svg(\"$asset_path\")  #src"
+            "PlotsBase.svg(\"$cover_path\")"
         else
-            "PlotsBase.png(\"$asset_path\")  #src"
+            "PlotsBase.png(\"$cover_path\")"
         end
-        write(jl, """mkpath("assets")  #src\n$asset_cmd\n""")
+        write(
+            jl, """
+            mkpath("assets")  #src
+            $cover_cmd  #src
+            $(i ∈ PlotsBase._animation_examples ? "PlotsBase.gif(anim)" : "current()")  #hide
+            """
+        )
+        card_jl = read(jl, String)
+        debug && @info card_jl
 
-        @label write_file
         fn, mode = if isempty(example.header)
             "$backend-$(PlotsBase.ref_name(i - 1)).jl", "a"  # continued example
         else
-            jlname, "w"
+            jl_name, "w"
         end
         card = joinpath(cards_path, fn)
         # @info "writing" card
-        open(io -> write(io, read(jl, String)), card, mode)
+        open(io -> write(io, card_jl), card, mode)
         # DEBUG: sometimes the generated file is still empty when passing to `DemoCards.makedemos`
         sleep(0.01)
     end
@@ -611,7 +617,6 @@ function main(args)
     end
     packages_backends = NamedTuple(p => Symbol(lowercase(string(p))) for p in packages)
     backends = values(packages_backends) |> collect
-    debug = length(packages) ≤ 1
 
     @info "selected packages: $packages"
     @info "selected backends: $backends"
@@ -619,6 +624,8 @@ function main(args)
     slice = parse.(Int, split(get(ENV, "PLOTDOCS_EXAMPLES", "")))
     slice = length(slice) == 0 ? nothing : slice
     @info "selected examples: $slice"
+
+    debug = length(packages) ≤ 1 || length(slice) ≤ 2
 
     work = basename(WORK_DIR)
     build = basename(BLD_DIR)
@@ -646,7 +653,7 @@ function main(args)
 
     @time "gallery" for pkg in packages
         be = packages_backends[pkg]
-        needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice)
+        needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice; debug)
         let (path, cb, asset) = makedemos(
                 joinpath(@__DIR__, "gallery", string(be));
                 root = @__DIR__, src = joinpath(work, "gallery"), edit_branch = BRANCH

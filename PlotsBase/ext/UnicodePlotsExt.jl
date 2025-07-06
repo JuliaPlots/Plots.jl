@@ -427,7 +427,10 @@ Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) =
     PlotsBase._show(io, MIME("text/plain"), plt)
 
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
-function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
+function PlotsBase._show(
+        io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend};
+        color::Union{Nothing, Bool} = nothing
+    )
     PlotsBase.prepare_output(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
@@ -437,7 +440,7 @@ function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBacke
             i < n && println(io)
         end
     else
-        have_color = Base.get_have_color()
+        have_color = color ≡ nothing ? Base.get_have_color() : color
         lines_colored = Array{Union{Nothing, Vector{String}}}(nothing, nr, nc)
         lines_uncolored = have_color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
