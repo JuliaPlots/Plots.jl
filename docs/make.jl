@@ -176,7 +176,7 @@ function generate_cards(
         # from the docs: """
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
-        # this command create the card cover file, NOT the output of the `@example` block in the `index.html` file !
+        # this command creates the card cover file, NOT the output of the `@example` block in the `index.html` file !
         cover_cmd = if i ∈ PlotsBase._animation_examples
             "PlotsBase.gif(anim, \"$cover_path\")"
         elseif backend ∈ svg_ready_backends
@@ -184,6 +184,7 @@ function generate_cards(
         else
             "PlotsBase.png(\"$cover_path\")"
         end
+        # this command creates the output of the `@example` block in the `index.html` card file
         show_cmd = if i ∈ PlotsBase._animation_examples
             "PlotsBase.gif(anim)"
         elseif backend ≡ :plotlyjs
