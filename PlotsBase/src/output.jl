@@ -177,7 +177,7 @@ end
 # ---------------------------------------------------------
 
 const _best_html_output_type = KW(
-    :unicodeplots => :txt,
+    :unicodeplots => :png,  # FIXME: https://github.com/fredrikekre/Literate.jl/issues/276
     :pythonplot => :svg,
     :pgfplotsx => :svg,
     :plotlyjs => :html,
