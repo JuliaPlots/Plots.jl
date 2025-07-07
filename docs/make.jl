@@ -771,7 +771,7 @@ function main(args)
                 "Overview" => "ecosystem.md",
             ]
         )
-        push!(pages, "Advanced Topics" => ["Plot objects" => "plot_objects.md", "Plotting pipeline" => "pipeline.md"])
+        push!(pages, "Advanced Topics" => ["Plotting pipeline" => "pipeline.md"])
         :generate ∈ build_cmds && push!(
             pages,
             "Gallery" => gallery,
