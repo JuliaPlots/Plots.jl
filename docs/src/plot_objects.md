@@ -5,7 +5,7 @@ The plot object.
 It holds all the attributes of the plot itself its [`Subplot`](@ref)s and [`Series`](@ref).
 
 ```@docs
-Plot
-Subplot
-Series
+PlotsBase.Plot
+PlotsBase.Subplot
+PlotsBase.Series
 ```
