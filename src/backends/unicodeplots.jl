@@ -336,9 +336,9 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
             i < n && println(io)
         end
     else
-        have_color = Base.get_have_color()
+        color = get(io, :color, false)
         lines_colored = Array{Union{Nothing, Vector{String}}}(nothing, nr, nc)
-        lines_uncolored = have_color ? similar(lines_colored) : lines_colored
+        lines_uncolored = color ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
         nsp = length(plt.o)
@@ -354,9 +354,9 @@ function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
                     elseif (sps += 1) > nsp
                         continue
                     end
-                    colored = string(plt.o[sps]; color = have_color)
+                    colored = string(plt.o[sps]; color)
                     lines_colored[r, c] = lu = lc = split(colored, '\n')
-                    if have_color
+                    if color
                         uncolored = UnicodePlots.no_ansi_escape(colored)
                         lines_uncolored[r, c] = lu = split(uncolored, '\n')
                     end

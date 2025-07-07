@@ -220,16 +220,16 @@ _display(plt::Plot) = @warn "_display is not defined for this backend."
 Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback
 for mime in (
-        "text/html",
+        "application/vnd.plotly.v1+json",
+        "application/postscript",
+        "application/x-tex",
+        "application/pdf",
+        "application/eps",
+        "image/svg+xml",
         "text/latex",
         "image/png",
         "image/eps",
-        "image/svg+xml",
-        "application/eps",
-        "application/pdf",
-        "application/postscript",
-        "application/x-tex",
-        "application/vnd.plotly.v1+json",
+        "text/html",
     )
     @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         if haskey(io, :juno_plotsize)
