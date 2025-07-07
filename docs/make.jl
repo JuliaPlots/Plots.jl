@@ -190,7 +190,7 @@ function generate_cards(
             # FIXME: failing to render the html script outputed by :plotlyjs so instead include the cover .svg file
             """
             nothing  #hide
-            # ![plot](assets/cover_name.svg)
+            # ![plot](assets/$(cover_name).svg)
             """
         else
             "current()"  # triggers MIME("text/html"), see PlotsBase._best_html_output_type (mostly `:svg` and `:html`)
