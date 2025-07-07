@@ -27,7 +27,6 @@ export LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)
 export GKSwstype=nul  # Plots.jl/issues/3664
 export MPLBACKEND=agg
 export COLORTERM=truecolor  # UnicodePlots.jl
-export PLOTDOCS_ANSICOLOR=true
 export JULIA_CONDAPKG_BACKEND=MicroMamba
 
 banner() {
@@ -76,8 +75,10 @@ install_and_precompile_julia_deps() {
 build_documenter_docs() {
   echo "== build documentation =="
   banner
+  export PLOTDOCS_ANSICOLOR=true
+  export PLOTSBASE_UNICODEPLOTS_COLORED=true
+  export PLOTDOCS_PUSH_PREVIEW=true
   # export PLOTDOCS_PACKAGES='UnicodePlots'
-  # export PLOTDOCS_PUSH_PREVIEW=true
   # export PLOTDOCS_EXAMPLES=1
   julia_project docs/make.jl
 }

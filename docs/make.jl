@@ -176,6 +176,7 @@ function generate_cards(
         # from the docs: """
         # #src and #hide are quite similar. The only difference is that #src lines are filtered out before execution (if execute=true) and #hide lines are filtered out after execution.
         # """
+        # this command creates the card cover file, NOT the output of the `@example` block in the `index.html` file !
         cover_cmd = if i ∈ PlotsBase._animation_examples
             "PlotsBase.gif(anim, \"$cover_path\")"
         elseif backend ∈ svg_ready_backends
@@ -183,11 +184,23 @@ function generate_cards(
         else
             "PlotsBase.png(\"$cover_path\")"
         end
+        # this command creates the output of the `@example` block in the `index.html` card file
+        show_cmd = if i ∈ PlotsBase._animation_examples
+            "PlotsBase.gif(anim)"
+        elseif backend ≡ :plotlyjs
+            # FIXME: failing to render the html script outputed by :plotlyjs so instead include the cover .svg file
+            """
+            nothing  #hide
+            # ![plot](assets/$(cover_name).svg)
+            """
+        else
+            "current()"  # triggers MIME("text/html"), see PlotsBase._best_html_output_type (mostly `:svg` and `:html`)
+        end
         write(
             jl, """
             mkpath("assets")  #src
             $cover_cmd  #src
-            $(i ∈ PlotsBase._animation_examples ? "PlotsBase.gif(anim)" : "current()")  #hide
+            $show_cmd  #hide
             """
         )
         card_jl = read(jl, String)

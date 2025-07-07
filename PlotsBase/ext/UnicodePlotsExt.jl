@@ -426,11 +426,10 @@ Base.show(plt::Plot{UnicodePlotsBackend}) = show(stdout, plt)
 Base.show(io::IO, plt::Plot{UnicodePlotsBackend}) =
     PlotsBase._show(io, MIME("text/plain"), plt)
 
+const PLOTSBASE_UNICODEPLOTS_COLORED = Base.get_bool_env("PLOTSBASE_UNICODEPLOTS_COLORED", Base.get_have_color())
+
 # NOTE: _show(...) must be kept for Base.showable (src/output.jl)
-function PlotsBase._show(
-        io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend};
-        color::Union{Nothing, Bool} = nothing
-    )
+function PlotsBase._show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     PlotsBase.prepare_output(plt)
     nr, nc = size(plt.layout)
     if nr == 1 && nc == 1  # fast path
@@ -440,9 +439,8 @@ function PlotsBase._show(
             i < n && println(io)
         end
     else
-        have_color = color ≡ nothing ? Base.get_have_color() : color
         lines_colored = Array{Union{Nothing, Vector{String}}}(nothing, nr, nc)
-        lines_uncolored = have_color ? similar(lines_colored) : lines_colored
+        lines_uncolored = PLOTSBASE_UNICODEPLOTS_COLORED ? similar(lines_colored) : lines_colored
         l_max = zeros(Int, nr)
         w_max = zeros(Int, nc)
         nsp = length(plt.o)
@@ -458,9 +456,9 @@ function PlotsBase._show(
                     elseif (sps += 1) > nsp
                         continue
                     end
-                    colored = string(plt.o[sps]; color = have_color)
+                    colored = string(plt.o[sps]; color = PLOTSBASE_UNICODEPLOTS_COLORED)
                     lines_colored[r, c] = lu = lc = split(colored, '\n')
-                    if have_color
+                    if PLOTSBASE_UNICODEPLOTS_COLORED
                         uncolored = UnicodePlots.no_ansi_escape(colored)
                         lines_uncolored[r, c] = lu = split(uncolored, '\n')
                     end
