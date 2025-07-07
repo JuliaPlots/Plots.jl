@@ -111,7 +111,7 @@ jobs:
 
       - uses: julia-actions/julia-processcoverage@latest
         with:
-          directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,src,GraphRecipes/src,StatsPlots/src,PlotThemes/src
+          directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,PlotsBase/ext,src,PlotThemes/src,GraphRecipes/src,StatsPlots/src
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
