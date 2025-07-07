@@ -682,7 +682,7 @@ function main(args)
             "Manual" => [
                 "Series Attributes" => "generated/attributes_series.md",
                 "Output" => "output.md",
-            ]
+            ],
         ]
     else  # release
         [
