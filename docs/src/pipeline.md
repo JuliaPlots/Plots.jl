@@ -16,7 +16,7 @@ n = 100
 x, y = range(0, 1, length = n), randn(n, 3)
 ```
 
-and we'd like to visualize `x` against each column of `y`.  Here's a sample command in Plots:
+and we'd like to visualize `x` against each column of `y`.  Here's a sample command in `Plots`:
 
 ```@example pipeline
 using Plots; pythonplot(size = (400, 300))
@@ -37,7 +37,7 @@ In this example, we have an input matrix, and we'd like to plot three series on 
 We create a row vector (1x3 matrix) of symbols to assign different visualization types for each series, set the orientation of the histogram, and set
 alpha values.
 
-For comparison's sake, this is somewhat similar to the following calls in PythonPlot:
+For comparison's sake, this is somewhat similar to the following calls in `PythonPlot`:
 
 ```@example pipeline
 import PythonPlot
@@ -66,10 +66,8 @@ ax.xaxis.grid(true)
 ax.yaxis.grid(true)
 PythonPlot.title("My title")
 PythonPlot.legend(["y1","y2"])
-PythonPlot.savefig("pythonplot.svg")
-nothing  #hide
+PythonPlot.gcf()  #hide
 ```
-![](pythonplot.svg)
 
 ---
 

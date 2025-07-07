@@ -72,7 +72,6 @@ A few environment variables control `PlotsBase` internals:
 
 #### For testing purposes
 - `PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON`: use a workaround for the `ECONNREFUSED` error when using the `plotlyjs` backend
-- `PLOTSBASE_UNICODEPLOTS_COLORED`: force `unicodeplots` colored output
 - `PLOTSBASE_TEST_PACKAGES`: list of backends to run the tests for.
 - `PLOTSBASE_REFERENCE_DIR`: where to find the reference images.
 - `PLOTSBASE_IMG_TOL`: tolerance when comparing images during tests.
