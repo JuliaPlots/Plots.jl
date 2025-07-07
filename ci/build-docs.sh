@@ -79,5 +79,5 @@ build_documenter_docs() {
   # export PLOTDOCS_PACKAGES='UnicodePlots'
   # export PLOTDOCS_PUSH_PREVIEW=true
   # export PLOTDOCS_EXAMPLES=1
-  julia_project docs/make.jl
+  julia_project docs/make.jl all
 }
