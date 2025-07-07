@@ -1,5 +1,5 @@
 # oneliner fast build PLOTDOCS_SUFFIX='' PLOTDOCS_PACKAGES='UnicodePlots' PLOTDOCS_EXAMPLES='1' julia --project make.jl
-import Pkg; Pkg.precompile()
+import Pkg
 
 using RecipesBase, RecipesPipeline, PlotsBase, Plots
 using DemoCards, Literate, Documenter
@@ -155,6 +155,7 @@ function generate_cards(
                 # author: "$(author())"
                 # description: ""
                 # date: $(Dates.now())
+                # execute: true
                 # ---
                 using Plots
                 const PlotsBase = Plots.PlotsBase  #hide
@@ -605,7 +606,15 @@ function to_html(df::DataFrames.AbstractDataFrame; table_style = Dict("font-size
 end
 
 function main(args)
-    length(args) > 0 && return  # split precompilation and actual docs build
+    args = @. Symbol(args)
+    default_build_cmds = [:generate, :gallery, :make, :deploy]
+    build_cmds = length(args) > 0 ? args : default_build_cmds
+    :all ∈ build_cmds && (build_cmds = default_build_cmds)
+    if :none ∈ build_cmds
+        Pkg.precompile()
+        return
+    end
+    @show build_cmds
 
     get!(ENV, "MPLBACKEND", "agg")  # set matplotlib gui backend
     get!(ENV, "GKSwstype", "nul")  # disable default GR ws
@@ -646,12 +655,14 @@ function main(args)
     src_dir = basename(SRC_DIR)
     @show debug SRC_DIR WORK_DIR BLD_DIR
 
-    @info "generate markdown"
-    @time "generate markdown" begin
-        generate_attr_markdown()
-        generate_supported_markdown(; default_backends = backends)
-        generate_graph_attr_markdown()
-        generate_colorschemes_markdown()
+    if :generate ∈ build_cmds
+        @info "generate markdown"
+        @time "generate markdown" begin
+            generate_attr_markdown()
+            generate_supported_markdown(; default_backends = backends)
+            generate_graph_attr_markdown()
+            generate_colorschemes_markdown()
+        end
     end
 
     for (pkg, dest) in (
@@ -661,46 +672,43 @@ function main(args)
         cp(pkgdir(pkg, "README.md"), joinpath(GEN_DIR, dest); force = true)
     end
 
-    @info "gallery"
     gallery = Pair{String, String}[]
     gallery_assets, gallery_callbacks, user_gallery = map(_ -> [], 1:3)
     needs_rng_fix = Dict{Symbol, Any}()
+    if :gallery ∈ build_cmds
+        @info "gallery"
 
-    @time "gallery" for pkg in packages
-        be = packages_backends[pkg]
-        needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice; debug)
-        let (path, cb, asset) = makedemos(
-                joinpath(@__DIR__, "gallery", string(be));
-                root = @__DIR__, src = joinpath(work_dir, "gallery"), edit_branch = BRANCH
+        @time "gallery" for pkg in packages
+            be = packages_backends[pkg]
+            needs_rng_fix[pkg] = generate_cards(joinpath(@__DIR__, "gallery"), be, slice; debug)
+            let (path, cb, asset) = makedemos(
+                    joinpath(@__DIR__, "gallery", string(be));
+                    root = @__DIR__, src = joinpath(work_dir, "gallery"), edit_branch = BRANCH
+                )
+                push!(gallery, string(pkg) => joinpath("gallery", path))
+                push!(gallery_callbacks, cb)
+                push!(gallery_assets, asset)
+            end
+        end
+        if !debug
+            user_gallery, cb, assets = makedemos(
+                joinpath("user_gallery");
+                root = @__DIR__, src = work_dir, edit_branch = BRANCH
             )
-            push!(gallery, string(pkg) => joinpath("gallery", path))
             push!(gallery_callbacks, cb)
-            push!(gallery_assets, asset)
+            push!(gallery_assets, assets)
+            unique!(gallery_assets)
+            @show user_gallery gallery_assets
         end
     end
-    if !debug
-        user_gallery, cb, assets = makedemos(
-            joinpath("user_gallery");
-            root = @__DIR__, src = work_dir, edit_branch = BRANCH
-        )
-        push!(gallery_callbacks, cb)
-        push!(gallery_assets, assets)
-        unique!(gallery_assets)
-        @show user_gallery gallery_assets
-    end
 
-    pages = if debug
-        [
-            "Home" => "index.md",
-            "Gallery" => gallery,
-            "Manual" => [
-                "Series Attributes" => "generated/attributes_series.md",
-                "Output" => "output.md",
-            ],
-        ]
+    pages = Any["Home" => "index.md"]
+    if debug
+        :gallery ∈ build_cmds && push!(pages, "Gallery" => gallery)
+        :generate ∈ build_cmds && push!(pages, "Series Attributes" => "generated/attributes_series.md")
     else  # release
-        [
-            "Home" => "index.md",
+        push!(
+            pages,
             "Getting Started" => [
                 "Installation" => "install.md",
                 "Basics" => "basics.md",
@@ -709,7 +717,10 @@ function main(args)
                     "Contour Plots" => "series_types/contour.md",
                     "Histograms" => "series_types/histogram.md",
                 ],
-            ],
+            ]
+        )
+        :generate ∈ build_cmds && push!(
+            pages,
             "Manual" => [
                 "Input Data" => "input_data.md",
                 "Output" => "output.md",
@@ -740,8 +751,14 @@ function main(args)
                 "Backends" => "backends.md",
                 "Supported Attributes" => "generated/supported.md",
             ],
+        )
+        push!(
+            pages,
             "Learning" => "learning.md",
-            "Contributing" => "contributing.md",
+            "Contributing" => "contributing.md"
+        )
+        :generate ∈ build_cmds && push!(
+            pages,
             "Ecosystem" => [
                 "StatsPlots" => "generated/statsplots.md",
                 "GraphRecipes" => [
@@ -757,12 +774,15 @@ function main(args)
                     ],
                 ],
                 "Overview" => "ecosystem.md",
-            ],
-            "Advanced Topics" => ["Plot objects" => "plot_objects.md", "Plotting pipeline" => "pipeline.md"],
+            ]
+        )
+        push!(pages, "Advanced Topics" => ["Plot objects" => "plot_objects.md", "Plotting pipeline" => "pipeline.md"])
+        :generate ∈ build_cmds && push!(
+            pages,
             "Gallery" => gallery,
-            "User Gallery" => user_gallery,
-            "API" => "api.md",
-        ]
+            "User Gallery" => user_gallery
+        )
+        push!(pages, "API" => "api.md")
     end
 
     # those will be built pages - to skip some pages, comment them above
@@ -814,119 +834,120 @@ function main(args)
         end
     end
 
-    ansicolor = Base.get_bool_env("PLOTDOCS_ANSICOLOR", true)
-    @info "makedocs ansicolor=$ansicolor"
     failed = false
-    try
-        @time "makedocs" makedocs(;
-            format = Documenter.HTML(;
-                size_threshold = nothing,
-                prettyurls = Base.get_bool_env("CI", false),
-                assets = ["assets/favicon.ico", gallery_assets...],
-                collapselevel = 2,
-                edit_link = BRANCH,
-                ansicolor,
-            ),
-            root = @__DIR__,
-            source = work_dir,
-            build = bld_dir,
-            # pagesonly = true,  # fails DemoCards, see github.com/JuliaDocs/DemoCards.jl/issues/162
-            sitename = "Plots",
-            authors = "Thomas Breloff",
-            warnonly = true,
-            pages,
-        )
-    catch e
-        failed = true
-        e isa InterruptException || rethrow()
+    if :make ∈ build_cmds
+        ansicolor = Base.get_bool_env("PLOTDOCS_ANSICOLOR", true)
+        @info "makedocs ansicolor=$ansicolor"
+        try
+            @time "makedocs" makedocs(;
+                format = Documenter.HTML(;
+                    size_threshold = nothing,
+                    prettyurls = Base.get_bool_env("CI", false),
+                    assets = ["assets/favicon.ico", gallery_assets...],
+                    collapselevel = 2,
+                    edit_link = BRANCH,
+                    ansicolor,
+                ),
+                root = @__DIR__,
+                source = work_dir,
+                build = bld_dir,
+                # pagesonly = true,  # fails DemoCards, see github.com/JuliaDocs/DemoCards.jl/issues/162
+                sitename = "Plots",
+                authors = "Thomas Breloff",
+                warnonly = true,
+                pages,
+            )
+        catch e
+            failed = true
+            e isa InterruptException || rethrow()
+        end
     end
-
-    @info "gallery callbacks"
-    @time "gallery callbacks" foreach(gallery_callbacks) do cb
-        cb()  # URL redirection for DemoCards-generated gallery
-    end
-
     failed && return  # don't deploy and post-process on failure
 
-    @info "post-process gallery html files to remove `rng` in user displayed code in gallery"
-    # non-exhaustive list of examples to be fixed:
-    # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
-    @time "post-process `rng`" for pkg in packages
-        be = packages_backends[pkg]
-        prefix = joinpath(BLD_DIR, "gallery", string(be), "generated" * suffix)
-        must_fix = needs_rng_fix[pkg]
-        for file in Glob.glob("*/index.html", prefix)
-            (m = match(r"-ref(\d+)", file)) ≡ nothing && continue
-            idx = parse(Int, first(m.captures))
-            get(must_fix, idx, false) || continue
-            lines = readlines(file; keep = true)
-            open(file, "w") do io
-                count, in_code, sub = 0, false, ""
-                for line in lines
-                    trailing = if (m = match(r"""<code class="language-julia hljs">.*""", line)) ≢ nothing
-                        in_code = true
-                        m.match
-                    else
-                        line
+    if :deploy ∈ build_cmds
+        @info "gallery callbacks"  # URL redirection for DemoCards-generated gallery
+        @time "gallery callbacks" foreach(cb -> cb(), gallery_callbacks)
+
+        @info "post-process gallery html files to remove `rng` in user displayed code in gallery"
+        # non-exhaustive list of examples to be fixed:
+        # [1, 4, 5, 7:12, 14:21, 25:27, 29:30, 33:34, 36, 38:39, 41, 43, 45:46, 48, 52, 54, 62]
+        @time "post-process `rng`" for pkg in packages
+            be = packages_backends[pkg]
+            prefix = joinpath(BLD_DIR, "gallery", string(be), "generated" * suffix)
+            must_fix = needs_rng_fix[pkg]
+            for file in Glob.glob("*/index.html", prefix)
+                (m = match(r"-ref(\d+)", file)) ≡ nothing && continue
+                idx = parse(Int, first(m.captures))
+                get(must_fix, idx, false) || continue
+                lines = readlines(file; keep = true)
+                open(file, "w") do io
+                    count, in_code, sub = 0, false, ""
+                    for line in lines
+                        trailing = if (m = match(r"""<code class="language-julia hljs">.*""", line)) ≢ nothing
+                            in_code = true
+                            m.match
+                        else
+                            line
+                        end
+                        if in_code && occursin("rng", line)
+                            line = replace(line, r"rng\s*?,\s*" => "")
+                            count += 1
+                        end
+                        occursin("</code>", trailing) && (in_code = false)
+                        write(io, line)
                     end
-                    if in_code && occursin("rng", line)
-                        line = replace(line, r"rng\s*?,\s*" => "")
-                        count += 1
-                    end
-                    occursin("</code>", trailing) && (in_code = false)
-                    write(io, line)
+                    count > 0 && @info "replaced $count `rng` occurrence(s) in $file" maxlog = 10
+                    @assert count > 0 "idx=$idx - count=$count - file=$file"
                 end
-                count > 0 && @info "replaced $count `rng` occurrence(s) in $file" maxlog = 10
-                @assert count > 0 "idx=$idx - count=$count - file=$file"
             end
         end
-    end
 
-    # post-process files for edit link
-    @info "post-process work dir to fix edit link in `html` files"
-    @time "post-process work dir" for file in vcat(
-            Glob.glob("**/*.html", BLD_DIR),  # NOTE: this does not match BLD_DIR/index.html :/
-            Glob.glob("*.html", BLD_DIR),  # I don't understand how Glob works :/
-        ) |> unique!
-        # @show file
-        lines = readlines(file; keep = true)
-        any(line -> occursin(joinpath("blob", BRANCH, "docs"), line), lines) || continue
-        old = joinpath("blob", BRANCH, "docs", work_dir)
-        new = joinpath("blob", BRANCH, "docs", src_dir)
-        @info "fixing $file $old -> $new" maxlog = 10
-        open(file, "w") do io
-            foreach(line -> write(io, replace(line, old => new, joinpath(WORK_DIR) => new)), lines)
+        # post-process files for edit link
+        @info "post-process work dir to fix edit link in `html` files"
+        @time "post-process work dir" for file in vcat(
+                Glob.glob("**/*.html", BLD_DIR),  # NOTE: this does not match BLD_DIR/index.html :/
+                Glob.glob("*.html", BLD_DIR),  # I don't understand how Glob works :/
+            ) |> unique!
+            # @show file
+            lines = readlines(file; keep = true)
+            any(line -> occursin(joinpath("blob", BRANCH, "docs"), line), lines) || continue
+            old = joinpath("blob", BRANCH, "docs", work_dir)
+            new = joinpath("blob", BRANCH, "docs", src_dir)
+            @info "fixing $file $old -> $new" maxlog = 10
+            open(file, "w") do io
+                foreach(line -> write(io, replace(line, old => new, joinpath(WORK_DIR) => new)), lines)
+            end
         end
-    end
 
-    debug && for (rt, dirs, fns) in walkdir(BLD_DIR)
-        if length(dirs) > 0
-            println("dirs in $rt:")
-            foreach(d -> println('\t', joinpath(rt, d)), dirs)
+        debug && for (rt, dirs, fns) in walkdir(BLD_DIR)
+            if length(dirs) > 0
+                println("dirs in $rt:")
+                foreach(d -> println('\t', joinpath(rt, d)), dirs)
+            end
+            if length(fns) > 0
+                println("files in $rt:")
+                foreach(f -> println('\t', joinpath(rt, f)), fns)
+            end
         end
-        if length(fns) > 0
-            println("files in $rt:")
-            foreach(f -> println('\t', joinpath(rt, f)), fns)
-        end
-    end
 
-    @info "deploydocs"
-    repo = "JuliaPlots/Plots.jl"
-    @time "deploydocs" withenv("GITHUB_REPOSITORY" => repo) do
-        deploydocs(;
-            root = @__DIR__,
-            target = bld_dir,
-            versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
-            devbranch = BRANCH,
-            deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
-            repo_previews = "github.com/JuliaPlots/PlotDocs.jl",
-            push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
-            forcepush = true,
-            repo,
-        )
+        @info "deploydocs"
+        repo = "JuliaPlots/Plots.jl"
+        @time "deploydocs" withenv("GITHUB_REPOSITORY" => repo) do
+            deploydocs(;
+                root = @__DIR__,
+                target = bld_dir,
+                versions = ["stable" => "v^", "v#.#", "dev" => "dev", "latest" => "dev"],
+                devbranch = BRANCH,
+                deploy_repo = "github.com/JuliaPlots/PlotDocs.jl",  # see https://documenter.juliadocs.org/stable/man/hosting/#Out-of-repo-deployment
+                repo_previews = "github.com/JuliaPlots/PlotDocs.jl",
+                push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
+                forcepush = true,
+                repo,
+            )
+        end
     end
     @info "done !"
     return nothing
 end
 
-main(ARGS)
+@main

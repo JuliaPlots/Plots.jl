@@ -75,10 +75,10 @@ install_and_precompile_julia_deps() {
 build_documenter_docs() {
   echo "== build documentation =="
   banner
-  export PLOTDOCS_ANSICOLOR=true
   export PLOTSBASE_UNICODEPLOTS_COLORED=true
-  export PLOTDOCS_PUSH_PREVIEW=true
+  export PLOTDOCS_PUSH_PREVIEW=false
+  export PLOTDOCS_ANSICOLOR=true
   # export PLOTDOCS_PACKAGES='UnicodePlots'
   # export PLOTDOCS_EXAMPLES=1
-  julia_project docs/make.jl
+  julia_project docs/make.jl all
 }
