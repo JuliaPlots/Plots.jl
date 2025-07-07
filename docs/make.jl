@@ -128,14 +128,15 @@ function generate_cards(
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
         svg_ready_backends = (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)
         cover_name = "$(backend)_$(PlotsBase.ref_name(i))"
-        cover_file = cover_name * if i ∈ PlotsBase._animation_examples
-            ".gif"
-        elseif backend ∈ svg_ready_backends
-            ".svg"
-        else
-            ".png"
+        cover_path = let cover_file = cover_name * if i ∈ PlotsBase._animation_examples
+                ".gif"
+            elseif backend ∈ svg_ready_backends
+                ".svg"
+            else
+                ".png"
+            end
+            joinpath("assets", cover_file)
         end
-        cover_path = joinpath("assets", cover_file)
         if !isempty(example.header)
             push!(sec_config["order"], jl_name)
             # start a new demo file
