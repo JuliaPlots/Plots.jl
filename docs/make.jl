@@ -162,7 +162,7 @@ function generate_cards(
                 PlotsBase.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(PlotsBase.SEED))  #hide
-
+                nothing  #hide
                 """
             )
         end
