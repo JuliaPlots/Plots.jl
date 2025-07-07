@@ -192,7 +192,7 @@ function generate_cards(
         show_cmd = if i ∈ PlotsBase._animation_examples
             "PlotsBase.gif(anim)"
         elseif backend ≡ :plotlyjs
-            # FIXME: failing to render the html script outputed by :plotlyjs so instead include the cover .svg file
+            # FIXME: failing to render the html script outputted by :plotlyjs so instead include the cover .svg file
             """
             nothing  #hide
             # ![$cover_name]($cover_path)
