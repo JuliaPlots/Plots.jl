@@ -927,4 +927,4 @@ function main(args)
     return nothing
 end
 
-main(ARGS)
+@main
