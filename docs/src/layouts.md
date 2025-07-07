@@ -4,10 +4,9 @@ PlotsBase.reset_defaults()
 ```
 
 # [Layouts](@id layouts)
-As of v0.7.0, `Plots` has taken control of subplot positioning, allowing complex, nested grids of subplots and components.  Care has been taken to keep the framework flexible and generic, so that backends need only support the ability to precisely define the absolute position of a subplot, and they get the full power of nesting, plot area alignment, and more.  Just set the `layout` keyword in a call to `plot(...)`
+As of v0.7.0, `Plots` has taken control of subplot positioning, allowing complex, nested grids of subplots and components.  Care has been taken to keep the framework flexible and generic, so that backends need only support the ability to precisely define the absolute position of a subplot, and they get the full power of nesting, plot area alignment, and more.  Just set the `layout` keyword in a call to `plot(...)`.
 
 It's helpful at this point to review terminology:
-
 - **Plot**: the whole figure/window;
 - **Subplot**: one subplot, containing a title, axes, colorbar, legend, and plot area;
 - **Axis**: one axis of a subplot, containing axis guide (label), tick labels, and tick marks;
@@ -16,23 +15,20 @@ It's helpful at this point to review terminology:
 
 ---
 
-#### Simple Layouts
+####### Simple layouts
 Pass an `Integer` to `layout` to allow it to automatically compute a grid size for that many subplots:
-
 ```@example layouts
 # create a 2x2 grid, and map each of the 4 series to one of the subplots
 plot(rand(100, 4); layout = 4)
 ```
 
 Pass a `Tuple` to `layout` to create a grid of that size:
-
 ```@example layouts
 # create a 4x1 grid, and map each of the 4 series to one of the subplots
 plot(rand(100, 4); layout = (4, 1))
 ```
 
 More complex grid layouts can be created with the `grid(...)` constructor:
-
 ```@example layouts
 plot(rand(100, 4); layout = grid(4, 1, heights=[0.1 ,0.4, 0.4, 0.1]))
 ```
@@ -45,11 +41,10 @@ plot(rand(100,4); layout = 4, label=["a" "b" "c" "d"], title=["1" "2" "3" "4"])
 
 ---
 
-#### Advanced Layouts
+### Advanced layouts
 The `@layout` macro is the easiest way to define complex layouts, using Julia's [multidimensional Array construction](https://docs.julialang.org/en/v1/manual/arrays/#man-array-concatenation) as the basis for a custom layout syntax.  Precise sizing can be achieved with curly brackets, otherwise the free space is equally split between the **plot areas** of subplots.
 
-The symbols themselves (`a` and `b` in the example below) can be any valid identifier and don't have any special meaning.
-
+The symbols themselves (`a` and `b` in the example below) can be any valid identifier and don't have any special meaning:
 ```@example layouts
 l = @layout [
     a{0.3w} [grid(3,3)
@@ -63,6 +58,7 @@ plot(
 ```
 
 ---
+### Inset subplots
 
 Create inset (floating) subplots using the `inset_subplots` attribute. `inset_subplots` takes a list of (parent_layout, BoundingBox) tuples, where the bounding box is relative to the parent.
 
@@ -99,9 +95,8 @@ sticks!(
 )
 ```
 
-### Adding Subplots incrementally
+### Adding subplots incrementally
 You can also combine multiple plots to a single plot. To do this, simply pass the variables holding the previous plots to the `plot` function:
-
 ```julia
 l = @layout [a ; b c]
 p1 = plot(...)
