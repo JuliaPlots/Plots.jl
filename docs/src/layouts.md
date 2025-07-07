@@ -15,7 +15,7 @@ It's helpful at this point to review terminology:
 
 ---
 
-####### Simple layouts
+### Simple layouts
 Pass an `Integer` to `layout` to allow it to automatically compute a grid size for that many subplots:
 ```@example layouts
 # create a 2x2 grid, and map each of the 4 series to one of the subplots
