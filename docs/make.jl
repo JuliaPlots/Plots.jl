@@ -156,6 +156,7 @@ function generate_cards(
                 Plots.reset_defaults()  #hide
                 using StableRNGs  #hide
                 rng = StableRNG($(Plots.PLOTS_SEED))  #hide
+                nothing  #hide
                 """
             )
         end
