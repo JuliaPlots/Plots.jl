@@ -128,17 +128,18 @@ function generate_cards(
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
         svg_ready_backends = (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)
         cover_name = "$(backend)_$(PlotsBase.ref_name(i))"
-        cover_path = cover_name * if i ∈ PlotsBase._animation_examples
+        cover_file = cover_name * if i ∈ PlotsBase._animation_examples
             ".gif"
         elseif backend ∈ svg_ready_backends
             ".svg"
         else
             ".png"
         end
+        cover_path = joinpath("assets", cover_file)
         if !isempty(example.header)
             push!(sec_config["order"], jl_name)
             # start a new demo file
-            debug && @info "generate demo \"$(example.header)\" - writing `$jl_name`"
+            debug && @info "generate demo $(example.header |> repr) - writing `$jl_name`"
 
             extra = if backend ≡ :unicodeplots
                 "import FileIO, FreeType  #hide"  # weak deps for png export
@@ -178,11 +179,11 @@ function generate_cards(
         # """
         # this command creates the card cover file, NOT the output of the `@example` block in the `index.html` file !
         cover_cmd = if i ∈ PlotsBase._animation_examples
-            "PlotsBase.gif(anim, \"$cover_path\")"
+            "PlotsBase.gif(anim, $(cover_path |> repr))"
         elseif backend ∈ svg_ready_backends
-            "PlotsBase.svg(\"$cover_path\")"
+            "PlotsBase.svg($(cover_path |> repr))"
         else
-            "PlotsBase.png(\"$cover_path\")"
+            "PlotsBase.png($(cover_path |> repr))"
         end
         # this command creates the output of the `@example` block in the `index.html` card file
         show_cmd = if i ∈ PlotsBase._animation_examples
@@ -191,7 +192,7 @@ function generate_cards(
             # FIXME: failing to render the html script outputed by :plotlyjs so instead include the cover .svg file
             """
             nothing  #hide
-            # ![plot](assets/$(cover_name).svg)
+            # ![plot]($cover_file)
             """
         else
             "current()"  # triggers MIME("text/html"), see PlotsBase._best_html_output_type (mostly `:svg` and `:html`)
