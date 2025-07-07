@@ -66,21 +66,22 @@ plot(1:10, Any[rand(10), sin])               # 2 series: rand(10) and map(sin,x)
 ### Environment variables
 
 A few environment variables control `PlotsBase` internals:
+- `PLOTSBASE_HOST_DEPENDENCY_LOCAL`: use a local `plotly` resource instead of a cloud hosted one.
 - `PLOTSBASE_DEFAULT_BACKEND`: default backend, preempting the one set through the `Preferences` based mechanism.
 - `PLOTSBASE_TMPDIR`: temporary files prefix for (html) files (some browser are denied access to temporary directorie such as `/tmp`).
-- `PLOTSBASE_HOST_DEPENDENCY_LOCAL`: use a local `plotly` resource instead of a cloud hosted one.
 
 #### For testing purposes
-- `PLOTSBASE_TEST_PACKAGES`: list of backends to run the tests for.
 - `PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON`: use a workaround for the `ECONNREFUSED` error when using the `plotlyjs` backend
-- `PLOTSBASE_IMG_TOL`: tolerance when comparing images during tests.
+- `PLOTSBASE_UNICODEPLOTS_COLORED`: force `unicodeplots` colored output
+- `PLOTSBASE_TEST_PACKAGES`: list of backends to run the tests for.
 - `PLOTSBASE_REFERENCE_DIR`: where to find the reference images.
+- `PLOTSBASE_IMG_TOL`: tolerance when comparing images during tests.
 
 #### For building documentation
-- `PLOTDOCS_PACKAGES`: restrict the docs build to these backends.
-- `PLOTDOCS_EXAMPLES`: restrict the docs build to these examples.
 - `PLOTDOCS_PUSH_PREVIEW`: allow pushing the docs previews for pull requests.
 - `PLOTDOCS_ANSICOLOR`: use ansicolor in julia code output, mostly for `unicodeplots`.
+- `PLOTDOCS_PACKAGES`: restrict the docs build to these backends, e.g. `PLOTDOCS_PACKAGES='GR UnicodePlots`.
+- `PLOTDOCS_EXAMPLES`: restrict the docs build to these examples, e.g. `PLOTDOCS_EXAMPLES='1 2 5`.
 - `PLOTDOCS_SUFFIX`: docs build suffix in order to build multiple docs versions at a time.
 
 ### Special julia variables

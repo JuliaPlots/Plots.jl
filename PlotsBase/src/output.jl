@@ -177,7 +177,7 @@ end
 # ---------------------------------------------------------
 
 const _best_html_output_type = KW(
-    :unicodeplots => :png,  # better rendered as :png in web pages
+    :unicodeplots => :txt,
     :pythonplot => :svg,
     :pgfplotsx => :svg,
     :plotlyjs => :html,
@@ -216,7 +216,8 @@ Base.showable(::M, ::Type{P}) where {M <: MIME, P <: Plot} = hasmethod(_show, Tu
 
 _display(plt::Plot) = @maxlog_warn "_display is not defined for this backend."
 
-Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
+Base.show(io::IO, ::MIME"text/plain", plt::Plot) = show(io, plt)
+
 # for writing to io streams... first prepare, then callback
 for mime in (
         "application/vnd.plotly.v1+json",
