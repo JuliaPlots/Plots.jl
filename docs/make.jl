@@ -943,6 +943,7 @@ function main(args)
                 forcepush = true,
                 repo,
             )
+        end
     end
     @info "done !"
     return nothing
