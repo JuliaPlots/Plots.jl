@@ -1,10 +1,20 @@
 # RecipesBase
 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/stable/RecipesBase)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://docs.juliaplots.org/dev/RecipesBase)
-[![CI](https://github.com/JuliaPlots/Plots.jl/workflows/ci/badge.svg?branch=master)](https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml)
-[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
-[![deps](https://juliahub.com/docs/RecipesBase/deps.svg)](https://juliahub.com/ui/Packages/RecipesBase/8e2Mm?t=2)
+[![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](
+  https://docs.juliaplots.org/stable/RecipesBase/
+)
+[![Docs dev](https://img.shields.io/badge/docs-dev-blue.svg)](
+  https://docs.juliaplots.org/dev/RecipesBase/
+)
+[![CI](https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2)](
+  https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
+)
+[![Project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](
+  https://julialang.zulipchat.com/#narrow/stream/236493-plots
+)
+[![Deps](https://juliahub.com/docs/RecipesBase/deps.svg)](
+  https://juliahub.com/ui/Packages/RecipesBase/8e2Mm?t=2
+)
 
 ### Author: Thomas Breloff (@tbreloff)
 

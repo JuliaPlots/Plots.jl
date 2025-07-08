@@ -1,10 +1,17 @@
 # RecipesPipeline
 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/stable/RecipesPipeline)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://docs.juliaplots.org/dev/RecipesPipeline)
-[![CI](https://github.com/JuliaPlots/Plots.jl/workflows/ci/badge.svg?branch=master)](https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml)
-[![Codecov](https://codecov.io/gh/JuliaPlots/RecipesPipeline.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/RecipesPipeline.jl)
-[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
+[![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](
+  https://docs.juliaplots.org/stable/RecipesPipeline/
+)
+[![Docs dev](https://img.shields.io/badge/docs-dev-blue.svg)](
+  https://docs.juliaplots.org/dev/RecipesPipeline/
+)
+[![CI](https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2)](
+  https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
+)
+[![Project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](
+  https://julialang.zulipchat.com/#narrow/stream/236493-plots
+)
 
 #### An implementation of the recipe pipeline from Plots
 This package was factored out of Plots.jl to allow any other plotting package to use the recipe pipeline. In short, the extremely lightweight RecipesBase.jl package can be depended on by any package to define "recipes": plot specifications of user-defined types, as well as custom plot types. RecipesPipeline.jl contains the machinery to translate these recipes to full specifications for a plot.
