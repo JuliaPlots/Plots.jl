@@ -1,5 +1,5 @@
 # RecipesPipeline API
-
+using Dierckx
 ## Warnings
 
 function RecipesPipeline.warn_on_recipe_aliases!(
@@ -374,9 +374,33 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
         plotattributes[letter1], plotattributes[letter2] =
             plotattributes[letter2], plotattributes[letter1]
     end
+    if plotattributes[:seriestype] === :heatmap
+        if haskey(plotattributes, :interpolate)
+            s = plotattributes[:interpolate]
+            x = collect(plotattributes[:x])
+            y = collect(plotattributes[:y])
+            z = reshape(collect(plotattributes[:z]),4,4)
+            finerx, finery, zinterp = cubic_interp_2d( x, y, z, s )
+            plotattributes[:x] = finerx
+            plotattributes[:y] = finery
+            plotattributes[:z] = Surface(zinterp)
+            plotattributes[:size] = (length(finerx), length(finery))
+        end
+    end
     _expand_subplot_extrema(sp, plotattributes, plotattributes[:seriestype])
     _update_series_attributes!(plotattributes, plt, sp)
     return _add_the_series(plt, sp, plotattributes)
+end
+
+function cubic_interp_2d( x, y, data, s )
+    spl = Spline2D(y, x, data; kx=3, ky=3, s=0.0)
+    finerx = LinRange(x[1], x[end], s[1])
+    finery = LinRange(y[1], y[end], s[2])
+    data_interp = Array{Float64}(undef, s[2], s[1])
+    for (i,yint) ∈ enumerate(finery), (j,xint) ∈ enumerate(finerx)
+        data_interp[i,j] = evaluate(spl, yint, xint)
+    end
+    return finerx, finery, data_interp
 end
 
 # getting ready to add the series... last update to subplot from anything
