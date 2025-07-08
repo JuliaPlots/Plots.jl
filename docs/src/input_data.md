@@ -4,23 +4,23 @@ PlotsBase.reset_defaults()
 ```
 
 # [Input Data](@id input-data)
-Part of the power of Plots lies is in the many combinations of allowed input data.
+Part of the power of `Plots` lies is in the many combinations of allowed input data.
 You shouldn't spend your time transforming and massaging your data into a specific format.
-Let Plots do that for you.
+Let `Plots` do that for you.
 
 There are a few rules to remember, and you'll be a power user in no time.
 
 ## Inputs are arguments, not keywords
 The `plot` function has several methods:
-`plot(y)`: treats the input as values for the `y`-axis and yields a unit-range as `x`-values.
-`plot(x, y)`: creates a 2D plot
-`plot(x, y, z)`: creates a 3D plot
+- `plot(y)`: treats the input as values for the `y`-axis and yields a unit-range as `x`-values;
+- `plot(x, y)`: creates a 2D plot;
+- `plot(x, y, z)`: creates a 3D plot.
 
 The reason lies in the flexibility of Julia's multiple dispatch, where every combination of input types
 can have unique behavior, when desired.
 
 ## [Columns are series](@id columns-are-series)
-In most cases, passing a (`n` × `m`) matrix of values (numbers, etc) will create `m` series, each with `n` data points.  This follows a consistent rule… vectors apply to a series, matrices apply to many series.  This rule carries into keyword arguments.  `scatter(rand(10,4), markershape = [:circle, :rect])` will create 4 series, each assigned the markershape vector [:circle,:rect].  However, `scatter(rand(10,4), markershape = [:circle :rect])` will create 4 series, with series 1 and 3 having markers shaped as `:circle` and series 2 and 4 having markers shaped as `:rect` (i.e. as squares).  The difference is that in the first example, it is a length-2 column vector, and in the second example it is a (1 × 2) row vector (a Matrix).
+In most cases, passing a (`n` × `m`) matrix of values (numbers, etc) will create `m` series, each with `n` data points.  This follows a consistent rule… vectors apply to a series, matrices apply to many series.  This rule carries into keyword arguments.  `scatter(rand(10,4), markershape = [:circle, :rect])` will create 4 series, each assigned the markershape vector `[:circle,:rect]`.  However, `scatter(rand(10,4), markershape = [:circle :rect])` will create 4 series, with series 1 and 3 having markers shaped as `:circle` and series 2 and 4 having markers shaped as `:rect` (i.e. as squares).  The difference is that in the first example, it is a length-2 column vector, and in the second example it is a (1 × 2) row vector (a `Matrix`).
 
 The flexibility and power of this can be illustrated by the following piece of code:
 ```@example input_data
@@ -30,13 +30,13 @@ using Plots
 xs = range(0, 2π, length = 10)
 data = [sin.(xs) cos.(xs) 2sin.(xs) 2cos.(xs)]
 
-# We put labels in a row vector: applies to each series
+# we put labels in a row vector: applies to each series
 labels = ["Apples" "Oranges" "Hats" "Shoes"]
 
-# Marker shapes in a column vector: applies to data points
+# marker shapes in a column vector: applies to data points
 markershapes = [:circle, :star5]
 
-# Marker colors in a matrix: applies to series and data points
+# marker colors in a matrix: applies to series and data points
 markercolors = [
     :green :orange :black :purple
     :red   :yellow :brown :white
@@ -75,7 +75,7 @@ To address this, you can use `NaN` as a path separator. A call to `plot` would t
 using Plots
 plotlyjs()
 
-function rectangle_from_coords(xb,yb,xt,yt)
+function rectangle_from_coords(xb, yb, xt, yt)
     [
         xb  yb
         xt  yb
@@ -86,23 +86,25 @@ function rectangle_from_coords(xb,yb,xt,yt)
     ]
 end
 
-some_rects=[
+some_rects = [
     rectangle_from_coords(1, 1, 5, 5)
     rectangle_from_coords(10, 10, 15, 15)
 ]
-other_rects=[
+other_rects = [
     rectangle_from_coords(1, 10, 5, 15)
     rectangle_from_coords(10, 1, 15, 5)
 ]
 
-plot(some_rects[:,1], some_rects[:,2], label = "some group")
-plot!(other_rects[:,1], other_rects[:,2], label = "other group")
-png("input_data_1") # hide
+plot(some_rects[:,1], some_rects[:,2]; label = "some group")
+plot!(other_rects[:,1], other_rects[:,2]; label = "other group")
+svg("input_data_1")  # src
 ```
-![](input_data_1.png)
+![](input_data_1.svg)
 
 ## DataFrames support
-Using the [StatsPlots](https://github.com/JuliaPlots/Plots.jl/tree/v2/StatsPlots) extension package, you can pass a `DataFrame` as the first argument (similar to Gadfly or R's ggplot2).  For data fields or certain attributes (such as `group`) a symbol will be replaced with the corresponding column(s) of the `DataFrame`.  Additionally, the column name might be used as the   An example:
+Using the [`StatsPlots`](https://github.com/JuliaPlots/Plots.jl/tree/v2/StatsPlots) extension package, you can pass a `DataFrame` as the first argument (similar to `Gadfly` or `R`'s `ggplot2`).
+For data fields or certain attributes (such as `group`) a symbol will be replaced with the corresponding column(s) of the `DataFrame`.
+Additionally, the column name might be used as the   An example:
 
 ```@example input_data
 using StatsPlots, RDatasets
@@ -110,7 +112,7 @@ gr()
 iris = dataset("datasets", "iris")
 @df iris scatter(
     :SepalLength,
-    :SepalWidth,
+    :SepalWidth;
     group = :Species,
     m = (0.5, [:+ :h :star7], 12),
     bg = RGB(0.2, 0.2, 0.2)
@@ -118,9 +120,8 @@ iris = dataset("datasets", "iris")
 ```
 
 ## Functions
-
-Functions can typically be used in place of input data, and they will be mapped as needed. 2D and 3D parametric plots can also be created, and ranges can be given as vectors or min/max.  For example, here are alternative methods to create the same plot:
-
+Functions can typically be used in place of input data, and they will be mapped as needed. 2D and 3D parametric plots can also be created, and ranges can be given as vectors or min/max.
+For example, here are alternative methods to create the same plot:
 ```@example input_data
 using Plots
 tmin = 0
@@ -139,18 +140,16 @@ plot(sin, cos, tmin, tmax)
 Vectors of functions are allowed as well (one series per function).
 
 ## Images
-Images can be directly added to plots by using the [Images.jl](https://github.com/timholy/Images.jl) library. For example, one can import a raster image and plot it with Plots via the commands:
-
+Images can be directly added to plots by using the [`Images.jl`](https://github.com/timholy/Images.jl) library. For example, one can import a raster image and plot it with Plots via the commands:
 ```julia
 using Plots, Images
 img = load("image.png")
 plot(img)
 ```
 
-PDF graphics can also be added to Plots.jl plots using `load("image.pdf")`. Note that Images.jl requires that the PDF color scheme is RGB.
+PDF graphics can also be added to `Plots.jl` plots using `load("image.pdf")`. Note that `Images.jl` requires that the `PDF` color scheme is `RGB`.
 
 ## Shapes
-
 *Save Gotham*
 
 ```@example input_data
@@ -205,9 +204,8 @@ plot!(Shape(x, y), c = :yellow)
 # buildings
 rect(w, h, x, y) = Shape(x .+ [0, w, w, 0, 0], y .+ [0, 0, h, h, 0])
 gray(pct) = RGB(pct, pct, pct)
-function windowrange(dim, denom)
-    range(0, 1, length = max(3, round(Int, dim/denom)))[2:end - 1]
-end
+windowrange(dim, denom) =
+    range(0, 1; length = max(3, round(Int, dim/denom)))[2:end - 1]
 
 for k in 1:50
     local w, h, x, y = 0.1rand() + 0.05, 0.8rand() + 0.3, rand(), 0.0
@@ -226,7 +224,7 @@ plt
 ```
 
 ```@example input_data
-# Holy plotting, Batman!
+# holy plotting, Batman !
 batman = PlotsBase.scale(make_batman(), 0.07, 0.07, (0, 0))
 batman = PlotsBase.translate(batman, 0.7, 1.23)
 plot!(batman, fillcolor = :black)
