@@ -300,7 +300,7 @@ edgestyle = :solid
 trim = false
 ```
 
-See the [documentation]( http://docs.juliaplots.org/latest/graphrecipes/introduction/ ) for
+See the [documentation](https://docs.juliaplots.org/stable/GraphRecipes/introduction/) for
 more details.
 """
 @userplot GraphPlot

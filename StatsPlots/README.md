@@ -1,9 +1,13 @@
 # StatsPlots
 
-[![Build Status](https://travis-ci.org/JuliaPlots/StatsPlots.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/StatsPlots.jl)
-[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://docs.juliaplots.org/latest/generated/statsplots/)
-[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
-
+[![CI](https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2)](
+  https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
+)
+[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](
+  https://docs.juliaplots.org/stable/generated/statsplots/)
+[![Project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](
+  https://julialang.zulipchat.com/#narrow/stream/236493-plots
+)
 
 ### Original author: Thomas Breloff (@tbreloff), maintained by the JuliaPlots members
 
