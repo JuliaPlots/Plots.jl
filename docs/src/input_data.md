@@ -97,7 +97,8 @@ other_rects = [
 
 plot(some_rects[:,1], some_rects[:,2]; label = "some group")
 plot!(other_rects[:,1], other_rects[:,2]; label = "other group")
-PlotsBase.svg("input_data_1")  # src
+PlotsBase.svg("input_data_1")  # hide
+nothing  # hide
 ```
 ![](input_data_1.svg)
 
