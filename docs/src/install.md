@@ -5,10 +5,10 @@ First, add the package:
 import Pkg
 Pkg.add("Plots")  # ≡ `PlotsBase` + `GR` backend
 
-Pkg.add("PlotBase", "PythonPlot")  # `PlotsBase` + `PythonPlot` backend, avoids installing the `GR` backend
+Pkg.add("PlotBase", "PythonPlot")  # `PlotsBase` + `PythonPlot` backend, which avoids installing the `GR` backend
 
 # if you want the latest features:
-Pkg.pkg"add Plots#master"
+Pkg.pkg"add Plots#v2"
 ```
 
 The GR [backend](@ref backends) is included by default, but you can install additional plotting packages if you need a different backend.
@@ -23,6 +23,8 @@ Pkg.add("GR")
 
 Pkg.add("UnicodePlots")  # simplest terminal based backend (guaranteed to work from a cluster, e.g. without X forwarding)
 
+Pkg.add("PythonPlot")  # depends only on PythonPlot package
+
 Pkg.add("PGFPlotsX")  # you need to have LaTeX installed on your system
 
 Pkg.add("PlotlyJS"); Pkg.add("PlotlyBase")
@@ -30,8 +32,6 @@ Pkg.add("PlotlyJS"); Pkg.add("PlotlyBase")
 # additional output formats, otherwise `plotly()` comes shipped with Plots.jl.
 # In order to have a good experience with Jupyter, refer to Plotly-specific
 # Jupyter installation (https://github.com/plotly/plotly.py#installation)
-
-Pkg.add("PythonPlot")  # depends only on PythonPlot package
 
 Pkg.add("Gaston")  # Gnuplot based backend
 ```
@@ -49,12 +49,13 @@ Pkg.add("GraphRecipes")
 
 ### Initialize
 ```julia
-using Plots # or StatsPlots
+using Plots  # or StatsPlots
 # using GraphRecipes  # if you wish to use GraphRecipes package too
 
 # or alternatively
 import PythonPlot  # select installed backend (triggered by packages extensions: https://docs.julialang.org/en/v1/manual/code-loading/#man-extensions)
 using PlotsBase
+pythonplot()  # activate the chosen backend
 ```
 
 Optionally, [choose a backend](@ref backends) and/or override default settings at the same time:
