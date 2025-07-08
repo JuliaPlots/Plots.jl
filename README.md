@@ -3,7 +3,13 @@
 </a>
 
 # Plots
-
+[![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](
+  https://docs.juliaplots.org/stable/
+)
+[![Docs dev](https://img.shields.io/badge/docs-dev-blue.svg)](
+  https://docs.juliaplots.org/dev
+)
+<br>
 [![CI](https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2)](
   https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
 )
@@ -13,12 +19,7 @@
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](
   https://julialang.zulipchat.com/#narrow/stream/236493-plots
 )
-[![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](
-  https://docs.juliaplots.org/stable/
-)
-[![Docs dev](https://img.shields.io/badge/docs-dev-blue.svg)](
-  https://docs.juliaplots.org/dev
-)
+<br>
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](
   https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2
 )
@@ -26,8 +27,8 @@
  https://juliapkgstats.com/pkg/Plots
 )
 
+This is the DOI for all Versions, please follow the link to get the DOI for a specific version:<br>
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725317.svg)](https://doi.org/10.5281/zenodo.4725317)
-This is the DOI for all Versions, please follow the link to get the DOI for a specific version.
 
 #### Created by Tom Breloff (@tbreloff)
 
