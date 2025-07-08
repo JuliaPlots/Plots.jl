@@ -392,17 +392,6 @@ function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     return _add_the_series(plt, sp, plotattributes)
 end
 
-function cubic_interp_2d( x, y, data, s )
-    spl = Spline2D(y, x, data; kx=3, ky=3, s=0.0)
-    finerx = LinRange(x[1], x[end], s[1])
-    finery = LinRange(y[1], y[end], s[2])
-    data_interp = Array{Float64}(undef, s[2], s[1])
-    for (i,yint) ∈ enumerate(finery), (j,xint) ∈ enumerate(finerx)
-        data_interp[i,j] = evaluate(spl, yint, xint)
-    end
-    return finerx, finery, data_interp
-end
-
 # getting ready to add the series... last update to subplot from anything
 # that might have been added during series recipes
 function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
