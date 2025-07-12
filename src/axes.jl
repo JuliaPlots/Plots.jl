@@ -119,7 +119,7 @@ end
 Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis")
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
-get_guide(axis::Axis)::String = if isnothing(axis[:guide])
+get_guide(axis::Axis) = if isnothing(axis[:guide])
     ""
 elseif isnothing(axis[:unit]) || axis[:guide] isa ProtectedString ||
         axis[:unitformat] ≡ :nounit
@@ -132,7 +132,7 @@ else
     else
         string(axis[:unit])
     end
-    isempty(axis[:guide]) && return unit
+    isempty(string(axis[:guide])) && return unit
     format_unit_label(axis[:guide], unit, axis[:unitformat])
 end
 
