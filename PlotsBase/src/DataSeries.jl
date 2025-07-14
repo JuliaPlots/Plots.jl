@@ -49,7 +49,7 @@ Base.append!(series::Series, args...) = extend_series!(series, args...)
 
 should_add_to_legend(series::Series) =
     series.plotattributes[:primary] &&
-    series.plotattributes[:label] != "" &&
+    series.plotattributes[:label] |> !isempty &&
     series.plotattributes[:seriestype] ∉ (
     :hexbin,
     :bins2d,

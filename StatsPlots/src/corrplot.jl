@@ -63,7 +63,7 @@ end
     # histograms on the diagonal
     for i in 1:n
         @series begin
-            if title != "" && title_location ≡ :left && i == 1
+            if title |> !isempty && title_location ≡ :left && i == 1
                 title := title
             end
             seriestype := :histogram
@@ -100,9 +100,7 @@ end
                 #above diag... hist2d
                 @series begin
                     seriestype := get(plotattributes, :seriestype, :histogram2d)
-                    if title != "" &&
-                            i == 1 &&
-                            (
+                    if title |> !isempty && i == 1 && (
                             (title_location ≡ :center && j == div(n, 2) + 1) ||
                                 (title_location ≡ :right && j == n)
                         )

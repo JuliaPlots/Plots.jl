@@ -300,7 +300,7 @@ function _add_plot_title!(plt)
     plot_title = plt[:plot_title]
     plot_titleindex = nothing
 
-    if plot_title != ""
+    if plot_title |> !isempty
         # make new subplot for plot title
         if plt[:plot_titleindex] == 0
             the_layout = plt.layout

@@ -36,8 +36,8 @@ end
         @test yguide(plot(y, ylabel = "hello")) == "hello (m)"
         @test yguide(plot(y, ylabel = "hello", unitformat = :nounit)) == "hello"
         pl = plot(y, ylabel = "")
-        @test yguide(pl) == ""
-        @test yguide(plot!(pl, -y)) == ""
+        @test isempty(yguide(pl))
+        @test isempty(yguide(plot!(pl, -y)))
         @test yguide(plot(y, ylabel = "", unitformat = :round)) == "m"
         pl = plot(y; ylabel = "hello")
         plot!(pl, -y)
@@ -314,7 +314,7 @@ end
         # on MacOS the superscript gets rendered with Unicode, on Ubuntu and Windows no
         @test yguide(pl, 2) ∈ ["goodbye (cm^-1)", "goodbye (cm⁻¹)"]
         @test xguide(pl, 1) == "check"
-        @test xguide(pl, 2) == ""
+        @test isempty(xguide(pl, 2))
     end
 
     @testset "bad link" begin

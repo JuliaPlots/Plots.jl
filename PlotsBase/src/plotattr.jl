@@ -95,6 +95,6 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
         aliases,
         "Type: $type.\n\n",
         "`$attrtype` attribute",
-        def == "" ? "" : ", defaults to `$def`.",
+        isempty(def) ? "" : ", defaults to `$def`.",
     )
 end
