@@ -30,9 +30,7 @@ function _check_installed(pkg::Union{Module, AbstractString, Symbol}; warn = tru
         @maxlog_warn "backend `$name` is not compatible with `PlotsBase`."
         return
     end
-    # lowercase -> CamelCase, falling back to the given input for `PlotlyBase` ...
-    pkg_str = string(get(_backend_packages, name, pkg))
-    pkg_str == "Plotly" && (pkg_str *= "Base")  # FIXME: `PlotsBase` inconsistency, `plotly` should be named `plotlybase`
+    pkg_str = string(get(_backend_packages, name, pkg))  # lowercase -> CamelCase
     # check supported
     if warn && !haskey(_compat, pkg_str)
         @maxlog_warn "package `$pkg_str` is not compatible with `PlotsBase`."

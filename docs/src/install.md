@@ -27,7 +27,7 @@ Pkg.add("PythonPlot")  # depends only on PythonPlot package
 
 Pkg.add("PGFPlotsX")  # you need to have LaTeX installed on your system
 
-Pkg.add("PlotlyJS"); Pkg.add("PlotlyBase")
+Pkg.add("PlotlyJS")
 # Note that you only need to add this if you need Electron windows and
 # additional output formats, otherwise `plotly()` comes shipped with Plots.jl.
 # In order to have a good experience with Jupyter, refer to Plotly-specific
