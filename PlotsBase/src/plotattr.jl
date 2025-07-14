@@ -22,7 +22,7 @@ end
 Look up the properties of a Plots attribute, or specify an attribute type.
 Options are $(attrtypes()).
 Call `plotattr()` to search for an attribute via fuzzy finding.
-The information is the same as that given on https://docs.juliaplots.org/latest/attributes/.
+The information is the same as that given on https://docs.juliaplots.org/stable/attributes/.
 """
 function plotattr()
     if isijulia()
@@ -81,7 +81,7 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
 
     attribute = lookup_aliases(attrtype, attribute)
     type, desc = _arg_desc[attribute]
-    def = _attribute_defaults[attrtype][attribute]
+    def = string(_attribute_defaults[attrtype][attribute])
     aliases = if (al = PlotsBase.Commons.aliases(attribute)) |> length > 0
         "Aliases: " * string(Tuple(al)) * ".\n\n"
     else
