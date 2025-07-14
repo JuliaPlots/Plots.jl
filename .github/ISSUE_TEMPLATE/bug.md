@@ -19,11 +19,11 @@ This bug occurs on ( insert `x` below )
 Backend      | yes | no  | untested
 -------------|-----|-----|---------
 gr (default) |     |     |
-pythonplot   |     |     |
-plotlyjs     |     |     |
-pgfplotsx    |     |     |
 unicodeplots |     |     |
-inspectdr    |     |     |
+pythonplot   |     |     |
+pgfplotsx    |     |     |
+plotlyjs     |     |     |
+plotly       |     |     |
 gaston       |     |     |
 
 ### Versions

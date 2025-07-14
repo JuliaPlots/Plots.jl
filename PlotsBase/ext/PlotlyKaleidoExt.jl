@@ -13,8 +13,8 @@ end
 
 for (mime, fmt) in (
         "application/pdf" => "pdf",
-        "image/png" => "png",
         "image/svg+xml" => "svg",
+        "image/png" => "png",
         "image/eps" => "eps",
     )
     @eval PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend}) =

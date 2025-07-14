@@ -1284,7 +1284,7 @@ _backend_skips = Dict(
     ],
     :pgfplotsx => [
         06,  # images
-        16,  # pgfplots thinks the upper panel is too small
+        16,  # pgfplotsx thinks the upper panel is too small
         32,  # spy
         49,  # polar heatmap
         51,  # image with custom axes
