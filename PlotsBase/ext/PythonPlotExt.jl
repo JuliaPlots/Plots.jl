@@ -1061,7 +1061,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
         )
 
         # title
-        if (title = sp[:title]) != ""  # support symbols
+        if (title = sp[:title]) |> !isempty  # support symbols
             loc = lowercase(string(sp[:titlelocation]))
             func = getproperty(
                 ax, if loc == "left"

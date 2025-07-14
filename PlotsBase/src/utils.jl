@@ -663,7 +663,7 @@ const _convert_sci_unicode_dict = Dict(
 )
 
 # converts unicode scientific notation, as returned by Showoff,
-# to a tex-like format (supported by gr, pyplot, and pgfplots).
+# to a tex-like format (supported by gr, pythonplot, and pgfplotsx).
 
 function convert_sci_unicode(label::AbstractString)
     for key in keys(_convert_sci_unicode_dict)

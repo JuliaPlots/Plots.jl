@@ -386,7 +386,7 @@ function plotly_layout(plt::Plot)
         x_idx, y_idx = multiple_subplots ? plotly_link_indices(plt, sp) : ("", "")
 
         # add an annotation for the title
-        if sp[:title] != ""
+        if sp[:title] |> !isempty
             bb = plotarea(sp)
             tpos = sp[:titlelocation]
             if tpos ≡ :left

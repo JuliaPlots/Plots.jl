@@ -319,7 +319,7 @@ debugshow(io, x::AbstractArray) = print(io, summary(x))
 function dumpdict(io::IO, plotattributes::AKW, prefix = "")
     _debug[] || return
     println(io)
-    prefix == "" || println(io, prefix, ":")
+    isempty(prefix) || println(io, prefix, ":")
     for k in sort(collect(keys(plotattributes)))
         Printf.@printf(io, "%14s: ", k)
         debugshow(io, plotattributes[k])

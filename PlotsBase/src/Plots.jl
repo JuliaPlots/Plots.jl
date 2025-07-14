@@ -272,7 +272,7 @@ function _update_subplot_attrs(
         end
     end
 
-    return PlotsBase.Subplots._update_subplot_periphery(sp, anns)
+    return Subplots._update_subplot_periphery(sp, anns)
 end
 
 function Commons.scale_lims!(plt::Plot, letter, factor)

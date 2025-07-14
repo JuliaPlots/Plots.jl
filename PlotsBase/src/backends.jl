@@ -30,9 +30,7 @@ function _check_installed(pkg::Union{Module, AbstractString, Symbol}; warn = tru
         @maxlog_warn "backend `$name` is not compatible with `PlotsBase`."
         return
     end
-    # lowercase -> CamelCase, falling back to the given input for `PlotlyBase` ...
-    pkg_str = string(get(_backend_packages, name, pkg))
-    pkg_str == "Plotly" && (pkg_str *= "Base")  # FIXME: `PlotsBase` inconsistency, `plotly` should be named `plotlybase`
+    pkg_str = string(get(_backend_packages, name, pkg))  # lowercase -> CamelCase
     # check supported
     if warn && !haskey(_compat, pkg_str)
         @maxlog_warn "package `$pkg_str` is not compatible with `PlotsBase`."
@@ -56,9 +54,9 @@ _series_updated(::Plot, ::Series) = nothing
 
 _before_layout_calcs(plt::Plot) = nothing
 
-title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefontsize] * pt
+title_padding(sp::Subplot) = isempty(sp[:title]) ? 0mm : sp[:titlefontsize] * pt
 guide_padding(axis::Axis) =
-    PlotsBase.get_guide(axis) == "" ? 0mm : axis[:guidefontsize] * pt
+    isempty(PlotsBase.get_guide(axis)) ? 0mm : axis[:guidefontsize] * pt
 
 closeall(::AbstractBackend) = nothing
 

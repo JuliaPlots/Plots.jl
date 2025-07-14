@@ -665,7 +665,7 @@ function gaston_parse_axes_attrs(
         push!(axesconf, "unset colorbox")
     end
 
-    if sp[:title] != ""
+    if sp[:title] |> !isempty
         # NOTE: `set title` is hard centered, cannot use `sp[:titlelocation]`
         # on `set label` takes `right`, `center` or `left` justification
         push!(axesconf, "set title '$(sp[:title])' $(gaston_font(titlefont(sp)))")

@@ -13,7 +13,6 @@ if ImageInTerminal.ENCODER_BACKEND[] ≡ :Sixel
             PlotsBase.PlotlyJSBackend,
             PlotsBase.PlotlyBackend,
             PlotsBase.GastonBackend,
-            PlotsBase.InspectDRBackend,
         )
         @eval function Base.display(::PlotsBase.PlotsDisplay, plt::PlotsBase.Plot{$be})
             PlotsBase.prepare_output(plt)

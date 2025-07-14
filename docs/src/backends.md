@@ -43,30 +43,31 @@ end
 ```
 
 # [Backends](@id backends)
-Backends are the lifeblood of Plots, and the diversity between features, approaches, and strengths/weaknesses was
+Backends are the lifeblood of `Plots`, and the diversity between features, approaches, and strengths/weaknesses was
 one of the primary reasons that I started this package.
 
-For those who haven't had the pleasure of hacking on 15 different plotting APIs: first, consider yourself lucky.
+For those who haven't had the pleasure of hacking on 15 different plotting `API`s: first, consider yourself lucky.
 However, you will probably have a hard time choosing the right backend for your task at hand.
 This document is meant to be a guide and introduction to make that choice.
 
 # At a glance
 My favorites: `GR` for speed, `Plotly(JS)` for interactivity, `UnicodePlots` for REPL/SSH and `PythonPlot` otherwise.
 
-| If you require...         | then use...                         |
-| :------------------------ | :-----------------------------------|
-| features                  | GR, PythonPlot, Plotly(JS), Gaston  |
-| speed                     | GR, UnicodePlots, Gaston            |
-| interactivity             | PythonPlot, Plotly(JS)              |
-| beauty                    | GR, Plotly(JS), PGFPlots/ PGFPlotsX |
-| REPL plotting             | UnicodePlots                        |
-| 3D plots                  | GR, PythonPlot, Plotly(JS), Gaston  |
-| a GUI window              | GR, PythonPlot, PlotlyJS, Gaston    |
-| a small footprint         | UnicodePlots, Plotly                |
-| backend stability         | PythonPlot, Gaston                  |
-| plot+data -> `.hdf5` file | HDF5                                |
+| If you require...         | then use...                                              |
+| :------------------------ | :------------------------------------------------------- |
+| features                  | `GR`, `PythonPlot`, `Plotly(JS)`, `Gaston`               |
+| speed                     | `GR`, `UnicodePlots`, `Gaston`                           |
+| interactivity             | `PythonPlot`, `Plotly(JS)`                               |
+| beauty                    | `GR, Plotly(JS)`, `PGFPlotsX`                            |
+| REPL plotting             | `UnicodePlots`                                           |
+| 3D plots                  | `GR, PythonPlot`, `Plotly(JS)`, `UnicodePlots`, `Gaston` |
+| a GUI window              | `GR, PythonPlot`, `PlotlyJS`, `Gaston`                   |
+| a small footprint         | `UnicodePlots`, `Plotly`                                 |
+| backend stability         | `PythonPlot`, `Gaston`                                   |
+| plot+data -> `.hdf5` file | `HDF5`                                                   |
 
-Of course this list is rather subjective and nothing in life is that simple. Likely there are subtle tradeoffs between backends, long hidden bugs, and more excitement. Don't be shy to try out something new !
+Of course this list is rather subjective and nothing in life is that simple.
+Likely there are subtle tradeoffs between backends, long hidden bugs, etc ...
 
 ---
 
@@ -116,18 +117,20 @@ surface(
 | `:surface`, `:wireframe` | display_option | see [GR doc](https://gr-framework.org/julia-gr.html#GR.surface-e3e6f234cc6cd4713b8727c874a5f331) |
 
 ## [Plotly / PlotlyJS](https://github.com/spencerlyon2/PlotlyJS.jl)
-These are treated as separate backends, though they share much of the code and use the Plotly JavaScript API.
-`plotly()` is the only dependency-free plotting option, as the required JavaScript is bundled with Plots.
-It can create inline plots in IJulia, or open standalone browser windows when run from the Julia REPL.
+These are treated as separate backends, though they share much of the code and use the `Plotly` `JavaScript` `API`.
+`plotly()` is the only dependency-free plotting option, as the required JavaScript is bundled with `Plots`.
+It can create inline plots in IJulia, or open standalone browser windows when run from the `Julia` `REPL`.
 
 `plotlyjs()` is the preferred option, and taps into the great functionality of Spencer Lyon's PlotlyJS.jl.
-Inline IJulia plots can be updated from any cell... something that makes this backend stand out.
-From the Julia REPL, it taps into Blink.jl and Electron to plot within a standalone GUI window... also very cool.
-Also, PlotlyJS supports saving the output to more formats than Plotly, such as EPS and PDF, and thus is the recommended version of Plotly for developing publication-quality figures.
+Inline `IJulia` plots can be updated from any cell... something that makes this backend stand out.
+From the `Julia` `REPL`, it taps into `Blink.jl` and `Electron` to plot within a standalone `GUI` window... also very cool.
+Also, `PlotlyJS` supports saving the output to more formats than `Plotly`, such as `EPS` and `PDF`, and thus is the recommended version of `Plotly` for developing publication-quality figures.
+
+In order to save a `Plotly` figure in a format different than `html` (e.g. `pdf` or `png`), one needs to install and import `PlotlyKaleido` explicitly in order to trigger the `Plots` [extension](https://pkgdocs.julialang.org/v1/creating-packages/#Conditional-loading-of-code-in-packages-(Extensions)).
 
 ```@example backends
 plotlyjs(); backendplot(n = 2)  #hide
-png("backends_plotlyjs.png")  #hide=#
+png("backends_plotlyjs.png")  #hide
 ```
 ![](backends_plotlyjs.png)
 
@@ -144,10 +147,10 @@ Cons:
 - No custom shapes
 - JSON may limit performance
 
-Primary PlotlyJS.jl author: Spencer Lyon (@spencerlyon2)
+Primary `PlotlyJS.jl` author: Spencer Lyon (@spencerlyon2)
 
 ### MathJax
-Plotly needs to load MathJax to render LaTeX strings, therefore passing extra keywords with `extra_kwargs = :plot` is implemented.
+`Plotly` needs to load `MathJax` to render `LaTeX` strings, therefore passing extra keywords with `extra_kwargs = :plot` is implemented.
 With that it is possible to pass a header to the extra `include_mathjax` keyword.
 It has the following options:
 
@@ -198,7 +201,8 @@ pl = scatter(
 ```
 
 ## [PythonPlot](https://github.com/stevengj/PythonPlot.jl)
-A Julia wrapper around the popular python package `Matplotlib`. It uses `PythonCall.jl` to pass data with minimal overhead.
+A `Julia` wrapper around the popular python package [`Matplotlib`](https://matplotlib.org).
+It uses [`PythonCall.jl`](https://juliapy.github.io/PythonCall.jl/stable/) to pass data with minimal overhead.
 
 ```@example backends
 pythonplot(); backendplot()  #hide
@@ -244,7 +248,7 @@ LaTeX plotting, based on `PGF/TikZ`.
 pgfplotsx(); backendplot()  #hide
 ```
 
-Successor backend of PGFPlots backend.
+Successor backend of `PGFPlots` backend.
 
 Has more features and is still in development otherwise the same.
 
@@ -365,25 +369,6 @@ plot!(p, 2:3, 2:3, c = :red)
 gaston(); backendplot()  #hide
 ```
 
-## [InspectDR](https://github.com/ma-laforge/InspectDR.jl)
-Fast plotting with a responsive GUI (optional).  Target: quickly identify design/simulation issues & glitches in order to shorten design iterations.
-
-Pros:
-
-- Relatively short load times / time to first plot.
-- Interactive mouse/keybindings.
-  - Fast & simple way to pan/zoom into data.
-- Drag & drop &Delta;-markers (measure/display &Delta;x, &Delta;y & slope).
-- Designed with larger datasets in mind.
-  - Responsive even with moderate (>200k points) datasets.
-  - Confirmed to handle 2GB datasets with reasonable speed on older desktop running Windows 7 (drag+pan of data area highly discouraged).
-
-Cons:
-
-- Mostly limited to 2D line/scatter plots
-
-Primary author: MA Laforge (@ma-laforge)
-
 ## [HDF5](https://github.com/JuliaIO/HDF5.jl) (HDF5-Plots)
 Write plot + data to a *single* `HDF5` file using a human-readable structure that can easily be reverse-engineered.
 
@@ -422,6 +407,25 @@ Primary author: MA Laforge (@ma-laforge)
 ---
 
 # Deprecated backends
+
+## [InspectDR](https://github.com/ma-laforge/InspectDR.jl)
+Fast plotting with a responsive GUI (optional).  Target: quickly identify design/simulation issues & glitches in order to shorten design iterations.
+
+Pros:
+
+- Relatively short load times / time to first plot.
+- Interactive mouse/keybindings.
+  - Fast & simple way to pan/zoom into data.
+- Drag & drop &Delta;-markers (measure/display &Delta;x, &Delta;y & slope).
+- Designed with larger datasets in mind.
+  - Responsive even with moderate (>200k points) datasets.
+  - Confirmed to handle 2GB datasets with reasonable speed on older desktop running Windows 7 (drag+pan of data area highly discouraged).
+
+Cons:
+
+- Mostly limited to 2D line/scatter plots
+
+Primary author: MA Laforge (@ma-laforge)
 
 ### [PyPlot](https://github.com/stevengj/PyPlot.jl)
 `matplotlib` based backend, using `PyCall.jl` and `PyPlot.jl`. Superseded by `PythonCall.jl` and `PythonPlot.jl`.
