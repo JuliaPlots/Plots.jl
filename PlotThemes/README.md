@@ -33,6 +33,7 @@ Currently the following themes are available:
 - `:dracula`
 - `:rose_pine`
 - `:rose_pine_dawn`
+- `:pastel`
 
 
 When using Plots, a theme can be set using the `theme` function:
@@ -103,6 +104,9 @@ Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 
 ### `:rose_pine_dawn`
 ![theme_rose_pine_dawn](https://github.com/BaerLKR/PlotThemes.jl/assets/83340886/e30c0b46-1be3-49f5-afc5-ceede0b0c27d)
+
+### `:pastel`
+![theme_pastel](https://github.com/user-attachments/assets/e7adb924-3dd9-410e-880b-d963187bacbf)
 
 ## Contributing
 A theme specifies default values for different Plots [attributes](https://docs.juliaplots.org/stable/attributes/).
