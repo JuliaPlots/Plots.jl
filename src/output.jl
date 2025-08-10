@@ -177,14 +177,14 @@ end
 # ---------------------------------------------------------
 
 const _best_html_output_type = KW(
-    :unicodeplots => :png,  # better rendered as :png in web pages
-    :pgfplotsx => :svg,
-    :inspectdr => :svg,
+    :unicodeplots => :png,
+    :pgfplotsx => :png,
+    :inspectdr => :png,
     :plotlyjs => :html,
     :plotly => :html,
-    :pyplot => :svg,
-    :gaston => :svg,
-    :gr => :svg,
+    :pyplot => :png,
+    :gaston => :png,
+    :gr => :png,
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
