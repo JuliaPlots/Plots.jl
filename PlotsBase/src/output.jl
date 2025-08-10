@@ -178,12 +178,12 @@ end
 
 const _best_html_output_type = KW(
     :unicodeplots => :png,  # FIXME: https://github.com/fredrikekre/Literate.jl/issues/276
-    :pythonplot => :svg,
-    :pgfplotsx => :svg,
+    :pythonplot => :png,
+    :pgfplotsx => :png,
     :plotlyjs => :html,
     :plotly => :html,
-    :gaston => :svg,
-    :gr => :svg,
+    :gaston => :png,
+    :gr => :png,
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
