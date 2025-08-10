@@ -120,7 +120,11 @@ function generate_cards(
 
         # DemoCards YAML frontmatter
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-        svg_ready_backends = (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)
+        svg_ready_backends = if false
+            (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)  # NOTE: could increase docs repo size ...
+        else
+            ()
+        end
         cover_name = "$(backend)_$(Plots.ref_name(i))"
         cover_path = let cover_file = cover_name * if i ∈ Plots._animation_examples
                 ".gif"
