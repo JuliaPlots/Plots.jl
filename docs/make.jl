@@ -127,7 +127,11 @@ function generate_cards(
 
         # DemoCards YAML frontmatter
         # https://johnnychen94.github.io/DemoCards.jl/stable/quickstart/usage_example/julia_demos/1.julia_demo/#juliademocard_example
-        svg_ready_backends = (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)
+        svg_ready_backends = if false
+            (:gr, :pythonplot, :pgfplotsx, :plotlyjs, :gaston)  # NOTE: this causes ↗ of docs size from ~150MB to ~350MB ...
+        else
+            ()
+        end
         cover_name = "$(backend)_$(PlotsBase.ref_name(i))"
         cover_path = let cover_file = cover_name * if i ∈ PlotsBase._animation_examples
                 ".gif"
