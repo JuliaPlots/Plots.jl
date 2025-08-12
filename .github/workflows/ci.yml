@@ -56,7 +56,7 @@ jobs:
             version: 'pre'  # upcoming julia version (`alpha`, `beta` or `rc`)
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: setup ubuntu dependencies
         if: startsWith(matrix.os, 'ubuntu')
