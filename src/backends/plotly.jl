@@ -1117,8 +1117,12 @@ function plotly_html_body(plt, style = nothing)
             $(js_body(plt, unique_tag))
             $(requirejs_suffix)
         }
+        let plotlyloader = window.document.createElement("script")
+        let src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js"
+        plotlyloader.addEventListener("load", plots_jl_plotly_$unique_tag);
+        plotlyloader.src = src
+        document.querySelector("#$unique_tag").appendChild(plotlyloader)
         </script>
-        <script src="https://requirejs.org/docs/release/$_requirejs_version/minified/require.js" onload="plots_jl_plotly_$unique_tag()"></script>
     """
     return html
 end
