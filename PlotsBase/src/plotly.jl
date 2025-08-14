@@ -1285,6 +1285,7 @@ function plotly_html_body(plt, style = nothing)
     return """
         <div id=\"$unique_tag\" style=\"$style\"></div>
         <script>
+        ;(()=> {
         function plots_jl_plotly_$unique_tag() {
             $requirejs_prefix
             $(js_body(plt, unique_tag))
@@ -1295,6 +1296,7 @@ function plotly_html_body(plt, style = nothing)
         plotlyloader.addEventListener("load", plots_jl_plotly_$unique_tag);
         plotlyloader.src = src
         document.querySelector("#$unique_tag").appendChild(plotlyloader)
+        })()
         </script>
     """
 end
