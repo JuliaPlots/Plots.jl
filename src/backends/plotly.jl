@@ -1108,7 +1108,8 @@ function plotly_html_body(plt, style = nothing)
         requirejs_suffix = "});"
     end
 
-    unique_tag = replace(string(UUIDs.uuid4()), '-' => '_')
+    unique_tag = "id_$(replace(string(UUIDs.uuid4()), '-' => '_'))"
+
     html = """
         <div id=\"$unique_tag\" style=\"$style\"></div>
         <script>
