@@ -1120,7 +1120,7 @@ function plotly_html_body(plt, style = nothing)
             $(requirejs_suffix)
         }
         let plotlyloader = window.document.createElement("script")
-        let src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js"
+        let src="https://requirejs.org/docs/release/$(Plots._requirejs_version)/minified/require.js"
         plotlyloader.addEventListener("load", plots_jl_plotly_$unique_tag);
         plotlyloader.src = src
         document.querySelector("#$unique_tag").appendChild(plotlyloader)
