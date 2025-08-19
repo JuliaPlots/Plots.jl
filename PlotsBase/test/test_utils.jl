@@ -49,6 +49,10 @@
     @test PlotsBase.nansplit([1, 2, NaN, 3, 4]) == [[1.0, 2.0], [3.0, 4.0]]
     @test PlotsBase.nanvcat([1, NaN]) |> length == 4
 
+    @test PlotsBase.Commons.@in(1,1) isa AbstractFloat
+    @test PlotsBase.Commons.@cm(1,1) isa AbstractFloat
+    @test PlotsBase.Commons.@mm(1,1) isa AbstractFloat
+
     @test PlotsBase.Commons.inch2px(1) isa AbstractFloat
     @test PlotsBase.Commons.px2inch(1) isa AbstractFloat
     @test PlotsBase.Commons.inch2mm(1) isa AbstractFloat
