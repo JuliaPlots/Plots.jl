@@ -41,5 +41,4 @@ Plots is a plotting API and toolset.  My goals with the package are:
 - **Concise**.  Less code means fewer mistakes and more efficient development/analysis.
 - **Flexible**.  Produce your favorite plots from your favorite package, but quicker and simpler.
 - **Consistent**.  Don't commit to one graphics package, use the same code everywhere.
-- **Lightweight**.  Very few dependencies.
 - **Smart**. Attempts to figure out what you **want** it to do... not just what you **tell** it.
