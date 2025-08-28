@@ -347,7 +347,7 @@ function PlotsBase.attr!(axis::Axis, args...; kw...)
     return axis
 end
 
-get_guide(axis::Axis)::String = if isnothing(axis[:guide])
+get_guide(axis::Axis) = if isnothing(axis[:guide])
     ""
 elseif isnothing(axis[:unit]) || axis[:unitformat] ≡ :nounit
     axis[:guide]
@@ -361,7 +361,7 @@ else
     else
         string(axis[:unit])
     end
-    isempty(axis[:guide]) && return unit
+    isempty(string(axis[:guide])) && return unit
     format_unit_label(axis[:guide], unit, axis[:unitformat])
 end
 

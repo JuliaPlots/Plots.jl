@@ -281,3 +281,19 @@ end
         end
     end
 end
+
+@testset "axis guides (labels)" begin
+    yguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:yaxis])
+
+    @test yguide(plot(1:3, ylabel = "hello")) == "hello"
+    @test yguide(plot(1:3, ylabel = L"hello")) == L"hello"
+    @test yguide(plot(1:3, ylabel = :hello)) == :hello
+
+    @test yguide(plot(1:3, yunit = 1)) == "1"
+    @test yguide(plot(1:3, yunit = 1, ylabel = :hello)) == "hello (1)"
+    @test yguide(plot(1:3, yunit = 1, ylabel = :hello, unitformat = :square)) == "hello [1]"
+    @test yguide(plot(1:3, yunit = 1, ylabel = L"hello")) == L"hello" * " (1)"
+
+    uf = (l, u) -> Symbol(l, "_symb_", u)
+    @test yguide(plot(1:3, yunit = 1, ylabel = :hello, unitformat = uf)) == :hello_symb_1
+end
