@@ -1,5 +1,6 @@
 using PlotsBase, Test
 using Unitful
+using Latexify
 using Unitful: m, cm, s, DimensionError
 # Some helper functions to access the subplot labels and the series inside each test plot
 xguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:xaxis])
@@ -290,6 +291,16 @@ end
         z = x' ./ y
         @test contour(x, y, z) isa PlotsBase.Plot
         @test contourf(x, y, z) isa PlotsBase.Plot
+    end
+
+    @testset "latexify as unitformat" begin
+        y = rand(10) * u"m^-1"
+        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left/\\;\\mathrm{m}^{-1}\\right.\$"
+
+        uf = (l, u) -> l * " (" * latexify(u) * ")"
+        @test yguide(plot(y, ylabel = "hello", unitformat = uf)) == "hello (\$\\mathrm{m}^{-1}\$)"
+        Latexify.set_default(labelformat = :square)
+        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left[\\;\\mathrm{m}^{-1}\\right]\$"
     end
 
     @testset "colorbar title" begin
