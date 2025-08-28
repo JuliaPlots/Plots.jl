@@ -8,7 +8,6 @@ import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits LogScaled logunit MixedUnits Level Gain uconvert
 import LaTeXStrings: LaTeXString
 import Latexify: latexify
-using UnitfulLatexify
 
 const MissingOrQuantity = Union{Missing, <:Quantity, <:LogScaled}
 

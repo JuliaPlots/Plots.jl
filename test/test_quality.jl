@@ -13,7 +13,6 @@
                 :LaTeXStrings,
                 :Requires,
                 :Pkg,
-                :UnitfulLatexify,
             ],
         ),
         ambiguities = false,
