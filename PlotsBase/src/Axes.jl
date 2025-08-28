@@ -355,9 +355,7 @@ else
     unit = if axis[:unitformat] isa Function
         axis[:unit]
     elseif PlotsBase.backend_name() ≡ :pgfplotsx
-        pgext = Base.get_extension(PlotsBase, :PGFPlotsXExt)
-        isnothing(pgext) && error("PGFPlotsX extension not loaded. Problems")
-        pgext.Latexify.latexify(axis[:unit])
+        PlotsBase.pgfext_latexify(axis[:unit])
     else
         string(axis[:unit])
     end

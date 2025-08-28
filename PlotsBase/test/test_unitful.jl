@@ -1,6 +1,6 @@
 using PlotsBase, Test
 using Unitful
-using UnitfulLatexify, Latexify
+using Latexify
 using Unitful: m, cm, s, DimensionError
 # Some helper functions to access the subplot labels and the series inside each test plot
 xguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:xaxis])

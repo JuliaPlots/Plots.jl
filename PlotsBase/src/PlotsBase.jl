@@ -10,7 +10,6 @@ end
 # multiple weakdeps triggers (keep in sync with Project.toml !)
 const WEAKDEPS = Expr(
     :block,
-    :(import UnitfulLatexify),
     :(import LaTeXStrings),
     :(import Latexify),
     :(import Contour),

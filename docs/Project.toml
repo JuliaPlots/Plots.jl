@@ -46,7 +46,6 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
 UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
-UnitfulLatexify = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
@@ -73,7 +72,6 @@ StableRNGs = "1"
 StaticArrays = "1"
 TestImages = "1"
 UnicodePlots = "3"
-UnitfulLatexify = "1"
 Unitful = "1"
 
 [sources]
