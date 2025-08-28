@@ -283,7 +283,7 @@ end
 end
 
 @testset "axis guides (labels)" begin
-    yguide(pl, idx = length(pl.subplots)) = Plots.get_guide(pl.subplots[idx].attr[:yaxis])
+    yguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:yaxis])
 
     @test yguide(plot(1:3, ylabel = "hello")) == "hello"
     @test yguide(plot(1:3, ylabel = L"hello")) == L"hello"
