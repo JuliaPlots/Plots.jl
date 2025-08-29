@@ -759,7 +759,7 @@ end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
     segments = series_segments(series; check = true)
-    plotattributes_outs = map(i -> KW(), 1:length(segments))
+    plotattributes_outs = map(i -> KW(), 1:length(collect(segments)))
 
     # TODO: create a plotattributes_out for each polygon
     # x, y = series[:x], series[:y]
