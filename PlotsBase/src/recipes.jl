@@ -1620,4 +1620,30 @@ end
     end
 end
 
+# -------------------------------------------------
+# Stem plots are useful for visualizing discretely sampled time series data
+@userplot Stem
+
+# If the second arg is a function, eagerly apply it so we can create the stem lines
+process_stem_args(x, f::Function) = (x, f.(x))
+process_stem_args(x, y) = (x, y)
+
+@recipe function f(s::Stem)
+    if length(s.args) != 2
+        throw(MethodError(stem, s.args))
+    end
+    x, y = process_stem_args(s.args...)
+    @series begin
+        primary := true
+        seriestype := :scatter
+        markerstrokewidth --> 0
+        x, y
+    end
+    @series begin
+        primary := false
+        seriestype := :line
+        [x x]', [zero(y) y]'
+    end
+end
+
 @specialize
