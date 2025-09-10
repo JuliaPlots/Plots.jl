@@ -460,7 +460,6 @@ end
         push!(xseg, center - hwi, center - hwi, center + hwi, center + hwi, center - hwi)
         push!(yseg, yi, fi, fi, yi, yi)
     end
-    @show xseg, yseg
 
     # widen limits out a bit
     expand_extrema!(axis, scale_lims(ignorenan_extrema(xseg.pts)..., default_widen_factor))
