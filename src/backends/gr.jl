@@ -1900,6 +1900,7 @@ end
 function gr_draw_shapes(series, clims)
     x, y = shape_data(series)
     for segment in series_segments(series, :shape)
+        @show segment
         i, rng = segment.attr_index, segment.range
         if length(rng) > 1
             # connect to the beginning

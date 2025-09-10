@@ -460,6 +460,7 @@ end
         push!(xseg, center - hwi, center - hwi, center + hwi, center + hwi, center - hwi)
         push!(yseg, yi, fi, fi, yi, yi)
     end
+    @show xseg, yseg
 
     # widen limits out a bit
     expand_extrema!(axis, scale_lims(ignorenan_extrema(xseg.pts)..., default_widen_factor))
@@ -482,15 +483,15 @@ end
         y := yseg.pts
         # expand attributes to match indices in new series data
         for k in _segmenting_vector_attributes ∪ _segmenting_array_attributes
-            if (v = get(plotattributes, k, nothing)) isa AVec
-                if eachindex(v) != eachindex(y)
-                    @warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
-                end
-                # Each segment is 6 elements long, including the NaN separator.
-                # One segment is created for each non-NaN element of `procy`.
-                # There is no trailing NaN, so the last repetition is dropped.
-                plotattributes[k] = @views repeat(v[valid_i]; inner = 6)[1:(end - 1)]
-            end
+            # if (v = get(plotattributes, k, nothing)) isa AVec
+            #     if eachindex(v) != eachindex(y)
+            #         @warn "Indices $(eachindex(v)) of attribute `$k` do not match data indices $(eachindex(y))."
+            #     end
+            #     # Each segment is 6 elements long, including the NaN separator.
+            #     # One segment is created for each non-NaN element of `procy`.
+            #     # There is no trailing NaN, so the last repetition is dropped.
+            #     plotattributes[k] = @views repeat(v[valid_i]; inner = 6)[1:(end - 1)]
+            # end
         end
         ()
     end

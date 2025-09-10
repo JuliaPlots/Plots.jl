@@ -1,13 +1,13 @@
 # https://plot.ly/javascript/getting-started
 
 _plotly_framestyle(style::Symbol) =
-if style in (:box, :axes, :zerolines, :grid, :none)
-    style
-else
-    default_style = get((semi = :box, origin = :zerolines), style, :axes)
-    @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
-    default_style
-end
+    if style in (:box, :axes, :zerolines, :grid, :none)
+        style
+    else
+        default_style = get((semi = :box, origin = :zerolines), style, :axes)
+        @warn "Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead."
+        default_style
+    end
 
 # --------------------------------------------------------------------------------------
 
@@ -289,13 +289,11 @@ function plotly_layout(plt::Plot)
         for ann in sp[:annotations]
             append!(
                 plotattributes_out[:annotations],
-                KW[
-                    plotly_annotation_dict(
-                        locate_annotation(sp, ann...)...;
-                        xref = "x$(x_idx)",
-                        yref = "y$(y_idx)",
-                    ),
-                ],
+                KW[plotly_annotation_dict(
+                    locate_annotation(sp, ann...)...;
+                    xref = "x$(x_idx)",
+                    yref = "y$(y_idx)",
+                ),],
             )
         end
         # series_annotations
@@ -335,7 +333,8 @@ function plotly_layout(plt::Plot)
         plotattributes_out[:hovermode] = "none"
     end
 
-    return plotattributes_out = recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
+    return plotattributes_out =
+        recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
 end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
@@ -404,12 +403,12 @@ end
 plotly_legend_pos(pos::Symbol) =
     get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
 
-plotly_legend_pos(v::Tuple{S, T}) where {S <: Real, T <: Real} =
+plotly_legend_pos(v::Tuple{S,T}) where {S<:Real,T<:Real} =
     (coords = v, xanchor = "left", yanchor = "top")
 
 plotly_legend_pos(theta::Real) = plotly_legend_pos((theta, :inner))
 
-function plotly_legend_pos(v::Tuple{S, Symbol}) where {S <: Real}
+function plotly_legend_pos(v::Tuple{S,Symbol}) where {S<:Real}
     (s, c) = sincosd(v[1])
     xanchors = ["left", "center", "right"]
     yanchors = ["bottom", "middle", "top"]
@@ -435,12 +434,12 @@ plotly_layout_json(plt::Plot) = JSON.json(plotly_layout(plt), 4)
 plotly_colorscale(cg::ColorGradient, α = nothing) =
     map(v -> [v, rgba_string(plot_color(cg.colors[v], α))], cg.values)
 plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing) =
-if length(c) == 1
-    [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
-else
-    vals = range(0.0, stop = 1.0, length = length(c))
-    map(i -> [vals[i], rgba_string(plot_color(c[i], α))], eachindex(c))
-end
+    if length(c) == 1
+        [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
+    else
+        vals = range(0.0, stop = 1.0, length = length(c))
+        map(i -> [vals[i], rgba_string(plot_color(c[i], α))], eachindex(c))
+    end
 
 function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
     n = length(cg)
@@ -508,33 +507,33 @@ end
 plotly_data(v) = v !== nothing ? collect(v) : v
 plotly_data(v::AbstractArray) = v
 plotly_data(surf::Surface) = surf.surf
-plotly_data(v::AbstractArray{R}) where {R <: Rational} = float(v)
+plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 
 plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
 plotly_native_data(axis::Axis, data::AbstractArray) =
-if !isempty(axis[:discrete_values])
-    map(
-        xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)],
-        data,
-    )
-elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
-    plotly_convert_to_datetime(data, axis[:formatter])
-else
-    data
-end
+    if !isempty(axis[:discrete_values])
+        map(
+            xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)],
+            data,
+        )
+    elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
+        plotly_convert_to_datetime(data, axis[:formatter])
+    else
+        data
+    end
 
 plotly_convert_to_datetime(x::AbstractArray, formatter::Function) =
-if formatter == datetimeformatter
-    map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
-elseif formatter == dateformatter
-    map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
-elseif formatter == timeformatter
-    map(xi -> isfinite(xi) ? string(Dates.today(), " ", formatter(xi)) : missing, x)
-else
-    error(
-        "Invalid DateTime formatter. Expected Plots.datetime/date/time formatter but got $formatter",
-    )
-end
+    if formatter == datetimeformatter
+        map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
+    elseif formatter == dateformatter
+        map(xi -> isfinite(xi) ? replace(formatter(xi), "T" => " ") : missing, x)
+    elseif formatter == timeformatter
+        map(xi -> isfinite(xi) ? string(Dates.today(), " ", formatter(xi)) : missing, x)
+    else
+        error(
+            "Invalid DateTime formatter. Expected Plots.datetime/date/time formatter but got $formatter",
+        )
+    end
 
 #ensures that a gradient is called if a single color is supplied where a gradient is needed (e.g. if a series recipe defines marker_z)
 as_gradient(grad::ColorGradient, α) = grad
@@ -572,7 +571,7 @@ function plotly_series(plt::Plot, series::Series)
 
     x, y, z = (
         plotly_data(series, letter, data) for
-            (letter, data) in zip((:x, :y, :z), (x, y, z))
+        (letter, data) in zip((:x, :y, :z), (x, y, z))
     )
 
     plotattributes_out[:name] = series[:label]
@@ -667,7 +666,7 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
 
         if series[:connections] !== nothing
-            if typeof(series[:connections]) <: Tuple{Array, Array, Array}
+            if typeof(series[:connections]) <: Tuple{Array,Array,Array}
                 # 0-based indexing
                 i, j, k = series[:connections]
                 if !(length(i) == length(j) == length(k))
@@ -680,7 +679,7 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k
-            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3, Int}}
+            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3,Int}}
                 # 1-based indexing
                 i, j, k = broadcast(
                     i -> [inds[i] - 1 for inds in series[:connections]],
@@ -722,19 +721,19 @@ function plotly_series(plt::Plot, series::Series)
             :size => 2_cycle(series[:markersize], inds),
             :color =>
                 rgba_string.(
-                plot_color.(
-                    get_markercolor.(series, inds),
-                    get_markeralpha.(series, inds),
+                    plot_color.(
+                        get_markercolor.(series, inds),
+                        get_markeralpha.(series, inds),
+                    ),
                 ),
-            ),
             :line => KW(
                 :color =>
                     rgba_string.(
-                    plot_color.(
-                        get_markerstrokecolor.(series, inds),
-                        get_markerstrokealpha.(series, inds),
+                        plot_color.(
+                            get_markerstrokecolor.(series, inds),
+                            get_markerstrokealpha.(series, inds),
+                        ),
                     ),
-                ),
                 :width => _cycle(series[:markerstrokewidth], inds),
             ),
         )
@@ -758,29 +757,18 @@ function plotly_colorbar(sp::Subplot)
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
-    segments = series_segments(series; check = true)
-    plotattributes_outs = map(i -> KW(), 1:length(collect(segments)))
-
-    # TODO: create a plotattributes_out for each polygon
-    # x, y = series[:x], series[:y]
-
-    # these are the axes that the series should be mapped to
-    x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
-    plotattributes_base = KW(
-        :xaxis => "x$(x_idx)",
-        :yaxis => "y$(y_idx)",
-        :name => series[:label],
-        :legendgroup => series[:label],
-    )
-
-    x, y = (
-        plotly_data(series, letter, data) for
-            (letter, data) in zip((:x, :y), shape_data(series, 100))
-    )
-
-    for (k, segment) in enumerate(segments)
-        i, rng = segment.attr_index, segment.range
-        length(rng) < 2 && continue
+    @show series[:x], series[:y]
+    plotattributes_outs = KW[]
+    i = 1
+    for (xs, ys) in zip(nansplit(series[:x]), nansplit(series[:y]))
+        # these are the axes that the series should be mapped to
+        x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
+        plotattributes_base = KW(
+            :xaxis => "x$(x_idx)",
+            :yaxis => "y$(y_idx)",
+            :name => series[:label],
+            :legendgroup => series[:label],
+        )
 
         # to draw polygons, we actually draw lines with fill
         plotattributes_out = merge(
@@ -788,14 +776,15 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
             KW(
                 :type => "scatter",
                 :mode => "lines",
-                :x => vcat(x[rng], x[rng[1]]),
-                :y => vcat(y[rng], y[rng[1]]),
+                :x => xs,
+                :y => ys,
                 :fill => "tozeroy",
                 :fillcolor => rgba_string(
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 ),
             ),
         )
+        @show plotattributes_out
         if series[:markerstrokewidth] > 0
             plotattributes_out[:line] = KW(
                 :color => rgba_string(
@@ -805,10 +794,11 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
                 :dash => string(get_linestyle(series, i)),
             )
         end
-        plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
+        plotattributes_out[:showlegend] = i == 1 ? should_add_to_legend(series) : false
         plotly_polar!(plotattributes_out, series)
         plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], i))
-        plotattributes_outs[k] = merge(plotattributes_out, series[:extra_kwargs])
+        push!(plotattributes_outs, merge(plotattributes_out, series[:extra_kwargs]))
+        i += 1
     end
     if series[:fill_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
@@ -854,13 +844,13 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 hasline ? "lines" : "none"
             end
             if series[:fillrange] == true ||
-                    series[:fillrange] == 0 ||
-                    isa(series[:fillrange], Tuple)
+               series[:fillrange] == 0 ||
+               isa(series[:fillrange], Tuple)
                 plotattributes_out[:fill] = "tozeroy"
                 plotattributes_out[:fillcolor] = rgba_string(
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 )
-            elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real}, Real}
+            elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real},Real}
                 plotattributes_out[:fill] = "tonexty"
                 plotattributes_out[:fillcolor] = rgba_string(
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
@@ -902,9 +892,9 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             )
             lcolor_next =
                 plot_color(
-                get_markerstrokecolor(series, i + 1),
-                get_markerstrokealpha(series, i + 1),
-            ) |> rgba_string
+                    get_markerstrokecolor(series, i + 1),
+                    get_markerstrokealpha(series, i + 1),
+                ) |> rgba_string
 
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
@@ -1022,12 +1012,12 @@ function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symb
 end
 
 plotly_polar!(plotattributes_out::KW, series::Series) =
-if ispolar(series[:subplot])  # convert polar plots x/y to theta/radius
-    theta, r = pop!(plotattributes_out, :x), pop!(plotattributes_out, :y)
-    plotattributes_out[:theta] = rad2deg.(theta)
-    plotattributes_out[:r] = r
-    plotattributes_out[:type] = :scatterpolar
-end
+    if ispolar(series[:subplot])  # convert polar plots x/y to theta/radius
+        theta, r = pop!(plotattributes_out, :x), pop!(plotattributes_out, :y)
+        plotattributes_out[:theta] = rad2deg.(theta)
+        plotattributes_out[:r] = r
+        plotattributes_out[:type] = :scatterpolar
+    end
 
 function plotly_adjust_hover_label!(plotattributes_out::KW, hover)
     if hover === nothing
@@ -1056,11 +1046,11 @@ html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
 plotly_url() =
-if _use_local_dependencies[]
-    _plotly_data_url()
-else
-    "https://cdn.plot.ly/$_plotly_min_js_filename"
-end
+    if _use_local_dependencies[]
+        _plotly_data_url()
+    else
+        "https://cdn.plot.ly/$_plotly_min_js_filename"
+    end
 
 function plotly_html_head(plt::Plot)
     plotly = plotly_url()
