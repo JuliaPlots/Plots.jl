@@ -451,7 +451,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
     end
 
     if st === :shape
-        for segment in series_segments(series)
+        for segment in series_segments(series, st)
             i, rng = segment.attr_index, segment.range
             if length(rng) > 1
                 lc = get_linecolor(series, clims, i, cbar_scale)
@@ -463,8 +463,6 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
                 has_fs = !isnothing(fs)
 
                 path = mpl.path.Path(hcat(x[rng], y[rng]))
-                # FIXME: path can be un-filled e.g. ex 56,
-                # where rectangles are created using 4 paths instead of a single one
 
                 # shape outline (and potentially solid fill)
                 mpl.patches.PathPatch(
