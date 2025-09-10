@@ -213,7 +213,7 @@ is_pkgeval() || @testset "PlotlyJS" begin
     end
 end
 
-is_pkgeval() || @testset "Examples" begin
+is_pkgeval() || @testset "Examples $be" for be in TEST_BACKENDS
     callback(m, pkgname, i) = begin
         pl = m.Plots.current()
         save_func = (; pgfplotsx = m.Plots.pdf, unicodeplots = m.Plots.txt)  # fastest `savefig` for each backend
@@ -224,9 +224,8 @@ is_pkgeval() || @testset "Examples" begin
         )
         @test filesize(fn) > 1_000
     end
-    Sys.islinux() && for be in TEST_BACKENDS
-        skip = vcat(Plots._backend_skips[be], blacklist)
-        Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
-        closeall()
-    end
+    Sys.islinux() || continue
+    skip = vcat(Plots._backend_skips[be], blacklist)
+    Plots.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
+    closeall()
 end
