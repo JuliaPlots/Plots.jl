@@ -757,18 +757,18 @@ function plotly_colorbar(sp::Subplot)
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
-    @show series[:x], series[:y]
     plotattributes_outs = KW[]
     i = 1
+    # these are the axes that the series should be mapped to
+    x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
+    plotattributes_base = KW(
+        :xaxis => "x$(x_idx)",
+        :yaxis => "y$(y_idx)",
+        :name => series[:label],
+        :legendgroup => series[:label],
+    )
+
     for (xs, ys) in zip(nansplit(series[:x]), nansplit(series[:y]))
-        # these are the axes that the series should be mapped to
-        x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
-        plotattributes_base = KW(
-            :xaxis => "x$(x_idx)",
-            :yaxis => "y$(y_idx)",
-            :name => series[:label],
-            :legendgroup => series[:label],
-        )
 
         # to draw polygons, we actually draw lines with fill
         plotattributes_out = merge(
@@ -784,7 +784,6 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
                 ),
             ),
         )
-        @show plotattributes_out
         if series[:markerstrokewidth] > 0
             plotattributes_out[:line] = KW(
                 :color => rgba_string(
