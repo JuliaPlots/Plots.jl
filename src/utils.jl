@@ -1,11 +1,12 @@
 # ---------------------------------------------------------------
-bool_env(x, default)::Bool =
+function bool_env(x, default)::Bool
     try
         return parse(Bool, get(ENV, x, default))
     catch e
         @warn e
         return false
     end
+end
 
 treats_y_as_x(seriestype) =
     seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
@@ -27,17 +28,17 @@ end
 
 Segments() = Segments(Float64)
 Segments(::Type{T}) where {T} = Segments(T[])
-Segments(p::Int) = Segments(NTuple{p,Float64}[])
+Segments(p::Int) = Segments(NTuple{p, Float64}[])
 
 # Segments() = Segments(zeros(0))
 
-to_nan(::Type{Float64})           = NaN
-to_nan(::Type{NTuple{2,Float64}}) = (NaN, NaN)
-to_nan(::Type{NTuple{3,Float64}}) = (NaN, NaN, NaN)
+to_nan(::Type{Float64}) = NaN
+to_nan(::Type{NTuple{2, Float64}}) = (NaN, NaN)
+to_nan(::Type{NTuple{3, Float64}}) = (NaN, NaN, NaN)
 
-coords(segs::Segments{Float64})           = segs.pts
-coords(segs::Segments{NTuple{2,Float64}}) = (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
-coords(segs::Segments{NTuple{3,Float64}}) = (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
+coords(segs::Segments{Float64}) = segs.pts
+coords(segs::Segments{NTuple{2, Float64}}) = (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
+coords(segs::Segments{NTuple{3, Float64}}) = (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
@@ -112,12 +113,12 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     segments = if has_attribute_segments(series)
         (
             if seriestype === :shape
-                # warn_on_inconsistent_shape_attr(series, x, y, z, r)
-                (SeriesSegment(segment, j),)
+                    # warn_on_inconsistent_shape_attr(series, x, y, z, r)
+                    (SeriesSegment(segment, j),)
             elseif seriestype in (:scatter, :scatter3d)
-                (SeriesSegment(i:i, i) for i in segment)
+                    (SeriesSegment(i:i, i) for i in segment)
             else
-                (SeriesSegment(i:(i + 1), i) for i in first(segment):(last(segment) - 1))
+                    (SeriesSegment(i:(i + 1), i) for i in first(segment):(last(segment) - 1))
             end for (j, segment) in enumerate(nan_segments)
         ) |> Iterators.flatten
     else
@@ -163,11 +164,13 @@ function warn_on_inconsistent_shape_attr(series, x, y, z, r)
 end
 
 # helpers to figure out if there are NaN values in a list of array types
-anynan(i::Int, args::Tuple) = any(a -> try
-    isnan(_cycle(a, i))
-catch MethodError
-    false
-end, args)
+anynan(i::Int, args::Tuple) = any(
+    a -> try
+        isnan(_cycle(a, i))
+    catch MethodError
+        false
+    end, args
+)
 anynan(args::Tuple) = i -> anynan(i, args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
@@ -186,7 +189,7 @@ Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()  # COV_EXCL_LINE
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
 
-float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
+float_extended_type(x::AbstractArray{T}) where {T} = Union{T, Float64}
 float_extended_type(x::AbstractArray{Real}) = Float64
 
 # ------------------------------------------------------------------------------------
@@ -222,12 +225,12 @@ RecipesPipeline.unzip(v) = Unzip.unzip(v)  # COV_EXCL_LINE
 "collect into columns (convenience for `unzip` from `Unzip.jl`)"
 unzip(v) = RecipesPipeline.unzip(v)
 
-replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol}) =
-    if haskey(aliases, k)
-        plotattributes[aliases[k]] = RecipesPipeline.pop_kw!(plotattributes, k)
-    end
+replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol, Symbol}) =
+if haskey(aliases, k)
+    plotattributes[aliases[k]] = RecipesPipeline.pop_kw!(plotattributes, k)
+end
 
-replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol}) =
+replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol, Symbol}) =
     foreach(k -> replaceAlias!(plotattributes, k, aliases), collect(keys(plotattributes)))
 
 scale_inverse_scale_func(scale::Symbol) = (
@@ -264,13 +267,13 @@ heatmap_edges(
 ) = _heatmap_edges(Val(scale === :identity), v, scale, isedges, ispolar)
 
 function heatmap_edges(
-    x::AVec,
-    xscale::Symbol,
-    y::AVec,
-    yscale::Symbol,
-    z_size::NTuple{2,Int},
-    ispolar::Bool = false,
-)
+        x::AVec,
+        xscale::Symbol,
+        y::AVec,
+        yscale::Symbol,
+        z_size::NTuple{2, Int},
+        ispolar::Bool = false,
+    )
     nx, ny = length(x), length(y)
     # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
     # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
@@ -291,9 +294,9 @@ function heatmap_edges(
 end
 
 is_uniformly_spaced(v; tol = 1.0e-6) =
-    let dv = diff(v)
-        maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
-    end
+let dv = diff(v)
+    maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     rmin, rmax = r_extrema
@@ -333,10 +336,10 @@ isvertical(series::Series) = isvertical(series.plotattributes)
 
 ticksType(ticks::AVec{<:Real}) = :ticks
 ticksType(ticks::AVec{<:AbstractString}) = :labels
-ticksType(ticks::Tuple{<:Union{AVec,Tuple},<:Union{AVec,Tuple}}) = :ticks_and_labels
+ticksType(ticks::Tuple{<:Union{AVec, Tuple}, <:Union{AVec, Tuple}}) = :ticks_and_labels
 ticksType(ticks) = :invalid
 
-limsType(lims::Tuple{<:Real,<:Real}) = :limits
+limsType(lims::Tuple{<:Real, <:Real}) = :limits
 limsType(lims::Symbol) = lims === :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
@@ -373,21 +376,23 @@ function nanvcat(vs::AVec)
     return v_out
 end
 
-sort_3d_axes(x, y, z, letter) =
-    if letter === :x
+function sort_3d_axes(x, y, z, letter)
+    return if letter === :x
         x, y, z
     elseif letter === :y
         y, x, z
     else
         z, y, x
     end
+end
 
-axes_letters(sp, letter) =
-    if RecipesPipeline.is3d(sp)
+function axes_letters(sp, letter)
+    return if RecipesPipeline.is3d(sp)
         sort_3d_axes(:x, :y, :z, letter)
     else
         letter === :x ? (:x, :y) : (:y, :x)
     end
+end
 
 handle_surface(z) = z
 handle_surface(z::Surface) = permutedims(z.surf)
@@ -475,12 +480,12 @@ for comp in (:line, :fill, :marker)
     @eval begin
         # defines `get_linecolor`, `get_fillcolor` and `get_markercolor` <- for grep
         function $get_compcolor(
-            series,
-            cmin::Real,
-            cmax::Real,
-            i::Integer = 1,
-            s::Symbol = :identity,
-        )
+                series,
+                cmin::Real,
+                cmax::Real,
+                i::Integer = 1,
+                s::Symbol = :identity,
+            )
             c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
             return if z === nothing
@@ -504,7 +509,7 @@ for comp in (:line, :fill, :marker)
             end
         end
 
-        $get_compcolor(series, clims::NTuple{2,<:Number}, args...) =
+        $get_compcolor(series, clims::NTuple{2, <:Number}, args...) =
             $get_compcolor(series, clims[1], clims[2], args...)
 
         $get_compalpha(series, i::Integer = 1) = _cycle(series[$Symbol($compalpha)], i)
@@ -537,9 +542,9 @@ get_linestyle(series, i::Integer = 1) = _cycle(series[:linestyle], i)
 get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
 
 get_markerstrokecolor(series, i::Integer = 1) =
-    let msc = series[:markerstrokecolor]
-        msc isa ColorGradient ? msc : _cycle(msc, i)
-    end
+let msc = series[:markerstrokecolor]
+    msc isa ColorGradient ? msc : _cycle(msc, i)
+end
 
 get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
 get_markerstrokewidth(series, i::Integer = 1) = _cycle(series[:markerstrokewidth], i)
@@ -570,9 +575,9 @@ const _segmenting_array_attributes = :line_z, :fill_z, :marker_z
 # check relevant attributes if they have multiple inputs
 has_attribute_segments(series::Series) =
     any(
-        series[attr] isa AbstractVector && length(series[attr]) > 1 for
+    series[attr] isa AbstractVector && length(series[attr]) > 1 for
         attr in _segmenting_vector_attributes
-    ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
+) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
 
 check_aspect_ratio(ar::AbstractVector) = nothing  # for PyPlot
 check_aspect_ratio(ar::Number) = nothing
@@ -622,9 +627,9 @@ allShapes(arg) =
     (trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers || a isa Shape, arg))
 allAlphas(arg) = trueOrAllTrue(
     a ->
-        (typeof(a) <: Real && a > 0 && a < 1) || (
-            typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))
-        ),
+    (typeof(a) <: Real && a > 0 && a < 1) || (
+        typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))
+    ),
     arg,
 )
 allReals(arg) = trueOrAllTrue(a -> typeof(a) <: Real, arg)
@@ -867,13 +872,17 @@ px2mm(px::Real) = float(px * MM_PER_PX)
 mm2px(mm::Real) = float(mm / MM_PER_PX)
 
 "Smallest x in plot"
-xmin(plt::Plot) = ignorenan_minimum([
-    ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
-])
+xmin(plt::Plot) = ignorenan_minimum(
+    [
+        ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list
+    ]
+)
 "Largest x in plot"
-xmax(plt::Plot) = ignorenan_maximum([
-    ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list
-])
+xmax(plt::Plot) = ignorenan_maximum(
+    [
+        ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list
+    ]
+)
 
 "Extrema of x-values in plot"
 ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
@@ -989,7 +998,7 @@ function ___straightline_data(xl, yl, x, y, exp_fact)
         # get the data values
         xdata = [
             clamp(x[1] + (x[1] - x[2]) * (ylim - y[1]) / (y[1] - y[2]), xl...) for
-            ylim in yl
+                ylim in yl
         ]
 
         xdata, a .* xdata .+ b
@@ -1002,8 +1011,8 @@ function ___straightline_data(xl, yl, x, y, exp_fact)
     )
 end
 
-__straightline_data(xl, yl, x, y, exp_fact) =
-    if (n = length(x)) == 2
+function __straightline_data(xl, yl, x, y, exp_fact)
+    return if (n = length(x)) == 2
         ___straightline_data(xl, yl, x, y, exp_fact)
     else
         k, r = divrem(n, 3)
@@ -1016,22 +1025,23 @@ __straightline_data(xl, yl, x, y, exp_fact) =
         end
         xdata, ydata
     end
+end
 
 _straightline_data(::Val{true}, ::Function, ::Function, ::Function, ::Function, args...) =
     __straightline_data(args...)
 
 function _straightline_data(
-    ::Val{false},
-    xf::Function,
-    xinvf::Function,
-    yf::Function,
-    yinvf::Function,
-    xl,
-    yl,
-    x,
-    y,
-    exp_fact,
-)
+        ::Val{false},
+        xf::Function,
+        xinvf::Function,
+        yf::Function,
+        yinvf::Function,
+        xl,
+        yl,
+        x,
+        y,
+        exp_fact,
+    )
     xdata, ydata = __straightline_data(xf.(xl), yf.(yl), xf.(x), yf.(y), exp_fact)
     return xinvf.(xdata), yinvf.(ydata)
 end
@@ -1111,7 +1121,7 @@ function _add_triangle!(I::Int, i::Int, j::Int, k::Int, x, y, z, X, Y, Z)
     return nothing
 end
 
-function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
+function mesh3d_triangles(x, y, z, cns::Tuple{Array, Array, Array})
     ci, cj, ck = cns
     length(ci) == length(cj) == length(ck) ||
         throw(ArgumentError("Argument connections must consist of equally sized arrays."))
@@ -1124,7 +1134,7 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array,Array,Array})
     return X, Y, Z
 end
 
-function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
+function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3, Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))
     Z = zeros(eltype(z), 4length(cns))
@@ -1135,7 +1145,7 @@ function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3,Int}})
 end
 
 # cache joined symbols so they can be looked up instead of constructed each time
-const _attrsymbolcache = Dict{Symbol,Dict{Symbol,Symbol}}()
+const _attrsymbolcache = Dict{Symbol, Dict{Symbol, Symbol}}()
 
 get_attr_symbol(letter::Symbol, keyword::String) = get_attr_symbol(letter, Symbol(keyword))
 get_attr_symbol(letter::Symbol, keyword::Symbol) = _attrsymbolcache[letter][keyword]
@@ -1147,12 +1157,12 @@ _fmt_paragraph(paragraph::AbstractString; kw...) =
     _fmt_paragraph(PipeBuffer(), paragraph, 0; kw...)
 
 function _fmt_paragraph(
-    io::IOBuffer,
-    remaining_text::AbstractString,
-    column_count::Integer;
-    fillwidth = 60,
-    leadingspaces = 0,
-)
+        io::IOBuffer,
+        remaining_text::AbstractString,
+        column_count::Integer;
+        fillwidth = 60,
+        leadingspaces = 0,
+    )
     kw = (; fillwidth, leadingspaces)
 
     return if (m = match(r"(.*?) (.*)", remaining_text)) isa Nothing
@@ -1174,17 +1184,17 @@ function _fmt_paragraph(
 end
 
 _argument_description(s::Symbol) =
-    if s ∈ keys(_arg_desc)
-        aliases = if (al = Plots.aliases(s)) |> length > 0
-            " Aliases: " * string(Tuple(al)) * '.'
-        else
-            ""
-        end
-        "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." *
-        aliases
+if s ∈ keys(_arg_desc)
+    aliases = if (al = Plots.aliases(s)) |> length > 0
+        " Aliases: " * string(Tuple(al)) * '.'
     else
         ""
     end
+    "`$s::$(_arg_desc[s][1])`: $(rstrip(replace(_arg_desc[s][2], '\n' => ' '), '.'))." *
+        aliases
+else
+    ""
+end
 
 _document_argument(s::Symbol) =
     _fmt_paragraph(_argument_description(s), leadingspaces = 6 + length(string(s)))
