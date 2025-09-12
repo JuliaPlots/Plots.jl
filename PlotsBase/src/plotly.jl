@@ -930,11 +930,8 @@ function plotly_colorbar(sp::Subplot)
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
-    segments = series_segments(series; check = true)
+    segments = series_segments(series, series[:seriestype]; check = true)
     plotattributes_outs = map(i -> KW(), 1:length(segments))
-
-    # TODO: create a plotattributes_out for each polygon
-    # x, y = series[:x], series[:y]
 
     # these are the axes that the series should be mapped to
     x_idx, y_idx = plotly_link_indices(plt, series[:subplot])
