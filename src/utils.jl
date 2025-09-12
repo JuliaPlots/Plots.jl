@@ -1,10 +1,11 @@
 # ---------------------------------------------------------------
-bool_env(x, default)::Bool =
-try
-    return parse(Bool, get(ENV, x, default))
-catch e
-    @warn e
-    return false
+function bool_env(x, default)::Bool
+    try
+        return parse(Bool, get(ENV, x, default))
+    catch e
+        @warn e
+        return false
+    end
 end
 
 treats_y_as_x(seriestype) =
@@ -36,10 +37,8 @@ to_nan(::Type{NTuple{2, Float64}}) = (NaN, NaN)
 to_nan(::Type{NTuple{3, Float64}}) = (NaN, NaN, NaN)
 
 coords(segs::Segments{Float64}) = segs.pts
-coords(segs::Segments{NTuple{2, Float64}}) =
-    (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
-coords(segs::Segments{NTuple{3, Float64}}) =
-    (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
+coords(segs::Segments{NTuple{2, Float64}}) = (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts))
+coords(segs::Segments{NTuple{3, Float64}}) = (map(p -> p[1], segs.pts), map(p -> p[2], segs.pts), map(p -> p[3], segs.pts))
 
 function Base.push!(segments::Segments{T}, vs...) where {T}
     isempty(segments.pts) || push!(segments.pts, to_nan(T))
@@ -112,21 +111,21 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     end
 
     segments = if has_attribute_segments(series)
-        map(nan_segments) do r
+        (
             if seriestype === :shape
-                warn_on_inconsistent_shape_attr(series, x, y, z, r)
-                (SeriesSegment(r, first(r)),)
+                    # warn_on_inconsistent_shape_attr(series, x, y, z, r)
+                    (SeriesSegment(segment, j),)
             elseif seriestype in (:scatter, :scatter3d)
-                (SeriesSegment(i:i, i) for i in r)
+                    (SeriesSegment(i:i, i) for i in segment)
             else
-                (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
-            end
-        end |> Iterators.flatten
+                    (SeriesSegment(i:(i + 1), i) for i in first(segment):(last(segment) - 1))
+            end for (j, segment) in enumerate(nan_segments)
+        ) |> Iterators.flatten
     else
         (SeriesSegment(r, 1) for r in nan_segments)
     end
 
-    warn_on_attr_dim_mismatch(series, x, y, z, segments)
+    # warn_on_attr_dim_mismatch(series, x, y, z, segments)
     return segments
 end
 
@@ -198,7 +197,8 @@ _cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
 _cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
 _cycle(v::AVec, idx::Int) = v[mod(idx, axes(v, 1))]
-_cycle(v::AMat, idx::Int) = size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]
+_cycle(v::AMat, idx::Int) =
+    size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]
 _cycle(v, idx::Int) = v
 
 _cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v, i), indices)
@@ -376,20 +376,22 @@ function nanvcat(vs::AVec)
     return v_out
 end
 
-sort_3d_axes(x, y, z, letter) =
-if letter === :x
-    x, y, z
-elseif letter === :y
-    y, x, z
-else
-    z, y, x
+function sort_3d_axes(x, y, z, letter)
+    return if letter === :x
+        x, y, z
+    elseif letter === :y
+        y, x, z
+    else
+        z, y, x
+    end
 end
 
-axes_letters(sp, letter) =
-if RecipesPipeline.is3d(sp)
-    sort_3d_axes(:x, :y, :z, letter)
-else
-    letter === :x ? (:x, :y) : (:y, :x)
+function axes_letters(sp, letter)
+    return if RecipesPipeline.is3d(sp)
+        sort_3d_axes(:x, :y, :z, letter)
+    else
+        letter === :x ? (:x, :y) : (:y, :x)
+    end
 end
 
 handle_surface(z) = z
@@ -1009,19 +1011,20 @@ function ___straightline_data(xl, yl, x, y, exp_fact)
     )
 end
 
-__straightline_data(xl, yl, x, y, exp_fact) =
-if (n = length(x)) == 2
-    ___straightline_data(xl, yl, x, y, exp_fact)
-else
-    k, r = divrem(n, 3)
-    @assert r == 0 "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
-    xdata, ydata = fill(NaN, n), fill(NaN, n)
-    for i in 1:k
-        inds = (3i - 2):(3i - 1)
-        xdata[inds], ydata[inds] =
-            ___straightline_data(xl, yl, x[inds], y[inds], exp_fact)
+function __straightline_data(xl, yl, x, y, exp_fact)
+    return if (n = length(x)) == 2
+        ___straightline_data(xl, yl, x, y, exp_fact)
+    else
+        k, r = divrem(n, 3)
+        @assert r == 0 "Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n"
+        xdata, ydata = fill(NaN, n), fill(NaN, n)
+        for i in 1:k
+            inds = (3i - 2):(3i - 1)
+            xdata[inds], ydata[inds] =
+                ___straightline_data(xl, yl, x[inds], y[inds], exp_fact)
+        end
+        xdata, ydata
     end
-    xdata, ydata
 end
 
 _straightline_data(::Val{true}, ::Function, ::Function, ::Function, ::Function, args...) =
@@ -1282,11 +1285,12 @@ function protectedstring(s)
         To suppress all axis labels, pass an empty string to `xlabel`, etc.
         To suppress units in axis labels pass `unitformat = :nounit` or `unitformat=(l,u)->l`
         (equivalently for `xunitformat`, `yunitformat`, etc.).
-            """, :protectedstring, force = true
+            """,
+        :protectedstring,
+        force = true,
     )
     return ProtectedString(s)
 end
-
 
 """
     P_str(s)

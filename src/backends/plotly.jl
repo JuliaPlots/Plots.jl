@@ -335,7 +335,8 @@ function plotly_layout(plt::Plot)
         plotattributes_out[:hovermode] = "none"
     end
 
-    return plotattributes_out = recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
+    return plotattributes_out =
+        recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
 end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
@@ -758,12 +759,8 @@ function plotly_colorbar(sp::Subplot)
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
-    segments = series_segments(series; check = true)
-    plotattributes_outs = map(i -> KW(), 1:length(segments))
-
-    # TODO: create a plotattributes_out for each polygon
-    # x, y = series[:x], series[:y]
-
+    plotattributes_outs = KW[]
+    i = 1
     # these are the axes that the series should be mapped to
     x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
     plotattributes_base = KW(
@@ -773,14 +770,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         :legendgroup => series[:label],
     )
 
-    x, y = (
-        plotly_data(series, letter, data) for
-            (letter, data) in zip((:x, :y), shape_data(series, 100))
-    )
-
-    for (k, segment) in enumerate(segments)
-        i, rng = segment.attr_index, segment.range
-        length(rng) < 2 && continue
+    for (xs, ys) in zip(nansplit(series[:x]), nansplit(series[:y]))
 
         # to draw polygons, we actually draw lines with fill
         plotattributes_out = merge(
@@ -788,8 +778,8 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
             KW(
                 :type => "scatter",
                 :mode => "lines",
-                :x => vcat(x[rng], x[rng[1]]),
-                :y => vcat(y[rng], y[rng[1]]),
+                :x => xs,
+                :y => ys,
                 :fill => "tozeroy",
                 :fillcolor => rgba_string(
                     plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
@@ -805,10 +795,11 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
                 :dash => string(get_linestyle(series, i)),
             )
         end
-        plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
+        plotattributes_out[:showlegend] = i == 1 ? should_add_to_legend(series) : false
         plotly_polar!(plotattributes_out, series)
         plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], i))
-        plotattributes_outs[k] = merge(plotattributes_out, series[:extra_kwargs])
+        push!(plotattributes_outs, merge(plotattributes_out, series[:extra_kwargs]))
+        i += 1
     end
     if series[:fill_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
