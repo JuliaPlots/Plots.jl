@@ -930,7 +930,7 @@ function plotly_colorbar(sp::Subplot)
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
-    segments = series_segments(series, series[:seriestype]; check = true)
+    segments = collect(series_segments(series, series[:seriestype]; check = true))
     plotattributes_outs = map(i -> KW(), 1:length(segments))
 
     # these are the axes that the series should be mapped to
