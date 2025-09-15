@@ -276,7 +276,6 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     segments = if has_attribute_segments(series)
         (
             if seriestype ≡ :shape
-                warn_on_inconsistent_shape_attrs(series, x, y, z, segment)
                 (SeriesSegment(segment, j),)
             elseif seriestype in (:scatter, :scatter3d)
                 (SeriesSegment(i:i, i) for i in segment)
@@ -288,7 +287,6 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
         (SeriesSegment(r, 1) for r in nan_segments)
     end
 
-    warn_on_attr_dim_mismatch(series, x, y, z, segments)
     return segments
 end
 
