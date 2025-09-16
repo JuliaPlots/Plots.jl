@@ -276,13 +276,13 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     segments = if has_attribute_segments(series)
         (
             if seriestype ≡ :shape
-                (SeriesSegment(segment, j),)
+                    (SeriesSegment(segment, j),)
             elseif seriestype in (:scatter, :scatter3d)
-                (SeriesSegment(i:i, i) for i in segment)
+                    (SeriesSegment(i:i, i) for i in segment)
             else
-                (SeriesSegment(i:(i + 1), i) for i in first(segment):(last(segment) - 1))
+                    (SeriesSegment(i:(i + 1), i) for i in first(segment):(last(segment) - 1))
             end for (j, segment) in enumerate(nan_segments)
-         ) |> Iterators.flatten
+        ) |> Iterators.flatten
     else
         (SeriesSegment(r, 1) for r in nan_segments)
     end
