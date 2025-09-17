@@ -294,14 +294,12 @@ end
         @test plot(y, label = P"meters") isa Plots.Plot
     end
 
-    if isdefined(Base, :get_extension)
-        @testset "latexify as unitformat" begin
-            y = rand(10) * u"m^-1"
-            @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left/\\;\\mathrm{m}^{-1}\\right.\$"
+    isdefined(Base, :get_extension) && @testset "latexify as unitformat" begin
+        y = rand(10) * u"m^-1"
+        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left/\\;\\mathrm{m}^{-1}\\right.\$"
 
-            uf = (l, u) -> l * " (" * latexify(u) * ")"
-            @test yguide(plot(y, ylabel = "hello", unitformat = uf)) == "hello (\$\\mathrm{m}^{-1}\$)"
-        end
+        uf = (l, u) -> l * " (" * latexify(u) * ")"
+        @test yguide(plot(y, ylabel = "hello", unitformat = uf)) == "hello (\$\\mathrm{m}^{-1}\$)"
     end
 
     @testset "colorbar title" begin
