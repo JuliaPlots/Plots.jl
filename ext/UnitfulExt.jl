@@ -9,6 +9,16 @@ import RecipesBase
 import LaTeXStrings: LaTeXString
 import Latexify: latexify
 
+# Very ugly hack for loading the Unitful + Latexify extension on old versions of Julia:
+if !isdefined(Base, :get_extension)
+    using Requires
+    function __init__()
+        # @info "using Requires" unitfullatexifyext_fname isdefined(Base, :get_extension)
+        unitfullatexifyext_fname = joinpath(dirname(dirname(pathof(Unitful))), "ext", "LatexifyExt.jl")
+        @require Latexify="5c2747f8-3f33-11e9-0e5d-1d1b2b2a6f19" include(unitfullatexifyext_fname)
+    end
+end
+
 const MissingOrQuantity = Union{Missing, <:Quantity, <:LogScaled}
 
 #==========
