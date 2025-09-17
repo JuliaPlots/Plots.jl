@@ -8,6 +8,9 @@ import RecipesBase
 @ext_imp_use :import Unitful Quantity unit ustrip Unitful dimension Units NoUnits LogScaled logunit MixedUnits Level Gain uconvert
 import LaTeXStrings: LaTeXString
 import Latexify: latexify
+if !isdefined(Base, :get_extension)
+    import UnitfulLatexify # On Julia <1.9, this glue package loads the extension.
+end
 
 const MissingOrQuantity = Union{Missing, <:Quantity, <:LogScaled}
 
