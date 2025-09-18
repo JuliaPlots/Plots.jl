@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a bug report
-types: bug
+type: bug
 assignees: ''
 
 ---
