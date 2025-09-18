@@ -38,7 +38,6 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
-UnitfulLatexify = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 
 [weakdeps]
@@ -53,7 +52,7 @@ FileIOExt = "FileIO"
 GeometryBasicsExt = "GeometryBasics"
 IJuliaExt = "IJulia"
 ImageInTerminalExt = "ImageInTerminal"
-UnitfulExt = ["Unitful", "UnitfulLatexify"]
+UnitfulExt = "Unitful"
 
 [compat]
 Aqua = "0.8"
@@ -93,7 +92,6 @@ StatsBase = "0.33 - 0.34"
 UnicodeFun = "0.4"
 UnicodePlots = "3.4"
 Unitful = "1.25"
-UnitfulLatexify = "2"
 Unzip = "0.1 - 0.2"
 julia = "1.10"
 
