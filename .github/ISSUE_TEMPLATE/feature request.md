@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest a feature or enhancement
-type: feature request
+type: feature
 assignees: ''
 
 ---
