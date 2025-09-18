@@ -1,8 +1,7 @@
 ---
 name: Feature request
 about: Suggest a feature or enhancement
-title: "[FR]"
-labels: feature request
+type: feature request
 assignees: ''
 
 ---
