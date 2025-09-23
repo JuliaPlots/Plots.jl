@@ -295,12 +295,13 @@ end
 
     @testset "latexify as unitformat" begin
         y = rand(10) * u"m^-1"
+        Latexify.set_default(labelformat = :slash)
         @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left/\\;\\mathrm{m}^{-1}\\right.\$"
 
         uf = (l, u) -> l * " (" * latexify(u) * ")"
         @test yguide(plot(y, ylabel = "hello", unitformat = uf)) == "hello (\$\\mathrm{m}^{-1}\$)"
         Latexify.set_default(labelformat = :square)
-        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left[\\;\\mathrm{m}^{-1}\\right]\$"
+        @test yguide(plot(y, ylabel = "hello", unitformat = latexify)) == "\$hello\\;\\left[\\mathrm{m}^{-1}\\right]\$"
     end
 
     @testset "colorbar title" begin
