@@ -35,6 +35,8 @@ jobs:
         run: |
           ls
           cd PlotReferenceImages
+          cp -r ~/.julia/dev/PlotReferenceImages.jl/* .
+          ls
           git status
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
@@ -43,6 +45,5 @@ jobs:
           body: "Review changes thoroughly and only merge when no unwanted changes are present."
           path: PlotReferenceImages
           token: ${{ secrets.PLOTS_REFIMAGES_TOKEN }}
-          repository: "JuliaPlots/PlotReferenceImages.jl"
-          head: "${{ github.ref_name}}"
+          branch: "${{ github.ref_name}}"
           base: "master"
