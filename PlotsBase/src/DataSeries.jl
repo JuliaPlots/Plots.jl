@@ -274,21 +274,19 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     end
 
     segments = if has_attribute_segments(series)
-        map(nan_segments) do r
+        (
             if seriestype ≡ :shape
-                warn_on_inconsistent_shape_attrs(series, x, y, z, r)
-                (SeriesSegment(r, first(r)),)
+                    (SeriesSegment(segment, j),)
             elseif seriestype in (:scatter, :scatter3d)
-                (SeriesSegment(i:i, i) for i in r)
+                    (SeriesSegment(i:i, i) for i in segment)
             else
-                (SeriesSegment(i:(i + 1), i) for i in first(r):(last(r) - 1))
-            end
-        end |> Iterators.flatten
+                    (SeriesSegment(i:(i + 1), i) for i in first(segment):(last(segment) - 1))
+            end for (j, segment) in enumerate(nan_segments)
+        ) |> Iterators.flatten
     else
         (SeriesSegment(r, 1) for r in nan_segments)
     end
 
-    warn_on_attr_dim_mismatch(series, x, y, z, segments)
     return segments
 end
 
