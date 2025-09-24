@@ -34,14 +34,13 @@ jobs:
       - name: Diagnostics
         run: |
           ls
-          git status
           cd PlotReferenceImages
           git status
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
           title: "Update Plot reference images from branch ${{ github.ref_name}} by the action ${{ github.workflow_ref }}"
-          body: "Review changes thoroughly and only merge when no unwanted chages are present."
+          body: "Review changes thoroughly and only merge when no unwanted changes are present."
           path: PlotReferenceImages
           token: ${{ secrets.PLOTS_REFIMAGES_TOKEN }}
           repository: "JuliaPlots/PlotReferenceImages.jl"
