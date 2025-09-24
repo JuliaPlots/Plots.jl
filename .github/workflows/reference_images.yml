@@ -15,7 +15,10 @@ jobs:
         with:
           repository: "JuliaPlots/PlotReferenceImages.jl"
           token: ${{ secrets.PLOTS_REFIMAGES_TOKEN }}
+          path: PlotReferenceImages
       - uses: actions/checkout@v5
+        with:
+          path: Plots
       - uses: julia-actions/setup-julia@latest
         with:
           version: 1
@@ -24,7 +27,7 @@ jobs:
         env:
           PLOTSBASE_TEST_PACKAGES: GR
           VISUAL_REGRESSION_TESTS_AUTO: true
-        shell: julia --color=yes --project=@. {0}
+        shell: julia --color=yes --project=Plots {0}
         run: |
           using Pkg
           Pkg.test("PlotsBase")
@@ -32,11 +35,14 @@ jobs:
         run: |
           ls
           git status
+          cd PlotReferenceImages
+          git status
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
           title: "Update Plot reference images from branch ${{ github.ref_name}} by the action ${{ github.workflow_ref }}"
           body: "Review changes thoroughly and only merge when no unwanted chages are present."
+          path: PlotReferenceImages
           token: ${{ secrets.PLOTS_REFIMAGES_TOKEN }}
           repository: "JuliaPlots/PlotReferenceImages.jl"
           head: "${{ github.ref_name}}"
