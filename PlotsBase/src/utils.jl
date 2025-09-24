@@ -942,6 +942,18 @@ _generate_doclist(attributes) =
 # for `PGFPlotsx` together with `UnitfulExt`
 function pgfx_sanitize_string end  # COV_EXCL_LINE
 
+# for things that need to be latexified for PGFPlotsX but not for anything else
+function pgfext_latexify(args...)
+    pgfext = Base.get_extension(PlotsBase, :PGFPlotsXExt)
+    isnothing(pgfext) && error("PGFPlotsX chosen as backend, but extension not loaded. Please report this as an issue.")
+    return pgfext.Latexify.latexify(args...)
+end
+function pgfext_LaTeXString(args...)
+    pgfext = Base.get_extension(PlotsBase, :PGFPlotsXExt)
+    isnothing(pgfext) && error("PGFPlotsX chosen as backend, but extension not loaded. Please report this as an issue.")
+    return pgfext.LaTeXString(args...)
+end
+
 function extrema_plus_buffer(v, buffmult = 0.2)
     vmin, vmax = ignorenan_extrema(v)
     vdiff = vmax - vmin
