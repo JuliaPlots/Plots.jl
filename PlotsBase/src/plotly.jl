@@ -1225,24 +1225,24 @@ html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
 function plotly_url()
-    if PlotsBase._use_local_dependencies[]
-    "file:///$(PlotsBase._plotly_local_file_path[])"
-else
-    "https://cdn.plot.ly/$(PlotsBase._plotly_min_js_filename)"
-end
+    return if PlotsBase._use_local_dependencies[]
+        "file:///$(PlotsBase._plotly_local_file_path[])"
+    else
+        "https://cdn.plot.ly/$(PlotsBase._plotly_min_js_filename)"
+    end
 end
 
 function mathjax_url(plt::Plot)
     include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
     mathjax_version = get(plt[:extra_plot_kwargs], :include_mathjax, "2.7.7")
-    if include_mathjax != "cdn"
+    return if include_mathjax != "cdn"
         "file://" * include_mathjax
     else
         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/$mathjax_version/MathJax.js?config=TeX-MML-AM_CHTML"
     end
 end
 function plotly_html_head(plt::Plot)
-    ""
+    return ""
 end
 
 function plotly_html_body(plt, style = nothing)
@@ -1254,23 +1254,23 @@ function plotly_html_body(plt, style = nothing)
     unique_tag = "id_$(replace(string(UUIDs.uuid4()), '-' => '_'))"
 
     return """
-        <div id=\"$unique_tag\" style=\"$style\"></div>
+            <div id=\"$unique_tag\" style=\"$style\"></div>
 
-        <link id="mathjax-julia" href="$(plotly_url())" >
-        <link id="plotlyjs-julia" href="$(mathjax_url(plt))" >
+            <link id="mathjax-julia" href="$(plotly_url())" >
+            <link id="plotlyjs-julia" href="$(mathjax_url(plt))" >
 
-        <script type="module" id="plotsjl-plotly-script">
-        if(window.MathJax == null)
-            // Calling `await import` will load the library, and return when loaded.
-		    await import(document.querySelector(`link#mathjax-julia`).href)
-	
-        if(window.Plotly == null)
-            await import(document.querySelector(`link#plotlyjs-julia`).href)
+            <script type="module" id="plotsjl-plotly-script">
+            if(window.MathJax == null)
+                // Calling `await import` will load the library, and return when loaded.
+    		    await import(document.querySelector(`link#mathjax-julia`).href)
+    	
+            if(window.Plotly == null)
+                await import(document.querySelector(`link#plotlyjs-julia`).href)
 
-        $(js_body(plt, unique_tag))
-        
-        </script>
-    """
+            $(js_body(plt, unique_tag))
+            
+            </script>
+        """
 end
 
 js_body(
