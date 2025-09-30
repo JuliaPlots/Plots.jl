@@ -1226,7 +1226,7 @@ html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
 function plotly_url()
     return if PlotsBase._use_local_dependencies[]
-        "file:///$(PlotsBase._plotly_local_file_path[])"
+        PlotsBase._plotly_data_url()
     else
         "https://cdn.plot.ly/$(PlotsBase._plotly_min_js_filename)"
     end
