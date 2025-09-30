@@ -3,9 +3,9 @@ using REPL
 import Base64
 
 const _plotly_local_file_path = Ref{Union{Nothing, String}}(nothing)
-const _plotly_data_url_cached = Ref{Union{Nothing,String}}(nothing)
+const _plotly_data_url_cached = Ref{Union{Nothing, String}}(nothing)
 function _plotly_data_url()
-    if _plotly_data_url_cached[] === nothing
+    return if _plotly_data_url_cached[] === nothing
         _plotly_data_url_cached[] = "data:text/javascript;base64,$(Base64.base64encode(read(_plotly_local_file_path)))"
     else
         _plotly_data_url_cached[]
