@@ -1234,7 +1234,7 @@ end
 
 function mathjax_url(plt::Plot)
     include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
-    mathjax_version = get(plt[:extra_plot_kwargs], :include_mathjax, "2.7.7")
+    mathjax_version = get(plt[:extra_plot_kwargs], :mathjax_version, "2.7.7")
     return if include_mathjax != "cdn"
         "file://" * include_mathjax
     else
