@@ -17,7 +17,9 @@ import Unitful:
     Level,
     Gain,
     uconvert
-import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis, pgfext_latexify, pgfext_LaTeXString
+import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis
+using Latexify: latexify
+using LaTeXStrings
 import PlotsBase.Axes: format_unit_label
 import RecipesBase
 
@@ -251,7 +253,7 @@ function append_cbar_unit_if_needed!(attr, label::Nothing, u)
         return attr[:colorbar_title] = UnitfulString("", u)
     end
     return attr[:colorbar_title] = if PlotsBase.backend_name() ≡ :pgfplotsx
-        UnitfulString(pgfext_LaTeXString(pgfext_latexify(u)), u)
+        UnitfulString(LaTeXString(latexify(u)), u)
     else
         UnitfulString(string(u), u)
     end
@@ -260,10 +262,10 @@ function append_cbar_unit_if_needed!(attr, label::S, u) where {S <: AbstractStri
     isempty(label) && return attr[:colorbar_title] = UnitfulString(label, u)
     return attr[:colorbar_title] = if PlotsBase.backend_name() ≡ :pgfplotsx
         UnitfulString(
-            pgfext_LaTeXString(
+            LaTeXString(
                 format_unit_label(
                     label,
-                    pgfext_latexify(u),
+                    latexify(u),
                     get(attr, :zunitformat, :round),
                 ),
             ),

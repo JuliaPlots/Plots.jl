@@ -4,6 +4,7 @@ export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_fun
 export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide
 
 import ..PlotsBase: PlotsBase, Subplot, DefaultsDict
+using Latexify: latexify
 
 using ..RecipesPipeline
 using ..Commons
@@ -355,7 +356,7 @@ else
     unit = if axis[:unitformat] isa Function
         axis[:unit]
     elseif PlotsBase.backend_name() ≡ :pgfplotsx
-        PlotsBase.pgfext_latexify(axis[:unit])
+        latexify(axis[:unit])
     else
         string(axis[:unit])
     end
