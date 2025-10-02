@@ -314,7 +314,7 @@ end
         pl = heatmap(x, y, z, zunit = u"cm/s", zunitformat = :square, colorbar_title = "v")
         @test ctitle(pl) ∈ ["v [cm s^-1]", "v [cm s⁻¹]"]
         pl = heatmap(x, y, z, zunit = u"cm/s", zunitformat = :nounit, colorbar_title = nothing)
-        @test ctitle(pl) ∈ ["v [cm s^-1]", "v [cm s⁻¹]"]
+        @test ctitle(pl) == ""
     end
 
     @testset "twinx (#4750)" begin
