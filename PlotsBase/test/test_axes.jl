@@ -292,6 +292,7 @@ end
     @test yguide(plot(1:3, yunit = 1)) == "1"
     @test yguide(plot(1:3, yunit = 1, ylabel = :hello)) == "hello (1)"
     @test yguide(plot(1:3, yunit = 1, ylabel = :hello, unitformat = :square)) == "hello [1]"
+    @test yguide(plot(1:3, yunit = 1, ylabel = nothing, unitformat = :square)) == ""
     @test yguide(plot(1:3, yunit = 1, ylabel = L"hello")) == L"hello" * " (1)"
 
     uf = (l, u) -> Symbol(l, "_symb_", u)
