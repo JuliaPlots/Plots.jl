@@ -72,8 +72,6 @@ end
         write(
             script,
             """
-            $(PlotsBase.WEAKDEPS)
-
             import $pkg
             using Test, PlotsBase
 

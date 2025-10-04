@@ -3,7 +3,7 @@
     # :CondaPkg stale deps show up when running CI
     Aqua.test_all(
         PlotsBase;
-        stale_deps = (; ignore = [:CondaPkg]),
+        stale_deps = (; ignore = [:Colors, :Contour, :LaTeXStrings, :Latexify, :CondaPkg]),
         persistent_tasks = false,
         ambiguities = false,
         deps_compat = false,  # FIXME: fails `CondaPkg`
