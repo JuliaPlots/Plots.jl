@@ -14,7 +14,6 @@ get!(ENV, "MPLBACKEND", "agg")
 get!(ENV, "PLOTSBASE_PLOTLYJS_UNSAFE_ELECTRON", "true")
 
 using PlotsBase
-eval(PlotsBase.WEAKDEPS)
 
 # initialize all backends
 for pkg in TEST_PACKAGES

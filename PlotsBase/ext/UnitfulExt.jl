@@ -18,12 +18,10 @@ import Unitful:
     Gain,
     uconvert
 import PlotsBase: PlotsBase, @recipe, PlotText, Subplot, AVec, AMat, Axis
+using Latexify: latexify
+using LaTeXStrings
 import PlotsBase.Axes: format_unit_label
 import RecipesBase
-import LaTeXStrings: LaTeXString
-import Latexify
-
-using UnitfulLatexify
 
 const MissingOrQuantity = Union{Missing, <:Quantity, <:LogScaled}
 
@@ -255,7 +253,7 @@ function append_cbar_unit_if_needed!(attr, label::Nothing, u)
         return attr[:colorbar_title] = UnitfulString("", u)
     end
     return attr[:colorbar_title] = if PlotsBase.backend_name() ≡ :pgfplotsx
-        UnitfulString(LaTeXString(Latexify.latexify(u)), u)
+        UnitfulString(LaTeXString(latexify(u)), u)
     else
         UnitfulString(string(u), u)
     end
@@ -267,7 +265,7 @@ function append_cbar_unit_if_needed!(attr, label::S, u) where {S <: AbstractStri
             LaTeXString(
                 format_unit_label(
                     label,
-                    Latexify.latexify(u),
+                    latexify(u),
                     get(attr, :zunitformat, :round),
                 ),
             ),

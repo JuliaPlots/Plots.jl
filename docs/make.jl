@@ -21,8 +21,6 @@ import Dates
 import JSON
 import Glob
 
-eval(PlotsBase.WEAKDEPS)
-
 PythonPlot.pygui(false)  # prevent segfault on event loop in ci
 
 suffix = get(ENV, "PLOTDOCS_SUFFIX", "")
