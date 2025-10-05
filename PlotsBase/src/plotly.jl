@@ -1228,17 +1228,17 @@ function plotly_url()
     return if PlotsBase._use_local_dependencies[]
         PlotsBase._plotly_data_url()
     else
-        "https://cdn.plot.ly/$(PlotsBase._plotly_min_js_filename)"
+        "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.1.0/plotly.min.js"
     end
 end
 
 function mathjax_url(plt::Plot)
     include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
-    mathjax_version = get(plt[:extra_plot_kwargs], :mathjax_version, "2.7.7")
+    mathjax_version = get(plt[:extra_plot_kwargs], :mathjax_version, "3.2.2")
     return if include_mathjax != "cdn"
         "file://" * include_mathjax
     else
-        "https://cdnjs.cloudflare.com/ajax/libs/mathjax/$mathjax_version/MathJax.js?config=TeX-MML-AM_CHTML"
+        "https://cdn.jsdelivr.net/npm/mathjax@$mathjax_version/es5/tex-svg-full.js"
     end
 end
 function plotly_html_head(plt::Plot)
@@ -1256,8 +1256,8 @@ function plotly_html_body(plt, style = nothing)
     return """
             <div id=\"$unique_tag\" style=\"$style\"></div>
 
-            <link id="mathjax-julia" href="$(plotly_url())" >
-            <link id="plotlyjs-julia" href="$(mathjax_url(plt))" >
+            <link id="mathjax-julia" href="$(mathjax_url(plt))" >
+            <link id="plotlyjs-julia" href="$(plotly_url())" >
 
             <script type="module" id="plotsjl-plotly-script">
             if(window.MathJax == null)
