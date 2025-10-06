@@ -435,14 +435,6 @@ This can be put anywhere in the code and will appear on the call `?my_plotfunc`.
 
 ### Troubleshooting
 
-It can sometimes be helpful when debugging recipes to see the order of dispatch inside the `apply_recipe` calls.  Turn on debugging info with:
-
-```julia
-RecipesBase.debug()
-```
-
-You can also pass a `Bool` to the `debug` method to turn it on/off.
-
 Here are some common errors, and what to look out for:
 
 #### convertToAnyVector
