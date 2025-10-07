@@ -1,7 +1,7 @@
 ## Description
 
 ## Attribution
-- [ ] I am listed in [.zenodo.json](https://github.com/JuliaPlots/Plots.jl/blob/2463eb9f8065c52ed8314f6e541664c5b9db88d2/.zenodo.json) (see https://github.com/JuliaPlots/Plots.jl/issues/3503)
+- [ ] I am listed in the appropriate version of `.zenodo.json` for [PRs against v2](https://github.com/JuliaPlots/Plots.jl/blob/v2/.zenodo.json) or [PRs against master](https://github.com/JuliaPlots/Plots.jl/blob/master/.zenodo.json) (see https://github.com/JuliaPlots/Plots.jl/issues/3503)
 
 ## Things to consider
 - [ ] Does it work on log scales?
