@@ -7,6 +7,9 @@ import RecipesPipeline
 import Statistics
 import UUIDs
 import JSON
+import PlotsBase: Base64, Downloads
+using Scratch: @get_scratch!
+
 
 using PlotUtils
 
@@ -1224,21 +1227,37 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt), 4)
 html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
-function plotly_url()
-    return if PlotsBase._use_local_dependencies[]
-        PlotsBase._plotly_data_url()
+function plotly_url(plt::Plot)
+    include_plotly = get(plt[:extra_plot_kwargs], :include_plotly, "cdn")
+    plotly_version = get(plt[:extra_plot_kwargs], :mathjax_version, "2.35.2")
+    plotly_cdn = "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@$plotly_version/plotly.min.js"
+    return if include_plotly != "cdn"
+        if !isdir(include_plotly)
+            include_plotly = joinpath(@get_scratch!("plotly"), "plotly$plotly_version.min.js")
+        end
+        if !isfile(include_plotly)
+            Downloads.download(plotly_cdn, include_plotly)
+        end
+        "data:application/javascript;base64,$(Base64.base64encode(read(include_plotly)))"
     else
-        "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.1.0/plotly.min.js"
+        plotly_cdn
     end
 end
 
 function mathjax_url(plt::Plot)
     include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
     mathjax_version = get(plt[:extra_plot_kwargs], :mathjax_version, "3.2.2")
+    mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@$mathjax_version/es5/tex-svg-full.js"
     return if include_mathjax != "cdn"
-        "file://" * include_mathjax
+        if !isdir(include_mathjax)
+            include_mathjax = joinpath(@get_scratch!("mathjax"), "mathjax$mathjax_version.js")
+        end
+        if !isfile(include_mathjax)
+            Downloads.download(mathjax_cdn, include_mathjax)
+        end
+        "data:application/javascript;base64,$(Base64.base64encode(read(include_mathjax)))"
     else
-        "https://cdn.jsdelivr.net/npm/mathjax@$mathjax_version/es5/tex-svg-full.js"
+        mathjax_cdn
     end
 end
 function plotly_html_head(plt::Plot)
@@ -1256,8 +1275,8 @@ function plotly_html_body(plt, style = nothing)
     return """
             <div id=\"$unique_tag\" style=\"$style\"></div>
 
+            <link id="plotlyjs-julia" href="$(plotly_url(plt))" >
             <link id="mathjax-julia" href="$(mathjax_url(plt))" >
-            <link id="plotlyjs-julia" href="$(plotly_url())" >
 
             <script type="module" id="plotsjl-plotly-script">
             if(window.MathJax == null)
