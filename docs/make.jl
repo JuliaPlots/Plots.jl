@@ -599,11 +599,12 @@ end
 
 # ----------------------------------------------------------------------
 
-function to_html(df::DataFrames.AbstractDataFrame; table_style = Dict("font-size" => "12px"), kw...)
+function to_html(df::DataFrames.AbstractDataFrame; table = ["font-size" => "12px"], kw...)
     io = PipeBuffer()  # NOTE: `DataFrames` exports `PrettyTables`
+    style = DataFrames.PrettyTables.HtmlTableStyle(; table)
     show(
         IOContext(io, :limit => false, :compact => false), MIME"text/html"(), df;
-        show_row_number = false, summary = false, eltypes = false, table_style,
+        show_row_number = false, summary = false, eltypes = false, style,
         kw...
     )
     return read(io, String)
