@@ -58,6 +58,16 @@ end
     end
 end
 
+@testset "Plotting Plots" begin
+    pl = @test_nowarn plot(rand(3,3))
+    @test plot(pl, plot_title = "Test")[:plot_title] == "Test"
+    @test plot(pl, title = "Test")[1][:title] == "Test"
+    @test plot(pl, xtickfontsize = 1)[1][:xaxis][:tickfontsize] == 1
+    @test plot(pl, label = "Test")[1][1][:label] == "Test"
+    @test plot(pl, label = "Test")[1][2][:label] == "Test"
+    @test plot(pl, label = "Test")[1][3][:label] == "Test"
+end
+
 @testset "Permute recipes" begin
     pl1 = bar(["a", "b", "c"], [1, 2, 3])
     pl2 = bar(["a", "b", "c"], [1, 2, 3], permute = (:x, :y))
