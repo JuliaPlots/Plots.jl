@@ -159,7 +159,6 @@ function plot!(
     for (k, v) in plotattributes
         Commons.is_series_attrs(k) && (series_attrs[k] = pop!(plotattributes, k))
     end
-
     # create the layout
     plt.layout, plt.subplots, plt.spmap = build_layout(layout, num_sp, copy(plts))
 
@@ -214,7 +213,7 @@ function plot!(args...; kw...)
 end
 
 # this adds to a specific plot... most plot commands will flow through here
-plot(plt::Plot, args...; kw...) = plot!(deepcopy(plt), args...; kw...)
+plot(plt::Plot, args...; kw...) = plot!(deepcopy(plt), PlaceHolder(), args...; kw...)
 
 function plot!(plt::Plot, args...; kw...)
     @nospecialize

@@ -1,4 +1,7 @@
 using PlotsBase, Dates, Test
+using PlotsBase.Surfaces: Surface
+import GR
+gr()
 struct Foo{T}
     x::Vector{T}
     y::Vector{T}
@@ -16,7 +19,7 @@ x = collect(0.0:10.0)
 foo = Foo(x, sin.(x))
 
 @testset "Magic attributes" begin
-    @test plot(foo)[1][1][:markershape] ≡ :+
+    @test plot(foo)[1][1][:markershape] ≡ (backend_name() === :gr ? :+ : :circle )
     @test plot(foo, markershape = :diamond)[1][1][:markershape] ≡ :diamond
     @test plot(foo, marker = :diamond)[1][1][:markershape] ≡ :diamond
     @test (
