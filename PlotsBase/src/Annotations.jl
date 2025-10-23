@@ -94,7 +94,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         msize = Float64[]
         shapes = Vector{Shape}(undef, length(anns.strs))
         for i in eachindex(anns.strs)
-            str = _cycle(anns.strs, i)
+            str = getindex(anns.strs, i)
 
             # get the width and height of the string (in mm)
             sw, sh = text_size(str, anns.font.pointsize)
@@ -110,7 +110,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # and then re-scale a copy of baseshape to match the w/h ratio
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
-            baseshape = _cycle(anns.baseshape, i)
+            baseshape = getindex(anns.baseshape, i)
             shapes[i] =
                 scale(baseshape, msw * xscale / maxscale, msh * yscale / maxscale, (0, 0))
         end
@@ -129,13 +129,13 @@ end
 function Base.iterate(ea::EachAnn, i = 1)
     (ea.anns ≡ nothing || isempty(ea.anns.strs) || i > length(ea.y)) && return
 
-    tmp = _cycle(ea.anns.strs, i)
+    tmp = getindex(ea.anns.strs, i)
     str, fnt = if isa(tmp, PlotText)
         tmp.str, tmp.font
     else
         tmp, ea.anns.font
     end
-    return (_cycle(ea.x, i), _cycle(ea.y, i), str, fnt), i + 1
+    return (getindex(ea.x, i), getindex(ea.y, i), str, fnt), i + 1
 end
 
 # -----------------------------------------------------------------------

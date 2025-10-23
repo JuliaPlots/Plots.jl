@@ -133,7 +133,7 @@ for comp in (:line, :fill, :marker)
             c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
             return if z ≡ nothing
-                isa(c, PlotUtils.ColorGradient) ? c : PlotUtils.plot_color(_cycle(c, i))
+                isa(c, PlotUtils.ColorGradient) ? c : PlotUtils.plot_color(getindex(c, i))
             else
                 grad = Commons.get_gradient(c)
                 if s ≡ :identity
@@ -156,21 +156,21 @@ for comp in (:line, :fill, :marker)
         $get_compcolor(series, clims::NTuple{2, <:Number}, args...) =
             $get_compcolor(series, clims[1], clims[2], args...)
 
-        $get_compalpha(series, i::Integer = 1) = _cycle(series[$Symbol($compalpha)], i)
+        $get_compalpha(series, i::Integer = 1) = getindex(series[$Symbol($compalpha)], i)
     end
 end
 
-get_linewidth(series, i::Integer = 1) = _cycle(series[:linewidth], i)
-get_linestyle(series, i::Integer = 1) = _cycle(series[:linestyle], i)
-get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
+get_linewidth(series, i::Integer = 1) = getindex(series[:linewidth], i)
+get_linestyle(series, i::Integer = 1) = getindex(series[:linestyle], i)
+get_fillstyle(series, i::Integer = 1) = getindex(series[:fillstyle], i)
 
 get_markerstrokecolor(series, i::Integer = 1) =
 let msc = series[:markerstrokecolor]
-    msc isa PlotUtils.ColorGradient ? msc : _cycle(msc, i)
+    msc isa PlotUtils.ColorGradient ? msc : getindex(msc, i)
 end
 
-get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
-get_markerstrokewidth(series, i::Integer = 1) = _cycle(series[:markerstrokewidth], i)
+get_markerstrokealpha(series, i::Integer = 1) = getindex(series[:markerstrokealpha], i)
+get_markerstrokewidth(series, i::Integer = 1) = getindex(series[:markerstrokewidth], i)
 
 function get_colorgradient(series::Series)
     return if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)

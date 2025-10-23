@@ -88,9 +88,9 @@ Commons.get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, 
 # and assigns a color automatically
 get_series_color(c, sp::Subplot, n::Int, seriestype) =
     if c ≡ :auto
-    Commons.like_surface(seriestype) ? PlotsBase.cgrad() : _cycle(sp[:color_palette], n)
+    Commons.like_surface(seriestype) ? PlotsBase.cgrad() : getindex(sp[:color_palette], n)
 elseif isa(c, Int)
-    _cycle(sp[:color_palette], c)
+    getindex(sp[:color_palette], c)
 else
     c
 end |> PlotsBase.plot_color

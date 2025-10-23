@@ -38,7 +38,7 @@ grouped_xy(y::AbstractArray) = 1:size(y, 1), y
         bar_width := bws * clamp(1 - spacing, 0, 1)
         xmat = zeros(nr, nc)
         for r in 1:nr
-            bw = _cycle(bws, r)
+            bw = getindex(bws, r)
             farleft = xnums[r] - 0.5 * (bw * nc)
             for c in 1:nc
                 xmat[r, c] = farleft + 0.5bw + (c - 1) * bw

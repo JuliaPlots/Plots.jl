@@ -34,7 +34,7 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
     ww = whisker_width ≡ :match ? bw : whisker_width ≡ :half ? bw / 2 : whisker_width
     for (i, glabel) in enumerate(sort(glabels; by = sort_labels_by))
         # filter y
-        values = y[filter(i -> _cycle(x, i) == glabel, 1:length(y))]
+        values = y[filter(i -> getindex(x, i) == glabel, 1:length(y))]
 
         # compute quantiles
         q1, q2, q3, q4, q5 = quantile(values, range(0, stop = 1, length = 5))
@@ -50,8 +50,8 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
 
         # make the shape
         center = PlotsBase.discrete_value!(plotattributes, :x, glabel)[1] + xshift
-        hw = 0.5_cycle(bw, i) # Box width
-        HW = 0.5_cycle(ww, i) # Whisker width
+        hw = 0.5getindex(bw, i) # Box width
+        HW = 0.5getindex(ww, i) # Whisker width
         l, m, r = center - hw, center, center + hw
         lw, rw = center - HW, center + HW
 
@@ -246,7 +246,7 @@ recipetype(::Val{:groupedboxplot}, args...) = GroupedBoxplot(args)
         bar_width := bws * clamp(1 - spacing, 0, 1)
         for i in 1:n
             groupinds = idxs[i]
-            Δx = _cycle(bws, i) * (i - (n + 1) / 2)
+            Δx = getindex(bws, i) * (i - (n + 1) / 2)
             x[groupinds] .+= Δx
         end
     end

@@ -23,10 +23,10 @@
 
     for (i, grouplabel) in enumerate(grouplabels)
         # filter y
-        groupy = y[filter(i -> _cycle(x, i) == grouplabel, 1:length(y))]
+        groupy = y[filter(i -> getindex(x, i) == grouplabel, 1:length(y))]
 
         center = PlotsBase.discrete_value!(plotattributes, :x, grouplabel)[1]
-        halfwidth = 0.5_cycle(barwidth, i)
+        halfwidth = 0.5getindex(barwidth, i)
 
         offsets = getoffsets(halfwidth, groupy)
 
@@ -103,7 +103,7 @@ recipetype(::Val{:groupeddotplot}, args...) = GroupedDotplot(args)
         bar_width := bws * clamp(1 - spacing, 0, 1)
         for i in 1:n
             groupinds = idxs[i]
-            Δx = _cycle(bws, i) * (i - (n + 1) / 2)
+            Δx = getindex(bws, i) * (i - (n + 1) / 2)
             x[groupinds] .+= Δx
         end
     end

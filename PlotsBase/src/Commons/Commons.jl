@@ -209,17 +209,6 @@ let letter_keyword = Symbol(letter, keyword)
 end
 
 # ------------------------------------------------------------------------------------
-_cycle(v::AVec, idx::Int) = v[mod(idx, axes(v, 1))]
-_cycle(v::AMat, idx::Int) = size(v, 1) == 1 ? v[end, mod(idx, axes(v, 2))] : v[:, mod(idx, axes(v, 2))]
-_cycle(v, idx::Int) = v
-
-_cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v, i), indices)
-_cycle(v::AMat, indices::AVec{Int}) = map(i -> _cycle(v, i), indices)
-_cycle(v, indices::AVec{Int}) = fill(v, length(indices))
-
-_cycle(cl::PlotUtils.AbstractColorList, idx::Int) = cl[mod1(idx, end)]
-_cycle(cl::PlotUtils.AbstractColorList, idx::AVec{Int}) = cl[mod1.(idx, end)]
-
 _as_gradient(grad) = grad
 _as_gradient(v::AbstractVector{<:Colorant}) = cgrad(v)
 _as_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
@@ -280,7 +269,7 @@ end
 # helpers to figure out if there are NaN values in a list of array types
 anynan(i::Int, args::Tuple) = any(
     a -> try
-        isnan(_cycle(a, i))
+        isnan(getindex(a, i))
     catch MethodError
         false
     end, args

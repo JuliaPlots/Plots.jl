@@ -245,7 +245,7 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         sps = get(kw, :subplot, :auto)
         sp = get_subplot(
             plt,
-            _cycle(sps ≡ :auto ? plt.subplots : plt.subplots[sps], series_idx(kw_list, kw)),
+            getindex(sps ≡ :auto ? plt.subplots : plt.subplots[sps], series_idx(kw_list, kw)),
         )
         kw[:subplot] = sp
 

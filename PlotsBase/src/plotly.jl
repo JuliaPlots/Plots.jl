@@ -896,7 +896,7 @@ function plotly_series(plt::Plot, series::Series)
             :symbol =>
                 get_plotly_marker(series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
-            :size => 2_cycle(series[:markersize], inds),
+            :size => 2getindex(series[:markersize], inds),
             :color => rgba_string.(
                 plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds)),
             ),
@@ -907,7 +907,7 @@ function plotly_series(plt::Plot, series::Series)
                         get_markerstrokealpha.(series, inds),
                     ),
                 ),
-                :width => _cycle(series[:markerstrokewidth], inds),
+                :width => getindex(series[:markerstrokewidth], inds),
             ),
         )
     end
@@ -976,7 +976,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         end
         plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
         plotly_polar!(plotattributes_out, series)
-        plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], i))
+        plotly_adjust_hover_label!(plotattributes_out, getindex(series[:hover], i))
         plotattributes_outs[k] = merge(plotattributes_out, series[:extra_kwargs])
     end
     if series[:fill_z] ≢ nothing
@@ -1077,15 +1077,15 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
 
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
-                    _cycle(series[:markershape], i),
-                    string(_cycle(series[:markershape], i)),
+                    getindex(series[:markershape], i),
+                    string(getindex(series[:markershape], i)),
                 ),
                 # :opacity => needs_scatter_fix ? [1, 0] : 1,
-                :size => 2_cycle(series[:markersize], i),
+                :size => 2getindex(series[:markersize], i),
                 :color => needs_scatter_fix ? [mcolor, mcolor_next] : mcolor,
                 :line => KW(
                     :color => needs_scatter_fix ? [lcolor, lcolor_next] : lcolor,
-                    :width => _cycle(series[:markerstrokewidth], i),
+                    :width => getindex(series[:markerstrokewidth], i),
                 ),
             )
         end
@@ -1111,7 +1111,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         end
 
         plotly_polar!(plotattributes_out, series)
-        plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], rng))
+        plotly_adjust_hover_label!(plotattributes_out, getindex(series[:hover], rng))
 
         if hasfillrange
             # if hasfillrange is true, return two dictionaries (one for original
