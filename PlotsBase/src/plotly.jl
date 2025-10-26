@@ -1111,7 +1111,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         end
 
         plotly_polar!(plotattributes_out, series)
-        plotly_adjust_hover_label!(plotattributes_out, getindex(series[:hover], rng))
+        plotly_adjust_hover_label!(plotattributes_out, _getattr(series, :hover, rng))
 
         if hasfillrange
             # if hasfillrange is true, return two dictionaries (one for original

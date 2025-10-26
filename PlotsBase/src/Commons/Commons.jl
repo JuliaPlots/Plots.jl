@@ -13,7 +13,7 @@ export get_subplot,
     get_clims
 export fg_color, plot_color, single_color, alpha, isdark, color_or_nothing!
 export get_attr_symbol,
-    _cycle,
+    _getattr,
     _as_gradient,
     makevec,
     maketuple,
@@ -129,6 +129,17 @@ using ..RecipesBase: AbstractLayout
 include("layouts.jl")
 
 # ---------------------------------------------------------------
+function _getattr(plotattr::AKW, key::Symbol, i = 1)
+    attr = plotattr[key]
+    return if attr isa AVec
+        getindex(attr, i)
+    elseif attr isa AMat
+        getindex(attr, :, i)
+    else
+        attr
+    end
+end
+
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 

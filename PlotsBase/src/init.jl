@@ -180,7 +180,7 @@ macro precompile_backend(backend_package)
             PrecompileTools.@compile_workload begin
                 withenv("GKSwstype" => "nul", "MPLBACKEND" => "agg") do
                     eval.(imports)
-                    eval.(examples)
+                    # eval.(examples)
                     PlotsBase.CURRENT_PLOT.nullableplot = nothing
                 end
             end
