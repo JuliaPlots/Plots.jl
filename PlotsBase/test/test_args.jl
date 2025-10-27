@@ -19,7 +19,7 @@ x = collect(0.0:10.0)
 foo = Foo(x, sin.(x))
 
 @testset "Magic attributes" begin
-    @test plot(foo)[1][1][:markershape] ≡ (backend_name() === :gr ? :+ : :circle )
+    @test plot(foo)[1][1][:markershape] ≡ (backend_name() === :gr ? :+ : :circle)
     @test plot(foo, markershape = :diamond)[1][1][:markershape] ≡ :diamond
     @test plot(foo, marker = :diamond)[1][1][:markershape] ≡ :diamond
     @test (
@@ -62,7 +62,7 @@ end
 end
 
 @testset "Plotting Plots" begin
-    pl = @test_nowarn plot(rand(3,3))
+    pl = @test_nowarn plot(rand(3, 3))
     @test plot(pl, plot_title = "Test")[:plot_title] == "Test"
     @test plot(pl, title = "Test")[1][:title] == "Test"
     @test plot(pl, xtickfontsize = 1)[1][:xaxis][:tickfontsize] == 1
