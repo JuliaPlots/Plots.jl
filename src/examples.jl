@@ -593,7 +593,7 @@ const _examples = PlotExample[
         "Ribbons",
         """
         Ribbons can be added to lines via the `ribbon` keyword;
-        you can pass a tuple of arrays (upper and lower bounds),
+        you can pass a tuple of arrays (lower and upper bounds, in this order),
         a single Array (for symmetric ribbons), a Function, or a number.
         """,
         quote
