@@ -896,7 +896,7 @@ function plotly_series(plt::Plot, series::Series)
             :symbol =>
                 get_plotly_marker(series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
-            :size => 2getindex(series[:markersize], inds),
+            :size => 2 * _getattr(series, :markersize, inds),
             :color => rgba_string.(
                 plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds)),
             ),
@@ -907,7 +907,7 @@ function plotly_series(plt::Plot, series::Series)
                         get_markerstrokealpha.(series, inds),
                     ),
                 ),
-                :width => getindex(series[:markerstrokewidth], inds),
+                :width => _getattr(series, :markerstrokewidth, inds),
             ),
         )
     end
