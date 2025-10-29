@@ -72,8 +72,8 @@ struct InputWrapper{T}
 end
 protect(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(::InputWrapper) = false
-Commons.getindex(wrapper::InputWrapper, ::Int) = wrapper.obj
-Commons.getindex(wrapper::InputWrapper, ::AVec{Int}) = wrapper.obj
+Commons._getvalue(wrapper::InputWrapper, ::Int) = wrapper.obj
+Commons._getvalue(wrapper::InputWrapper, ::AVec{Int}) = wrapper.obj
 
 # -----------------------------------------------------------
 
