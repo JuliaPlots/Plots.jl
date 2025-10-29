@@ -94,7 +94,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         msize = Float64[]
         shapes = Vector{Shape}(undef, length(anns.strs))
         for i in eachindex(anns.strs)
-            str = getindex(anns.strs, i)
+            str = _getvalue(anns.strs, i)
 
             # get the width and height of the string (in mm)
             sw, sh = text_size(str, anns.font.pointsize)
@@ -110,7 +110,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # and then re-scale a copy of baseshape to match the w/h ratio
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
-            baseshape = getindex(anns.baseshape, i)
+            baseshape = _getvalue(anns.baseshape, i)
             shapes[i] =
                 scale(baseshape, msw * xscale / maxscale, msh * yscale / maxscale, (0, 0))
         end
@@ -129,13 +129,13 @@ end
 function Base.iterate(ea::EachAnn, i = 1)
     (ea.anns ≡ nothing || isempty(ea.anns.strs) || i > length(ea.y)) && return
 
-    tmp = getindex(ea.anns.strs, i)
+    tmp = _getvalue(ea.anns.strs, i)
     str, fnt = if isa(tmp, PlotText)
         tmp.str, tmp.font
     else
         tmp, ea.anns.font
     end
-    return (getindex(ea.x, i), getindex(ea.y, i), str, fnt), i + 1
+    return (_getvalue(ea.x, i), _getvalue(ea.y, i), str, fnt), i + 1
 end
 
 # -----------------------------------------------------------------------
@@ -195,7 +195,7 @@ _process_annotation_3d(
 
 function _process_annotation(sp::Subplot, ann, annotation_processor::Function)
     ann = makevec.(ann)
-    return [annotation_processor(sp, getindex.(ann, i)...) for i in 1:maximum(length.(ann))]
+    return [annotation_processor(sp, _getvalue.(ann, i)...) for i in 1:maximum(length.(ann))]
 end
 
 # Expand arrays of coordinates, positions and labels into individual annotations
