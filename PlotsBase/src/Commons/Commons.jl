@@ -13,6 +13,7 @@ export get_subplot,
     get_clims
 export fg_color, plot_color, single_color, alpha, isdark, color_or_nothing!
 export get_attr_symbol,
+    _getvalue,
     _getattr,
     _as_gradient,
     makevec,
@@ -129,6 +130,16 @@ using ..RecipesBase: AbstractLayout
 include("layouts.jl")
 
 # ---------------------------------------------------------------
+function _getvalue(val, args...)
+    return val
+end
+function _getvalue(val::Union{AVec, ColorGradient, RecipesBase.CyclingAttribute}, i, args...)
+    return val[i]
+end
+function _getvalue(val::AMat, args...)
+    return val[args...]
+end
+
 function _getattr(plotattr::AKW, key::Symbol, i = 1)
     attr = plotattr[key]
     return if attr isa AVec

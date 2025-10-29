@@ -331,11 +331,11 @@ function gr_getcolorind(c)
     return convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
 end
 
-gr_set_linecolor(c) = GR.setlinecolorind(gr_getcolorind(getindex(c, 1)))
-gr_set_fillcolor(c) = GR.setfillcolorind(gr_getcolorind(getindex(c, 1)))
-gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(getindex(c, 1)))
-gr_set_bordercolor(c) = GR.setbordercolorind(gr_getcolorind(getindex(c, 1)))
-gr_set_textcolor(c) = GR.settextcolorind(gr_getcolorind(getindex(c, 1)))
+gr_set_linecolor(c) = GR.setlinecolorind(gr_getcolorind(_getvalue(c, 1)))
+gr_set_fillcolor(c) = GR.setfillcolorind(gr_getcolorind(_getvalue(c, 1)))
+gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_getvalue(c, 1)))
+gr_set_bordercolor(c) = GR.setbordercolorind(gr_getcolorind(_getvalue(c, 1)))
+gr_set_textcolor(c) = GR.settextcolorind(gr_getcolorind(_getvalue(c, 1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
 gr_set_transparency(::Nothing) = GR.settransparency(1)
 gr_set_transparency(c, α) = gr_set_transparency(α)
@@ -2030,8 +2030,12 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
             (fc = get_fillcolor(series, clims, i)) |> gr_set_fillcolor
             gr_set_fillstyle(get_fillstyle(series, i))
             fx = getindex(x, vcat(rng, reverse(rng)))
-            fy = vcat(getindex(fr_from, rng), getindex(fr_to, reverse(rng)))
+            fy = vcat(_getvalue(fr_from, rng), _getvalue(fr_to, reverse(rng)))
             gr_set_transparency(fc, get_fillalpha(series, i))
+            @show fx, fy
+            @show length(fx), length(fy)
+            @show fr_from, fr_to
+            @show rng
             GR.fillarea(fx, fy)
         end
         (lc = get_linecolor(series, clims, i)) |> gr_set_fillcolor
@@ -2068,18 +2072,18 @@ function gr_draw_markers(
         rng = intersect(eachindex(IndexLinear(), x), segment.range)
         isempty(rng) && continue
         i = segment.attr_index
-        ms = get_thickness_scaling(series) * getindex(msize, i)
-        msw = get_thickness_scaling(series) * getindex(strokewidth, i)
-        shape = getindex(shapes, i)
+        ms = get_thickness_scaling(series) * _getvalue(msize, i)
+        msw = get_thickness_scaling(series) * _getvalue(strokewidth, i)
+        shape = _getvalue(shapes, i)
         if !(shape isa Shape)
             shape = gr_get_markershape.(shape)
         end
         for j in rng
             gr_draw_marker(
                 series,
-                getindex(x, j),
-                getindex(y, j),
-                getindex(z, j),
+                _getvalue(x, j),
+                _getvalue(y, j),
+                _getvalue(z, j),
                 clims,
                 i,
                 ms,

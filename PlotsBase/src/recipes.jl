@@ -294,23 +294,25 @@ end
 # create vertical line segments from fill
 @recipe function f(::Type{Val{:sticks}}, x, y, z)  # COV_EXCL_LINE
     n = length(x)
-    if (fr = plotattributes[:fillrange]) ≡ nothing
-        sp = plotattributes[:subplot]
-        fr = if sp[:yaxis][:scale] ≡ :identity
-            0.0
-        else
-            NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
-        end
-    end
+
     newx, newy, newz = zeros(3n), zeros(3n), z ≢ nothing ? zeros(3n) : nothing
     for (i, (xi, yi, zi)) in enumerate(zip(x, y, z ≢ nothing ? z : 1:n))
+        fri = _getattr(plotattributes, :fillrange, i)
+        if fri ≡ nothing
+            sp = plotattributes[:subplot]
+            fri = if sp[:yaxis][:scale] ≡ :identity
+                0.0
+            else
+                NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
+            end
+        end
         rng = (3i - 2):(3i)
         newx[rng] = [xi, xi, NaN]
         if z ≢ nothing
             newy[rng] = [yi, yi, NaN]
-            newz[rng] = [getindex(fr, i), zi, NaN]
+            newz[rng] = [fri, zi, NaN]
         else
-            newy[rng] = [getindex(fr, i), yi, NaN]
+            newy[rng] = [fri, yi, NaN]
         end
     end
     x := newx
@@ -466,10 +468,10 @@ end
     valid_i = isfinite.(procx) .& isfinite.(procy)
     for i in 1:ny
         valid_i[i] || continue
-        yi = procy[i]
-        center = procx[i]
-        hwi = getindex(hw, i)
-        fi = getindex(fillto, i)
+        yi = _getvalue(procy, i)
+        center = _getvalue(procx, i)
+        hwi = _getvalue(hw, i)
+        fi = _getvalue(fillto, i)
         push!(xseg, center - hwi, center - hwi, center + hwi, center + hwi, center - hwi)
         push!(yseg, yi, fi, fi, yi, yi)
     end
@@ -935,7 +937,7 @@ end
         θ_new = θ + 2π * y[i] / s
         coords = [(0.0, 0.0); partialcircle(θ, θ_new, 50)]
         @series begin
-            seriescolor := getindex(colors, i)
+            seriescolor := _getvalue(colors, i)
             seriestype := :shape
             label --> string(x[i])
             x := first.(coords)

@@ -976,7 +976,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         end
         plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
         plotly_polar!(plotattributes_out, series)
-        plotly_adjust_hover_label!(plotattributes_out, getindex(series[:hover], i))
+        plotly_adjust_hover_label!(plotattributes_out, _getattr(series, :hover, i))
         plotattributes_outs[k] = merge(plotattributes_out, series[:extra_kwargs])
     end
     if series[:fill_z] ≢ nothing
@@ -1077,15 +1077,15 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
 
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(
-                    getindex(series[:markershape], i),
-                    string(getindex(series[:markershape], i)),
+                    _getattr(series, :markershape, i),
+                    string(_getattr(series, :markershape, i)),
                 ),
                 # :opacity => needs_scatter_fix ? [1, 0] : 1,
-                :size => 2getindex(series[:markersize], i),
+                :size => 2 * _getattr(series, :markersize, i),
                 :color => needs_scatter_fix ? [mcolor, mcolor_next] : mcolor,
                 :line => KW(
                     :color => needs_scatter_fix ? [lcolor, lcolor_next] : lcolor,
-                    :width => getindex(series[:markerstrokewidth], i),
+                    :width => _getattr(series, :markerstrokewidth, i),
                 ),
             )
         end

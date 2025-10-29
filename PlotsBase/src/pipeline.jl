@@ -243,9 +243,10 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
+        subplots = sps ≡ :auto ? plt.subplots : _getvalue(plt.subplots, sps)
         sp = get_subplot(
             plt,
-            getindex(RecipesBase.cycle(sps ≡ :auto ? plt.subplots : plt.subplots[sps]), series_idx(kw_list, kw)),
+            getindex(RecipesBase.cycle(subplots), series_idx(kw_list, kw)),
         )
         kw[:subplot] = sp
 

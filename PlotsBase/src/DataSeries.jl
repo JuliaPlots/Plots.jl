@@ -137,10 +137,10 @@ for comp in (:line, :fill, :marker)
             else
                 grad = Commons.get_gradient(c)
                 if s ≡ :identity
-                    get(grad, z[i], (cmin, cmax))
+                    get(grad, z, (cmin, cmax))
                 else
                     base = _log_scale_bases[s]
-                    get(grad, log(base, z[i]), (log(base, cmin), log(base, cmax)))
+                    get(grad, log(base, z), (log(base, cmin), log(base, cmax)))
                 end
             end
         end
@@ -165,7 +165,7 @@ get_linestyle(series, i::Integer = 1) = _getattr(series, :linestyle, i)
 get_fillstyle(series, i::Integer = 1) = _getattr(series, :fillstyle, i)
 
 function get_markerstrokecolor(series, i::Integer = 1)
-    _getattr(series, :markerstrokecolor, i)
+    return _getattr(series, :markerstrokecolor, i)
 end
 
 get_markerstrokealpha(series, i::Integer = 1) = _getattr(series, :markerstrokealpha, i)

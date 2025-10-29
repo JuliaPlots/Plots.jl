@@ -74,10 +74,14 @@ function Base.getindex(c::CyclingAttribute, args...)
             return arg
         end
     end
-    Base.getindex(c.value, args...)
+    return Base.getindex(c.value, args...)
 end
 
-Base.getindex(c::CyclingAttribute, i::Int) = Base.getindex(c.value, mod1(i, length(c.value))) 
+Base.getindex(c::CyclingAttribute, i::Int) = Base.getindex(c.value, mod1(i, length(c.value)))
+Base.getindex(c::CyclingAttribute, i::StepRange) = map(i) do j
+    Base.getindex(c.value, mod1(j, length(c.value)))
+end
+
 # --------------------------------------------------------------------------
 
 @inline to_symbol(s::Symbol) = s

@@ -319,7 +319,7 @@ end
 function make_fillrange_side(y::AVec, rib)
     frs = zeros(axes(y))
     for (i, yi) in pairs(y)
-        frs[i] = yi + getindex(rib, i)
+        frs[i] = yi + _getvalue(rib, i)
     end
     return frs
 end
