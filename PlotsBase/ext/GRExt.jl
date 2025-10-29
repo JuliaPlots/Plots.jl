@@ -518,7 +518,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     # draw radial ticks
     yaxis[:showaxis] && for i in eachindex(rtick_values)
         r = (rtick_values[i] - rmin) / (rmax - rmin)
-        (r ≤ 1 && r ≥ 0) && gr_text(GR.wctondc(0.05, r)..., getindex(rtick_labels, i))
+        (r ≤ 1 && r ≥ 0) && gr_text(GR.wctondc(0.05, r)..., _getvalue(rtick_labels, i))
     end
     GR.restorestate()
     return nothing
@@ -1290,7 +1290,7 @@ function gr_add_legend(sp, leg, viewport_area)
                     1,
                     min(max_markersize, mfac * msz),
                     min(max_markersize, mfac * msw),
-                    getindex(msh, 1),
+                    _getvalue(msh, 1),
                 )
             end
 
@@ -2029,13 +2029,9 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
         if is2d && fillrange ≢ nothing
             (fc = get_fillcolor(series, clims, i)) |> gr_set_fillcolor
             gr_set_fillstyle(get_fillstyle(series, i))
-            fx = getindex(x, vcat(rng, reverse(rng)))
+            fx = _getvalue(x, vcat(rng, reverse(rng)))
             fy = vcat(_getvalue(fr_from, rng), _getvalue(fr_to, reverse(rng)))
             gr_set_transparency(fc, get_fillalpha(series, i))
-            @show fx, fy
-            @show length(fx), length(fy)
-            @show fr_from, fr_to
-            @show rng
             GR.fillarea(fx, fy)
         end
         (lc = get_linecolor(series, clims, i)) |> gr_set_fillcolor
