@@ -235,6 +235,7 @@ const _examples = PlotExample[
         to the plots.
         """,
         quote
+            # TODO: broken in plotly
             plot(
                 PlotsBase.fakedata(100, 10),
                 layout = 4,

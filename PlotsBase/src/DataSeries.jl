@@ -42,11 +42,25 @@ end
 end
 
 Base.iterate(series::Series) = Base.iterate(series.plotattributes)
+Base.iterate(series::Series, state) = Base.iterate(series.plotattributes, state)
+Base.length(series::Series) = Base.length(series.plotattributes)
 Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]
 Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 Base.push!(series::Series, args...) = extend_series!(series, args...)
 Base.append!(series::Series, args...) = extend_series!(series, args...)
+function Commons._getattr(series::Series, key::Symbol, i = 1)
+    attr = series[key]
+    return if attr isa PlotUtils.AbstractColorList
+        getindex(attr, series[:series_index])
+    elseif attr isa AVec
+        attr[i]
+    elseif attr isa AMat
+        getindex(attr, :, i)
+    else
+        attr
+    end
+end
 
 should_add_to_legend(series::Series) =
     series.plotattributes[:primary] &&
