@@ -77,15 +77,15 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     # sort vector arguments
     for arg in POTENTIAL_VECTOR_ARGUMENTS
         if typeof(plotattributes[arg]) <: AVec
-            plotattributes[arg] = getindex(plotattributes[arg], indices)
+            plotattributes[arg] = _getattr(plotattributes, arg, indices)
         end
     end
 
     # a tuple as fillrange has to be handled differently
     if typeof(plotattributes[:fillrange]) <: Tuple
         lower, upper = plotattributes[:fillrange]
-        typeof(lower) <: AVec && (lower = getindex(lower, indices))
-        typeof(upper) <: AVec && (upper = getindex(upper, indices))
+        typeof(lower) <: AVec && (lower = _getvalue(lower, indices))
+        typeof(upper) <: AVec && (upper = _getvalue(upper, indices))
         plotattributes[:fillrange] = (lower, upper)
     end
 
@@ -383,13 +383,13 @@ end
     for rng in DataSeries.iter_segments(args...)
         length(rng) < 2 && continue
         ts = range(0, stop = 1, length = npoints)
-        nanappend!(newx, map(t -> bezier_value(getindex(x, rng), t), ts))
-        nanappend!(newy, map(t -> bezier_value(getindex(y, rng), t), ts))
+        nanappend!(newx, map(t -> bezier_value(_getvalue(x, rng), t), ts))
+        nanappend!(newy, map(t -> bezier_value(_getvalue(y, rng), t), ts))
         if z ≢ nothing
-            nanappend!(newz, map(t -> bezier_value(getindex(z, rng), t), ts))
+            nanappend!(newz, map(t -> bezier_value(_getvalue(z, rng), t), ts))
         end
         if fr ≢ nothing
-            nanappend!(newfr, map(t -> bezier_value(getindex(fr, rng), t), ts))
+            nanappend!(newfr, map(t -> bezier_value(_getvalue(fr, rng), t), ts))
         end
     end
 
@@ -444,7 +444,7 @@ end
             1
         end
     else
-        map(i -> 0.5getindex(bw, i), eachindex(procx))
+        map(i -> 0.5 * _getvalue(bw, i), eachindex(procx))
     end
 
     # make fillto a vector... default fills to 0
@@ -1129,10 +1129,10 @@ function error_coords(errorbar, errordata, otherdata...)
     od = map(odi -> Vector{float_extended_type(odi)}(undef, 0), otherdata)
     for (i, edi) in enumerate(errordata)
         for (j, odj) in enumerate(otherdata)
-            odi = getindex(odj, i)
+            odi = _getvalue(odj, i)
             nanappend!(od[j], [odi, odi])
         end
-        e1, e2 = error_tuple(getindex(errorbar, i))
+        e1, e2 = error_tuple(_getvalue(errorbar, i))
         nanappend!(ed, [edi - e1, edi + e2])
     end
     return (ed, od...)
@@ -1217,11 +1217,11 @@ function quiver_using_arrows(plotattributes::AKW)
     is_3d && (z = zeros(0))
     for i in 1:max(length(xorig), length(yorig), is_3d ? 0 : length(zorig))
         # get the starting position
-        xi = getindex(xorig, i)
-        yi = getindex(yorig, i)
-        zi = is_3d ? getindex(zorig, i) : 0
+        xi = _getvalue(xorig, i)
+        yi = _getvalue(yorig, i)
+        zi = is_3d ? _getvalue(zorig, i) : 0
         # get the velocity
-        vi = getindex(velocity, i)
+        vi = _getvalue(velocity, i)
         if is_3d
             vx, vy, vz = if istuple(vi)
                 vi[1], vi[2], vi[3]
@@ -1266,12 +1266,12 @@ function quiver_using_hack(plotattributes::AKW)
     for i in 1:max(length(xorig), length(yorig))
 
         # get the starting position
-        xi = getindex(xorig, i)
-        yi = getindex(yorig, i)
+        xi = _getvalue(xorig, i)
+        yi = _getvalue(yorig, i)
         p = P2((xi, yi))
 
         # get the velocity
-        vi = getindex(velocity, i)
+        vi = _getvalue(velocity, i)
         vx, vy = if istuple(vi)
             first(vi), last(vi)
         elseif isscalar(vi)

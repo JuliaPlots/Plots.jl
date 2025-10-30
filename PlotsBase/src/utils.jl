@@ -909,7 +909,7 @@ function _guess_best_legend_position(xl, yl, plt, weight = 100)
         for (i, lim) in enumerate(Iterators.product(xl, yl))
             lim = lim ./ scale
             for ix in eachindex(x)
-                xi, yi = x[ix], getindex(y, ix + yoffset)
+                xi, yi = x[ix], _getvalue(y, ix + yoffset)
                 # ignore y points outside quadrant visible quadrant
                 xi < xl[1] + quadrants[i][1][1] * (xl[2] - xl[1]) && continue
                 xi > xl[1] + quadrants[i][1][2] * (xl[2] - xl[1]) && continue
