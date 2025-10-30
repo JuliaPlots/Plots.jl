@@ -1,6 +1,6 @@
 module GRExt
 
-import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, _cycle
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline
 
 import NaNMath
 import GR

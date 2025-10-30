@@ -133,14 +133,14 @@ include("layouts.jl")
 function _getvalue(val, args...)
     return val
 end
-function _getvalue(val::Union{AVec, ColorGradient, RecipesBase.CyclingAttribute}, i, args...)
+function _getvalue(val::Union{AVec, PlotUtils.AbstractColorList, RecipesBase.CyclingAttribute}, i, args...)
     return val[i]
 end
 function _getvalue(val::AMat, args...)
     return val[args...]
 end
 
-function _getattr(plotattr::AKW, key::Symbol, i = 1)
+function _getattr(plotattr::Union{AKW, AbstractLayout}, key::Symbol, i = 1)
     attr = plotattr[key]
     return if attr isa AVec
         getindex(attr, i)

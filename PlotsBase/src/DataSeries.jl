@@ -41,6 +41,7 @@ end
     ()
 end
 
+Base.iterate(series::Series) = Base.iterate(series.plotattributes)
 Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]
 Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
