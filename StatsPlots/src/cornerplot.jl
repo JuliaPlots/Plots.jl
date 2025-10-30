@@ -101,11 +101,11 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
                 ticks := :auto
                 if i == N
                     xformatter := :auto
-                    xguide := getindex(labs, j)
+                    xguide := PlotsBase.Commons._getvalue(labs, j)
                 end
                 if j == 1
                     yformatter := :auto
-                    yguide := getindex(labs, i)
+                    yguide := PlotsBase.Commons._getvalue(labs, i)
                 end
                 seriestype := :scatter
                 subplot := indices[i + 1 - k, j]

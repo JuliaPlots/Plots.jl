@@ -78,7 +78,7 @@ function StatsPlots.dataviewer(t; throttle = 0.1, nbins = 30, nbins_range = 1:10
 
             # grouping kwarg
             has_by = by_toggle[] && !isempty(by[])
-            by_tup = Tuple(getindex(&dict, b) for b in by[])
+            by_tup = Tuple(PlotsBase.Commons._getvalue(&dict, b) for b in by[])
             has_by && (kwargs[:group] = NamedTuple{Tuple(by[])}(by_tup))
 
             # label kwarg

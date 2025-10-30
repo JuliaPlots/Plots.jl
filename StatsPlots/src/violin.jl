@@ -42,7 +42,7 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
         x = if step(x) == first(x) == 1
             plotattributes[:series_plotindex]
         else
-            [getindex(x, plotattributes[:series_plotindex])]
+            [PlotsBase.Commons._getvalue(x, plotattributes[:series_plotindex])]
         end
     end
     xsegs, ysegs = PlotsBase.Segments(), PlotsBase.Segments()
@@ -53,7 +53,7 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
     bw == nothing && (bw = 0.8)
     msc = plotattributes[:markerstrokecolor]
     for (i, glabel) in enumerate(glabels)
-        fy = y[filter(i -> getindex(x, i) == glabel, 1:length(y))]
+        fy = y[filter(i -> PlotsBase.Commons._getvalue(x, i) == glabel, 1:length(y))]
         widths, centers = violin_coords(
             fy,
             trim = trim,
@@ -63,7 +63,7 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
         isempty(widths) && continue
 
         # normalize
-        hw = 0.5getindex(bw, i)
+        hw = 0.5PlotsBase.Commons._getvalue(bw, i)
         widths = hw * widths / PlotsBase.ignorenan_maximum(widths)
 
         # make the violin
@@ -202,7 +202,7 @@ recipetype(::Val{:groupedviolin}, args...) = GroupedViolin(args)
         bar_width := bws * clamp(1 - spacing, 0, 1)
         for i in 1:n
             groupinds = idxs[i]
-            Δx = getindex(bws, i) * (i - (n + 1) / 2)
+            Δx = PlotsBase.Commons._getvalue(bws, i) * (i - (n + 1) / 2)
             x[groupinds] .+= Δx
         end
     end
