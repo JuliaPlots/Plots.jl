@@ -25,11 +25,11 @@ import Base.show
 import ..PlotsBase
 import ..PlotUtils
 
-using ..PlotsBase: DefaultsDict, RecipesPipeline, KW
+using ..PlotsBase: DefaultsDict, RecipesPipeline, AKW, KW
 using ..RecipesBase: @recipe
 using ..Commons
 
-mutable struct Series
+mutable struct Series <: AKW
     plotattributes::DefaultsDict
 end
 
@@ -41,11 +41,26 @@ end
     ()
 end
 
+Base.iterate(series::Series) = Base.iterate(series.plotattributes)
+Base.iterate(series::Series, state) = Base.iterate(series.plotattributes, state)
+Base.length(series::Series) = Base.length(series.plotattributes)
 Base.getindex(series::Series, k::Symbol) = series.plotattributes[k]
 Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 Base.push!(series::Series, args...) = extend_series!(series, args...)
 Base.append!(series::Series, args...) = extend_series!(series, args...)
+function Commons._getattr(series::Series, key::Symbol, i = 1)
+    attr = series[key]
+    return if attr isa PlotUtils.AbstractColorList
+        getindex(attr, series[:series_index])
+    elseif attr isa AVec
+        attr[i]
+    elseif attr isa AMat
+        getindex(attr, :, i)
+    else
+        attr
+    end
+end
 
 should_add_to_legend(series::Series) =
     series.plotattributes[:primary] &&
@@ -130,17 +145,17 @@ for comp in (:line, :fill, :marker)
                 i::Integer = 1,
                 s::Symbol = :identity,
             )
-            c = series[$Symbol($compcolor)]  # series[:linecolor], series[:fillcolor], series[:markercolor]
-            z = series[$Symbol($comp_z)]  # series[:line_z], series[:fill_z], series[:marker_z]
+            c = _getattr(series, $Symbol($compcolor), i)  # series[:linecolor], series[:fillcolor], series[:markercolor]
+            z = _getattr(series, $Symbol($comp_z), i)  # series[:line_z], series[:fill_z], series[:marker_z]
             return if z ≡ nothing
-                isa(c, PlotUtils.ColorGradient) ? c : PlotUtils.plot_color(_cycle(c, i))
+                isa(c, PlotUtils.ColorGradient) ? c : PlotUtils.plot_color(c)
             else
                 grad = Commons.get_gradient(c)
                 if s ≡ :identity
-                    get(grad, z[i], (cmin, cmax))
+                    get(grad, z, (cmin, cmax))
                 else
                     base = _log_scale_bases[s]
-                    get(grad, log(base, z[i]), (log(base, cmin), log(base, cmax)))
+                    get(grad, log(base, z), (log(base, cmin), log(base, cmax)))
                 end
             end
         end
@@ -156,21 +171,20 @@ for comp in (:line, :fill, :marker)
         $get_compcolor(series, clims::NTuple{2, <:Number}, args...) =
             $get_compcolor(series, clims[1], clims[2], args...)
 
-        $get_compalpha(series, i::Integer = 1) = _cycle(series[$Symbol($compalpha)], i)
+        $get_compalpha(series, i::Integer = 1) = _getattr(series, $Symbol($compalpha), i)
     end
 end
 
-get_linewidth(series, i::Integer = 1) = _cycle(series[:linewidth], i)
-get_linestyle(series, i::Integer = 1) = _cycle(series[:linestyle], i)
-get_fillstyle(series, i::Integer = 1) = _cycle(series[:fillstyle], i)
+get_linewidth(series, i::Integer = 1) = _getattr(series, :linewidth, i)
+get_linestyle(series, i::Integer = 1) = _getattr(series, :linestyle, i)
+get_fillstyle(series, i::Integer = 1) = _getattr(series, :fillstyle, i)
 
-get_markerstrokecolor(series, i::Integer = 1) =
-let msc = series[:markerstrokecolor]
-    msc isa PlotUtils.ColorGradient ? msc : _cycle(msc, i)
+function get_markerstrokecolor(series, i::Integer = 1)
+    return _getattr(series, :markerstrokecolor, i)
 end
 
-get_markerstrokealpha(series, i::Integer = 1) = _cycle(series[:markerstrokealpha], i)
-get_markerstrokewidth(series, i::Integer = 1) = _cycle(series[:markerstrokewidth], i)
+get_markerstrokealpha(series, i::Integer = 1) = _getattr(series, :markerstrokealpha, i)
+get_markerstrokewidth(series, i::Integer = 1) = _getattr(series, :markerstrokewidth, i)
 
 function get_colorgradient(series::Series)
     return if (st = series[:seriestype]) in (:surface, :heatmap) || isfilledcontour(series)

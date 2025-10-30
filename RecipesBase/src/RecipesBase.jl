@@ -10,7 +10,8 @@ export @recipe,
     RecipeData,
     AbstractBackend,
     AbstractPlot,
-    AbstractLayout
+    AbstractLayout,
+    cycle
 
 # Common abstract types for the Plots ecosystem
 abstract type AbstractBackend end
@@ -52,12 +53,33 @@ apply_recipe(plotattributes::AbstractDict{Symbol, Any}) = ()
 is_explicit(d::AbstractDict{Symbol, Any}, k) = haskey(d, k)
 function is_default end
 
+include("api.jl")
 # --------------------------------------------------------------------------
 
 # this holds the data and attributes of one series, and is returned from apply_recipe
 struct RecipeData
     plotattributes::AbstractDict{Symbol, Any}
     args::Tuple
+end
+
+struct CyclingAttribute{T}
+    value::T
+end
+
+function Base.getindex(c::CyclingAttribute, args...)
+    args = map(enumerate(args)) do (i, arg)
+        if arg isa Number
+            return mod1(arg, size(c.value, i))
+        else
+            return arg
+        end
+    end
+    return Base.getindex(c.value, args...)
+end
+
+Base.getindex(c::CyclingAttribute, i::Int) = Base.getindex(c.value, mod1(i, length(c.value)))
+Base.getindex(c::CyclingAttribute, i::StepRange) = map(i) do j
+    Base.getindex(c.value, mod1(j, length(c.value)))
 end
 
 # --------------------------------------------------------------------------

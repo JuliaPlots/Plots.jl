@@ -235,6 +235,7 @@ const _examples = PlotExample[
         to the plots.
         """,
         quote
+            # TODO: broken in plotly
             plot(
                 PlotsBase.fakedata(100, 10),
                 layout = 4,
@@ -464,15 +465,14 @@ const _examples = PlotExample[
     ),
     PlotExample( # 29
         "Layouts, margins, label rotation, title location",
-        :(using PlotsBase.Commons),  # for Measures, e.g. mm and px
         quote
             plot(
                 rand(100, 6),
                 layout = @layout([a b; c]),
                 title = ["A" "B" "C"],
                 titlelocation = :left,
-                left_margin = [20mm 0mm],
-                bottom_margin = 10px,
+                left_margin = [(20, :mm) (0, :mm)],
+                bottom_margin = (10, :px),
                 xrotation = 60,
             )
         end,
@@ -542,7 +542,7 @@ const _examples = PlotExample[
             p2 = plot(x, grid = (:y, :olivedrab, :dot, 1, 0.9), title = "Modified y grid")
             p3 = plot(deepcopy(p2), title = "Add x grid")
             xgrid!(p3, :on, :cadetblue, 2, :dashdot, 0.4)
-            plot(p1, p2, p3, layout = (1, 3), label = "", fillrange = 0, fillalpha = 0.3)
+            plot(p1, p2, p3, layout = (1, 3), label = "", fillrange = RecipesBase.cycle(0), fillalpha = 0.3)
         end,
     ),
     PlotExample( # 34
