@@ -86,7 +86,15 @@ Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::Int) = Base.getin
 Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::StepRange) = map(i) do j
     Base.getindex(c.value, mod1(j, length(c.value)))
 end
+Base.getindex(c::CyclingAttribute, i::StepRange) = map(i) do j
+    Base.getindex(c.value, mod1(j, length(c.value)))
+end
 
+for op in (:+, :-, :/, :*)
+    @eval Base.$op(a::CyclingAttribute, b::CyclingAttribute) = CyclingAttribute($op(a.value, b.value))
+end
+Base.:-(a::CyclingAttribute) = CyclingAttribute(-a.value)
+Base.:(==)(a::CyclingAttribute, b::CyclingAttribute) = a.value == b.value
 # --------------------------------------------------------------------------
 
 @inline to_symbol(s::Symbol) = s

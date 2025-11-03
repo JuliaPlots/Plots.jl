@@ -2030,7 +2030,7 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
             (fc = get_fillcolor(series, clims, i)) |> gr_set_fillcolor
             gr_set_fillstyle(get_fillstyle(series, i))
             fx = _getvalue(x, vcat(rng, reverse(rng)))
-            fy = vcat(_getvalue(fr_from, rng), _getvalue(fr_to, reverse(rng)))
+            fy = vcat(_getvalue(fr_from, rng), _getvalue(RecipesBase.cycle(fr_to), reverse(rng)))
             gr_set_transparency(fc, get_fillalpha(series, i))
             GR.fillarea(fx, fy)
         end

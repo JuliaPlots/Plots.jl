@@ -149,20 +149,22 @@ end
     @test all(RecipesPipeline.get_axis_limits(p2, :x) .== x)
 end
 
-@testset "Slicing" begin
+@testset "Slicing & cycling" begin
     @test plot(1:5, fillrange = 0)[1][1][:fillrange] == 0
     data4 = rand(4, 4)
     mat = reshape(1:8, 2, 4)
-    sp = plot(data4, ribbon = (mat, mat))[1]
+    sp = plot(data4, ribbon = RecipesBase.cycle.((mat, mat)))[1]
     for i in axes(data4, 1)
-        for attribute in (:fillrange, :ribbon)
-            nt = NamedTuple{tuple(attribute)}
-            get_attrs(pl) = pl[1][i][attribute]
-            @test plot(data4; nt(0)...) |> get_attrs == 0
-            @test plot(data4; nt(Ref([1, 2]))...) |> get_attrs == [1.0, 2.0]
-            @test plot(data4; nt(Ref([1 2]))...) |> get_attrs == (iseven(i) ? 2 : 1)
-            @test plot(data4; nt(Ref(mat))...) |> get_attrs == [2(i - 1) + 1, 2i]
-        end
+        get_fillrange(pl) = pl[1][i][:fillrange]
+        @test plot(data4; fillrange = 0) |> get_fillrange == 0
+        @test plot(data4; fillrange = [1, 2]) |> get_fillrange == [1.0, 2.0]
+        @test plot(data4; fillrange = [1 2]) |> get_fillrange == (iseven(i) ? 2 : 1)
+        @test plot(data4; fillrange = mat) |> get_fillrange == [2(i - 1) + 1, 2i]
+        get_ribbon(pl) = pl[1][i][:ribbon]
+        @test plot(data4; ribbon = 0) |> get_ribbon == 0
+        @test plot(data4; ribbon = RecipesBase.cycle([1, 2])) |> get_ribbon == RecipesBase.cycle([1, 2])
+        @test plot(data4; ribbon = [1 2]) |> get_ribbon == (iseven(i) ? 2 : 1)
+        @test plot(data4; ribbon = RecipesBase.cycle(mat)) |> get_ribbon == [2(i - 1) + 1, 2i]
         @test sp[i][:ribbon] == ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
     end
 end
