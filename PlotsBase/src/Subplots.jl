@@ -7,14 +7,15 @@ export Subplot,
     titlefont,
     get_series_color,
     needs_any_3d_axes
-import PlotsBase
 
-import ..RecipesPipeline: RecipesPipeline, DefaultsDict
-import ..RecipesBase: AbstractLayout, AbstractBackend
-import ..Commons: BoundingBox
-import ..DataSeries: Series
-import ..PlotUtils
+using PlotsBase: PlotsBase
 
+using ..RecipesPipeline: RecipesPipeline, DefaultsDict
+using ..Commons: BoundingBox
+using ..DataSeries: Series
+using ..PlotUtils
+
+using ..RecipesBase: RecipesBase, AbstractLayout, AbstractBackend
 using ..Commons
 using ..Fonts
 using ..Ticks
@@ -91,6 +92,8 @@ get_series_color(c, sp::Subplot, n::Int, seriestype) =
     Commons.like_surface(seriestype) ? PlotsBase.cgrad() : _getattr(sp, :color_palette, n)
 elseif isa(c, Int)
     _getattr(sp, :color_palette, c)
+elseif c isa RecipesBase.CyclingAttribute
+    c[n]
 else
     c
 end |> PlotsBase.plot_color
