@@ -19,4 +19,12 @@ using RecipesBase, Test
     @test c2[:, 1] == [:red, :blue]
     @test c2[3, :] == [:red, :green]
     @test c2[:, 3] == [:red, :blue]
+    c3 = cycle(:blue)
+    @test c3[1] == :blue
+    @test c3[2] == :blue
+    c4 = cycle((1,2))
+    @test c4[1] == 1
+    @test c4[2] == 2
+    @test c4[3] == 1
+    @test c4[4] == 2
 end

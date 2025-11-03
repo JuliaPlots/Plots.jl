@@ -66,7 +66,12 @@ struct CyclingAttribute{T}
     value::T
 end
 
+const CyclingContainerTypes = Union{AbstractArray,Tuple}
+
 function Base.getindex(c::CyclingAttribute, args...)
+    return c.value
+end
+function Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, args...)
     args = map(enumerate(args)) do (i, arg)
         if arg isa Number
             return mod1(arg, size(c.value, i))
@@ -77,8 +82,8 @@ function Base.getindex(c::CyclingAttribute, args...)
     return Base.getindex(c.value, args...)
 end
 
-Base.getindex(c::CyclingAttribute, i::Int) = Base.getindex(c.value, mod1(i, length(c.value)))
-Base.getindex(c::CyclingAttribute, i::StepRange) = map(i) do j
+Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::Int) = Base.getindex(c.value, mod1(i, length(c.value)))
+Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::StepRange) = map(i) do j
     Base.getindex(c.value, mod1(j, length(c.value)))
 end
 
