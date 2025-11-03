@@ -8,6 +8,7 @@ using ImageMagick
 using StableRNGs
 using Graphs
 using Plots
+using Plots.PlotsBase
 using Test
 using Gtk  # for popup
 
@@ -20,21 +21,19 @@ include("parse_readme.jl")
 default(show = false, reuse = true)
 
 cd(joinpath(@__DIR__, "..", "assets")) do
-    figure_files = readdir()
-    @testset "$figure_file" for figure_file in figure_files
-        figure = splitext(figure_file)[1]
-        if figure == "julia_type_tree"
-            if VERSION >= v"1.11" # julia 1.11 introduced Core.BFloat16
-                @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol()
+    @testset "TestImages" begin
+        figure_files = readdir()
+        @testset "$figure_file" for figure_file in figure_files
+            figure = splitext(figure_file)[1]
+            if figure == "julia_type_tree"
+                if VERSION >= v"1.11" # julia 1.11 introduced Core.BFloat16
+                    @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol()
+                end
+            else
+                @plottest getproperty(@__MODULE__, Symbol(figure))() figure_file popup = !isci() tol =
+                    itol()
             end
-        else
-            @plottest getproperty(@__MODULE__, Symbol(figure))() figure_file popup = !isci() tol =
-                itol()
         end
-    end
-
-    @testset "README" begin
-        @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
     end
 end
 
@@ -97,7 +96,7 @@ end
     @test GraphRecipes.isnothing(1.0) == Plots.isnothing(1.0)
 
     for (s, e) in [(rand(rng), rand(rng)) for i in 1:100]
-        @test GraphRecipes.partialcircle(s, e) == Plots.partialcircle(s, e)
+        @test GraphRecipes.partialcircle(s, e) == PlotsBase.partialcircle(s, e)
     end
 
     @testset "nearest_intersection" begin
