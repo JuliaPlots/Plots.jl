@@ -49,10 +49,10 @@ Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 Base.push!(series::Series, args...) = extend_series!(series, args...)
 Base.append!(series::Series, args...) = extend_series!(series, args...)
-function Commons._getattr(series::Series, key::Symbol, i = 1)
+function Commons._getattr(series::Series, key::Symbol, i::Union{Nothing,Int} = nothing)
     attr = series[key]
     return if attr isa PlotUtils.AbstractColorList
-        getindex(attr, series[:series_index])
+        getindex(attr, i === nothing ? series[:series_index] : i)
     elseif attr isa AVec
         attr[i]
     elseif attr isa AMat
