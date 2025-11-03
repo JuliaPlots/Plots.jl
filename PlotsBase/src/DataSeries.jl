@@ -49,10 +49,11 @@ Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 Base.push!(series::Series, args...) = extend_series!(series, args...)
 Base.append!(series::Series, args...) = extend_series!(series, args...)
-function Commons._getattr(series::Series, key::Symbol, i::Union{Nothing,Int} = nothing)
+function Commons._getattr(series::Series, key::Symbol, i::Union{Nothing, Number} = nothing)
     attr = series[key]
-    return if attr isa PlotUtils.AbstractColorList
-        getindex(attr, i === nothing ? series[:series_index] : i)
+    return if attr isa PlotUtils.AbstractColorList && i !== nothing
+        clims = get_clims(series)
+        get(attr, i, clims)
     elseif attr isa AVec
         attr[i]
     elseif attr isa AMat
@@ -145,12 +146,12 @@ for comp in (:line, :fill, :marker)
                 i::Integer = 1,
                 s::Symbol = :identity,
             )
-            c = _getattr(series, $Symbol($compcolor), i)  # series[:linecolor], series[:fillcolor], series[:markercolor]
             z = _getattr(series, $Symbol($comp_z), i)  # series[:line_z], series[:fill_z], series[:marker_z]
             return if z ≡ nothing
+                c = _getattr(series, $Symbol($compcolor), i)  # series[:linecolor], series[:fillcolor], series[:markercolor]
                 isa(c, PlotUtils.ColorGradient) ? c : PlotUtils.plot_color(c)
             else
-                grad = Commons.get_gradient(c)
+                grad = _getattr(series, $Symbol($compcolor))  # series[:linecolor], series[:fillcolor], series[:markercolor]
                 if s ≡ :identity
                     get(grad, z, (cmin, cmax))
                 else
