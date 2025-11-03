@@ -1,18 +1,15 @@
 using VisualRegressionTests
 using AbstractTrees
 using LinearAlgebra
-using GraphRecipes
+using Logging
 using GraphRecipes
 using SparseArrays
 using ImageMagick
 using StableRNGs
-using Logging
 using Graphs
 using Plots
 using Test
 using Gtk  # for popup
-
-const PlotsBase = Plots.PlotsBase
 
 isci() = get(ENV, "CI", "false") == "true"
 itol(tol = nothing) = something(tol, isci() ? 1.0e-3 : 1.0e-5)
@@ -22,45 +19,31 @@ include("parse_readme.jl")
 
 default(show = false, reuse = true)
 
-@testset "functions" begin
-    rng = StableRNG(1)
-    for method in keys(GraphRecipes._graph_funcs)
-        method ≡ :spectral && continue  # FIXME
-        dat = if (inp = GraphRecipes._graph_inputs[method]) ≡ :adjmat
-            [
-                0 1 1
-                1 0 1
-                1 1 0
-            ]
-        elseif inp ≡ :sourcedestiny
-            Symmetric(sparse(rand(rng, 0:1, 8, 8)))
-        elseif inp ≡ :adjlist
-            dat = [
-                0 1 1 0 0 0 0 0 0 0
-                0 0 0 0 1 1 0 0 0 0
-                0 0 0 1 0 0 1 0 1 0
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 1 0 1
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0
-            ]
+cd(joinpath(@__DIR__, "..", "assets")) do
+    figure_files = readdir()
+    @testset "$figure_file" for figure_file in figure_files
+        figure = splitext(figure_file)[1]
+        if figure == "julia_type_tree"
+            if VERSION >= v"1.11" # julia 1.11 introduced Core.BFloat16
+                @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol()
+            end
         else
-            @error "wrong input $inp"
+            @plottest getproperty(@__MODULE__, Symbol(figure))() figure_file popup = !isci() tol =
+                itol()
         end
-        pl = graphplot(dat; method)
-        @test pl isa PlotsBase.Plot
+    end
+
+    @testset "README" begin
+        @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
     end
 end
 
 @testset "issues" begin
     @testset "143" begin
         g = SimpleGraph(7)
+
         add_edge!(g, 2, 3)
         add_edge!(g, 3, 4)
-
         @test g.ne == 2
         al = GraphRecipes.get_adjacency_list(g)
         @test isempty(al[1])
@@ -96,25 +79,25 @@ end
     @testset "180" begin
         rng = StableRNG(1)
         mat = Symmetric(sparse(rand(rng, 0:1, 8, 8)))
-        graphplot(mat; method = :arcdiagram, rng)
+        graphplot(mat, method = :arcdiagram, rng = rng)
     end
 end
 
 @testset "utils.jl" begin
     rng = StableRNG(1)
-    @test GraphRecipes.directed_curve(0.0, 1.0, 0.0, 1.0; rng) ==
-        GraphRecipes.directed_curve(0, 1, 0, 1; rng)
+    @test GraphRecipes.directed_curve(0.0, 1.0, 0.0, 1.0, rng = rng) ==
+        GraphRecipes.directed_curve(0, 1, 0, 1, rng = rng)
 
-    @test GraphRecipes.isnothing(nothing) == PlotsBase.isnothing(nothing)
-    @test GraphRecipes.isnothing(missing) == PlotsBase.isnothing(missing)
-    @test GraphRecipes.isnothing(NaN) == PlotsBase.isnothing(NaN)
-    @test GraphRecipes.isnothing(0) == PlotsBase.isnothing(0)
-    @test GraphRecipes.isnothing(1) == PlotsBase.isnothing(1)
-    @test GraphRecipes.isnothing(0.0) == PlotsBase.isnothing(0.0)
-    @test GraphRecipes.isnothing(1.0) == PlotsBase.isnothing(1.0)
+    @test GraphRecipes.isnothing(nothing) == Plots.isnothing(nothing)
+    @test GraphRecipes.isnothing(missing) == Plots.isnothing(missing)
+    @test GraphRecipes.isnothing(NaN) == Plots.isnothing(NaN)
+    @test GraphRecipes.isnothing(0) == Plots.isnothing(0)
+    @test GraphRecipes.isnothing(1) == Plots.isnothing(1)
+    @test GraphRecipes.isnothing(0.0) == Plots.isnothing(0.0)
+    @test GraphRecipes.isnothing(1.0) == Plots.isnothing(1.0)
 
     for (s, e) in [(rand(rng), rand(rng)) for i in 1:100]
-        @test GraphRecipes.partialcircle(s, e) == PlotsBase.partialcircle(s, e)
+        @test GraphRecipes.partialcircle(s, e) == Plots.partialcircle(s, e)
     end
 
     @testset "nearest_intersection" begin
@@ -144,52 +127,37 @@ end
     # checking that they don't error. Also, test all of the different aliases.
     @testset "Aliases" begin
         A = [1 0 1 0; 0 0 1 1; 1 1 1 1; 0 0 1 1]
-        graphplot(A; markercolor = :red, markershape = :rect, markersize = 0.5, rng)
-        graphplot(A; nodeweights = 1:4, rng)
-        graphplot(A; curvaturescalar = 0, rng)
-        graphplot(A; el = Dict((1, 2) => ""), elb = true, rng)
-        graphplot(A; ew = (s, d, w) -> 3, rng)
-        graphplot(A; ses = 0.5, rng)
+        graphplot(A, markercolor = :red, markershape = :rect, markersize = 0.5, rng = rng)
+        graphplot(A, nodeweights = 1:4, rng = rng)
+        graphplot(A, curvaturescalar = 0, rng = rng)
+        graphplot(A, el = Dict((1, 2) => ""), elb = true, rng = rng)
+        graphplot(A, ew = (s, d, w) -> 3, rng = rng)
+        graphplot(A, ses = 0.5, rng = rng)
     end
 end
 
-cd(joinpath(@__DIR__, "..", "assets")) do
-    @testset "FIGURES" begin
-        @plottest random_labelled_graph() "random_labelled_graph.png" popup = !isci() tol =
-            itol()
+# -----------------------------------------
+# marginalhist
 
-        @plottest random_3d_graph() "random_3d_graph.png" popup = !isci() tol = itol()
+# using Distributions
+# n = 1000
+# x = rand(RNG, Gamma(2), n)
+# y = -0.5x + randn(RNG, n)
+# marginalhist(x, y)
 
-        @plottest light_graphs() "light_graphs.png" popup = !isci() tol = itol()
+# -----------------------------------------
+# portfolio composition map
 
-        @plottest directed() "directed.png" popup = !isci() tol = itol()
+# # fake data
+# tickers = ["IBM", "Google", "Apple", "Intel"]
+# N = 10
+# D = length(tickers)
+# weights = rand(RNG, N, D)
+# weights ./= sum(weights, 2)
+# returns = sort!((1:N) + D*randn(RNG, N))
 
-        @plottest marker_properties() "marker_properties.png" popup = !isci() tol = itol()
+# # plot it
+# portfoliocomposition(weights, returns, labels = tickers')
 
-        @plottest edgelabel() "edgelabel.png" popup = !isci() tol = itol()
-
-        @plottest selfedges() "selfedges.png" popup = !isci() tol = itol()
-
-        @plottest multigraphs() "multigraphs.png" popup = !isci() tol = itol()
-
-        @plottest arc_chord_diagrams() "arc_chord_diagrams.png" popup = !isci() tol = itol()
-
-        @plottest ast_example() "ast_example.png" popup = !isci() tol = itol()
-
-        @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol(2.0e-2)
-        @plottest julia_dict_tree() "julia_dict_tree.png" popup = !isci() tol = itol()
-
-        @plottest funky_edge_and_marker_args() "funky_edge_and_marker_args.png" popup =
-            !isci() tol = itol()
-
-        @plottest custom_nodeshapes_single() "custom_nodeshapes_single.png" popup = !isci() tol =
-            itol()
-
-        @plottest custom_nodeshapes_various() "custom_nodeshapes_various.png" popup =
-            !isci() tol = itol()
-    end
-
-    @testset "README" begin
-        @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
-    end
-end
+# -----------------------------------------
+#
