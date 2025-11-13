@@ -656,8 +656,10 @@ gr_set_gradient(series::Series) =
     (color = get_colorgradient(series)) !== nothing && gr_set_gradient(color)
 
 # this is our new display func... set up the viewport_canvas, compute bounding boxes, and display each subplot
-function gr_display(plt::Plot, dpi_factor = 1)
-    GR.clearws()
+function gr_display(plt::Plot, dpi_factor = 1, display = true)
+    if (display)
+        GR.clearws()
+    end
 
     # collect some monitor/display sizes in meters and pixels
     dsp_width_meters, dsp_height_meters, dsp_width_px, dsp_height_px = GR.inqdspsize()
@@ -683,13 +685,15 @@ function gr_display(plt::Plot, dpi_factor = 1)
         vp_canvas.xmax *= ratio
     end
 
-    # fill in the viewport_canvas background
-    gr_fill_viewport(vp_canvas, plt[:background_color_outside])
+    if (display)
+        # fill in the viewport_canvas background
+        gr_fill_viewport(vp_canvas, plt[:background_color_outside])
 
-    # subplots
-    foreach(sp -> gr_display(sp, w * px, h * px, vp_canvas), plt.subplots)
+        # subplots
+        foreach(sp -> gr_display(sp, w * px, h * px, vp_canvas), plt.subplots)
 
-    GR.updatews()
+        GR.updatews()
+    end
     return nothing
 end
 
@@ -2089,15 +2093,28 @@ for (mime, fmt) in (
         filepath = tempname() * "." * $fmt
         # workaround  windows bug github.com/JuliaLang/julia/issues/46989
         touch(filepath)
-        GR.emergencyclosegks()
-        withenv(
-            "GKS_FILEPATH" => filepath,
-            "GKS_ENCODING" => "utf8",
-            "GKSwstype" => $fmt,
-        ) do
-            gr_display(plt, dpi_factor)
+        if plt[:overwrite_figure]
+            GR.emergencyclosegks()
+            withenv(
+                "GKS_FILEPATH" => filepath,
+                "GKS_ENCODING" => "utf8",
+                "GKSwstype" => $fmt,
+            ) do
+                gr_display(plt, dpi_factor)
+            end
+            GR.emergencyclosegks()
+        else
+            withenv(
+                "GKS_ENCODING" => "utf8",
+            ) do
+                # ensure that the canvas' workstation viewport ist set
+                gr_display(plt, dpi_factor, false)
+
+                GR.beginprint(filepath)
+                gr_display(plt, dpi_factor)
+                GR.endprint()
+            end
         end
-        GR.emergencyclosegks()
         write(io, read(filepath, String))
         return rm(filepath)
     end
