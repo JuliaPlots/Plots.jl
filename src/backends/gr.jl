@@ -2093,17 +2093,7 @@ for (mime, fmt) in (
         filepath = tempname() * "." * $fmt
         # workaround  windows bug github.com/JuliaLang/julia/issues/46989
         touch(filepath)
-        if plt[:overwrite_figure]
-            GR.emergencyclosegks()
-            withenv(
-                "GKS_FILEPATH" => filepath,
-                "GKS_ENCODING" => "utf8",
-                "GKSwstype" => $fmt,
-            ) do
-                gr_display(plt, dpi_factor)
-            end
-            GR.emergencyclosegks()
-        else
+        if plt[:overwrite_figure] # this is the default
             withenv(
                 "GKS_ENCODING" => "utf8",
             ) do
@@ -2114,6 +2104,16 @@ for (mime, fmt) in (
                 gr_display(plt, dpi_factor)
                 GR.endprint()
             end
+        else
+            GR.emergencyclosegks()
+            withenv(
+                "GKS_FILEPATH" => filepath,
+                "GKS_ENCODING" => "utf8",
+                "GKSwstype" => $fmt,
+            ) do
+                gr_display(plt, dpi_factor)
+            end
+            GR.emergencyclosegks()
         end
         write(io, read(filepath, String))
         return rm(filepath)
