@@ -351,4 +351,13 @@ Plots.with(:gr) do
         show(devnull, scatter(x, y))
         # show(devnull, plot(x, y))  # currently unsupported
     end
+
+    @testset "heatmap interpolation" begin
+        @test heatmap(
+            1:4,
+            1:4,
+            [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16];
+            interpolate = (10, 10),
+        )
+    end
 end
