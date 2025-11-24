@@ -57,12 +57,24 @@ function _check_compat(m::Module; warn = true)
     return nothing
 end
 
-_path(sym::Symbol) =
-if sym ∈ (:pgfplots, :pyplot)
-    @path joinpath(@__DIR__, "backends", "deprecated", "$sym.jl")
-else
-    @path joinpath(@__DIR__, "backends", "$sym.jl")
-end
+const _backend_paths = Dict{Symbol, RelocatableFolders.Path}(
+    :gaston => @path(joinpath(@__DIR__, "backends", "gaston.jl")),
+    :gr => @path(joinpath(@__DIR__, "backends", "gr.jl")),
+    :hdf5 => @path(joinpath(@__DIR__, "backends", "hdf5.jl")),
+    :inspectdr => @path(joinpath(@__DIR__, "backends", "inspectdr.jl")),
+    :pgfplotsx => @path(joinpath(@__DIR__, "backends", "pgfplotsx.jl")),
+    :plotly => @path(joinpath(@__DIR__, "backends", "plotly.jl")),
+    :plotlybase => @path(joinpath(@__DIR__, "backends", "plotlybase.jl")),
+    :plotlyjs => @path(joinpath(@__DIR__, "backends", "plotlyjs.jl")),
+    :pythonplot => @path(joinpath(@__DIR__, "backends", "pythonplot.jl")),
+    :unicodeplots => @path(joinpath(@__DIR__, "backends", "unicodeplots.jl")),
+    :web => @path(joinpath(@__DIR__, "backends", "web.jl")),
+    # Deprecated backends
+    :pgfplots => @path(joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")),
+    :pyplot => @path(joinpath(@__DIR__, "backends", "deprecated", "pyplot.jl")),
+)
+
+_path(sym::Symbol) = _backend_paths[sym]
 
 "Returns a list of supported backends"
 backends() = _backends
