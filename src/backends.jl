@@ -68,7 +68,6 @@ const _backend_paths = Dict{Symbol, RelocatableFolders.Path}(
     :plotlyjs => @path(joinpath(@__DIR__, "backends", "plotlyjs.jl")),
     :pythonplot => @path(joinpath(@__DIR__, "backends", "pythonplot.jl")),
     :unicodeplots => @path(joinpath(@__DIR__, "backends", "unicodeplots.jl")),
-    :web => @path(joinpath(@__DIR__, "backends", "web.jl")),
     # Deprecated backends
     :pgfplots => @path(joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")),
     :pyplot => @path(joinpath(@__DIR__, "backends", "deprecated", "pyplot.jl")),
