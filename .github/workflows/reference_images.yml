@@ -39,7 +39,7 @@ jobs:
           ls
           git status
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           title: "Update Plot reference images from branch ${{ github.ref_name}} by the action ${{ github.action }}"
           body: "Review changes thoroughly and only merge when no unwanted changes are present."
