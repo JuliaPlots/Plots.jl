@@ -37,7 +37,7 @@ This is the DOI for all Versions, please follow the link to get the DOI for a sp
 Plots is a plotting API and toolset.
 
 The goals of the package are:
-- **Powerful**: do more with less, omplex visualizations become easy.
+- **Powerful**: do more with less, complex visualizations become easy.
 - **Intuitive**: stop reading so much documentation, commands should "just work".
 - **Concise**: less code means fewer mistakes and more efficient development/analysis.
 - **Flexible**: produce your favorite plots from your favorite package, but quicker and simpler.
