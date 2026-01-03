@@ -32,12 +32,16 @@ libgcc = if Sys.islinux()
     lo, hi = extrema(keys(versions))
     libstdcxx_version = Base.BinaryPlatforms.detect_libstdcxx_version(Int(hi.patch))
     @info libstdcxx_version
-    _, ub = versions[libstdcxx_version]
-    specs = ">=$(VersionNumber(lo.major, lo.minor)),$ub"
-    ("libgcc-ng$specs", "libstdcxx-ng$specs")
+    if libstdcxx_version ≢ nothing
+        _, ub = versions[libstdcxx_version]
+        specs = ">=$(VersionNumber(lo.major, lo.minor)),$ub"
+        ("libgcc-ng$specs", "libstdcxx-ng$specs")
+    else
+        ()
+    end
 else
     ()
 end
 
-CondaPkg.PkgREPL.add([libgcc..., "matplotlib>=3.4"])  # "openssl>=3.4"
+CondaPkg.PkgREPL.add([libgcc..., "matplotlib>=3.10"])  # "openssl>=3.4"
 CondaPkg.status()

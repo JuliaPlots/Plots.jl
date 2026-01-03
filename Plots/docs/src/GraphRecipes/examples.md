@@ -97,6 +97,8 @@ graphplot(DiGraph(g), self_edge_size=0.2)
 
 #### Multigraphs
 ```@example
+using Graphs, Plots, GraphRecipes
+
 graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.25)
 ```
 
@@ -116,14 +118,12 @@ plot(
               names=[text(string(i), 8) for i in 1:8],
               linecolor=:black,
               fillcolor=:lightgray),
-
     graphplot(adjmat,
               method=:arcdiagram,
               markersize=0.5,
               linecolor=:black,
               markercolor=:black)
-    )
-
+)
 ```
 
 
