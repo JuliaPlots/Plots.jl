@@ -6,7 +6,8 @@ const TEST_PACKAGES = let val = get(ENV, "PLOTS_TEST_PACKAGES", "GR,UnicodePlots
 end
 const TEST_BACKENDS = NamedTuple(p => Symbol(lowercase(string(p))) for p in TEST_PACKAGES)
 
-using PlotsBase
+using Plots
+const PlotsBase = Plots.PlotsBase
 
 # initialize all backends
 for pkg in TEST_PACKAGES
@@ -17,7 +18,6 @@ for pkg in TEST_PACKAGES
 end
 gr()
 
-using Plots
 using Test
 
 for pkg in TEST_PACKAGES
