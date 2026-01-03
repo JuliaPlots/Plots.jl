@@ -153,7 +153,7 @@ end
     end
 end
 
-cd(joinpath(@__DIR__, "..", "assets")) do
+cd(joinpath(@__DIR__, "..", "..", "assets", "GraphRecipes")) do
     @testset "FIGURES" begin
         @plottest random_labelled_graph() "random_labelled_graph.png" popup = !isci() tol =
             itol()

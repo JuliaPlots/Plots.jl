@@ -36,7 +36,7 @@ banner() {
 }
 
 julia_project() {
-  xvfb-run -a julia --color=yes --project=docs "$@"
+  xvfb-run -a julia --color=yes --project=Plots/docs "$@"
 }
 
 install_ubuntu_deps() {

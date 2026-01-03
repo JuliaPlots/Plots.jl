@@ -76,9 +76,9 @@ Unitful = "1"
 
 [sources]
 Plots = {path = ".."}
-PlotsBase = {path = "../PlotsBase"}
-PlotThemes = {path = "../PlotThemes"}
-RecipesBase = {path = "../RecipesBase"}
-RecipesPipeline = {path = "../RecipesPipeline"}
-StatsPlots = {path = "../StatsPlots"}
-GraphRecipes = {path = "../GraphRecipes"}
+PlotsBase = {path = "../../PlotsBase"}
+PlotThemes = {path = "../../PlotThemes"}
+RecipesBase = {path = "../../RecipesBase"}
+RecipesPipeline = {path = "../../RecipesPipeline"}
+StatsPlots = {path = "../../StatsPlots"}
+GraphRecipes = {path = "../../GraphRecipes"}

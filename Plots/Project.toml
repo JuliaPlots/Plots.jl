@@ -11,7 +11,7 @@ PlotsBase = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [sources]
-PlotsBase = {path = "PlotsBase"}
+PlotsBase = {path = "../PlotsBase"}
 
 [compat]
 GR = "0.73"

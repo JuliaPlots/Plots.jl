@@ -83,6 +83,7 @@ jobs:
               (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
               (; path="./PlotThemes"),       # compat for LTS [sources], remove later
               (; path="./PlotsBase"),        # compat for LTS [sources], remove later
+              (; path="./Plots"),            # compat for LTS [sources], remove later
               (; path="./GraphRecipes"),
               (; path="./StatsPlots"),
             ])
