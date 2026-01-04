@@ -851,9 +851,7 @@ gr_set_gradient(series::Series) =
 
 # this is our new display func... set up the viewport_canvas, compute bounding boxes, and display each subplot
 function gr_display(plt::Plot, dpi_factor = 1, display = true)
-    if display
-        GR.clearws()
-    end
+    display && GR.clearws()
 
     # collect some monitor/display sizes in meters and pixels
     dsp_width_meters, dsp_height_meters, dsp_width_px, dsp_height_px = GR.inqdspsize()
@@ -880,12 +878,8 @@ function gr_display(plt::Plot, dpi_factor = 1, display = true)
     end
 
     if display
-        # fill in the viewport_canvas background
-        gr_fill_viewport(vp_canvas, plt[:background_color_outside])
-
-        # subplots
-        foreach(sp -> gr_display(sp, w * px, h * px, vp_canvas), plt.subplots)
-
+        gr_fill_viewport(vp_canvas, plt[:background_color_outside])  # fill in the viewport_canvas background
+        foreach(sp -> gr_display(sp, w * px, h * px, vp_canvas), plt.subplots)  # display subplots
         GR.updatews()
     end
     return nothing
@@ -993,7 +987,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
     width, height = sp_size = get_size(sp)
 
-    # Add margin given by the user
+    # add margin given by the user
     padding = (
         left = Ref(2mm + sp[:left_margin]),
         top = Ref(2mm + sp[:top_margin]),
@@ -1001,7 +995,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
         bottom = Ref(2mm + sp[:bottom_margin]),
     )
 
-    # Add margin for title
+    # add margin for title
     if (title = sp[:title]) |> !isempty
         gr_set_font(titlefont(sp), sp)
         l = last(gr_text_size(title))
@@ -1012,7 +1006,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
     xticks, yticks, zticks = get_ticks.(Ref(sp), axes)
 
     if gr_is3d(sp)
-        # Add margin for x and y ticks
+        # add margin for x and y ticks
         m = 0mm
         for (ax, tc) in ((xaxis, xticks), (yaxis, yticks))
             isempty(first(tc)) && continue
@@ -1043,7 +1037,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
             padding[zaxis[:mirror] ? :right : :left][] += 1mm + width * l * px
         end
 
-        # Add margin for x or y label
+        # add margin for x or y label
         m = 0mm
         for ax in (xaxis, yaxis)
             (guide = PlotsBase.get_guide(ax)) |> isempty && continue
@@ -1055,7 +1049,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
             # NOTE: `xaxis` arbitrary here ?
             padding[mirrored(xaxis, :top) ? :top : :bottom][] += m
         end
-        # Add margin for z label
+        # add margin for z label
         if (guide = PlotsBase.get_guide(zaxis)) |> !isempty
             gr_set_font(guidefont(zaxis), sp)
             l = last(gr_text_size(guide))
@@ -2289,9 +2283,7 @@ for (mime, fmt) in (
         filepath = tempname() * "." * $fmt
         # workaround  windows bug github.com/JuliaLang/julia/issues/46989
         touch(filepath)
-        withenv(
-            "GKS_ENCODING" => "utf8",
-        ) do
+        withenv("GKS_ENCODING" => "utf8") do
             # ensure that the canvas' workstation viewport ist set
             gr_display(plt, dpi_factor, false)
 
