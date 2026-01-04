@@ -2,7 +2,7 @@
   <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
-# Plots
+# Plots monorepo
 
 [![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](
   https://docs.juliaplots.org/stable/
