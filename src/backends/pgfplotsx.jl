@@ -538,6 +538,8 @@ function pgfx_add_series!(::Val{:mesh3d}, axis, series_opt, series, series_func,
         "patch" => nothing,
         "table/row sep" => "\\\\",
         "patch table" => join(ptable, "\n        "),
+        "fill" => opt[:seriescolor],
+        "faceted color" => opt[:seriescolor],
     )
     return pgfx_add_series!(axis, series_opt, series, series_func, opt)
 end
