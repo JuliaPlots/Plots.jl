@@ -145,7 +145,7 @@ end
 
 function _getattr(plotattr::Union{AKW, AbstractLayout}, key::Symbol, i = 1)
     attr = plotattr[key]
-    return if attr isa AVec
+    return if attr isa AVec || attr isa PlotUtils.AbstractColorList
         getindex(attr, i)
     elseif attr isa AMat
         getindex(attr, :, i)

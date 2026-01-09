@@ -51,7 +51,7 @@ Base.push!(series::Series, args...) = extend_series!(series, args...)
 Base.append!(series::Series, args...) = extend_series!(series, args...)
 function Commons._getattr(series::Series, key::Symbol, i::Union{Nothing, Number} = nothing)
     attr = series[key]
-    return if attr isa PlotUtils.ColorGradient && i !== nothing
+    ret = if attr isa PlotUtils.ColorGradient && i !== nothing
         clims = get_clims(series)
         get(attr, i, clims)
     elseif (attr isa AVec || attr isa PlotUtils.ColorPalette) && i !== nothing
@@ -61,6 +61,7 @@ function Commons._getattr(series::Series, key::Symbol, i::Union{Nothing, Number}
     else
         attr
     end
+    return ret
 end
 
 should_add_to_legend(series::Series) =
