@@ -115,7 +115,7 @@ end
     print(io, pl)
 
     @test PlotsBase.to_pixels(1PlotsBase.mm) isa AbstractFloat
-    @test PlotsBase.ispositive(1PlotsBase.mm)
+    @test PlotsBase.ispos(1PlotsBase.mm)
     @test size(PlotsBase.DEFAULT_BBOX[]) == (0PlotsBase.mm, 0PlotsBase.mm)
     show(io, PlotsBase.DEFAULT_BBOX[])
     show(io, pl.layout)
