@@ -36,7 +36,7 @@ banner() {
 }
 
 julia_project() {
-  xvfb-run -a julia --color=yes --project=Plots/docs "$@"
+  xvfb-run -a julia --color=yes --project=docs "$@"
 }
 
 install_ubuntu_deps() {
@@ -69,7 +69,7 @@ install_and_precompile_julia_deps() {
   banner
   JULIA_PKG_PRECOMPILE_AUTO=0 julia_project ci/matplotlib.jl
   echo '== precompile docs dependencies =='
-  julia_project Plots/docs/make.jl none
+  julia_project docs/make.jl none
 }
 
 build_documenter_docs() {
@@ -80,5 +80,5 @@ build_documenter_docs() {
   export PLOTDOCS_ANSICOLOR=true
   # export PLOTDOCS_PACKAGES='UnicodePlots'
   # export PLOTDOCS_EXAMPLES=1
-  julia_project Plots/docs/make.jl all
+  julia_project docs/make.jl all
 }
