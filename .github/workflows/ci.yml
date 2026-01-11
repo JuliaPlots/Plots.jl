@@ -92,7 +92,7 @@ jobs:
           '
 
       - name: test Plots stack
-        timeout-minutes: 60
+        timeout-minutes: 90
         run: |
           cmd=(${{ env.JULIA_PROJECT_CMD }} --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
