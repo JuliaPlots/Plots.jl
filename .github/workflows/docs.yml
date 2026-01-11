@@ -6,7 +6,7 @@ on:
     branches: [v2]
     tags: '*'
   release:
-    types: [published]
+    types: [published, released]
   pull_request:
 
 concurrency:
