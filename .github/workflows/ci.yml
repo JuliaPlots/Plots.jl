@@ -41,8 +41,7 @@ jobs:
           - '1'  # latest stable
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
-        include:
-          # NOTE: macos-latest resolves to macos-14 (only aarch64), use macos-13 for x86.
+        include:  # NOTE: macos-latest resolves to macos-14 (only aarch64)
           - os: macos-latest
             experimental: false
             arch: aarch64
