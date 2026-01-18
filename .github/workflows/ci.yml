@@ -24,11 +24,11 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.pull_request.labels.*.name, 'skip ci') }}
     env:
       JULIA_PROJECT_CMD: julia --project=@. --check-bounds=yes --color=yes
-      JULIA_CONDAPKG_LIBSTDCXX_NG_VERSION : 'ignore'  # handled ourselves in ci/matplotlib.jl
+      JULIA_CONDAPKG_LIBSTDCXX_NG_VERSION: ignore  # handled ourselves in ci/matplotlib.jl
       JULIA_CONDAPKG_BACKEND: MicroMamba
-      MPLBACKEND: agg
       GKS_ENCODING: utf8
-      GKSwstype: nul
+      GKS_WSTYPE: nul
+      MPLBACKEND: agg
     name: julia ${{ matrix.version }} - ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     runs-on: ${{ matrix.os }}
