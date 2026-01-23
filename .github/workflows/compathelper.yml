@@ -16,5 +16,5 @@ jobs:
           COMPATHELPER_PRIV: ${{ secrets.COMPATHELPER_PRIV }}  # optional
         run: |
           julia -e 'using CompatHelper; CompatHelper.main(
-            subdirs=["RecipesBase", "RecipesPipeline", "Plots"]
+            subdirs=["RecipesBase", "RecipesPipeline", "PlotThemes", "Plots"]
           )'
