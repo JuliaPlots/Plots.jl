@@ -17,11 +17,12 @@ jobs:
   ci:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
-      GKS_ENCODING: "utf8"
-      GKSwstype: "nul"
-      JULIA_CONDAPKG_BACKEND: "MicroMamba"
-      PLOTS_PLOTLYJS_UNSAFE_ELECTRON: "true"
-      MPLBACKEND: "agg"
+      JULIA_PROJECT_CMD: julia --project=@. --check-bounds=yes --color=yes
+      GKS_ENCODING: utf8
+      GKS_WSTYPE: nul
+      JULIA_CONDAPKG_BACKEND: MicroMamba
+      PLOTS_PLOTLYJS_UNSAFE_ELECTRON: true
+      MPLBACKEND: agg
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     runs-on: ${{ matrix.os }}
@@ -29,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - 'lts' # LTS, also minimum declared julia compat in `Project.toml` 
+          - 'lts' # LTS, also minimum declared julia compat in `Project.toml`
           - '1' # latest stable
         experimental:
           - false
@@ -42,10 +43,8 @@ jobs:
             version: '1'
           - os: ubuntu-latest
             experimental: false
-            prefix: xvfb-run  # add `xvfb-run` prefix julia-actions/julia-runtest/blob/master/README.md
           - os: ubuntu-latest
             experimental: true
-            prefix: xvfb-run
             version: 'pre'  # upcoming julia version, next `rc`
 
     steps:
@@ -67,14 +66,6 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@latest
-
-      - name: Run upstream RecipesBase & RecipesPipeline tests
-        shell: julia --project=@. --color=yes {0}
-        run: |
-          using Pkg
-          foreach(("RecipesBase", "RecipesPipeline")) do name
-            Pkg.develop(path=name); Pkg.test(name; coverage=true)
-          end
 
       - name: Install conda based matplotlib
         shell: julia --project=@. --color=yes {0}
@@ -100,10 +91,33 @@ jobs:
           CondaPkg.PkgREPL.add([libgcc..., "matplotlib"])
           CondaPkg.status()
 
-      - uses: julia-actions/julia-runtest@latest
-        timeout-minutes: 60
-        with:
-          prefix: ${{ matrix.prefix }}  # for `xvfb-run`
+      - name: develop packages
+        run: |
+          ${{ env.JULIA_PROJECT_CMD }} -e '
+            using Pkg
+            Pkg.develop([
+              (; path="./RecipesBase"),      # compat for LTS [sources], remove later
+              (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
+              (; path="./Plots"),            # compat for LTS [sources], remove later
+            ])
+            Pkg.precompile()  # // precompilation
+          '
+
+      - name: test Plots stack
+        timeout-minutes: 90
+        run: |
+          cmd=(${{ env.JULIA_PROJECT_CMD }} --depwarn=yes)
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            cmd=(xvfb-run ${cmd[@]})
+          fi
+          echo ${cmd[@]}
+          ${cmd[@]} -e '
+            using Pkg; Pkg.test([
+              "RecipesBase",
+              "RecipesPipeline",
+              "Plots",
+            ]; coverage=true)
+          '
 
       - name: Run downstream tests
         if: startsWith(matrix.os, 'ubuntu')
@@ -119,7 +133,7 @@ jobs:
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          directories: RecipesBase/src,RecipesPipeline/src,src
+          directories: RecipesBase/src,RecipesPipeline/src,Plots/src
       - uses: codecov/codecov-action@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
