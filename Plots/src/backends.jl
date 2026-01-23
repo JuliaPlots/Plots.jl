@@ -11,8 +11,9 @@ const _backend_packages = Dict{Symbol, Symbol}()
 const _initialized_backends = Set{Symbol}()
 const _backends = Symbol[]
 
-const _plots_deps = let toml = TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
-    merge(toml["deps"], toml["extras"])
+const _plots_deps = let toml_proj = TOML.parsefile(normpath(@__DIR__, "..", "Project.toml")),
+        toml_test = TOML.parsefile(normpath(@__DIR__, "..", "test", "Project.toml"))
+    merge(toml_proj["deps"], toml_test["deps"])
 end
 
 function _check_installed(backend::Union{Module, AbstractString, Symbol}; warn = true)
