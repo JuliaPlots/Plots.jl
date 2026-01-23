@@ -68,6 +68,8 @@ jobs:
       - uses: julia-actions/julia-buildpkg@latest
 
       - name: dev pkgs and install mpl deps
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: 0
         run: |
           ${{ env.JULIA_PROJECT_CMD }} -e '
             using Pkg
