@@ -36,7 +36,6 @@ graphplot(A,
            linecolor = :darkgrey,
            linealpha = 0.5
        )
-
 ```
 
 ### Graphs.jl
@@ -66,11 +65,11 @@ graphplot(g, names=1:3, curvature_scalar=0.1)
 Edge labels can be passed via the `edgelabel` keyword argument. You can pass edge labels
 as a dictionary of `(si::Int, di::Int) => label`, where `si`, `di` are the indices of the source and destiny nodes for the edge being labeled. Alternatively, you can pass a matrix or a vector of labels. `graphplot` will try to convert any label you pass it into a string unless you pass one of `missing`, `NaN`, `nothing`, `false` or `""`, in which case, `graphplot` will skip the label.
 
-```@example graphexamples
+```@example
 using GraphRecipes, Plots
 using Graphs
 
-n = 8
+const n = 8
 g = wheel_digraph(n)
 edgelabel_dict = Dict()
 edgelabel_mat = Array{String}(undef, n, n)
@@ -85,7 +84,7 @@ graphplot(g, names=1:n, edgelabel=edgelabel_dict, curves=false, nodeshape=:rect)
 ```
 
 #### Self edges
-```@example graphexamples
+```@example
 using Graphs, Plots, GraphRecipes
 
 g = [1 1 1;
@@ -96,13 +95,14 @@ graphplot(DiGraph(g), self_edge_size=0.2)
 ```
 
 #### Multigraphs
-```@example graphexamples
+```@example
+using Graphs, Plots, GraphRecipes
 graphplot([[1,1,2,2],[1,1,1],[1]], names="node_".*string.(1:3), nodeshape=:circle, self_edge_size=0.25)
 ```
 
 #### Arc and chord diagrams
 
-```@example graphexamples
+```@example
 using LinearAlgebra
 using SparseArrays
 using GraphRecipes
@@ -129,7 +129,7 @@ plot(
 
 #### Julia code -- AST
 
-```@example graphexamples
+```@example
 using GraphRecipes
 using Plots
 default(size=(1000, 1000))
@@ -150,7 +150,7 @@ plot(code, fontsize=12, shorten=0.01, axis_buffer=0.15, nodeshape=:rect)
 
 #### Julia Type Trees
 
-```@example graphexamples
+```@example
 using GraphRecipes
 using Plots
 default(size=(1000, 1000))
