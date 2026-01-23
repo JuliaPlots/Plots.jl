@@ -105,7 +105,7 @@ jobs:
           using Pkg
           foreach(("StatsPlots", "GraphRecipes")) do name
             Pkg.activate(tempdir())
-            foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline", "."))
+            foreach(path -> Pkg.develop(; path), ("RecipesBase", "RecipesPipeline", "Plots"))
             Pkg.add(name); Pkg.test(name; coverage=true)
           end
 
