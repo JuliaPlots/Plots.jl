@@ -48,7 +48,7 @@ jobs:
             version: 'pre'  # upcoming julia version, next `rc`
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Ubuntu LaTeX dependencies
         if: startsWith(matrix.os, 'ubuntu')
