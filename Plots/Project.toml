@@ -41,6 +41,7 @@ UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 
 [sources]
+PlotThemes = {path = "../PlotThemes"}
 RecipesBase = {path = "../RecipesBase"}
 RecipesPipeline = {path = "../RecipesPipeline"}
 

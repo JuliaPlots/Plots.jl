@@ -73,5 +73,6 @@ Unitful = "1"
 
 [sources]
 Plots = {path = "../Plots"}
+PlotThemes = {path = "../PlotThemes"}
 RecipesBase = {path = "../RecipesBase"}
 RecipesPipeline = {path = "../RecipesPipeline"}

@@ -76,6 +76,7 @@ jobs:
             Pkg.develop([
               (; path="./RecipesBase"),      # compat for LTS [sources], remove later
               (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
+              (; path="./PlotThemes"),       # compat for LTS [sources], remove later
               (; path="./Plots"),            # compat for LTS [sources], remove later
             ])
             include(joinpath(@__DIR__, "ci", "matplotlib.jl"))
@@ -94,6 +95,7 @@ jobs:
             using Pkg; Pkg.test([
               "RecipesBase",
               "RecipesPipeline",
+              "PlotThemes",
               "Plots",
             ]; coverage=true)
           '
@@ -112,7 +114,7 @@ jobs:
       - uses: julia-actions/julia-processcoverage@latest
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          directories: RecipesBase/src,RecipesPipeline/src,Plots/src
+          directories: RecipesBase/src,RecipesPipeline/src,PlotThemes/src,Plots/src
       - uses: codecov/codecov-action@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
