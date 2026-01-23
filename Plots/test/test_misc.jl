@@ -2,7 +2,7 @@
 
 @testset "Infrastructure" begin
     @test_nowarn JSON.Parser.parse(
-        String(read(joinpath(dirname(pathof(Plots)), "..", ".zenodo.json"))),
+        String(read(joinpath(dirname(pathof(Plots)), "..", "..", ".zenodo.json"))),
     )
 end
 

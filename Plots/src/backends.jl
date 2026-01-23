@@ -2,18 +2,18 @@ struct NoBackend <: AbstractBackend end
 
 lazyloadPkg() = Base.require(@__MODULE__, :Pkg)
 
-const _current_plots_version = VersionNumber(TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))["version"])
-const _plots_compats = TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))["compat"]
+const _toml_proj = TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
+const _toml_test = TOML.parsefile(normpath(@__DIR__, "..", "test", "Project.toml"))
+
+const _current_plots_version = VersionNumber(_toml_proj["version"])
+const _plots_compats = merge(_toml_proj["compat"], _toml_test["compat"])
+const _plots_deps = merge(_toml_proj["deps"], _toml_test["deps"])
 
 const _backendSymbol = Dict{DataType, Symbol}(NoBackend => :none)
 const _backendType = Dict{Symbol, DataType}(:none => NoBackend)
 const _backend_packages = Dict{Symbol, Symbol}()
 const _initialized_backends = Set{Symbol}()
 const _backends = Symbol[]
-
-const _plots_deps = let toml = TOML.parsefile(normpath(@__DIR__, "..", "Project.toml"))
-    merge(toml["deps"], toml["extras"])
-end
 
 function _check_installed(backend::Union{Module, AbstractString, Symbol}; warn = true)
     sym = Symbol(lowercase(string(backend)))
