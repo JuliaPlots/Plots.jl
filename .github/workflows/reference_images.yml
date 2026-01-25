@@ -30,7 +30,7 @@ jobs:
         shell: julia --color=yes --project=Plots {0}
         run: |
           using Pkg
-          Pkg.test("PlotsBase")
+          Pkg.test("Plots")
       - name: Diagnostics
         run: |
           ls
