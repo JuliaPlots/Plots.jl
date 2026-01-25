@@ -1,6 +1,4 @@
 name = "PlotsWorkspace"
-uuid = "8e1d987f-9c8e-4191-8ed6-a4aafebe3192"
-version = "1"
 
 [workspace]
-projects = ["RecipesBase", "PlotThemes", "RecipesPipeline", "PlotsBase", "Plots", "GraphRecipes", "StatsPlots"]
+projects = ["RecipesBase", "RecipesPipeline", "PlotThemes", "PlotsBase", "Plots", "GraphRecipes", "StatsPlots"]
