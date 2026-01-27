@@ -66,7 +66,7 @@
     @series begin
         seriestype := :density
         subplot := 3
-        orientation := :h
+        permute := (:x, :y)
         xlims := (0, 1.1 * maximum(ky.density))
         ylims := (ymin, ymax)
 
