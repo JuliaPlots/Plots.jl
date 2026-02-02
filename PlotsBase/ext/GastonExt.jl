@@ -122,23 +122,20 @@ const _gaston_scales = [:identity, :ln, :log2, :log10]
 
 PlotsBase.should_warn_on_unsupported(::GastonBackend) = false
 
-# Create the window/figure for this backend.
+# create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{GastonBackend})
-    state_handle = Gaston.nexthandle() # for now all the figures will be kept
-    return plt.o = Gaston.newfigure(state_handle)
+    return plt.o = Gaston.figure(nothing; autolayout = false)  # for now all the figures will be kept
 end
 
 function PlotsBase._before_layout_calcs(plt::Plot{GastonBackend})
     # initialize all the subplots first
-    plt.o.subplots = Gaston.SubPlot[]
-
-    foreach(sp -> gaston_init_subplot(plt, sp), unique(plt.inset_subplots))
+    foreach(sp -> gaston_init_subplot!(plt, sp), unique(plt.inset_subplots))
 
     if length(plt.subplots) > 0
         n, sps = gaston_get_subplots(0, plt.subplots, plt.layout)
     end
 
-    plt.o.layout = gaston_init_subplots(plt, sps)
+    plt.o.multiplot = gaston_init_subplots!(plt, sps)
 
     # then add the series (curves in gaston)
     foreach(series -> gaston_add_series(plt, series), plt.series_list)
@@ -202,7 +199,7 @@ end
 PlotsBase._display(plt::Plot{GastonBackend}) = display(plt.o)
 
 # --------------------------------------------
-# These functions are gaston specific
+# These functions are Gaston specific
 # --------------------------------------------
 
 function gaston_saveopts(plt::Plot{GastonBackend})
@@ -247,20 +244,20 @@ function gaston_get_subplots(n, plt_subplots, layout)
     return n, sps
 end
 
-function gaston_init_subplots(plt, sps)
+function gaston_init_subplots!(plt, sps)
     sz = nr, nc = size(sps)
     for c in 1:nc, r in 1:nr  # NOTE: row major
         if (sp = sps[r, c]) isa Subplot || sp ≡ nothing
-            gaston_init_subplot(plt, sp)
+            gaston_init_subplot!(plt, sp)
         else
-            gaston_init_subplots(plt, sp)
+            gaston_init_subplots!(plt, sp)
             sz = max.(sz, size(sp))
         end
     end
     return sz
 end
 
-function gaston_init_subplot(
+function gaston_init_subplot!(
         plt::Plot{GastonBackend},
         sp::Union{Nothing, Subplot{GastonBackend}},
     )
@@ -798,14 +795,11 @@ function gaston_font(f; rot = true, align = true, color = true, scale = 1)
     return font
 end
 
-gaston_palette(gradient) =
-let palette = ["$(n - 1) $(c.r) $(c.g) $(c.b)" for (n, c) in enumerate(gradient)]
+gaston_palette(gradient) = let palette = ["$(n - 1) $(c.r) $(c.g) $(c.b)" for (n, c) in enumerate(gradient)]
     '(' * join(palette, ", ") * ')'
 end
 
-gaston_palette_conf(
-    series,
-) = "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
+gaston_palette_conf(series) = "; set palette model RGB defined $(gaston_palette(series[:seriescolor]))"
 
 function gaston_marker(marker, alpha)
     # NOTE: :rtriangle, :ltriangle, :hexagon, :heptagon, :octagon seems unsupported by gnuplot
