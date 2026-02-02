@@ -160,6 +160,8 @@ function slice_arg(v::AMat, idx::Int)
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v::NTuple{2, AMat}, idx::Int) = slice_arg(v[1], idx), slice_arg(v[2], idx)
+slice_arg(v::RecipesBase.CyclingAttribute{<:AMat}, idx::Int) = RecipesBase.cycle(slice_arg(v.value, idx))
+slice_arg(v::RecipesBase.CyclingAttribute, idx) = v
 slice_arg(v, idx) = v
 
 """
@@ -191,6 +193,9 @@ function _slice_series_attrs!(
         commandIndex::Int,
     )
     for k in keys(_series_defaults)
+        # skip ribbon matrix slicing - let make_fillrange_from_ribbon handle it
+        # (CyclingAttribute ribbons are still sliced via slice_arg dispatch)
+        k ≡ :ribbon && get(plotattributes, k, nothing) isa AMat && continue
         haskey(plotattributes, k) &&
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
     end
@@ -606,9 +611,6 @@ function with(f::Function, args...; scalefonts = nothing, kw...)
     for arg in args
         # change backend ?
         arg isa Symbol && if arg ∈ backends()
-            if (pkg = backend_package_name(arg)) ≢ nothing  # :plotly
-                @eval Main import $pkg
-            end
             Base.invokelatest(backend, arg)
         end
 

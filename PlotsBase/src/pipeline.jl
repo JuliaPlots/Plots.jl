@@ -181,7 +181,9 @@ function RecipesPipeline.process_sliced_series_attributes!(::Plot, kw_list)
         # convert a ribbon into a fillrange
         if rib ≢ nothing
             make_fillrange_from_ribbon(kw)
-            # map fillrange if it's a Function
+            # # unwrap CyclingAttribute after processing
+            rib isa RecipesBase.CyclingAttribute && (kw[:ribbon] = rib.value)
+        # map fillrange if it's a Function
         elseif fr ≢ nothing && fr isa Function
             kw[:fillrange] = map(fr, kw[:x])
         end

@@ -1,4 +1,8 @@
 # miscellaneous tests (not fitting into other test files)
+using Plots
+using Plots: PlotsBase, GR
+using PlotsBase: JSON, RecipesPipeline
+using Test
 
 @testset "Infrastructure" begin
     @test_nowarn JSON.parse(
