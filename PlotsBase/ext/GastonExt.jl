@@ -836,6 +836,8 @@ function gaston_enclose_tick_string(tick_string)
     return "$base^{$power}"
 end
 
+PlotsBase.closeall(::GastonBackend) = Gaston.closeall()
+
 PlotsBase.@precompile_backend Gaston
 
 end
