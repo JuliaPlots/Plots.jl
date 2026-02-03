@@ -145,11 +145,11 @@ function PlotsBase._before_layout_calcs(plt::Plot{GastonBackend})
         sp ≡ nothing && continue
         for ann in sp[:annotations]
             x, y, val = locate_annotation(sp, ann...)
-            sp.o.axesconf *= "; set label '$(val.str)' at $x,$y $(gaston_font(val.font))"
+            sp.o.settings *= "; set label '$(val.str)' at $x,$y $(gaston_font(val.font))"
         end
         if _debug[]
-            sp.o.axesconf = replace(sp.o.axesconf, "; " => "\n")
-            println(sp.o.axesconf)
+            sp.o.settings = replace(sp.o.settings, "; " => "\n")
+            println(sp.o.settings)
             foreach(x -> println("== n°$(x[1]) ==\n", x[2].conf), enumerate(sp.o.curves))
         end
     end
@@ -266,9 +266,8 @@ function gaston_init_subplot!(
             end
             any_label |= should_add_to_legend(series)
         end
-        axesconf = gaston_parse_axes_attrs(plt, sp, dims, any_label)
-        # sp.o = Gaston.Plot(; dims, curves = [], axesconf)
-        sp.o = Gaston.Axis(axesconf, Gaston.Plot[], dims == 3)
+        settings = gaston_parse_axes_attrs(plt, sp, dims, any_label)
+        sp.o = Gaston.Axis(settings, Gaston.Plot[], dims == 3)
     end
     push!(plt.o, obj)  # add new Axis ≡ subplot
     return nothing
@@ -439,28 +438,28 @@ function gaston_seriesconf!(
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         push!(extra_curves, "w points lc $lc dt $dt lw $lw notitle")
     elseif st ≡ :image
-        gsp.axesconf *= gaston_palette_conf(series)
+        gsp.settings *= gaston_palette_conf(series)
         curveconf *= "w image pixels"
     elseif st ∈ (:contour, :contour3d)
         filled = isfilledcontour(series)
         curveconf *= filled ? "w pm3d" : "w lines"
         if series[:contour_labels] == true
-            gsp.axesconf *= "; set cntrlabel interval -1"
+            gsp.settings *= "; set cntrlabel interval -1"
             push!(extra_curves, "w labels notitle")
         end
         levels = collect(contour_levels(series, clims))
         if st ≡ :contour  # 2D
-            gsp.axesconf *= if filled
+            gsp.settings *= if filled
                 "; set view map; set palette maxcolors $(length(levels))"
             else
                 "; set view map; unset surface"
             end
         end
-        gsp.axesconf *= "; set contour both; set cntrparam levels discrete $(join(map(string, levels), ", "))"
+        gsp.settings *= "; set contour both; set cntrparam levels discrete $(join(map(string, levels), ", "))"
     elseif st ∈ (:surface, :heatmap)
         curveconf *= "w pm3d"
-        gsp.axesconf *= gaston_palette_conf(series)
-        st ≡ :heatmap && (gsp.axesconf *= "; set view map")
+        gsp.settings *= gaston_palette_conf(series)
+        st ≡ :heatmap && (gsp.settings *= "; set view map")
     elseif st ∈ (:wireframe, :mesh3d)
         lc, dt, lw = gaston_lc_ls_lw(series, clims, i)
         curveconf *= "w lines lc $lc dt $dt lw $lw"
@@ -509,8 +508,8 @@ function gaston_parse_axes_attrs(
         dims::Int,
         any_label::Bool,
     )
-    # axesconf = ["set margins 2, 2, 2, 2"]  # left, right, bottom, top
-    axesconf = String[]
+    # settings = ["set margins 2, 2, 2, 2"]  # left, right, bottom, top
+    settings = String[]
 
     polar = ispolar(sp) && dims == 2  # cannot splot in polar coordinates
 
@@ -521,7 +520,7 @@ function gaston_parse_axes_attrs(
 
         # NOTE: there is no `z2tics` concept in gnuplot (only 2D)
         I = if dims == 2 && axis[:mirror]
-            push!(axesconf, "unset $(letter)tics")
+            push!(settings, "unset $(letter)tics")
             "2"
         else
             ""
@@ -534,7 +533,7 @@ function gaston_parse_axes_attrs(
             guide_font = font(guide_font; rotation = guide_font.rotation + 90)
         end
         push!(
-            axesconf,
+            settings,
             "set $(letter)$(I)label '$(PlotsBase.get_guide(axis))' $(gaston_font(guide_font))",
         )
 
@@ -547,15 +546,15 @@ function gaston_parse_axes_attrs(
         elseif scale ≡ :ln
             "logscale", "e"
         end
-        push!(axesconf, "set $logscale $letter $base")
+        push!(settings, "set $logscale $letter $base")
 
         # handle ticks
         if axis[:showaxis] && fs ≢ :none
             if polar
-                push!(axesconf, "set size square; unset $(letter)tics")
+                push!(settings, "set size square; unset $(letter)tics")
             else
                 push!(
-                    axesconf,
+                    settings,
                     "set $(letter)$(I)tics $(axis[:tick_direction]) $(gaston_font(tickfont(axis)))",
                 )
 
@@ -566,7 +565,7 @@ function gaston_parse_axes_attrs(
                     else
                         lo, hi = axis_limits(sp, letter)
                     end
-                    push!(axesconf, "set $(letter)$(I)range [$lo:$hi]")
+                    push!(settings, "set $(letter)$(I)range [$lo:$hi]")
 
                     offset = if dims == 2 && letter ≡ :y
                         # ticks appear too close to the border, offset them by 1 character
@@ -574,49 +573,49 @@ function gaston_parse_axes_attrs(
                     else
                         ""
                     end
-                    push!(axesconf, "set $(letter)$(I)tics border nomirror $offset")
+                    push!(settings, "set $(letter)$(I)tics border nomirror $offset")
 
                     ticks = get_ticks(sp, axis)
-                    gaston_set_ticks!(axesconf, ticks, letter, I, "", "")
+                    gaston_set_ticks!(settings, ticks, letter, I, "", "")
 
                     if axis[:minorticks] ≢ :native && !no_minor_intervals(axis)
                         minor_ticks = get_minor_ticks(sp, axis, ticks)
-                        gaston_set_ticks!(axesconf, minor_ticks, letter, I, "m", "add")
+                        gaston_set_ticks!(settings, minor_ticks, letter, I, "m", "add")
                     end
                 end
             end
         end
         if fs in (:zerolines, :origin)
-            push!(axesconf, "set $(letter)zeroaxis")
+            push!(settings, "set $(letter)zeroaxis")
         end
         if !axis[:showaxis] || fs ≡ :none
-            push!(axesconf, "set tics scale 0", "set format x \"\"", "set format y \"\"")
+            push!(settings, "set tics scale 0", "set format x \"\"", "set format y \"\"")
         end
 
         if axis[:grid]
-            push!(axesconf, "set grid " * (polar ? "polar" : "$(letter)tics"))
+            push!(settings, "set grid " * (polar ? "polar" : "$(letter)tics"))
             axis[:minorgrid] &&
-                push!(axesconf, "set grid " * (polar ? "polar" : "m$(letter)tics"))
+                push!(settings, "set grid " * (polar ? "polar" : "m$(letter)tics"))
         end
 
         if (ratio = get_aspect_ratio(sp)) ≢ :none
             if dims == 2
                 ratio ≡ :equal && (ratio = -1)
-                push!(axesconf, "set size ratio $ratio")
+                push!(settings, "set size ratio $ratio")
             else
                 # ratio and square have no effect on 3D plots,
                 # but do affect 3D projections created using set view map
                 if ratio ≡ :equal
-                    push!(axesconf, "set view equal xyz")
+                    push!(settings, "set view equal xyz")
                 end
             end
         elseif dims == 3
             # by default unit x/y aspect ratio in 3d ?
-            # push!(axesconf, "set view equal xy")
-            # push!(axesconf, "set size square")
+            # push!(settings, "set view equal xy")
+            # push!(settings, "set size square")
         end
     end
-    gaston_set_legend!(axesconf, sp, any_label)
+    gaston_set_legend!(settings, sp, any_label)
 
     # plots border
     border = if polar
@@ -644,26 +643,26 @@ function gaston_parse_axes_attrs(
                 gp_borders[:left_vertical]
         )
     end
-    push!(axesconf, border > 0 ? "set border $border back" : "unset border")
+    push!(settings, border > 0 ? "set border $border back" : "unset border")
 
     if hascolorbar(sp)
         push!(
-            axesconf,
+            settings,
             "set colorbox",
             "set cbtics border offset 1 $(gaston_font(colorbartitlefont(sp)))",
         )
     else
-        push!(axesconf, "unset colorbox")
+        push!(settings, "unset colorbox")
     end
 
     if sp[:title] |> !isempty
         # NOTE: `set title` is hard centered, cannot use `sp[:titlelocation]`
         # on `set label` takes `right`, `center` or `left` justification
-        push!(axesconf, "set title '$(sp[:title])' $(gaston_font(titlefont(sp)))")
+        push!(settings, "set title '$(sp[:title])' $(gaston_font(titlefont(sp)))")
     end
 
     if polar
-        push!(axesconf, "set polar")
+        push!(settings, "set polar")
         tmin, tmax = axis_limits(sp, :x, false, false)
         rmin, rmax = axis_limits(sp, :y, false, false)
         rticks = get_ticks(sp, :y)
@@ -673,7 +672,7 @@ function gaston_parse_axes_attrs(
             ["'$l' $t" for (t, l) in zip(rticks...)]
         end
         push!(
-            axesconf,
+            settings,
             "set rtics ( $(join(gaston_ticks, ", ")) ) $(gaston_font(tickfont(sp[:yaxis])))",
             "set trange [$(min(0, tmin)):$(max(2π, tmax))]",
             "set rrange [$rmin:$rmax]",
@@ -682,7 +681,7 @@ function gaston_parse_axes_attrs(
         )
     end
 
-    return join(axesconf, "; ")
+    return join(settings, "; ")
 end
 
 function gaston_fix_ticks_overflow(ticks::AbstractVector)
@@ -698,10 +697,10 @@ function gaston_fix_ticks_overflow(ticks::AbstractVector)
     return ticks
 end
 
-function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
+function gaston_set_ticks!(settings, ticks, letter, I, maj_min, add)
     ticks ≡ :auto && return
     if ticks ∈ (:none, nothing, false)
-        push!(axesconf, "unset $(maj_min)$(letter)tics")
+        push!(settings, "unset $(maj_min)$(letter)tics")
         return
     end
     gaston_ticks = if (ttype = PlotsBase.ticks_type(ticks)) ≡ :ticks
@@ -720,12 +719,12 @@ function gaston_set_ticks!(axesconf, ticks, letter, I, maj_min, add)
         nothing
     end
     if gaston_ticks ≢ nothing
-        push!(axesconf, "set $(letter)$(I)tics $add (" * join(gaston_ticks, ", ") * ")")
+        push!(settings, "set $(letter)$(I)tics $add (" * join(gaston_ticks, ", ") * ")")
     end
     return nothing
 end
 
-function gaston_set_legend!(axesconf, sp, any_label)
+function gaston_set_legend!(settings, sp, any_label)
     if (lp = sp[:legend_position]) ∉ (:none, :inline) && any_label
         leg_str = string(PlotsBase._guess_best_legend_position(lp, sp))
 
@@ -745,14 +744,14 @@ function gaston_set_legend!(axesconf, sp, any_label)
             "center "
         end
         pos *= sp[:legend_column] == 1 ? "vertical" : "horizontal"
-        push!(axesconf, "set key $pos box lw 1 opaque noautotitle")
-        push!(axesconf, "set key $(gaston_font(legendfont(sp), rot = false, align = false))")
+        push!(settings, "set key $pos box lw 1 opaque noautotitle")
+        push!(settings, "set key $(gaston_font(legendfont(sp), rot = false, align = false))")
         if sp[:legend_title] ≢ nothing
             # NOTE: cannot use legendtitlefont(sp) as it will override legendfont
-            push!(axesconf, "set key title '$(sp[:legend_title])'")
+            push!(settings, "set key title '$(sp[:legend_title])'")
         end
     else
-        push!(axesconf, "set key off")
+        push!(settings, "set key off")
     end
     return nothing
 end
