@@ -158,9 +158,6 @@ macro precompile_backend(backend_package)
                             if backend_name() ≡ :pgfplotsx
                                 return  # FIXME: `Colors` extension issue for PFPlotsX
                             end
-                            if backend_name() ≡ :gaston
-                                return  # FIXME: temporary workaround deadlock
-                            end
                             if backend_name() ≡ :unicodeplots
                                 savefig(pl, "$fn.txt")
                                 return
