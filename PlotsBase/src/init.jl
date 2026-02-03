@@ -143,9 +143,6 @@ macro precompile_backend(backend_package)
                     examples,
                     quote
                         $func() = begin  # evaluate each example in a local scope
-                            if backend_name() ≡ :gaston
-                                return  # FIXME: temporary workaround deadlock
-                            end
                             if backend_name() ≡ :pythonplot
                                 return  # FIXME: __init__ failure with PythonPlot
                             end
@@ -160,6 +157,9 @@ macro precompile_backend(backend_package)
                             end
                             if backend_name() ≡ :pgfplotsx
                                 return  # FIXME: `Colors` extension issue for PFPlotsX
+                            end
+                            if backend_name() ≡ :gaston
+                                return  # FIXME: temporary workaround deadlock
                             end
                             if backend_name() ≡ :unicodeplots
                                 savefig(pl, "$fn.txt")
