@@ -1,4 +1,2 @@
-name = "PlotsWS"
-
 [workspace]
 projects = ["RecipesBase", "RecipesPipeline", "PlotThemes", "PlotsBase", "Plots", "GraphRecipes", "StatsPlots", "docs"]
