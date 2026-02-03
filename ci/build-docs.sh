@@ -48,10 +48,9 @@ install_ubuntu_deps() {
     ttf-mscorefonts-installer \
     poppler-utils \
     ghostscript-x \
-    qtbase5-dev \
     pdf2svg \
-    gnuplot \
     g++
+  sudo apt -y install gnuplot libxcb-cursor0  # Gaston
 
   echo '== install fonts =='
   mkdir -p ~/.fonts
