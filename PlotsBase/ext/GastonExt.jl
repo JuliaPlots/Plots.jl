@@ -124,7 +124,7 @@ PlotsBase.should_warn_on_unsupported(::GastonBackend) = false
 
 # create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{GastonBackend})
-    return plt.o = Gaston.figure(nothing; autolayout = false)  # for now all the figures will be kept
+    return plt.o = Gaston.Figure(nothing; autolayout = false)  # for now all the figures will be kept
 end
 
 function PlotsBase._before_layout_calcs(plt::Plot{GastonBackend})
@@ -135,7 +135,8 @@ function PlotsBase._before_layout_calcs(plt::Plot{GastonBackend})
         n, sps = gaston_get_subplots(0, plt.subplots, plt.layout)
     end
 
-    plt.o.multiplot = gaston_init_subplots!(plt, sps)
+    r, c = gaston_init_subplots!(plt, sps)
+    plt.o.multiplot = "layout $r,$c columnsfirst"
 
     # then add the series (curves in gaston)
     foreach(series -> gaston_add_series(plt, series), plt.series_list)
@@ -178,19 +179,14 @@ for (mime, term) in (
     @eval function PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
         term = String($term)
         if plt.o ≢ nothing
-            tmpfile = tempname() * ".$term"
-            ret = Gaston.save(;
-                saveopts = gaston_saveopts(plt),
-                handle = plt.o.handle,
-                output = tmpfile,
-                term,
-            )
+            filename = tempname() * ".$term"
+            ret = Gaston.save(plt.o; filename, term = "$term $(gaston_saveopts(plt))")
             if ret ≡ nothing || ret
-                while !isfile(tmpfile)
+                while !isfile(filename)
                 end  # avoid race condition with read in next line
-                write(io, read(tmpfile))
+                write(io, read(filename))
             end
-            isfile(tmpfile) && rm(tmpfile, force = true)
+            isfile(filename) && rm(filename, force = true)
         end
         return nothing
     end
@@ -264,8 +260,7 @@ function gaston_init_subplot!(
     obj = if sp ≡ nothing
         sp
     else
-        dims =
-            RecipesPipeline.is3d(sp) || sp[:projection] == "3d" || needs_any_3d_axes(sp) ? 3 : 2
+        dims = RecipesPipeline.is3d(sp) || sp[:projection] == "3d" || needs_any_3d_axes(sp) ? 3 : 2
         any_label = false
         for series in series_list(sp)
             if dims == 2 && series[:seriestype] ∈ (:heatmap, :contour)
@@ -274,9 +269,10 @@ function gaston_init_subplot!(
             any_label |= should_add_to_legend(series)
         end
         axesconf = gaston_parse_axes_attrs(plt, sp, dims, any_label)
-        sp.o = Gaston.Plot(; dims, curves = [], axesconf)
+        # sp.o = Gaston.Plot(; dims, curves = [], axesconf)
+        sp.o = Gaston.Axis(axesconf, Gaston.Plot[], dims == 3)
     end
-    push!(plt.o.subplots, obj)
+    push!(plt.o, obj)  # add new Axis ≡ subplot
     return nothing
 end
 
@@ -320,7 +316,7 @@ function gaston_multiplot_pos_size!(dat)
             sp.o ≡ nothing && continue
             # gnuplot screen coordinates: bottom left at 0,0 and top right at 1,1
             gx, gy = x, 1 - y - h
-            sp.o.axesconf = "set origin $gx, $gy; set size $w, $h; " * sp.o.axesconf
+            sp.o.settings = "set origin $gx, $gy; set size $w, $h; " * sp.o.settings
         end
     end
     return nothing
@@ -331,13 +327,12 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     (gsp = sp.o) ≡ nothing && return
     x, y, z = series[:x], series[:y], series[:z]
     st = series[:seriestype]
-    curves = Gaston.Curve[]
-    if gsp.dims == 2 && z ≡ nothing
+    if !gsp.is3d && z ≡ nothing
         for (n, seg) in enumerate(series_segments(series, st; check = true))
             i, rng = seg.attr_index, seg.range
             fr = _cycle(series[:fillrange], 1:length(x[rng]))
             for sc in gaston_seriesconf!(sp, series, n == 1, i)
-                push!(curves, Gaston.Curve(x[rng], y[rng], nothing, fr, sc))
+                push!(gsp.plots, Gaston.Plot(x[rng], y[rng], fr, sc))
             end
         end
     else
@@ -367,15 +362,16 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
             end
         end
         for sc in gaston_seriesconf!(sp, series, true, 1)
-            push!(curves, Gaston.Curve(x, y, z, supp, sc))
+            push!(gsp.plots, Gaston.Plot(x, y, z, supp, sc))
         end
     end
 
-    for c in curves
-        append = length(gsp.curves) > 0
-        push!(gsp.curves, c)
-        Gaston.write_data(c, gsp.dims, gsp.datafile; append)
-    end
+    # Gaston @v1
+    # for c in curves
+    #     append = length(gsp.curves) > 0
+    #     push!(gsp.curves, c)
+    #     Gaston.write_data(c, gsp.dims, gsp.datafile; append)
+    # end
     return nothing
 end
 
