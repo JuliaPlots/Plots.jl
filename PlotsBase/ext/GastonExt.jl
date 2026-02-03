@@ -256,7 +256,7 @@ function gaston_init_subplot!(
         sp::Union{Nothing, Subplot{GastonBackend}},
     )
     obj = if sp ≡ nothing
-        sp
+        Gaston.Axis()
     else
         dims = RecipesPipeline.is3d(sp) || sp[:projection] == "3d" || needs_any_3d_axes(sp) ? 3 : 2
         any_label = false
@@ -333,7 +333,6 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
             end
         end
     else
-        supp = nothing  # supplementary column
         if z isa Surface
             z = z.surf
             if st ≡ :image
@@ -359,7 +358,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
             end
         end
         for sc in gaston_seriesconf!(sp, series, true, 1)
-            push!(gsp.plots, Gaston.Plot(x, y, z, supp, sc))
+            push!(gsp.plots, Gaston.Plot(x, y, z, sc))
         end
     end
 
