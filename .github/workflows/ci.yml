@@ -61,9 +61,11 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get -y update
-          sudo apt-get -y install g++ gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex}  # LaTeX
+          sudo apt-get -y install g++ poppler-utils texlive-{latex-base,latex-extra,luatex}  # LaTeX
+          sudo apt-get -y install gnuplot libxcb-cursor0  # Gaston
           sudo fc-cache -vr
           echo "LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)" >>$GITHUB_ENV
+          echo "JULIA_GNUPLOT_EXE=gnuplot" >>$GITHUB_ENV
 
       - uses: julia-actions/setup-julia@latest
         with:

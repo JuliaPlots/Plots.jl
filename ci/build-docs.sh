@@ -28,6 +28,7 @@ export GKSwstype=nul  # Plots.jl/issues/3664
 export MPLBACKEND=agg
 export COLORTERM=truecolor  # UnicodePlots.jl
 export JULIA_CONDAPKG_BACKEND=MicroMamba
+export JULIA_GNUPLOT_EXE=gnuplot
 
 banner() {
   echo "running action $GITHUB_ACTION with workflow $GITHUB_WORKFLOW for $GITHUB_REPOSITORY@$GITHUB_REF"
@@ -48,10 +49,9 @@ install_ubuntu_deps() {
     ttf-mscorefonts-installer \
     poppler-utils \
     ghostscript-x \
-    qtbase5-dev \
     pdf2svg \
-    gnuplot \
     g++
+  sudo apt -y install gnuplot libxcb-cursor0  # Gaston
 
   echo '== install fonts =='
   mkdir -p ~/.fonts
