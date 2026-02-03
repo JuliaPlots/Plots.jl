@@ -1433,7 +1433,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
 end
 
 expand_padding!(padding, bb, plotbb) =
-if ispositive(width(bb)) && ispositive(height(bb))
+if ispos(width(bb)) && ispos(height(bb))
     padding[1] = max(padding[1], left(plotbb) - left(bb))
     padding[2] = max(padding[2], top(plotbb) - top(bb))
     padding[3] = max(padding[3], right(bb) - right(plotbb))

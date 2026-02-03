@@ -53,7 +53,7 @@ fake_supported_versions!(path) = begin
     maybe_pin_version!(compat, "RecipesPipeline", pkg_version("RecipesPipeline"))
     maybe_pin_version!(compat, "PlotThemes", pkg_version("PlotThemes"))
     maybe_pin_version!(compat, "PlotsBase", pkg_version("PlotsBase"))
-    maybe_pin_version!(compat, "Plots", pkg_version(""))
+    maybe_pin_version!(compat, "Plots", pkg_version("Plots"))
     open(toml, "w") do io
         TOML.print(io, parsed_toml)
     end

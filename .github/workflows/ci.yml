@@ -24,11 +24,11 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.pull_request.labels.*.name, 'skip ci') }}
     env:
       JULIA_PROJECT_CMD: julia --project=@. --check-bounds=yes --color=yes
-      JULIA_CONDAPKG_LIBSTDCXX_NG_VERSION : 'ignore'  # handled ourselves in ci/matplotlib.jl
+      JULIA_CONDAPKG_LIBSTDCXX_NG_VERSION: ignore  # handled ourselves in ci/matplotlib.jl
       JULIA_CONDAPKG_BACKEND: MicroMamba
-      MPLBACKEND: agg
       GKS_ENCODING: utf8
-      GKSwstype: nul
+      GKS_WSTYPE: nul
+      MPLBACKEND: agg
     name: julia ${{ matrix.version }} - ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     runs-on: ${{ matrix.os }}
@@ -41,8 +41,7 @@ jobs:
           - '1'  # latest stable
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
-        include:
-          # NOTE: macos-latest resolves to macos-14 (only aarch64), use macos-13 for x86.
+        include:  # NOTE: macos-latest resolves to macos-14 (only aarch64)
           - os: macos-latest
             experimental: false
             arch: aarch64
@@ -56,7 +55,7 @@ jobs:
             version: 'pre'  # upcoming julia version (`alpha`, `beta` or `rc`)
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: setup ubuntu dependencies
         if: startsWith(matrix.os, 'ubuntu')
@@ -83,6 +82,7 @@ jobs:
               (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
               (; path="./PlotThemes"),       # compat for LTS [sources], remove later
               (; path="./PlotsBase"),        # compat for LTS [sources], remove later
+              (; path="./Plots"),            # compat for LTS [sources], remove later
               (; path="./GraphRecipes"),
               (; path="./StatsPlots"),
             ])
@@ -91,7 +91,7 @@ jobs:
           '
 
       - name: test Plots stack
-        timeout-minutes: 60
+        timeout-minutes: 90
         run: |
           cmd=(${{ env.JULIA_PROJECT_CMD }} --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -111,7 +111,7 @@ jobs:
 
       - uses: julia-actions/julia-processcoverage@latest
         with:
-          directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,PlotsBase/ext,src,PlotThemes/src,GraphRecipes/src,StatsPlots/src
+          directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,PlotsBase/ext,Plots/src,PlotThemes/src,GraphRecipes/src,StatsPlots/src
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

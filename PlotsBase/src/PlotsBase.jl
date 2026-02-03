@@ -130,7 +130,6 @@ const _compat = _project.compat
 
 include("Commons/Commons.jl")
 using .Commons
-# using .Commons.Frontend
 Commons.@generic_functions attr attr! annotate!
 include("DF.jl")
 using .DF
@@ -172,7 +171,6 @@ include("recipes.jl")
 include("animation.jl")
 include("examples.jl")
 include("plotattr.jl")
-include("alignment.jl")
 include("output.jl")
 include("shorthands.jl")
 include("backends.jl")

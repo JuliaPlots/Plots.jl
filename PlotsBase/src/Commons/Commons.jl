@@ -49,7 +49,7 @@ export GridLayout, EmptyLayout, RootLayout, @maxlog_warn
 export BBox, BoundingBox, mm, cm, inch, pt, w, h
 export bbox_to_pcts, xy_mm_to_pcts
 export Length, AbsoluteLength, Measure
-export to_pixels, ispositive, get_ticks, scale_lims!
+export to_pixels, ispos, get_ticks, scale_lims!
 
 export _subplot_defaults, _axis_defaults, _plot_defaults, _series_defaults, _match_map
 export _match_map2, @add_attributes, preprocess_attributes!, _override_seriestype_check

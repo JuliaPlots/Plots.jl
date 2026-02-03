@@ -1,0 +1,38 @@
+# Plots
+[![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](
+  https://docs.juliaplots.org/stable/
+)
+[![Docs dev](https://img.shields.io/badge/docs-dev-blue.svg)](
+  https://docs.juliaplots.org/dev
+)
+<br>
+[![CI](https://github.com/JuliaPlots/Plots.jl/actions/workflows/ci.yml/badge.svg?branch=v2)](
+  https://github.com/JuliaPlots/Plots.jl/actions?query=workflow%3Aci
+)
+[![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg)](
+  https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
+)
+[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](
+  https://julialang.zulipchat.com/#narrow/stream/236493-plots
+)
+<br>
+[![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/v2/graph/badge.svg)](
+  https://codecov.io/gh/JuliaPlots/Plots.jl/tree/v2
+)
+[![Plots DL](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FPlots&query=total_requests&suffix=%2Fmonth&label=Downloads)](
+ https://juliapkgstats.com/pkg/Plots
+)
+
+#### Created by Tom Breloff (@tbreloff)
+
+#### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
+
+Plots is a plotting API and toolset.
+
+The goals of the package are:
+- **Powerful**: do more with less, complex visualizations become easy.
+- **Intuitive**: stop reading so much documentation, commands should "just work".
+- **Concise**: less code means fewer mistakes and more efficient development/analysis.
+- **Flexible**: produce your favorite plots from your favorite package, but quicker and simpler.
+- **Consistent**: don't commit to one graphics package, use the same code everywhere.
+- **Smart**: attempts to figure out what you **want** it to do ... not just what you **tell** it.

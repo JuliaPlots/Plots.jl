@@ -135,8 +135,14 @@ end
     end
 end
 
-# -----------------------------------------
-# marginalhist
+cd(joinpath(@__DIR__, "..", "..", "assets", "GraphRecipes")) do
+    @testset "FIGURES" begin
+        @plottest random_labelled_graph() "random_labelled_graph.png" popup = !isci() tol =
+            itol()
+
+        @plottest random_3d_graph() "random_3d_graph.png" popup = !isci() tol = itol()
+
+        @plottest light_graphs() "light_graphs.png" popup = !isci() tol = itol()
 
 # using Distributions
 # n = 1000

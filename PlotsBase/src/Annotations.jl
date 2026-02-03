@@ -3,11 +3,12 @@ module Annotations
 export SeriesAnnotations,
     EachAnn,
     series_annotations,
+    assign_annotation_coord!,
     series_annotations_shapes!,
     process_annotation,
     locate_annotation,
     annotations,
-    assign_annotation_coord!
+    text_size
 
 import ..PlotsBase: Series, Subplot, PlotOrSubplot, is3d, discrete_value!, plot!
 
@@ -22,6 +23,23 @@ mutable struct SeriesAnnotations
     baseshape::Union{Shape, AVec{Shape}, Nothing}
     scalefactor::Tuple
 end
+
+"Returns the (width, height) of a text label."
+function text_size(lablen::Int, sz::Number, rot::Number = 0)
+    # we need to compute the size of the ticks generically
+    # this means computing the bounding box and then getting the width/height
+    # note:
+    ptsz = sz * pt
+    width = 0.8lablen * ptsz
+
+    # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
+    height = abs(sind(rot)) * width + abs(cosd(rot)) * ptsz
+    width = abs(sind(rot + 90)) * width + abs(cosd(rot + 90)) * ptsz
+    return width, height
+end
+text_size(lab::AbstractString, sz::Number, rot::Number = 0) =
+    text_size(length(lab), sz, rot)
+text_size(lab::PlotText, sz::Number, rot::Number = 0) = text_size(length(lab.str), sz, rot)
 
 _text_label(lab::Tuple, font) = text(lab[1], font, lab[2:end]...)
 _text_label(lab::PlotText, font) = lab

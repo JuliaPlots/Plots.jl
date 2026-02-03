@@ -1,4 +1,7 @@
 using PlotsBase, Dates, Test
+using PlotsBase.Surfaces: Surface
+import GR
+gr()
 struct Foo{T}
     x::Vector{T}
     y::Vector{T}
@@ -16,7 +19,7 @@ x = collect(0.0:10.0)
 foo = Foo(x, sin.(x))
 
 @testset "Magic attributes" begin
-    @test plot(foo)[1][1][:markershape] ≡ :+
+    @test plot(foo)[1][1][:markershape] ≡ (backend_name() === :gr ? :+ : :circle)
     @test plot(foo, markershape = :diamond)[1][1][:markershape] ≡ :diamond
     @test plot(foo, marker = :diamond)[1][1][:markershape] ≡ :diamond
     @test (
@@ -56,6 +59,16 @@ end
         @test pl[1][axis][:tickfontsize] == 10
         @test pl[1][axis][:tickfontfamily] == "Times"
     end
+end
+
+@testset "Plotting Plots" begin
+    pl = @test_nowarn plot(rand(3, 3))
+    @test plot(pl, plot_title = "Test")[:plot_title] == "Test"
+    @test plot(pl, title = "Test")[1][:title] == "Test"
+    @test plot(pl, xtickfontsize = 1)[1][:xaxis][:tickfontsize] == 1
+    @test plot(pl, label = "Test")[1][1][:label] == "Test"
+    @test plot(pl, label = "Test")[1][2][:label] == "Test"
+    @test plot(pl, label = "Test")[1][3][:label] == "Test"
 end
 
 @testset "Permute recipes" begin

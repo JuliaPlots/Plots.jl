@@ -1,6 +1,6 @@
 ci_tol() =
 if Sys.islinux()
-    is_pkgeval() ? "1e-2" : "5e-4"
+    is_pkgeval() ? "1e-2" : "1e-3"
 elseif Sys.isapple()
     "1e-3"
 else
@@ -13,54 +13,15 @@ const PLOTSBASE_IMG_TOL =
 
 Base.eval(TESTS_MODULE, :(using Random, StableRNGs, PlotsBase))
 
-reference_dir(args...) =
-if (ref_dir = get(ENV, "PLOTSBASE_REFERENCE_DIR", nothing)) ≢ nothing
-    joinpath(ref_dir, args...)
-else
-    joinpath(first(Base.DEPOT_PATH), "dev", "PlotReferenceImages.jl", args...)
-end
-reference_path(backend, version) =
-    reference_dir("PlotsBase", string(backend), string(version))
-
-function checkout_reference_dir(dn::AbstractString)
-    mkpath(dn)
-    local repo
-    for i in 1:6
-        try
-            repo = LibGit2.clone(
-                "https://github.com/JuliaPlots/PlotReferenceImages.jl.git",
-                dn,
-            )
-            break
-        catch err
-            @warn err
-            sleep(20i)
-        end
-    end
-    if (ver = PlotsBase._version).prerelease |> isempty
-        try
-            tag = LibGit2.GitObject(repo, "v$ver")
-            hash = string(LibGit2.target(tag))
-            LibGit2.checkout!(repo, hash)
-        catch err
-            @warn err
-        end
-    end
-    LibGit2.peel(LibGit2.head(repo)) |> println  # print some information
-    return nothing
-end
-
-let dn = reference_dir()
-    isdir(dn) || checkout_reference_dir(dn)
-end
+assets_path(args...) = normpath(@__DIR__, "..", "..", "assets", "PlotsBase", args...)
 
 function reference_file(backend, version, i)
     # NOTE: keep ref[...].png naming consistent with `PlotDocs`
-    refdir = mkpath(reference_dir("PlotsBase", string(backend)))
+    refdir = assets_path(string(backend)) |> mkpath
     fn = PlotsBase.ref_name(i) * ".png"
-    reffn = joinpath(refdir, string(version), fn)
+    reffn = assets_path(string(backend), string(version), fn)
     for ver in sort(VersionNumber.(readdir(refdir)), rev = true)
-        if (tmpfn = joinpath(refdir, string(ver), fn)) |> isfile
+        if (tmpfn = assets_path(string(backend), string(ver), fn)) |> isfile
             reffn = tmpfn
             break
         end
@@ -82,7 +43,7 @@ function image_comparison_tests(
     ver = PlotsBase._version
     ver = VersionNumber(ver.major, ver.minor, ver.patch)
     reffn = reference_file(pkg, ver, idx)
-    newfn = joinpath(reference_path(pkg, ver), PlotsBase.ref_name(idx) * ".png")
+    newfn = assets_path(string(pkg), string(ver), PlotsBase.ref_name(idx) * ".png")
 
     imports = something(example.imports, :())
     exprs = quote

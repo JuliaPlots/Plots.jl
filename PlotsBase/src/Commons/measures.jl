@@ -20,9 +20,7 @@ to_pixels(m::AbsoluteLength) = m.value / px.value
 # returns x_pct, y_pct
 function xy_mm_to_pcts(x::AbsoluteLength, y::AbsoluteLength, figw, figh, flipy = true)
     xmm, ymm = x.value, y.value
-    if flipy
-        ymm = figh.value - ymm  # flip y when origin in bottom-left
-    end
+    flipy && (ymm = figh.value - ymm)  # flip y when origin in bottom-left
     return xmm / figw.value, ymm / figh.value
 end
 
@@ -30,9 +28,7 @@ end
 # returns an array of percentages of figure size: [left, bottom, width, height]
 function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
     mms = Float64[f(bb).value for f in (left, bottom, width, height)]
-    if flipy
-        mms[2] = figh.value - mms[2]  # flip y when origin in bottom-left
-    end
+    flipy && (mms[2] = figh.value - mms[2])  # flip y when origin in bottom-left
     return mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
 end
 
@@ -42,15 +38,15 @@ Base.show(io::IO, bbox::BoundingBox) = print(
 )
 
 # Base.:*{T,N}(m1::Length{T,N}, m2::Length{T,N}) = Length{T,N}(m1.value * m2.value)
-ispositive(m::Measure) = m.value > 0
+ispos(m::Measure) = m.value > 0
 
 # union together bounding boxes
 function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
     # empty boxes don't change the union
-    ispositive(width(bb1)) || return bb2
-    ispositive(height(bb1)) || return bb2
-    ispositive(width(bb2)) || return bb1
-    ispositive(height(bb2)) || return bb1
+    width(bb1) |> ispos || return bb2
+    height(bb1) |> ispos || return bb2
+    width(bb2) |> ispos || return bb1
+    height(bb2) |> ispos || return bb1
 
     l = min(left(bb1), left(bb2))
     t = min(top(bb1), top(bb2))

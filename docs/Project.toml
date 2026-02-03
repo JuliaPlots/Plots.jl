@@ -75,7 +75,7 @@ UnicodePlots = "3"
 Unitful = "1"
 
 [sources]
-Plots = {path = ".."}
+Plots = {path = "../Plots"}
 PlotsBase = {path = "../PlotsBase"}
 PlotThemes = {path = "../PlotThemes"}
 RecipesBase = {path = "../RecipesBase"}

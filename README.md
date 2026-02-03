@@ -2,7 +2,8 @@
   <img src="https://opencollective.com/webpack/donate/button@2x.png?color=blue" width=200 />
 </a>
 
-# Plots
+# Plots monorepo
+
 [![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](
   https://docs.juliaplots.org/stable/
 )
@@ -30,16 +31,4 @@
 This is the DOI for all Versions, please follow the link to get the DOI for a specific version:<br>
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725317.svg)](https://doi.org/10.5281/zenodo.4725317)
 
-#### Created by Tom Breloff (@tbreloff)
-
-#### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
-
-Plots is a plotting API and toolset.
-
-The goals of the package are:
-- **Powerful**: do more with less, omplex visualizations become easy.
-- **Intuitive**: stop reading so much documentation, commands should "just work".
-- **Concise**: less code means fewer mistakes and more efficient development/analysis.
-- **Flexible**: produce your favorite plots from your favorite package, but quicker and simpler.
-- **Consistent**: don't commit to one graphics package, use the same code everywhere.
-- **Smart**: attempts to figure out what you **want** it to do ... not just what you **tell** it.
+This is the `Plots.jl` [monorepo](https://en.wikipedia.org/wiki/Monorepo) hosting the julia package `Plots`, its dependencies/subpackages : `RecipesBase`, `RecipesPipeline`, `PlotsBase`, and tools built on tops of `Plots` such as `GraphRecipes` and `StatsPlots`.

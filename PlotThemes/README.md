@@ -1,7 +1,5 @@
 # PlotThemes
 
-[![Build Status](https://travis-ci.org/JuliaPlots/PlotThemes.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/PlotThemes.jl)
-
 #### Primary author: Patrick Kofod Mogensen (@pkofod)
 
 PlotThemes is a package to spice up the plots made with [Plots.jl](https://github.com/JuliaPlots/Plots.jl). To install:

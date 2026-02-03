@@ -811,6 +811,11 @@
             "type": "Other"
         },
         {
+            "name": "Daniel Arnström",
+            "orcid": "0000-0003-0970-0620",
+            "type": "Other"
+        },
+        {
             "affiliation": "@JuliaComputing",
             "name": "Παναγιώτης Γεωργακόπουλος",
             "type": "Other"

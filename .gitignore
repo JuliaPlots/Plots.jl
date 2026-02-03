@@ -11,18 +11,20 @@ deps/plotly-*
 deps/build.log
 deps/deps.jl
 
-Manifest-v*.toml
-Manifest.toml
+**/Manifest-v*.toml
+**/Manifest.toml
 
-test/tmpplotsave.hdf5
+# docs
+**/generated*/
+
+**/docs/build*/
+**/docs/work*/
+
+**/test/tmpplotsave.hdf5
+
 /benchmark/*.json
 /.benchmarkci
 dev/
 
 .CondaPkg/
 .vscode/
-
-# docs
-**/generated*/
-docs/build*/
-docs/work*/

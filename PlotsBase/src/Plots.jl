@@ -4,6 +4,7 @@ export Plot,
     PlotOrSubplot,
     plottitlefont,
     _update_plot_attrs,
+    _update_plot_object,
     InputWrapper,
     protect
 
@@ -187,6 +188,8 @@ plottitlefont(plt::Plot) = font(;
     color = plt[:plot_titlefontcolor],
 )
 
+_update_plot_object(plt::Plot) = nothing
+
 # update attr from an input dictionary
 function _update_plot_attrs(plt::Plot, plotattributes_in::AKW)
     for (k, v) in PlotsBase._plot_defaults
@@ -254,9 +257,7 @@ function _update_subplot_attrs(
     Subplots._update_subplot_colors(sp)
     Subplots._update_margins(sp)
     cbar_update_keys = :clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry
-    if any(haskey.(Ref(plotattributes_in), cbar_update_keys))
-        Colorbars._update_subplot_colorbars(sp)
-    end
+    any(haskey.(Ref(plotattributes_in), cbar_update_keys)) && Colorbars._update_subplot_colorbars(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
