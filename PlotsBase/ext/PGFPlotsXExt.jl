@@ -1271,15 +1271,25 @@ end
 function pgfx_fillrange_attrs(fillrange, x, y)
     n = length(x)
     x_fill = [x; x[n:-1:1]; x[1]]
-    y_fill = [y; _getvalue(fillrange, n:-1:1); y[1]]
+    fr_vals = if fillrange isa Number
+        fill(fillrange, n)
+    else
+        _getvalue(fillrange, n:-1:1)
+    end
+    y_fill = [y; fr_vals; y[1]]
     return PGFPlotsX.Coordinates(x_fill, y_fill)
 end
 
 function pgfx_fillrange_attrs(fillrange, x, y, z)
     n = length(x)
     x_fill = [x; x[n:-1:1]; x[1]]
-    y_fill = [y; y[n:-1:1]; x[1]]
-    z_fill = [z; _getvalue(fillrange, n:-1:1); z[1]]
+    y_fill = [y; y[n:-1:1]; y[1]]
+    fr_vals = if fillrange isa Number
+        fill(fillrange, n)
+    else
+        _getvalue(fillrange, n:-1:1)
+    end
+    z_fill = [z; fr_vals; z[1]]
     return PGFPlotsX.Coordinates(x_fill, y_fill, z_fill)
 end
 

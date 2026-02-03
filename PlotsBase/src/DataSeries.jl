@@ -153,7 +153,10 @@ for comp in (:line, :fill, :marker)
                 isa(c, PlotUtils.ColorGradient) ? c : PlotUtils.plot_color(c)
             else
                 grad = _getattr(series, $Symbol($compcolor))  # series[:linecolor], series[:fillcolor], series[:markercolor]
-                if s ≡ :identity
+                if !(grad isa PlotUtils.ColorGradient)
+                    # z-coloring requires a gradient; if a plain color, just return it
+                    PlotUtils.plot_color(grad)
+                elseif s ≡ :identity
                     get(grad, z, (cmin, cmax))
                 else
                     base = _log_scale_bases[s]

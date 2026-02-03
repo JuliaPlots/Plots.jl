@@ -293,11 +293,7 @@ end
 
 # helpers to figure out if there are NaN values in a list of array types
 anynan(i::Int, args::Tuple) = any(
-    a -> try
-        isnan(_getvalue(a, i))
-    catch MethodError
-        false
-    end, args
+    a -> isnan(_getvalue(a, i)), args
 )
 anynan(args::Tuple) = i -> anynan(i, args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)

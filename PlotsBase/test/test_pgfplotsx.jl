@@ -1,4 +1,5 @@
 using Test, PlotsBase, Unitful, LaTeXStrings
+using RecipesBase: cycle
 const PGFPlotsX = Base.get_extension(PlotsBase, :PGFPlotsXExt).PGFPlotsX
 
 function create_plot(args...; kwargs...)
@@ -71,7 +72,7 @@ with(:pgfplotsx) do
             rand(11, 4),
             lab = "lines",
             w = 3,
-            palette = :grays,
+            palette = cycle(:grays),
             fill = 0,
             α = 0.6,
         )
@@ -134,7 +135,7 @@ with(:pgfplotsx) do
         @test plot(
             PlotsBase.fakedata(100, 10),
             layout = 4,
-            palette = [:grays :blues :hot :rainbow],
+            palette = cycle.([:grays :blues :hot :rainbow]),
             bg_inside = [:orange :pink :darkblue :black],
         ) isa PlotsBase.Plot
     end
@@ -347,9 +348,9 @@ with(:pgfplotsx) do
     @testset "Markers and Paths" begin
         pl = plot(
             5 .- ones(9),
-            markershape = [:utriangle, :rect],
+            markershape = cycle([:utriangle, :rect]),
             markersize = 8,
-            color = [:red, :black],
+            color = cycle([:red, :black]),
         )
         axis_contents = first(get_pgf_axes(pl)).contents
         plots = filter(x -> x isa PGFPlotsX.Plot, axis_contents)

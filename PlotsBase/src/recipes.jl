@@ -682,24 +682,30 @@ end
 
     # create a secondary series for the markers
     if plotattributes[:markershape] ≢ :none
+        # create the primary path series first
         @series begin
-            seriestype := :scatter
-            x := _bin_centers(edge)
-            y := weights
-            fillrange := nothing
-            label := ""
-            primary := false
+            x := xpts
+            y := ypts
+            seriestype := :path
+            markershape := :none
+            xerror := :none
+            yerror := :none
             ()
         end
-        markershape := :none
-        xerror := :none
-        yerror := :none
+        # then the non-primary scatter series for markers
+        seriestype := :scatter
+        x := _bin_centers(edge)
+        y := weights
+        fillrange := nothing
+        label := ""
+        primary := false
+        ()
+    else
+        x := xpts
+        y := ypts
+        seriestype := :path
+        ()
     end
-
-    x := xpts
-    y := ypts
-    seriestype := :path
-    ()
 end
 @deps stepbins path
 

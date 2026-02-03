@@ -88,12 +88,14 @@ Commons.get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
 function get_series_color(c, sp::Subplot, n::Int, seriestype)
+    # Ensure valid index (n can be 0 for non-primary series before any primary series)
+    idx = max(1, n)
     c = if c ≡ :auto
-        Commons.like_surface(seriestype) ? PlotsBase.cgrad() : _getattr(sp, :color_palette, n)
+        Commons.like_surface(seriestype) ? PlotsBase.cgrad() : _getattr(sp, :color_palette, idx)
     elseif isa(c, Int)
         _getattr(sp, :color_palette, c)
     elseif c isa RecipesBase.CyclingAttribute
-        c[n]
+        c[idx]
     else
         c
     end

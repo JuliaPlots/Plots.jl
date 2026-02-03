@@ -95,6 +95,10 @@ for op in (:+, :-, :/, :*)
 end
 Base.:-(a::CyclingAttribute) = CyclingAttribute(-a.value)
 Base.:(==)(a::CyclingAttribute, b::CyclingAttribute) = a.value == b.value
+Base.firstindex(c::CyclingAttribute) = firstindex(c.value)
+Base.lastindex(c::CyclingAttribute) = lastindex(c.value)
+Base.length(c::CyclingAttribute) = length(c.value)
+Base.size(c::CyclingAttribute, args...) = size(c.value, args...)
 # --------------------------------------------------------------------------
 
 @inline to_symbol(s::Symbol) = s
