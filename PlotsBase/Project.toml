@@ -41,6 +41,7 @@ Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 [weakdeps]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+Gaston = "4b11ee91-296f-5714-9832-002c20994614"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"

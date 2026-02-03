@@ -143,6 +143,9 @@ macro precompile_backend(backend_package)
                     examples,
                     quote
                         $func() = begin  # evaluate each example in a local scope
+                            if backend_name() ≡ :gaston
+                                return  # FIXME: temporary workaround deadlock
+                            end
                             if backend_name() ≡ :pythonplot
                                 return  # FIXME: __init__ failure with PythonPlot
                             end
