@@ -180,13 +180,11 @@ for (mime, term) in (
         term = String($term)
         if plt.o ≢ nothing
             filename = tempname() * ".$term"
-            ret = Gaston.producefigure(plt.o; filename, term = "$term $(gaston_saveopts(plt))")
-            if ret ≡ nothing || ret
-                while !isfile(filename)
-                end  # avoid race condition with read in next line
-                write(io, read(filename))
-            end
-            isfile(filename) && rm(filename, force = true)
+            Gaston.producefigure(plt.o; filename, term = "$term $(gaston_saveopts(plt))")
+            while !isfile(filename)
+            end  # avoid race condition with read in next line
+            write(io, read(filename))
+            rm(filename; force = true)
         end
         return nothing
     end
