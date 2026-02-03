@@ -1,6 +1,6 @@
 # miscellaneous tests (not fitting into other test files)
-using Plots
-using Plots: PlotsBase, GR
+using PlotsBase
+import GR
 using PlotsBase: JSON, RecipesPipeline
 using Test
 
