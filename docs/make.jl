@@ -941,6 +941,7 @@ function main(args)
                 push_preview = Base.get_bool_env("PLOTDOCS_PUSH_PREVIEW", false),
                 devbranch = BRANCH,
                 forcepush = true,
+                tag_prefix = "Plots-",
                 repo,
             )
         end
