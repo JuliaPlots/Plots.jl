@@ -53,13 +53,16 @@ jobs:
       - name: Ubuntu LaTeX dependencies
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo apt-get -y update
-          sudo apt-get -y install gnuplot poppler-utils texlive-{latex-base,latex-extra,luatex} g++
+          sudo apt -y update
+          sudo apt -y install poppler-utils texlive-{latex-base,latex-extra,luatex} g++  # LaTeX
+          sudo apt -y install gnuplot libxcb-cursor0  # Gaston
           sudo fc-cache -vr
 
       - name: Set LD_PRELOAD
         if: startsWith(matrix.os, 'ubuntu')
-        run: echo "LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)" >> $GITHUB_ENV
+        run: |
+          echo "LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)" >> $GITHUB_ENV
+          echo "JULIA_GNUPLOT_EXE=gnuplot" >>$GITHUB_ENV
 
       - uses: julia-actions/setup-julia@latest
         with:
