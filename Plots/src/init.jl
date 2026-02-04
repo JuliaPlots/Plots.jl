@@ -124,10 +124,13 @@ include(_path(backend_name()))
         )
     end
     @compile_workload begin
-        withenv("GKSwstype" => "nul") do
+        withenv("GKSwstype" => "nul", "MPLBACKEND" => "agg") do
             load_default_backend()
             eval.(imports)
             eval.(examples)
+            if backend_name() ≠ :pythonplot  # FIXME: __init__ failure with PythonPlot
+                closeall()  # required for `Gaston` not to deadlock for example
+            end
         end
     end
     CURRENT_PLOT.nullableplot = nothing

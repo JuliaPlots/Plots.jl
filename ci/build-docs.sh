@@ -29,6 +29,7 @@ export MPLBACKEND=agg
 export COLORTERM=truecolor  # UnicodePlots.jl
 export PLOTDOCS_ANSICOLOR=true
 export JULIA_CONDAPKG_BACKEND=MicroMamba
+export JULIA_GNUPLOT_EXE=gnuplot
 
 julia_project() {
   xvfb-run -a julia --color=yes --project=docs "$@"

@@ -46,7 +46,7 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 [compat]
 Aqua = "0.8"
 Distributions = "0.25, 1"
-Gaston = "1"
+Gaston = "2"
 HDF5 = "0.16 - 0.17"
 InspectDR = "0.4"
 LibGit2 = "1"
