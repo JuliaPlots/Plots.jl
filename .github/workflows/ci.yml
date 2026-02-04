@@ -118,7 +118,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         with:
           directories: RecipesBase/src,RecipesPipeline/src,PlotThemes/src,Plots/src
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         if: startsWith(matrix.os, 'ubuntu')
         with:
           file: lcov.info
