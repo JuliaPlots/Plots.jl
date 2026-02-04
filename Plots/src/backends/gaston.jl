@@ -369,8 +369,7 @@ const gp_fillstyle = Dict(
     # :|, :-, :+  # unimplemented
 )
 
-gaston_fillstyle(x) =
-if haskey(gp_fillstyle, x)
+gaston_fillstyle(x) = if haskey(gp_fillstyle, x)
     "pattern $(gp_fillstyle[x])"
 else
     "solid"
