@@ -2,10 +2,9 @@
 
 should_warn_on_unsupported(::GastonBackend) = false
 
-# Create the window/figure for this backend.
+# create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
-    state_handle = Gaston.nexthandle() # for now all the figures will be kept
-    return plt.o = Gaston.newfigure(state_handle)
+    return plt.o = Gaston.Figure(nothing; autolayout = false)  # for now all the figures will be kept
 end
 
 function _before_layout_calcs(plt::Plot{GastonBackend})
