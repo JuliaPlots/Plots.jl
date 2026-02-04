@@ -205,7 +205,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     (gsp = sp.o) === nothing && return
     x, y, z = series[:x], series[:y], series[:z]
     st = series[:seriestype]
-    if gsp.dims == 2 && z === nothing
+    if !gsp.is3d && z === nothing
         for (n, seg) in enumerate(series_segments(series, st; check = true))
             i, rng = seg.attr_index, seg.range
             fr = _cycle(series[:fillrange], 1:length(x[rng]))
@@ -376,7 +376,7 @@ else
     "solid"
 end
 
-function gaston_parse_axes_args(
+function gaston_parse_axes_attrs(
         plt::Plot{GastonBackend},
         sp::Subplot{GastonBackend},
         dims::Int,
