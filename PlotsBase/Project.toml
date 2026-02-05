@@ -1,6 +1,6 @@
 name = "PlotsBase"
 uuid = "c52230a3-c5da-43a3-9e85-260fcdfdc737"
-version = "0.1"
+version = "0.1.0"
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -12,8 +12,8 @@ FFMPEG = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
 FixedPointNumbers = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 JLFzf = "1019f520-868f-41f5-a6de-eb00f4b6a39c"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Measures = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
@@ -38,11 +38,6 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 UnicodeFun = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 Unzip = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 
-[sources]
-PlotThemes = {path = "../PlotThemes"}
-RecipesBase = {path = "../RecipesBase"}
-RecipesPipeline = {path = "../RecipesPipeline"}
-
 [weakdeps]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
@@ -57,6 +52,11 @@ PlotlyKaleido = "f2990250-8cf9-495f-b13a-cce12b45703c"
 PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[sources]
+PlotThemes = {path = "../PlotThemes"}
+RecipesBase = {path = "../RecipesBase"}
+RecipesPipeline = {path = "../RecipesPipeline"}
 
 [extensions]
 FileIOExt = "FileIO"
@@ -82,7 +82,7 @@ Downloads = "1"
 FFMPEG = "0.4"
 FixedPointNumbers = "0.8"
 GR = "0.73"
-Gaston = "1"
+Gaston = "2"
 HDF5 = "0.17"
 JLFzf = "0.1"
 JSON = "0.21, 1"
@@ -100,9 +100,9 @@ PrecompileTools = "1"
 Preferences = "1"
 Printf = "1"
 PythonPlot = "1"
-Random = "1"
 REPL = "1"
 RecipesBase = "1.4.0"
+Random = "1"
 RecipesPipeline = "1"
 Reexport = "1"
 Scratch = "1"
@@ -111,9 +111,9 @@ SparseArrays = "1"
 Statistics = "1"
 StatsBase = "0.34"
 TableOperations = "1"
+UUIDs = "1"
 UnicodeFun = "0.4"
 UnicodePlots = "3"
 Unitful = "1.25"
 Unzip = "0.2"
-UUIDs = "1"
 julia = "1.10"

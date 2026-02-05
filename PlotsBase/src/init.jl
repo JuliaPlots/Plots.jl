@@ -180,7 +180,10 @@ macro precompile_backend(backend_package)
             PrecompileTools.@compile_workload begin
                 withenv("GKSwstype" => "nul", "MPLBACKEND" => "agg") do
                     eval.(imports)
-                    # eval.(examples)
+                    eval.(examples)
+                    if backend_name() ≠ :pythonplot  # FIXME: __init__ failure with PythonPlot
+                        PlotsBase.closeall()  # required for `Gaston` not to deadlock for example
+                    end
                     PlotsBase.CURRENT_PLOT.nullableplot = nothing
                 end
             end
