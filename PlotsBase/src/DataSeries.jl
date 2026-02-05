@@ -26,7 +26,7 @@ import ..PlotsBase
 import ..PlotUtils
 
 using ..PlotsBase: DefaultsDict, RecipesPipeline, AKW, KW
-using ..RecipesBase: @recipe
+using ..RecipesBase: RecipesBase, @recipe, CyclingAttribute
 using ..Commons
 
 mutable struct Series <: AKW
@@ -261,9 +261,12 @@ end
 # we want to check if a series needs to be split into segments just because
 # of its attributes
 # check relevant attributes if they have multiple inputs
+_is_segmenting_vector(v) = v isa AbstractVector && length(v) > 1
+_is_segmenting_vector(v::RecipesBase.CyclingAttribute) = length(v) > 1
+
 has_attribute_segments(series::Series) =
     any(
-    series[attr] isa AbstractVector && length(series[attr]) > 1 for
+    _is_segmenting_vector(series[attr]) for
         attr in PlotsBase.Commons._segmenting_vector_attributes
 ) || any(
     series[attr] isa AbstractArray for

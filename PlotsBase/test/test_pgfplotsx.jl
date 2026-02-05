@@ -72,7 +72,7 @@ with(:pgfplotsx) do
             rand(11, 4),
             lab = "lines",
             w = 3,
-            palette = cycle(:grays),
+            palette = :grays,
             fill = 0,
             α = 0.6,
         )
@@ -135,7 +135,7 @@ with(:pgfplotsx) do
         @test plot(
             PlotsBase.fakedata(100, 10),
             layout = 4,
-            palette = cycle.([:grays :blues :hot :rainbow]),
+            palette = [:grays :blues :hot :rainbow],
             bg_inside = [:orange :pink :darkblue :black],
         ) isa PlotsBase.Plot
     end

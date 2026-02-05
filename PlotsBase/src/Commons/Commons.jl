@@ -145,7 +145,12 @@ end
 
 function _getattr(plotattr::Union{AKW, AbstractLayout}, key::Symbol, i = 1)
     attr = plotattr[key]
-    return if attr isa AVec || attr isa PlotUtils.AbstractColorList
+    return if attr isa PlotUtils.AbstractColorList
+        getindex(attr, mod1(i, length(attr)))
+    elseif attr isa RecipesBase.CyclingAttribute
+        # CyclingAttribute uses mod1 indexing internally
+        getindex(attr, i)
+    elseif attr isa AVec
         getindex(attr, i)
     elseif attr isa AMat
         getindex(attr, :, i)

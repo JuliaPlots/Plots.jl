@@ -651,7 +651,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     end  # for segments
 
     # get that last marker
-    if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && opt[:markershape] isa AVec
+    if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && (opt[:markershape] isa AVec || opt[:markershape] isa RecipesBase.CyclingAttribute)
         push!(
             axis,
             PGFPlotsX.PlotInc(  # additional plot
@@ -1185,8 +1185,9 @@ function pgfx_marker(plotattributes, i = 1)
         pgfx_thickness_scaling(plotattributes) *
         0.75 *
         _getattr(plotattributes, :markersize, i)
-    mark_freq = if !any(isnan, plotattributes[:y]) && plotattributes[:markershape] isa AVec
-        length(plotattributes[:markershape])
+    ms = plotattributes[:markershape]
+    mark_freq = if !any(isnan, plotattributes[:y]) && (ms isa AVec || ms isa RecipesBase.CyclingAttribute)
+        length(ms)
     else
         1
     end
