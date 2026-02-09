@@ -329,7 +329,11 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
             i, rng = seg.attr_index, seg.range
             fr = _getattr(series, :fillrange, 1:length(x[rng]))
             for sc in gaston_seriesconf!(sp, series, n == 1, i)
-                push!(gsp.plots, Gaston.Plot(x[rng], y[rng], fr, sc))
+                if fr ≡ nothing
+                    push!(gsp.plots, Gaston.Plot(x[rng], y[rng], sc))
+                else
+                    push!(gsp.plots, Gaston.Plot(x[rng], y[rng], fr, sc))
+                end
             end
         end
     else
