@@ -160,7 +160,7 @@ end
     # TODO: think about this case later
     # sp = plot(data4, ribbon = (mat, mat))[1]
     for i in axes(data4, 1)
-        @test plot(data4)[1][i][:seriescolor] ==  RGBA(palette(:default)[i])
+        @test plot(data4)[1][i][:seriescolor] == RGBA(palette(:default)[i])
         get_fillrange(pl) = pl[1][i][:fillrange]
         @test plot(data4; fillrange = 0) |> get_fillrange == 0
         @test plot(data4; fillrange = [0.1, 0.2]) |> get_fillrange == [0.1, 0.2]
@@ -168,7 +168,7 @@ end
         @test plot(data4; fillrange = mat) |> get_fillrange == [0.1(2(i - 1) + 1), 0.2i]
         get_ribbon(pl) = pl[1][i][:ribbon]
         @test plot(data4; ribbon = 0) |> get_ribbon == 0
-        @test_throws BoundsError plot(data4; ribbon = [0.1,0.2])
+        @test_throws BoundsError plot(data4; ribbon = [0.1, 0.2])
         @test plot(data4; ribbon = RecipesBase.cycle([0.1, 0.2])) |> get_ribbon == [0.1, 0.2]
         @test_throws BoundsError plot(data4; ribbon = [0.1 0.2])
         @test plot(data4; ribbon = RecipesBase.cycle([0.1 0.2])) |> get_ribbon == (iseven(i) ? 0.2 : 0.1)

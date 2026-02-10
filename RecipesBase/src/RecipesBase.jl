@@ -66,7 +66,7 @@ struct CyclingAttribute{T}
     value::T
 end
 
-const CyclingContainerTypes = Union{AbstractArray,Tuple}
+const CyclingContainerTypes = Union{AbstractArray, Tuple}
 
 function Base.getindex(c::CyclingAttribute, args...)
     return c.value

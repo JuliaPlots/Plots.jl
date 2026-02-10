@@ -134,7 +134,7 @@ function _getvalue(val, args...)
     return val
 end
 function _getvalue(val::RecipesBase.CyclingAttribute)
-    val.value
+    return val.value
 end
 function _getvalue(val::Union{AVec, PlotUtils.AbstractColorList, RecipesBase.CyclingAttribute}, i, args...)
     return val[i]

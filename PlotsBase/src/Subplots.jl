@@ -99,7 +99,7 @@ function get_series_color(c, sp::Subplot, n::Int, seriestype)
     else
         c
     end
-    PlotsBase.plot_color(c)
+    return PlotsBase.plot_color(c)
 end
 
 get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
