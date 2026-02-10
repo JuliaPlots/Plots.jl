@@ -2148,7 +2148,8 @@ function gr_draw_surface(series, x, y, z, clims)
                 x, y, z = GR.gridit(x, y, z, nx, ny)
             end
             d_opt = get(e_kwargs, :display_option, GR.OPTION_COLORED_MESH)
-            if (!isnothing(fillalpha) && fillalpha < 1) || alpha(first(fillcolor)) < 1
+            fc = fillcolor isa Colorant ? fillcolor : first(fillcolor)
+            if (!isnothing(fillalpha) && fillalpha < 1) || alpha(fc) < 1
                 gr_set_transparency(fillcolor, fillalpha)
                 GR.surface(x, y, z, d_opt)
             else

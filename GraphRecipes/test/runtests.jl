@@ -144,25 +144,34 @@ cd(joinpath(@__DIR__, "..", "..", "assets", "GraphRecipes")) do
 
         @plottest light_graphs() "light_graphs.png" popup = !isci() tol = itol()
 
-# using Distributions
-# n = 1000
-# x = rand(RNG, Gamma(2), n)
-# y = -0.5x + randn(RNG, n)
-# marginalhist(x, y)
+        @plottest directed() "directed.png" popup = !isci() tol = itol()
 
-# -----------------------------------------
-# portfolio composition map
+        @plottest marker_properties() "marker_properties.png" popup = !isci() tol = itol()
 
-# # fake data
-# tickers = ["IBM", "Google", "Apple", "Intel"]
-# N = 10
-# D = length(tickers)
-# weights = rand(RNG, N, D)
-# weights ./= sum(weights, 2)
-# returns = sort!((1:N) + D*randn(RNG, N))
+        @plottest edgelabel() "edgelabel.png" popup = !isci() tol = itol()
 
-# # plot it
-# portfoliocomposition(weights, returns, labels = tickers')
+        @plottest selfedges() "selfedges.png" popup = !isci() tol = itol()
 
-# -----------------------------------------
-#
+        @plottest multigraphs() "multigraphs.png" popup = !isci() tol = itol()
+
+        @plottest arc_chord_diagrams() "arc_chord_diagrams.png" popup = !isci() tol = itol()
+
+        @plottest ast_example() "ast_example.png" popup = !isci() tol = itol()
+
+        @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol(2.0e-2)
+        @plottest julia_dict_tree() "julia_dict_tree.png" popup = !isci() tol = itol()
+
+        @plottest funky_edge_and_marker_args() "funky_edge_and_marker_args.png" popup =
+            !isci() tol = itol()
+
+        @plottest custom_nodeshapes_single() "custom_nodeshapes_single.png" popup = !isci() tol =
+            itol()
+
+        @plottest custom_nodeshapes_various() "custom_nodeshapes_various.png" popup =
+            !isci() tol = itol()
+    end
+
+    @testset "README" begin
+        @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
+    end
+end
