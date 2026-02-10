@@ -172,6 +172,6 @@ cd(joinpath(@__DIR__, "..", "..", "assets", "GraphRecipes")) do
     end
 
     @testset "README" begin
-        @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
+        @plottest readme_julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
     end
 end
