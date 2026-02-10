@@ -82,12 +82,17 @@ function Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, args...)
     return Base.getindex(c.value, args...)
 end
 
-Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::Int) = Base.getindex(c.value, mod1(i, length(c.value)))
+function _cycling_index(v, i::Int)
+    n = length(v)
+    return firstindex(v) + mod(i - 1, n)
+end
+
+Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::Int) = Base.getindex(c.value, _cycling_index(c.value, i))
 Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::StepRange) = map(i) do j
-    Base.getindex(c.value, mod1(j, length(c.value)))
+    Base.getindex(c.value, _cycling_index(c.value, j))
 end
 Base.getindex(c::CyclingAttribute, i::StepRange) = map(i) do j
-    Base.getindex(c.value, mod1(j, length(c.value)))
+    Base.getindex(c.value, _cycling_index(c.value, j))
 end
 
 for op in (:+, :-, :/, :*)
