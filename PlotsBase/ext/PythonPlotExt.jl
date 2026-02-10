@@ -630,8 +630,8 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             ax.scatter(
                 args...;
                 zorder = zorder + 0.5,
-                marker = _py_marker(_cycle(series[:markershape], i)),
-                s = _py_thickness_scale(plt, _cycle(series[:markersize], i)) .^ 2,
+                marker = _py_marker(_getattr(series, :markershape, i)),
+                s = _py_thickness_scale(plt, _getattr(series, :markersize, i)) .^ 2,
                 facecolors = _py_color(
                     get_markercolor(series, i, cbar_scale),
                     get_markeralpha(series, i),
@@ -903,9 +903,9 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             f, dim1, dim2 = :fill_between, x[rng], y[rng]
             n = length(dim1)
             args = if typeof(fillrange) <: Union{Real, AVec}
-                dim1, _cycle(fillrange, rng), dim2
+                dim1, _getvalue(fillrange, rng), dim2
             elseif is_2tuple(fillrange)
-                dim1, _cycle(fillrange[1], rng), _cycle(fillrange[2], rng)
+                dim1, _getvalue(fillrange[1], rng), _getvalue(fillrange[2], rng)
             end
 
             la = get_linealpha(series, i)
@@ -1596,7 +1596,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                 solid_joinstyle = "miter",
                 dash_capstyle = "butt",
                 dash_joinstyle = "miter",
-                marker = _py_marker(_cycle(series[:markershape], 1)),
+                marker = _py_marker(_getattr(series, :markershape, 1)),
                 markersize = _py_thickness_scale(plt, 0.8sp[:legend_font_pointsize]),
                 markeredgecolor = _py_color(
                     single_color(get_markerstrokecolor(series)),

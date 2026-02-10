@@ -4,7 +4,7 @@ using Reexport
 import RecipesBase: recipetype
 using RecipesPipeline
 @reexport using PlotsBase
-import PlotsBase.Commons: _cycle, mm
+import PlotsBase.Commons: mm
 
 using LinearAlgebra: eigen, diagm
 using Distributions

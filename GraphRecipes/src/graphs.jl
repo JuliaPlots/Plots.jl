@@ -1132,7 +1132,7 @@ more details.
                 colorbar_entry --> false
                 markersize := 0
                 markeralpha := 0
-                markerstrokesize := 0
+                makerstrokewidth := 0
                 isnothing(edgelabel) || (annotations --> edge_label_array)
             else
                 seriestype := :scatter
@@ -1153,7 +1153,7 @@ more details.
                 colorbar_entry --> false
                 markersize := 0
                 markeralpha := 0
-                markerstrokesize := 0
+                makerstrokewidth := 0
                 annotations --> edge_label_array
             end
         end

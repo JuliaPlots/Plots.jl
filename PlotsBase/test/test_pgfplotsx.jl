@@ -1,4 +1,5 @@
 using Test, PlotsBase, Unitful, LaTeXStrings
+using RecipesBase: cycle
 const PGFPlotsX = Base.get_extension(PlotsBase, :PGFPlotsXExt).PGFPlotsX
 
 function create_plot(args...; kwargs...)
@@ -347,9 +348,9 @@ with(:pgfplotsx) do
     @testset "Markers and Paths" begin
         pl = plot(
             5 .- ones(9),
-            markershape = [:utriangle, :rect],
+            markershape = cycle([:utriangle, :rect]),
             markersize = 8,
-            color = [:red, :black],
+            color = cycle([:red, :black]),
         )
         axis_contents = first(get_pgf_axes(pl)).contents
         plots = filter(x -> x isa PGFPlotsX.Plot, axis_contents)

@@ -1139,15 +1139,16 @@ has_black_border_for_default(st::Function) =
 has_black_border_for_default(st::Symbol) =
     like_histogram(st) || st in (:hexbin, :bar, :shape)
 
-ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol) =
-if plotattributes[csym] isa ColorPalette
-    α = nothing
-    plotattributes[asym] isa AbstractVector || (α = plotattributes[asym])
-    plotattributes[csym] = cgrad(plotattributes[csym], categorical = true, alpha = α)
-elseif !(plotattributes[csym] isa ColorGradient)
-    plotattributes[csym] =
-        typeof(plotattributes[asym]) <: AbstractVector ? cgrad() :
-        cgrad(alpha = plotattributes[asym])
+function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
+    return if plotattributes[csym] isa ColorPalette
+        α = nothing
+        plotattributes[asym] isa AbstractVector || (α = plotattributes[asym])
+        plotattributes[csym] = cgrad(alpha = α)
+    elseif !(plotattributes[csym] isa PlotUtils.AbstractColorList)
+        plotattributes[csym] =
+            typeof(plotattributes[asym]) <: AbstractVector ? cgrad() :
+            cgrad(alpha = plotattributes[asym])
+    end
 end
 
 # get a good default linewidth... 0 for surface and heatmaps
