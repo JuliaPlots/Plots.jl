@@ -61,7 +61,11 @@ grouped_xy(y::AbstractArray) = 1:size(y, 1), y
         isstack ? groupedbar_fillrange(y) :
         (y, get(plotattributes, :fillrange, fill_bottom))
     if isylog
-        replace!(fr, 0 => fill_bottom)
+        if fr isa AbstractArray
+            replace!(fr, 0 => fill_bottom)
+        elseif fr == 0
+            fr = fill_bottom
+        end
     end
     fillrange := fr
 
