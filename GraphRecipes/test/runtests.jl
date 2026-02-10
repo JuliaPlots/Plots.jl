@@ -20,7 +20,7 @@ include("parse_readme.jl")
 
 default(show = false, reuse = true)
 
-cd(joinpath(@__DIR__, "..", "assets")) do
+cd(joinpath(@__DIR__, "..", "..", "assets", "GraphRecipes")) do
     @testset "TestImages" begin
         figure_files = readdir()
         @testset "$figure_file" for figure_file in figure_files
