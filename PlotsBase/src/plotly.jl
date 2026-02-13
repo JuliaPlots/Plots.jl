@@ -7,6 +7,9 @@ import RecipesPipeline
 import Statistics
 import UUIDs
 import JSON
+import PlotsBase: Base64, Downloads
+using Scratch: @get_scratch!
+
 
 using PlotUtils
 
@@ -1224,35 +1227,41 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt), 4)
 html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
-plotly_url() =
-if PlotsBase._use_local_dependencies[]
-    "file:///$(PlotsBase._plotly_local_file_path[])"
-else
-    "https://cdn.plot.ly/$(PlotsBase._plotly_min_js_filename)"
+function plotly_url(plt::Plot)
+    include_plotly = get(plt[:extra_plot_kwargs], :include_plotly, "cdn")
+    plotly_version = get(plt[:extra_plot_kwargs], :mathjax_version, "2.35.2")
+    plotly_cdn = "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@$plotly_version/plotly.min.js"
+    return if include_plotly != "cdn"
+        if !isdir(include_plotly)
+            include_plotly = joinpath(@get_scratch!("plotly"), "plotly$plotly_version.min.js")
+        end
+        if !isfile(include_plotly)
+            Downloads.download(plotly_cdn, include_plotly)
+        end
+        "data:application/javascript;base64,$(Base64.base64encode(read(include_plotly)))"
+    else
+        plotly_cdn
+    end
 end
 
-function plotly_html_head(plt::Plot)
-    plotly = plotly_url()
-
+function mathjax_url(plt::Plot)
     include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
-
-    mathjax_file = if include_mathjax != "cdn"
-        "file://" * include_mathjax
+    mathjax_version = get(plt[:extra_plot_kwargs], :mathjax_version, "3.2.2")
+    mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@$mathjax_version/es5/tex-svg-full.js"
+    return if include_mathjax != "cdn"
+        if !isdir(include_mathjax)
+            include_mathjax = joinpath(@get_scratch!("mathjax"), "mathjax$mathjax_version.js")
+        end
+        if !isfile(include_mathjax)
+            Downloads.download(mathjax_cdn, include_mathjax)
+        end
+        "data:application/javascript;base64,$(Base64.base64encode(read(include_mathjax)))"
     else
-        "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
+        mathjax_cdn
     end
-
-    mathjax_head = if isempty(include_mathjax)
-        ""
-    else
-        "<script src=\"$mathjax_file\"></script>\n\t\t"
-    end
-
-    return if PlotsBase.isijulia()
-        mathjax_head
-    else
-        "$mathjax_head<script src=$(repr(plotly))></script>"
-    end
+end
+function plotly_html_head(plt::Plot)
+    return ""
 end
 
 function plotly_html_body(plt, style = nothing)
@@ -1261,41 +1270,26 @@ function plotly_html_body(plt, style = nothing)
         style = "width:$(w)px;height:$(h)px;"
     end
 
-    requirejs_prefix = requirejs_suffix = ""
-    if PlotsBase.isijulia()
-        # require.js adds .js automatically
-        plotly_no_ext = plotly_url() |> splitext |> first
-
-        requirejs_prefix = """
-            requirejs.config({
-                paths: {
-                    plotly: '$(plotly_no_ext)'
-                }
-            });
-            require(['plotly'], function (Plotly) {
-        """
-        requirejs_suffix = "});"
-    end
-
     unique_tag = "id_$(replace(string(UUIDs.uuid4()), '-' => '_'))"
 
     return """
-        <div id=\"$unique_tag\" style=\"$style\"></div>
-        <script>
-        ;(()=> {
-        function plots_jl_plotly_$unique_tag() {
-            $requirejs_prefix
+            <div id=\"$unique_tag\" style=\"$style\"></div>
+
+            <link id="plotlyjs-julia" href="$(plotly_url(plt))" >
+            <link id="mathjax-julia" href="$(mathjax_url(plt))" >
+
+            <script type="module" id="plotsjl-plotly-script">
+            if(window.MathJax == null)
+                // Calling `await import` will load the library, and return when loaded.
+    		    await import(document.querySelector(`link#mathjax-julia`).href)
+    	
+            if(window.Plotly == null)
+                await import(document.querySelector(`link#plotlyjs-julia`).href)
+
             $(js_body(plt, unique_tag))
-            $requirejs_suffix
-        }
-        let plotlyloader = window.document.createElement("script")
-        let src="https://requirejs.org/docs/release/$(PlotsBase._requirejs_version)/minified/require.js"
-        plotlyloader.addEventListener("load", plots_jl_plotly_$unique_tag);
-        plotlyloader.src = src
-        document.querySelector("#$unique_tag").appendChild(plotlyloader)
-        })()
-        </script>
-    """
+            
+            </script>
+        """
 end
 
 js_body(
