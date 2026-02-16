@@ -143,6 +143,20 @@ with(:gr) do
         @test_nowarn show(devnull, scatter3d(1:2, 1:2, 1:2))
     end
 
+    @testset "stem" begin
+        n = 0:0.5:10
+
+        # Make sure array and function arguments work
+        @test stem(n, sin.(n)) isa PlotsBase.Plot
+        @test stem(n, sin) isa PlotsBase.Plot
+
+        # Should only accept two positional arguments, otherwise throw an error
+        @test_throws MethodError stem()
+        @test_throws MethodError stem(n)
+        @test_throws MethodError stem(n, n, n)
+        @test_throws MethodError stem(n, n, n, n)
+    end
+
     @testset "sticks" begin
         @test_nowarn show(devnull, sticks(1:2, marker = :circle))
     end
