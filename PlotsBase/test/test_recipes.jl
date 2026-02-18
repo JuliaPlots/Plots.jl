@@ -154,7 +154,6 @@ with(:gr) do
     @testset "bar with logscales" begin
         @test_nowarn show(devnull, bar([1 2 3], [0.02 125 10_000]; yscale = :log10))
         @test_nowarn histogram(randn(100), yscale = :log10)
-        @test histogram(randn(100), yscale = :log10)
     end
 
     @testset "histogram range" begin
