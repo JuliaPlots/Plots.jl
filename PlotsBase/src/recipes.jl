@@ -770,9 +770,11 @@ _hist_edges(
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
+_invertedindex(v, not) = [j for (i, j) in enumerate(v) if !(i ∈ not)]
+
 _filternans(vs::NTuple{1, AbstractVector}) = filter!.(isfinite, vs)
+_filternans(vs::NTuple{1, AbstractRange}) = filter!.(isfinite, collect.(vs))
 function _filternans(vs::NTuple{N, AbstractVector}) where {N}
-    _invertedindex(v, not) = [j for (i, j) in enumerate(v) if !(i ∈ not)]
     nots = union(Set.(findall.(!isfinite, vs))...)
     return _invertedindex.(vs, Ref(nots))
 end
