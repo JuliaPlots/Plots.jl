@@ -6,10 +6,10 @@ using OffsetArrays
         legend --> :topleft
         (1:3, 1:3)
     end
-    let pl = pl = plot(LegendPlot(); legend = :right)
+    let pl = plot(LegendPlot(); legend = :right)
         @test pl[1][:legend_position] ≡ :right
     end
-    let pl = pl = plot(LegendPlot())
+    let pl = plot(LegendPlot())
         @test pl[1][:legend_position] ≡ :topleft
     end
     let pl = plot(LegendPlot(); legend = :inline)
@@ -53,9 +53,9 @@ end
 
 @testset "steps offset" begin
     data = OffsetArray(rand(11), -5:5)
-    plot(data, linetype = :steppre)
-    plot(data, linetype = :stepmid)
-    plot(data, linetype = :steppost)
+    @test_nowarn plot(data, linetype = :steppre)
+    @test_nowarn plot(data, linetype = :stepmid)
+    @test_nowarn plot(data, linetype = :steppost)
 end
 
 @testset "offset axes" begin
@@ -154,5 +154,10 @@ with(:gr) do
     @testset "bar with logscales" begin
         @test_nowarn show(devnull, bar([1 2 3], [0.02 125 10_000]; yscale = :log10))
         @test_nowarn histogram(randn(100), yscale = :log10)
+        @test histogram(randn(100), yscale = :log10)
+    end
+
+    @testset "histogram range" begin
+        @test histogram(1:10) isa Plot
     end
 end
