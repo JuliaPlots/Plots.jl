@@ -32,6 +32,7 @@ _prepare_series_data(s::Surface{<:AMat{<:MaybeNumber}}) =
 _prepare_series_data(s::Surface) = s  # non-numeric Surface, such as an image
 _prepare_series_data(v::Volume) =
     Volume(_prepare_series_data(v.v), v.x_extents, v.y_extents, v.z_extents)
+_prepare_series_data(c::RecipesBase.CyclingAttribute) = c
 
 # default: assume x represents a single series
 _series_data_vector(x, plotattributes) = [_prepare_series_data(x)]
