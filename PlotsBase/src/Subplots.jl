@@ -7,14 +7,15 @@ export Subplot,
     titlefont,
     get_series_color,
     needs_any_3d_axes
-import PlotsBase
 
-import ..RecipesPipeline: RecipesPipeline, DefaultsDict
-import ..RecipesBase: AbstractLayout, AbstractBackend
-import ..Commons: BoundingBox
-import ..DataSeries: Series
-import ..PlotUtils
+using PlotsBase: PlotsBase
 
+using ..RecipesPipeline: RecipesPipeline, DefaultsDict
+using ..Commons: BoundingBox
+using ..DataSeries: Series
+using ..PlotUtils
+
+using ..RecipesBase: RecipesBase, AbstractLayout, AbstractBackend
 using ..Commons
 using ..Fonts
 using ..Ticks
@@ -86,14 +87,20 @@ Commons.get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[get_attr_symbol(s, 
 
 # converts a symbol or string into a Colorant or ColorGradient
 # and assigns a color automatically
-get_series_color(c, sp::Subplot, n::Int, seriestype) =
-    if c ≡ :auto
-    Commons.like_surface(seriestype) ? PlotsBase.cgrad() : _cycle(sp[:color_palette], n)
-elseif isa(c, Int)
-    _cycle(sp[:color_palette], c)
-else
-    c
-end |> PlotsBase.plot_color
+function get_series_color(c, sp::Subplot, n::Int, seriestype)
+    # Ensure valid index (n can be 0 for non-primary series before any primary series)
+    idx = max(1, n)
+    c = if c ≡ :auto
+        Commons.like_surface(seriestype) ? PlotsBase.cgrad() : _getattr(sp, :color_palette, idx)
+    elseif isa(c, Int)
+        _getattr(sp, :color_palette, c)
+    elseif c isa RecipesBase.CyclingAttribute
+        c[idx]
+    else
+        c
+    end
+    return PlotsBase.plot_color(c)
+end
 
 get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
     map(x -> get_series_color(x, sp, n, seriestype), c)

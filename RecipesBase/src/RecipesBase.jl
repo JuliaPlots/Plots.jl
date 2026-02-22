@@ -10,7 +10,8 @@ export @recipe,
     RecipeData,
     AbstractBackend,
     AbstractPlot,
-    AbstractLayout
+    AbstractLayout,
+    cycle
 
 # Common abstract types for the Plots ecosystem
 abstract type AbstractBackend end
@@ -52,6 +53,7 @@ apply_recipe(plotattributes::AbstractDict{Symbol, Any}) = ()
 is_explicit(d::AbstractDict{Symbol, Any}, k) = haskey(d, k)
 function is_default end
 
+include("api.jl")
 # --------------------------------------------------------------------------
 
 # this holds the data and attributes of one series, and is returned from apply_recipe
@@ -60,6 +62,48 @@ struct RecipeData
     args::Tuple
 end
 
+struct CyclingAttribute{T}
+    value::T
+end
+
+const CyclingContainerTypes = Union{AbstractArray, Tuple}
+
+function Base.getindex(c::CyclingAttribute, args...)
+    return c.value
+end
+function Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, args...)
+    args = map(enumerate(args)) do (i, arg)
+        if arg isa Number
+            return mod1(arg, size(c.value, i))
+        else
+            return arg
+        end
+    end
+    return Base.getindex(c.value, args...)
+end
+
+function _cycling_index(v, i::Int)
+    n = length(v)
+    return firstindex(v) + mod(i - 1, n)
+end
+
+Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::Int) = Base.getindex(c.value, _cycling_index(c.value, i))
+Base.getindex(c::CyclingAttribute{<:CyclingContainerTypes}, i::StepRange) = map(i) do j
+    Base.getindex(c.value, _cycling_index(c.value, j))
+end
+Base.getindex(c::CyclingAttribute, i::StepRange) = map(i) do j
+    Base.getindex(c.value, _cycling_index(c.value, j))
+end
+
+for op in (:+, :-, :/, :*)
+    @eval Base.$op(a::CyclingAttribute, b::CyclingAttribute) = CyclingAttribute($op(a.value, b.value))
+end
+Base.:-(a::CyclingAttribute) = CyclingAttribute(-a.value)
+Base.:(==)(a::CyclingAttribute, b::CyclingAttribute) = a.value == b.value
+Base.firstindex(c::CyclingAttribute) = firstindex(c.value)
+Base.lastindex(c::CyclingAttribute) = lastindex(c.value)
+Base.length(c::CyclingAttribute) = length(c.value)
+Base.size(c::CyclingAttribute, args...) = size(c.value, args...)
 # --------------------------------------------------------------------------
 
 @inline to_symbol(s::Symbol) = s

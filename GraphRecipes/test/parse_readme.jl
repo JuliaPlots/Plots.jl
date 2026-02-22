@@ -17,4 +17,4 @@ end
 # the installation instructions.
 readme_exprs = [Meta.parse("begin $(code_blocks[i]) end") for i in 2:length(code_blocks)]
 
-julia_logo_pun() = eval(readme_exprs[1])
+readme_julia_logo_pun() = eval(readme_exprs[1])

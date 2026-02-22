@@ -551,7 +551,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
         i, rng = segment.attr_index, segment.range
         segment_opt = pgfx_linestyle(opt, i)
         if opt[:markershape] ≢ :none
-            if (marker = _cycle(opt[:markershape], i)) isa Shape
+            if (marker = _getattr(opt, :markershape, i)) isa Shape
                 scale_factor = 0.00125
                 msize = opt[:markersize] * scale_factor
                 path = join(
@@ -573,7 +573,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
         # add fillrange
         if (sf = opt[:fillrange]) ≢ nothing && !isfilledcontour(series)
             if sf isa Number || sf isa AVec
-                pgfx_fillrange_series!(axis, series, series_func, i, _cycle(sf, rng), rng)
+                pgfx_fillrange_series!(axis, series, series_func, i, _getvalue(sf, rng), rng)
             elseif sf isa Tuple && series[:ribbon] ≢ nothing
                 for sfi in sf
                     pgfx_fillrange_series!(
@@ -581,7 +581,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                         series,
                         series_func,
                         i,
-                        _cycle(sfi, rng),
+                        _getvalue(sfi, rng),
                         rng,
                     )
                 end
@@ -651,7 +651,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     end  # for segments
 
     # get that last marker
-    if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && opt[:markershape] isa AVec
+    if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && (opt[:markershape] isa AVec || opt[:markershape] isa RecipesBase.CyclingAttribute)
         push!(
             axis,
             PGFPlotsX.PlotInc(  # additional plot
@@ -1174,7 +1174,7 @@ pgfx_should_add_to_legend(series::Series) =
 )
 
 function pgfx_marker(plotattributes, i = 1)
-    shape = _cycle(plotattributes[:markershape], i)
+    shape = _getattr(plotattributes, :markershape, i)
     cstr =
         plot_color(get_markercolor(plotattributes, i), get_markeralpha(plotattributes, i))
     cstr_stroke = plot_color(
@@ -1184,9 +1184,10 @@ function pgfx_marker(plotattributes, i = 1)
     mark_size =
         pgfx_thickness_scaling(plotattributes) *
         0.75 *
-        _cycle(plotattributes[:markersize], i)
-    mark_freq = if !any(isnan, plotattributes[:y]) && plotattributes[:markershape] isa AVec
-        length(plotattributes[:markershape])
+        _getattr(plotattributes, :markersize, i)
+    ms = plotattributes[:markershape]
+    mark_freq = if !any(isnan, plotattributes[:y]) && (ms isa AVec || ms isa RecipesBase.CyclingAttribute)
+        length(ms)
     else
         1
     end
@@ -1202,7 +1203,7 @@ function pgfx_marker(plotattributes, i = 1)
             "line width" =>
                 pgfx_thickness_scaling(plotattributes) *
                 0.75 *
-                _cycle(plotattributes[:markerstrokewidth], i),
+                _getattr(plotattributes, :markerstrokewidth, i),
             "rotate" => if shape ≡ :dtriangle
                 180
             elseif shape ≡ :rtriangle
@@ -1212,7 +1213,7 @@ function pgfx_marker(plotattributes, i = 1)
             else
                 0
             end,
-            pgfx_get_linestyle(_cycle(plotattributes[:markerstrokestyle], i)) =>
+            pgfx_get_linestyle(_getattr(plotattributes, :markerstrokestyle, i)) =>
                 nothing,
         ),
     )
@@ -1271,15 +1272,25 @@ end
 function pgfx_fillrange_attrs(fillrange, x, y)
     n = length(x)
     x_fill = [x; x[n:-1:1]; x[1]]
-    y_fill = [y; _cycle(fillrange, n:-1:1); y[1]]
+    fr_vals = if fillrange isa Number
+        fill(fillrange, n)
+    else
+        _getvalue(fillrange, n:-1:1)
+    end
+    y_fill = [y; fr_vals; y[1]]
     return PGFPlotsX.Coordinates(x_fill, y_fill)
 end
 
 function pgfx_fillrange_attrs(fillrange, x, y, z)
     n = length(x)
     x_fill = [x; x[n:-1:1]; x[1]]
-    y_fill = [y; y[n:-1:1]; x[1]]
-    z_fill = [z; _cycle(fillrange, n:-1:1); z[1]]
+    y_fill = [y; y[n:-1:1]; y[1]]
+    fr_vals = if fillrange isa Number
+        fill(fillrange, n)
+    else
+        _getvalue(fillrange, n:-1:1)
+    end
+    z_fill = [z; fr_vals; z[1]]
     return PGFPlotsX.Coordinates(x_fill, y_fill, z_fill)
 end
 

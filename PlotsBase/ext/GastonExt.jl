@@ -327,9 +327,13 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
     if !gsp.is3d && z ≡ nothing
         for (n, seg) in enumerate(series_segments(series, st; check = true))
             i, rng = seg.attr_index, seg.range
-            fr = _cycle(series[:fillrange], 1:length(x[rng]))
+            fr = _getattr(series, :fillrange, 1:length(x[rng]))
             for sc in gaston_seriesconf!(sp, series, n == 1, i)
-                push!(gsp.plots, Gaston.Plot(x[rng], y[rng], fr, sc))
+                if fr ≡ nothing
+                    push!(gsp.plots, Gaston.Plot(x[rng], y[rng], sc))
+                else
+                    push!(gsp.plots, Gaston.Plot(x[rng], y[rng], fr, sc))
+                end
             end
         end
     else
@@ -774,8 +778,8 @@ gaston_lc_ls_lw(series::Series, clims, i::Int) = (
 )
 
 gaston_mk_ms_mc(series::Series, clims, i::Int) = (
-    gaston_marker(_cycle(series[:markershape], i), get_markeralpha(series, i)),
-    0.2_cycle(series[:markersize], i),
+    gaston_marker(_getattr(series, :markershape, i), get_markeralpha(series, i)),
+    0.2 * _getattr(series, :markersize, i),
     gaston_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
 )
 

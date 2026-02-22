@@ -77,15 +77,15 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     # sort vector arguments
     for arg in POTENTIAL_VECTOR_ARGUMENTS
         if typeof(plotattributes[arg]) <: AVec
-            plotattributes[arg] = _cycle(plotattributes[arg], indices)
+            plotattributes[arg] = _getattr(plotattributes, arg, indices)
         end
     end
 
     # a tuple as fillrange has to be handled differently
     if typeof(plotattributes[:fillrange]) <: Tuple
         lower, upper = plotattributes[:fillrange]
-        typeof(lower) <: AVec && (lower = _cycle(lower, indices))
-        typeof(upper) <: AVec && (upper = _cycle(upper, indices))
+        typeof(lower) <: AVec && (lower = _getvalue(lower, indices))
+        typeof(upper) <: AVec && (upper = _getvalue(upper, indices))
         plotattributes[:fillrange] = (lower, upper)
     end
 
@@ -294,23 +294,25 @@ end
 # create vertical line segments from fill
 @recipe function f(::Type{Val{:sticks}}, x, y, z)  # COV_EXCL_LINE
     n = length(x)
-    if (fr = plotattributes[:fillrange]) ≡ nothing
-        sp = plotattributes[:subplot]
-        fr = if sp[:yaxis][:scale] ≡ :identity
-            0.0
-        else
-            NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
-        end
-    end
+
     newx, newy, newz = zeros(3n), zeros(3n), z ≢ nothing ? zeros(3n) : nothing
     for (i, (xi, yi, zi)) in enumerate(zip(x, y, z ≢ nothing ? z : 1:n))
+        fri = _getattr(plotattributes, :fillrange, i)
+        if fri ≡ nothing
+            sp = plotattributes[:subplot]
+            fri = if sp[:yaxis][:scale] ≡ :identity
+                0.0
+            else
+                NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
+            end
+        end
         rng = (3i - 2):(3i)
         newx[rng] = [xi, xi, NaN]
         if z ≢ nothing
             newy[rng] = [yi, yi, NaN]
-            newz[rng] = [_cycle(fr, i), zi, NaN]
+            newz[rng] = [fri, zi, NaN]
         else
-            newy[rng] = [_cycle(fr, i), yi, NaN]
+            newy[rng] = [fri, yi, NaN]
         end
     end
     x := newx
@@ -381,13 +383,13 @@ end
     for rng in DataSeries.iter_segments(args...)
         length(rng) < 2 && continue
         ts = range(0, stop = 1, length = npoints)
-        nanappend!(newx, map(t -> bezier_value(_cycle(x, rng), t), ts))
-        nanappend!(newy, map(t -> bezier_value(_cycle(y, rng), t), ts))
+        nanappend!(newx, map(t -> bezier_value(_getvalue(x, rng), t), ts))
+        nanappend!(newy, map(t -> bezier_value(_getvalue(y, rng), t), ts))
         if z ≢ nothing
-            nanappend!(newz, map(t -> bezier_value(_cycle(z, rng), t), ts))
+            nanappend!(newz, map(t -> bezier_value(_getvalue(z, rng), t), ts))
         end
         if fr ≢ nothing
-            nanappend!(newfr, map(t -> bezier_value(_cycle(fr, rng), t), ts))
+            nanappend!(newfr, map(t -> bezier_value(_getvalue(fr, rng), t), ts))
         end
     end
 
@@ -442,7 +444,7 @@ end
             1
         end
     else
-        map(i -> 0.5_cycle(bw, i), eachindex(procx))
+        map(i -> 0.5 * _getvalue(bw, i), eachindex(procx))
     end
 
     # make fillto a vector... default fills to 0
@@ -466,10 +468,10 @@ end
     valid_i = isfinite.(procx) .& isfinite.(procy)
     for i in 1:ny
         valid_i[i] || continue
-        yi = procy[i]
-        center = procx[i]
-        hwi = _cycle(hw, i)
-        fi = _cycle(fillto, i)
+        yi = _getvalue(procy, i)
+        center = _getvalue(procx, i)
+        hwi = _getvalue(hw, i)
+        fi = _getvalue(fillto, i)
         push!(xseg, center - hwi, center - hwi, center + hwi, center + hwi, center - hwi)
         push!(yseg, yi, fi, fi, yi, yi)
     end
@@ -680,24 +682,30 @@ end
 
     # create a secondary series for the markers
     if plotattributes[:markershape] ≢ :none
+        # create the primary path series first
         @series begin
-            seriestype := :scatter
-            x := _bin_centers(edge)
-            y := weights
-            fillrange := nothing
-            label := ""
-            primary := false
+            x := xpts
+            y := ypts
+            seriestype := :path
+            markershape := :none
+            xerror := :none
+            yerror := :none
             ()
         end
-        markershape := :none
-        xerror := :none
-        yerror := :none
+        # then the non-primary scatter series for markers
+        seriestype := :scatter
+        x := _bin_centers(edge)
+        y := weights
+        fillrange := nothing
+        label := ""
+        primary := false
+        ()
+    else
+        x := xpts
+        y := ypts
+        seriestype := :path
+        ()
     end
-
-    x := xpts
-    y := ypts
-    seriestype := :path
-    ()
 end
 @deps stepbins path
 
@@ -937,7 +945,7 @@ end
         θ_new = θ + 2π * y[i] / s
         coords = [(0.0, 0.0); partialcircle(θ, θ_new, 50)]
         @series begin
-            seriescolor := _cycle(colors, i)
+            seriescolor := _getvalue(colors, i)
             seriestype := :shape
             label --> string(x[i])
             x := first.(coords)
@@ -1129,10 +1137,10 @@ function error_coords(errorbar, errordata, otherdata...)
     od = map(odi -> Vector{float_extended_type(odi)}(undef, 0), otherdata)
     for (i, edi) in enumerate(errordata)
         for (j, odj) in enumerate(otherdata)
-            odi = _cycle(odj, i)
+            odi = _getvalue(odj, i)
             nanappend!(od[j], [odi, odi])
         end
-        e1, e2 = error_tuple(_cycle(errorbar, i))
+        e1, e2 = error_tuple(_getvalue(errorbar, i))
         nanappend!(ed, [edi - e1, edi + e2])
     end
     return (ed, od...)
@@ -1217,11 +1225,11 @@ function quiver_using_arrows(plotattributes::AKW)
     is_3d && (z = zeros(0))
     for i in 1:max(length(xorig), length(yorig), is_3d ? 0 : length(zorig))
         # get the starting position
-        xi = _cycle(xorig, i)
-        yi = _cycle(yorig, i)
-        zi = is_3d ? _cycle(zorig, i) : 0
+        xi = _getvalue(xorig, i)
+        yi = _getvalue(yorig, i)
+        zi = is_3d ? _getvalue(zorig, i) : 0
         # get the velocity
-        vi = _cycle(velocity, i)
+        vi = _getvalue(velocity, i)
         if is_3d
             vx, vy, vz = if istuple(vi)
                 vi[1], vi[2], vi[3]
@@ -1266,12 +1274,12 @@ function quiver_using_hack(plotattributes::AKW)
     for i in 1:max(length(xorig), length(yorig))
 
         # get the starting position
-        xi = _cycle(xorig, i)
-        yi = _cycle(yorig, i)
+        xi = _getvalue(xorig, i)
+        yi = _getvalue(yorig, i)
         p = P2((xi, yi))
 
         # get the velocity
-        vi = _cycle(velocity, i)
+        vi = _getvalue(velocity, i)
         vx, vy = if istuple(vi)
             first(vi), last(vi)
         elseif isscalar(vi)

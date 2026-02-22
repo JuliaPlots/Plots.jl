@@ -1,5 +1,5 @@
 autopick_ignore_none_auto(arr::AVec, idx::Integer) =
-    _cycle(setdiff(arr, [:none, :auto]), idx)
+    _getvalue(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
 function aliases_and_autopick(
