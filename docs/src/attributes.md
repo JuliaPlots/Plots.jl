@@ -59,7 +59,7 @@ Note that `yaxis` and `zaxis` work similarly, and `axis` will apply to all.
 
 Passing a tuple to `xticks` (and similarly to `yticks` and `zticks`) changes the position of the ticks and the labels:
 ```julia
-plot!(xticks = ([0:π:3*π;], ["0", "\\pi", "2\\pi"]))
+plot!(xticks = ([0:π:2π;], ["0", "\\pi", "2\\pi"]))
 yticks!([-1:1:1;], ["min", "zero", "max"])
 ```
 
