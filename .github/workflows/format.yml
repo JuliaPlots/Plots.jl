@@ -2,10 +2,11 @@ name: format
 
 on:
   push:
-    branches: ['release-', 'master', 'v2']
+    branches: [ 'release-', 'master', 'v2' ]
     tags:
-      - '*'
+    - '*'
   pull_request:
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -15,17 +16,7 @@ jobs:
   runic:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@latest
-      - uses: julia-actions/cache@v2
-      - uses: fredrikekre/runic-action@v1
-      - name: Create PR with formatting changes
-        if: failure()
-        uses: peter-evans/create-pull-request@v7
-        with:
-          commit-message: "Apply Runic formatting"
-          title: "Apply Runic formatting"
-          body: "Automated formatting changes from Runic."
-          branch: runic/format-${{ github.head_ref || github.ref_name }}
-          base: ${{ github.head_ref || github.ref_name }}
-          delete-branch: true
+    - uses: actions/checkout@v6
+    - uses: julia-actions/setup-julia@latest
+    - uses: julia-actions/cache@v2
+    - uses: fredrikekre/runic-action@v1

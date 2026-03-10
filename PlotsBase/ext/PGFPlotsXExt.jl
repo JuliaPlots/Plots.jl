@@ -1232,8 +1232,8 @@ function pgfx_add_annotation!(
         Options(
             join(
                 (
-                    get((vcenter = "", top = "below", bottom = "above"), val.font.valign, ""), 
-                    get((hcenter = "", left = "right", right = "left"), val.font.halign, ""), 
+                    get((vcenter = "", top = "below", bottom = "above"), val.font.valign, ""),
+                    get((hcenter = "", left = "right", right = "left"), val.font.halign, ""),
                 ),
                 ' '
             ) => nothing,
