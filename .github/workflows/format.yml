@@ -19,3 +19,13 @@ jobs:
       - uses: julia-actions/setup-julia@latest
       - uses: julia-actions/cache@v2
       - uses: fredrikekre/runic-action@v1
+      - name: Create PR with formatting changes
+        if: failure()
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "Apply Runic formatting"
+          title: "Apply Runic formatting"
+          body: "Automated formatting changes from Runic."
+          branch: runic/format-${{ github.head_ref || github.ref_name }}
+          base: ${{ github.head_ref || github.ref_name }}
+          delete-branch: true
