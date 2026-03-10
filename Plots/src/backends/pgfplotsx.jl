@@ -1029,10 +1029,13 @@ function pgfx_add_annotation!(
     cstr = val.font.color
     ann_opt = merge(
         Options(
-            get((hcenter = "", left = "right", right = "left"), val.font.halign, "") =>
-                nothing,
-            get((vcenter = "", top = "below", bottom = "above"), val.font.valign, "") =>
-                nothing,
+            join(
+                (
+                    get((vcenter = "", top = "below", bottom = "above"), val.font.valign, ""),
+                    get((hcenter = "", left = "right", right = "left"), val.font.halign, ""),
+                ),
+                ' '
+            ) => nothing,
             "color" => cstr,
             "draw opacity" => float(alpha(cstr)),  # float(...): convert N0f8
             "rotate" => val.font.rotation,
