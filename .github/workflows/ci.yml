@@ -71,7 +71,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
 
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
 
       - name: dev downstream pkgs and install mpl deps
         env:
