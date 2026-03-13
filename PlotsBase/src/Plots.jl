@@ -84,8 +84,10 @@ Base.iterate(plt::Plot) = iterate(plt.subplots)
 
 Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
 Base.push!(plt::Plot, i::Integer, args::Real...) = push!(plt.series_list[i], args...)
-Base.append!(plt::Plot, args::AbstractVector) = append!(plt, 1, args...)
+Base.append!(plt::Plot, args::Real...) = append!(plt, 1, args...)
 Base.append!(plt::Plot, i::Integer, args::Real...) = append!(plt.series_list[i], args...)
+Base.append!(plt::Plot, args::AbstractVector...) = append!(plt, 1, args...)
+Base.append!(plt::Plot, i::Integer, args::AbstractVector...) = append!(plt.series_list[i], args...)
 
 # tuples
 Base.push!(plt::Plot, t::Tuple) = push!(plt, 1, t...)
