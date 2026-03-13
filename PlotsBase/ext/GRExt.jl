@@ -1,6 +1,6 @@
 module GRExt
 
-import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline, _cycle
+import PlotsBase: PlotsBase, PrecompileTools, RecipesPipeline
 
 import NaNMath
 import GR
@@ -331,11 +331,11 @@ function gr_getcolorind(c)
     return convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
 end
 
-gr_set_linecolor(c) = GR.setlinecolorind(gr_getcolorind(_cycle(c, 1)))
-gr_set_fillcolor(c) = GR.setfillcolorind(gr_getcolorind(_cycle(c, 1)))
-gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c, 1)))
-gr_set_bordercolor(c) = GR.setbordercolorind(gr_getcolorind(_cycle(c, 1)))
-gr_set_textcolor(c) = GR.settextcolorind(gr_getcolorind(_cycle(c, 1)))
+gr_set_linecolor(c::Colorant) = GR.setlinecolorind(gr_getcolorind(c))
+gr_set_fillcolor(c::Colorant) = GR.setfillcolorind(gr_getcolorind(c))
+gr_set_markercolor(c::Colorant) = GR.setmarkercolorind(gr_getcolorind(c))
+gr_set_bordercolor(c::Colorant) = GR.setbordercolorind(gr_getcolorind(c))
+gr_set_textcolor(c::Colorant) = GR.settextcolorind(gr_getcolorind(c))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
 gr_set_transparency(::Nothing) = GR.settransparency(1)
 gr_set_transparency(c, α) = gr_set_transparency(α)
@@ -518,7 +518,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     # draw radial ticks
     yaxis[:showaxis] && for i in eachindex(rtick_values)
         r = (rtick_values[i] - rmin) / (rmax - rmin)
-        (r ≤ 1 && r ≥ 0) && gr_text(GR.wctondc(0.05, r)..., _cycle(rtick_labels, i))
+        (r ≤ 1 && r ≥ 0) && gr_text(GR.wctondc(0.05, r)..., _getvalue(rtick_labels, i))
     end
     GR.restorestate()
     return nothing
@@ -1288,7 +1288,7 @@ function gr_add_legend(sp, leg, viewport_area)
                     1,
                     min(max_markersize, mfac * msz),
                     min(max_markersize, mfac * msw),
-                    _cycle(msh, 1),
+                    _getvalue(msh, 1),
                 )
             end
 
@@ -2027,8 +2027,8 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
         if is2d && fillrange ≢ nothing
             (fc = get_fillcolor(series, clims, i)) |> gr_set_fillcolor
             gr_set_fillstyle(get_fillstyle(series, i))
-            fx = _cycle(x, vcat(rng, reverse(rng)))
-            fy = vcat(_cycle(fr_from, rng), _cycle(fr_to, reverse(rng)))
+            fx = _getvalue(x, vcat(rng, reverse(rng)))
+            fy = vcat(_getvalue(fr_from, rng), _getvalue(RecipesBase.cycle(fr_to), reverse(rng)))
             gr_set_transparency(fc, get_fillalpha(series, i))
             GR.fillarea(fx, fy)
         end
@@ -2066,18 +2066,18 @@ function gr_draw_markers(
         rng = intersect(eachindex(IndexLinear(), x), segment.range)
         isempty(rng) && continue
         i = segment.attr_index
-        ms = get_thickness_scaling(series) * _cycle(msize, i)
-        msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
-        shape = _cycle(shapes, i)
+        ms = get_thickness_scaling(series) * _getvalue(msize, i)
+        msw = get_thickness_scaling(series) * _getvalue(strokewidth, i)
+        shape = _getvalue(shapes, i)
         if !(shape isa Shape)
             shape = gr_get_markershape.(shape)
         end
         for j in rng
             gr_draw_marker(
                 series,
-                _cycle(x, j),
-                _cycle(y, j),
-                _cycle(z, j),
+                _getvalue(x, j),
+                _getvalue(y, j),
+                _getvalue(z, j),
                 clims,
                 i,
                 ms,
@@ -2148,7 +2148,8 @@ function gr_draw_surface(series, x, y, z, clims)
                 x, y, z = GR.gridit(x, y, z, nx, ny)
             end
             d_opt = get(e_kwargs, :display_option, GR.OPTION_COLORED_MESH)
-            if (!isnothing(fillalpha) && fillalpha < 1) || alpha(first(fillcolor)) < 1
+            fc = fillcolor isa Colorant ? fillcolor : first(fillcolor)
+            if (!isnothing(fillalpha) && fillalpha < 1) || alpha(fc) < 1
                 gr_set_transparency(fillcolor, fillalpha)
                 GR.surface(x, y, z, d_opt)
             else
