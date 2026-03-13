@@ -66,7 +66,6 @@ plot(1:10, Any[rand(10), sin])               # 2 series: rand(10) and map(sin,x)
 ### Environment variables
 
 A few environment variables control `PlotsBase` internals:
-- `PLOTSBASE_HOST_DEPENDENCY_LOCAL`: use a local `plotly` resource instead of a cloud hosted one.
 - `PLOTSBASE_DEFAULT_BACKEND`: default backend, preempting the one set through the `Preferences` based mechanism.
 - `PLOTSBASE_TMPDIR`: temporary files prefix for (html) files (some browser are denied access to temporary directories such as `/tmp`).
 
