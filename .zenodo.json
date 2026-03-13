@@ -819,6 +819,11 @@
             "affiliation": "@JuliaComputing",
             "name": "Παναγιώτης Γεωργακόπουλος",
             "type": "Other"
+        },
+        {
+            "affiliation": "@ZiplineTeam",
+            "name": "Jonnie Diegelman",
+            "type": "Other"
         }
     ],
     "upload_type": "software"
