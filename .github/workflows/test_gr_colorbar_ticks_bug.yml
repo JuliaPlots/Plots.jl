@@ -1,0 +1,78 @@
+name: Colorbar Ticks GR Bug Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-colorbar-ticks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: '1.6' # Matching the reported Julia version from the issue
+
+      - name: Install Plots and backends
+        run: |
+          julia -e '
+            using Pkg;
+            Pkg.add("Plots");
+            Pkg.add("GR");
+            Pkg.add("PyPlot");
+          '
+
+      - name: Test colorbar_ticks with GR (Demonstrates Bug)
+        run: |
+          julia -e '
+            using Plots;
+            gr();
+            println("Generating plot with GR backend using colorbar_ticks=[0.2, 0.5]...");
+            try
+                p_gr = heatmap(rand(10,10); colorbar_ticks=[0.2, 0.5], title="GR: colorbar_ticks (BUG)", size=(600,400));
+                savefig(p_gr, "gr_colorbar_ticks_bug.png");
+                println("GR plot saved to gr_colorbar_ticks_bug.png.");
+                println("Expected: Custom ticks at 0.2 and 0.5 should be visible.");
+                println("Actual (bug): Default ticks are displayed instead, or ticks are absent/incorrect.");
+            catch e
+                println("Error occurred during GR plot generation: $(e)");
+                exit(1); # Fail the step if an error occurs
+            end
+          '
+        # This step is designed to generate an artifact showing the current buggy behavior.
+        # In a more advanced CI, this would involve image comparison against a known "buggy"
+        # reference image, or fail if a "correct" reference image is not matched.
+        # For now, it clearly labels the artifact as demonstrating the bug.
+
+      - name: Test colorbar_ticks with PyPlot (Expected Correct Behavior)
+        run: |
+          julia -e '
+            using Plots;
+            pyplot();
+            println("Generating plot with PyPlot backend using colorbar_ticks=[0.2, 0.5]...");
+            try
+                p_pyplot = heatmap(rand(10,10); colorbar_ticks=[0.2, 0.5], title="PyPlot: colorbar_ticks (OK)", size=(600,400));
+                savefig(p_pyplot, "pyplot_colorbar_ticks_ok.png");
+                println("PyPlot plot saved to pyplot_colorbar_ticks_ok.png.");
+                println("Expected: Custom ticks at 0.2 and 0.5 should be clearly visible.");
+                println("Actual (working): Ticks should match [0.2, 0.5].");
+            catch e
+                println("Error occurred during PyPlot plot generation: $(e)");
+                exit(1); # Fail the step if an error occurs
+            end
+          '
+        # This step provides a reference of the correct behavior.
+
+      - name: Upload Plot Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: colorbar-ticks-plots
+          path: |
+            gr_colorbar_ticks_bug.png
+            pyplot_colorbar_ticks_ok.png
+          retention-days: 5 # Retain artifacts for 5 days
