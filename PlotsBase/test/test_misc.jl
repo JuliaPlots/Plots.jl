@@ -260,7 +260,7 @@ with(:gr) do
         @test_nowarn show(IOBuffer(), MIME("image/png"), badplot())
         @test_nowarn show(IOBuffer(), MIME("image/png"), badplot())
 
-        @test_nowarn show(
+        @test_logs (:warn, r"Invalid negative or zero value") match_mode = :any show(
             IOBuffer(),
             MIME("image/png"),
             plot(1:3, -(1:3), yscale = :log10, xlabel = "test"),
@@ -268,7 +268,7 @@ with(:gr) do
         @test_nowarn show(
             IOBuffer(),
             MIME("image/png"),
-            plot(1:3, 1:3, yscale = :log10, xlabel = "test", ylabel = "test"),
+            plot(1:3, 10 .^ (0:2), yscale = :log10, xlabel = "test", ylabel = "test"),
         )
     end
 
