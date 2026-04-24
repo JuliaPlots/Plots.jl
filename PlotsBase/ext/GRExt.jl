@@ -444,14 +444,14 @@ end
 
 gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 gr_inqtext(x, y, s::AbstractString) =
-begin
+    begin
     coords =
-        if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
-                match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
-            GR.inqtextext(x, y, s)
-        else
-            GR.inqtext(x, y, s)
-        end
+    if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
+            match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
+        GR.inqtextext(x, y, s)
+    else
+        GR.inqtext(x, y, s)
+    end
     xs, ys = coords
     if any(v -> !(v isa Real && isfinite(v)), xs) || any(v -> !(v isa Real && isfinite(v)), ys)
         return map(_ -> 0.0, xs), map(_ -> 0.0, ys)
