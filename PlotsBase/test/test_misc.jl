@@ -249,6 +249,29 @@ with(:gr) do
         @test occursin("Plot:", str)
     end
 
+    @testset "non-finite text does not poison subsequent plots" begin
+        function badplot()
+            plt1 = heatmap(rand(4, 4); title = "title")
+            plt2 = plot(fill(NaN, 4), fill(NaN, 4))
+            annotate!(plt2, [NaN, NaN], [NaN, NaN], PlotsBase.text.(["a", "b"], 12))
+            plot(plt1, plt2)
+        end
+
+        @test_nowarn show(IOBuffer(), MIME("image/png"), badplot())
+        @test_nowarn show(IOBuffer(), MIME("image/png"), badplot())
+
+        @test_nowarn show(
+            IOBuffer(),
+            MIME("image/png"),
+            plot(1:3, -(1:3), yscale = :log10, xlabel = "test"),
+        )
+        @test_nowarn show(
+            IOBuffer(),
+            MIME("image/png"),
+            plot(1:3, 1:3, yscale = :log10, xlabel = "test", ylabel = "test"),
+        )
+    end
+
     @testset "recipes" begin
         @test PlotsBase.seriestype_supported(:path) ≡ :native
 
