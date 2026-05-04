@@ -369,6 +369,8 @@ function gr_polyline(
         arrowside = :none,
         arrowstyle = :simple,
         arrowsize = 1,
+        linestyle = :solid,
+        linewidth = 1.0,
     )
     draw_head = arrowside in (:head, :both)
     draw_tail = arrowside in (:tail, :both)
@@ -395,7 +397,11 @@ function gr_polyline(
         end
         # if we found a start and end, draw the line segment, otherwise we're done
         if istart > 0 && iend > 0
-            func(x[istart:iend], y[istart:iend])
+            if func === GR.polyline
+                gr_styled_polyline(x[istart:iend], y[istart:iend], linestyle, linewidth)
+            else
+                func(x[istart:iend], y[istart:iend])
+            end
             if draw_head
                 gr_set_arrowstyle(arrowstyle)
                 GR.drawarrow(x[iend - 1], y[iend - 1], x[iend], y[iend])
@@ -406,6 +412,59 @@ function gr_polyline(
             end
         else
             break
+        end
+    end
+    return
+end
+
+function gr_styled_polyline(x, y, style, linewidth)
+    style in (:dash, :dot, :dashdot, :dashdotdot) || return GR.polyline(x, y)
+    GR.setlinetype(gr_linetypes.solid)
+    lscale = max(1, linewidth) / 2
+    dash = 0.012lscale
+    gap = 0.008lscale
+    dot = 0.0025lscale
+    return if style === :dash
+        gr_dashed_polyline(x, y, (dash, gap))
+    elseif style === :dot
+        gr_dashed_polyline(x, y, (dot, gap))
+    elseif style === :dashdot
+        gr_dashed_polyline(x, y, (dash, gap, dot, gap))
+    else
+        gr_dashed_polyline(x, y, (dash, gap, dot, gap, dot, gap))
+    end
+end
+
+function gr_dashed_polyline(x, y, pattern)
+    ipattern = 1
+    pattern_offset = 0.0
+    xs = Vector{Float64}(undef, 2)
+    ys = Vector{Float64}(undef, 2)
+    for i in 1:(length(x) - 1)
+        x1, y1 = GR.wctondc(x[i], y[i])
+        x2, y2 = GR.wctondc(x[i + 1], y[i + 1])
+        dx, dy = x2 - x1, y2 - y1
+        segment_length = hypot(dx, dy)
+        segment_length > 0 || continue
+        segment_offset = 0.0
+        while segment_offset < segment_length
+            pattern_remaining = pattern[ipattern] - pattern_offset
+            step = min(pattern_remaining, segment_length - segment_offset)
+            if isodd(ipattern)
+                t1 = segment_offset / segment_length
+                t2 = (segment_offset + step) / segment_length
+                xa, ya = GR.ndctowc(x1 + t1 * dx, y1 + t1 * dy)
+                xb, yb = GR.ndctowc(x1 + t2 * dx, y1 + t2 * dy)
+                xs[1], xs[2] = xa, xb
+                ys[1], ys[2] = ya, yb
+                GR.polyline(xs, ys)
+            end
+            segment_offset += step
+            pattern_offset += step
+            if pattern_offset >= pattern[ipattern]
+                pattern_offset = 0.0
+                ipattern = ipattern == length(pattern) ? 1 : ipattern + 1
+            end
         end
     end
     return
@@ -610,10 +669,11 @@ end
 # ---------------------------------------------------------
 
 function gr_set_line(lw, style, c, s)  # s can be Subplot or Series
+    linewidth = get_thickness_scaling(s) * max(0, lw / gr_nominal_size(s))
     GR.setlinetype(gr_linetypes[style])
-    GR.setlinewidth(get_thickness_scaling(s) * max(0, lw / gr_nominal_size(s)))
+    GR.setlinewidth(linewidth)
     gr_set_linecolor(c)
-    return nothing
+    return linewidth
 end
 
 gr_set_fill(c) = (gr_set_fillcolor(c); GR.setfillintstyle(GR.INTSTYLE_SOLID); nothing)
@@ -1200,7 +1260,7 @@ gr_legend_bbox(xpos, ypos, leg) = GR.drawrect(
     ypos + 0.5leg.dy,
 )
 
-const gr_lw_clamp_factor = Ref(5)
+const gr_lw_clamp_factor = Ref(3)
 
 function gr_add_legend(sp, leg, viewport_area)
     sp[:legend_position] ∈ (:none, :inline) && return
@@ -1254,7 +1314,7 @@ function gr_add_legend(sp, leg, viewport_area)
             ls = get_linestyle(series)
             la = get_linealpha(series)
             clamped_lw = (lfps / 8) * clamp(lw, min_lw, max_lw)
-            gr_set_line(clamped_lw, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
+            linewidth = gr_set_line(clamped_lw, ls, lc, sp)  # see github.com/JuliaPlots/Plots.jl/issues/3003
             _debug[] && gr_legend_bbox(xpos, ypos, leg)
 
             if ((st ≡ :shape || series[:fillrange] ≢ nothing) && series[:ribbon] ≡ nothing)
@@ -1272,8 +1332,8 @@ function gr_add_legend(sp, leg, viewport_area)
                 gr_set_transparency(fc, get_fillalpha(series))
                 gr_polyline(x, y, GR.fillarea)
                 gr_set_transparency(lc, la)
-                gr_set_line(clamped_lw, ls, lc, sp)
-                st ≡ :shape && gr_polyline(x, y)
+                linewidth = gr_set_line(clamped_lw, ls, lc, sp)
+                st ≡ :shape && gr_styled_polyline(x, y, ls, linewidth)
             end
 
             max_markersize = Inf
@@ -1281,7 +1341,12 @@ function gr_add_legend(sp, leg, viewport_area)
                 max_markersize = leg.base_markersize
                 gr_set_transparency(lc, la)
                 filled = series[:fillrange] ≢ nothing && series[:ribbon] ≡ nothing
-                GR.polyline(xpos .+ [lft, rgt], ypos .+ (filled ? [top, top] : [0, 0]))
+                gr_styled_polyline(
+                    xpos .+ [lft, rgt],
+                    ypos .+ (filled ? [top, top] : [0, 0]),
+                    ls,
+                    linewidth,
+                )
             end
 
             if (msh = series[:markershape]) ≢ :none
@@ -2043,7 +2108,8 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
             GR.fillarea(fx, fy)
         end
         (lc = get_linecolor(series, clims, i)) |> gr_set_fillcolor
-        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
+        ls = get_linestyle(series, i)
+        linewidth = gr_set_line(get_linewidth(series, i), ls, lc, series)
         gr_set_transparency(lc, get_linealpha(series, i))
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
@@ -2054,7 +2120,15 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
             arrowside, arrowstyle, arrowsize =
                 arrow.side, arrow.style, (arrow.headlength + arrow.headwidth) / 2
 
-            gr_polyline(x[rng], y[rng]; arrowside, arrowstyle, arrowsize)
+            gr_polyline(
+                x[rng],
+                y[rng];
+                arrowside,
+                arrowstyle,
+                arrowsize,
+                linestyle = ls,
+                linewidth,
+            )
         end
     end
     return
@@ -2120,9 +2194,10 @@ function gr_draw_shapes(series, clims)
 
             # draw the shapes
             lc = get_linecolor(series, clims, i)
-            gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
+            ls = get_linestyle(series, i)
+            linewidth = gr_set_line(get_linewidth(series, i), ls, lc, series)
             gr_set_transparency(lc, get_linealpha(series, i))
-            GR.polyline(xseg, yseg)
+            gr_styled_polyline(xseg, yseg, ls, linewidth)
         end
     end
     return

@@ -44,6 +44,25 @@
     end
 end
 
+@testset "GR - linestyle visual defaults" begin
+    with(:gr) do
+        fn = tempname() * ".svg"
+        plt = plot(
+            1:4,
+            [1:4 4:-1:1];
+            marker = :circle,
+            linestyle = [:dash :dot],
+            linewidth = 2,
+            label = ["dash" "dot"],
+        )
+        savefig(plt, fn)
+        svg_text = read(fn, String)
+        @test !occursin("stroke-dasharray", svg_text)
+        @test count(r"stroke:#009af9", svg_text) > 10
+        @test count(r"stroke:#e26f46", svg_text) > 10
+    end
+end
+
 is_pkgeval() || @testset "PlotlyJS" begin
     with(:plotlyjs) do
         PlotlyJSExt = Base.get_extension(PlotsBase, :PlotlyJSExt)
