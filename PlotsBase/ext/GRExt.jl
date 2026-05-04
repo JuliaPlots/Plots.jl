@@ -444,20 +444,30 @@ end
 
 gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 gr_inqtext(x, y, s::AbstractString) =
-if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
-        match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
-    GR.inqtextext(x, y, s)
-else
-    GR.inqtext(x, y, s)
+    begin
+    coords =
+    if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
+            match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
+        GR.inqtextext(x, y, s)
+    else
+        GR.inqtext(x, y, s)
+    end
+    xs, ys = coords
+    if any(v -> !(v isa Real && isfinite(v)), xs) || any(v -> !(v isa Real && isfinite(v)), ys)
+        return map(_ -> 0.0, xs), map(_ -> 0.0, ys)
+    end
+    return coords
 end
 
 gr_text(x, y, s) = gr_text(x, y, string(s))
 gr_text(x, y, s::AbstractString) =
-if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
-        match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
-    GR.textext(x, y, s)
-else
-    GR.text(x, y, s)
+if x isa Real && y isa Real && isfinite(x) && isfinite(y)
+    if (occursin('\\', s) || occursin(r"10\^{|2\^{|e\^{", s)) &&
+            match(r".*\$[^\$]+?\$.*", String(s)) ≡ nothing
+        GR.textext(x, y, s)
+    else
+        GR.text(x, y, s)
+    end
 end
 
 function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
