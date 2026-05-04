@@ -70,3 +70,25 @@ is_pkgeval() || @testset "Backends $be" for be in TEST_BACKENDS
     PlotsBase.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
     closeall()
 end
+
+@testset "GR colorbar_ticks" begin
+    with(:gr) do
+        # Test that colorbar_ticks works without error for vertical colorbars
+        p = heatmap(rand(10, 10); colorbar_ticks = [0.2, 0.5, 0.8])
+        @test backend() == PlotsBase.backend_instance(:gr)
+        
+        # Test with custom labels
+        p = heatmap(rand(10, 10); colorbar_ticks = ([0.2, 0.5, 0.8], ["low", "mid", "high"]))
+        
+        # Test with horizontal colorbar
+        p = heatmap(
+            rand(10, 10);
+            colorbar = :top,
+            colorbar_ticks = [0.3, 0.6, 0.9],
+        )
+        
+        # Verify the plots render without error
+        io = IOContext(IOBuffer(), :color => true)
+        @test show(io, p) isa Nothing
+    end
+end
