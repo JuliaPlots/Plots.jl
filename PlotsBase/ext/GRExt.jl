@@ -811,54 +811,62 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     end
 
     if _has_ticks(sp[:colorbar_ticks])
-        ticks_vals, ticks_labels = get_colorbar_ticks(sp)
-        if !isempty(ticks_vals)
-            gr_set_line(1, :solid, plot_color(:black), sp)
-            (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
-            cb_pos = sp[:colorbar]
-            is_horizontal = cb_pos in (:top, :bottom)
+        gr_set_line(1, :solid, plot_color(:black), sp)
+        (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
 
-            # draw tick marks manually (workaround for GR.axes signature differences)
-            tick_ndc = gr_colorbar_tick_size[]
-            for cv in ticks_vals
-                if is_horizontal
-                    x_ndc, y_ndc = GR.wctondc(cv, z_min)
-                    p1x, p1y = GR.ndctowc(x_ndc, y_ndc)
-                    p2x, p2y = GR.ndctowc(x_ndc, y_ndc - tick_ndc)
-                    GR.polyline([p1x, p2x], [p1y, p2y])
-                else
-                    x_ndc, y_ndc = GR.wctondc(x_max, cv)
-                    p1x, p1y = GR.ndctowc(x_ndc, y_ndc)
-                    p2x, p2y = GR.ndctowc(x_ndc + tick_ndc, y_ndc)
-                    GR.polyline([p1x, p2x], [p1y, p2y])
-                end
-            end
+        if sp[:colorbar_ticks] isa Union{Symbol, Bool}
+            # Preserve GR's native auto-tick appearance for the default path.
+            z_tick = 0.5GR.tick(z_min, z_max)
+            # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
+            GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+        else
+            ticks_vals, ticks_labels = get_colorbar_ticks(sp)
+            if !isempty(ticks_vals)
+                cb_pos = sp[:colorbar]
+                is_horizontal = cb_pos in (:top, :bottom)
 
-            # draw tick labels when provided
-            if !isempty(ticks_labels)
-                GR.savestate()
-                f = font(
-                    ;
-                    family = sp[:colorbar_tickfontfamily],
-                    pointsize = sp[:colorbar_tickfontsize],
-                    rotation = sp[:colorbar_tickfontrotation],
-                    color = sp[:colorbar_tickfontcolor],
-                    halign = sp[:colorbar_tickfonthalign],
-                    valign = sp[:colorbar_tickfontvalign],
-                )
-                gr_set_font(f, sp)
-                for (cv, dv) in zip(ticks_vals, ticks_labels)
+                # draw tick marks manually (workaround for GR.axes signature differences)
+                tick_ndc = gr_colorbar_tick_size[]
+                for cv in ticks_vals
                     if is_horizontal
                         x_ndc, y_ndc = GR.wctondc(cv, z_min)
-                        xw, yw = GR.ndctowc(x_ndc, y_ndc - 2.0 * tick_ndc)
-                        gr_text(xw, yw, dv)
+                        p1x, p1y = GR.ndctowc(x_ndc, y_ndc)
+                        p2x, p2y = GR.ndctowc(x_ndc, y_ndc - tick_ndc)
+                        GR.polyline([p1x, p2x], [p1y, p2y])
                     else
                         x_ndc, y_ndc = GR.wctondc(x_max, cv)
-                        xw, yw = GR.ndctowc(x_ndc + 2.0 * tick_ndc, y_ndc)
-                        gr_text(xw, yw, dv)
+                        p1x, p1y = GR.ndctowc(x_ndc, y_ndc)
+                        p2x, p2y = GR.ndctowc(x_ndc + tick_ndc, y_ndc)
+                        GR.polyline([p1x, p2x], [p1y, p2y])
                     end
                 end
-                GR.restorestate()
+
+                # draw tick labels when provided
+                if !isempty(ticks_labels)
+                    GR.savestate()
+                    f = font(
+                        ;
+                        family = sp[:colorbar_tickfontfamily],
+                        pointsize = sp[:colorbar_tickfontsize],
+                        rotation = sp[:colorbar_tickfontrotation],
+                        color = sp[:colorbar_tickfontcolor],
+                        halign = sp[:colorbar_tickfonthalign],
+                        valign = sp[:colorbar_tickfontvalign],
+                    )
+                    gr_set_font(f, sp)
+                    for (cv, dv) in zip(ticks_vals, ticks_labels)
+                        if is_horizontal
+                            x_ndc, y_ndc = GR.wctondc(cv, z_min)
+                            xw, yw = GR.ndctowc(x_ndc, y_ndc - 2.0 * tick_ndc)
+                            gr_text(xw, yw, dv)
+                        else
+                            x_ndc, y_ndc = GR.wctondc(x_max, cv)
+                            xw, yw = GR.ndctowc(x_ndc + 2.0 * tick_ndc, y_ndc)
+                            gr_text(xw, yw, dv)
+                        end
+                    end
+                    GR.restorestate()
+                end
             end
         end
     end
