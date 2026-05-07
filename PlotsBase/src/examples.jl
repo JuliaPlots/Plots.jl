@@ -1280,7 +1280,7 @@ const _examples = PlotExample[
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
-_animation_examples = [02, 31]
+_animation_examples = [02, 32]
 _backend_skips = Dict(
     :none => Int[],
     :hdf5 => Int[47],
