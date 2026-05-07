@@ -463,6 +463,24 @@ const _examples = PlotExample[
         end,
     ),
     PlotExample( # 29
+        "Heatmap colorbar ticks",
+        quote
+            plot(
+                heatmap(rand(10, 10); colorbar_ticks = [0.2, 0.5, 0.8]),
+                heatmap(
+                    rand(10, 10);
+                    colorbar_ticks = ([0.2, 0.5, 0.8], ["low", "mid", "high"]),
+                ),
+                heatmap(
+                    rand(10, 10);
+                    colorbar = :top,
+                    colorbar_ticks = [0.3, 0.6, 0.9],
+                ),
+                layout = (1, 3),
+            )
+        end,
+    ),
+    PlotExample( # 30
         "Layouts, margins, label rotation, title location",
         :(using PlotsBase.Commons),  # for Measures, e.g. mm and px
         quote
@@ -477,7 +495,7 @@ const _examples = PlotExample[
             )
         end,
     ),
-    PlotExample( # 30
+    PlotExample( # 31
         "Boxplot and Violin series recipes",
         "",
         true,
@@ -493,7 +511,7 @@ const _examples = PlotExample[
             )
         end,
     ),
-    PlotExample( # 31
+    PlotExample( # 32
         "Animation with subplots",
         "The `layout` macro can be used to create an animation with subplots.",
         quote
@@ -513,7 +531,7 @@ const _examples = PlotExample[
             end
         end,
     ),
-    PlotExample( # 32
+    PlotExample( # 33
         "Spy",
         """
         For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has
