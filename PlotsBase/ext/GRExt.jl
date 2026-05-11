@@ -844,25 +844,30 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
                 # draw tick labels when provided
                 if !isempty(ticks_labels)
                     GR.savestate()
+                    halign = if is_horizontal
+                        sp[:colorbar_tickfonthalign]
+                    elseif sp[:colorbar_tickfonthalign] ≡ :hcenter
+                        :left
+                    else
+                        sp[:colorbar_tickfonthalign]
+                    end
                     f = font(
                         ;
                         family = sp[:colorbar_tickfontfamily],
                         pointsize = sp[:colorbar_tickfontsize],
                         rotation = sp[:colorbar_tickfontrotation],
                         color = sp[:colorbar_tickfontcolor],
-                        halign = sp[:colorbar_tickfonthalign],
+                        halign = halign,
                         valign = sp[:colorbar_tickfontvalign],
                     )
                     gr_set_font(f, sp)
                     for (cv, dv) in zip(ticks_vals, ticks_labels)
                         if is_horizontal
                             x_ndc, y_ndc = GR.wctondc(cv, z_min)
-                            xw, yw = GR.ndctowc(x_ndc, y_ndc - 2.0 * tick_ndc)
-                            gr_text(xw, yw, dv)
+                            gr_text(x_ndc, y_ndc - 2.0 * tick_ndc, dv)
                         else
                             x_ndc, y_ndc = GR.wctondc(x_max, cv)
-                            xw, yw = GR.ndctowc(x_ndc + 2.0 * tick_ndc, y_ndc)
-                            gr_text(xw, yw, dv)
+                            gr_text(x_ndc + 2.0 * tick_ndc, y_ndc, dv)
                         end
                     end
                     GR.restorestate()
