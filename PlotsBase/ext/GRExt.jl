@@ -105,6 +105,10 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontcolor,
         :colorbar_entry,
         :colorbar_scale,
+        :colorbar_ticks,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfontcolor,
         :clims,
         :fill,
         :fill_z,
@@ -755,6 +759,59 @@ function gr_colorbar_info(sp::Subplot)
     return maximum(first.(gr_text_size.(clims))), clims
 end
 
+function gr_draw_colorbar_auto_ticks(sp::Subplot, x_max, z_min, z_max)
+    z_tick = 0.5GR.tick(z_min, z_max)
+    gr_set_line(1, :solid, plot_color(:black), sp)
+    (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
+    # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
+    return GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+end
+
+function gr_draw_colorbar_custom_ticks(sp::Subplot, x_max, z_min, z_max)
+    tick_values, tick_labels = get_colorbar_ticks(sp)
+    ticks = [
+        (tick, string(label))
+        for (tick, label) in zip(tick_values, tick_labels)
+        if tick isa Real && isfinite(tick) && z_min <= tick <= z_max
+    ]
+    isempty(ticks) && return nothing
+
+    gr_set_line(1, :solid, plot_color(:black), sp)
+    (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
+    tick_points = [GR.wctondc(x_max, tick) for (tick, _) in ticks]
+
+    GR.savestate()
+    GR.setscale(0)
+    GR.setviewport(0, 1, 0, 1)
+    GR.setwindow(0, 1, 0, 1)
+    GR.setclip(0)
+
+    tick_size = gr_colorbar_tick_size[]
+    for (x, y) in tick_points
+        GR.polyline([x, x + 2tick_size], [y, y])
+    end
+
+    family = sp[:colorbar_tickfontfamily]
+    family === :match && (family = sp[:fontfamily_subplot])
+    tickfont = font(family, sp[:colorbar_tickfontsize], plot_color(sp[:colorbar_tickfontcolor]))
+    gr_set_font(tickfont, sp; halign = :left, valign = :vcenter)
+    for ((x, y), (_, label)) in zip(tick_points, ticks)
+        gr_text(x + 3tick_size, y, label)
+    end
+
+    GR.restorestate()
+    return nothing
+end
+
+function gr_draw_colorbar_ticks(sp::Subplot, x_max, z_min, z_max)
+    _has_ticks(sp[:colorbar_ticks]) || return nothing
+    return if sp[:colorbar_ticks] ∈ (:auto, :native, true)
+        gr_draw_colorbar_auto_ticks(sp, x_max, z_min, z_max)
+    else
+        gr_draw_colorbar_custom_ticks(sp, x_max, z_min, z_max)
+    end
+end
+
 # add the colorbar
 function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     GR.savestate()
@@ -810,13 +867,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         end
     end
 
-    if _has_ticks(sp[:colorbar_ticks])
-        z_tick = 0.5GR.tick(z_min, z_max)
-        gr_set_line(1, :solid, plot_color(:black), sp)
-        (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
-        # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
-        GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
-    end
+    gr_draw_colorbar_ticks(sp, x_max, z_min, z_max)
 
     title = gr_colorbar_title(sp)
     gr_set_font(title.font, sp; halign = :center, valign = :top)
