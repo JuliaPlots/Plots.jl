@@ -37,6 +37,15 @@ with(:gr) do
     @test_save :pdf
     @test_save :svg
     @test_save :ps
+
+    @testset "colorbar ticks" begin
+        z = reshape(1:9, 3, 3)
+        for ticks in ([2, 5], ([2, 5], ["low", "high"]))
+            fn = tempname() * ".png"
+            @test_nowarn png(heatmap(z; colorbar_ticks = ticks), fn)
+            @test filesize(fn) > 1_000
+        end
+    end
 end
 
 with(:unicodeplots) do
