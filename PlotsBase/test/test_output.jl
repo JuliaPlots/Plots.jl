@@ -37,6 +37,19 @@ with(:gr) do
     @test_save :pdf
     @test_save :svg
     @test_save :ps
+
+    @testset "colorbar border color" begin
+        fn = tempname() * ".svg"
+        pl = heatmap(
+            reshape(1:9, 3, 3);
+            colorbar_bordercolor = :red,
+            foreground_color_subplot = :green,
+        )
+        savefig(pl, fn)
+
+        has_red_stroke = occursin("stroke:#ff0000", lowercase(read(fn, String)))
+        @test has_red_stroke
+    end
 end
 
 with(:unicodeplots) do

@@ -105,6 +105,7 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontcolor,
         :colorbar_entry,
         :colorbar_scale,
+        :colorbar_bordercolor,
         :clims,
         :fill,
         :fill_z,
@@ -812,7 +813,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
 
     if _has_ticks(sp[:colorbar_ticks])
         z_tick = 0.5GR.tick(z_min, z_max)
-        gr_set_line(1, :solid, plot_color(:black), sp)
+        gr_set_line(1, :solid, plot_color(sp[:colorbar_bordercolor]), sp)
         (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
         # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
         GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])

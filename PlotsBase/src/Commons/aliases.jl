@@ -200,6 +200,16 @@ add_aliases(
     :bordercolor,
 )
 add_aliases(
+    :colorbar_bordercolor,
+    :colorbar_border_color,
+    :colorbar_bordercolour,
+    :colorbar_border_colour,
+    :cbordercolor,
+    :cborder_color,
+    :cbordercolour,
+    :cborder_colour,
+)
+add_aliases(
     :foreground_color_text,
     :fg_text,
     :fgtext,
