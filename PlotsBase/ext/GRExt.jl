@@ -771,8 +771,8 @@ function gr_draw_colorbar_custom_ticks(sp::Subplot, x_max, z_min, z_max)
     tick_values, tick_labels = get_colorbar_ticks(sp)
     ticks = [
         (tick, string(label))
-        for (tick, label) in zip(tick_values, tick_labels)
-        if tick isa Real && isfinite(tick) && z_min <= tick <= z_max
+            for (tick, label) in zip(tick_values, tick_labels)
+            if tick isa Real && isfinite(tick) && z_min <= tick <= z_max
     ]
     isempty(ticks) && return nothing
 
