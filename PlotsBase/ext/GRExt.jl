@@ -104,6 +104,14 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontrotation,
         :colorbar_titlefontcolor,
         :colorbar_entry,
+        :colorbar_ticks,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfonthalign,
+        :colorbar_tickfontvalign,
+        :colorbar_tickfontrotation,
+        :colorbar_tickfontcolor,
+        :colorbar_formatter,
         :colorbar_scale,
         :clims,
         :fill,
@@ -740,6 +748,15 @@ end
 
 const gr_colorbar_tick_size = Ref(0.005)
 
+gr_colorbar_tickfont(sp::Subplot) = font(;
+    family = sp[:colorbar_tickfontfamily],
+    pointsize = sp[:colorbar_tickfontsize],
+    valign = sp[:colorbar_tickfontvalign],
+    halign = sp[:colorbar_tickfonthalign],
+    rotation = sp[:colorbar_tickfontrotation],
+    color = sp[:colorbar_tickfontcolor],
+)
+
 function gr_colorbar_title(sp::Subplot)
     title = if (ttl = sp[:colorbar_title]) isa PlotText
         ttl
@@ -753,6 +770,49 @@ end
 function gr_colorbar_info(sp::Subplot)
     clims = gr_clims(sp)
     return maximum(first.(gr_text_size.(clims))), clims
+end
+
+gr_native_colorbar_ticks(ticks) = ticks ≡ :auto || ticks ≡ :native || ticks ≡ true
+
+function gr_colorbar_tick_ndc(sp::Subplot, x, z_min, z_max)
+    tick_values, tick_labels = get_colorbar_ticks(sp)
+    isempty(tick_values) && return ()
+
+    if length(tick_labels) != length(tick_values)
+        tick_labels = fill("", length(tick_values))
+    end
+
+    z_lo, z_hi = extrema((z_min, z_max))
+    if (yscale = sp[:colorbar_scale]) ∈ _log_scales
+        GR.setscale(gr_y_log_scales[yscale])
+    end
+    tick_info = [
+        (GR.wctondc(x, tick)..., string(label)) for
+            (tick, label) in zip(tick_values, tick_labels) if
+            isfinite(tick) && z_lo ≤ tick ≤ z_hi
+    ]
+    GR.setscale(0)
+    return tick_info
+end
+
+function gr_draw_colorbar_ticks(sp::Subplot, vp::GRViewport, x, z_min, z_max)
+    tick_info = gr_colorbar_tick_ndc(sp, x, z_min, z_max)
+    isempty(tick_info) && return
+
+    GR.selntran(0)
+    gr_set_line(1, :solid, plot_color(:black), sp)
+    x_axis = first(first(tick_info))
+    GR.polyline([x_axis, x_axis], [vp.ymin, vp.ymax])
+    for (_, y, _) in tick_info
+        GR.polyline([x_axis, x_axis + gr_colorbar_tick_size[]], [y, y])
+    end
+
+    gr_set_font(gr_colorbar_tickfont(sp), sp; halign = :left, valign = :center)
+    for (_, y, label) in tick_info
+        isempty(label) || gr_text(x_axis + gr_colorbar_tick_size[] + 0.006, y, label)
+    end
+    GR.selntran(1)
+    return nothing
 end
 
 # add the colorbar
@@ -811,11 +871,16 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     end
 
     if _has_ticks(sp[:colorbar_ticks])
-        z_tick = 0.5GR.tick(z_min, z_max)
         gr_set_line(1, :solid, plot_color(:black), sp)
-        (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
-        # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
-        GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+        if gr_native_colorbar_ticks(sp[:colorbar_ticks])
+            z_tick = 0.5GR.tick(z_min, z_max)
+            (yscale = sp[:colorbar_scale]) ∈ _log_scales &&
+                GR.setscale(gr_y_log_scales[yscale])
+            # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
+            GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+        else
+            gr_draw_colorbar_ticks(sp, vp_cmap, x_max, z_min, z_max)
+        end
     end
 
     title = gr_colorbar_title(sp)

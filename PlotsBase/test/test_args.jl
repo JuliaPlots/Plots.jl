@@ -37,6 +37,13 @@ end
     end
 end
 
+@testset "GR colorbar ticks" begin
+    ticks = ([0.2, 0.5], ["low", "high"])
+    pl = heatmap(rand(10, 10); colorbar_ticks = ticks)
+    @test pl[1][:colorbar_ticks] == ticks
+    @test_nowarn show(devnull, pl)
+end
+
 @testset "Series Attributes" begin
     pl = plot([[1, 2, 3], [2, 3, 4]], lw = 5, label = :auto)
     @test hline!(deepcopy(pl), [1.75], label = :auto)[1].series_list[3][:label] ==
