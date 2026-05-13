@@ -41,7 +41,7 @@ end
     ticks = ([0.2, 0.5], ["low", "high"])
     pl = heatmap(rand(10, 10); colorbar_ticks = ticks)
     @test pl[1][:colorbar_ticks] == ticks
-    @test_nowarn show(devnull, pl)
+    @test_nowarn png(pl, tempname())
 end
 
 @testset "Series Attributes" begin
