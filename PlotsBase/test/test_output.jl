@@ -37,6 +37,15 @@ with(:gr) do
     @test_save :pdf
     @test_save :svg
     @test_save :ps
+
+    @testset "colorbar border width" begin
+        fn = tempname() * ".svg"
+        pl = heatmap(reshape(1:9, 3, 3); colorbar_borderwidth = 4)
+
+        @test pl[1][:colorbar_borderwidth] == 4
+        @test_nowarn savefig(pl, fn)
+        @test isfile(fn)
+    end
 end
 
 with(:unicodeplots) do

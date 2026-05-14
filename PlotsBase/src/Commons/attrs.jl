@@ -444,6 +444,7 @@ const _subplot_defaults = KW(
     :colorbar_tickfontrotation => 0.0,
     :colorbar_tickfontcolor => :match,
     :colorbar_scale => :identity,
+    :colorbar_borderwidth => 1,
     :colorbar_formatter => :auto,
     :colorbar_discrete_values => [],
     :colorbar_continuous_values => zeros(0),
