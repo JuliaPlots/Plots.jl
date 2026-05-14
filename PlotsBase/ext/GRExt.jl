@@ -105,6 +105,7 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontcolor,
         :colorbar_entry,
         :colorbar_scale,
+        :colorbar_bordercolor,
         :clims,
         :fill,
         :fill_z,
@@ -811,7 +812,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     end
 
     if _has_ticks(sp[:colorbar_ticks])
-        gr_set_line(1, :solid, plot_color(:black), sp)
+        gr_set_line(1, :solid, sp[:colorbar_bordercolor], sp)
         (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
 
         if sp[:colorbar_ticks] isa Union{Symbol, Bool}

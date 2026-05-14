@@ -347,6 +347,12 @@ add_aliases(
 )
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
 add_aliases(
+    :colorbar_bordercolor,
+    :colorbar_border_color,
+    :cbordercolor,
+    :cborder_color,
+)
+add_aliases(
     :colorbar_title,
     :colorbartitle,
     :cb_title,

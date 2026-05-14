@@ -162,6 +162,7 @@ function _update_subplot_colors(sp::Subplot)
     color_or_nothing!(sp.attr, :foreground_color_subplot)
     color_or_nothing!(sp.attr, :legend_foreground_color)
     color_or_nothing!(sp.attr, :foreground_color_title)
+    color_or_nothing!(sp.attr, :colorbar_bordercolor)
     return nothing
 end
 
