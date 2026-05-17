@@ -33,6 +33,13 @@ with(:gr) do
     @test PlotsBase.default_output_format(plot()) == "png"
     @test PlotsBase.addExtension("foo", "bar") == "foo.bar"
 
+    @testset "colorbar dimensions" begin
+        pl = heatmap(reshape(1:9, 3, 3); colorbar_width = 0.04, colorbar_height = 0.5)
+        @test pl[1][:colorbar_width] == 0.04
+        @test pl[1][:colorbar_height] == 0.5
+        @test_nowarn PlotsBase.svg(pl, tempname())
+    end
+
     @test_save :png
     @test_save :pdf
     @test_save :svg

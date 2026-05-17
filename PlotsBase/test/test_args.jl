@@ -109,6 +109,8 @@ end
 
 @testset "aliases" begin
     @test :legend in PlotsBase.Commons.aliases(:legend_position)
+    @test :cbarwidth in PlotsBase.Commons.aliases(:colorbar_width)
+    @test :cbar_height in PlotsBase.Commons.aliases(:colorbar_height)
     PlotsBase.Commons.add_non_underscore_aliases!(PlotsBase.Commons._typeAliases)
     PlotsBase.Commons.add_axes_aliases(:ticks, :tick)
 end

@@ -105,6 +105,8 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontcolor,
         :colorbar_entry,
         :colorbar_scale,
+        :colorbar_width,
+        :colorbar_height,
         :clims,
         :fill,
         :fill_z,
@@ -661,7 +663,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vp
         vp_canvas.ymax * (1 - bottom(bb) / h),
         vp_canvas.ymax * (1 - top(bb) / h),
     )
-    hascolorbar(sp) && (viewport.xmax -= 0.1(1 + 0.5gr_is3d(sp)))
+    hascolorbar(sp) && (viewport.xmax -= gr_colorbar_reserved_width(sp))
     return viewport
 end
 
@@ -671,9 +673,26 @@ end
 const gr_cbar_width = Ref(0.03)
 const gr_cbar_offsets = Ref((0.02, 0.07))
 
+gr_colorbar_size(value, default) = value === :auto ? default : value
+
+function gr_colorbar_width(sp::Subplot)
+    return max(0, gr_colorbar_size(sp[:colorbar_width], gr_cbar_width[]))
+end
+
+function gr_colorbar_reserved_width(sp::Subplot)
+    offset = gr_cbar_offsets[][gr_is3d(sp) ? 2 : 1]
+    return max(0.1(1 + 0.5gr_is3d(sp)), offset + gr_colorbar_width(sp) + 0.05)
+end
+
+function gr_colorbar_yspan(sp::Subplot, vp::GRViewport)
+    cbar_height = clamp(gr_colorbar_size(sp[:colorbar_height], height(vp)), 0, height(vp))
+    return ycenter(vp) - 0.5cbar_height, ycenter(vp) + 0.5cbar_height
+end
+
 function gr_set_viewport_cmap(sp::Subplot, vp::GRViewport)
     offset = gr_cbar_offsets[][gr_is3d(sp) ? 2 : 1]
-    args = vp.xmax + offset, vp.xmax + offset + gr_cbar_width[], vp.ymin, vp.ymax
+    ymin, ymax = gr_colorbar_yspan(sp, vp)
+    args = vp.xmax + offset, vp.xmax + offset + gr_colorbar_width(sp), ymin, ymax
     GR.setviewport(args...)
     return GRViewport(args...)
 end
@@ -820,7 +839,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
 
     title = gr_colorbar_title(sp)
     gr_set_font(title.font, sp; halign = :center, valign = :top)
-    gr_text(vp.xmax + 0.1, ycenter(vp), title.str)
+    gr_text(vp_cmap.xmax + 0.05, ycenter(vp_cmap), title.str)
 
     GR.restorestate()
     return nothing
