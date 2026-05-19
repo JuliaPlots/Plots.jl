@@ -824,54 +824,49 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
             if !isempty(ticks_vals)
                 cb_pos = sp[:colorbar]
                 is_horizontal = cb_pos in (:top, :bottom)
+                ticks = [GR.GRTick(cv, 1) for cv in ticks_vals]
+                tick_labels =
+                    isempty(ticks_labels) ? nothing :
+                    [GR.GRTickLabel(cv, string(dv), 0) for (cv, dv) in zip(ticks_vals, ticks_labels)]
 
-                # draw tick marks manually (workaround for GR.axes signature differences)
-                tick_ndc = gr_colorbar_tick_size[]
-                for cv in ticks_vals
-                    if is_horizontal
-                        x_ndc, y_ndc = GR.wctondc(cv, z_min)
-                        p1x, p1y = GR.ndctowc(x_ndc, y_ndc)
-                        p2x, p2y = GR.ndctowc(x_ndc, y_ndc - tick_ndc)
-                        GR.polyline([p1x, p2x], [p1y, p2y])
-                    else
-                        x_ndc, y_ndc = GR.wctondc(x_max, cv)
-                        p1x, p1y = GR.ndctowc(x_ndc, y_ndc)
-                        p2x, p2y = GR.ndctowc(x_ndc + tick_ndc, y_ndc)
-                        GR.polyline([p1x, p2x], [p1y, p2y])
-                    end
-                end
-
-                # draw tick labels when provided
-                if !isempty(ticks_labels)
-                    GR.savestate()
-                    halign = if is_horizontal
-                        sp[:colorbar_tickfonthalign]
-                    elseif sp[:colorbar_tickfonthalign] ≡ :hcenter
-                        :left
-                    else
-                        sp[:colorbar_tickfonthalign]
-                    end
-                    f = font(
-                        ;
-                        family = sp[:colorbar_tickfontfamily],
-                        pointsize = sp[:colorbar_tickfontsize],
-                        rotation = sp[:colorbar_tickfontrotation],
-                        color = sp[:colorbar_tickfontcolor],
-                        halign = halign,
-                        valign = sp[:colorbar_tickfontvalign],
+                GR.savestate()
+                f = font(
+                    ;
+                    family = sp[:colorbar_tickfontfamily],
+                    pointsize = sp[:colorbar_tickfontsize],
+                    rotation = sp[:colorbar_tickfontrotation],
+                    color = sp[:colorbar_tickfontcolor],
+                    halign = sp[:colorbar_tickfonthalign],
+                    valign = sp[:colorbar_tickfontvalign],
+                )
+                gr_set_font(f, sp)
+                axis = if is_horizontal
+                    GR.axis(
+                        'X';
+                        min = x_min,
+                        max = x_max,
+                        org = x_min,
+                        position = z_min,
+                        ticks = ticks,
+                        tick_size = gr_colorbar_tick_size[],
+                        tick_labels = tick_labels,
+                        draw_axis_line = 0,
                     )
-                    gr_set_font(f, sp)
-                    for (cv, dv) in zip(ticks_vals, ticks_labels)
-                        if is_horizontal
-                            x_ndc, y_ndc = GR.wctondc(cv, z_min)
-                            gr_text(x_ndc, y_ndc - 2.0 * tick_ndc, dv)
-                        else
-                            x_ndc, y_ndc = GR.wctondc(x_max, cv)
-                            gr_text(x_ndc + 2.0 * tick_ndc, y_ndc, dv)
-                        end
-                    end
-                    GR.restorestate()
+                else
+                    GR.axis(
+                        'Y';
+                        min = z_min,
+                        max = z_max,
+                        org = z_min,
+                        position = x_max,
+                        ticks = ticks,
+                        tick_size = gr_colorbar_tick_size[],
+                        tick_labels = tick_labels,
+                        draw_axis_line = 0,
+                    )
                 end
+                GR.drawaxis(is_horizontal ? 'X' : 'Y', axis)
+                GR.restorestate()
             end
         end
     end
