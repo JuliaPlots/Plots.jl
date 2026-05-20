@@ -68,6 +68,8 @@ end
         pl = @test_nowarn heatmap([1 2; 3 4], colorbar_ticks = ticks)
         @test pl[1][:colorbar_ticks] == ticks
         @test PlotsBase.Colorbars.get_colorbar_ticks(pl[1]) == ticks
+        @test_nowarn display(pl)
+        @test_nowarn display(heatmap([1 2; 3 4], colorbar_ticks = :auto))
     end
 end
 
