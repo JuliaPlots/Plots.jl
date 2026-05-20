@@ -61,6 +61,16 @@ end
     end
 end
 
+@testset "GR colorbar ticks" begin
+    with(:gr) do
+        ticks = ([2, 4], ["two", "four"])
+        @test PlotsBase.is_attr_supported(backend(), :colorbar_ticks)
+        pl = @test_nowarn heatmap([1 2; 3 4], colorbar_ticks = ticks)
+        @test pl[1][:colorbar_ticks] == ticks
+        @test PlotsBase.Colorbars.get_colorbar_ticks(pl[1]) == ticks
+    end
+end
+
 @testset "Plotting Plots" begin
     pl = @test_nowarn plot(rand(3, 3))
     @test plot(pl, plot_title = "Test")[:plot_title] == "Test"
