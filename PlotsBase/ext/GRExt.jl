@@ -741,6 +741,8 @@ end
 
 const gr_colorbar_tick_size = Ref(0.005)
 
+gr_has_custom_colorbar_ticks(ticks) = _has_ticks(ticks) && !(ticks isa Symbol) && ticks !== true
+
 function gr_draw_colorbar_ticks(sp::Subplot, x_max, z_min, z_max)
     ticks = get_colorbar_ticks(sp)
     ticks === nothing && return
@@ -857,7 +859,15 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     end
 
     if _has_ticks(sp[:colorbar_ticks])
-        gr_draw_colorbar_ticks(sp, x_max, z_min, z_max)
+        if gr_has_custom_colorbar_ticks(sp[:colorbar_ticks])
+            gr_draw_colorbar_ticks(sp, x_max, z_min, z_max)
+        else
+            z_tick = 0.5GR.tick(z_min, z_max)
+            gr_set_line(1, :solid, plot_color(:black), sp)
+            (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
+            # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
+            GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+        end
     end
 
     title = gr_colorbar_title(sp)
