@@ -811,11 +811,64 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     end
 
     if _has_ticks(sp[:colorbar_ticks])
-        z_tick = 0.5GR.tick(z_min, z_max)
         gr_set_line(1, :solid, plot_color(:black), sp)
         (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
-        # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
-        GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+
+        if sp[:colorbar_ticks] isa Union{Symbol, Bool}
+            # Preserve GR's native auto-tick appearance for the default path.
+            z_tick = 0.5GR.tick(z_min, z_max)
+            # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
+            GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
+        else
+            ticks_vals, ticks_labels = get_colorbar_ticks(sp)
+            if !isempty(ticks_vals)
+                cb_pos = sp[:colorbar]
+                is_horizontal = cb_pos in (:top, :bottom)
+                ticks = [GR.GRTick(cv, 1) for cv in ticks_vals]
+                tick_labels =
+                    isempty(ticks_labels) ? nothing :
+                    [GR.GRTickLabel(cv, string(dv), 0) for (cv, dv) in zip(ticks_vals, ticks_labels)]
+
+                GR.savestate()
+                f = font(
+                    ;
+                    family = sp[:colorbar_tickfontfamily],
+                    pointsize = sp[:colorbar_tickfontsize],
+                    rotation = sp[:colorbar_tickfontrotation],
+                    color = sp[:colorbar_tickfontcolor],
+                    halign = sp[:colorbar_tickfonthalign],
+                    valign = sp[:colorbar_tickfontvalign],
+                )
+                gr_set_font(f, sp)
+                axis = if is_horizontal
+                    GR.axis(
+                        'X';
+                        min = x_min,
+                        max = x_max,
+                        org = x_min,
+                        position = z_min,
+                        ticks = ticks,
+                        tick_size = gr_colorbar_tick_size[],
+                        tick_labels = tick_labels,
+                        draw_axis_line = 0,
+                    )
+                else
+                    GR.axis(
+                        'Y';
+                        min = z_min,
+                        max = z_max,
+                        org = z_min,
+                        position = x_max,
+                        ticks = ticks,
+                        tick_size = gr_colorbar_tick_size[],
+                        tick_labels = tick_labels,
+                        draw_axis_line = 0,
+                    )
+                end
+                GR.drawaxis(is_horizontal ? 'X' : 'Y', axis)
+                GR.restorestate()
+            end
+        end
     end
 
     title = gr_colorbar_title(sp)

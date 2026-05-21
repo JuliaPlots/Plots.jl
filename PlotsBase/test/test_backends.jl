@@ -70,3 +70,11 @@ is_pkgeval() || @testset "Backends $be" for be in TEST_BACKENDS
     PlotsBase.test_examples(be; skip, callback, disp = is_ci(), strict = true)  # `ci` display for coverage
     closeall()
 end
+
+@testset "GR colorbar_ticks horizontal" begin
+    with(:gr) do
+        p = heatmap(rand(10, 10); colorbar = :top, colorbar_ticks = [0.3, 0.6, 0.9])
+        io = IOContext(IOBuffer(), :color => true)
+        @test show(io, p) isa Nothing
+    end
+end

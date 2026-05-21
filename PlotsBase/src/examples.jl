@@ -1259,6 +1259,30 @@ const _examples = PlotExample[
             )
         ),
     ),
+    PlotExample( # 67
+        "Heatmap colorbar ticks",
+        :(using PlotsBase.Commons),
+        quote
+            plot(
+                heatmap(
+                    rand(10, 10);
+                    colorbar_ticks = [0.2, 0.5, 0.8],
+                    colorbar_tickfontsize = 10,
+                    right_margin = 8mm,
+                    title = "ticks",
+                ),
+                heatmap(
+                    rand(10, 10);
+                    colorbar_ticks = ([0.2, 0.5, 0.8], ["low", "mid", "high"]),
+                    colorbar_tickfontsize = 10,
+                    right_margin = 14mm,
+                    title = "labels",
+                ),
+                layout = (1, 2),
+                size = (900, 500),
+            )
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages

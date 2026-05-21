@@ -1,6 +1,11 @@
 
 # Plots.jl NEWS
 
+## Unreleased
+
+### Features
+- GR backend: Add support for `colorbar_ticks` to customize tick positions and labels on colorbars (#3560)
+
 ## Breaking changes
 ---
 
