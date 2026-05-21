@@ -106,7 +106,24 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :legend,
         :colorbar,
         :colorbar_title,
+        :colorbar_titlefont,
+        :colorbar_titlefontfamily,
+        :colorbar_titlefontsize,
+        :colorbar_titlefonthalign,
+        :colorbar_titlefontvalign,
+        :colorbar_titlefontrotation,
+        :colorbar_titlefontcolor,
         :colorbar_entry,
+        :colorbar_ticks,
+        :colorbar_tickfont,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfonthalign,
+        :colorbar_tickfontvalign,
+        :colorbar_tickfontrotation,
+        :colorbar_tickfontcolor,
+        :colorbar_scale,
+        :colorbar_formatter,
         :marker_z,
         :fill_z,
         :line_z,
@@ -633,6 +650,20 @@ function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
 end
 plotly_colorscale(c, α = nothing) = plotly_colorscale(_as_gradient(c), α)
 
+plotly_colorbar_scale_values(sp::Subplot, values) =
+if sp[:colorbar_scale] ≡ :identity
+    values
+else
+    sf = RecipesPipeline.scale_func(sp[:colorbar_scale])
+    map(values) do value
+        scaled_value = sf(value)
+        isinf(scaled_value) ? NaN : scaled_value
+    end
+end
+
+plotly_colorbar_clims(sp::Subplot, clims) =
+    Tuple(plotly_colorbar_scale_values(sp, clims))
+
 get_plotly_marker(k, def) = get(
     (
         rect = "square",
@@ -765,8 +796,9 @@ function plotly_series(plt::Plot, series::Series)
 
     plotattributes_out[:colorbar] = plotly_colorbar(sp)
 
-    if PlotsBase.is_2tuple(clims) && all(!isnan, clims)
-        plotattributes_out[:zmin], plotattributes_out[:zmax] = clims
+    plotly_clims = plotly_colorbar_clims(sp, clims)
+    if PlotsBase.is_2tuple(plotly_clims) && all(!isnan, plotly_clims)
+        plotattributes_out[:zmin], plotattributes_out[:zmax] = plotly_clims
     end
 
     # set the "type"
@@ -777,7 +809,8 @@ function plotly_series(plt::Plot, series::Series)
         x = PlotsBase.heatmap_edges(x, sp[:xaxis][:scale])
         y = PlotsBase.heatmap_edges(y, sp[:yaxis][:scale])
         plotattributes_out[:type] = "heatmap"
-        plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
+        plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] =
+            x, y, plotly_colorbar_scale_values(sp, z)
         plotattributes_out[:colorscale] =
             plotly_colorscale(series[:fillcolor], series[:fillalpha])
         plotattributes_out[:showscale] = hascolorbar(sp)
@@ -921,11 +954,29 @@ end
 function plotly_colorbar(sp::Subplot)
     x_domain, y_domain = plotly_domain(sp)
     plot_attribute = KW(
-        :title => sp[:colorbar_title],
+        :title => KW(
+            :text => sp[:colorbar_title],
+            :font => plotly_font(colorbartitlefont(sp)),
+        ),
         :y => Statistics.mean(y_domain),
         :len => diff(y_domain)[1],
         :x => x_domain[2],
+        :tickfont => plotly_font(colorbartickfont(sp)),
+        :tickangle => -sp[:colorbar_tickfontrotation],
     )
+    if _has_ticks(sp[:colorbar_ticks])
+        if sp[:colorbar_ticks] ≢ :native
+            tick_values, tick_labels = get_colorbar_ticks(sp)
+            if !isempty(tick_values)
+                plot_attribute[:tickmode] = "array"
+                plot_attribute[:tickvals] = plotly_colorbar_scale_values(sp, tick_values)
+                isempty(tick_labels) || (plot_attribute[:ticktext] = tick_labels)
+            end
+        end
+    else
+        plot_attribute[:showticklabels] = false
+        plot_attribute[:ticks] = ""
+    end
     return plot_attribute
 end
 
@@ -961,14 +1012,20 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
                 :y => vcat(y[rng], y[rng[1]]),
                 :fill => "tozeroy",
                 :fillcolor => rgba_string(
-                    plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
+                    plot_color(
+                        get_fillcolor(series, clims, i, series[:subplot][:colorbar_scale]),
+                        get_fillalpha(series, i),
+                    ),
                 ),
             ),
         )
         if series[:markerstrokewidth] > 0
             plotattributes_out[:line] = KW(
                 :color => rgba_string(
-                    plot_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
+                    plot_color(
+                        get_linecolor(series, clims, i, series[:subplot][:colorbar_scale]),
+                        get_linealpha(series, i),
+                    ),
                 ),
                 :width => get_linewidth(series, i),
                 :dash => string(get_linestyle(series, i)),
@@ -1027,12 +1084,18 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                     isa(series[:fillrange], Tuple)
                 plotattributes_out[:fill] = "tozeroy"
                 plotattributes_out[:fillcolor] = rgba_string(
-                    plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
+                    plot_color(
+                        get_fillcolor(series, clims, i, sp[:colorbar_scale]),
+                        get_fillalpha(series, i),
+                    ),
                 )
             elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real}, Real}
                 plotattributes_out[:fill] = "tonexty"
                 plotattributes_out[:fillcolor] = rgba_string(
-                    plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
+                    plot_color(
+                        get_fillcolor(series, clims, i, sp[:colorbar_scale]),
+                        get_fillalpha(series, i),
+                    ),
                 )
             elseif !(series[:fillrange] in (false, nothing))
                 @maxlog_warn "fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])"
@@ -1053,11 +1116,14 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         # add "marker"
         if hasmarker
             mcolor = rgba_string(
-                plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i)),
+                plot_color(
+                    get_markercolor(series, clims, i, sp[:colorbar_scale]),
+                    get_markeralpha(series, i),
+                ),
             )
             mcolor_next = if (mz = series[:marker_z]) ≢ nothing && i < length(mz)
                 plot_color(
-                    get_markercolor(series, clims, i + 1),
+                    get_markercolor(series, clims, i + 1, sp[:colorbar_scale]),
                     get_markeralpha(series, i + 1),
                 ) |> rgba_string
             else
@@ -1094,7 +1160,10 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         if hasline
             plotattributes_out[:line] = KW(
                 :color => rgba_string(
-                    plot_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
+                    plot_color(
+                        get_linecolor(series, clims, i, sp[:colorbar_scale]),
+                        get_linealpha(series, i),
+                    ),
                 ),
                 :width => get_linewidth(series, i),
                 :shape => if st ≡ :steppre
@@ -1168,7 +1237,8 @@ end
 
 function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symbol)
     plotattributes_out = deepcopy(plotattributes_base)
-    cmin, cmax = get_clims(series[:subplot])
+    sp = series[:subplot]
+    cmin, cmax = plotly_colorbar_clims(sp, get_clims(sp))
     plotattributes_out[:showlegend] = false
     plotattributes_out[:type] = RecipesPipeline.is3d(series) ? :scatter3d : :scatter
     plotattributes_out[:hoverinfo] = :none
@@ -1185,7 +1255,8 @@ function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symb
         :cmin => cmin,
         :cmax => cmax,
         :colorscale => plotly_colorscale(series[Symbol("$(sym)color")], 1),
-        :showscale => hascolorbar(series[:subplot]),
+        :showscale => hascolorbar(sp),
+        :colorbar => plotly_colorbar(sp),
     )
     return plotattributes_out
 end

@@ -434,6 +434,22 @@ with(:pgfplotsx) do
         @test pl[1][:colorbar_title] == "Test me"
         @test pl[1][:colorbar_titlefontsize] == 12
         @test pl[1][:colorbar_titlefonthalign] ≡ :right
+        pl = @test_nowarn heatmap(
+            [1.0 10.0; 100.0 1000.0],
+            colorbar_scale = :log10,
+            colorbar_ticks = ([1.0, 1000.0], ["low", "high"]),
+            colorbar_tickfont = font(9, "Courier", :left, :top, 30.0),
+            colorbar_titlefont = font(12, "Times", :right),
+        )
+        @test pl[1][:colorbar_tickfontsize] == 9
+        @test pl[1][:colorbar_tickfontfamily] == "Courier"
+        @test pl[1][:colorbar_tickfonthalign] ≡ :left
+        ax_opt = first(get_pgf_axes(pl)).options
+        cb_style = ax_opt["colorbar style"]
+        @test cb_style["ytick"] == "{0.0,3.0}"
+        @test cb_style["yticklabels"] == "{low,high}"
+        @test cb_style["yticklabel style"]["rotate"] == 30.0
+        @test cb_style["ylabel style"]["align"] == "right"
     end
 
     @testset "Latexify - LaTeXStrings" begin

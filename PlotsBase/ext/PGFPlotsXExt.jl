@@ -103,10 +103,24 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :legend_title,
         :colorbar,
         :colorbar_title,
+        :colorbar_titlefont,
+        :colorbar_titlefontfamily,
         :colorbar_titlefontsize,
+        :colorbar_titlefonthalign,
+        :colorbar_titlefontvalign,
         :colorbar_titlefontcolor,
         :colorbar_titlefontrotation,
         :colorbar_entry,
+        :colorbar_ticks,
+        :colorbar_tickfont,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfonthalign,
+        :colorbar_tickfontvalign,
+        :colorbar_tickfontrotation,
+        :colorbar_tickfontcolor,
+        :colorbar_scale,
+        :colorbar_formatter,
         :fill,
         :fill_z,
         :line_z,
@@ -288,6 +302,32 @@ PlotsBase.labelfunc(scale::Symbol, backend::PGFPlotsXBackend) =
 
 pgfx_halign(k) = (left = "left", hcenter = "center", center = "center", right = "right")[k]
 
+pgfx_colorbar_scale_values(sp::Subplot, values) =
+if sp[:colorbar_scale] ≡ :identity
+    values
+else
+    sf = RecipesPipeline.scale_func(sp[:colorbar_scale])
+    map(values) do value
+        scaled_value = sf(value)
+        isinf(scaled_value) ? NaN : scaled_value
+    end
+end
+
+pgfx_colorbar_clims(sp::Subplot) = Tuple(pgfx_colorbar_scale_values(sp, get_clims(sp)))
+
+function pgfx_colorbar_ticklabels(labels, is_log_scale::Bool)
+    isempty(labels) && return ""
+    tick_labels = is_log_scale ? wrap_power_labels(labels) : labels
+    needs_math = any(tick_labels) do label
+        label isa AbstractString && occursin('^', label) && !pgfx_is_inline_math(label)
+    end
+    if is_log_scale && needs_math
+        return "\\(" * join(tick_labels, "\\),\\(") * "\\)"
+    else
+        return join(tick_labels, ',')
+    end
+end
+
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
         pgfx_sanitize_plot!(plt)
@@ -343,9 +383,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             title_cstr = plot_color(sp[:titlefontcolor])
             bgc_inside = plot_color(sp[:background_color_inside])
             update_clims(sp)
+            colorbar_clims = pgfx_colorbar_clims(sp)
             axis_opt = Options(
-                "point meta max" => get_clims(sp)[2],
-                "point meta min" => get_clims(sp)[1],
+                "point meta max" => colorbar_clims[2],
+                "point meta min" => colorbar_clims[1],
                 "legend cell align" => "left",
                 "legend columns" => pgfx_legend_col(sp[:legend_column]),
                 "title" => sp[:title],
@@ -400,13 +441,22 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
 
             if hascolorbar(sp)
                 formatter = latex_formatter(sp[:colorbar_formatter])
-                cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
+                ctick_values, ctick_labels = get_colorbar_ticks(sp; formatter = formatter)
+                ctick_values = pgfx_colorbar_scale_values(sp, ctick_values)
+                cticks = curly(join(ctick_values, ','))
+                cticklabels = curly(
+                    pgfx_colorbar_ticklabels(
+                        ctick_labels,
+                        sp[:colorbar_scale] ∈ _log_scales,
+                    ),
+                )
                 letter = sp[:colorbar] ≡ :top ? :x : :y
 
                 colorbar_style = push!(
                     Options("$(letter)label" => sp[:colorbar_title]),
                     "$(letter)label style" => pgfx_get_colorbar_title_style(sp),
                     "$(letter)tick" => cticks,
+                    "$(letter)ticklabels" => cticklabels,
                     "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                 )
 
@@ -705,6 +755,7 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
     )
     args = pgfx_series_arguments(series, opt)
     meta = map(r -> any(!isfinite, r) ? NaN : r[3], zip(args...))
+    meta = pgfx_colorbar_scale_values(series[:subplot], meta)
     for arg in args
         arg[(!isfinite).(arg)] .= 0
     end
@@ -1066,6 +1117,7 @@ function pgfx_get_colorbar_title_style(sp)
         "color" => cstr,
         "draw opacity" => alpha(cstr),
         "rotate" => sp[:colorbar_titlefontrotation],
+        "align" => pgfx_halign(sp[:colorbar_titlefonthalign]),
     )
 end
 
