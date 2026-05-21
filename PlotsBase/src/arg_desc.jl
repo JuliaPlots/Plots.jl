@@ -131,6 +131,7 @@ const _arg_desc = KW(
     :colorbar_tickfontfamily => (Union{AStr, Symbol}, "String or Symbol. Font family of colorbar tick labels."),
     :colorbar_tickfontsize => (Integer, "Font pointsize of colorbar tick entries."),
     :colorbar_tickfontcolor => (ColorType, "Font color of colorbar tick entries."),
+    :colorbar_tickfont => (Font, "Font of colorbar tick entries."),
     :colorbar_scale => (Symbol, "Scale of the colorbar axis. Choose from $(Commons._all_scales)."),
     :colorbar_formatter => (Union{Function, Symbol}, "Choose from (:scientific, :plain, :none, :auto), or a method which converts a number to a string for tick labeling."),
     :legend_font => (Font, "Font of legend items."),

@@ -61,6 +61,18 @@ end
     end
 end
 
+@testset "Colorbar font attributes" begin
+    pl = @test_nowarn heatmap(
+        rand(2, 2);
+        colorbar_tickfont = font(11, "Times", :left, :top, 30.0),
+    )
+    @test pl[1][:colorbar_tickfontsize] == 11
+    @test pl[1][:colorbar_tickfontfamily] == "Times"
+    @test pl[1][:colorbar_tickfonthalign] == :left
+    @test pl[1][:colorbar_tickfontvalign] == :top
+    @test pl[1][:colorbar_tickfontrotation] == 30.0
+end
+
 @testset "Plotting Plots" begin
     pl = @test_nowarn plot(rand(3, 3))
     @test plot(pl, plot_title = "Test")[:plot_title] == "Test"
