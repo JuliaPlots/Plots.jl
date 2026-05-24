@@ -90,3 +90,15 @@ end
         @test show(io, p) isa Nothing
     end
 end
+
+Sys.islinux() && :PythonPlot in TEST_PACKAGES && @testset "PythonPlot colorbar border style" begin
+    with(:pythonplot) do
+        p = heatmap(
+            rand(10, 10);
+            colorbar_bordercolor = :red,
+            colorbar_borderwidth = 2,
+        )
+        io = IOContext(IOBuffer(), :color => true)
+        @test show(io, p) isa Nothing
+    end
+end

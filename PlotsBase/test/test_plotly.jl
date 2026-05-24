@@ -9,6 +9,13 @@ Sys.isunix() && with(:plotly) do
         @test !haskey(PlotsBase.plotly_series(pl)[1], :zmax)
     end
 
+    @testset "Colorbar border style" begin
+        pl = heatmap(rand(2, 2); colorbar_bordercolor = :red, colorbar_borderwidth = 2)
+        colorbar = PlotsBase.plotly_series(pl)[1][:colorbar]
+        @test colorbar[:outlinecolor] == "rgba(255, 0, 0, 1.000)"
+        @test colorbar[:outlinewidth] == 2
+    end
+
     @testset "Contours" begin
         x = (-2π):0.1:(2π)
         y = (-π):0.1:π

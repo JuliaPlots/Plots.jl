@@ -200,6 +200,17 @@ with(:pgfplotsx) do
         # TODO: clims are wrong
     end
 
+    @testset "Colorbar border style" begin
+        pl = heatmap(rand(2, 2); colorbar_bordercolor = :red, colorbar_borderwidth = 2)
+        axis = first(get_pgf_axes(pl))
+        if @test_nowarn(haskey(axis.options.dict, "colorbar style"))
+            colorbar_style = axis["colorbar style"]
+            @test colorbar_style["draw"] == RGBA{Float64}(colorant"red", 1.0)
+            @test colorbar_style["draw opacity"] == 1.0
+            @test colorbar_style["line width"] ≈ 1.5
+        end
+    end
+
     @testset "Contours" begin
         x = 1:0.5:20
         y = 1:0.5:10
