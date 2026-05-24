@@ -86,8 +86,8 @@ end
             colorbar_bordercolor = :red,
             colorbar_borderwidth = 2,
         )
-        io = IOContext(IOBuffer(), :color => true)
-        @test show(io, p) isa Nothing
+        fn = png(p, tempname())
+        @test filesize(fn) > 1_000
     end
 end
 
@@ -98,7 +98,7 @@ Sys.islinux() && :PythonPlot in TEST_PACKAGES && @testset "PythonPlot colorbar b
             colorbar_bordercolor = :red,
             colorbar_borderwidth = 2,
         )
-        io = IOContext(IOBuffer(), :color => true)
-        @test show(io, p) isa Nothing
+        fn = png(p, tempname())
+        @test filesize(fn) > 1_000
     end
 end
