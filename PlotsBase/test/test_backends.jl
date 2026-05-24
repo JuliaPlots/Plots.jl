@@ -78,3 +78,46 @@ end
         @test show(io, p) isa Nothing
     end
 end
+
+@testset "GR colorbar properties" begin
+    with(:gr) do
+        for attr in (
+                :colorbar_tickfont,
+                :colorbar_tickfontfamily,
+                :colorbar_tickfontsize,
+                :colorbar_tickfontcolor,
+                :colorbar_tickcolor,
+                :colorbar_ticklinewidth,
+                :colorbar_bordercolor,
+                :colorbar_borderlinewidth,
+                :colorbar_width,
+                :colorbar_height,
+            )
+            @test PlotsBase.is_attr_supported(backend(), attr)
+        end
+
+        p = heatmap(
+            reshape(1:100, 10, 10);
+            colorbar_ticks = [20, 50, 80],
+            colorbar_tickfont = (12, :red, 45.0),
+            colorbar_tickcolor = :blue,
+            colorbar_ticklinewidth = 2,
+            colorbar_bordercolor = :green,
+            colorbar_borderlinewidth = 3,
+            colorbar_width = 0.05,
+            colorbar_height = 0.75,
+        )
+
+        sp = p[1]
+        @test sp[:colorbar_tickfontsize] == 12
+        @test sp[:colorbar_tickfontrotation] == 45.0
+        @test sp[:colorbar_ticklinewidth] == 2
+        @test sp[:colorbar_borderlinewidth] == 3
+        @test sp[:colorbar_width] == 0.05
+        @test sp[:colorbar_height] == 0.75
+
+        fn = tempname() * ".png"
+        @test png(p, fn) == fn
+        @test filesize(fn) > 1_000
+    end
+end

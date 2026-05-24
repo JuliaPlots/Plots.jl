@@ -346,6 +346,23 @@ add_aliases(
     :surfcolour,
 )
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
+add_aliases(:colorbar_tickfont, :cb_tickfont, :cbar_tickfont, :colorkey_tickfont)
+add_aliases(:colorbar_tickcolor, :cb_tickcolor, :cbar_tickcolor, :colorkey_tickcolor)
+add_aliases(
+    :colorbar_ticklinewidth,
+    :cb_ticklinewidth,
+    :cbar_ticklinewidth,
+    :colorkey_ticklinewidth,
+)
+add_aliases(:colorbar_bordercolor, :cb_bordercolor, :cbar_bordercolor, :colorkey_bordercolor)
+add_aliases(
+    :colorbar_borderlinewidth,
+    :cb_borderlinewidth,
+    :cbar_borderlinewidth,
+    :colorkey_borderlinewidth,
+)
+add_aliases(:colorbar_width, :cb_width, :cbar_width, :colorkey_width)
+add_aliases(:colorbar_height, :cb_height, :cbar_height, :colorkey_height)
 add_aliases(
     :colorbar_title,
     :colorbartitle,

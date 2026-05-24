@@ -443,6 +443,12 @@ const _subplot_defaults = KW(
     :colorbar_tickfontvalign => :vcenter,
     :colorbar_tickfontrotation => 0.0,
     :colorbar_tickfontcolor => :match,
+    :colorbar_tickcolor => :match,
+    :colorbar_ticklinewidth => 1,
+    :colorbar_bordercolor => :match,
+    :colorbar_borderlinewidth => 0,
+    :colorbar_width => :auto,
+    :colorbar_height => :auto,
     :colorbar_scale => :identity,
     :colorbar_formatter => :auto,
     :colorbar_discrete_values => [],
@@ -573,7 +579,14 @@ const _plot_attrs = Set(keys(_plot_defaults))
 
 const _magic_axis_attrs = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
 const _magic_subplot_attrs =
-    [:title_font, :legend_font, :legend_title_font, :plot_title_font, :colorbar_titlefont]
+    [
+        :title_font,
+        :legend_font,
+        :legend_title_font,
+        :plot_title_font,
+        :colorbar_titlefont,
+        :colorbar_tickfont,
+    ]
 const _magic_series_attrs = [:line, :marker, :fill]
 const _all_magic_attrs =
     Set(union(_magic_axis_attrs, _magic_series_attrs, _magic_subplot_attrs))
@@ -1102,6 +1115,8 @@ const _match_map = Dict(
     :colorbar_titlefontcolor => :foreground_color_subplot,
     :colorbar_tickfontfamily => :fontfamily_subplot,
     :colorbar_tickfontcolor => :foreground_color_subplot,
+    :colorbar_tickcolor => :foreground_color_subplot,
+    :colorbar_bordercolor => :foreground_color_subplot,
     :plot_titlefontfamily => :fontfamily,
     :plot_titlefontcolor => :foreground_color,
     :tickfontcolor => :foreground_color_text,
