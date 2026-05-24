@@ -436,6 +436,36 @@ with(:pgfplotsx) do
         @test pl[1][:colorbar_titlefonthalign] ≡ :right
     end
 
+    @testset "Colorbar properties" begin
+        pl = heatmap(
+            reshape(1:9, 3, 3);
+            colorbar_ticks = ([2, 5, 8], ["low", "mid", "high"]),
+            colorbar_tickfont = (12, :red, 45.0),
+            colorbar_tickcolor = :blue,
+            colorbar_ticklinewidth = 2,
+            colorbar_bordercolor = :green,
+            colorbar_borderlinewidth = 3,
+            colorbar_width = 0.05,
+            colorbar_height = 0.75,
+            colorbar_title = "Styled",
+        )
+        axis = first(get_pgf_axes(pl))
+        colorbar_style = axis.options["colorbar style"]
+        ticklabel_style = colorbar_style["yticklabel style"]
+        tick_style = colorbar_style["ytick style"]
+        @test colorbar_style["ylabel"] == "Styled"
+        @test occursin("\\fontsize{12", ticklabel_style["font"])
+        @test occursin("\\selectfont", ticklabel_style["font"])
+        @test ticklabel_style["color"] == PlotsBase.plot_color(:red)
+        @test ticklabel_style["rotate"] == 45.0
+        @test tick_style["draw"] == PlotsBase.plot_color(:blue)
+        @test tick_style["line width"] == "2pt"
+        @test colorbar_style["draw"] == PlotsBase.plot_color(:green)
+        @test colorbar_style["line width"] == "3pt"
+        @test colorbar_style["width"] == "0.05\\linewidth"
+        @test colorbar_style["height"] == "0.75\\linewidth"
+    end
+
     @testset "Latexify - LaTeXStrings" begin
         @test PlotsBase.pgfx_sanitize_string("A string, with 2 punctuation chars.") ==
             "A string, with 2 punctuation chars."

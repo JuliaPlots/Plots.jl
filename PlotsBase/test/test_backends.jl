@@ -48,6 +48,9 @@ is_pkgeval() || @testset "PlotlyJS" begin
     with(:plotlyjs) do
         PlotlyJSExt = Base.get_extension(PlotsBase, :PlotlyJSExt)
         @test backend() == PlotlyJSExt.PlotlyJSBackend()
+        @test PlotsBase.is_attr_supported(backend(), :colorbar_tickcolor)
+        @test PlotsBase.is_attr_supported(backend(), :colorbar_borderlinewidth)
+        @test PlotsBase.is_attr_supported(backend(), :colorbar_width)
         pl = plot(rand(10))
         @test pl isa Plot
         display(pl)

@@ -17,6 +17,7 @@ using PlotsBase.Colorbars
 using PlotsBase.Subplots
 using PlotsBase.Surfaces
 using PlotsBase.Commons
+using PlotsBase.Ticks: _has_ticks
 using PlotsBase.Plots
 using PlotsBase.Fonts
 using PlotsBase.Ticks
@@ -106,6 +107,24 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :legend,
         :colorbar,
         :colorbar_title,
+        :colorbar_titlefont,
+        :colorbar_titlefontfamily,
+        :colorbar_titlefontsize,
+        :colorbar_titlefontcolor,
+        :colorbar_titlefontrotation,
+        :colorbar_tickfont,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfontcolor,
+        :colorbar_tickcolor,
+        :colorbar_ticklinewidth,
+        :colorbar_bordercolor,
+        :colorbar_borderlinewidth,
+        :colorbar_width,
+        :colorbar_height,
+        :colorbar_ticks,
+        :colorbar_formatter,
+        :colorbar_scale,
         :colorbar_entry,
         :marker_z,
         :fill_z,
@@ -279,6 +298,10 @@ function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
     return pcts
 end
 
+plotly_colorbar_dimension(v::Symbol, default, name) =
+    v ≡ :auto ? default : throw(ArgumentError("$name must be `:auto` or a real number."))
+plotly_colorbar_dimension(v::Real, default, name) = max(0, float(v))
+
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot)
     figw, figh = sp.plt[:size]
@@ -288,7 +311,7 @@ function plotly_domain(sp::Subplot)
     y_domain = [pcts[2], pcts[2] + pcts[4]]
     if hascolorbar(sp)
         subplot_width = pcts[3]
-        colorbar_fractional_size = 0.25
+        colorbar_fractional_size = plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
         colorbar_width = subplot_width * colorbar_fractional_size
         x_domain[2] = x_domain[2] - colorbar_width
     end
@@ -920,12 +943,31 @@ end
 
 function plotly_colorbar(sp::Subplot)
     x_domain, y_domain = plotly_domain(sp)
+    tick_vals, tick_labels = get_colorbar_ticks(sp)
     plot_attribute = KW(
-        :title => sp[:colorbar_title],
+        :title => KW(:text => sp[:colorbar_title], :font => plotly_font(colorbartitlefont(sp))),
         :y => Statistics.mean(y_domain),
-        :len => diff(y_domain)[1],
+        :lenmode => "fraction",
+        :len => plotly_colorbar_dimension(sp[:colorbar_height], diff(y_domain)[1], "colorbar_height"),
         :x => x_domain[2],
+        :tickfont => plotly_font(colorbartickfont(sp)),
+        :tickcolor => rgba_string(plot_color(sp[:colorbar_tickcolor])),
+        :tickwidth => sp[:colorbar_ticklinewidth],
+        :outlinecolor => rgba_string(plot_color(sp[:colorbar_bordercolor])),
+        :outlinewidth => sp[:colorbar_borderlinewidth],
     )
+    if sp[:colorbar_width] !== :auto
+        plot_attribute[:thicknessmode] = "fraction"
+        plot_attribute[:thickness] = plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
+    end
+    if _has_ticks(sp[:colorbar_ticks]) && !isempty(tick_vals)
+        plot_attribute[:tickmode] = "array"
+        plot_attribute[:tickvals] = tick_vals
+        isempty(tick_labels) || (plot_attribute[:ticktext] = tick_labels)
+    elseif !_has_ticks(sp[:colorbar_ticks])
+        plot_attribute[:showticklabels] = false
+        plot_attribute[:ticks] = ""
+    end
     return plot_attribute
 end
 
@@ -1186,6 +1228,7 @@ function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symb
         :cmax => cmax,
         :colorscale => plotly_colorscale(series[Symbol("$(sym)color")], 1),
         :showscale => hascolorbar(series[:subplot]),
+        :colorbar => plotly_colorbar(series[:subplot]),
     )
     return plotattributes_out
 end

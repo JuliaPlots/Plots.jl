@@ -103,9 +103,24 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :legend_title,
         :colorbar,
         :colorbar_title,
+        :colorbar_titlefont,
+        :colorbar_titlefontfamily,
         :colorbar_titlefontsize,
         :colorbar_titlefontcolor,
         :colorbar_titlefontrotation,
+        :colorbar_tickfont,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfontcolor,
+        :colorbar_tickcolor,
+        :colorbar_ticklinewidth,
+        :colorbar_bordercolor,
+        :colorbar_borderlinewidth,
+        :colorbar_width,
+        :colorbar_height,
+        :colorbar_ticks,
+        :colorbar_formatter,
+        :colorbar_scale,
         :colorbar_entry,
         :fill,
         :fill_z,
@@ -408,7 +423,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "$(letter)label style" => pgfx_get_colorbar_title_style(sp),
                     "$(letter)tick" => cticks,
                     "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
+                    "$(letter)tick style" => pgfx_get_colorbar_tick_style(sp),
                 )
+                pgfx_colorbar_dimensions!(colorbar_style, sp)
+                pgfx_colorbar_border!(colorbar_style, sp)
 
                 if sp[:colorbar] ≡ :top
                     push!(
@@ -1058,6 +1076,33 @@ function pgfx_get_colorbar_ticklabel_style(sp)
         "draw opacity" => alpha(cstr),
         "rotate" => sp[:colorbar_tickfontrotation],
     )
+end
+function pgfx_get_colorbar_tick_style(sp)
+    cstr = plot_color(sp[:colorbar_tickcolor])
+    return Options(
+        "draw" => cstr,
+        "draw opacity" => alpha(cstr),
+        "line width" => string(sp[:colorbar_ticklinewidth], "pt"),
+    )
+end
+function pgfx_colorbar_dimensions!(opt, sp)
+    sp[:colorbar_width] ≡ :auto || push!(opt, "width" => pgfx_colorbar_dimension(sp[:colorbar_width], "colorbar_width"))
+    sp[:colorbar_height] ≡ :auto || push!(opt, "height" => pgfx_colorbar_dimension(sp[:colorbar_height], "colorbar_height"))
+    return opt
+end
+pgfx_colorbar_dimension(v::Real, name) = string(float(v), "\\linewidth")
+pgfx_colorbar_dimension(v, name) =
+    throw(ArgumentError("$name must be `:auto` or a real number."))
+function pgfx_colorbar_border!(opt, sp)
+    sp[:colorbar_borderlinewidth] > 0 || return opt
+    cstr = plot_color(sp[:colorbar_bordercolor])
+    push!(
+        opt,
+        "draw" => cstr,
+        "draw opacity" => alpha(cstr),
+        "line width" => string(sp[:colorbar_borderlinewidth], "pt"),
+    )
+    return opt
 end
 function pgfx_get_colorbar_title_style(sp)
     cstr = plot_color(sp[:colorbar_titlefontcolor])

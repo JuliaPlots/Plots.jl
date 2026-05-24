@@ -71,4 +71,34 @@ Sys.isunix() && with(:plotly) do
         html = read(io, String)
         # FIXME: how can we write a test checking that the html correctly draw a plotly plot ?
     end
+
+    @testset "Colorbar properties" begin
+        pl = heatmap(
+            reshape(1:9, 3, 3);
+            colorbar_ticks = ([2, 5, 8], ["low", "mid", "high"]),
+            colorbar_tickfont = (12, :red, 45.0),
+            colorbar_tickcolor = :blue,
+            colorbar_ticklinewidth = 2,
+            colorbar_bordercolor = :green,
+            colorbar_borderlinewidth = 3,
+            colorbar_width = 0.05,
+            colorbar_height = 0.75,
+            colorbar_title = "Styled",
+        )
+        colorbar = PlotsBase.plotly_series(pl)[1][:colorbar]
+        @test colorbar[:title][:text] == "Styled"
+        @test colorbar[:tickfont][:size] == round(Int, 1.4 * 12)
+        @test colorbar[:tickfont][:color] == "rgba(255, 0, 0, 1.000)"
+        @test colorbar[:tickcolor] == "rgba(0, 0, 255, 1.000)"
+        @test colorbar[:tickwidth] == 2
+        @test colorbar[:outlinecolor] == "rgba(0, 128, 0, 1.000)"
+        @test colorbar[:outlinewidth] == 3
+        @test colorbar[:thicknessmode] == "fraction"
+        @test colorbar[:thickness] == 0.05
+        @test colorbar[:lenmode] == "fraction"
+        @test colorbar[:len] == 0.75
+        @test colorbar[:tickmode] == "array"
+        @test colorbar[:tickvals] == [2, 5, 8]
+        @test colorbar[:ticktext] == ["low", "mid", "high"]
+    end
 end
