@@ -435,7 +435,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         colorbar_style,
                         "draw" => bordercolor,
                         "draw opacity" => alpha(bordercolor),
-                        "line width" => pgfx_thickness_scaling(sp) * borderwidth,
+                        "line width" => 0.75 * pgfx_thickness_scaling(sp) * borderwidth,
                     )
                 end
 
