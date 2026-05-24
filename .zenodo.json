@@ -819,6 +819,10 @@
             "affiliation": "@JuliaComputing",
             "name": "Παναγιώτης Γεωργακόπουλος",
             "type": "Other"
+        },
+        {
+            "name": "duooppa",
+            "type": "Other"
         }
     ],
     "upload_type": "software"

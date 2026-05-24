@@ -156,6 +156,8 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_tickfontvalign,
         :colorbar_tickfontrotation,
         :colorbar_tickfontcolor,
+        :colorbar_bordercolor,
+        :colorbar_borderwidth,
         :colorbar_titlefontcolor,
         :colorbar_titlefontsize,
         :colorbar_scale,
@@ -1184,7 +1186,12 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                     5_py_thickness_scale(plt, intensity),
             )
 
-            cbar.outline.set_linewidth(_py_thickness_scale(plt, 1))
+            if (borderwidth = sp[:colorbar_borderwidth]) isa Real
+                cbar.outline.set_edgecolor(_py_color(sp[:colorbar_bordercolor]))
+                cbar.outline.set_linewidth(_py_thickness_scale(plt, borderwidth))
+            else
+                cbar.outline.set_linewidth(_py_thickness_scale(plt, 1))
+            end
 
             sp.attr[:cbar_handle] = cbar
             sp.attr[:cbar_ax] = cax

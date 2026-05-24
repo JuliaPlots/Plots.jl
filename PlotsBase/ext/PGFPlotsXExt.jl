@@ -107,6 +107,8 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontcolor,
         :colorbar_titlefontrotation,
         :colorbar_entry,
+        :colorbar_bordercolor,
+        :colorbar_borderwidth,
         :fill,
         :fill_z,
         :line_z,
@@ -424,6 +426,16 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         colorbar_style,
                         "$(letter)tick style" => "{draw=none}",
                         "$(letter)ticklabels" => "{,,}",
+                    )
+                end
+
+                if (borderwidth = sp[:colorbar_borderwidth]) isa Real
+                    bordercolor = plot_color(sp[:colorbar_bordercolor])
+                    push!(
+                        colorbar_style,
+                        "draw" => bordercolor,
+                        "draw opacity" => alpha(bordercolor),
+                        "line width" => pgfx_thickness_scaling(sp) * borderwidth,
                     )
                 end
 

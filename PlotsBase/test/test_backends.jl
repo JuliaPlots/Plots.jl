@@ -78,3 +78,15 @@ end
         @test show(io, p) isa Nothing
     end
 end
+
+@testset "GR colorbar border style" begin
+    with(:gr) do
+        p = heatmap(
+            rand(10, 10);
+            colorbar_bordercolor = :red,
+            colorbar_borderwidth = 2,
+        )
+        io = IOContext(IOBuffer(), :color => true)
+        @test show(io, p) isa Nothing
+    end
+end

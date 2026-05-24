@@ -107,6 +107,8 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :colorbar,
         :colorbar_title,
         :colorbar_entry,
+        :colorbar_bordercolor,
+        :colorbar_borderwidth,
         :marker_z,
         :fill_z,
         :line_z,
@@ -926,6 +928,10 @@ function plotly_colorbar(sp::Subplot)
         :len => diff(y_domain)[1],
         :x => x_domain[2],
     )
+    if (borderwidth = sp[:colorbar_borderwidth]) isa Real
+        plot_attribute[:outlinecolor] = rgba_string(plot_color(sp[:colorbar_bordercolor]))
+        plot_attribute[:outlinewidth] = borderwidth
+    end
     return plot_attribute
 end
 

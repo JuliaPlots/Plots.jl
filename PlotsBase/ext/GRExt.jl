@@ -104,6 +104,8 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontrotation,
         :colorbar_titlefontcolor,
         :colorbar_entry,
+        :colorbar_bordercolor,
+        :colorbar_borderwidth,
         :colorbar_scale,
         :clims,
         :fill,
@@ -740,6 +742,19 @@ end
 
 const gr_colorbar_tick_size = Ref(0.005)
 
+function gr_draw_colorbar_border(sp::Subplot, x_min, x_max, z_min, z_max)
+    borderwidth = sp[:colorbar_borderwidth]
+    borderwidth isa Real || return nothing
+    borderwidth > 0 || return nothing
+
+    bordercolor = plot_color(sp[:colorbar_bordercolor])
+    gr_set_line(borderwidth, :solid, bordercolor, sp)
+    gr_set_transparency(bordercolor)
+    GR.polyline([x_min, x_max, x_max, x_min, x_min], [z_min, z_min, z_max, z_max, z_min])
+    GR.settransparency(1.0)
+    return nothing
+end
+
 function gr_colorbar_title(sp::Subplot)
     title = if (ttl = sp[:colorbar_title]) isa PlotText
         ttl
@@ -870,6 +885,8 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
             end
         end
     end
+
+    gr_draw_colorbar_border(sp, x_min, x_max, z_min, z_max)
 
     title = gr_colorbar_title(sp)
     gr_set_font(title.font, sp; halign = :center, valign = :top)
