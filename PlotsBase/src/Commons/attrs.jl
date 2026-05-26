@@ -578,15 +578,14 @@ const _subplot_attrs = Set(keys(_subplot_defaults))
 const _plot_attrs = Set(keys(_plot_defaults))
 
 const _magic_axis_attrs = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
-const _magic_subplot_attrs =
-    [
-        :title_font,
-        :legend_font,
-        :legend_title_font,
-        :plot_title_font,
-        :colorbar_titlefont,
-        :colorbar_tickfont,
-    ]
+const _magic_subplot_attrs = [
+    :title_font,
+    :legend_font,
+    :legend_title_font,
+    :plot_title_font,
+    :colorbar_titlefont,
+    :colorbar_tickfont,
+]
 const _magic_series_attrs = [:line, :marker, :fill]
 const _all_magic_attrs =
     Set(union(_magic_axis_attrs, _magic_series_attrs, _magic_subplot_attrs))
