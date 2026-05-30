@@ -124,3 +124,49 @@ end
         @test filesize(fn) > 1_000
     end
 end
+
+@testset "PythonPlot colorbar properties" begin
+    if haskey(TEST_BACKENDS, :PythonPlot)
+        with(:pythonplot) do
+            for attr in (
+                    :colorbar_titlefont,
+                    :colorbar_tickfont,
+                    :colorbar_tickcolor,
+                    :colorbar_ticklinewidth,
+                    :colorbar_bordercolor,
+                    :colorbar_borderlinewidth,
+                    :colorbar_width,
+                    :colorbar_height,
+                )
+                @test PlotsBase.is_attr_supported(backend(), attr)
+            end
+
+            p = heatmap(
+                reshape(1:100, 10, 10);
+                colorbar_title = "Styled",
+                colorbar_titlefont = (12, :green, 0.0),
+                colorbar_ticks = ([20, 50, 80], ["low", "mid", "high"]),
+                colorbar_tickfont = (10, :red, 45.0),
+                colorbar_tickcolor = :blue,
+                colorbar_ticklinewidth = 2,
+                colorbar_bordercolor = :green,
+                colorbar_borderlinewidth = 3,
+                colorbar_width = 0.08,
+                colorbar_height = 0.75,
+            )
+
+            sp = p[1]
+            @test sp[:colorbar_titlefontsize] == 12
+            @test sp[:colorbar_tickfontsize] == 10
+            @test sp[:colorbar_tickfontrotation] == 45.0
+            @test sp[:colorbar_ticklinewidth] == 2
+            @test sp[:colorbar_borderlinewidth] == 3
+            @test sp[:colorbar_width] == 0.08
+            @test sp[:colorbar_height] == 0.75
+
+            fn = tempname() * ".png"
+            @test png(p, fn) == fn
+            @test filesize(fn) > 1_000
+        end
+    end
+end

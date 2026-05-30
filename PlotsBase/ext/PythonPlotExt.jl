@@ -148,16 +148,26 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :legend_title,
         :colorbar,
         :colorbar_title,
+        :colorbar_titlefont,
+        :colorbar_titlefontfamily,
+        :colorbar_titlefontsize,
+        :colorbar_titlefontrotation,
+        :colorbar_titlefontcolor,
         :colorbar_entry,
         :colorbar_ticks,
+        :colorbar_tickfont,
         :colorbar_tickfontfamily,
         :colorbar_tickfontsize,
         :colorbar_tickfonthalign,
         :colorbar_tickfontvalign,
         :colorbar_tickfontrotation,
         :colorbar_tickfontcolor,
-        :colorbar_titlefontcolor,
-        :colorbar_titlefontsize,
+        :colorbar_tickcolor,
+        :colorbar_ticklinewidth,
+        :colorbar_bordercolor,
+        :colorbar_borderlinewidth,
+        :colorbar_width,
+        :colorbar_height,
         :colorbar_scale,
         :marker_z,
         :line,
@@ -471,6 +481,12 @@ end
 # bounding box: legend
 _py_bbox_legend(ax) = _py_bbox(ax.get_legend())
 _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_scaling]
+
+_py_colorbar_dimension(v::Symbol, default, name) =
+    v ≡ :auto ? default : throw(ArgumentError("$name must be `:auto` or a real number."))
+_py_colorbar_dimension(v::Real, default, name) = max(0, float(v))
+_py_colorbar_size(v, default, name) =
+    string(100 * _py_colorbar_dimension(v, default, name), "%")
 
 # ---------------------------------------------------------------------------
 
@@ -1117,22 +1133,36 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             cb_sym = sp[:colorbar]
             label = string("cbar", sp[:subplot_index])
             cbar = if RecipesPipeline.is3d(sp) || ispolar(sp)
-                cax = fig.add_axes([0.9, 0.1, 0.03, 0.8]; label)
+                width = _py_colorbar_dimension(sp[:colorbar_width], 0.03, "colorbar_width")
+                height = _py_colorbar_dimension(sp[:colorbar_height], 0.8, "colorbar_height")
+                cax = fig.add_axes([0.9, 0.5 - 0.5height, width, height]; label)
                 fig.colorbar(handle; cax, kw...)
             else
                 # divider approach works only with 2d plots
                 divider = mpl_toolkits.axes_grid1.make_axes_locatable(ax)
-                pos, pad, orientation = if cb_sym ≡ :left
-                    cb_sym, "5%", "vertical"
+                pos, pad, orientation, size = if cb_sym ≡ :left
+                    cb_sym,
+                    "5%",
+                    "vertical",
+                    _py_colorbar_size(sp[:colorbar_width], 0.05, "colorbar_width")
                 elseif cb_sym ≡ :top
-                    cb_sym, "2.5%", "horizontal"
+                    cb_sym,
+                    "2.5%",
+                    "horizontal",
+                    _py_colorbar_size(sp[:colorbar_height], 0.05, "colorbar_height")
                 elseif cb_sym ≡ :bottom
-                    cb_sym, "5%", "horizontal"
+                    cb_sym,
+                    "5%",
+                    "horizontal",
+                    _py_colorbar_size(sp[:colorbar_height], 0.05, "colorbar_height")
                 else  # :right or :best
-                    :right, "2.5%", "vertical"
+                    :right,
+                    "2.5%",
+                    "vertical",
+                    _py_colorbar_size(sp[:colorbar_width], 0.05, "colorbar_width")
                 end
                 # Reasonable value works most of the usecases
-                cax = divider.append_axes(string(pos); size = "5%", label, pad)
+                cax = divider.append_axes(string(pos); size, label, pad)
                 if cb_sym ≡ :left
                     cax.yaxis.set_ticks_position("left")
                 elseif cb_sym ≡ :right
@@ -1151,6 +1181,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 family = sp[:colorbar_titlefontfamily],
                 math_fontfamily = _py_get_matching_math_font(sp[:colorbar_titlefontfamily]),
                 color = _py_color(sp[:colorbar_titlefontcolor]),
+                rotation = sp[:colorbar_titlefontrotation],
             )
 
             # cbar.formatter.set_useOffset(false)  # this for some reason does not work, must be a pyplot bug, instead this is a workaround:
@@ -1173,18 +1204,20 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                     _py_get_matching_math_font(sp[:colorbar_tickfontfamily]),
                 )
                 lab.set_color(_py_color(sp[:colorbar_tickfontcolor]))
+                lab.set_rotation(sp[:colorbar_tickfontrotation])
             end
 
             # Adjust thickness of the cbar ticks
-            intensity = 0.5
             cbar_axis.set_tick_params(
                 direction = axis[:tick_direction] ≡ :out ? "out" : "in",
-                width = _py_thickness_scale(plt, intensity),
+                color = _py_color(sp[:colorbar_tickcolor]),
+                width = _py_thickness_scale(plt, sp[:colorbar_ticklinewidth]),
                 length = axis[:tick_direction] ≡ :none ? 0 :
-                    5_py_thickness_scale(plt, intensity),
+                    5_py_thickness_scale(plt, 0.5),
             )
 
-            cbar.outline.set_linewidth(_py_thickness_scale(plt, 1))
+            cbar.outline.set_edgecolor(_py_color(sp[:colorbar_bordercolor]))
+            cbar.outline.set_linewidth(_py_thickness_scale(plt, sp[:colorbar_borderlinewidth]))
 
             sp.attr[:cbar_handle] = cbar
             sp.attr[:cbar_ax] = cax
