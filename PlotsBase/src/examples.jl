@@ -1261,24 +1261,23 @@ const _examples = PlotExample[
     ),
     PlotExample( # 67
         "Heatmap colorbar ticks and fonts",
-        "Customize colorbar tick values, labels, and the font used to draw colorbar tick labels.",
+        "Customize colorbar tick values, labels, and font.",
         :(using PlotsBase.Commons),
         quote
-            z = rand(10, 10)
             plot(
                 heatmap(
-                    z;
+                    rand(10, 10);
                     colorbar_ticks = [0.2, 0.5, 0.8],
                     colorbar_tickfontsize = 10,
                     right_margin = 8mm,
                     title = "ticks",
                 ),
                 heatmap(
-                    z;
+                    rand(10, 10);
                     colorbar_ticks = ([0.2, 0.5, 0.8], ["low", "mid", "high"]),
-                    colorbar_tickfont = font(10, "sans-serif", :right, :top, 35.0, :blue),
-                    right_margin = 18mm,
-                    title = "tick font",
+                    colorbar_tickfont = font(10),
+                    right_margin = 14mm,
+                    title = "labels",
                 ),
                 layout = (1, 2),
                 size = (900, 500),
