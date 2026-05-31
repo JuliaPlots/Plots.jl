@@ -1142,24 +1142,24 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 divider = mpl_toolkits.axes_grid1.make_axes_locatable(ax)
                 pos, pad, orientation, size = if cb_sym ≡ :left
                     cb_sym,
-                    "5%",
-                    "vertical",
-                    _py_colorbar_size(sp[:colorbar_width], 0.05, "colorbar_width")
+                        "5%",
+                        "vertical",
+                        _py_colorbar_size(sp[:colorbar_width], 0.05, "colorbar_width")
                 elseif cb_sym ≡ :top
                     cb_sym,
-                    "2.5%",
-                    "horizontal",
-                    _py_colorbar_size(sp[:colorbar_height], 0.05, "colorbar_height")
+                        "2.5%",
+                        "horizontal",
+                        _py_colorbar_size(sp[:colorbar_height], 0.05, "colorbar_height")
                 elseif cb_sym ≡ :bottom
                     cb_sym,
-                    "5%",
-                    "horizontal",
-                    _py_colorbar_size(sp[:colorbar_height], 0.05, "colorbar_height")
+                        "5%",
+                        "horizontal",
+                        _py_colorbar_size(sp[:colorbar_height], 0.05, "colorbar_height")
                 else  # :right or :best
                     :right,
-                    "2.5%",
-                    "vertical",
-                    _py_colorbar_size(sp[:colorbar_width], 0.05, "colorbar_width")
+                        "2.5%",
+                        "vertical",
+                        _py_colorbar_size(sp[:colorbar_width], 0.05, "colorbar_width")
                 end
                 # Reasonable value works most of the usecases
                 cax = divider.append_axes(string(pos); size, label, pad)
