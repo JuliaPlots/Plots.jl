@@ -742,6 +742,16 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         x, y = PlotsBase.heatmap_edges(x, xaxis[:scale], y, yaxis[:scale], size(z))
         expand_extrema!(xaxis, x)
         expand_extrema!(yaxis, y)
+        # On a log colorbar scale the fill colors must be log-normalized too, not just
+        # the colorbar axis ticks — otherwise the cells keep linear colors while the
+        # axis reads as log (GR already log-normalizes the colors; match it here).
+        if sp[:colorbar_scale] ∈ PlotsBase.Commons._log_scales &&
+                get(extrakw, :vmin, nothing) isa Real &&
+                extrakw[:vmin] > 0
+            extrakw[:norm] = mpl.colors.LogNorm(vmin = extrakw[:vmin], vmax = extrakw[:vmax])
+            delete!(extrakw, :vmin)
+            delete!(extrakw, :vmax)
+        end
         ax.pcolormesh(
             x,
             y,
@@ -1209,7 +1219,9 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
 
             # Adjust thickness of the cbar ticks
             cbar_axis.set_tick_params(
-                direction = axis[:tick_direction] ≡ :out ? "out" : "in",
+                # Colorbars point their ticks outward by matplotlib convention; the plot
+                # axes' :in default must not drag the colorbar ticks inside the bar.
+                direction = "out",
                 color = _py_color(sp[:colorbar_tickcolor]),
                 width = _py_thickness_scale(plt, sp[:colorbar_ticklinewidth]),
                 length = axis[:tick_direction] ≡ :none ? 0 :

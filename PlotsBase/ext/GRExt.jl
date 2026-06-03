@@ -784,6 +784,7 @@ end
 
 function gr_has_default_colorbar_ticks(sp::Subplot)
     return sp[:colorbar_ticks] isa Union{Symbol, Bool} &&
+        sp[:colorbar_formatter] ≡ :auto &&
         sp.attr[:colorbar_tickfontfamily] == Commons._subplot_defaults[:colorbar_tickfontfamily] &&
         sp.attr[:colorbar_tickfontsize] == Commons._subplot_defaults[:colorbar_tickfontsize] &&
         sp.attr[:colorbar_tickfonthalign] == Commons._subplot_defaults[:colorbar_tickfonthalign] &&

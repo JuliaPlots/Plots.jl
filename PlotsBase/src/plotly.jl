@@ -318,6 +318,17 @@ function plotly_domain(sp::Subplot)
     return x_domain, y_domain
 end
 
+# Colorbar thickness as a fraction of the whole plot. `plotly_domain` reserves
+# `subplot_width * colorbar_width` for the bar, so the bar's thickness must use the
+# same reference — otherwise (e.g. in a multi-panel layout where subplot_width < 1)
+# the bar is drawn far wider than its reserved gap and spills into the next subplot.
+function plotly_colorbar_thickness(sp::Subplot)
+    figw, figh = sp.plt[:size]
+    pcts = PlotsBase.bbox_to_pcts(sp.plotarea, figw * px, figh * px)
+    pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
+    return pcts[3] * plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
+end
+
 function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     letter = axis[:letter]
     framestyle = sp[:framestyle]
@@ -800,6 +811,20 @@ function plotly_series(plt::Plot, series::Series)
         x = PlotsBase.heatmap_edges(x, sp[:xaxis][:scale])
         y = PlotsBase.heatmap_edges(y, sp[:yaxis][:scale])
         plotattributes_out[:type] = "heatmap"
+        # Plotly heatmaps have no native log color axis: to make the cell colors follow
+        # a log colorbar scale (GR already does this), map z and the colorbar tick
+        # positions into log space and relabel those ticks with the original values.
+        if (cbsc = sp[:colorbar_scale]) ∈ _log_scales &&
+                PlotsBase.is_2tuple(clims) &&
+                clims[1] > 0 &&
+                all(v -> v isa Real && (isnan(v) || v > 0), z)
+            logb = log(_log_scale_bases[cbsc])
+            logf(v) = log(v) / logb
+            z = map(v -> isnan(v) ? v : logf(v), z)
+            plotattributes_out[:zmin], plotattributes_out[:zmax] = logf(clims[1]), logf(clims[2])
+            cbar = plotattributes_out[:colorbar]
+            haskey(cbar, :tickvals) && (cbar[:tickvals] = [logf(t) for t in cbar[:tickvals]])
+        end
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
         plotattributes_out[:colorscale] =
             plotly_colorscale(series[:fillcolor], series[:fillalpha])
@@ -958,7 +983,7 @@ function plotly_colorbar(sp::Subplot)
     )
     if sp[:colorbar_width] !== :auto
         plot_attribute[:thicknessmode] = "fraction"
-        plot_attribute[:thickness] = plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
+        plot_attribute[:thickness] = plotly_colorbar_thickness(sp)
     end
     if _has_ticks(sp[:colorbar_ticks]) && !isempty(tick_vals)
         plot_attribute[:tickmode] = "array"

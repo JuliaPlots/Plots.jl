@@ -218,6 +218,18 @@ const _pgfplotsx_series_ids = KW()
 const Options = PGFPlotsX.Options
 const Table = PGFPlotsX.Table
 
+const _pgfx_log_bases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
+pgfx_is_log_colorbar(sc::Symbol) = sc in (:ln, :log2, :log10)
+# Map a value into the colorbar's log space so the heatmap `meta` column, the
+# `point meta` color range, and the colorbar tick positions all share one space:
+# pgfplots colors `point meta` linearly, so to log-scale the cell colors (as GR does)
+# the data itself must be log-transformed and the ticks relabeled with originals.
+function pgfx_colorbar_logmap(sp::Subplot, v)
+    sc = sp[:colorbar_scale]
+    (pgfx_is_log_colorbar(sc) && v isa Real && isfinite(v) && v > 0) ?
+        log(v) / log(_pgfx_log_bases[sc]) : v
+end
+
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -359,8 +371,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             bgc_inside = plot_color(sp[:background_color_inside])
             update_clims(sp)
             axis_opt = Options(
-                "point meta max" => get_clims(sp)[2],
-                "point meta min" => get_clims(sp)[1],
+                "point meta max" => pgfx_colorbar_logmap(sp, get_clims(sp)[2]),
+                "point meta min" => pgfx_colorbar_logmap(sp, get_clims(sp)[1]),
                 "legend cell align" => "left",
                 "legend columns" => pgfx_legend_col(sp[:legend_column]),
                 "title" => sp[:title],
@@ -415,7 +427,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
 
             if hascolorbar(sp)
                 formatter = latex_formatter(sp[:colorbar_formatter])
-                cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
+                cvals, clabels = get_colorbar_ticks(sp; formatter = formatter)
+                cticks = curly(join((pgfx_colorbar_logmap(sp, c) for c in cvals), ','))
                 letter = sp[:colorbar] ≡ :top ? :x : :y
 
                 colorbar_style = push!(
@@ -425,6 +438,16 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     "$(letter)tick style" => pgfx_get_colorbar_tick_style(sp),
                 )
+                # On a log colorbar scale the tick positions are mapped into log space
+                # (above), so pin the labels to the original values rather than letting
+                # pgfplots print the log positions.
+                if pgfx_is_log_colorbar(sp[:colorbar_scale]) && !isempty(clabels)
+                    push!(
+                        colorbar_style,
+                        "$(letter)ticklabels" =>
+                            curly(join(("{$l}" for l in clabels), ',')),
+                    )
+                end
                 pgfx_colorbar_dimensions!(colorbar_style, sp)
                 pgfx_colorbar_border!(colorbar_style, sp)
 
@@ -723,6 +746,11 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
     )
     args = pgfx_series_arguments(series, opt)
     meta = map(r -> any(!isfinite, r) ? NaN : r[3], zip(args...))
+    # Log-transform the color values so the cell colors follow a log colorbar scale
+    # (matching the log-mapped point-meta range and colorbar ticks); GR already does this.
+    if pgfx_is_log_colorbar(series[:subplot][:colorbar_scale])
+        meta = map(v -> pgfx_colorbar_logmap(series[:subplot], v), meta)
+    end
     for arg in args
         arg[(!isfinite).(arg)] .= 0
     end
