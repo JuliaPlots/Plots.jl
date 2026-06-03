@@ -226,7 +226,7 @@ pgfx_is_log_colorbar(sc::Symbol) = sc in (:ln, :log2, :log10)
 # the data itself must be log-transformed and the ticks relabeled with originals.
 function pgfx_colorbar_logmap(sp::Subplot, v)
     sc = sp[:colorbar_scale]
-    (pgfx_is_log_colorbar(sc) && v isa Real && isfinite(v) && v > 0) ?
+    return (pgfx_is_log_colorbar(sc) && v isa Real && isfinite(v) && v > 0) ?
         log(v) / log(_pgfx_log_bases[sc]) : v
 end
 
