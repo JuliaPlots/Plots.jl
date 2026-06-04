@@ -101,4 +101,20 @@ Sys.isunix() && with(:plotly) do
         @test colorbar[:tickvals] == [2, 5, 8]
         @test colorbar[:ticktext] == ["low", "mid", "high"]
     end
+
+    @testset "Colorbar log scale" begin
+        pl = heatmap(
+            reshape(1:9, 3, 3);
+            colorbar_scale = :log10,
+            colorbar_ticks = ([1, 3, 9], ["one", "three", "nine"]),
+            colorbar_width = 0.25,
+        )
+        series = PlotsBase.plotly_series(pl)[1]
+        colorbar = series[:colorbar]
+        @test isapprox(series[:z], log10.(Float64[1 2 3; 4 5 6; 7 8 9]))
+        @test isapprox(colorbar[:tickvals], log10.([1.0, 3.0, 9.0]))
+        @test colorbar[:ticktext] == ["one", "three", "nine"]
+        @test colorbar[:len] < 1
+        @test colorbar[:thickness] == 0.25
+    end
 end

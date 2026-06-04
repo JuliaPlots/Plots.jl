@@ -310,23 +310,11 @@ function plotly_domain(sp::Subplot)
     x_domain = [pcts[1], pcts[1] + pcts[3]]
     y_domain = [pcts[2], pcts[2] + pcts[4]]
     if hascolorbar(sp)
-        subplot_width = pcts[3]
         colorbar_fractional_size = plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
-        colorbar_width = subplot_width * colorbar_fractional_size
+        colorbar_width = colorbar_fractional_size
         x_domain[2] = x_domain[2] - colorbar_width
     end
     return x_domain, y_domain
-end
-
-# Colorbar thickness as a fraction of the whole plot. `plotly_domain` reserves
-# `subplot_width * colorbar_width` for the bar, so the bar's thickness must use the
-# same reference — otherwise (e.g. in a multi-panel layout where subplot_width < 1)
-# the bar is drawn far wider than its reserved gap and spills into the next subplot.
-function plotly_colorbar_thickness(sp::Subplot)
-    figw, figh = sp.plt[:size]
-    pcts = PlotsBase.bbox_to_pcts(sp.plotarea, figw * px, figh * px)
-    pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
-    return pcts[3] * plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
 end
 
 function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
@@ -983,7 +971,8 @@ function plotly_colorbar(sp::Subplot)
     )
     if sp[:colorbar_width] !== :auto
         plot_attribute[:thicknessmode] = "fraction"
-        plot_attribute[:thickness] = plotly_colorbar_thickness(sp)
+        plot_attribute[:thickness] =
+            plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
     end
     if _has_ticks(sp[:colorbar_ticks]) && !isempty(tick_vals)
         plot_attribute[:tickmode] = "array"
