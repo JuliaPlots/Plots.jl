@@ -103,6 +103,17 @@ end
     end
 end
 
+@testset "title location and gap" begin
+    with(:gr) do
+        for loc in (:left, :center, :right)
+            io = PipeBuffer()
+            pl = plot(1:2; title = "t", titlelocation = loc, title_gap = 3PlotsBase.mm)
+            PlotsBase._show(io, MIME("image/png"), pl)
+            @test length(io.data) > 10
+        end
+    end
+end
+
 @testset "size error handling" begin
     plt = plot(size = ())
     @test_throws ArgumentError savefig(plt, tempname())
