@@ -437,6 +437,11 @@ with(:pgfplotsx) do
     end
 
     @testset "Colorbar properties" begin
+        PGFPlotsXExt = Base.get_extension(PlotsBase, :PGFPlotsXExt)
+        @test PGFPlotsXExt.pgfx_colorbar_dimension(0.25, "colorbar_width") ==
+            "0.25\\linewidth"
+        @test_throws ArgumentError PGFPlotsXExt.pgfx_colorbar_dimension(:bad, "colorbar_width")
+
         pl = heatmap(
             reshape(1:9, 3, 3);
             colorbar_ticks = ([2, 5, 8], ["low", "mid", "high"]),

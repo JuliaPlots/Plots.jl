@@ -84,6 +84,15 @@ end
 
 @testset "GR colorbar properties" begin
     with(:gr) do
+        GRExt = Base.get_extension(PlotsBase, :GRExt)
+        @test GRExt.gr_colorbar_dimension(:auto, 0.03, "colorbar_width") == 0.03
+        @test GRExt.gr_colorbar_dimension(-0.5, 0.03, "colorbar_width") == 0.0
+        @test_throws ArgumentError GRExt.gr_colorbar_dimension(
+            :bad,
+            0.03,
+            "colorbar_width",
+        )
+
         for attr in (
                 :colorbar_tickfont,
                 :colorbar_tickfontfamily,
@@ -128,6 +137,20 @@ end
 @testset "PythonPlot colorbar properties" begin
     if haskey(TEST_BACKENDS, :PythonPlot)
         with(:pythonplot) do
+            PythonPlotExt = Base.get_extension(PlotsBase, :PythonPlotExt)
+            @test PythonPlotExt._py_colorbar_dimension(
+                :auto,
+                0.05,
+                "colorbar_width",
+            ) == 0.05
+            @test PythonPlotExt._py_colorbar_dimension(-0.5, 0.05, "colorbar_width") == 0.0
+            @test PythonPlotExt._py_colorbar_size(0.25, 0.05, "colorbar_width") == "25.0%"
+            @test_throws ArgumentError PythonPlotExt._py_colorbar_dimension(
+                :bad,
+                0.05,
+                "colorbar_width",
+            )
+
             for attr in (
                     :colorbar_titlefont,
                     :colorbar_tickfont,

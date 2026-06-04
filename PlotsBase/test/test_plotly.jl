@@ -73,6 +73,22 @@ Sys.isunix() && with(:plotly) do
     end
 
     @testset "Colorbar properties" begin
+        @test PlotsBase.Plotly.plotly_colorbar_dimension(
+            :auto,
+            0.25,
+            "colorbar_width",
+        ) == 0.25
+        @test PlotsBase.Plotly.plotly_colorbar_dimension(
+            -0.5,
+            0.25,
+            "colorbar_width",
+        ) == 0.0
+        @test_throws ArgumentError PlotsBase.Plotly.plotly_colorbar_dimension(
+            :bad,
+            0.25,
+            "colorbar_width",
+        )
+
         pl = heatmap(
             reshape(1:9, 3, 3);
             colorbar_ticks = ([2, 5, 8], ["low", "mid", "high"]),
@@ -100,6 +116,11 @@ Sys.isunix() && with(:plotly) do
         @test colorbar[:tickmode] == "array"
         @test colorbar[:tickvals] == [2, 5, 8]
         @test colorbar[:ticktext] == ["low", "mid", "high"]
+
+        pl = heatmap(reshape(1:9, 3, 3); colorbar_ticks = false)
+        colorbar = PlotsBase.plotly_series(pl)[1][:colorbar]
+        @test colorbar[:showticklabels] == false
+        @test colorbar[:ticks] == ""
     end
 
     @testset "Colorbar log scale" begin
