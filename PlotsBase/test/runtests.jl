@@ -51,7 +51,7 @@ Sys.isapple() && push!(broken_examples, 50)  # FIXME: https://github.com/jheinen
 
 const skipped_examples = Int[]  # NOTE: won't error, regardless of the test output
 push!(skipped_examples, 62)  # TODO: remove when new GR release is out and lands through CI (compat issues)
-push!(skipped_examples, 67)  # TODO: GR 0.73.25 changed axis() from Char to String; colorbar code in GRExt.jl calls GR.axis('X') (valid in 0.73.24, used by #5741); remove this skip once colorbar code is updated to GR.axis("X") 
+push!(skipped_examples, 67)  # TODO: GR 0.73.25 changed axis() from Char to String; colorbar code in GRExt.jl calls GR.axis('X') (valid in 0.73.24, used by #5741); remove this skip once colorbar code is updated to GR.axis("X")
 
 function available_channels()
     juliaup = "https://julialang-s3.julialang.org/juliaup"
