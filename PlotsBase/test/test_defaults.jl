@@ -102,3 +102,44 @@ end
     @test sp[:legend_font_pointsize] == 12
     @test PlotsBase.legendfont(sp).pointsize == 12
 end
+
+@testset "Colorbar defaults and API" begin
+    sp = plot()[1]
+    @test sp[:colorbar_tickfontfamily] == "sans-serif"
+    @test sp[:colorbar_tickfontsize] == 8
+    @test sp[:colorbar_tickfonthalign] ≡ :hcenter
+    @test sp[:colorbar_tickfontvalign] ≡ :vcenter
+    @test sp[:colorbar_tickfontrotation] == 0.0
+    @test sp[:colorbar_tickfontcolor] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
+    @test sp[:colorbar_tickcolor] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
+    @test sp[:colorbar_ticklinewidth] == 1
+    @test sp[:colorbar_bordercolor] == RGB{Colors.N0f8}(0.0, 0.0, 0.0)
+    @test sp[:colorbar_borderlinewidth] == 0
+    @test sp[:colorbar_width] ≡ :auto
+    @test sp[:colorbar_height] ≡ :auto
+    @test PlotsBase.colorbartickfont(sp).pointsize == 8
+    @test PlotsBase.colorbartickfont(sp).halign ≡ :hcenter
+
+    sp = heatmap(
+        reshape(1:4, 2, 2);
+        cb_tickfont = (10, :red, 30.0),
+        cb_tickcolor = :blue,
+        cbar_ticklinewidth = 2,
+        colorkey_bordercolor = :green,
+        cb_borderlinewidth = 3,
+        cbar_width = 0.04,
+        colorkey_height = 0.7,
+    )[1]
+    @test sp[:colorbar_tickfontsize] == 10
+    @test sp[:colorbar_tickfontcolor] == colorant"red"
+    @test sp[:colorbar_tickfontrotation] == 30.0
+    @test PlotsBase.plot_color(sp[:colorbar_tickcolor]) == RGBA(colorant"blue")
+    @test sp[:colorbar_ticklinewidth] == 2
+    @test PlotsBase.plot_color(sp[:colorbar_bordercolor]) == RGBA(colorant"green")
+    @test sp[:colorbar_borderlinewidth] == 3
+    @test sp[:colorbar_width] == 0.04
+    @test sp[:colorbar_height] == 0.7
+
+    @test_nowarn sp = heatmap(reshape(1:4, 2, 2); colorbar_tickfont = 12)[1]
+    @test PlotsBase.colorbartickfont(sp).pointsize == 12
+end
