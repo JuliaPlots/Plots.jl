@@ -842,7 +842,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
                 gr_set_font(f, sp)
                 axis = if is_horizontal
                     GR.axis(
-                        'X';
+                        "X";
                         min = x_min,
                         max = x_max,
                         org = x_min,
@@ -854,7 +854,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
                     )
                 else
                     GR.axis(
-                        'Y';
+                        "Y";
                         min = z_min,
                         max = z_max,
                         org = z_min,
