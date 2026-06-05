@@ -97,6 +97,7 @@ const _arg_desc = KW(
     :titlefontvalign => (Symbol, "Font vertical alignment of subplot title. Choose from (:vcenter, :top, :bottom, :center)."),
     :titlefontrotation => (Real, "Font rotation of subplot title."),
     :titlefontcolor => (ColorType, "Color Type. Font color of subplot title."),
+    :title_gap => (Real, "Extra vertical space between the subplot title and the plot frame (e.g. `1mm`, `5pt`)."),
     :background_color_subplot => (ColorType, "Base background color of the subplot (`:match` matches `:background_color`)."),
     :legend_background_color => (ColorType, "Background color of the legend (`:match` matches :background_color_subplot`)."),
     :background_color_inside => (ColorType, "Background color inside the plot area (under the grid) (`:match` matches :background_color_subplot`)."),
