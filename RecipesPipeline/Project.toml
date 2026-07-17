@@ -13,6 +13,9 @@ PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 [sources]
 RecipesBase = {path = "../RecipesBase"}
 
+[workspace]
+projects = ["test"]
+
 [compat]
 NaNMath = "1"
 PlotUtils = "1"

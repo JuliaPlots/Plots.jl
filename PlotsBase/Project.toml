@@ -58,6 +58,9 @@ PlotThemes = {path = "../PlotThemes"}
 RecipesBase = {path = "../RecipesBase"}
 RecipesPipeline = {path = "../RecipesPipeline"}
 
+[workspace]
+projects = ["test"]
+
 [extensions]
 FileIOExt = "FileIO"
 GRExt = "GR"
@@ -81,7 +84,7 @@ Dates = "1"
 Downloads = "1"
 FFMPEG = "0.4"
 FixedPointNumbers = "0.8"
-GR = "0.73"
+GR = "0.73.25"
 Gaston = "2"
 HDF5 = "0.17"
 JLFzf = "0.1"

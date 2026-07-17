@@ -22,6 +22,9 @@ PlotsBase = {path = "../PlotsBase"}
 RecipesBase = {path = "../RecipesBase"}
 RecipesPipeline = {path = "../RecipesPipeline"}
 
+[workspace]
+projects = ["test"]
+
 [weakdeps]
 Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
 
