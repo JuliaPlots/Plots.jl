@@ -485,8 +485,12 @@ _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_
 _py_colorbar_dimension(v::Symbol, default, name) =
     v ≡ :auto ? default : throw(ArgumentError("$name must be `:auto` or a real number."))
 _py_colorbar_dimension(v::Real, default, name) = max(0, float(v))
-_py_colorbar_size(v, default, name) =
-    string(100 * _py_colorbar_dimension(v, default, name), "%")
+function _py_colorbar_size(v, default, name, ax, dimension)
+    fraction = _py_colorbar_dimension(v, default, name)
+    axes_size = mpl_toolkits.axes_grid1.axes_size
+    reference = dimension ≡ :width ? axes_size.AxesY(ax) : axes_size.AxesX(ax)
+    return axes_size.Fraction(fraction, reference)
+end
 
 # ---------------------------------------------------------------------------
 
@@ -1154,22 +1158,46 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                     cb_sym,
                         "5%",
                         "vertical",
-                        _py_colorbar_size(sp[:colorbar_width], 0.05, "colorbar_width")
+                        _py_colorbar_size(
+                            sp[:colorbar_width],
+                            0.05,
+                            "colorbar_width",
+                            ax,
+                            :width,
+                        )
                 elseif cb_sym ≡ :top
                     cb_sym,
                         "2.5%",
                         "horizontal",
-                        _py_colorbar_size(sp[:colorbar_height], 0.05, "colorbar_height")
+                        _py_colorbar_size(
+                            sp[:colorbar_height],
+                            0.05,
+                            "colorbar_height",
+                            ax,
+                            :height,
+                        )
                 elseif cb_sym ≡ :bottom
                     cb_sym,
                         "5%",
                         "horizontal",
-                        _py_colorbar_size(sp[:colorbar_height], 0.05, "colorbar_height")
+                        _py_colorbar_size(
+                            sp[:colorbar_height],
+                            0.05,
+                            "colorbar_height",
+                            ax,
+                            :height,
+                        )
                 else  # :right or :best
                     :right,
                         "2.5%",
                         "vertical",
-                        _py_colorbar_size(sp[:colorbar_width], 0.05, "colorbar_width")
+                        _py_colorbar_size(
+                            sp[:colorbar_width],
+                            0.05,
+                            "colorbar_width",
+                            ax,
+                            :width,
+                        )
                 end
                 # Reasonable value works most of the usecases
                 cax = divider.append_axes(string(pos); size, label, pad)

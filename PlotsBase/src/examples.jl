@@ -1276,7 +1276,6 @@ const _examples = PlotExample[
                     colorbar_height = 0.8,
                     right_margin = 8mm,
                     title = "ticks",
-                    warn_on_unsupported = false,
                 ),
                 heatmap(
                     rand(10, 10);
@@ -1286,7 +1285,6 @@ const _examples = PlotExample[
                     colorbar_titlefont = (12, :green),
                     right_margin = 14mm,
                     title = "labels",
-                    warn_on_unsupported = false,
                 ),
                 layout = (1, 2),
                 size = (900, 500),

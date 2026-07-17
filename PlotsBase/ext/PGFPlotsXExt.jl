@@ -438,10 +438,15 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     "$(letter)tick style" => pgfx_get_colorbar_tick_style(sp),
                 )
-                # On a log colorbar scale the tick positions are mapped into log space
-                # (above), so pin the labels to the original values rather than letting
-                # pgfplots print the log positions.
-                if pgfx_is_log_colorbar(sp[:colorbar_scale]) && !isempty(clabels)
+                # Pin labels when Plots computed them explicitly. This is required for
+                # custom formatters and tuple-provided labels, and for log colorbars whose
+                # tick positions were mapped into log space above.
+                if !isempty(clabels) &&
+                        (
+                        sp[:colorbar_formatter] !== :auto ||
+                            sp[:colorbar_ticks] isa Tuple ||
+                            pgfx_is_log_colorbar(sp[:colorbar_scale])
+                    )
                     push!(
                         colorbar_style,
                         "$(letter)ticklabels" =>
@@ -1126,9 +1131,11 @@ function pgfx_colorbar_border!(opt, sp)
     cstr = plot_color(sp[:colorbar_bordercolor])
     push!(
         opt,
-        "draw" => cstr,
-        "draw opacity" => alpha(cstr),
-        "line width" => string(sp[:colorbar_borderlinewidth], "pt"),
+        "axis line style" => Options(
+            "draw" => cstr,
+            "draw opacity" => alpha(cstr),
+            "line width" => string(sp[:colorbar_borderlinewidth], "pt"),
+        ),
     )
     return opt
 end

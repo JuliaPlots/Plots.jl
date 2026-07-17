@@ -465,10 +465,16 @@ with(:pgfplotsx) do
         @test ticklabel_style["rotate"] == 45.0
         @test tick_style["draw"] == PlotsBase.plot_color(:blue)
         @test tick_style["line width"] == "2pt"
-        @test colorbar_style["draw"] == PlotsBase.plot_color(:green)
-        @test colorbar_style["line width"] == "3pt"
+        @test colorbar_style["yticklabels"] == "{{low},{mid},{high}}"
+        axis_line_style = colorbar_style["axis line style"]
+        @test axis_line_style["draw"] == PlotsBase.plot_color(:green)
+        @test axis_line_style["line width"] == "3pt"
         @test colorbar_style["width"] == "0.05\\linewidth"
         @test colorbar_style["height"] == "0.75\\linewidth"
+
+        formatted = heatmap(reshape(1:9, 3, 3); colorbar_formatter = _ -> "test")
+        formatted_style = first(get_pgf_axes(formatted)).options["colorbar style"]
+        @test occursin("{test}", formatted_style["yticklabels"])
     end
 
     @testset "Latexify - LaTeXStrings" begin

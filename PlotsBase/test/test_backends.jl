@@ -144,7 +144,6 @@ end
                 "colorbar_width",
             ) == 0.05
             @test PythonPlotExt._py_colorbar_dimension(-0.5, 0.05, "colorbar_width") == 0.0
-            @test PythonPlotExt._py_colorbar_size(0.25, 0.05, "colorbar_width") == "25.0%"
             @test_throws ArgumentError PythonPlotExt._py_colorbar_dimension(
                 :bad,
                 0.05,
@@ -190,6 +189,12 @@ end
             fn = tempname() * ".png"
             @test png(p, fn) == fn
             @test filesize(fn) > 1_000
+            axis_width = PythonPlot.pyconvert(Float64, p[1].o.get_position().width)
+            colorbar_width = PythonPlot.pyconvert(
+                Float64,
+                p[1][:cbar_ax].get_position().width,
+            )
+            @test isapprox(colorbar_width / axis_width, 0.08)
         end
     end
 end

@@ -311,7 +311,7 @@ function plotly_domain(sp::Subplot)
     y_domain = [pcts[2], pcts[2] + pcts[4]]
     if hascolorbar(sp)
         colorbar_fractional_size = plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
-        colorbar_width = colorbar_fractional_size
+        colorbar_width = pcts[3] * colorbar_fractional_size
         x_domain[2] = x_domain[2] - colorbar_width
     end
     return x_domain, y_domain
@@ -970,9 +970,12 @@ function plotly_colorbar(sp::Subplot)
         :outlinewidth => sp[:colorbar_borderlinewidth],
     )
     if sp[:colorbar_width] !== :auto
+        figw, figh = sp.plt[:size]
+        pcts = PlotsBase.bbox_to_pcts(sp.plotarea, figw * px, figh * px)
+        pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
         plot_attribute[:thicknessmode] = "fraction"
         plot_attribute[:thickness] =
-            plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
+            pcts[3] * plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
     end
     if _has_ticks(sp[:colorbar_ticks]) && !isempty(tick_vals)
         plot_attribute[:tickmode] = "array"

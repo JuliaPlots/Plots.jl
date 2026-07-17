@@ -101,6 +101,7 @@ Sys.isunix() && with(:plotly) do
             colorbar_height = 0.75,
             colorbar_title = "Styled",
         )
+        repr(MIME("text/html"), pl) # update the subplot layout before checking fractions
         colorbar = PlotsBase.plotly_series(pl)[1][:colorbar]
         @test colorbar[:title][:text] == "Styled"
         @test colorbar[:tickfont][:size] == round(Int, 1.4 * 12)
@@ -110,7 +111,13 @@ Sys.isunix() && with(:plotly) do
         @test colorbar[:outlinecolor] == "rgba(0, 128, 0, 1.000)"
         @test colorbar[:outlinewidth] == 3
         @test colorbar[:thicknessmode] == "fraction"
-        @test colorbar[:thickness] == 0.05
+        @test colorbar[:thickness] > 0
+        @test colorbar[:thickness] < 0.05
+        x_domain, _ = PlotsBase.Plotly.plotly_domain(pl[1])
+        @test isapprox(
+            colorbar[:thickness] / (colorbar[:thickness] + only(diff(x_domain))),
+            0.05,
+        )
         @test colorbar[:lenmode] == "fraction"
         @test colorbar[:len] == 0.75
         @test colorbar[:tickmode] == "array"
@@ -130,12 +137,18 @@ Sys.isunix() && with(:plotly) do
             colorbar_ticks = ([1, 3, 9], ["one", "three", "nine"]),
             colorbar_width = 0.25,
         )
+        repr(MIME("text/html"), pl)
         series = PlotsBase.plotly_series(pl)[1]
         colorbar = series[:colorbar]
         @test isapprox(series[:z], log10.(Float64[1 2 3; 4 5 6; 7 8 9]))
         @test isapprox(colorbar[:tickvals], log10.([1.0, 3.0, 9.0]))
         @test colorbar[:ticktext] == ["one", "three", "nine"]
         @test colorbar[:len] < 1
-        @test colorbar[:thickness] == 0.25
+        @test colorbar[:thickness] < 0.25
+        x_domain, _ = PlotsBase.Plotly.plotly_domain(pl[1])
+        @test isapprox(
+            colorbar[:thickness] / (colorbar[:thickness] + only(diff(x_domain))),
+            0.25,
+        )
     end
 end
