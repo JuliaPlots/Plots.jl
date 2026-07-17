@@ -43,5 +43,5 @@ else
     ()
 end
 
-CondaPkg.PkgREPL.add([libgcc..., "matplotlib>=3.10"])  # "openssl>=3.4"
+CondaPkg.PkgREPL.add([libgcc..., "matplotlib>=3.10,<3.11"])  # "openssl>=3.4"
 CondaPkg.status()
