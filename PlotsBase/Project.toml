@@ -58,6 +58,9 @@ PlotThemes = {path = "../PlotThemes"}
 RecipesBase = {path = "../RecipesBase"}
 RecipesPipeline = {path = "../RecipesPipeline"}
 
+[workspace]
+projects = ["test"]
+
 [extensions]
 FileIOExt = "FileIO"
 GRExt = "GR"
