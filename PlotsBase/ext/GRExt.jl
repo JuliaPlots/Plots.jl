@@ -906,7 +906,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
                         draw_axis_line = 0,
                     )
                 end
-                GR.drawaxis(is_horizontal ? 'X' : 'Y', axis)
+                GR.drawaxis(axis)
                 GR.restorestate()
             end
         end
