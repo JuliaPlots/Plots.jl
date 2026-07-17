@@ -94,6 +94,9 @@ jobs:
 
       - name: test Plots stack
         timeout-minutes: 90
+        env:
+          CONDA_PREFIX: ${{ github.workspace }}/.CondaPkg/env
+          JULIA_CONDAPKG_BACKEND: Current
         run: |
           cmd=(${{ env.JULIA_PROJECT_CMD }} --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
