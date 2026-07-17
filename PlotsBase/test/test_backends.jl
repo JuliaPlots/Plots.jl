@@ -53,7 +53,13 @@ is_pkgeval() || @testset "PlotlyJS" begin
         @test PlotsBase.is_attr_supported(backend(), :colorbar_width)
         pl = plot(rand(10))
         @test pl isa Plot
-        display(pl)
+        if Sys.iswindows() && is_ci()
+            # Blink's Electron process can fail to open its local socket on headless
+            # Windows runners. Exercise PlotlyJS rendering without launching a window.
+            @test occursin("plotly", lowercase(repr(MIME("text/html"), pl)))
+        else
+            display(pl)
+        end
     end
 end
 
