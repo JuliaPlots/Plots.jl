@@ -45,3 +45,9 @@ end
 
 CondaPkg.PkgREPL.add([libgcc..., "matplotlib>=3.10,<3.11"])  # "openssl>=3.4"
 CondaPkg.status()
+
+if haskey(ENV, "GITHUB_ENV")
+    open(ENV["GITHUB_ENV"], "a") do io
+        println(io, "JULIA_CONDAPKG_EXE=$(CondaPkg.MicroMamba.executable())")
+    end
+end
