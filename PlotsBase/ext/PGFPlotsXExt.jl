@@ -1149,17 +1149,15 @@ pgfx_colorbar_dimension(v, name) =
 function pgfx_colorbar_border!(opt, sp)
     sp[:colorbar_borderlinewidth] > 0 || return opt
     cstr = plot_color(sp[:colorbar_bordercolor])
-    # Frame the color map itself. `draw`/`axis line style` on the colorbar axis can
-    # leave an empty padded box around the gradient (the review "gradient not filling
-    # the box" case); `frame style` + no axis enlargelimits keeps the border flush.
+    # Draw the colorbar axis box. `enlargelimits=false` keeps the colormap flush with
+    # that box (the review "gradient not filling the box" case was empty padding from
+    # default enlargelimits). `frame style` is not a valid colorbar-style key.
     push!(
         opt,
         "enlargelimits" => false,
-        "frame style" => Options(
-            "draw" => cstr,
-            "draw opacity" => alpha(cstr),
-            "line width" => string(sp[:colorbar_borderlinewidth], "pt"),
-        ),
+        "draw" => cstr,
+        "draw opacity" => alpha(cstr),
+        "line width" => string(sp[:colorbar_borderlinewidth], "pt"),
     )
     return opt
 end

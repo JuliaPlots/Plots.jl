@@ -466,9 +466,8 @@ with(:pgfplotsx) do
         @test tick_style["draw"] == PlotsBase.plot_color(:blue)
         @test tick_style["line width"] == "2pt"
         @test colorbar_style["yticklabels"] == "{{low},{mid},{high}}"
-        frame_style = colorbar_style["frame style"]
-        @test frame_style["draw"] == PlotsBase.plot_color(:green)
-        @test frame_style["line width"] == "3pt"
+        @test colorbar_style["draw"] == PlotsBase.plot_color(:green)
+        @test colorbar_style["line width"] == "3pt"
         @test colorbar_style["enlargelimits"] == false
         @test colorbar_style["width"] == "0.05\\linewidth"
         @test colorbar_style["height"] ==
