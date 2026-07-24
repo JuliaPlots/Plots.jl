@@ -466,11 +466,13 @@ with(:pgfplotsx) do
         @test tick_style["draw"] == PlotsBase.plot_color(:blue)
         @test tick_style["line width"] == "2pt"
         @test colorbar_style["yticklabels"] == "{{low},{mid},{high}}"
-        axis_line_style = colorbar_style["axis line style"]
-        @test axis_line_style["draw"] == PlotsBase.plot_color(:green)
-        @test axis_line_style["line width"] == "3pt"
+        frame_style = colorbar_style["frame style"]
+        @test frame_style["draw"] == PlotsBase.plot_color(:green)
+        @test frame_style["line width"] == "3pt"
+        @test colorbar_style["enlargelimits"] == false
         @test colorbar_style["width"] == "0.05\\linewidth"
-        @test colorbar_style["height"] == "0.75\\linewidth"
+        @test colorbar_style["height"] ==
+            "0.75*\\pgfkeysvalueof{/pgfplots/parent axis height}"
 
         formatted = heatmap(reshape(1:9, 3, 3); colorbar_formatter = _ -> "test")
         formatted_style = first(get_pgf_axes(formatted)).options["colorbar style"]

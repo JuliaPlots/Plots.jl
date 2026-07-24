@@ -956,24 +956,34 @@ end
 
 function plotly_colorbar(sp::Subplot)
     x_domain, y_domain = plotly_domain(sp)
+    y_span = only(diff(y_domain))
     tick_vals, tick_labels = get_colorbar_ticks(sp)
+    # Height is a fraction of the subplot viewport (see arg_desc), so scale by the
+    # subplot's y-domain rather than treating the value as a figure-wide fraction.
+    # That keeps multi-panel layouts (the review dual-heatmap case) from drawing a
+    # near-figure-height bar that forces the adjacent plot to look squished.
+    cbar_height =
+        plotly_colorbar_dimension(sp[:colorbar_height], 1.0, "colorbar_height") * y_span
     plot_attribute = KW(
         :title => KW(:text => sp[:colorbar_title], :font => plotly_font(colorbartitlefont(sp))),
         :y => Statistics.mean(y_domain),
         :lenmode => "fraction",
-        :len => plotly_colorbar_dimension(sp[:colorbar_height], diff(y_domain)[1], "colorbar_height"),
+        :len => cbar_height,
         :x => x_domain[2],
+        :xpad => 0,
         :tickfont => plotly_font(colorbartickfont(sp)),
         :tickcolor => rgba_string(plot_color(sp[:colorbar_tickcolor])),
         :tickwidth => sp[:colorbar_ticklinewidth],
         :outlinecolor => rgba_string(plot_color(sp[:colorbar_bordercolor])),
         :outlinewidth => sp[:colorbar_borderlinewidth],
+        :ticks => "outside",
     )
     if sp[:colorbar_width] !== :auto
         figw, figh = sp.plt[:size]
         pcts = PlotsBase.bbox_to_pcts(sp.plotarea, figw * px, figh * px)
         pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
         plot_attribute[:thicknessmode] = "fraction"
+        # Match the domain reservation: thickness is fraction-of-subplot × subplot width.
         plot_attribute[:thickness] =
             pcts[3] * plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
     end

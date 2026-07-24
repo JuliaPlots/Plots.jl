@@ -113,13 +113,15 @@ Sys.isunix() && with(:plotly) do
         @test colorbar[:thicknessmode] == "fraction"
         @test colorbar[:thickness] > 0
         @test colorbar[:thickness] < 0.05
-        x_domain, _ = PlotsBase.Plotly.plotly_domain(pl[1])
+        x_domain, y_domain = PlotsBase.Plotly.plotly_domain(pl[1])
         @test isapprox(
             colorbar[:thickness] / (colorbar[:thickness] + only(diff(x_domain))),
             0.05,
         )
         @test colorbar[:lenmode] == "fraction"
-        @test colorbar[:len] == 0.75
+        # colorbar_height is a fraction of the subplot y-domain, not the figure
+        @test isapprox(colorbar[:len] / only(diff(y_domain)), 0.75)
+        @test colorbar[:ticks] == "outside"
         @test colorbar[:tickmode] == "array"
         @test colorbar[:tickvals] == [2, 5, 8]
         @test colorbar[:ticktext] == ["low", "mid", "high"]

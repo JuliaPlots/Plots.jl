@@ -426,6 +426,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
 
             if hascolorbar(sp)
+                # Pass the user formatter through for Functions; only remap Symbol
+                # formatters for LaTeX. Using latex_formatter on a Function is a no-op,
+                # and get_colorbar_ticks then produces the custom labels (e.g. "test").
                 formatter = latex_formatter(sp[:colorbar_formatter])
                 cvals, clabels = get_colorbar_ticks(sp; formatter = formatter)
                 cticks = curly(join((pgfx_colorbar_logmap(sp, c) for c in cvals), ','))
@@ -438,15 +441,18 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     "$(letter)tick style" => pgfx_get_colorbar_tick_style(sp),
                 )
-                # Pin labels when Plots computed them explicitly. This is required for
-                # custom formatters and tuple-provided labels, and for log colorbars whose
-                # tick positions were mapped into log space above.
-                if !isempty(clabels) &&
-                        (
+                # Pin labels whenever Plots produced them explicitly: custom formatters
+                # (Function or non-:auto Symbol), tuple-provided labels, and log colorbars
+                # whose tick positions were mapped into log space above. Without this,
+                # pgfplots prints the raw tick positions and custom formatters appear broken.
+                pin_colorbar_labels =
+                    !isempty(clabels) && (
+                    sp[:colorbar_formatter] isa Function ||
                         sp[:colorbar_formatter] !== :auto ||
-                            sp[:colorbar_ticks] isa Tuple ||
-                            pgfx_is_log_colorbar(sp[:colorbar_scale])
-                    )
+                        sp[:colorbar_ticks] isa Tuple ||
+                        pgfx_is_log_colorbar(sp[:colorbar_scale])
+                )
+                if pin_colorbar_labels
                     push!(
                         colorbar_style,
                         "$(letter)ticklabels" =>
@@ -1119,19 +1125,37 @@ function pgfx_get_colorbar_tick_style(sp)
     )
 end
 function pgfx_colorbar_dimensions!(opt, sp)
-    sp[:colorbar_width] ≡ :auto || push!(opt, "width" => pgfx_colorbar_dimension(sp[:colorbar_width], "colorbar_width"))
-    sp[:colorbar_height] ≡ :auto || push!(opt, "height" => pgfx_colorbar_dimension(sp[:colorbar_height], "colorbar_height"))
+    # Width is a fraction of the parent axis width (`\linewidth` inside colorbar style).
+    sp[:colorbar_width] ≡ :auto ||
+        push!(opt, "width" => pgfx_colorbar_dimension(sp[:colorbar_width], "colorbar_width"))
+    # Height must be relative to the *parent axis height*, not its width — using
+    # `\linewidth` here made custom bars shorter/taller than the plot and left empty
+    # frame padding so the gradient no longer filled the border box.
+    if sp[:colorbar_height] ≢ :auto
+        h = pgfx_colorbar_dimension_value(sp[:colorbar_height], "colorbar_height")
+        push!(
+            opt,
+            "height" => string(h, "*\\pgfkeysvalueof{/pgfplots/parent axis height}"),
+        )
+    end
     return opt
 end
+pgfx_colorbar_dimension_value(v::Real, name) = float(v)
+pgfx_colorbar_dimension_value(v, name) =
+    throw(ArgumentError("$name must be `:auto` or a real number."))
 pgfx_colorbar_dimension(v::Real, name) = string(float(v), "\\linewidth")
 pgfx_colorbar_dimension(v, name) =
     throw(ArgumentError("$name must be `:auto` or a real number."))
 function pgfx_colorbar_border!(opt, sp)
     sp[:colorbar_borderlinewidth] > 0 || return opt
     cstr = plot_color(sp[:colorbar_bordercolor])
+    # Frame the color map itself. `draw`/`axis line style` on the colorbar axis can
+    # leave an empty padded box around the gradient (the review "gradient not filling
+    # the box" case); `frame style` + no axis enlargelimits keeps the border flush.
     push!(
         opt,
-        "axis line style" => Options(
+        "enlargelimits" => false,
+        "frame style" => Options(
             "draw" => cstr,
             "draw opacity" => alpha(cstr),
             "line width" => string(sp[:colorbar_borderlinewidth], "pt"),
