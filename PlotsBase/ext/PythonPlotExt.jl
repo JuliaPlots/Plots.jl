@@ -495,17 +495,6 @@ function _py_colorbar_size(v, default, name, ax, dimension)
     return axes_size.Fraction(fraction, reference)
 end
 
-# Shrink a vertical colorbar axes to `colorbar_height` (fraction of its parent
-# height) and center it, matching GR's viewport semantics.
-function _py_apply_colorbar_height!(cax, height_fraction)
-    height_fraction >= 1 && return nothing
-    height_fraction <= 0 && return nothing
-    pos = cax.get_position()
-    new_height = pos.height * height_fraction
-    y0 = pos.y0 + 0.5 * (pos.height - new_height)
-    cax.set_position([pos.x0, y0, pos.width, new_height])
-    return nothing
-end
 
 # ---------------------------------------------------------------------------
 
@@ -1214,7 +1203,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                             :width,
                         )
                 end
-                # Reasonable value works most of the usecases
+                # Reasonable value works most of the usecases.
+                # Note: AxesDivider always matches a right/left colorbar's height to the
+                # parent axes; colorbar_height is applied for horizontal bars (size) and
+                # for the 3d/polar add_axes path above. Vertical 2d height is parent-linked.
                 cax = divider.append_axes(string(pos); size, label, pad)
                 if cb_sym ≡ :left
                     cax.yaxis.set_ticks_position("left")
@@ -1224,18 +1216,6 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                     cax.xaxis.set_ticks_position("top")
                 else  # :bottom or :best
                     cax.xaxis.set_ticks_position("bottom")
-                end
-                # Vertical colorbars from the divider match the parent axes height by
-                # default; apply colorbar_height as a centered fraction (GR semantics).
-                if orientation == "vertical" && sp[:colorbar_height] ≢ :auto
-                    _py_apply_colorbar_height!(
-                        cax,
-                        _py_colorbar_dimension(
-                            sp[:colorbar_height],
-                            1.0,
-                            "colorbar_height",
-                        ),
-                    )
                 end
                 fig.colorbar(handle; orientation, cax, kw...)
             end

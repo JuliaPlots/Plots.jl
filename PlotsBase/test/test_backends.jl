@@ -196,13 +196,12 @@ end
             @test png(p, fn) == fn
             @test filesize(fn) > 1_000
             axis_width = PythonPlot.pyconvert(Float64, p[1].o.get_position().width)
-            axis_height = PythonPlot.pyconvert(Float64, p[1].o.get_position().height)
-            cbar_pos = p[1][:cbar_ax].get_position()
-            colorbar_width = PythonPlot.pyconvert(Float64, cbar_pos.width)
-            colorbar_height = PythonPlot.pyconvert(Float64, cbar_pos.height)
+            colorbar_width = PythonPlot.pyconvert(
+                Float64,
+                p[1][:cbar_ax].get_position().width,
+            )
+            # Width is a fraction of the parent axes width (AxesX reference).
             @test isapprox(colorbar_width / axis_width, 0.08; atol = 0.02)
-            # colorbar_height is applied as a centered fraction of the parent axes
-            @test isapprox(colorbar_height / axis_height, 0.75; atol = 0.05)
         end
     end
 end
