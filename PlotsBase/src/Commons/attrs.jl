@@ -428,6 +428,7 @@ const _subplot_defaults = KW(
     :titlefontvalign => :vcenter,
     :titlefontrotation => 0.0,
     :titlefontcolor => :match,
+    :title_gap => 1mm,
     :background_color_subplot => :match,            # default for other bg colors... match takes plot default
     :background_color_inside => :match,            # background inside grid
     :foreground_color_subplot => :match,            # default for other fg colors... match takes plot default

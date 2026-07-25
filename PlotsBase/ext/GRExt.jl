@@ -1103,7 +1103,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
     if (title = sp[:title]) |> !isempty
         gr_set_font(titlefont(sp), sp)
         l = last(gr_text_size(title))
-        padding.top[] += 1mm + height * l * px
+        padding.top[] += sp[:title_gap] + height * l * px
     end
 
     xaxis, yaxis, zaxis = axes = sp[:xaxis], sp[:yaxis], sp[:zaxis]
@@ -2013,12 +2013,19 @@ end
 gr_add_title(sp, vp_plt, vp_sp) =
 if (title = sp[:title]) |> !isempty
     GR.savestate()
+    title_gap_ndc = sp[:title_gap] / (get_size(sp)[2] * px)
+    # anchor above a top x-axis (own mirror, or a twin overlaid on this subplot) to avoid overlapping its ticks
+    top_axis =
+        mirrored(sp[:xaxis], :top) ||
+        any(isp -> parent(isp) === sp && mirrored(isp[:xaxis], :top), sp.plt.inset_subplots)
+    title_y, title_valign =
+        top_axis ? (vp_sp.ymax, :top) : (vp_plt.ymax + title_gap_ndc, :bottom)
     xpos, ypos, halign, valign = if (loc = sp[:titlelocation]) ≡ :left
-        vp_plt.xmin, vp_sp.ymax, :left, :top
+        vp_plt.xmin, title_y, :left, title_valign
     elseif loc ≡ :center
-        xcenter(vp_plt), vp_sp.ymax, :center, :top
+        xcenter(vp_plt), title_y, :center, title_valign
     elseif loc ≡ :right
-        vp_plt.xmax, vp_sp.ymax, :right, :top
+        vp_plt.xmax, title_y, :right, title_valign
     else
         xposition(vp_plt, loc[1]),
             yposition(vp_plt, loc[2]),
