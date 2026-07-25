@@ -75,17 +75,17 @@ Sys.isunix() && with(:plotly) do
     @testset "Colorbar properties" begin
         @test PlotsBase.Plotly.plotly_colorbar_dimension(
             :auto,
-            0.25,
+            PlotsBase.Plotly._plotly_colorbar_width_default,
             "colorbar_width",
-        ) == 0.25
+        ) == PlotsBase.Plotly._plotly_colorbar_width_default
         @test PlotsBase.Plotly.plotly_colorbar_dimension(
             -0.5,
-            0.25,
+            PlotsBase.Plotly._plotly_colorbar_width_default,
             "colorbar_width",
         ) == 0.0
         @test_throws ArgumentError PlotsBase.Plotly.plotly_colorbar_dimension(
             :bad,
-            0.25,
+            PlotsBase.Plotly._plotly_colorbar_width_default,
             "colorbar_width",
         )
 
@@ -130,6 +130,53 @@ Sys.isunix() && with(:plotly) do
         colorbar = PlotsBase.plotly_series(pl)[1][:colorbar]
         @test colorbar[:showticklabels] == false
         @test colorbar[:ticks] == ""
+
+        # `:auto` width must still pin thickness (not leave Plotly's pixel default) and
+        # use the compact default so dual-panel heatmaps are not squished.
+        pl = heatmap(reshape(1:9, 3, 3))
+        repr(MIME("text/html"), pl)
+        colorbar = PlotsBase.plotly_series(pl)[1][:colorbar]
+        x_domain, _ = PlotsBase.Plotly.plotly_domain(pl[1])
+        @test colorbar[:thicknessmode] == "fraction"
+        @test isapprox(
+            colorbar[:thickness] / (colorbar[:thickness] + only(diff(x_domain))),
+            PlotsBase.Plotly._plotly_colorbar_width_default;
+            atol = 1.0e-6,
+        )
+    end
+
+    @testset "Colorbar dual-panel layout" begin
+        # Mirrors the maintainer review script: explicit width on one panel, `:auto` on
+        # the other. Both plot domains must stay comparable (no 25%-width collapse).
+        pl = plot(
+            heatmap(
+                reshape(1:100, 10, 10);
+                colorbar_width = 0.06,
+                colorbar_height = 0.8,
+                colorbar_ticks = [0.2, 0.5, 0.8],
+            ),
+            heatmap(
+                reshape(1:100, 10, 10);
+                colorbar_ticks = ([0.2, 0.5, 0.8], ["low", "mid", "high"]),
+                colorbar_title = "level",
+            );
+            layout = (1, 2),
+            size = (900, 500),
+        )
+        repr(MIME("text/html"), pl)
+        widths = map(1:2) do i
+            xd, _ = PlotsBase.Plotly.plotly_domain(pl[i])
+            only(diff(xd))
+        end
+        @test all(w -> w > 0.3, widths)
+        @test isapprox(widths[1], widths[2]; rtol = 0.25)
+        for i in 1:2
+            cb = PlotsBase.plotly_series(pl)[i][:colorbar]
+            @test cb[:thicknessmode] == "fraction"
+            @test cb[:thickness] > 0
+            @test cb[:ticks] == "outside"
+            @test cb[:len] < 1
+        end
     end
 
     @testset "Colorbar log scale" begin

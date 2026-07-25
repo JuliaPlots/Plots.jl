@@ -1263,6 +1263,17 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                     5_py_thickness_scale(plt, 0.5),
             )
 
+            # Keep the colorbar title clear of outside tick labels (rotated tick fonts
+            # and custom labels otherwise collide with the side title on dual panels).
+            if !isempty(string(sp[:colorbar_title]))
+                labelpad = _py_thickness_scale(plt, max(sp[:colorbar_tickfontsize], 8) + 4)
+                if sp[:colorbar] ∈ (:top, :bottom)
+                    cbar.ax.xaxis.labelpad = labelpad
+                else
+                    cbar.ax.yaxis.labelpad = labelpad
+                end
+            end
+
             cbar.outline.set_edgecolor(_py_color(sp[:colorbar_bordercolor]))
             cbar.outline.set_linewidth(_py_thickness_scale(plt, sp[:colorbar_borderlinewidth]))
 

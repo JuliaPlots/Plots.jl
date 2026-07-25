@@ -302,6 +302,12 @@ plotly_colorbar_dimension(v::Symbol, default, name) =
     v ≡ :auto ? default : throw(ArgumentError("$name must be `:auto` or a real number."))
 plotly_colorbar_dimension(v::Real, default, name) = max(0, float(v))
 
+# Backend default for `:auto` colorbar_width: fraction of the *subplot* width.
+# Historical Plotly code reserved a hard-coded 0.25, which squishes multi-panel
+# heatmaps (see review of #5755). Match PythonPlot's ~0.05 scale, with a little
+# extra room so outside tick labels do not collide with the next subplot.
+const _plotly_colorbar_width_default = 0.08
+
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot)
     figw, figh = sp.plt[:size]
@@ -310,7 +316,11 @@ function plotly_domain(sp::Subplot)
     x_domain = [pcts[1], pcts[1] + pcts[3]]
     y_domain = [pcts[2], pcts[2] + pcts[4]]
     if hascolorbar(sp)
-        colorbar_fractional_size = plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
+        colorbar_fractional_size = plotly_colorbar_dimension(
+            sp[:colorbar_width],
+            _plotly_colorbar_width_default,
+            "colorbar_width",
+        )
         colorbar_width = pcts[3] * colorbar_fractional_size
         x_domain[2] = x_domain[2] - colorbar_width
     end
@@ -964,6 +974,17 @@ function plotly_colorbar(sp::Subplot)
     # near-figure-height bar that forces the adjacent plot to look squished.
     cbar_height =
         plotly_colorbar_dimension(sp[:colorbar_height], 1.0, "colorbar_height") * y_span
+    figw, figh = sp.plt[:size]
+    pcts = PlotsBase.bbox_to_pcts(sp.plotarea, figw * px, figh * px)
+    pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
+    # Always pin thickness to the same fraction reserved in plotly_domain — including
+    # the `:auto` path. Leaving thickness unset made Plotly draw a thin default bar
+    # inside a large reserved strip, which looked "out of place" on dual heatmaps.
+    cbar_width_frac = plotly_colorbar_dimension(
+        sp[:colorbar_width],
+        _plotly_colorbar_width_default,
+        "colorbar_width",
+    )
     plot_attribute = KW(
         :title => KW(:text => sp[:colorbar_title], :font => plotly_font(colorbartitlefont(sp))),
         :y => Statistics.mean(y_domain),
@@ -971,6 +992,8 @@ function plotly_colorbar(sp::Subplot)
         :len => cbar_height,
         :x => x_domain[2],
         :xpad => 0,
+        :thicknessmode => "fraction",
+        :thickness => pcts[3] * cbar_width_frac,
         :tickfont => plotly_font(colorbartickfont(sp)),
         :tickcolor => rgba_string(plot_color(sp[:colorbar_tickcolor])),
         :tickwidth => sp[:colorbar_ticklinewidth],
@@ -978,15 +1001,6 @@ function plotly_colorbar(sp::Subplot)
         :outlinewidth => sp[:colorbar_borderlinewidth],
         :ticks => "outside",
     )
-    if sp[:colorbar_width] !== :auto
-        figw, figh = sp.plt[:size]
-        pcts = PlotsBase.bbox_to_pcts(sp.plotarea, figw * px, figh * px)
-        pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
-        plot_attribute[:thicknessmode] = "fraction"
-        # Match the domain reservation: thickness is fraction-of-subplot × subplot width.
-        plot_attribute[:thickness] =
-            pcts[3] * plotly_colorbar_dimension(sp[:colorbar_width], 0.25, "colorbar_width")
-    end
     if _has_ticks(sp[:colorbar_ticks]) && !isempty(tick_vals)
         plot_attribute[:tickmode] = "array"
         plot_attribute[:tickvals] = tick_vals
