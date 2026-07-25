@@ -195,13 +195,17 @@ end
             fn = tempname() * ".png"
             @test png(p, fn) == fn
             @test filesize(fn) > 1_000
-            axis_width = PythonPlot.pyconvert(Float64, p[1].o.get_position().width)
-            colorbar_width = PythonPlot.pyconvert(
-                Float64,
-                p[1][:cbar_ax].get_position().width,
-            )
+            axis_pos = p[1].o.get_position()
+            cbar_pos = p[1][:cbar_ax].get_position()
+            axis_width = PythonPlot.pyconvert(Float64, axis_pos.width)
+            axis_height = PythonPlot.pyconvert(Float64, axis_pos.height)
+            colorbar_width = PythonPlot.pyconvert(Float64, cbar_pos.width)
+            colorbar_height = PythonPlot.pyconvert(Float64, cbar_pos.height)
             # Width is a fraction of the parent axes width (AxesX reference).
             @test isapprox(colorbar_width / axis_width, 0.08; atol = 0.02)
+            # Vertical colorbar_height is a centered fraction of the parent axes height
+            # (locator detached so the ratio survives draw/png).
+            @test isapprox(colorbar_height / axis_height, 0.75; atol = 0.05)
         end
     end
 end

@@ -495,6 +495,37 @@ function _py_colorbar_size(v, default, name, ax, dimension)
     return axes_size.Fraction(fraction, reference)
 end
 
+# AxesDivider always matches a right/left colorbar's height to the parent axes.
+# Detach the divider locator and place the bar from the parent bbox so
+# `colorbar_height` survives draw/png (plain set_position was overwritten before).
+function _py_reposition_vertical_colorbar!(sp, ax, cax)
+    ppos = ax.get_position()
+    px0 = PythonCall.pyconvert(Float64, ppos.x0)
+    py0 = PythonCall.pyconvert(Float64, ppos.y0)
+    pw = PythonCall.pyconvert(Float64, ppos.width)
+    ph = PythonCall.pyconvert(Float64, ppos.height)
+
+    w_frac = _py_colorbar_dimension(sp[:colorbar_width], 0.05, "colorbar_width")
+    h_frac =
+        sp[:colorbar_height] ≡ :auto ? 1.0 :
+        _py_colorbar_dimension(sp[:colorbar_height], 1.0, "colorbar_height")
+    h_frac = clamp(h_frac, 0.0, 1.0)
+
+    cbar_w = pw * w_frac
+    cbar_h = ph * h_frac
+    # Match the typical axes_grid1 pad string ("2.5%") used when appending right axes.
+    pad = 0.025 * pw
+    x0 = if sp[:colorbar] ≡ :left
+        px0 - pad - cbar_w
+    else
+        px0 + pw + pad
+    end
+    y0 = py0 + 0.5 * (ph - cbar_h)
+
+    cax.set_axes_locator(PythonCall.pybuiltins.None)
+    cax.set_position([x0, y0, cbar_w, cbar_h])
+    return nothing
+end
 
 # ---------------------------------------------------------------------------
 
@@ -1204,9 +1235,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                         )
                 end
                 # Reasonable value works most of the usecases.
-                # Note: AxesDivider always matches a right/left colorbar's height to the
-                # parent axes; colorbar_height is applied for horizontal bars (size) and
-                # for the 3d/polar add_axes path above. Vertical 2d height is parent-linked.
+                # Note: AxesDivider matches a right/left colorbar's height to the parent
+                # axes. Custom `colorbar_height` for vertical bars is applied after layout
+                # via `_py_reposition_vertical_colorbar!` (horizontal bars use `size` here;
+                # 3d/polar use add_axes above).
                 cax = divider.append_axes(string(pos); size, label, pad)
                 if cb_sym ≡ :left
                     cax.yaxis.set_ticks_position("left")
@@ -1217,7 +1249,11 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 else  # :bottom or :best
                     cax.xaxis.set_ticks_position("bottom")
                 end
-                fig.colorbar(handle; orientation, cax, kw...)
+                cb = fig.colorbar(handle; orientation, cax, kw...)
+                if orientation == "vertical" && sp[:colorbar_height] ≢ :auto
+                    sp.attr[:cbar_custom_height] = true
+                end
+                cb
             end
 
             cbar.set_label(
@@ -1771,7 +1807,7 @@ function PlotsBase._update_plot_object(plt::Plot{PythonPlotBackend})
         # ax.set_position signature: `[left, bottom, width, height]`
         bbox_to_pcts(sp.plotarea, figw, figh) |> ax.set_position
 
-        if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)  # 2D plots are completely handled by axis dividers
+        if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)
             bb = sp.attr[:cbar_bbox]
             # this is the bounding box of just the colors of the colorbar (not labels)
             pad = 2mm
@@ -1783,6 +1819,9 @@ function PlotsBase._update_plot_object(plt::Plot{PythonPlotBackend})
             )
             get(sp[:extra_kwargs], "3d_colorbar_axis", bbox_to_pcts(cb_bbox, figw, figh)) |>
                 sp.attr[:cbar_ax].set_position
+        elseif haskey(sp.attr, :cbar_ax) && get(sp.attr, :cbar_custom_height, false)
+            # Parent was just moved; re-place the vertical colorbar with custom height.
+            _py_reposition_vertical_colorbar!(sp, ax, sp.attr[:cbar_ax])
         end
     end
     return PythonPlot.draw()
