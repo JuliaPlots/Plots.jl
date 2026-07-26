@@ -137,6 +137,23 @@ end
         fn = tempname() * ".png"
         @test png(p, fn) == fn
         @test filesize(fn) > 1_000
+
+        # colorbar_formatter alone must leave the native auto-tick path (review #5755)
+        # and produce labels from the user function.
+        default_sp = heatmap(reshape(1:9, 3, 3))[1]
+        @test GRExt.gr_has_default_colorbar_ticks(default_sp)
+        formatted = heatmap(
+            reshape(collect(0.01:0.01:1), 10, 10);
+            colorbar_formatter = _ -> "test",
+        )
+        fsp = formatted[1]
+        @test !GRExt.gr_has_default_colorbar_ticks(fsp)
+        _, flabels = PlotsBase.get_colorbar_ticks(fsp)
+        @test !isempty(flabels)
+        @test all(==("test"), flabels)
+        fn = tempname() * ".png"
+        @test png(formatted, fn) == fn
+        @test filesize(fn) > 1_000
     end
 end
 
@@ -206,6 +223,61 @@ end
             # Vertical colorbar_height is a centered fraction of the parent axes height
             # (locator detached so the ratio survives draw/png).
             @test isapprox(colorbar_height / axis_height, 0.75; atol = 0.05)
+        end
+    end
+end
+
+@testset "PythonPlot colorbar dual-panel layout" begin
+    # Mirrors BeastyBlacksmith's review script for #5755: dual heatmaps must keep
+    # comparable axes widths (no squish) and honor colorbar_width/height fractions.
+    if haskey(TEST_BACKENDS, :PythonPlot)
+        with(:pythonplot) do
+            p = plot(
+                heatmap(
+                    reshape(1:100, 10, 10);
+                    colorbar_ticks = [0.2, 0.5, 0.8],
+                    colorbar_tickcolor = :blue,
+                    colorbar_ticklinewidth = 2,
+                    colorbar_bordercolor = :green,
+                    colorbar_borderlinewidth = 2,
+                    colorbar_width = 0.06,
+                    colorbar_height = 0.8,
+                    right_margin = 8mm,
+                    title = "ticks",
+                ),
+                heatmap(
+                    reshape(1:100, 10, 10);
+                    colorbar_ticks = ([0.2, 0.5, 0.8], ["low", "mid", "high"]),
+                    colorbar_tickfont = (10, :red, 30.0),
+                    colorbar_title = "level",
+                    colorbar_titlefont = (12, :green),
+                    right_margin = 14mm,
+                    title = "labels",
+                );
+                layout = (1, 2),
+                size = (900, 500),
+            )
+            fn = tempname() * ".png"
+            @test png(p, fn) == fn
+            @test filesize(fn) > 1_000
+
+            widths = Float64[]
+            for i in 1:2
+                apos = p[i].o.get_position()
+                cpos = p[i][:cbar_ax].get_position()
+                aw = PythonPlot.pyconvert(Float64, apos.width)
+                ah = PythonPlot.pyconvert(Float64, apos.height)
+                cw = PythonPlot.pyconvert(Float64, cpos.width)
+                ch = PythonPlot.pyconvert(Float64, cpos.height)
+                push!(widths, aw)
+                @test aw > 0.2
+                @test cw / aw < 0.15  # colorbar stays a thin strip beside the axes
+                if i == 1
+                    @test isapprox(cw / aw, 0.06; atol = 0.02)
+                    @test isapprox(ch / ah, 0.8; atol = 0.05)
+                end
+            end
+            @test isapprox(widths[1], widths[2]; rtol = 0.25)
         end
     end
 end
