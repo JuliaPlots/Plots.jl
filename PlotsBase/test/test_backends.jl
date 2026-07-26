@@ -242,7 +242,7 @@ end
                     colorbar_borderlinewidth = 2,
                     colorbar_width = 0.06,
                     colorbar_height = 0.8,
-                    right_margin = 8mm,
+                    right_margin = 8PlotsBase.mm,
                     title = "ticks",
                 ),
                 heatmap(
@@ -251,7 +251,7 @@ end
                     colorbar_tickfont = (10, :red, 30.0),
                     colorbar_title = "level",
                     colorbar_titlefont = (12, :green),
-                    right_margin = 14mm,
+                    right_margin = 14PlotsBase.mm,
                     title = "labels",
                 );
                 layout = (1, 2),
