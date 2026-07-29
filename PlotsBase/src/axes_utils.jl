@@ -50,8 +50,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             scale,
         ) |> first
     elseif typeof(ticks) <: Int
-        # NOTE: `axis_limits` expands the limits to the span returned here, so that all
-        # `ticks` ticks are visible - both must go through `optimize_int_ticks`
+        # NOTE: `axis_limits` expands the limits to the span returned here
         optimize_int_ticks(sf(amin), sf(amax), ticks; scale) |> first
     else
         map(sf, filter(t -> amin ≤ t ≤ amax, ticks))

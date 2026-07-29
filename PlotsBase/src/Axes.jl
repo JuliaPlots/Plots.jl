@@ -111,24 +111,17 @@ function get_axis(sp::Subplot, letter::Symbol)
 end
 
 """
-Expand `(amin, amax)` to the span that `ticks = n::Int` needs, so that all `n` requested
-ticks are within the axis limits instead of being clipped by the backend.
-
-`get_ticks` lays out the ticks over the limits returned here, so the expansion is iterated
-until it is a fixed point of `optimize_int_ticks` - the span it returns for its own output.
-Widening is monotonic, hence no data can be hidden and the iteration terminates.
+Expand `(amin, amax)` so that all `n` ticks requested by `ticks = n::Int` fit inside the axis
+limits. Ticks are laid out over the *unexpanded* limits (`get_ticks` passes
+`expand_int_ticks = false`), hence they always fall inside the span returned here.
 """
-function expand_limits_to_ticks(amin, amax, n::Int, scale::Symbol, max_passes = 5)
+function expand_limits_to_ticks(amin, amax, n::Int, scale::Symbol)
     sf, invsf, _ = scale_inverse_scale_func(scale)
     smin, smax = sf(amin), sf(amax)
     (isfinite(smin) && isfinite(smax)) || return amin, amax
-    for _ in 1:max_passes
-        _, viewmin, viewmax = optimize_int_ticks(smin, smax, n; scale)
-        (isfinite(viewmin) && isfinite(viewmax)) || break
-        viewmin ≥ smin && viewmax ≤ smax && break  # fixed point
-        smin, smax = min(smin, viewmin), max(smax, viewmax)
-    end
-    lmin, lmax = invsf(smin), invsf(smax)
+    _, viewmin, viewmax = optimize_int_ticks(smin, smax, n; scale)
+    lmin, lmax = invsf(viewmin), invsf(viewmax)
+    # only ever widen, so that no data can be hidden by the expansion
     return (
         isfinite(lmin) ? min(amin, lmin) : amin, isfinite(lmax) ? max(amax, lmax) : amax,
     )
@@ -138,7 +131,8 @@ function Commons.axis_limits(
         sp,
         letter,
         lims_factor = widen_factor(get_axis(sp, letter)),
-        consider_aspect = true,
+        consider_aspect = true;
+        expand_int_ticks = true,
     )
     axis = get_axis(sp, letter)
     ex = axis[:extrema]
@@ -182,7 +176,8 @@ function Commons.axis_limits(
         amin, amax = round_limits(amin, amax, axis[:scale])
     end
 
-    if !has_user_lims &&
+    if expand_int_ticks &&
+            !has_user_lims &&
             !ispolar(axis.sps[1]) &&
             (n = axis[:ticks]) isa Int &&
             n > 0 &&
@@ -510,7 +505,9 @@ function Commons.get_ticks(
             collect(0:(π / 4):(7π / 4)), string.(0:45:315)
         else
             cvals = axis[:continuous_values]
-            alims = axis_limits(sp, axis[:letter])
+            # NOTE: lay out the ticks over the unexpanded limits, since `axis_limits` expands
+            # them to the tick span for `ticks::Int` - see `expand_limits_to_ticks`
+            alims = axis_limits(sp, axis[:letter]; expand_int_ticks = false)
             Commons.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
         end
     end
