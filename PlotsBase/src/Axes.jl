@@ -5,6 +5,7 @@ export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_g
 
 import ..PlotsBase: PlotsBase, Subplot, DefaultsDict
 using Latexify: latexify
+using PlotUtils: optimize_ticks
 
 using ..RecipesPipeline
 using ..Commons
@@ -110,6 +111,32 @@ function get_axis(sp::Subplot, letter::Symbol)
     end::Axis
 end
 
+"""
+Expand `(amin, amax)` to the tick span `optimize_ticks` needs to lay out `n` ticks.
+
+`ticks = n::Int` asks for `n` ticks, which `optimize_ticks` can usually only honor with a
+span wider than the data (it prefers round tick values); without expanding the limits the
+extra ticks fall outside the drawing window and are clipped by the backend.
+"""
+function expand_limits_to_ticks(amin, amax, n::Int, scale::Symbol)
+    sf, invsf, _ = scale_inverse_scale_func(scale)
+    smin, smax = sf(amin), sf(amax)
+    (isfinite(smin) && isfinite(smax)) || return amin, amax
+    _, viewmin, viewmax = optimize_ticks(
+        smin,
+        smax;
+        k_min = n,
+        k_max = n,
+        k_ideal = n,
+        strict_span = false,
+    )
+    lmin, lmax = invsf(viewmin), invsf(viewmax)
+    # only ever widen, so that no data can be hidden by the expansion
+    return (
+        isfinite(lmin) ? min(amin, lmin) : amin, isfinite(lmax) ? max(amax, lmax) : amax,
+    )
+end
+
 function Commons.axis_limits(
         sp,
         letter,
@@ -156,6 +183,14 @@ function Commons.axis_limits(
         amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
     elseif lims ≡ :round
         amin, amax = round_limits(amin, amax, axis[:scale])
+    end
+
+    if !has_user_lims &&
+            !ispolar(axis.sps[1]) &&
+            (n = axis[:ticks]) isa Int &&
+            n > 0 &&
+            isempty(axis[:discrete_values])
+        amin, amax = expand_limits_to_ticks(amin, amax, n, axis[:scale])
     end
 
     aspect_ratio = get_aspect_ratio(sp)

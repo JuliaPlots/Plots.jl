@@ -75,6 +75,36 @@ end
     @test PlotsBase.get_ticks(p3[1], p3[1][:xaxis])[2] == string.('A':'Z')
 end
 
+@testset "Integer number of ticks" begin
+    # github.com/JuliaPlots/Plots.jl/issues/5738: `ticks = n` requests `n` ticks, which
+    # `optimize_ticks` honors with a span wider than the data - the limits must be expanded
+    # accordingly, else the outermost ticks are clipped by the backend
+    for n in 3:8
+        pl = plot(sin, -π, π; xticks = n, yticks = n)
+        for letter in (:x, :y)
+            ticks, labels = PlotsBase.get_ticks(pl[1], letter)
+            amin, amax = PlotsBase.axis_limits(pl[1], letter)
+            @test length(ticks) == length(labels) == n
+            @test all(amin .≤ ticks .≤ amax)  # all requested ticks are visible
+        end
+    end
+
+    # user limits win over the tick count
+    pl = plot(sin, -π, π; xticks = 5, xlims = (-3, 3))
+    @test PlotsBase.xlims(pl) == (-3, 3)
+
+    # no data can be hidden by the expansion
+    pl = plot(sin, -π, π; xticks = 5)
+    amin, amax = PlotsBase.xlims(pl)
+    @test amin ≤ -π && amax ≥ π
+
+    # discrete axes index the categories instead (and must not swap ticks and labels)
+    pl = plot('A':'M', 1:13; xticks = 3)
+    ticks, labels = PlotsBase.get_ticks(pl[1], :x)
+    @test ticks isa AbstractVector{<:Real}
+    @test labels == ["A", "G", "M"]
+end
+
 @testset "Ticks getter functions" begin
     ticks1 = ([1, 2, 3], ("a", "b", "c"))
     ticks2 = ([4, 5], ("e", "f"))

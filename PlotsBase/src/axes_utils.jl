@@ -93,7 +93,7 @@ end
 
 Commons.get_ticks(ticks::AVec, cvals, dvals, args...) =
     optimal_ticks_and_labels(ticks, args...)
-Commons.get_ticks(ticks::Int, dvals, cvals, args...) =
+Commons.get_ticks(ticks::Int, cvals, dvals, args...) =
 if isempty(dvals)
     optimal_ticks_and_labels(ticks, args...)
 else
