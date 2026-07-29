@@ -89,6 +89,16 @@ end
         end
     end
 
+    # `get_ticks` lays out the ticks over the expanded limits, so the expansion has to be a
+    # fixed point of the tick optimization - it is not reached in one pass on log scales
+    for scale in (:log10, :log2, :ln), n in 3:8
+        pl = plot(exp, 1, 10; yscale = scale, yticks = n)
+        ticks, = PlotsBase.get_ticks(pl[1], :y)
+        amin, amax = PlotsBase.axis_limits(pl[1], :y)
+        @test length(ticks) == n
+        @test all(amin .≤ ticks .≤ amax)
+    end
+
     # user limits win over the tick count
     pl = plot(sin, -π, π; xticks = 5, xlims = (-3, 3))
     @test PlotsBase.xlims(pl) == (-3, 3)

@@ -5,7 +5,6 @@ export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_g
 
 import ..PlotsBase: PlotsBase, Subplot, DefaultsDict
 using Latexify: latexify
-using PlotUtils: optimize_ticks
 
 using ..RecipesPipeline
 using ..Commons
@@ -112,26 +111,24 @@ function get_axis(sp::Subplot, letter::Symbol)
 end
 
 """
-Expand `(amin, amax)` to the tick span `optimize_ticks` needs to lay out `n` ticks.
+Expand `(amin, amax)` to the span that `ticks = n::Int` needs, so that all `n` requested
+ticks are within the axis limits instead of being clipped by the backend.
 
-`ticks = n::Int` asks for `n` ticks, which `optimize_ticks` can usually only honor with a
-span wider than the data (it prefers round tick values); without expanding the limits the
-extra ticks fall outside the drawing window and are clipped by the backend.
+`get_ticks` lays out the ticks over the limits returned here, so the expansion is iterated
+until it is a fixed point of `optimize_int_ticks` - the span it returns for its own output.
+Widening is monotonic, hence no data can be hidden and the iteration terminates.
 """
-function expand_limits_to_ticks(amin, amax, n::Int, scale::Symbol)
+function expand_limits_to_ticks(amin, amax, n::Int, scale::Symbol, max_passes = 5)
     sf, invsf, _ = scale_inverse_scale_func(scale)
     smin, smax = sf(amin), sf(amax)
     (isfinite(smin) && isfinite(smax)) || return amin, amax
-    _, viewmin, viewmax = optimize_ticks(
-        smin,
-        smax;
-        k_min = n,
-        k_max = n,
-        k_ideal = n,
-        strict_span = false,
-    )
-    lmin, lmax = invsf(viewmin), invsf(viewmax)
-    # only ever widen, so that no data can be hidden by the expansion
+    for _ in 1:max_passes
+        _, viewmin, viewmax = optimize_int_ticks(smin, smax, n; scale)
+        (isfinite(viewmin) && isfinite(viewmax)) || break
+        viewmin ≥ smin && viewmax ≤ smax && break  # fixed point
+        smin, smax = min(smin, viewmin), max(smax, viewmax)
+    end
+    lmin, lmax = invsf(smin), invsf(smax)
     return (
         isfinite(lmin) ? min(amin, lmin) : amin, isfinite(lmax) ? max(amax, lmax) : amax,
     )
