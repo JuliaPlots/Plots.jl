@@ -79,6 +79,14 @@ end
     end
 end
 
+@userplot CBarDemo
+@recipe function f(cb::CBarDemo)
+    seriestype := :heatmap
+    colorbar_width := 0.15
+    colorbar_border_color := :red
+    return cb.args[1]
+end
+
 @testset "colorbar border and size" begin
     # the backends must keep their own defaults when nothing is requested
     @test PlotsBase.colorbar_border(heatmap(rand(10, 10))[1]) == (colorant"black", :auto)
@@ -107,6 +115,23 @@ end
                 @test show(io, heatmap(rand(10, 10); kw...)) isa Nothing
                 @test show(io, surface(1:10, 1:10, (x, y) -> x * y; kw...)) isa Nothing
             end
+
+            kw = (;
+                colorbar_width = 0.12,
+                colorbar_height = 0.6,
+                colorbar_border_color = :red,
+                colorbar_border_width = 2,
+            )
+            z = exp.(10rand(10, 10))
+            # log scaled colorbar
+            @test show(io, heatmap(z; colorbar_scale = :log10, kw...)) isa Nothing
+            # layouts
+            @test show(io, plot(heatmap(z; kw...), plot(1:5); layout = (1, 2))) isa Nothing
+            # recipes
+            @test show(io, cbardemo(rand(10, 10))) isa Nothing
+            # several series sharing a single colorbar
+            @test show(io, scatter(rand(10, 3), rand(10, 3); marker_z = rand(10, 3), kw...)) isa
+                Nothing
         end
     end
 end
