@@ -9,11 +9,8 @@ using ..Dates
 
 const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
 
-"""
-`n` ticks for the scaled limits `smin, smax`, as `(ticks, viewmin, viewmax)`: honoring `n`
-needs the wider span `viewmin, viewmax`, which `axis_limits` expands the limits to, else the
-outermost ticks are clipped (github.com/JuliaPlots/Plots.jl/issues/5738).
-"""
+# `(ticks, viewmin, viewmax)`: `n` ticks only fit the wider span `viewmin, viewmax`, which
+# `axis_limits` expands the limits to, else the outermost ticks are clipped
 optimize_int_ticks(smin, smax, n::Int; scale = :identity) =
     optimize_ticks(smin, smax; k_min = n, k_max = n, k_ideal = n, strict_span = false, scale)
 

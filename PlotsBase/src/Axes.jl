@@ -111,9 +111,8 @@ function get_axis(sp::Subplot, letter::Symbol)
 end
 
 """
-Expand `(amin, amax)` so that all `n` ticks requested by `ticks = n::Int` fit inside the axis
-limits. Ticks are laid out over the *unexpanded* limits (`get_ticks` passes
-`expand_int_ticks = false`), hence they always fall inside the span returned here.
+Expand `(amin, amax)` so that the `n` ticks requested by `ticks = n::Int` fit: `get_ticks`
+lays them out over the unexpanded limits, hence they are always within the span returned here.
 """
 function expand_limits_to_ticks(amin, amax, n::Int, scale::Symbol)
     sf, invsf, _ = scale_inverse_scale_func(scale)
@@ -505,8 +504,7 @@ function Commons.get_ticks(
             collect(0:(π / 4):(7π / 4)), string.(0:45:315)
         else
             cvals = axis[:continuous_values]
-            # NOTE: lay out the ticks over the unexpanded limits, since `axis_limits` expands
-            # them to the tick span for `ticks::Int` - see `expand_limits_to_ticks`
+            # NOTE: unexpanded, see `expand_limits_to_ticks`
             alims = axis_limits(sp, axis[:letter]; expand_int_ticks = false)
             Commons.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
         end
