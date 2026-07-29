@@ -159,6 +159,10 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontcolor,
         :colorbar_titlefontsize,
         :colorbar_scale,
+        :colorbar_border_color,
+        :colorbar_border_width,
+        :colorbar_width,
+        :colorbar_height,
         :marker_z,
         :line,
         :line_z,
@@ -471,6 +475,33 @@ end
 # bounding box: legend
 _py_bbox_legend(ax) = _py_bbox(ax.get_legend())
 _py_thickness_scale(plt::Plot{PythonPlotBackend}, ptsz) = ptsz * plt[:thickness_scaling]
+
+"""
+    _py_shrink_cbar!(cax, frac, horizontal)
+
+Shrink the colorbar axes `cax` to the fraction `frac` of its length, keeping it centered.
+The axes created by an axes divider are positioned by a locator, which is therefore wrapped
+instead of setting the position directly. A `frac` of `:auto` leaves `cax` untouched.
+"""
+function _py_shrink_cbar!(cax, frac, horizontal::Bool)
+    frac ≡ :auto && return cax
+    locator = cax.get_axes_locator()
+    shrunk = (ax, renderer) -> begin
+        bb = locator(ax, renderer)
+        x, y, w, h = (
+            PythonCall.pyconvert(Float64, getproperty(bb, s)) for
+                s in (:x0, :y0, :width, :height)
+        )
+        mpl.transforms.Bbox.from_bounds(
+            horizontal ? x + 0.5(1 - frac)w : x,
+            horizontal ? y : y + 0.5(1 - frac)h,
+            horizontal ? frac * w : w,
+            horizontal ? h : frac * h,
+        )
+    end
+    cax.set_axes_locator(PythonCall.pyfunc(shrunk))
+    return cax
+end
 
 # ---------------------------------------------------------------------------
 
@@ -1117,6 +1148,8 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             cb_sym = sp[:colorbar]
             label = string("cbar", sp[:subplot_index])
             cbar = if RecipesPipeline.is3d(sp) || ispolar(sp)
+                # the colorbar axes is repositioned in `_update_plot_object`,
+                # where `colorbar_width` and `colorbar_height` are taken into account
                 cax = fig.add_axes([0.9, 0.1, 0.03, 0.8]; label)
                 fig.colorbar(handle; cax, kw...)
             else
@@ -1131,8 +1164,17 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 else  # :right or :best
                     :right, "2.5%", "vertical"
                 end
-                # Reasonable value works most of the usecases
-                cax = divider.append_axes(string(pos); size = "5%", label, pad)
+                # thickness of the bar, `5%` is a reasonable value for most usecases
+                thickness =
+                    sp[orientation == "vertical" ? :colorbar_width : :colorbar_height]
+                cbar_size = thickness ≡ :auto ? "5%" : "$(100thickness)%"
+                cax = divider.append_axes(string(pos); size = cbar_size, label, pad)
+                # length of the bar, along the plot area
+                _py_shrink_cbar!(
+                    cax,
+                    sp[orientation == "vertical" ? :colorbar_height : :colorbar_width],
+                    orientation == "horizontal",
+                )
                 if cb_sym ≡ :left
                     cax.yaxis.set_ticks_position("left")
                 elseif cb_sym ≡ :right
@@ -1184,7 +1226,12 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                     5_py_thickness_scale(plt, intensity),
             )
 
-            cbar.outline.set_linewidth(_py_thickness_scale(plt, 1))
+            # border around the bar
+            border_color, border_width = colorbar_border(sp)
+            cbar.outline.set_linewidth(
+                _py_thickness_scale(plt, border_width ≡ :auto ? 1 : border_width),
+            )
+            border_width ≡ :auto || cbar.outline.set_edgecolor(_py_color(border_color))
 
             sp.attr[:cbar_handle] = cbar
             sp.attr[:cbar_ax] = cax
@@ -1684,11 +1731,18 @@ function PlotsBase._update_plot_object(plt::Plot{PythonPlotBackend})
             bb = sp.attr[:cbar_bbox]
             # this is the bounding box of just the colors of the colorbar (not labels)
             pad = 2mm
+            # `colorbar_width` / `colorbar_height` are fractions of the plot area
+            cb_width = (w = sp[:colorbar_width]) ≡ :auto ? width(bb) : w * width(sp.plotarea)
+            cb_height = if (h = sp[:colorbar_height]) ≡ :auto
+                height(sp.bbox) - 2pad
+            else
+                h * height(sp.bbox)
+            end
             cb_bbox = BoundingBox(
                 right(sp.bbox) - 2width(bb) - 2pad,  # x0
-                top(sp.bbox) + pad,  # y0
-                width(bb),  # width
-                height(sp.bbox) - 2pad,  # height
+                top(sp.bbox) + 0.5(height(sp.bbox) - cb_height),  # y0, vertically centered
+                cb_width,  # width
+                cb_height,  # height
             )
             get(sp[:extra_kwargs], "3d_colorbar_axis", bbox_to_pcts(cb_bbox, figw, figh)) |>
                 sp.attr[:cbar_ax].set_position

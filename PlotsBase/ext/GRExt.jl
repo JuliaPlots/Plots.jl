@@ -105,6 +105,17 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontcolor,
         :colorbar_entry,
         :colorbar_scale,
+        :colorbar_ticks,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfonthalign,
+        :colorbar_tickfontvalign,
+        :colorbar_tickfontrotation,
+        :colorbar_tickfontcolor,
+        :colorbar_border_color,
+        :colorbar_border_width,
+        :colorbar_width,
+        :colorbar_height,
         :clims,
         :fill,
         :fill_z,
@@ -661,7 +672,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vp
         vp_canvas.ymax * (1 - bottom(bb) / h),
         vp_canvas.ymax * (1 - top(bb) / h),
     )
-    hascolorbar(sp) && (viewport.xmax -= 0.1(1 + 0.5gr_is3d(sp)))
+    hascolorbar(sp) && (viewport.xmax -= gr_cbar_reserved_width(sp, width(viewport)))
     return viewport
 end
 
@@ -670,10 +681,37 @@ end
 # in case someone wants to modify these hardcoded factors
 const gr_cbar_width = Ref(0.03)
 const gr_cbar_offsets = Ref((0.02, 0.07))
+# ndc space kept on the right of the colorbar for its tick labels and title
+const gr_cbar_label_space = Ref(0.05)
+
+# thickness of the colorbar in ndc: `colorbar_width` is a fraction of the plot area width
+gr_cbar_thickness(sp::Subplot, plotarea_width) =
+    (w = sp[:colorbar_width]) ≡ :auto ? gr_cbar_width[] : w * plotarea_width
+
+# horizontal space taken away from the subplot to make room for the colorbar,
+# its tick labels and its title
+function gr_cbar_reserved_width(sp::Subplot, subplot_width)
+    reserved = 0.1(1 + 0.5gr_is3d(sp))
+    sp[:colorbar_width] ≡ :auto && return reserved
+    offset = gr_cbar_offsets[][gr_is3d(sp) ? 2 : 1]
+    # `subplot_width` overestimates the plot area width (which is only known once the
+    # colorbar has been accounted for), hence the reserved space is never too small
+    return max(
+        reserved,
+        offset + gr_cbar_thickness(sp, subplot_width) + gr_cbar_label_space[],
+    )
+end
 
 function gr_set_viewport_cmap(sp::Subplot, vp::GRViewport)
     offset = gr_cbar_offsets[][gr_is3d(sp) ? 2 : 1]
-    args = vp.xmax + offset, vp.xmax + offset + gr_cbar_width[], vp.ymin, vp.ymax
+    y_min, y_max = if (h = sp[:colorbar_height]) ≡ :auto
+        vp.ymin, vp.ymax
+    else  # `colorbar_height` is a fraction of the plot area height, centered on it
+        half = 0.5h * height(vp)
+        ycenter(vp) - half, ycenter(vp) + half
+    end
+    x_min = vp.xmax + offset
+    args = x_min, x_min + gr_cbar_thickness(sp, width(vp)), y_min, y_max
     GR.setviewport(args...)
     return GRViewport(args...)
 end
@@ -830,16 +868,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
                     [GR.GRTickLabel(cv, string(dv), 0) for (cv, dv) in zip(ticks_vals, ticks_labels)]
 
                 GR.savestate()
-                f = font(
-                    ;
-                    family = sp[:colorbar_tickfontfamily],
-                    pointsize = sp[:colorbar_tickfontsize],
-                    rotation = sp[:colorbar_tickfontrotation],
-                    color = sp[:colorbar_tickfontcolor],
-                    halign = sp[:colorbar_tickfonthalign],
-                    valign = sp[:colorbar_tickfontvalign],
-                )
-                gr_set_font(f, sp)
+                gr_set_font(colorbartickfont(sp), sp)
                 axis = if is_horizontal
                     GR.axis(
                         "X";
@@ -865,15 +894,23 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
                         draw_axis_line = 0,
                     )
                 end
-                GR.drawaxis(is_horizontal ? 'X' : 'Y', axis)
+                GR.drawaxis(axis)  # the axis carries its own `X` / `Y` spec
                 GR.restorestate()
             end
         end
     end
 
+    border_color, border_width = colorbar_border(sp)
+    if border_width ≢ :auto && border_width > 0
+        gr_set_transparency(1)
+        gr_viewport_bbox(vp_cmap, sp, border_color, border_width)
+    end
+
     title = gr_colorbar_title(sp)
     gr_set_font(title.font, sp; halign = :center, valign = :top)
-    gr_text(vp.xmax + 0.1, ycenter(vp), title.str)
+    # shift the title by the extra thickness requested through `colorbar_width`
+    extra_width = gr_cbar_thickness(sp, width(vp)) - gr_cbar_width[]
+    gr_text(vp.xmax + 0.1 + extra_width, ycenter(vp), title.str)
 
     GR.restorestate()
     return nothing
@@ -1172,11 +1209,11 @@ function gr_clims(sp, args...)
     return lo, hi
 end
 
-function gr_viewport_bbox(vp, sp, color)
+function gr_viewport_bbox(vp, sp, color, lw = 1)
     GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
-    gr_set_line(1, :solid, plot_color(color), sp)
+    gr_set_line(lw, :solid, plot_color(color), sp)
     GR.drawrect(vp.xmin, vp.xmax, vp.ymin, vp.ymax)
     GR.selntran(1)
     GR.restorestate()

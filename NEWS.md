@@ -5,6 +5,13 @@
 
 ### Features
 - GR backend: Add support for `colorbar_ticks` to customize tick positions and labels on colorbars (#3560)
+- New colorbar attributes `colorbar_border_color`, `colorbar_border_width`, `colorbar_width` and `colorbar_height`,
+  supported by the `gr`, `plotly`/`plotlyjs`, `pgfplotsx` and `pythonplot` backends (#3174).
+  `colorbar_width`/`colorbar_height` are given as a fraction of the plot area, `:auto` keeps the backend default.
+  The `plotly`/`plotlyjs` colorbar now also honors `colorbar_ticks` and the colorbar title / tick fonts
+
+### Fixed
+- GR backend: `colorbar_ticks` no longer errors with `GR ≥ 0.73.25` (`GR.drawaxis` signature change)
 
 ## Breaking changes
 ---

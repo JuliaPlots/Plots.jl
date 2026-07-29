@@ -2,6 +2,7 @@ module Subplots
 
 export Subplot,
     colorbartitlefont,
+    colorbartickfont,
     legendfont,
     legendtitlefont,
     titlefont,
@@ -105,6 +106,15 @@ colorbartitlefont(sp::Subplot) = font(;
     halign = sp[:colorbar_titlefonthalign],
     rotation = sp[:colorbar_titlefontrotation],
     color = sp[:colorbar_titlefontcolor],
+)
+
+colorbartickfont(sp::Subplot) = font(;
+    family = sp[:colorbar_tickfontfamily],
+    pointsize = sp[:colorbar_tickfontsize],
+    valign = sp[:colorbar_tickfontvalign],
+    halign = sp[:colorbar_tickfonthalign],
+    rotation = sp[:colorbar_tickfontrotation],
+    color = sp[:colorbar_tickfontcolor],
 )
 
 titlefont(sp::Subplot) = font(;

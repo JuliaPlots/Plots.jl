@@ -106,6 +106,18 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :legend,
         :colorbar,
         :colorbar_title,
+        :colorbar_titlefontfamily,
+        :colorbar_titlefontsize,
+        :colorbar_titlefontcolor,
+        :colorbar_ticks,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfontcolor,
+        :colorbar_tickfontrotation,
+        :colorbar_border_color,
+        :colorbar_border_width,
+        :colorbar_width,
+        :colorbar_height,
         :colorbar_entry,
         :marker_z,
         :fill_z,
@@ -921,11 +933,42 @@ end
 function plotly_colorbar(sp::Subplot)
     x_domain, y_domain = plotly_domain(sp)
     plot_attribute = KW(
-        :title => sp[:colorbar_title],
+        :title => KW(
+            :text => sp[:colorbar_title],
+            :font => plotly_font(colorbartitlefont(sp)),
+        ),
         :y => Statistics.mean(y_domain),
         :len => diff(y_domain)[1],
         :x => x_domain[2],
+        :tickfont => plotly_font(colorbartickfont(sp)),
+        :tickangle => -sp[:colorbar_tickfontrotation],
     )
+
+    # bar size, given as a fraction of the plot area
+    (h = sp[:colorbar_height]) ≡ :auto || (plot_attribute[:len] *= h)
+    if (w = sp[:colorbar_width]) ≢ :auto
+        plot_attribute[:thicknessmode] = "fraction"
+        plot_attribute[:thickness] = w * diff(x_domain)[1]
+    end
+
+    # border around the bar
+    border_color, border_width = colorbar_border(sp)
+    if border_width ≢ :auto
+        plot_attribute[:outlinewidth] = border_width
+        plot_attribute[:outlinecolor] = rgba_string(plot_color(border_color))
+    end
+
+    if !_has_ticks(sp[:colorbar_ticks])
+        plot_attribute[:ticks] = ""
+        plot_attribute[:showticklabels] = false
+    elseif sp[:colorbar_ticks] ∉ (:auto, :native, true)
+        ticks_vals, ticks_labels = get_colorbar_ticks(sp)
+        if !isempty(ticks_vals)
+            plot_attribute[:tickmode] = "array"
+            plot_attribute[:tickvals] = ticks_vals
+            isempty(ticks_labels) || (plot_attribute[:ticktext] = ticks_labels)
+        end
+    end
     return plot_attribute
 end
 

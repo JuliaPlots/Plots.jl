@@ -1,6 +1,6 @@
 module Colorbars
 
-export colorbar_style, update_clims, hascolorbar
+export colorbar_style, update_clims, hascolorbar, colorbar_border
 export get_colorbar_ticks, _update_subplot_colorbars
 
 import ..Surfaces
@@ -120,6 +120,21 @@ function colorbar_style(series::Series)
     else
         nothing
     end
+end
+
+"""
+    colorbar_border(sp::Subplot)
+
+Resolve the border (frame) drawn around the colorbar of `sp` into a `(color, width)` tuple.
+
+`width` is `:auto` whenever the backend should keep its own default: this is the case when
+neither `colorbar_border_width` nor `colorbar_border_color` were set. Setting the color alone
+is enough to request a border, which then defaults to a width of `1`.
+"""
+function colorbar_border(sp::Subplot)
+    width = sp[:colorbar_border_width]
+    width ≡ :auto && sp.attr[:colorbar_border_color] ≢ :match && (width = 1)
+    return sp[:colorbar_border_color], width
 end
 
 hascolorbar(series::Series) = colorbar_style(series) ≢ nothing

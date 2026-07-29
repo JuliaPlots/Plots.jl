@@ -1283,6 +1283,23 @@ const _examples = PlotExample[
             )
         end,
     ),
+    PlotExample( # 68
+        "Colorbar border and size",
+        "The frame drawn around a colorbar is styled with `colorbar_border_color` and `colorbar_border_width`, its size with `colorbar_width` and `colorbar_height`, both given as a fraction of the plot area. Setting only the border color is enough to draw a border, and each attribute defaults to `:auto`, which keeps the backend default.",
+        :(using PlotsBase.Commons),
+        quote
+            cbar_heatmap(; kw...) =
+                heatmap(rand(10, 10); ticks = :none, right_margin = 8mm, kw...)
+            plot(
+                cbar_heatmap(title = "border color", colorbar_border_color = :red),
+                cbar_heatmap(title = "border width", colorbar_border_width = 3),
+                cbar_heatmap(title = "bar width", colorbar_width = 0.2),
+                cbar_heatmap(title = "bar height", colorbar_height = 0.5),
+                layout = (2, 2),
+                size = (900, 700),
+            )
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages

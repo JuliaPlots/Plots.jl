@@ -356,6 +356,31 @@ add_aliases(
     :colorkeytitle,
     :colorkey_title,
 )
+add_aliases(
+    :colorbar_border_color,
+    :colorbarbordercolor,
+    :cb_border_color,
+    :cbborder_color,
+    :cbar_border_color,
+    :cbarborder_color,
+)
+add_aliases(
+    :colorbar_border_width,
+    :colorbarborderwidth,
+    :cb_border_width,
+    :cbborder_width,
+    :cbar_border_width,
+    :cbarborder_width,
+)
+add_aliases(:colorbar_width, :colorbarwidth, :cb_width, :cbwidth, :cbar_width, :cbarwidth)
+add_aliases(
+    :colorbar_height,
+    :colorbarheight,
+    :cb_height,
+    :cbheight,
+    :cbar_height,
+    :cbarheight,
+)
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
 add_aliases(:smooth, :regression, :reg)
 add_aliases(:levels, :nlevels, :nlev, :levs)

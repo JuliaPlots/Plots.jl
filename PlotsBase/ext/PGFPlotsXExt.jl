@@ -106,6 +106,15 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontsize,
         :colorbar_titlefontcolor,
         :colorbar_titlefontrotation,
+        :colorbar_ticks,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfontcolor,
+        :colorbar_tickfontrotation,
+        :colorbar_border_color,
+        :colorbar_border_width,
+        :colorbar_width,
+        :colorbar_height,
         :colorbar_entry,
         :fill,
         :fill_z,
@@ -426,6 +435,27 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         "$(letter)ticklabels" => "{,,}",
                     )
                 end
+
+                # bar size, given as a fraction of the plot area
+                (cbw = sp[:colorbar_width]) ≡ :auto || push!(
+                    colorbar_style,
+                    "width" => "$(cbw)*\\pgfkeysvalueof{/pgfplots/parent axis width}",
+                )
+                (cbh = sp[:colorbar_height]) ≡ :auto || push!(
+                    colorbar_style,
+                    "height" => "$(cbh)*\\pgfkeysvalueof{/pgfplots/parent axis height}",
+                )
+
+                # border around the bar
+                border_color, border_width = colorbar_border(sp)
+                border_width ≡ :auto || push!(
+                    colorbar_style,
+                    "axis line style" => pgfx_linestyle(
+                        pgfx_thickness_scaling(sp) * border_width,
+                        border_color,
+                        1,
+                    ),
+                )
 
                 push!(
                     axis_opt,

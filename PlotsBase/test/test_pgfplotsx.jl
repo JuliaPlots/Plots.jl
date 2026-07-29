@@ -200,6 +200,27 @@ with(:pgfplotsx) do
         # TODO: clims are wrong
     end
 
+    @testset "Colorbar style" begin
+        pl = heatmap(
+            rand(10, 10);
+            colorbar_width = 0.08,
+            colorbar_height = 0.5,
+            colorbar_border_color = :red,
+            colorbar_border_width = 2,
+        )
+        style = first(get_pgf_axes(pl))["colorbar style"]
+        @test style["width"] == "0.08*\\pgfkeysvalueof{/pgfplots/parent axis width}"
+        @test style["height"] == "0.5*\\pgfkeysvalueof{/pgfplots/parent axis height}"
+        @test style["axis line style"]["color"] == PlotsBase.plot_color(:red)
+        @test style["axis line style"]["line width"] == 2
+
+        # backend defaults are kept when nothing is requested
+        style = first(get_pgf_axes(heatmap(rand(10, 10))))["colorbar style"]
+        @test !haskey(style.dict, "width")
+        @test !haskey(style.dict, "height")
+        @test !haskey(style.dict, "axis line style")
+    end
+
     @testset "Contours" begin
         x = 1:0.5:20
         y = 1:0.5:10
