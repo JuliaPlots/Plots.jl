@@ -43,5 +43,6 @@ else
     ()
 end
 
-CondaPkg.PkgREPL.add([libgcc..., "matplotlib>=3.10"])  # "openssl>=3.4"
+# NOTE: `matplotlib >= 3.10` pulls `libraqm`, needing a newer harfbuzz than `HarfBuzz_jll` has
+CondaPkg.PkgREPL.add([libgcc..., "matplotlib>=3.8,<3.10"])  # "openssl>=3.4"
 CondaPkg.status()

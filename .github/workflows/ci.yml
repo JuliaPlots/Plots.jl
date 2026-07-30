@@ -76,6 +76,7 @@ jobs:
       - name: dev downstream pkgs and install mpl deps
         env:
           JULIA_PKG_PRECOMPILE_AUTO: 0
+          JULIA_CONDAPKG_ENV: ${{ runner.temp }}/condaenv
         run: |
           ${{ env.JULIA_PROJECT_CMD }} -e '
             using Pkg
@@ -89,11 +90,15 @@ jobs:
               (; path="./StatsPlots"),
             ])
             include(joinpath(@__DIR__, "ci", "matplotlib.jl"))
+            Pkg.instantiate()  # also installs the workspace test projects deps
             Pkg.precompile()  # // precompilation
           '
 
       - name: test Plots stack
         timeout-minutes: 90
+        env:
+          JULIA_CONDAPKG_ENV: ${{ runner.temp }}/condaenv
+          JULIA_CONDAPKG_OFFLINE: true  # consume the shared env, do not re-resolve it
         run: |
           cmd=(${{ env.JULIA_PROJECT_CMD }} --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
