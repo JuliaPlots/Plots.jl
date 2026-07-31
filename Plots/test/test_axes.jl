@@ -136,6 +136,22 @@ end
 @testset "3D Axis" begin
     ql = quiver([1, 2], [2, 1], [3, 4], quiver = ([1, -1], [0, 0], [1, -0.5]), arrow = true)
     @test ql[1][:projection] == "3d"
+
+    @testset "#3419 - `aspect_ratio` must not alter 3D limits" begin
+        # `RecipesPipeline.is3d(:sp)` dispatched on a `Symbol` and so always returned
+        # `false`, letting the *2D* aspect correction - which derives its factor from the
+        # plot area's pixel width / height - leak into 3D subplots and silently widen the
+        # `x` / `y` limits.
+        x, y = range(0, 10, length = 10), range(0, 1, length = 10)
+        z = [xi * yi for xi in x, yi in y]
+        for ar in (:none, :equal, 1)
+            pl = surface(x, y, z, aspect_ratio = ar)
+            Plots.prepare_output(pl)  # `plotarea` is degenerate until laid out
+            @test Plots.xlims(pl) == (0, 10)
+            @test Plots.ylims(pl) == (0, 1)
+            @test Plots.zlims(pl) == (0, 10)
+        end
+    end
 end
 
 @testset "Twinx" begin

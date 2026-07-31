@@ -755,7 +755,7 @@ function axis_limits(
             !has_user_lims &&
                 consider_aspect &&
                 letter in (:x, :y) &&
-                !(aspect_ratio === :none || RecipesPipeline.is3d(:sp))
+                !(aspect_ratio === :none || RecipesPipeline.is3d(sp))
         )
         aspect_ratio = aspect_ratio isa Number ? aspect_ratio : 1
         area = plotarea(sp)
