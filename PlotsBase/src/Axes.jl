@@ -110,11 +110,28 @@ function get_axis(sp::Subplot, letter::Symbol)
     end::Axis
 end
 
+"""
+Expand `(amin, amax)` so that the `n` ticks requested by `ticks = n::Int` fit: `get_ticks`
+lays them out over the unexpanded limits, hence they are always within the span returned here.
+"""
+function expand_limits_to_ticks(amin, amax, n::Int, scale::Symbol)
+    sf, invsf, _ = scale_inverse_scale_func(scale)
+    smin, smax = sf(amin), sf(amax)
+    (isfinite(smin) && isfinite(smax)) || return amin, amax
+    _, viewmin, viewmax = optimize_int_ticks(smin, smax, n; scale)
+    lmin, lmax = invsf(viewmin), invsf(viewmax)
+    # only ever widen, so that no data can be hidden by the expansion
+    return (
+        isfinite(lmin) ? min(amin, lmin) : amin, isfinite(lmax) ? max(amax, lmax) : amax,
+    )
+end
+
 function Commons.axis_limits(
         sp,
         letter,
         lims_factor = widen_factor(get_axis(sp, letter)),
-        consider_aspect = true,
+        consider_aspect = true;
+        expand_int_ticks = true,
     )
     axis = get_axis(sp, letter)
     ex = axis[:extrema]
@@ -156,6 +173,15 @@ function Commons.axis_limits(
         amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
     elseif lims ≡ :round
         amin, amax = round_limits(amin, amax, axis[:scale])
+    end
+
+    if expand_int_ticks &&
+            !has_user_lims &&
+            !ispolar(axis.sps[1]) &&
+            (n = axis[:ticks]) isa Int &&
+            n > 0 &&
+            isempty(axis[:discrete_values])
+        amin, amax = expand_limits_to_ticks(amin, amax, n, axis[:scale])
     end
 
     aspect_ratio = get_aspect_ratio(sp)
@@ -478,7 +504,8 @@ function Commons.get_ticks(
             collect(0:(π / 4):(7π / 4)), string.(0:45:315)
         else
             cvals = axis[:continuous_values]
-            alims = axis_limits(sp, axis[:letter])
+            # NOTE: unexpanded, see `expand_limits_to_ticks`
+            alims = axis_limits(sp, axis[:letter]; expand_int_ticks = false)
             Commons.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
         end
     end
