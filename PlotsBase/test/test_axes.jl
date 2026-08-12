@@ -75,6 +75,51 @@ end
     @test PlotsBase.get_ticks(p3[1], p3[1][:xaxis])[2] == string.('A':'Z')
 end
 
+@testset "Integer number of ticks" begin
+    # github.com/JuliaPlots/Plots.jl/issues/5738: `ticks = n` requests `n` ticks, which
+    # `optimize_ticks` honors with a span wider than the data - the limits must be expanded
+    # accordingly, else the outermost ticks are clipped by the backend
+    for n in 3:8
+        pl = plot(sin, -π, π; xticks = n, yticks = n)
+        for letter in (:x, :y)
+            ticks, labels = PlotsBase.get_ticks(pl[1], letter)
+            amin, amax = PlotsBase.axis_limits(pl[1], letter)
+            @test length(ticks) == length(labels) == n
+            @test all(amin .≤ ticks .≤ amax)  # all requested ticks are visible
+        end
+    end
+
+    # ticks must be laid out over the unexpanded limits, else they disagree with the
+    # expansion computed from them - which was only visible on log scales
+    for scale in (:log10, :log2, :ln), n in 3:8
+        pl = plot(exp, 1, 10; yscale = scale, yticks = n)
+        ticks, = PlotsBase.get_ticks(pl[1], :y)
+        amin, amax = PlotsBase.axis_limits(pl[1], :y)
+        @test length(ticks) == n
+        @test all(amin .≤ ticks .≤ amax)
+    end
+
+    # user limits win over the tick count, `widen = false` does not
+    pl = plot(sin, -π, π; xticks = 5, xlims = (-3, 3))
+    @test PlotsBase.xlims(pl) == (-3, 3)
+
+    pl = plot(sin, -π, π; xticks = 5, widen = false)
+    ticks, = PlotsBase.get_ticks(pl[1], :x)
+    amin, amax = PlotsBase.xlims(pl)
+    @test length(ticks) == 5 && all(amin .≤ ticks .≤ amax)
+
+    # no data can be hidden by the expansion
+    pl = plot(sin, -π, π; xticks = 5)
+    amin, amax = PlotsBase.xlims(pl)
+    @test amin ≤ -π && amax ≥ π
+
+    # discrete axes index the categories instead (and must not swap ticks and labels)
+    pl = plot('A':'M', 1:13; xticks = 3)
+    ticks, labels = PlotsBase.get_ticks(pl[1], :x)
+    @test ticks isa AbstractVector{<:Real}
+    @test labels == ["A", "G", "M"]
+end
+
 @testset "Ticks getter functions" begin
     ticks1 = ([1, 2, 3], ("a", "b", "c"))
     ticks2 = ([4, 5], ("e", "f"))
@@ -141,6 +186,22 @@ end
 @testset "3D Axis" begin
     ql = quiver([1, 2], [2, 1], [3, 4], quiver = ([1, -1], [0, 0], [1, -0.5]), arrow = true)
     @test ql[1][:projection] == "3d"
+
+    @testset "#3419 - `aspect_ratio` must not alter 3D limits" begin
+        # `RecipesPipeline.is3d(:sp)` dispatched on a `Symbol` and so always returned
+        # `false`, letting the *2D* aspect correction - which derives its factor from the
+        # plot area's pixel width / height - leak into 3D subplots and silently widen the
+        # `x` / `y` limits.
+        x, y = range(0, 10, length = 10), range(0, 1, length = 10)
+        z = [xi * yi for xi in x, yi in y]
+        for ar in (:none, :equal, 1)
+            pl = surface(x, y, z, aspect_ratio = ar)
+            PlotsBase.prepare_output(pl)  # `plotarea` is degenerate until laid out
+            @test PlotsBase.xlims(pl) == (0, 10)
+            @test PlotsBase.ylims(pl) == (0, 1)
+            @test PlotsBase.zlims(pl) == (0, 10)
+        end
+    end
 end
 
 @testset "Twinx" begin

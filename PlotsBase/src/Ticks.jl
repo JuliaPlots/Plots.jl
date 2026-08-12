@@ -1,12 +1,18 @@
 module Ticks
 
-export _has_ticks, _transform_ticks, get_minor_ticks
+export _has_ticks, _transform_ticks, get_minor_ticks, optimize_int_ticks
 export no_minor_intervals, num_minor_intervals, ticks_type
 
+using PlotUtils: optimize_ticks
 using ..Commons
 using ..Dates
 
 const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
+
+# `(ticks, viewmin, viewmax)`: `n` ticks only fit the wider span `viewmin, viewmax`, which
+# `axis_limits` expands the limits to, else the outermost ticks are clipped
+optimize_int_ticks(smin, smax, n::Int; scale = :identity) =
+    optimize_ticks(smin, smax; k_min = n, k_max = n, k_ideal = n, strict_span = false, scale)
 
 ticks_type(ticks::AVec{<:Real}) = :ticks
 ticks_type(ticks::AVec{<:AbstractString}) = :labels
