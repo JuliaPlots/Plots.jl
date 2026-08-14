@@ -90,7 +90,8 @@ jobs:
               (; path="./StatsPlots"),
             ])
             include(joinpath(@__DIR__, "ci", "matplotlib.jl"))
-            Pkg.instantiate()  # also installs the workspace test projects deps
+            # `workspace` also fetches test-only deps (`Blink`), but needs julia >= 1.12
+            VERSION >= v"1.12" ? Pkg.instantiate(; workspace = true) : Pkg.instantiate()
             Pkg.precompile()  # // precompilation
           '
 
