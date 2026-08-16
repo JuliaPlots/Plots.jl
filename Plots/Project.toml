@@ -17,7 +17,7 @@ PlotsBase = {path = "../PlotsBase"}
 projects = ["test"]
 
 [compat]
-GR = "0.73.25"
+GR = "0.73.26"
 PlotsBase = "0.1"
 Reexport = "1"
 julia = "1.10"
