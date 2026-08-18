@@ -93,6 +93,12 @@ jobs:
             # `workspace` also fetches test-only deps (`Blink`), but needs julia >= 1.12
             VERSION >= v"1.12" ? Pkg.instantiate(; workspace = true) : Pkg.instantiate()
             Pkg.precompile()  # // precompilation
+            # `Knockout` and `WebIO` (`StatsPlots` test deps) download their js assets at build
+            # time, and a restored depot can carry the packages without them: `instantiate` does
+            # not repair that, so force the build from a throwaway environment
+            Pkg.activate(; temp = true)
+            Pkg.add(["Knockout", "WebIO"])
+            Pkg.build(["Knockout", "WebIO"])
           '
 
       - name: test Plots stack
