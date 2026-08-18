@@ -120,7 +120,7 @@ jobs:
       - uses: julia-actions/julia-processcoverage@latest
         with:
           directories: RecipesBase/src,RecipesPipeline/src,PlotsBase/src,PlotsBase/ext,Plots/src,PlotThemes/src,GraphRecipes/src,StatsPlots/src
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
