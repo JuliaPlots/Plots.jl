@@ -1298,7 +1298,7 @@ const _examples = PlotExample[
                 cbar_heatmap(title = "bar width", colorbar_width = 0.2),
                 cbar_heatmap(title = "bar height", colorbar_height = 0.5),
                 layout = (2, 3),
-                size = (1_000, 700),
+                size = (1_200, 700),
             )
         end,
     ),
