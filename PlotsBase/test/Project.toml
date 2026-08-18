@@ -43,4 +43,4 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [compat]
-UnicodePlots = "3.8.4"
+UnicodePlots = "3.8"
