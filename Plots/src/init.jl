@@ -72,17 +72,18 @@ function __init__()
         PlotsDisplay(),
     )
 
-    i ->
-    begin
-        while PlotsDisplay() in Base.Multimedia.displays
-            popdisplay(PlotsDisplay())
-        end
-        insert!(
-            Base.Multimedia.displays,
-            findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
-            PlotsDisplay(),
-        )
-    end |> atreplinit
+    atreplinit(
+        i -> begin
+            while PlotsDisplay() in Base.Multimedia.displays
+                popdisplay(PlotsDisplay())
+            end
+            insert!(
+                Base.Multimedia.displays,
+                findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1,
+                PlotsDisplay(),
+            )
+        end,
+    )
 
     _runtime_init(backend())
     return nothing
