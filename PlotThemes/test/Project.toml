@@ -1,3 +1,4 @@
 [deps]
+PlotThemes = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
