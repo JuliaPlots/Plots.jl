@@ -110,6 +110,11 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontsize,
         :colorbar_titlefontcolor,
         :colorbar_ticks,
+        :colorbar_scale,
+        :colorbar_formatter,
+        :colorbar_tickcolor,
+        :colorbar_ticklinewidth,
+        :colorbar_tickfont,
         :colorbar_tickfontfamily,
         :colorbar_tickfontsize,
         :colorbar_tickfontcolor,
@@ -645,6 +650,21 @@ function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
 end
 plotly_colorscale(c, α = nothing) = plotly_colorscale(_as_gradient(c), α)
 
+# plotly interpolates the colorscale linearly in `z`, so a log colorbar scale is obtained
+# by handing it the log transformed data and color limits (mirroring `gr_z_normalized_log_scaled`):
+# the colors then follow the log mapping and the colorbar axis is evenly spaced in the exponent
+function plotly_z_log_scaled(scale, z, clims)
+    sf = RecipesPipeline.scale_func(scale)
+    z_log = map(zi -> zi > 0 ? sf(zi) : NaN, z)  # non-positive values are out of range
+    finite = filter(isfinite, vec(z_log))
+    lo, hi = map(lim -> lim > 0 ? sf(lim) : NaN, clims)
+    # fall back to the data range whenever a limit cannot be log transformed
+    isfinite(lo) || (lo = isempty(finite) ? NaN : minimum(finite))
+    isfinite(hi) || (hi = isempty(finite) ? NaN : maximum(finite))
+    isempty(finite) && @maxlog_warn "No positive value to show on a `$scale` colorbar scale."
+    return z_log, (lo, hi)
+end
+
 get_plotly_marker(k, def) = get(
     (
         rect = "square",
@@ -775,7 +795,10 @@ function plotly_series(plt::Plot, series::Series)
         st in (:path, :scatter, :scattergl, :straightline) &&
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
-    plotattributes_out[:colorbar] = plotly_colorbar(sp)
+    # only the heatmap `z` is drawn in log space below, hence the colorbar of any other
+    # series type stays linear
+    plotattributes_out[:colorbar] =
+        plotly_colorbar(sp, st ≡ :heatmap ? sp[:colorbar_scale] : :identity)
 
     if PlotsBase.is_2tuple(clims) && all(!isnan, clims)
         plotattributes_out[:zmin], plotattributes_out[:zmax] = clims
@@ -790,6 +813,17 @@ function plotly_series(plt::Plot, series::Series)
         y = PlotsBase.heatmap_edges(y, sp[:yaxis][:scale])
         plotattributes_out[:type] = "heatmap"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
+        if (scale = sp[:colorbar_scale]) ∈ _log_scales
+            z_log, loglims = plotly_z_log_scaled(scale, z, clims)
+            plotattributes_out[:z] = z_log
+            all(isfinite, loglims) &&
+                ((plotattributes_out[:zmin], plotattributes_out[:zmax]) = loglims)
+            if series[:hover] ≡ nothing  # keep the original values in the hover label
+                plotattributes_out[:text] = z
+                plotattributes_out[:hovertemplate] =
+                    "x: %{x}<br>y: %{y}<br>z: %{text}<extra></extra>"
+            end
+        end
         plotattributes_out[:colorscale] =
             plotly_colorscale(series[:fillcolor], series[:fillalpha])
         plotattributes_out[:showscale] = hascolorbar(sp)
@@ -930,7 +964,7 @@ function plotly_series(plt::Plot, series::Series)
     return [merge(plotattributes_out, series[:extra_kwargs])]
 end
 
-function plotly_colorbar(sp::Subplot)
+function plotly_colorbar(sp::Subplot, scale::Symbol = :identity)
     x_domain, y_domain = plotly_domain(sp)
     plot_attribute = KW(
         :title => KW(
@@ -943,6 +977,13 @@ function plotly_colorbar(sp::Subplot)
         :tickfont => plotly_font(colorbartickfont(sp)),
         :tickangle => -sp[:colorbar_tickfontrotation],
     )
+
+    # tick marks
+    tick_color, tick_width = colorbar_tick_line(sp)
+    if tick_width ≢ :auto
+        plot_attribute[:tickwidth] = tick_width
+        plot_attribute[:tickcolor] = rgba_string(plot_color(tick_color))
+    end
 
     # bar size, given as a fraction of the plot area
     (h = sp[:colorbar_height]) ≡ :auto || (plot_attribute[:len] *= h)
@@ -961,8 +1002,20 @@ function plotly_colorbar(sp::Subplot)
     if !_has_ticks(sp[:colorbar_ticks])
         plot_attribute[:ticks] = ""
         plot_attribute[:showticklabels] = false
-    elseif sp[:colorbar_ticks] ∉ (:auto, :native, true)
+    elseif (log_scaled = scale ∈ _log_scales) ||
+            sp[:colorbar_ticks] ∉ (:auto, :native, true) ||
+            sp[:colorbar_formatter] ≢ :auto
+        # plotly labels the ticks itself unless we hand it both values and labels, which is
+        # what a custom `colorbar_ticks` or `colorbar_formatter` asks for
         ticks_vals, ticks_labels = get_colorbar_ticks(sp)
+        if log_scaled
+            # the bar is drawn in log space, so place the ticks there too, keeping the
+            # labels reading the data values and dropping what cannot be transformed
+            sf = RecipesPipeline.scale_func(scale)
+            keep = map(t -> t > 0 && isfinite(sf(t)), ticks_vals)
+            isempty(ticks_labels) || (ticks_labels = ticks_labels[keep])
+            ticks_vals = map(sf, ticks_vals[keep])
+        end
         if !isempty(ticks_vals)
             plot_attribute[:tickmode] = "array"
             plot_attribute[:tickvals] = ticks_vals

@@ -150,6 +150,7 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_title,
         :colorbar_entry,
         :colorbar_ticks,
+        :colorbar_formatter,
         :colorbar_tickfontfamily,
         :colorbar_tickfontsize,
         :colorbar_tickfonthalign,
@@ -161,6 +162,9 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_scale,
         :colorbar_border_color,
         :colorbar_border_width,
+        :colorbar_tickcolor,
+        :colorbar_ticklinewidth,
+        :colorbar_tickfont,
         :colorbar_width,
         :colorbar_height,
         :marker_z,
@@ -580,6 +584,9 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         # vmin, vmax cause an error for wireframe plot
         # We are not supporting clims for hexbin as calculation of bins is not trivial
         KW()
+    elseif sp[:colorbar_scale] ∈ _log_scales
+        # a `norm` maps the data through the colorbar scale, and is exclusive with vmin / vmax
+        KW(:norm => mpl.colors.LogNorm(vmin = vmin, vmax = vmax))
     else
         KW(:vmin => vmin, :vmax => vmax)
     end
@@ -1215,15 +1222,22 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                     _py_get_matching_math_font(sp[:colorbar_tickfontfamily]),
                 )
                 lab.set_color(_py_color(sp[:colorbar_tickfontcolor]))
+                lab.set_rotation(sp[:colorbar_tickfontrotation])
             end
 
             # Adjust thickness of the cbar ticks
             intensity = 0.5
+            tick_color, tick_width = colorbar_tick_line(sp)
             cbar_axis.set_tick_params(
-                direction = axis[:tick_direction] ≡ :out ? "out" : "in",
-                width = _py_thickness_scale(plt, intensity),
+                # colorbar ticks point outward, as they do with the other backends
+                direction = "out",
+                width = _py_thickness_scale(
+                    plt,
+                    tick_width ≡ :auto ? intensity : tick_width,
+                ),
                 length = axis[:tick_direction] ≡ :none ? 0 :
                     5_py_thickness_scale(plt, intensity),
+                color = _py_color(tick_color),
             )
 
             # border around the bar

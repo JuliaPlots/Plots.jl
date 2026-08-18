@@ -106,6 +106,10 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_entry,
         :colorbar_scale,
         :colorbar_ticks,
+        :colorbar_formatter,
+        :colorbar_tickcolor,
+        :colorbar_ticklinewidth,
+        :colorbar_tickfont,
         :colorbar_tickfontfamily,
         :colorbar_tickfontsize,
         :colorbar_tickfonthalign,
@@ -849,11 +853,18 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     end
 
     if _has_ticks(sp[:colorbar_ticks])
-        gr_set_line(1, :solid, plot_color(:black), sp)
+        gr_set_line(
+            (tick_lw = sp[:colorbar_ticklinewidth]) ≡ :auto ? 1 : tick_lw,
+            :solid,
+            plot_color(sp[:colorbar_tickcolor]),
+            sp,
+        )
         (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])
 
-        if sp[:colorbar_ticks] isa Union{Symbol, Bool}
-            # Preserve GR's native auto-tick appearance for the default path.
+        if sp[:colorbar_ticks] ≡ :native ||
+                (sp[:colorbar_ticks] isa Union{Symbol, Bool} && sp[:colorbar_formatter] ≡ :auto)
+            # Preserve GR's native auto-tick appearance for the default path: `GR.axes` labels
+            # the ticks itself, which is why a custom `colorbar_formatter` needs the path below.
             z_tick = 0.5GR.tick(z_min, z_max)
             # signature: gr.axes(x_tick, y_tick, x_org, y_org, major_x, major_y, tick_size)
             GR.axes(0, z_tick, x_max, z_min, 0, 1, gr_colorbar_tick_size[])
