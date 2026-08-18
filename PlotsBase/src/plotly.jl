@@ -259,6 +259,10 @@ function shrink_by(lo, sz, ratio)
 end
 
 function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
+    # a 3D scene's box proportions come from `scene.aspectmode` (see `plotly_scene_aspect`),
+    # not from shrinking the domain rectangle it is drawn into - the ratio below is derived
+    # from the `x`/`y` data ranges alone and is meaningless under a 3D projection
+    RecipesPipeline.is3d(sp) && return pcts
     if (aspect_ratio = get_aspect_ratio(sp)) ≢ :none
         aspect_ratio ≡ :equal && (aspect_ratio = 1.0)
         xmin, xmax = axis_limits(sp, :x)
@@ -369,6 +373,46 @@ function plotly_polaraxis(sp::Subplot, axis::Axis)
     return ax
 end
 
+"""
+    plotly_scene_aspect(sp::Subplot)
+
+`plotly.js` defaults `scene.aspectmode` to `"auto"`, which proportions the 3D box to the
+data but falls back to `"cube"` once one axis spans more than four times the two others.
+That data dependent switch makes `plotly` the only backend whose 3D box proportions depend
+on the data: `GR` (`GR.setwindow3d`) and `PythonPlot` (`set_box_aspect`) always draw a cube
+unless told otherwise. Set the mode explicitly so the default no longer varies with the data.
+
+`aspect_ratio` maps onto `"manual"` rather than `"data"`. Despite its documentation,
+`plotly` derives `"data"` from the extent of the traces and ignores user `xlims`/`ylims`/
+`zlims`, so an explicitly limited subplot would silently get a box that does not match its
+own axes.
+"""
+function plotly_scene_aspect(sp::Subplot)
+    manual(x, y, z) =
+        KW(:aspectmode => "manual", :aspectratio => KW(:x => x, :y => y, :z => z))
+
+    ar = get_aspect_ratio(sp)
+    ar ≡ :equal && (ar = 1)
+    return if ar isa AbstractVector && length(ar) == 3
+        manual(ar...)  # matches `PythonPlot`'s `set_box_aspect(ratio)`
+    elseif ar isa Number && ar == 1
+        # equal units on every axis: size the box by the axis spans themselves, measured
+        # in the same scale `plotly_axis` reports the range in, so that a `:log10` axis is
+        # compared by decades rather than by its raw data span
+        spans = map((:x, :y, :z)) do letter
+            axis = sp[get_attr_symbol(letter, :axis)]
+            scale = RecipesPipeline.scale_func(axis[:scale])
+            amin, amax = axis_limits(sp, letter)
+            scale(amax) - scale(amin)
+        end
+        manual((spans ./ maximum(spans))...)
+    else
+        # `:none` (i.e. the `:auto` default) and numeric ratios, which have no meaning for
+        # a 3D box - see JuliaPlots/Plots.jl#4148 for `aspect_ratio` support in 3D
+        KW(:aspectmode => "cube")
+    end
+end
+
 function plotly_layout(plt::Plot)
     plotattributes_out = KW()
 
@@ -432,6 +476,7 @@ function plotly_layout(plt::Plot)
                     Symbol("xaxis$(spidx)") => plotly_axis(sp[:xaxis], sp),
                     Symbol("yaxis$(spidx)") => plotly_axis(sp[:yaxis], sp),
                     Symbol("zaxis$(spidx)") => plotly_axis(sp[:zaxis], sp),
+                    plotly_scene_aspect(sp)...,
 
                     #2.6 multiplier set camera eye such that whole plot can be seen
                     :camera => KW(
