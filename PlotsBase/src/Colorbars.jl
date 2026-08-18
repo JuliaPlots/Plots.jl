@@ -1,6 +1,6 @@
 module Colorbars
 
-export colorbar_style, update_clims, hascolorbar, colorbar_border
+export colorbar_style, update_clims, hascolorbar, colorbar_border, colorbar_tick_line
 export get_colorbar_ticks, _update_subplot_colorbars
 
 import ..Surfaces
@@ -135,6 +135,21 @@ function colorbar_border(sp::Subplot)
     width = sp[:colorbar_border_width]
     width ≡ :auto && sp.attr[:colorbar_border_color] ≢ :match && (width = 1)
     return sp[:colorbar_border_color], width
+end
+
+"""
+    colorbar_tick_line(sp::Subplot)
+
+Resolve the tick marks of the colorbar of `sp` into a `(color, width)` tuple.
+
+`width` is `:auto` whenever the backend should keep its own default, which is the case when neither
+`colorbar_ticklinewidth` nor `colorbar_tickcolor` were set. Setting the color alone is enough to
+request styled tick marks, which then default to a width of `1`.
+"""
+function colorbar_tick_line(sp::Subplot)
+    width = sp[:colorbar_ticklinewidth]
+    width ≡ :auto && sp.attr[:colorbar_tickcolor] ≢ :match && (width = 1)
+    return sp[:colorbar_tickcolor], width
 end
 
 hascolorbar(series::Series) = colorbar_style(series) ≢ nothing

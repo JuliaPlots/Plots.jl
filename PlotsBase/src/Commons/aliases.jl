@@ -358,6 +358,10 @@ add_aliases(
 )
 add_aliases(
     :colorbar_border_color,
+    :colorbar_bordercolor,
+    :colorkey_bordercolor,
+    :cb_bordercolor,
+    :cbar_bordercolor,
     :colorbarbordercolor,
     :cb_border_color,
     :cbborder_color,
@@ -366,21 +370,56 @@ add_aliases(
 )
 add_aliases(
     :colorbar_border_width,
+    :colorbar_borderwidth,
+    :colorbar_borderlinewidth,
+    :colorkey_borderlinewidth,
+    :cb_borderlinewidth,
+    :cbar_borderlinewidth,
+    :colorbar_border_linewidth,
     :colorbarborderwidth,
     :cb_border_width,
     :cbborder_width,
     :cbar_border_width,
     :cbarborder_width,
 )
-add_aliases(:colorbar_width, :colorbarwidth, :cb_width, :cbwidth, :cbar_width, :cbarwidth)
+add_aliases(
+    :colorbar_tickcolor,
+    :colorkey_tickcolor,
+    :colorbar_tick_color,
+    :cb_tickcolor,
+    :cbtick_color,
+    :cbar_tickcolor,
+    :cbartick_color,
+)
+add_aliases(
+    :colorbar_ticklinewidth,
+    :colorkey_ticklinewidth,
+    :colorbar_tick_linewidth,
+    :colorbar_tickwidth,
+    :colorbar_tick_width,
+    :cb_ticklinewidth,
+    :cbar_ticklinewidth,
+)
+add_aliases(
+    :colorbar_width,
+    :colorbarwidth,
+    :colorkey_width,
+    :cb_width,
+    :cbwidth,
+    :cbar_width,
+    :cbarwidth,
+)
 add_aliases(
     :colorbar_height,
     :colorbarheight,
+    :colorkey_height,
     :cb_height,
     :cbheight,
     :cbar_height,
     :cbarheight,
 )
+add_aliases(:colorbar_tickfont, :colorkey_tickfont, :cb_tickfont, :cbar_tickfont)
+add_aliases(:colorbar_titlefont, :colorkey_titlefont, :cb_titlefont, :cbar_titlefont)
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
 add_aliases(:smooth, :regression, :reg)
 add_aliases(:levels, :nlevels, :nlev, :levs)
