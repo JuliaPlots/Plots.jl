@@ -219,6 +219,43 @@ with(:pgfplotsx) do
         @test !haskey(style.dict, "width")
         @test !haskey(style.dict, "height")
         @test !haskey(style.dict, "axis line style")
+        @test !haskey(style.dict, "ytick style")
+        @test !haskey(style.dict, "yticklabels")
+
+        # tick marks
+        style = first(
+            get_pgf_axes(
+                heatmap(
+                    rand(10, 10);
+                    colorbar_tickcolor = :blue,
+                    colorbar_ticklinewidth = 2,
+                ),
+            ),
+        )["colorbar style"]
+        @test style["ytick style"]["color"] == PlotsBase.plot_color(:blue)
+        @test style["ytick style"]["line width"] == 2
+
+        # custom tick labels and a custom formatter must reach the colorbar
+        style = first(
+            get_pgf_axes(
+                heatmap(rand(10, 10); colorbar_ticks = ([0.2, 0.8], ["lo", "hi"])),
+            ),
+        )["colorbar style"]
+        @test style["yticklabels"] == "{lo,hi}"
+        style = first(
+            get_pgf_axes(heatmap(rand(10, 10); colorbar_formatter = x -> "test")),
+        )["colorbar style"]
+        @test occursin("test", style["yticklabels"])
+
+        # a log colorbar scale maps the colors, not only the labels
+        z = reshape(collect(0.01:0.01:1), 10, 10)
+        axis = first(get_pgf_axes(heatmap(z; colorbar_scale = :log10)))
+        @test axis["point meta min"] ≈ -2
+        @test axis["point meta max"] ≈ 0
+        @test axis["colorbar style"]["ytick"] == "{-2.0,-1.0,0.0}"
+        axis = first(get_pgf_axes(heatmap(z)))
+        @test axis["point meta min"] ≈ 0.01
+        @test axis["point meta max"] ≈ 1
     end
 
     @testset "Contours" begin

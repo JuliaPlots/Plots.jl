@@ -95,6 +95,29 @@ Sys.isunix() && with(:plotly) do
         @test cb[:ticktext] == ["lo", "hi"]
 
         @test cbar(heatmap(rand(10, 10); colorbar_ticks = :none))[:showticklabels] == false
+
+        # tick marks
+        cb = cbar(heatmap(rand(10, 10)))
+        @test !haskey(cb, :tickwidth)
+        cb = cbar(
+            heatmap(rand(10, 10); colorbar_tickcolor = :blue, colorbar_ticklinewidth = 2),
+        )
+        @test cb[:tickwidth] == 2
+        @test cb[:tickcolor] == PlotsBase.rgba_string(PlotsBase.plot_color(:blue))
+
+        # a custom formatter must reach the labels
+        cb = cbar(heatmap(rand(10, 10); colorbar_formatter = x -> "test"))
+        @test cb[:tickmode] == "array"
+        @test all(==("test"), cb[:ticktext])
+
+        # a log colorbar scale maps the colors, not only the labels
+        z = reshape(collect(0.01:0.01:1), 10, 10)
+        series(pl) = (PlotsBase.prepare_output(pl); PlotsBase.plotly_series(pl)[1])
+        linear, logged = series(heatmap(z)), series(heatmap(z; colorbar_scale = :log10))
+        @test linear[:zmin] ≈ 0.01 && linear[:zmax] ≈ 1
+        @test logged[:zmin] ≈ -2 && logged[:zmax] ≈ 0
+        @test logged[:z] ≈ log10.(linear[:z])
+        @test logged[:colorbar][:tickvals] ≈ [-2, -1, 0]
     end
 
     @testset "Extra kwargs" begin

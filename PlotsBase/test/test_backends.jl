@@ -87,9 +87,34 @@ end
     return cb.args[1]
 end
 
-@testset "colorbar border and size" begin
+@testset "colorbar styling" begin
     # the backends must keep their own defaults when nothing is requested
     @test PlotsBase.colorbar_border(heatmap(rand(10, 10))[1]) == (colorant"black", :auto)
+    @test PlotsBase.colorbar_tick_line(heatmap(rand(10, 10))[1]) == (colorant"black", :auto)
+    # setting the tick color alone is enough to request styled tick marks
+    @test PlotsBase.colorbar_tick_line(
+        heatmap(rand(10, 10); colorbar_tickcolor = :blue)[1],
+    ) == (:blue, 1)
+    @test PlotsBase.colorbar_tick_line(
+        heatmap(rand(10, 10); colorbar_ticklinewidth = 3)[1],
+    )[2] == 3
+    # the names used by the maintainer QA script must all resolve
+    sp = heatmap(
+        rand(10, 10);
+        colorbar_tickcolor = :blue,
+        colorbar_ticklinewidth = 2,
+        colorbar_bordercolor = :green,
+        colorbar_borderlinewidth = 2,
+        colorbar_tickfont = (10, :red, 30.0),
+    )[1]
+    @test PlotsBase.colorbar_tick_line(sp) == (:blue, 2)
+    @test PlotsBase.colorbar_border(sp) == (:green, 2)
+    # `colorbar_tickfont` is magic and expands into the tick font attributes
+    @test sp[:colorbar_tickfontsize] == 10
+    @test sp[:colorbar_tickfontcolor] == colorant"red"
+    @test sp[:colorbar_tickfontrotation] == 30.0
+    @test :colorkey_tickcolor ∈ PlotsBase.Commons.aliases(:colorbar_tickcolor)
+    @test :cbar_borderlinewidth ∈ PlotsBase.Commons.aliases(:colorbar_border_width)
     # setting the color alone is enough to request a border
     @test PlotsBase.colorbar_border(heatmap(rand(10, 10); colorbar_border_color = :red)[1]) ==
         (:red, 1)
@@ -129,6 +154,10 @@ end
             @test show(io, plot(heatmap(z; kw...), plot(1:5); layout = (1, 2))) isa Nothing
             # recipes
             @test show(io, cbardemo(rand(10, 10))) isa Nothing
+            # a custom formatter must reach the colorbar labels
+            @test show(io, heatmap(z; colorbar_formatter = x -> "test")) isa Nothing
+            @test show(io, heatmap(z; colorbar_tickcolor = :blue, colorbar_ticklinewidth = 2)) isa
+                Nothing
             # several series sharing a single colorbar
             @test show(io, scatter(rand(10, 3), rand(10, 3); marker_z = rand(10, 3), kw...)) isa
                 Nothing

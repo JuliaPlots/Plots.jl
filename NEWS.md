@@ -5,13 +5,19 @@
 
 ### Features
 - GR backend: Add support for `colorbar_ticks` to customize tick positions and labels on colorbars (#3560)
-- New colorbar attributes `colorbar_border_color`, `colorbar_border_width`, `colorbar_width` and `colorbar_height`,
-  supported by the `gr`, `plotly`/`plotlyjs`, `pgfplotsx` and `pythonplot` backends (#3174).
+- New colorbar attributes `colorbar_border_color`, `colorbar_border_width`, `colorbar_tickcolor`,
+  `colorbar_ticklinewidth`, `colorbar_width` and `colorbar_height`, supported by the `gr`,
+  `plotly`/`plotlyjs`, `pgfplotsx` and `pythonplot` backends (#3174).
   `colorbar_width`/`colorbar_height` are given as a fraction of the plot area, `:auto` keeps the backend default.
-  The `plotly`/`plotlyjs` colorbar now also honors `colorbar_ticks` and the colorbar title / tick fonts
+  `colorbar_tickfont` joins `colorbar_titlefont` as a magic attribute, so `colorbar_tickfont = (10, :red, 30.0)` works
+- The `plotly`/`plotlyjs` colorbar now also honors `colorbar_ticks`, `colorbar_formatter` and the colorbar title / tick fonts
 
 ### Fixed
 - GR backend: `colorbar_ticks` no longer errors with `GR ≥ 0.73.25` (`GR.drawaxis` signature change)
+- GR backend: `colorbar_formatter` is now applied (it was ignored unless `colorbar_ticks` was given explicitly)
+- PGFPlotsX backend: the colorbar now shows custom tick labels, from either `colorbar_ticks` pairs or `colorbar_formatter`
+- PythonPlot backend: colorbar tick labels honor `colorbar_tickfontrotation`, colorbar tick marks point outward
+  as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
 
 ## Breaking changes
 ---
