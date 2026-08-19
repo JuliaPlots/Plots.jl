@@ -95,10 +95,9 @@ jobs:
             Pkg.precompile()  # // precompilation
             # `Knockout` and `WebIO` (`StatsPlots` test deps) download their js assets at build
             # time, and a restored depot can carry the packages without them: `instantiate` does
-            # not repair that, so force the build from a throwaway environment
-            Pkg.activate(; temp = true)
-            Pkg.add(["Knockout", "WebIO"])
-            Pkg.build(["Knockout", "WebIO"])
+            # not repair that, so force the build
+            Pkg.activate("StatsPlots/test")
+            Pkg.build(["Interact"])
           '
 
       - name: test Plots stack
