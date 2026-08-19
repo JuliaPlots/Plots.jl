@@ -37,7 +37,7 @@ jobs:
       matrix:
         experimental: [false]
         version:
-          - 'lts'  # minimal declared julia compat in `Project.toml`
+          - 'min'  # minimal declared julia compat in `Project.toml`
           - '1'  # latest stable
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
@@ -45,7 +45,7 @@ jobs:
           - os: macos-latest
             experimental: false
             arch: aarch64
-            version: 'lts'
+            version: 'min'
           - os: macos-latest
             experimental: false
             arch: aarch64
@@ -80,24 +80,9 @@ jobs:
         run: |
           ${{ env.JULIA_PROJECT_CMD }} -e '
             using Pkg
-            Pkg.develop([
-              (; path="./RecipesBase"),      # compat for LTS [sources], remove later
-              (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
-              (; path="./PlotThemes"),       # compat for LTS [sources], remove later
-              (; path="./PlotsBase"),        # compat for LTS [sources], remove later
-              (; path="./Plots"),            # compat for LTS [sources], remove later
-              (; path="./GraphRecipes"),
-              (; path="./StatsPlots"),
-            ])
             include(joinpath(@__DIR__, "ci", "matplotlib.jl"))
-            # `workspace` also fetches test-only deps (`Blink`), but needs julia >= 1.12
-            VERSION >= v"1.12" ? Pkg.instantiate(; workspace = true) : Pkg.instantiate()
+            Pkg.instantiate(; workspace = true)
             Pkg.precompile()  # // precompilation
-            # `Knockout` and `WebIO` (`StatsPlots` test deps) download their js assets at build
-            # time, and a restored depot can carry the packages without them: `instantiate` does
-            # not repair that, so force the build
-            Pkg.activate("StatsPlots/test")
-            Pkg.build(["Interact"])
           '
 
       - name: test Plots stack
