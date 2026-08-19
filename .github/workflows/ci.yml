@@ -37,7 +37,7 @@ jobs:
       matrix:
         experimental: [false]
         version:
-          - 'min'  # minimal declared julia compat in `Project.toml`
+          - 'min-minor'  # minimal declared julia compat in `Project.toml`
           - '1'  # latest stable
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
@@ -45,7 +45,7 @@ jobs:
           - os: macos-latest
             experimental: false
             arch: aarch64
-            version: 'min'
+            version: 'min-minor'
           - os: macos-latest
             experimental: false
             arch: aarch64
@@ -67,7 +67,7 @@ jobs:
           echo "LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)" >>$GITHUB_ENV
           echo "JULIA_GNUPLOT_EXE=gnuplot" >>$GITHUB_ENV
 
-      - uses: julia-actions/setup-julia@latest
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
           show-versioninfo: true
