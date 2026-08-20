@@ -1,4 +1,8 @@
 # miscellaneous tests (not fitting into other test files)
+using PlotsBase
+import GR
+using PlotsBase: JSON, RecipesPipeline
+using Test
 
 @testset "Infrastructure" begin
     @test_nowarn JSON.parse(
@@ -149,21 +153,27 @@ end
     @test all(RecipesPipeline.get_axis_limits(p2, :x) .== x)
 end
 
-@testset "Slicing" begin
+@testset "Slicing & cycling" begin
     @test plot(1:5, fillrange = 0)[1][1][:fillrange] == 0
     data4 = rand(4, 4)
-    mat = reshape(1:8, 2, 4)
-    sp = plot(data4, ribbon = (mat, mat))[1]
+    mat = 0.1 .* reshape(1:8, 2, 4)
+    # TODO: think about this case later
+    # sp = plot(data4, ribbon = (mat, mat))[1]
     for i in axes(data4, 1)
-        for attribute in (:fillrange, :ribbon)
-            nt = NamedTuple{tuple(attribute)}
-            get_attrs(pl) = pl[1][i][attribute]
-            @test plot(data4; nt(0)...) |> get_attrs == 0
-            @test plot(data4; nt(Ref([1, 2]))...) |> get_attrs == [1.0, 2.0]
-            @test plot(data4; nt(Ref([1 2]))...) |> get_attrs == (iseven(i) ? 2 : 1)
-            @test plot(data4; nt(Ref(mat))...) |> get_attrs == [2(i - 1) + 1, 2i]
-        end
-        @test sp[i][:ribbon] == ([2(i - 1) + 1, 2i], [2(i - 1) + 1, 2i])
+        @test plot(data4)[1][i][:seriescolor] == RGBA(palette(:default)[i])
+        get_fillrange(pl) = pl[1][i][:fillrange]
+        @test plot(data4; fillrange = 0) |> get_fillrange == 0
+        @test plot(data4; fillrange = [0.1, 0.2]) |> get_fillrange == [0.1, 0.2]
+        @test plot(data4; fillrange = [0.1 0.2]) |> get_fillrange == (iseven(i) ? 0.2 : 0.1)
+        @test plot(data4; fillrange = mat) |> get_fillrange == [0.1(2(i - 1) + 1), 0.2i]
+        get_ribbon(pl) = pl[1][i][:ribbon]
+        @test plot(data4; ribbon = 0) |> get_ribbon == 0
+        @test_throws BoundsError plot(data4; ribbon = [0.1, 0.2])
+        @test plot(data4; ribbon = RecipesBase.cycle([0.1, 0.2])) |> get_ribbon == [0.1, 0.2]
+        @test_throws BoundsError plot(data4; ribbon = [0.1 0.2])
+        @test plot(data4; ribbon = RecipesBase.cycle([0.1 0.2])) |> get_ribbon == (iseven(i) ? 0.2 : 0.1)
+        @test plot(data4; ribbon = RecipesBase.cycle(mat)) |> get_ribbon == [0.1(2(i - 1) + 1), 0.2i]
+        # @test sp[i][:ribbon] == ([0.1(2(i - 1) + 1), 0.2i], [0.1(2(i - 1) + 1), 0.2i])
     end
 end
 

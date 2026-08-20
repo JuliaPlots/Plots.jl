@@ -181,6 +181,8 @@ function RecipesPipeline.process_sliced_series_attributes!(::Plot, kw_list)
         # convert a ribbon into a fillrange
         if rib ≢ nothing
             make_fillrange_from_ribbon(kw)
+            # # unwrap CyclingAttribute after processing
+            rib isa RecipesBase.CyclingAttribute && (kw[:ribbon] = rib.value)
             # map fillrange if it's a Function
         elseif fr ≢ nothing && fr isa Function
             kw[:fillrange] = map(fr, kw[:x])
@@ -243,10 +245,9 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
-        sp = get_subplot(
-            plt,
-            _cycle(sps ≡ :auto ? plt.subplots : plt.subplots[sps], series_idx(kw_list, kw)),
-        )
+        subplots = makevec(sps ≡ :auto ? plt.subplots : _getvalue(plt.subplots, sps))
+        sidx = series_idx(kw_list, kw)
+        sp = getindex(RecipesBase.cycle(subplots), sidx)
         kw[:subplot] = sp
 
         # extract subplot/axis attributes from kw and add to sp_attr

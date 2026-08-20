@@ -155,7 +155,7 @@ end
     @test segments([nan10; 1:5]) == [11:15]
     @test segments([1:5; nan10]) == [1:5]
     @test segments([nan10; 1:5; nan10; 1:5; nan10]) == [11:15, 26:30]
-    @test segments([NaN; 1], 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
+    @test segments(RecipesBase.cycle([NaN; 1]), 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
     @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
 end
 
@@ -265,7 +265,7 @@ end
 
     # test cycling indexes
     x = 0.0:0.1:1
-    y = [1, 2, 3]
+    y = RecipesBase.cycle([1, 2, 3])
     pl = scatter(x, y)
     @test PlotsBase._guess_best_legend_position(:best, pl) ≡ :topright
 

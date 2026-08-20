@@ -1,18 +1,16 @@
 using VisualRegressionTests
 using AbstractTrees
 using LinearAlgebra
-using GraphRecipes
+using Logging
 using GraphRecipes
 using SparseArrays
 using ImageMagick
 using StableRNGs
-using Logging
 using Graphs
 using Plots
+using Plots.PlotsBase
 using Test
 using Gtk  # for popup
-
-const PlotsBase = Plots.PlotsBase
 
 isci() = get(ENV, "CI", "false") == "true"
 itol(tol = nothing) = something(tol, isci() ? 1.0e-3 : 1.0e-5)
@@ -22,45 +20,29 @@ include("parse_readme.jl")
 
 default(show = false, reuse = true)
 
-@testset "functions" begin
-    rng = StableRNG(1)
-    for method in keys(GraphRecipes._graph_funcs)
-        method ≡ :spectral && continue  # FIXME
-        dat = if (inp = GraphRecipes._graph_inputs[method]) ≡ :adjmat
-            [
-                0 1 1
-                1 0 1
-                1 1 0
-            ]
-        elseif inp ≡ :sourcedestiny
-            Symmetric(sparse(rand(rng, 0:1, 8, 8)))
-        elseif inp ≡ :adjlist
-            dat = [
-                0 1 1 0 0 0 0 0 0 0
-                0 0 0 0 1 1 0 0 0 0
-                0 0 0 1 0 0 1 0 1 0
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 1 0 1
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0
-            ]
-        else
-            @error "wrong input $inp"
+cd(joinpath(@__DIR__, "..", "..", "assets", "GraphRecipes")) do
+    @testset "TestImages" begin
+        figure_files = readdir()
+        @testset "$figure_file" for figure_file in figure_files
+            figure = splitext(figure_file)[1]
+            if figure == "julia_type_tree"
+                if VERSION >= v"1.11" # julia 1.11 introduced Core.BFloat16
+                    @plottest julia_type_tree() "julia_type_tree.png" popup = !isci() tol = itol()
+                end
+            else
+                @plottest getproperty(@__MODULE__, Symbol(figure))() figure_file popup = !isci() tol =
+                    itol()
+            end
         end
-        pl = graphplot(dat; method)
-        @test pl isa PlotsBase.Plot
     end
 end
 
 @testset "issues" begin
     @testset "143" begin
         g = SimpleGraph(7)
+
         add_edge!(g, 2, 3)
         add_edge!(g, 3, 4)
-
         @test g.ne == 2
         al = GraphRecipes.get_adjacency_list(g)
         @test isempty(al[1])
@@ -96,22 +78,22 @@ end
     @testset "180" begin
         rng = StableRNG(1)
         mat = Symmetric(sparse(rand(rng, 0:1, 8, 8)))
-        graphplot(mat; method = :arcdiagram, rng)
+        graphplot(mat, method = :arcdiagram, rng = rng)
     end
 end
 
 @testset "utils.jl" begin
     rng = StableRNG(1)
-    @test GraphRecipes.directed_curve(0.0, 1.0, 0.0, 1.0; rng) ==
-        GraphRecipes.directed_curve(0, 1, 0, 1; rng)
+    @test GraphRecipes.directed_curve(0.0, 1.0, 0.0, 1.0, rng = rng) ==
+        GraphRecipes.directed_curve(0, 1, 0, 1, rng = rng)
 
-    @test GraphRecipes.isnothing(nothing) == PlotsBase.isnothing(nothing)
-    @test GraphRecipes.isnothing(missing) == PlotsBase.isnothing(missing)
-    @test GraphRecipes.isnothing(NaN) == PlotsBase.isnothing(NaN)
-    @test GraphRecipes.isnothing(0) == PlotsBase.isnothing(0)
-    @test GraphRecipes.isnothing(1) == PlotsBase.isnothing(1)
-    @test GraphRecipes.isnothing(0.0) == PlotsBase.isnothing(0.0)
-    @test GraphRecipes.isnothing(1.0) == PlotsBase.isnothing(1.0)
+    @test GraphRecipes.isnothing(nothing) == Plots.isnothing(nothing)
+    @test GraphRecipes.isnothing(missing) == Plots.isnothing(missing)
+    @test GraphRecipes.isnothing(NaN) == Plots.isnothing(NaN)
+    @test GraphRecipes.isnothing(0) == Plots.isnothing(0)
+    @test GraphRecipes.isnothing(1) == Plots.isnothing(1)
+    @test GraphRecipes.isnothing(0.0) == Plots.isnothing(0.0)
+    @test GraphRecipes.isnothing(1.0) == Plots.isnothing(1.0)
 
     for (s, e) in [(rand(rng), rand(rng)) for i in 1:100]
         @test GraphRecipes.partialcircle(s, e) == PlotsBase.partialcircle(s, e)
@@ -144,12 +126,12 @@ end
     # checking that they don't error. Also, test all of the different aliases.
     @testset "Aliases" begin
         A = [1 0 1 0; 0 0 1 1; 1 1 1 1; 0 0 1 1]
-        graphplot(A; markercolor = :red, markershape = :rect, markersize = 0.5, rng)
-        graphplot(A; nodeweights = 1:4, rng)
-        graphplot(A; curvaturescalar = 0, rng)
-        graphplot(A; el = Dict((1, 2) => ""), elb = true, rng)
-        graphplot(A; ew = (s, d, w) -> 3, rng)
-        graphplot(A; ses = 0.5, rng)
+        graphplot(A, markercolor = :red, markershape = :rect, markersize = 0.5, rng = rng)
+        graphplot(A, nodeweights = 1:4, rng = rng)
+        graphplot(A, curvaturescalar = 0, rng = rng)
+        graphplot(A, el = Dict((1, 2) => ""), elb = true, rng = rng)
+        graphplot(A, ew = (s, d, w) -> 3, rng = rng)
+        graphplot(A, ses = 0.5, rng = rng)
     end
 end
 
@@ -190,6 +172,6 @@ cd(joinpath(@__DIR__, "..", "..", "assets", "GraphRecipes")) do
     end
 
     @testset "README" begin
-        @plottest julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
+        @plottest readme_julia_logo_pun() "readme_julia_logo_pun.png" popup = !isci() tol = itol()
     end
 end

@@ -108,8 +108,6 @@ end
     io = devnull
     show(io, pl[1])
 
-    @test PlotsBase.getplot(pl) == pl
-    @test PlotsBase.getattr(pl) == pl.attr
     @test PlotsBase.backend_object(pl) == pl.o
     @test occursin("Plot", string(pl))
     print(io, pl)

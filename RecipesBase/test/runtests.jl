@@ -7,6 +7,8 @@ using Test
 
 const KW = Dict{Symbol, Any}
 
+include("test_api.jl")
+
 RB.is_key_supported(k::Symbol) = true
 
 for t in map(i -> Symbol(:T, i), 1:5)

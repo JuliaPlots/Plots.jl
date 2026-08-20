@@ -3,6 +3,7 @@ module GraphRecipes
 using Graphs
 using PlotUtils         # ColorGradient
 using RecipesBase
+using PlotsBase: PlotsBase, partialcircle
 
 using InteractiveUtils  # subtypes
 using LinearAlgebra

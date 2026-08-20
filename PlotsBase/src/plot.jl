@@ -59,9 +59,6 @@ function Base.show(io::IO, plt::Plot)
     return
 end
 
-getplot(plt::Plot) = plt
-getattr(plt::Plot, ::Int = 1) = plt.attr
-
 # ---------------------------------------------------------
 
 """

@@ -1,3 +1,7 @@
+using AbstractTrees
+using StableRNGs
+using GraphRecipes.Graphs
+
 function random_labelled_graph()
     n = 15
     rng = StableRNG(1)
