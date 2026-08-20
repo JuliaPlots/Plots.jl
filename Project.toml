@@ -1,2 +1,5 @@
+[compat]
+julia = "1.12"
+
 [workspace]
-projects = ["RecipesBase", "RecipesPipeline", "PlotThemes", "PlotsBase", "Plots", "GraphRecipes", "docs"]
+projects = ["RecipesBase", "RecipesPipeline", "PlotThemes", "PlotsBase", "Plots", "GraphRecipes", "docs", "StatsPlots"]

@@ -37,7 +37,7 @@ jobs:
       matrix:
         experimental: [false]
         version:
-          - 'lts'  # minimal declared julia compat in `Project.toml`
+          - 'min-minor'  # minimal declared julia compat in `Project.toml`
           - '1'  # latest stable
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
@@ -45,7 +45,7 @@ jobs:
           - os: macos-latest
             experimental: false
             arch: aarch64
-            version: 'lts'
+            version: 'min-minor'
           - os: macos-latest
             experimental: false
             arch: aarch64
@@ -67,9 +67,10 @@ jobs:
           echo "LD_PRELOAD=$(g++ --print-file-name=libstdc++.so)" >>$GITHUB_ENV
           echo "JULIA_GNUPLOT_EXE=gnuplot" >>$GITHUB_ENV
 
-      - uses: julia-actions/setup-julia@latest
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
+          show-versioninfo: true
 
       - uses: julia-actions/cache@v3
 
@@ -80,18 +81,8 @@ jobs:
         run: |
           ${{ env.JULIA_PROJECT_CMD }} -e '
             using Pkg
-            Pkg.develop([
-              (; path="./RecipesBase"),      # compat for LTS [sources], remove later
-              (; path="./RecipesPipeline"),  # compat for LTS [sources], remove later
-              (; path="./PlotThemes"),       # compat for LTS [sources], remove later
-              (; path="./PlotsBase"),        # compat for LTS [sources], remove later
-              (; path="./Plots"),            # compat for LTS [sources], remove later
-              (; path="./GraphRecipes"),
-              (; path="./StatsPlots"),
-            ])
             include(joinpath(@__DIR__, "ci", "matplotlib.jl"))
-            # `workspace` also fetches test-only deps (`Blink`), but needs julia >= 1.12
-            VERSION >= v"1.12" ? Pkg.instantiate(; workspace = true) : Pkg.instantiate()
+            Pkg.instantiate(; workspace = true)
             Pkg.precompile()  # // precompilation
           '
 

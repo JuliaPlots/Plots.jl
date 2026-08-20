@@ -57,6 +57,69 @@ Sys.isunix() && with(:plotly) do
         end
     end
 
+    @testset "Colorbar" begin
+        cbar(pl) = (PlotsBase.prepare_output(pl); PlotsBase.plotly_series(pl)[1][:colorbar])
+
+        pl = heatmap(rand(10, 10); colorbar_title = "cbar")
+        cb = cbar(pl)
+        @test cb[:title][:text] == "cbar"
+        # backend defaults are kept when nothing is requested
+        @test !haskey(cb, :outlinewidth)
+        @test !haskey(cb, :thickness)
+
+        len, thickness =
+            cb[:len], PlotsBase.Plotly.plotly_domain(pl[1])[1] |> diff |> first
+        cb = cbar(
+            heatmap(
+                rand(10, 10);
+                colorbar_width = 0.1,
+                colorbar_height = 0.5,
+                colorbar_border_color = :red,
+                colorbar_border_width = 2,
+                colorbar_tickfontcolor = :blue,
+            ),
+        )
+        @test cb[:len] ≈ 0.5len
+        @test cb[:thicknessmode] == "fraction"
+        @test cb[:thickness] ≈ 0.1thickness
+        @test cb[:outlinewidth] == 2
+        @test cb[:outlinecolor] == PlotsBase.rgba_string(PlotsBase.plot_color(:red))
+        @test cb[:tickfont][:color] == PlotsBase.rgba_string(PlotsBase.plot_color(:blue))
+
+        # setting the border color alone is enough to request a border
+        @test cbar(heatmap(rand(10, 10); colorbar_border_color = :red))[:outlinewidth] == 1
+
+        cb = cbar(heatmap(rand(10, 10); colorbar_ticks = ([0.2, 0.8], ["lo", "hi"])))
+        @test cb[:tickmode] == "array"
+        @test cb[:tickvals] == [0.2, 0.8]
+        @test cb[:ticktext] == ["lo", "hi"]
+
+        @test cbar(heatmap(rand(10, 10); colorbar_ticks = :none))[:showticklabels] == false
+
+        # tick marks
+        cb = cbar(heatmap(rand(10, 10)))
+        @test !haskey(cb, :tickwidth)
+        cb = cbar(
+            heatmap(rand(10, 10); colorbar_tick_color = :blue, colorbar_tick_line_width = 2),
+        )
+        @test cb[:tickwidth] == 2
+        @test cb[:tickcolor] == PlotsBase.rgba_string(PlotsBase.plot_color(:blue))
+
+        # a custom formatter must reach the labels
+        cb = cbar(heatmap(rand(10, 10); colorbar_formatter = x -> "test"))
+        @test cb[:tickmode] == "array"
+        @test all(==("test"), cb[:ticktext])
+
+        # a log colorbar scale maps the colors, not only the labels
+        z = reshape(collect(0.01:0.01:1), 10, 10)
+        series(pl) = (PlotsBase.prepare_output(pl); PlotsBase.plotly_series(pl)[1])
+        linear, logged = series(heatmap(z)), series(heatmap(z; colorbar_scale = :log10))
+        @test linear[:zmin] ≈ 0.01 && linear[:zmax] ≈ 1
+        @test logged[:zmin] ≈ -2 && logged[:zmax] ≈ 0
+        @test logged[:z] ≈ log10.(linear[:z])
+        @test logged[:colorbar][:tickvals] ≈ [-2, -1, 0]
+    end
+
     @testset "Extra kwargs" begin
         pl = plot(1:5, test = "me")
         @test PlotsBase.plotly_series(pl)[1][:test] == "me"

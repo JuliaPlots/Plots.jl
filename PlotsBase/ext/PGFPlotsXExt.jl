@@ -106,6 +106,20 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_titlefontsize,
         :colorbar_titlefontcolor,
         :colorbar_titlefontrotation,
+        :colorbar_scale,
+        :colorbar_ticks,
+        :colorbar_formatter,
+        :colorbar_tick_color,
+        :colorbar_tick_line_width,
+        :colorbar_tickfont,
+        :colorbar_tickfontfamily,
+        :colorbar_tickfontsize,
+        :colorbar_tickfontcolor,
+        :colorbar_tickfontrotation,
+        :colorbar_border_color,
+        :colorbar_border_width,
+        :colorbar_width,
+        :colorbar_height,
         :colorbar_entry,
         :fill,
         :fill_z,
@@ -283,6 +297,52 @@ curly(obj) = "{$(string(obj))}"
 latex_formatter(formatter::Symbol) = formatter in (:plain, :latex) ? formatter : :latex
 latex_formatter(formatter::Function) = formatter
 
+# values outside of the domain of a scale (`log` of a non-positive number) are handed over as
+# `NaN`, which pgfplots leaves blank
+function pgfx_scaled_value(sf, v)
+    sv = sf(v)
+    return isfinite(sv) ? sv : NaN
+end
+
+# series types which pgfplots colors through `point meta`
+pgfx_meta_colored(series) =
+    series[:seriestype] in (:heatmap, :surface, :wireframe, :contour, :contour3d)
+
+# pgfplots maps `point meta` linearly onto the colormap, hence log scaled colors are obtained by
+# handing over log scaled meta data and limits: `heatmap` and `surface` are the series types
+# writing such a scaled `meta` column, any other one keeps the whole axis linear, as its colors
+# are resolved either from unscaled `point meta` (contours, `wireframe`) or against the unscaled
+# color limits (`marker_z` & friends)
+pgfx_meta_scaled(series) =
+    series[:seriestype] in (:heatmap, :surface) ||
+    !(pgfx_meta_colored(series) || hascolorbar(series))
+
+function pgfx_colorbar_scale_func(sp)
+    (
+        (scale = sp[:colorbar_scale]) ∈ _log_scales &&
+            all(pgfx_meta_scaled, series_list(sp))
+    ) || return identity
+    sf = RecipesPipeline.scale_func(scale)
+    return v -> pgfx_scaled_value(sf, v)
+end
+
+# color limits mapped through the colorbar scale, falling back to the extrema of the scaled data
+# whenever a limit is out of the domain of the scale (non-positive data on a log scale)
+function pgfx_colorbar_limits(sp)
+    (sf = pgfx_colorbar_scale_func(sp)) ≡ identity && return get_clims(sp)
+    cmin, cmax = map(sf, get_clims(sp))
+    (isnan(cmin) || isnan(cmax)) || return cmin, cmax
+    zmin, zmax = Inf, -Inf
+    for series in series_list(sp)
+        (hascolorbar(series) && (z = series[:z]) ≢ nothing) || continue
+        for v in Iterators.map(sf, handle_surface(z))
+            isnan(v) || ((zmin, zmax) = (min(zmin, v), max(zmax, v)))
+        end
+    end
+    isfinite(zmin) && isfinite(zmax) || return 0.0, 1.0  # nothing left to scale
+    return isnan(cmin) ? zmin : cmin, isnan(cmax) ? zmax : cmax
+end
+
 PlotsBase.labelfunc(scale::Symbol, backend::PGFPlotsXBackend) =
     PlotsBase.labelfunc_tex(scale)
 
@@ -343,9 +403,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             title_cstr = plot_color(sp[:titlefontcolor])
             bgc_inside = plot_color(sp[:background_color_inside])
             update_clims(sp)
+            cbar_min, cbar_max = pgfx_colorbar_limits(sp)
             axis_opt = Options(
-                "point meta max" => get_clims(sp)[2],
-                "point meta min" => get_clims(sp)[1],
+                "point meta max" => cbar_max,
+                "point meta min" => cbar_min,
                 "legend cell align" => "left",
                 "legend columns" => pgfx_legend_col(sp[:legend_column]),
                 "title" => sp[:title],
@@ -400,7 +461,15 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
 
             if hascolorbar(sp)
                 formatter = latex_formatter(sp[:colorbar_formatter])
-                cticks = curly(join(get_colorbar_ticks(sp; formatter = formatter)[1], ','))
+                cbar_ticks, cbar_labels = get_colorbar_ticks(sp; formatter = formatter)
+                # the colorbar axis carries the scaled meta values, hence its ticks have to be
+                # scaled as well, keeping the unscaled values as labels
+                if (cbar_sf = pgfx_colorbar_scale_func(sp)) ≢ identity
+                    keep = findall(t -> isfinite(cbar_sf(t)), cbar_ticks)
+                    isempty(cbar_labels) || (cbar_labels = cbar_labels[keep])
+                    cbar_ticks = map(cbar_sf, cbar_ticks[keep])
+                end
+                cticks = curly(join(cbar_ticks, ','))
                 letter = sp[:colorbar] ≡ :top ? :x : :y
 
                 colorbar_style = push!(
@@ -409,6 +478,20 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "$(letter)tick" => cticks,
                     "$(letter)ticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                 )
+
+                # pgfplots labels the ticks itself, so the computed labels are only handed over
+                # when they were asked for through `colorbar_ticks` or `colorbar_formatter`, or
+                # when the tick positions were scaled
+                if !isempty(cbar_labels) && (
+                        cbar_sf ≢ identity ||
+                            sp[:colorbar_ticks] ∉ (:auto, :native, true) ||
+                            sp[:colorbar_formatter] ≢ :auto
+                    )
+                    push!(
+                        colorbar_style,
+                        "$(letter)ticklabels" => curly(join(cbar_labels, ',')),
+                    )
+                end
 
                 if sp[:colorbar] ≡ :top
                     push!(
@@ -426,6 +509,38 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         "$(letter)ticklabels" => "{,,}",
                     )
                 end
+
+                # tick marks
+                tick_color, tick_width = colorbar_tick_line(sp)
+                tick_width ≡ :auto || push!(
+                    colorbar_style,
+                    "$(letter)tick style" => pgfx_linestyle(
+                        pgfx_thickness_scaling(sp) * tick_width,
+                        tick_color,
+                        1,
+                    ),
+                )
+
+                # bar size, given as a fraction of the plot area
+                (cbw = sp[:colorbar_width]) ≡ :auto || push!(
+                    colorbar_style,
+                    "width" => "$(cbw)*\\pgfkeysvalueof{/pgfplots/parent axis width}",
+                )
+                (cbh = sp[:colorbar_height]) ≡ :auto || push!(
+                    colorbar_style,
+                    "height" => "$(cbh)*\\pgfkeysvalueof{/pgfplots/parent axis height}",
+                )
+
+                # border around the bar
+                border_color, border_width = colorbar_border(sp)
+                border_width ≡ :auto || push!(
+                    colorbar_style,
+                    "axis line style" => pgfx_linestyle(
+                        pgfx_thickness_scaling(sp) * border_width,
+                        border_color,
+                        1,
+                    ),
+                )
 
                 push!(
                     axis_opt,
@@ -685,6 +800,14 @@ function pgfx_add_series!(::Val{:surface}, axis, series_opt, series, series_func
         "z buffer" => "sort",
         "opacity" => something(get_fillalpha(series), 1.0),
     )
+    if (sf = pgfx_colorbar_scale_func(series[:subplot])) ≢ identity
+        # `surf` colors by the z coordinate, which has to be replaced by scaled meta data
+        x, y, z = pgfx_series_arguments(series, opt)
+        push!(series_opt, "point meta" => "\\thisrow{meta}")
+        table = Table(["x" => x, "y" => y, "z" => z, "meta" => map(sf, z)])
+        push!(axis, series_func(series_opt, table))
+        return pgfx_add_legend!(axis, series, opt)
+    end
     return pgfx_add_series!(axis, series_opt, series, series_func, opt)
 end
 
@@ -704,7 +827,8 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
         "opacity" => something(get_fillalpha(series), 1.0),
     )
     args = pgfx_series_arguments(series, opt)
-    meta = map(r -> any(!isfinite, r) ? NaN : r[3], zip(args...))
+    sf = pgfx_colorbar_scale_func(series[:subplot])
+    meta = map(r -> any(!isfinite, r) ? NaN : sf(r[3]), zip(args...))
     for arg in args
         arg[(!isfinite).(arg)] .= 0
     end

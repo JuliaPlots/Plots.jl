@@ -200,6 +200,64 @@ with(:pgfplotsx) do
         # TODO: clims are wrong
     end
 
+    @testset "Colorbar style" begin
+        pl = heatmap(
+            rand(10, 10);
+            colorbar_width = 0.08,
+            colorbar_height = 0.5,
+            colorbar_border_color = :red,
+            colorbar_border_width = 2,
+        )
+        style = first(get_pgf_axes(pl))["colorbar style"]
+        @test style["width"] == "0.08*\\pgfkeysvalueof{/pgfplots/parent axis width}"
+        @test style["height"] == "0.5*\\pgfkeysvalueof{/pgfplots/parent axis height}"
+        @test style["axis line style"]["color"] == PlotsBase.plot_color(:red)
+        @test style["axis line style"]["line width"] == 2
+
+        # backend defaults are kept when nothing is requested
+        style = first(get_pgf_axes(heatmap(rand(10, 10))))["colorbar style"]
+        @test !haskey(style.dict, "width")
+        @test !haskey(style.dict, "height")
+        @test !haskey(style.dict, "axis line style")
+        @test !haskey(style.dict, "ytick style")
+        @test !haskey(style.dict, "yticklabels")
+
+        # tick marks
+        style = first(
+            get_pgf_axes(
+                heatmap(
+                    rand(10, 10);
+                    colorbar_tick_color = :blue,
+                    colorbar_tick_line_width = 2,
+                ),
+            ),
+        )["colorbar style"]
+        @test style["ytick style"]["color"] == PlotsBase.plot_color(:blue)
+        @test style["ytick style"]["line width"] == 2
+
+        # custom tick labels and a custom formatter must reach the colorbar
+        style = first(
+            get_pgf_axes(
+                heatmap(rand(10, 10); colorbar_ticks = ([0.2, 0.8], ["lo", "hi"])),
+            ),
+        )["colorbar style"]
+        @test style["yticklabels"] == "{lo,hi}"
+        style = first(
+            get_pgf_axes(heatmap(rand(10, 10); colorbar_formatter = x -> "test")),
+        )["colorbar style"]
+        @test occursin("test", style["yticklabels"])
+
+        # a log colorbar scale maps the colors, not only the labels
+        z = reshape(collect(0.01:0.01:1), 10, 10)
+        axis = first(get_pgf_axes(heatmap(z; colorbar_scale = :log10)))
+        @test axis["point meta min"] ≈ -2
+        @test axis["point meta max"] ≈ 0
+        @test axis["colorbar style"]["ytick"] == "{-2.0,-1.0,0.0}"
+        axis = first(get_pgf_axes(heatmap(z)))
+        @test axis["point meta min"] ≈ 0.01
+        @test axis["point meta max"] ≈ 1
+    end
+
     @testset "Contours" begin
         x = 1:0.5:20
         y = 1:0.5:10
