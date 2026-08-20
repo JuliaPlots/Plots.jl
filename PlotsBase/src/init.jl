@@ -1,15 +1,5 @@
-using Scratch: @get_scratch!
 using REPL
-
-const _plotly_local_file_path = Ref{Union{Nothing, String}}(nothing)
-# use fixed version of Plotly instead of the latest one for stable dependency
-# see github.com/JuliaPlots/Plots.jl/pull/2779
-const _plotly_min_js_filename = "plotly-2.3.0.min.js"  # must match https://github.com/JuliaPlots/PlotlyJS.jl/blob/master/deps/plotly_cdn_version.jl
-
-const _requirejs_version = v"2.3.7"
-
-const _use_local_dependencies = Ref(false)
-const _use_local_plotlyjs = Ref(false)
+import Base64
 
 _plots_defaults() =
 if isdefined(Main, :PLOTSBASE_DEFAULTS)
@@ -23,20 +13,8 @@ function _plots_theme_defaults()
     return theme(pop!(user_defaults, :theme, :default); user_defaults...)
 end
 
-function _plots_plotly_defaults()
-    if Base.get_bool_env("PLOTSBASE_HOST_DEPENDENCY_LOCAL", false)
-        _plotly_local_file_path[] =
-            fn = joinpath(@get_scratch!("plotly"), _plotly_min_js_filename)
-        isfile(fn) ||
-            Downloads.download("https://cdn.plot.ly/$(_plotly_min_js_filename)", fn)
-        _use_local_plotlyjs[] = true
-    end
-    return _use_local_dependencies[] = _use_local_plotlyjs[]
-end
-
 function __init__()
     _plots_theme_defaults()
-    _plots_plotly_defaults()
 
     insert!(
         Base.Multimedia.displays,
