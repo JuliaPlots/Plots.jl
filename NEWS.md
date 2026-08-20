@@ -14,7 +14,7 @@
 - The colorbar font attributes are now spelled with underscores, like the other font families:
   `colorbar_title_font`, `colorbar_tick_font`, `colorbar_font_family` and the per-attribute names
   `colorbar_<title|tick>_font_<family|size|halign|valign|rotation|color>`.
-  The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work as aliases
+  The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work when setting attributes
 
 ### Fixed
 - GR backend: `colorbar_ticks` no longer errors with `GR ≥ 0.73.25` (`GR.drawaxis` signature change)
@@ -24,6 +24,10 @@
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
 
 ## Breaking changes
+- Reading a colorbar font attribute back by its old name now throws, as it already does for the legend fonts:
+  use `sp[:colorbar_title_font_size]` rather than `sp[:colorbar_titlefontsize]`.
+  The old names remain aliases on the input side, so passing them to `plot` keeps working.
+
 ---
 
 ## v2

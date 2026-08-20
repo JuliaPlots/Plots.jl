@@ -473,7 +473,6 @@ const _subplot_defaults = KW(
     :colorbar_title => "",
     :colorbar_title_font_size => 10,
     :colorbar_title_location => :center,           # also :left or :right
-    :colorbar_font_family => :match,
     :colorbar_title_font_family => :match,
     :colorbar_title_font_halign => :hcenter,
     :colorbar_title_font_valign => :vcenter,
