@@ -5,8 +5,8 @@
 
 ### Features
 - GR backend: Add support for `colorbar_ticks` to customize tick positions and labels on colorbars (#3560)
-- New colorbar attributes `colorbar_border_color`, `colorbar_border_width`, `colorbar_tickcolor`,
-  `colorbar_ticklinewidth`, `colorbar_width` and `colorbar_height`, supported by the `gr`,
+- New colorbar attributes `colorbar_border_color`, `colorbar_border_width`, `colorbar_tick_color`,
+  `colorbar_tick_line_width`, `colorbar_width` and `colorbar_height`, supported by the `gr`,
   `plotly`/`plotlyjs`, `pgfplotsx` and `pythonplot` backends (#3174).
   `colorbar_width`/`colorbar_height` are given as a fraction of the plot area, `:auto` keeps the backend default.
   `colorbar_tickfont` joins `colorbar_titlefont` as a magic attribute, so `colorbar_tickfont = (10, :red, 30.0)` works

@@ -1285,7 +1285,7 @@ const _examples = PlotExample[
     ),
     PlotExample( # 68
         "Colorbar styling",
-        "The frame drawn around a colorbar is styled with `colorbar_border_color` and `colorbar_border_width`, its tick marks with `colorbar_tickcolor` and `colorbar_ticklinewidth`, and its size with `colorbar_width` and `colorbar_height`, both given as a fraction of the plot area. Setting only a color is enough to request the styled element, and each attribute defaults to `:auto`, which keeps the backend default.",
+        "The frame drawn around a colorbar is styled with `colorbar_border_color` and `colorbar_border_width`, its tick marks with `colorbar_tick_color` and `colorbar_tick_line_width`, and its size with `colorbar_width` and `colorbar_height`, both given as a fraction of the plot area. Setting only a color is enough to request the styled element, and each attribute defaults to `:auto`, which keeps the backend default.",
         :(using PlotsBase.Commons),
         quote
             cbar_heatmap(; kw...) =
@@ -1293,8 +1293,8 @@ const _examples = PlotExample[
             plot(
                 cbar_heatmap(title = "border color", colorbar_border_color = :red),
                 cbar_heatmap(title = "border width", colorbar_border_width = 3),
-                cbar_heatmap(title = "tick color", colorbar_tickcolor = :red),
-                cbar_heatmap(title = "tick width", colorbar_ticklinewidth = 3),
+                cbar_heatmap(title = "tick color", colorbar_tick_color = :red),
+                cbar_heatmap(title = "tick width", colorbar_tick_line_width = 3),
                 cbar_heatmap(title = "bar width", colorbar_width = 0.2),
                 cbar_heatmap(title = "bar height", colorbar_height = 0.5),
                 layout = (2, 3),

@@ -107,8 +107,8 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_scale,
         :colorbar_ticks,
         :colorbar_formatter,
-        :colorbar_tickcolor,
-        :colorbar_ticklinewidth,
+        :colorbar_tick_color,
+        :colorbar_tick_line_width,
         :colorbar_tickfont,
         :colorbar_tickfontfamily,
         :colorbar_tickfontsize,
@@ -685,10 +685,12 @@ end
 # in case someone wants to modify these hardcoded factors
 const gr_cbar_width = Ref(0.03)
 const gr_cbar_offsets = Ref((0.02, 0.07))
-# ndc space kept on the right of the colorbar for its tick labels and title
+# space kept on the right of the colorbar for its tick labels and title, in normalized
+# device coordinates (the `0..1` square `GR` maps the canvas onto)
 const gr_cbar_label_space = Ref(0.05)
 
-# thickness of the colorbar in ndc: `colorbar_width` is a fraction of the plot area width
+# thickness of the colorbar, in normalized device coordinates: `colorbar_width` is given
+# as a fraction of the plot area width
 gr_cbar_thickness(sp::Subplot, plotarea_width) =
     (w = sp[:colorbar_width]) ≡ :auto ? gr_cbar_width[] : w * plotarea_width
 
@@ -854,9 +856,9 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
 
     if _has_ticks(sp[:colorbar_ticks])
         gr_set_line(
-            (tick_lw = sp[:colorbar_ticklinewidth]) ≡ :auto ? 1 : tick_lw,
+            (tick_lw = sp[:colorbar_tick_line_width]) ≡ :auto ? 1 : tick_lw,
             :solid,
-            plot_color(sp[:colorbar_tickcolor]),
+            plot_color(sp[:colorbar_tick_color]),
             sp,
         )
         (yscale = sp[:colorbar_scale]) ∈ _log_scales && GR.setscale(gr_y_log_scales[yscale])

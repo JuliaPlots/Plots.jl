@@ -227,8 +227,8 @@ with(:pgfplotsx) do
             get_pgf_axes(
                 heatmap(
                     rand(10, 10);
-                    colorbar_tickcolor = :blue,
-                    colorbar_ticklinewidth = 2,
+                    colorbar_tick_color = :blue,
+                    colorbar_tick_line_width = 2,
                 ),
             ),
         )["colorbar style"]

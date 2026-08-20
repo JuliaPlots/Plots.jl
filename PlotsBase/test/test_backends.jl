@@ -93,16 +93,16 @@ end
     @test PlotsBase.colorbar_tick_line(heatmap(rand(10, 10))[1]) == (colorant"black", :auto)
     # setting the tick color alone is enough to request styled tick marks
     @test PlotsBase.colorbar_tick_line(
-        heatmap(rand(10, 10); colorbar_tickcolor = :blue)[1],
+        heatmap(rand(10, 10); colorbar_tick_color = :blue)[1],
     ) == (:blue, 1)
     @test PlotsBase.colorbar_tick_line(
-        heatmap(rand(10, 10); colorbar_ticklinewidth = 3)[1],
+        heatmap(rand(10, 10); colorbar_tick_line_width = 3)[1],
     )[2] == 3
     # the names used by the maintainer QA script must all resolve
     sp = heatmap(
         rand(10, 10);
-        colorbar_tickcolor = :blue,
-        colorbar_ticklinewidth = 2,
+        colorbar_tick_color = :blue,
+        colorbar_tick_line_width = 2,
         colorbar_bordercolor = :green,
         colorbar_borderlinewidth = 2,
         colorbar_tickfont = (10, :red, 30.0),
@@ -113,8 +113,17 @@ end
     @test sp[:colorbar_tickfontsize] == 10
     @test sp[:colorbar_tickfontcolor] == colorant"red"
     @test sp[:colorbar_tickfontrotation] == 30.0
-    @test :colorkey_tickcolor ∈ PlotsBase.Commons.aliases(:colorbar_tickcolor)
-    @test :cbar_borderlinewidth ∈ PlotsBase.Commons.aliases(:colorbar_border_width)
+    # the canonical names are fully underscored, the shorter spellings are aliases
+    for (canonical, alias) in (
+            (:colorbar_tick_color, :colorbar_tickcolor),
+            (:colorbar_tick_line_width, :colorbar_ticklinewidth),
+            (:colorbar_border_width, :colorbar_borderlinewidth),
+            (:colorbar_tickfont, :colorbar_tick_font),
+        )
+        @test canonical ∈ keys(PlotsBase._subplot_defaults) ∪ PlotsBase.Commons._all_magic_attrs
+        @test alias ∈ PlotsBase.Commons.aliases(canonical)
+    end
+    @test :colorkey_tickcolor ∈ PlotsBase.Commons.aliases(:colorbar_tick_color)
     # setting the color alone is enough to request a border
     @test PlotsBase.colorbar_border(heatmap(rand(10, 10); colorbar_border_color = :red)[1]) ==
         (:red, 1)
@@ -156,7 +165,7 @@ end
             @test show(io, cbardemo(rand(10, 10))) isa Nothing
             # a custom formatter must reach the colorbar labels
             @test show(io, heatmap(z; colorbar_formatter = x -> "test")) isa Nothing
-            @test show(io, heatmap(z; colorbar_tickcolor = :blue, colorbar_ticklinewidth = 2)) isa
+            @test show(io, heatmap(z; colorbar_tick_color = :blue, colorbar_tick_line_width = 2)) isa
                 Nothing
             # several series sharing a single colorbar
             @test show(io, scatter(rand(10, 3), rand(10, 3); marker_z = rand(10, 3), kw...)) isa

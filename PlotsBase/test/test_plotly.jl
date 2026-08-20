@@ -100,7 +100,7 @@ Sys.isunix() && with(:plotly) do
         cb = cbar(heatmap(rand(10, 10)))
         @test !haskey(cb, :tickwidth)
         cb = cbar(
-            heatmap(rand(10, 10); colorbar_tickcolor = :blue, colorbar_ticklinewidth = 2),
+            heatmap(rand(10, 10); colorbar_tick_color = :blue, colorbar_tick_line_width = 2),
         )
         @test cb[:tickwidth] == 2
         @test cb[:tickcolor] == PlotsBase.rgba_string(PlotsBase.plot_color(:blue))
