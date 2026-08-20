@@ -9,14 +9,18 @@
   `colorbar_tick_line_width`, `colorbar_width` and `colorbar_height`, supported by the `gr`,
   `plotly`/`plotlyjs`, `pgfplotsx` and `pythonplot` backends (#3174).
   `colorbar_width`/`colorbar_height` are given as a fraction of the plot area, `:auto` keeps the backend default.
-  `colorbar_tickfont` joins `colorbar_titlefont` as a magic attribute, so `colorbar_tickfont = (10, :red, 30.0)` works
+  `colorbar_tick_font` joins `colorbar_title_font` as a magic attribute, so `colorbar_tick_font = (10, :red, 30.0)` works
 - The `plotly`/`plotlyjs` colorbar now also honors `colorbar_ticks`, `colorbar_formatter` and the colorbar title / tick fonts
+- The colorbar font attributes are now spelled with underscores, like the other font families:
+  `colorbar_title_font`, `colorbar_tick_font`, `colorbar_font_family` and the per-attribute names
+  `colorbar_<title|tick>_font_<family|size|halign|valign|rotation|color>`.
+  The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work as aliases
 
 ### Fixed
 - GR backend: `colorbar_ticks` no longer errors with `GR ≥ 0.73.25` (`GR.drawaxis` signature change)
 - GR backend: `colorbar_formatter` is now applied (it was ignored unless `colorbar_ticks` was given explicitly)
 - PGFPlotsX backend: the colorbar now shows custom tick labels, from either `colorbar_ticks` pairs or `colorbar_formatter`
-- PythonPlot backend: colorbar tick labels honor `colorbar_tickfontrotation`, colorbar tick marks point outward
+- PythonPlot backend: colorbar tick labels honor `colorbar_tick_font_rotation`, colorbar tick marks point outward
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
 
 ## Breaking changes

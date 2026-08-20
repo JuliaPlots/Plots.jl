@@ -100,21 +100,21 @@ get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype) =
     map(x -> get_series_color(x, sp, n, seriestype), c)
 
 colorbartitlefont(sp::Subplot) = font(;
-    family = sp[:colorbar_titlefontfamily],
-    pointsize = sp[:colorbar_titlefontsize],
-    valign = sp[:colorbar_titlefontvalign],
-    halign = sp[:colorbar_titlefonthalign],
-    rotation = sp[:colorbar_titlefontrotation],
-    color = sp[:colorbar_titlefontcolor],
+    family = sp[:colorbar_title_font_family],
+    pointsize = sp[:colorbar_title_font_size],
+    valign = sp[:colorbar_title_font_valign],
+    halign = sp[:colorbar_title_font_halign],
+    rotation = sp[:colorbar_title_font_rotation],
+    color = sp[:colorbar_title_font_color],
 )
 
 colorbartickfont(sp::Subplot) = font(;
-    family = sp[:colorbar_tickfontfamily],
-    pointsize = sp[:colorbar_tickfontsize],
-    valign = sp[:colorbar_tickfontvalign],
-    halign = sp[:colorbar_tickfonthalign],
-    rotation = sp[:colorbar_tickfontrotation],
-    color = sp[:colorbar_tickfontcolor],
+    family = sp[:colorbar_tick_font_family],
+    pointsize = sp[:colorbar_tick_font_size],
+    valign = sp[:colorbar_tick_font_valign],
+    halign = sp[:colorbar_tick_font_halign],
+    rotation = sp[:colorbar_tick_font_rotation],
+    color = sp[:colorbar_tick_font_color],
 )
 
 titlefont(sp::Subplot) = font(;

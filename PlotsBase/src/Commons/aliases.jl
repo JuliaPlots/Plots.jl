@@ -420,13 +420,30 @@ add_aliases(
     :cbarheight,
 )
 add_aliases(
-    :colorbar_tickfont,
     :colorbar_tick_font,
+    :colorbar_tickfont,
     :colorkey_tickfont,
     :cb_tickfont,
     :cbar_tickfont,
 )
-add_aliases(:colorbar_titlefont, :colorkey_titlefont, :cb_titlefont, :cbar_titlefont)
+add_aliases(
+    :colorbar_title_font,
+    :colorbar_titlefont,
+    :colorkey_titlefont,
+    :cb_titlefont,
+    :cbar_titlefont,
+)
+add_aliases(:colorbar_font_family, :colorbar_fontfamily)
+# keep the compact spellings of the colorbar font attributes working
+for (part, attr) in Iterators.product(
+        (:tick, :title),
+        (:family, :size, :halign, :valign, :rotation, :color),
+    )
+    add_aliases(
+        Symbol(:colorbar_, part, :_font_, attr),
+        Symbol(:colorbar_, part, :font, attr),
+    )
+end
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
 add_aliases(:smooth, :regression, :reg)
 add_aliases(:levels, :nlevels, :nlev, :levs)

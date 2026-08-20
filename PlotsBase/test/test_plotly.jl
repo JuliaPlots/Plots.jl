@@ -76,7 +76,7 @@ Sys.isunix() && with(:plotly) do
                 colorbar_height = 0.5,
                 colorbar_border_color = :red,
                 colorbar_border_width = 2,
-                colorbar_tickfontcolor = :blue,
+                colorbar_tick_font_color = :blue,
             ),
         )
         @test cb[:len] ≈ 0.5len

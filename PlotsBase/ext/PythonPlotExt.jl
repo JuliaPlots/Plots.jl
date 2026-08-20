@@ -151,20 +151,20 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :colorbar_entry,
         :colorbar_ticks,
         :colorbar_formatter,
-        :colorbar_tickfontfamily,
-        :colorbar_tickfontsize,
-        :colorbar_tickfonthalign,
-        :colorbar_tickfontvalign,
-        :colorbar_tickfontrotation,
-        :colorbar_tickfontcolor,
-        :colorbar_titlefontcolor,
-        :colorbar_titlefontsize,
+        :colorbar_tick_font_family,
+        :colorbar_tick_font_size,
+        :colorbar_tick_font_halign,
+        :colorbar_tick_font_valign,
+        :colorbar_tick_font_rotation,
+        :colorbar_tick_font_color,
+        :colorbar_title_font_color,
+        :colorbar_title_font_size,
         :colorbar_scale,
         :colorbar_border_color,
         :colorbar_border_width,
         :colorbar_tick_color,
         :colorbar_tick_line_width,
-        :colorbar_tickfont,
+        :colorbar_tick_font,
         :colorbar_width,
         :colorbar_height,
         :marker_z,
@@ -1196,10 +1196,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
 
             cbar.set_label(
                 sp[:colorbar_title];
-                size = _py_thickness_scale(plt, sp[:colorbar_titlefontsize]),
-                family = sp[:colorbar_titlefontfamily],
-                math_fontfamily = _py_get_matching_math_font(sp[:colorbar_titlefontfamily]),
-                color = _py_color(sp[:colorbar_titlefontcolor]),
+                size = _py_thickness_scale(plt, sp[:colorbar_title_font_size]),
+                family = sp[:colorbar_title_font_family],
+                math_fontfamily = _py_get_matching_math_font(sp[:colorbar_title_font_family]),
+                color = _py_color(sp[:colorbar_title_font_color]),
             )
 
             # cbar.formatter.set_useOffset(false)  # this for some reason does not work, must be a pyplot bug, instead this is a workaround:
@@ -1216,13 +1216,13 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             sp[:colorbar_ticks] ≡ :native || _py_set_ticks(sp, cbar.ax, ticks, ticks_letter)
 
             for lab in cbar_axis.get_ticklabels()
-                lab.set_fontsize(_py_thickness_scale(plt, sp[:colorbar_tickfontsize]))
-                lab.set_family(sp[:colorbar_tickfontfamily])
+                lab.set_fontsize(_py_thickness_scale(plt, sp[:colorbar_tick_font_size]))
+                lab.set_family(sp[:colorbar_tick_font_family])
                 lab.set_math_fontfamily(
-                    _py_get_matching_math_font(sp[:colorbar_tickfontfamily]),
+                    _py_get_matching_math_font(sp[:colorbar_tick_font_family]),
                 )
-                lab.set_color(_py_color(sp[:colorbar_tickfontcolor]))
-                lab.set_rotation(sp[:colorbar_tickfontrotation])
+                lab.set_color(_py_color(sp[:colorbar_tick_font_color]))
+                lab.set_rotation(sp[:colorbar_tick_font_rotation])
             end
 
             # Adjust thickness of the cbar ticks

@@ -1267,14 +1267,14 @@ const _examples = PlotExample[
                 heatmap(
                     rand(10, 10);
                     colorbar_ticks = [0.2, 0.5, 0.8],
-                    colorbar_tickfontsize = 10,
+                    colorbar_tick_font_size = 10,
                     right_margin = 8mm,
                     title = "ticks",
                 ),
                 heatmap(
                     rand(10, 10);
                     colorbar_ticks = ([0.2, 0.5, 0.8], ["low", "mid", "high"]),
-                    colorbar_tickfontsize = 10,
+                    colorbar_tick_font_size = 10,
                     right_margin = 14mm,
                     title = "labels",
                 ),
