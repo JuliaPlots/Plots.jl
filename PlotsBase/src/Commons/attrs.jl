@@ -682,6 +682,7 @@ is_axis_attrs(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_attr
 is_axis_attr_noletter(k) = k in _all_axis_attrs
 
 RecipesBase.is_key_supported(k::Symbol) = PlotsBase.is_attr_supported(k)
+RecipesBase.canonical_key(k::Symbol) = get(_keyAliases, k, k)
 
 # -----------------------------------------------------------------------------
 include("aliases.jl")

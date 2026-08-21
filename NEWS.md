@@ -15,6 +15,11 @@
   `colorbar_title_font`, `colorbar_tick_font`, `colorbar_font_family` and the per-attribute names
   `colorbar_<title|tick>_font_<family|size|halign|valign|rotation|color>`.
   The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work when setting attributes
+- Recipes can read an attribute without hard-coding its canonical name: `$attr` inside a `@recipe` body
+  expands to a lookup through `RecipesBase.canonical_key`, so aliases resolve and an internal rename does
+  not break the recipe. `target <-- :attr` is the same read in assignment position.
+  `$` keeps its usual meaning inside quoted code (`:( ... )`, `quote ... end`, `@eval` and other macros),
+  where it is left untouched
 
 ### Fixed
 - GR backend: `colorbar_ticks` no longer errors with `GR ≥ 0.73.25` (`GR.drawaxis` signature change)
