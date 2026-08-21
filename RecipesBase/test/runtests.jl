@@ -9,7 +9,7 @@ const KW = Dict{Symbol, Any}
 
 RB.is_key_supported(k::Symbol) = true
 
-for t in map(i -> Symbol(:T, i), 1:5)
+for t in map(i -> Symbol(:T, i), 1:7)
     @eval struct $t end
 end
 
@@ -169,6 +169,74 @@ end
         check_apply_recipe(T5, KW(:customcolor => :red))
     end
 end  # @testset "@recipe"
+
+@testset "attribute reads" begin
+    # `plotattributes` is only bound inside a recipe, so exercise the rewriter directly
+    walk(str) = (ex = Meta.parse("begin\n$str\nend"); RB.process_recipe_body!(ex); ex)
+    unchanged(str) = walk(str) == Meta.parse("begin\n$str\nend")
+
+    @testset "`\$` and `<--` read an attribute" begin
+        RB.canonical_key(k::Symbol) = k ≡ :mycolor ? :markercolor : k
+
+        RB.@recipe function plot(t::T6, n::Integer = 1)
+            :xrotation --> $markercolor          # read on the right of an arrow
+            lw = $mycolor                        # read through an alias
+            war <-- :markershape                 # the binary form
+            :zrotation --> something($xrotation, 0)  # read as a call argument
+            :yrotation --> lw
+            :markershape --> war
+            rand(StableRNG(1), 10, n)
+        end
+
+        plotattributes = KW(:markercolor => :red, :xrotation => 5, :markershape => :auto)
+        RB.apply_recipe(plotattributes, T6(), 2)
+        @test plotattributes[:xrotation] == 5      # `--> ` does not override an explicit value
+        @test plotattributes[:zrotation] == 5      # `$xrotation` was read, then written through
+        @test plotattributes[:yrotation] ≡ :red    # `$mycolor` resolved to `markercolor`
+        @test plotattributes[:markershape] ≡ :auto # `war <-- :markershape`
+    end
+
+    @testset "`\$` inside quoted code is left alone" begin
+        # `$` already means interpolation inside a quote, so none of these are ours.
+        # the arrow itself is still rewritten, but the quoted key survives verbatim:
+        # this is the `RecipesPipeline` grouping idiom for a key computed at run time
+        @test walk(":(\$key) := split_attribute(plt, key, val, idx)") ==
+            Meta.parse("begin\nplotattributes[:(\$key)] = split_attribute(plt, key, val, idx)\nend")
+        @test unchanged("ex = :(y = \$val)")
+        @test unchanged("ex = quote z = \$val end")
+        @test unchanged("ex = :(f(\$(g(u))))")
+        @test unchanged("ex = :(:(\$(\$x)))")
+        # macros quote implicitly, so `$` under one is theirs, not ours
+        @test unchanged("@eval myfun(::\$T) = 1")
+        @test unchanged("@btime f(\$x)")
+        # ordinary string interpolation never produces an `Expr(:\$)` in the first place
+        @test unchanged("plotattributes[:hello] = \"\$var\"")
+        @test unchanged("run(`convert \$infile \$outfile`)")
+        # ... but `@series` is ours, so reads inside it still work
+        @test !unchanged("@series begin lc = \$linecolor end")
+    end
+
+    @testset "`return` is not mangled" begin
+        # the walk must tolerate a non-`Expr` replacing the `return` it strips
+        for payload in ("z", "", ":auto", "(a, b)", "\$markercolor")
+            @test walk("return $payload") isa Expr
+        end
+
+        RB.@recipe function plot(t::T7, n::Integer = 1)
+            :markercolor --> :red, :force
+            return rand(StableRNG(1), 10, n)
+        end
+        plotattributes = KW()
+        data_list = RB.apply_recipe(plotattributes, T7(), 2)
+        @test data_list[1].args == (rand(StableRNG(1), 10, 2),)
+        @test plotattributes[:markercolor] ≡ :red
+    end
+
+    @testset "a computed key errors at expansion time" begin
+        @test_throws ErrorException walk("c = \$(:markershape)")
+        @test_throws ErrorException walk("c = \$(get_key(u))")
+    end
+end
 
 # Can't do this inside a test-set, because it creates a struct.
 RB.@userplot MyPlot
