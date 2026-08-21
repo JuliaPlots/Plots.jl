@@ -105,25 +105,44 @@ end
         colorbar_tick_line_width = 2,
         colorbar_bordercolor = :green,
         colorbar_borderlinewidth = 2,
-        colorbar_tickfont = (10, :red, 30.0),
+        colorbar_tick_font = (10, :red, 30.0),
     )[1]
     @test PlotsBase.colorbar_tick_line(sp) == (:blue, 2)
     @test PlotsBase.colorbar_border(sp) == (:green, 2)
-    # `colorbar_tickfont` is magic and expands into the tick font attributes
-    @test sp[:colorbar_tickfontsize] == 10
-    @test sp[:colorbar_tickfontcolor] == colorant"red"
-    @test sp[:colorbar_tickfontrotation] == 30.0
+    # `colorbar_tick_font` is magic and expands into the tick font attributes
+    @test sp[:colorbar_tick_font_size] == 10
+    @test sp[:colorbar_tick_font_color] == colorant"red"
+    @test sp[:colorbar_tick_font_rotation] == 30.0
     # the canonical names are fully underscored, the shorter spellings are aliases
     for (canonical, alias) in (
             (:colorbar_tick_color, :colorbar_tickcolor),
             (:colorbar_tick_line_width, :colorbar_ticklinewidth),
             (:colorbar_border_width, :colorbar_borderlinewidth),
-            (:colorbar_tickfont, :colorbar_tick_font),
+            (:colorbar_tick_font, :colorbar_tickfont),
+            (:colorbar_title_font, :colorbar_titlefont),
+            (:colorbar_font_family, :colorbar_fontfamily),
+            (:colorbar_tick_font_size, :colorbar_tickfontsize),
+            (:colorbar_title_font_color, :colorbar_titlefontcolor),
         )
         @test canonical ∈ keys(PlotsBase._subplot_defaults) ∪ PlotsBase.Commons._all_magic_attrs
         @test alias ∈ PlotsBase.Commons.aliases(canonical)
     end
     @test :colorkey_tickcolor ∈ PlotsBase.Commons.aliases(:colorbar_tick_color)
+    # the compact font spellings keep working, magic and individual
+    sp = heatmap(
+        rand(10, 10);
+        colorbar_tickfont = (9, :green),
+        colorbar_titlefontsize = 14,
+        colorbartickfontrotation = 45,
+        colorbar_fontfamily = "helvetica",
+    )[1]
+    @test sp[:colorbar_tick_font_size] == 9
+    @test sp[:colorbar_tick_font_color] == colorant"green"
+    @test sp[:colorbar_tick_font_rotation] == 45
+    @test sp[:colorbar_title_font_size] == 14
+    @test sp[:colorbar_font_family] == "helvetica"
+    @test PlotsBase.colorbartickfont(sp).pointsize == 9
+    @test PlotsBase.colorbartitlefont(sp).pointsize == 14
     # setting the color alone is enough to request a border
     @test PlotsBase.colorbar_border(heatmap(rand(10, 10); colorbar_border_color = :red)[1]) ==
         (:red, 1)

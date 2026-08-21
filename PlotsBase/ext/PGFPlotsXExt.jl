@@ -103,19 +103,19 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :legend_title,
         :colorbar,
         :colorbar_title,
-        :colorbar_titlefontsize,
-        :colorbar_titlefontcolor,
-        :colorbar_titlefontrotation,
+        :colorbar_title_font_size,
+        :colorbar_title_font_color,
+        :colorbar_title_font_rotation,
         :colorbar_scale,
         :colorbar_ticks,
         :colorbar_formatter,
         :colorbar_tick_color,
         :colorbar_tick_line_width,
-        :colorbar_tickfont,
-        :colorbar_tickfontfamily,
-        :colorbar_tickfontsize,
-        :colorbar_tickfontcolor,
-        :colorbar_tickfontrotation,
+        :colorbar_tick_font,
+        :colorbar_tick_font_family,
+        :colorbar_tick_font_size,
+        :colorbar_tick_font_color,
+        :colorbar_tick_font_rotation,
         :colorbar_border_color,
         :colorbar_border_width,
         :colorbar_width,
@@ -1175,21 +1175,21 @@ function pgfx_get_ticklabel_style(sp, axis)
 end
 
 function pgfx_get_colorbar_ticklabel_style(sp)
-    cstr = plot_color(sp[:colorbar_tickfontcolor])
+    cstr = plot_color(sp[:colorbar_tick_font_color])
     return Options(
-        "font" => pgfx_font(sp[:colorbar_tickfontsize], pgfx_thickness_scaling(sp)),
+        "font" => pgfx_font(sp[:colorbar_tick_font_size], pgfx_thickness_scaling(sp)),
         "color" => cstr,
         "draw opacity" => alpha(cstr),
-        "rotate" => sp[:colorbar_tickfontrotation],
+        "rotate" => sp[:colorbar_tick_font_rotation],
     )
 end
 function pgfx_get_colorbar_title_style(sp)
-    cstr = plot_color(sp[:colorbar_titlefontcolor])
+    cstr = plot_color(sp[:colorbar_title_font_color])
     return Options(
-        "font" => pgfx_font(sp[:colorbar_titlefontsize], pgfx_thickness_scaling(sp)),
+        "font" => pgfx_font(sp[:colorbar_title_font_size], pgfx_thickness_scaling(sp)),
         "color" => cstr,
         "draw opacity" => alpha(cstr),
-        "rotate" => sp[:colorbar_titlefontrotation],
+        "rotate" => sp[:colorbar_title_font_rotation],
     )
 end
 

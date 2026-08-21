@@ -436,14 +436,14 @@ const _subplot_defaults = KW(
     :color_palette => :auto,
     :colorbar => :legend,
     :clims => :auto,
-    :colorbar_fontfamily => :match,
+    :colorbar_font_family => :match,
     :colorbar_ticks => :auto,
-    :colorbar_tickfontfamily => :match,
-    :colorbar_tickfontsize => 8,
-    :colorbar_tickfonthalign => :hcenter,
-    :colorbar_tickfontvalign => :vcenter,
-    :colorbar_tickfontrotation => 0.0,
-    :colorbar_tickfontcolor => :match,
+    :colorbar_tick_font_family => :match,
+    :colorbar_tick_font_size => 8,
+    :colorbar_tick_font_halign => :hcenter,
+    :colorbar_tick_font_valign => :vcenter,
+    :colorbar_tick_font_rotation => 0.0,
+    :colorbar_tick_font_color => :match,
     :colorbar_scale => :identity,
     :colorbar_formatter => :auto,
     :colorbar_discrete_values => [],
@@ -471,14 +471,13 @@ const _subplot_defaults = KW(
     :bottom_margin => :match,
     :subplot_index => -1,
     :colorbar_title => "",
-    :colorbar_titlefontsize => 10,
+    :colorbar_title_font_size => 10,
     :colorbar_title_location => :center,           # also :left or :right
-    :colorbar_fontfamily => :match,
-    :colorbar_titlefontfamily => :match,
-    :colorbar_titlefonthalign => :hcenter,
-    :colorbar_titlefontvalign => :vcenter,
-    :colorbar_titlefontrotation => 0.0,
-    :colorbar_titlefontcolor => :match,
+    :colorbar_title_font_family => :match,
+    :colorbar_title_font_halign => :hcenter,
+    :colorbar_title_font_valign => :vcenter,
+    :colorbar_title_font_rotation => 0.0,
+    :colorbar_title_font_color => :match,
     :framestyle => :axes,
     :camera => (30, 30),
     :extra_kwargs => Dict(),
@@ -584,8 +583,8 @@ const _magic_subplot_attrs = [
     :legend_font,
     :legend_title_font,
     :plot_title_font,
-    :colorbar_titlefont,
-    :colorbar_tickfont,
+    :colorbar_title_font,
+    :colorbar_tick_font,
 ]
 const _magic_series_attrs = [:line, :marker, :fill]
 const _all_magic_attrs =
@@ -614,8 +613,8 @@ const _initial_plt_fontsizes =
 const _initial_sp_fontsizes = Dict(
     :titlefontsize => _subplot_defaults[:titlefontsize],
     :annotationfontsize => _subplot_defaults[:annotationfontsize],
-    :colorbar_tickfontsize => _subplot_defaults[:colorbar_tickfontsize],
-    :colorbar_titlefontsize => _subplot_defaults[:colorbar_titlefontsize],
+    :colorbar_tick_font_size => _subplot_defaults[:colorbar_tick_font_size],
+    :colorbar_title_font_size => _subplot_defaults[:colorbar_title_font_size],
 )
 
 const _initial_ax_fontsizes = Dict(
@@ -975,7 +974,7 @@ end
 
 @attributes function process_font_attr!(plotattributes::AKW, fontname::Symbol, arg)
     T = typeof(arg)
-    if fontname in (:legend_font,)
+    if fontname in (:legend_font, :colorbar_title_font, :colorbar_tick_font)
         # TODO: this is necessary while old and new font names coexist and should be standard after the transition
         fontname = Symbol(fontname, :_)
     end
@@ -1110,11 +1109,11 @@ const _match_map = Dict(
     :legend_font_color => :foreground_color_subplot,
     :legend_title_font_family => :fontfamily_subplot,
     :legend_title_font_color => :foreground_color_subplot,
-    :colorbar_fontfamily => :fontfamily_subplot,
-    :colorbar_titlefontfamily => :fontfamily_subplot,
-    :colorbar_titlefontcolor => :foreground_color_subplot,
-    :colorbar_tickfontfamily => :fontfamily_subplot,
-    :colorbar_tickfontcolor => :foreground_color_subplot,
+    :colorbar_font_family => :fontfamily_subplot,
+    :colorbar_title_font_family => :fontfamily_subplot,
+    :colorbar_title_font_color => :foreground_color_subplot,
+    :colorbar_tick_font_family => :fontfamily_subplot,
+    :colorbar_tick_font_color => :foreground_color_subplot,
     :colorbar_border_color => :foreground_color_subplot,
     :colorbar_tick_color => :foreground_color_subplot,
     :plot_titlefontfamily => :fontfamily,

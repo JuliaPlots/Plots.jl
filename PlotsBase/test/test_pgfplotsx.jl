@@ -487,11 +487,11 @@ with(:pgfplotsx) do
         pl = heatmap(
             rand(3, 3),
             colorbar_title = "Test me",
-            colorbar_titlefont = (12, :right),
+            colorbar_title_font = (12, :right),
         )
         @test pl[1][:colorbar_title] == "Test me"
-        @test pl[1][:colorbar_titlefontsize] == 12
-        @test pl[1][:colorbar_titlefonthalign] ≡ :right
+        @test pl[1][:colorbar_title_font_size] == 12
+        @test pl[1][:colorbar_title_font_halign] ≡ :right
     end
 
     @testset "Latexify - LaTeXStrings" begin

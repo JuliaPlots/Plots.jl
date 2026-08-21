@@ -483,8 +483,8 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
             :titlefont,
             :legend_title_font,
             :plot_titlefont,
-            :colorbar_titlefont,
-            :colorbar_tickfont,
+            :colorbar_title_font,
+            :colorbar_tick_font,
             :legend_font,
         )
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
