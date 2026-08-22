@@ -196,11 +196,12 @@ julia> sticks(1:10)
     hline!(y)
 
 Draw horizontal lines at positions specified by the values in
-the AbstractVector `y`.
+the AbstractVector `y`, or at a single position for a real `y`.
 
 # Example
 ```julia-repl
 julia> hline([-1,0,2])
+julia> hline(0.73)
 ```
 """
 @shorthands hline
@@ -210,14 +211,26 @@ julia> hline([-1,0,2])
     vline!(x)
 
 Draw vertical lines at positions specified by the values in
-the AbstractVector `x`.
+the AbstractVector `x`, or at a single position for a real `x`.
 
 # Example
 ```julia-repl
 julia> vline([-1,0,2])
+julia> vline(0.73)
 ```
 """
 @shorthands vline
+
+# a lone position is the common case, and without these a real would fall through to the
+# generic single-argument recipes: a float has none, and an integer means "n empty series"
+for func in (:hline, :vline)
+    bang = Symbol(func, :!)
+    @eval begin
+        $func(v::Real, args...; kw...) = $func([v], args...; kw...)
+        $bang(v::Real, args...; kw...) = $bang([v], args...; kw...)
+        $bang(plt::Plot, v::Real, args...; kw...) = $bang(plt, [v], args...; kw...)
+    end
+end
 
 """
     hspan(y)

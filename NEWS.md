@@ -17,6 +17,8 @@
   The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work when setting attributes
 
 ### Fixed
+- `hline`, `vline` and their `!` forms accept a single position, so `hline(0.73)` no longer errors and
+  `vline(100)` draws one line instead of a hundred empty series (#2129)
 - GR backend: `colorbar_ticks` no longer errors with `GR ≥ 0.73.25` (`GR.drawaxis` signature change)
 - GR backend: `colorbar_formatter` is now applied (it was ignored unless `colorbar_ticks` was given explicitly)
 - PGFPlotsX backend: the colorbar now shows custom tick labels, from either `colorbar_ticks` pairs or `colorbar_formatter`
