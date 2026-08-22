@@ -7,7 +7,7 @@ using PlotUtils: optimize_ticks
 using ..Commons
 using ..Dates
 
-const DEFAULT_MINOR_INTERVALS = Ref(5)  # 5 intervals -> 4 ticks
+const DEFAULT_MINOR_TICKS = Ref(4)  # 4 ticks -> 5 intervals
 
 # `(ticks, viewmin, viewmax)`: `n` ticks only fit the wider span `viewmin, viewmax`, which
 # `axis_limits` expands the limits to, else the outermost ticks are clipped
@@ -42,26 +42,24 @@ _transform_ticks(ticks::AbstractArray{T}, axis) where {T <: Dates.TimeType} =
 _transform_ticks(ticks::NTuple{2, Any}, axis) = (_transform_ticks(ticks[1], axis), ticks[2])
 
 function num_minor_intervals(axis)
-    # FIXME: `minorticks` should be fixed in `2.0` to be the number of ticks, not intervals
-    # see github.com/JuliaPlots/Plots.jl/pull/4528
-    n_intervals = axis[:minorticks]
-    return if !(n_intervals isa Bool) && n_intervals isa Integer && n_intervals ≥ 0
-        max(1, n_intervals)  # 0 intervals makes no sense
+    n_ticks = axis[:minorticks]
+    return if !(n_ticks isa Bool) && n_ticks isa Integer && n_ticks ≥ 0
+        n_ticks + 1  # `n` minor ticks cut a major interval into `n + 1` pieces
     else   # `:auto` or `true`
         if (base = get(_log_scale_bases, axis[:scale], nothing)) == 10
             Int(base - 1)
         else
-            DEFAULT_MINOR_INTERVALS[]
+            DEFAULT_MINOR_TICKS[] + 1
         end
     end::Int
 end
 
 no_minor_intervals(axis) =
-if (n_intervals = axis[:minorticks]) ≡ false
+if (n_ticks = axis[:minorticks]) ≡ false
     true  # must be tested with `===` since Bool <: Integer
-elseif n_intervals ∈ (:none, nothing)
+elseif n_ticks ∈ (:none, nothing)
     true
-elseif (n_intervals ≡ :auto && !axis[:minorgrid])
+elseif (n_ticks ≡ :auto && !axis[:minorgrid])
     true
 else
     false

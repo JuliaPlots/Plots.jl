@@ -55,7 +55,7 @@ const _ggplot2 = [
     :minorgridlinewidth => 0.5, # * 0.5
     :foreground_color_minor_grid => :white,
     #foreground_color_minortick=>:white, ## not yet implemented
-    :minorticks => 2,
+    :minorticks => 1,
     ## Lines and markers
     :markerstrokealpha => 0,
     :markerstrokewidth => 0,
