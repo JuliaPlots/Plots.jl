@@ -24,6 +24,10 @@
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
 
 ## Breaking changes
+- `minorticks` now counts minor ticks, not minor intervals, matching its name and its documentation.
+  `minorticks = n` draws `n` ticks between two major ticks, where it used to draw `n - 1`.
+  Passing `n + 1` where you passed `n` restores the old spacing; `:auto` and `true` are unchanged.
+  The `dao` and `ggplot2` themes were adjusted so they still look the same (#4532)
 - Reading a colorbar font attribute back by its old name now throws, as it already does for the legend fonts:
   use `sp[:colorbar_title_font_size]` rather than `sp[:colorbar_titlefontsize]`.
   The old names remain aliases on the input side, so passing them to `plot` keeps working.

@@ -305,33 +305,26 @@ end
 end
 
 @testset "minor ticks" begin
-    # FIXME in 2.0: this is awful to read, because `minorticks` represent the number of `intervals`
-    for minor_intervals in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
-        n_minor_ticks_per_major = if minor_intervals isa Bool
-            minor_intervals ? PlotsBase.Ticks.DEFAULT_MINOR_INTERVALS[] - 1 : 0
-        elseif minor_intervals ≡ :auto
-            PlotsBase.Ticks.DEFAULT_MINOR_INTERVALS[] - 1
-        elseif minor_intervals ≡ :none || minor_intervals isa Nothing
+    # `minorticks = n` asks for `n` minor ticks between two major ticks
+    for minorticks in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)
+        n_minor_ticks_per_major = if minorticks isa Bool
+            minorticks ? PlotsBase.Ticks.DEFAULT_MINOR_TICKS[] : 0
+        elseif minorticks ≡ :auto
+            PlotsBase.Ticks.DEFAULT_MINOR_TICKS[]
+        elseif minorticks ≡ :none || minorticks isa Nothing
             0
         else
-            max(0, minor_intervals - 1)
+            minorticks
         end
-        pl = plot(1:4; minorgrid = true, minorticks = minor_intervals)
+        pl = plot(1:4; minorgrid = true, minorticks)
         sp = first(pl)
         for axis in (:xaxis, :yaxis)
             ticks = PlotsBase.get_ticks(sp, sp[axis], update = false)
             n_expected_minor_ticks = (length(first(ticks)) - 1) * n_minor_ticks_per_major
             minor_ticks = PlotsBase.get_minor_ticks(sp, sp[axis], ticks)
-            n_minor_ticks = if minor_intervals isa Bool
-                if minor_intervals
-                    length(minor_ticks)
-                else
-                    @test minor_ticks isa Nothing
-                    0
-                end
-            elseif minor_intervals ≡ :auto
-                length(minor_ticks)
-            elseif minor_intervals ≡ :none || minor_intervals isa Nothing
+            n_minor_ticks = if minorticks ≡ false ||
+                    minorticks ≡ :none ||
+                    minorticks isa Nothing
                 @test minor_ticks isa Nothing
                 0
             else
