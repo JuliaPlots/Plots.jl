@@ -140,3 +140,32 @@ end
     yticks!(pl, yticks, ylabels)
     @test sp.attr[:yaxis][:ticks] == (yticks, ylabels)
 end
+
+@testset "hline / vline with a scalar" begin
+    # github.com/JuliaPlots/Plots.jl/issues/2129
+    xy(pl, i = 1) = (pl.series_list[i][:x], pl.series_list[i][:y])
+
+    for v in (0.73, 3, -2, 1 // 2, 2.5f0), f in (hline, vline)
+        pl = f(v)
+        @test length(pl.series_list) == 1
+        @test isequal(xy(pl), xy(f([v])))  # `isequal`, the separators are `NaN`
+    end
+
+    # an integer used to fall through to "add `n` empty series", so `vline(100)`
+    # drew a hundred lines instead of one
+    @test length(vline(100).series_list) == 1
+    @test all(==(100.0), filter(isfinite, xy(vline(100))[1]))
+    @test all(==(3.0), filter(isfinite, xy(hline(3))[2]))
+
+    # `plot(n)` still means `n` empty series
+    @test length(plot(3).series_list) == 3
+
+    pl = plot(1:5)
+    hline!(pl, 2.5)
+    vline!(pl, 3.5)
+    @test length(pl.series_list) == 3
+
+    plot(1:5)
+    hline!(2.5)
+    @test length(PlotsBase.current().series_list) == 2
+end
