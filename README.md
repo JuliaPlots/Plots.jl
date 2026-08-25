@@ -32,3 +32,4 @@ This is the DOI for all Versions, please follow the link to get the DOI for a sp
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725317.svg)](https://doi.org/10.5281/zenodo.4725317)
 
 This is the `Plots.jl` [monorepo](https://en.wikipedia.org/wiki/Monorepo) hosting the julia package `Plots`, its dependencies/subpackages : `RecipesBase`, `RecipesPipeline`, `PlotsBase`, and tools built on tops of `Plots` such as `GraphRecipes` and `StatsPlots`.
+
