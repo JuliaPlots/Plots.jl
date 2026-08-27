@@ -17,6 +17,8 @@
   The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work when setting attributes
 
 ### Fixed
+- Log scale minor ticks are no longer duplicated, and no longer drawn on top of major ticks, when the
+  major ticks are more than one decade apart (#5789)
 - `hline`, `vline`, `hspan`, `vspan` and their `!` forms accept a single position, so `hline(0.73)` no
   longer errors and `vline(100)` draws one line instead of a hundred empty series (#2129).
   This is handled in the pipeline, so it also covers `plot(0.73; seriestype = :vline)` and a recipe
