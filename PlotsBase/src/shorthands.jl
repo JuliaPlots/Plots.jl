@@ -221,16 +221,6 @@ julia> vline(0.73)
 """
 @shorthands vline
 
-# a lone position is the common case, and without these a real would fall through to the
-# generic single-argument recipes: a float has none, and an integer means "n empty series"
-for func in (:hline, :vline)
-    bang = Symbol(func, :!)
-    @eval begin
-        $func(v::Real, args...; kw...) = $func([v], args...; kw...)
-        $bang(v::Real, args...; kw...) = $bang([v], args...; kw...)
-        $bang(plt::Plot, v::Real, args...; kw...) = $bang(plt, [v], args...; kw...)
-    end
-end
 
 """
     hspan(y)

@@ -142,6 +142,31 @@ end
     # TODO String, Volume etc
 end
 
+@testset "takes_positions" begin
+    import RecipesPipeline: _series_data_vector
+
+    for st in (:hline, :vline, :hspan, :vspan)
+        @test takes_positions(st)
+        @test takes_positions(Dict{Symbol, Any}(:seriestype => st))
+    end
+    for st in (:path, :scatter, :bar, :heatmap)
+        @test !takes_positions(st)
+    end
+    @test !takes_positions(Dict{Symbol, Any}())  # defaults to `:path`
+
+    # a lone position is a one element series for these series types
+    for st in (:hline, :vline, :hspan, :vspan), v in (0.73, 3, -2, 1 // 2)
+        pa = Dict{Symbol, Any}(:seriestype => st)
+        @test _series_data_vector(v, pa) == [_prepare_series_data([v])]
+    end
+
+    # and everything else keeps its behaviour: an integer asks for that many empty series,
+    # any other lone number is still an error
+    pa = Dict{Symbol, Any}(:seriestype => :path)
+    @test _series_data_vector(3, pa) == [zeros(0) for _ in 1:3]
+    @test_throws ErrorException _series_data_vector(0.73, pa)
+end
+
 @testset "unzip" begin
     x, y, z = unzip([(1.0, 2.0, 3.0), (1.0, 2.0, 3.0)])
     @test all(x .== 1.0) && all(y .== 2.0) && all(z .== 3.0)
