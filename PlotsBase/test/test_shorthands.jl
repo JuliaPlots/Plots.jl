@@ -183,6 +183,11 @@ end
 
     # the shorthands are not the only way in: a recipe that sets the seriestype, or a
     # direct `plot(x; seriestype = ...)`, reaches the pipeline without passing through them
+    for st in (:hline, :vline, :hspan, :vspan)
+        @test RecipesPipeline.takes_positions(st)
+    end
+    @test !RecipesPipeline.takes_positions(:path)
+
     for st in (:hline, :vline, :hspan, :vspan), v in (0.73, 3)
         pl = plot(v; seriestype = st)
         @test length(pl.series_list) == 1

@@ -163,9 +163,6 @@ Returns `true` if `myseriestype` reads its data as positions to draw at, so that
 number is a one element series rather than a request for that many empty series.
 """
 takes_positions(st) = false
-for st in (:hline, :vline, :hspan, :vspan)
-    @eval takes_positions(::Type{Val{Symbol($(string(st)))}}) = true
-end
 takes_positions(st::Symbol) = takes_positions(Val{st})
 takes_positions(plotattributes::AbstractDict) =
     takes_positions(get(plotattributes, :seriestype, :path))

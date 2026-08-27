@@ -140,6 +140,11 @@ end
 end
 @deps vspan shape
 
+# these draw at the positions they are given, so a lone number is a one element series
+for st in (:hline, :vline, :hspan, :vspan)
+    @eval RecipesPipeline.takes_positions(::Type{Val{Symbol($(string(st)))}}) = true
+end
+
 # ---------------------------------------------------------------------------
 # path and scatter
 
