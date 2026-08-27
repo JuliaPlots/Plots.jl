@@ -141,6 +141,18 @@ end
     @test sp.attr[:yaxis][:ticks] == (yticks, ylabels)
 end
 
+struct ScalarVLine end
+@recipe function f(::ScalarVLine)
+    seriestype := :vline
+    return 0.73
+end
+
+struct IntegerVLine end
+@recipe function f(::IntegerVLine)
+    seriestype := :vline
+    return 3
+end
+
 @testset "hline / vline with a scalar" begin
     # github.com/JuliaPlots/Plots.jl/issues/2129
     xy(pl, i = 1) = (pl.series_list[i][:x], pl.series_list[i][:y])
@@ -168,4 +180,25 @@ end
     plot(1:5)
     hline!(2.5)
     @test length(PlotsBase.current().series_list) == 2
+
+    # the shorthands are not the only way in: a recipe that sets the seriestype, or a
+    # direct `plot(x; seriestype = ...)`, reaches the pipeline without passing through them
+    for st in (:hline, :vline, :hspan, :vspan)
+        @test RecipesPipeline.takes_positions(st)
+    end
+    @test !RecipesPipeline.takes_positions(:path)
+
+    for st in (:hline, :vline, :hspan, :vspan), v in (0.73, 3)
+        pl = plot(v; seriestype = st)
+        @test length(pl.series_list) == 1
+        @test isequal(xy(pl), xy(plot([v]; seriestype = st)))
+    end
+
+    pl = plot(ScalarVLine())
+    @test length(pl.series_list) == 1
+    @test all(==(0.73), filter(isfinite, xy(pl)[1]))
+
+    pl = plot(IntegerVLine())
+    @test length(pl.series_list) == 1
+    @test all(==(3.0), filter(isfinite, xy(pl)[1]))
 end

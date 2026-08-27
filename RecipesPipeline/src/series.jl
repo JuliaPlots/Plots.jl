@@ -36,8 +36,21 @@ _prepare_series_data(v::Volume) =
 # default: assume x represents a single series
 _series_data_vector(x, plotattributes) = [_prepare_series_data(x)]
 
+# a lone position, e.g. `vline(0.73)` or a recipe setting `seriestype := :vline`
+_series_data_vector(x::Real, plotattributes) =
+if takes_positions(plotattributes)
+    [_prepare_series_data([x])]
+else
+    [_prepare_series_data(x)]
+end
+
 # fixed number of blank series
-_series_data_vector(n::Integer, plotattributes) = [zeros(0) for i in 1:n]
+_series_data_vector(n::Integer, plotattributes) =
+if takes_positions(plotattributes)
+    [_prepare_series_data([n])]
+else
+    [zeros(0) for i in 1:n]
+end
 
 # vector of data points is a single series
 _series_data_vector(v::AVec{<:DataPoint}, plotattributes) = [_prepare_series_data(v)]

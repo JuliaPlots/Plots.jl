@@ -157,6 +157,17 @@ is3d(st::Symbol) = is3d(Val{st})
 is3d(plotattributes::AbstractDict) = is3d(get(plotattributes, :seriestype, :path))
 
 """
+    takes_positions(::Type{Val{:myseriestype}})
+
+Returns `true` if `myseriestype` reads its data as positions to draw at, so that a lone
+number is a one element series rather than a request for that many empty series.
+"""
+takes_positions(st) = false
+takes_positions(st::Symbol) = takes_positions(Val{st})
+takes_positions(plotattributes::AbstractDict) =
+    takes_positions(get(plotattributes, :seriestype, :path))
+
+"""
     is_surface(::Type{Val{:myseriestype}})
 
 Returns `true` if `myseriestype` represents a surface series, `false` otherwise.
