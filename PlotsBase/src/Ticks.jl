@@ -93,12 +93,17 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
         hi = ticks[i]
         (isfinite(lo) && isfinite(hi) && hi > lo) || continue
         if log_scaled
-            for e in 1:sub
+            # a pair can span several decades, and the phantom pairs added above span
+            # exactly one, so the count has to be taken per pair rather than once for
+            # the whole axis
+            for e in 1:round(Int, log(base, hi / lo))
                 lo_ = lo * base^(e - 1)
                 hi_ = lo_ * base
                 step = (hi_ - lo_) / n_minor_intervals
-                rng = (lo_ + (e > 1 ? 0 : step)):step:(hi_ - (e < sub ? 0 : step / 2))
-                append!(minorticks, collect(rng))
+                # a decade boundary inside the pair is itself a minor tick, the ones
+                # bounding the pair are major ticks
+                e > 1 && push!(minorticks, lo_)
+                append!(minorticks, collect((lo_ + step):step:(hi_ - step / 2)))
             end
         else
             step = (hi - lo) / n_minor_intervals

@@ -336,6 +336,38 @@ end
     end
 end
 
+@testset "log minor ticks" begin
+    # github.com/JuliaPlots/Plots.jl/issues/5789
+    function minors(ylims, yticks; kw...)
+        pl = plot([1, 1]; yscale = :log10, minorgrid = true, ylims, yticks, kw...)
+        sp = first(pl)
+        t = PlotsBase.get_ticks(sp, sp[:yaxis], update = false)
+        first(t), PlotsBase.get_minor_ticks(sp, sp[:yaxis], t)
+    end
+
+    for (lims, ticks) in (
+            ((1, 1000), [1, 10, 100, 1000]),          # majors one decade apart
+            ((1, 10_000), [1, 100, 10_000]),          # two
+            ((1, 1_000_000), [1, 1000, 1_000_000]),   # three
+        )
+        majors, mt = minors(lims, ticks)
+        @test allunique(mt)
+        @test !any(x -> any(m -> isapprox(x, m; rtol = 1.0e-9), majors), mt)
+    end
+
+    # a decade boundary between two majors is a minor tick, and `:auto` still puts the
+    # usual eight in a decade
+    majors, mt = minors((1, 10_000), [1, 100, 10_000])
+    @test 10 ∈ mt
+    @test 1000 ∈ mt
+    _, mt = minors((1, 1000), [1, 10, 100, 1000])
+    @test count(x -> 1 < x < 10, mt) == 8
+    for n in (1, 3)
+        _, mt = minors((1, 1000), [1, 10, 100, 1000]; yminorticks = n)
+        @test count(x -> 1 < x < 10, mt) == n
+    end
+end
+
 @testset "axis guides (labels)" begin
     yguide(pl, idx = length(pl.subplots)) = PlotsBase.get_guide(pl.subplots[idx].attr[:yaxis])
 
