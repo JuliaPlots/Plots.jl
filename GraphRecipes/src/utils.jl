@@ -261,15 +261,8 @@ function process_edge_attribute(attr, source, destiny, weights)
     end
     return attr
 end
-# Function from Plots/src/components.jl
-"get an array of tuples of points on a circle with radius `r`"
-function partialcircle(start_θ, end_θ, n = 20, r = 1)
-    return Tuple{Float64, Float64}[
-        (r * cos(u), r * sin(u)) for u in range(start_θ, stop = end_θ, length = n)
-    ]
-end
 
-function partialcircle(start_θ, end_θ, circle_center::Array{T, 1}, n = 20, r = 1) where {T}
+function PlotsBase.Shapes.partialcircle(start_θ, end_θ, circle_center::Array{T, 1}, n = 20, r = 1) where {T}
     return Tuple{Float64, Float64}[
         (r * cos(u) + circle_center[1], r * sin(u) + circle_center[2]) for
             u in range(start_θ, stop = end_θ, length = n)

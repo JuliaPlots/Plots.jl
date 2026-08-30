@@ -32,11 +32,11 @@ Meant to be overloaded by other types!
 to_corrplot_matrix(x) = x
 
 function update_ticks_guides(d::KW, labs, i, j, n)
-    # d[:title]  = (i==1 ? _cycle(labs,j) : "")
+    # d[:title]  = (i==1 ? PlotsBase.Commons._getvalue(labs,j) : "")
     # d[:xticks] = (i==n)
-    d[:xguide] = (i == n ? _cycle(labs, j) : "")
+    d[:xguide] = (i == n ? PlotsBase.Commons._getvalue(labs, j) : "")
     # d[:yticks] = (j==1)
-    return d[:yguide] = (j == 1 ? _cycle(labs, i) : "")
+    return d[:yguide] = (j == 1 ? PlotsBase.Commons._getvalue(labs, i) : "")
 end
 
 @recipe function f(cp::CorrPlot)
