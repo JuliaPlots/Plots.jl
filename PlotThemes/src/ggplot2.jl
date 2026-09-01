@@ -36,7 +36,7 @@ const _ggplot2 = [
     :bglegend => _ggplot_colors[:gray92],
     :fglegend => :white,
     :fgguide => :black,
-    :widen => true,
+    :limits_modifiers => :widen,
     ## Axes / Ticks
     #framestyle => :grid,
     #foreground_color_tick => _ggplot_colors[:gray20], # tick color not yet implemented

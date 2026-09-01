@@ -234,6 +234,7 @@ add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 # axes attributes
 add_axes_aliases(:guide, :label, :lab, :l; generic = false)
 add_axes_aliases(:lims, :lim, :limit, :limits, :range)
+add_axes_aliases(:limits_modifiers, :limits_modifier, :lims_modifiers, :lims_modifier)
 add_axes_aliases(:ticks, :tick)
 add_axes_aliases(:rotation, :rot, :r)
 add_axes_aliases(:guidefontsize, :labelfontsize)

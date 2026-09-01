@@ -34,20 +34,20 @@ end
 end
 
 @testset "vline, vspan" begin
-    vl = vline([1], widen = false)
+    vl = vline([1], limits_modifiers = :none)
     @test PlotsBase.xlims(vl) == (1, 2)
     @test PlotsBase.ylims(vl) == (1, 2)
-    vl = vline([1], xlims = (0, 2), widen = false)
+    vl = vline([1], xlims = (0, 2), limits_modifiers = :none)
     @test PlotsBase.xlims(vl) == (0, 2)
-    vl = vline([1], ylims = (-3, 5), widen = false)
+    vl = vline([1], ylims = (-3, 5), limits_modifiers = :none)
     @test PlotsBase.ylims(vl) == (-3, 5)
 
-    vsp = vspan([1, 3], widen = false)
+    vsp = vspan([1, 3], limits_modifiers = :none)
     @test PlotsBase.xlims(vsp) == (1, 3)
     @test PlotsBase.ylims(vsp) == (0, 1) # TODO: might be problematic on log-scales
-    vsp = vspan([1, 3], xlims = (-2, 5), widen = false)
+    vsp = vspan([1, 3], xlims = (-2, 5), limits_modifiers = :none)
     @test PlotsBase.xlims(vsp) == (-2, 5)
-    vsp = vspan([1, 3], ylims = (-2, 5), widen = false)
+    vsp = vspan([1, 3], ylims = (-2, 5), limits_modifiers = :none)
     @test PlotsBase.ylims(vsp) == (-2, 5)
 end
 

@@ -1,6 +1,6 @@
 module Axes
 
-export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
+export Axis, Extrema, tickfont, guidefont, limits_modifiers, scale_inverse_scale_func
 export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide
 
 import ..PlotsBase: PlotsBase, Subplot, DefaultsDict
@@ -13,6 +13,9 @@ using ..Fonts
 using ..Dates
 
 const default_widen_factor = Ref(1.06)
+
+"modifiers accepted by the `limits_modifiers` axis attribute"
+const _limits_modifier_names = (:widen, :round, :symmetric)
 const _widen_seriestypes = (
     :line,
     :path,
@@ -129,7 +132,7 @@ end
 function Commons.axis_limits(
         sp,
         letter,
-        lims_factor = widen_factor(get_axis(sp, letter)),
+        modifiers = limits_modifiers(get_axis(sp, letter)),
         consider_aspect = true;
         expand_int_ticks = true,
     )
@@ -162,6 +165,7 @@ function Commons.axis_limits(
     if !isfinite(amin) && !isfinite(amax)
         amin, amax = zero(amin), one(amax)
     end
+    chain = limits_modifiers(axis, modifiers)
     if ispolar(axis.sps[1])
         if axis[:letter] ≡ :x
             amin, amax = 0, 2π
@@ -169,8 +173,10 @@ function Commons.axis_limits(
             # widen max radius so ticks dont overlap with theta axis
             amin, amax = 0, amax + 0.1abs(amax - amin)
         end
-    elseif lims_factor ≢ nothing
-        amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
+    elseif !isempty(chain)
+        for m in chain  # applied left to right
+            amin, amax = apply_limits_modifier(amin, amax, m, axis[:scale])
+        end
     elseif lims ≡ :round
         amin, amax = round_limits(amin, amax, axis[:scale])
     end
@@ -197,11 +203,11 @@ function Commons.axis_limits(
         dist = amax - amin
 
         factor = if letter ≡ :x
-            ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
+            ydist, = axis_limits(sp, :y, limits_modifiers(sp[:yaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * ydist / dist
             axis_ratio / plot_ratio
         else
-            xdist, = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false) |> collect |> diff
+            xdist, = axis_limits(sp, :x, limits_modifiers(sp[:xaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * dist / xdist
             plot_ratio / axis_ratio
         end
@@ -216,26 +222,67 @@ function Commons.axis_limits(
     return amin, amax
 end
 
+warn_invalid_modifier(letter, m) = @maxlog_warn """
+Invalid $(letter)limits modifier `$m`, ignored.
+Choose from $(_limits_modifier_names), a tuple of them, `:auto` or `:none`.
+`:widen` takes an optional factor, written `:widen => 1.2`.
 """
-factor to widen axis limits by, or `nothing` if axis widening should be skipped
-"""
-function widen_factor(axis::Axis; factor = default_widen_factor[])
-    if (widen = axis[:widen]) isa Bool
-        return widen ? factor : nothing
-    elseif widen isa Number
-        return widen
-    else
-        widen ≡ :auto || @maxlog_warn "Invalid value specified for `widen`: $widen"
-    end
 
-    # automatic behavior: widen if limits aren't specified and series type is appropriate
+valid_limits_modifier(letter, m::Symbol) =
+    m in _limits_modifier_names || (warn_invalid_modifier(letter, m); false)
+valid_limits_modifier(letter, m::Pair{Symbol}) =
+    # `:widen` is the only modifier taking an argument
+    (first(m) ≡ :widen && last(m) isa Real) || (warn_invalid_modifier(letter, m); false)
+valid_limits_modifier(letter, m) = (warn_invalid_modifier(letter, m); false)
+
+"""
+the chain implied by `limits_modifiers = :auto`: widen, unless limits were given explicitly
+or rounded, and only for series types that would otherwise clip at the border
+"""
+function auto_limits_modifiers(axis::Axis)
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims ≡ :round) && return
+    (lims isa Tuple || lims ≡ :round) && return ()
     for sp in axis.sps, series in series_list(sp)
-        series.plotattributes[:seriestype] in _widen_seriestypes && return factor
+        series.plotattributes[:seriestype] in _widen_seriestypes && return (:widen,)
     end
-    return nothing
+    return ()
 end
+
+"""
+    limits_modifiers(axis)
+    limits_modifiers(axis, spec)
+
+Resolve `limits_modifiers` into the tuple of modifiers `axis_limits` folds over, left to
+right. Resolving an already resolved tuple returns it unchanged.
+"""
+limits_modifiers(axis::Axis) = limits_modifiers(axis, axis[:limits_modifiers])
+limits_modifiers(axis::Axis, spec::Tuple) =
+    Tuple(m for m in spec if valid_limits_modifier(axis[:letter], m))
+limits_modifiers(axis::Axis, spec::Pair{Symbol}) = limits_modifiers(axis, (spec,))
+limits_modifiers(axis::Axis, spec::Symbol) =
+if spec ≡ :auto
+    auto_limits_modifiers(axis)
+elseif spec ≡ :none
+    ()
+else
+    limits_modifiers(axis, (spec,))
+end
+limits_modifiers(axis::Axis, spec::Bool) = spec ? (:widen,) : ()
+limits_modifiers(axis::Axis, spec::Real) = (:widen => spec,)
+limits_modifiers(::Axis, ::Nothing) = ()
+limits_modifiers(axis::Axis, spec) = (warn_invalid_modifier(axis[:letter], spec); ())
+
+apply_limits_modifier(amin, amax, m::Symbol, scale) =
+if m ≡ :widen
+    scale_lims(amin, amax, default_widen_factor[], scale)
+elseif m ≡ :round
+    round_limits(amin, amax, scale)
+else  # `:symmetric`
+    a = max(abs(amin), abs(amax))
+    (-a, a)
+end
+apply_limits_modifier(amin, amax, m::Pair{Symbol}, scale) =
+    scale_lims(amin, amax, last(m), scale)
 
 function round_limits(amin, amax, scale)
     base = get(_log_scale_bases, scale, 10.0)

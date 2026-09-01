@@ -90,7 +90,7 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :window_title,
         :arrow,
         :guide,
-        :widen,
+        :limits_modifiers,
         :lims,
         :line,
         :ticks,

@@ -4,7 +4,7 @@
 
     rx = [x[3], x[5]]
 
-    pl = plot(x, y, widen = false)
+    pl = plot(x, y, limits_modifiers = :none)
     vspan!(pl, rx, label = "", alpha = 0.2)
 
     ref_ylims = (y[1], y[end])
@@ -20,7 +20,7 @@ end
 
     ref_xlims = map(date -> date.instant.periods.value, span)
 
-    pl = plot(x, y, xlims = span, widen = false)
+    pl = plot(x, y, xlims = span, limits_modifiers = :none)
 end
 
 @testset "DateTime xlims" begin
@@ -30,6 +30,6 @@ end
 
     ref_xlims = map(date -> date.instant.periods.value, span)
 
-    pl = plot(x, y, xlims = span, widen = false)
+    pl = plot(x, y, xlims = span, limits_modifiers = :none)
     @test PlotsBase.xlims(pl) == ref_xlims
 end

@@ -122,7 +122,7 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :window_title,
         :guide,
         :guide_position,
-        :widen,
+        :limits_modifiers,
         :lims,
         :ticks,
         :scale,

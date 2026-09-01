@@ -524,7 +524,7 @@ const _axis_defaults = KW(
     :minorticks => :auto,
     :minorgrid => false,
     :showaxis => true,
-    :widen => :auto,
+    :limits_modifiers => :auto,
     :draw_arrow => false,
     :unitformat => :round,
     :unit => nothing,
@@ -601,6 +601,28 @@ const _all_attrs =
     union(_lettered_all_axis_attrs, _all_subplot_attrs, _all_series_attrs, _all_plot_attrs)
 
 const _deprecated_attributes = Dict{Symbol, Symbol}()
+
+"""
+`widen` became `limits_modifiers` in v2. The value space is unchanged (`:auto`, a `Bool` or a
+factor), so this is a plain key rewrite. Remove in v3.
+"""
+function deprecate_widen!(plotattributes::AKW)
+    for k in collect(keys(plotattributes))
+        letter, rest = if (s = string(k)) in ("widen", "widens")
+            "", s
+        elseif length(s) > 1 && first(s) in ('x', 'y', 'z')
+            string(first(s)), lstrip(chop(s, head = 1, tail = 0), '_')
+        else
+            continue
+        end
+        rest in ("widen", "widens") || continue
+        nk = Symbol(letter, "limits_modifiers")
+        @maxlog_warn "`$k` is deprecated, use `$nk` instead"
+        v = pop!(plotattributes, k)
+        haskey(plotattributes, nk) || (plotattributes[nk] = v)
+    end
+    return nothing
+end
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 
 const _initial_defaults = deepcopy(_all_defaults)

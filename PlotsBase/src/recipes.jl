@@ -423,7 +423,7 @@ end
         x = plotnames
         y = values_y
     end
-    ywiden --> false
+    ylimits_modifiers --> :none
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
     axis = plotattributes[:subplot][:xaxis]
@@ -529,7 +529,7 @@ end
     z := nothing
     seriestype := :shape
     label := ""
-    widen --> false
+    limits_modifiers --> :none
     ()
 end
 @deps plots_heatmap shape
@@ -1535,7 +1535,7 @@ end
     rs, cs, zs = PlotsBase.find_nnz(z.surf)
     xlims := ignorenan_extrema(cs)
     ylims := ignorenan_extrema(rs)
-    widen --> true
+    limits_modifiers --> :widen
 
     markershape --> :circle
     markersize --> 1

@@ -30,6 +30,10 @@
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
 
 ## Breaking changes
+- The `widen` axis attribute is replaced by `limits_modifiers`, which composes: `:widen`, `:round` and
+  `:symmetric` can be combined in a tuple and are applied left to right, as in
+  `xlimits_modifiers = (:widen, :round)`. A custom widening factor is written `:widen => 1.2`, and
+  `:none` applies nothing. `widen` still works with a deprecation warning and will be removed in v3 (#3556)
 - `minorticks` now counts minor ticks, not minor intervals, matching its name and its documentation.
   `minorticks = n` draws `n` ticks between two major ticks, where it used to draw `n - 1`.
   Passing `n + 1` where you passed `n` restores the old spacing; `:auto` and `true` are unchanged.
