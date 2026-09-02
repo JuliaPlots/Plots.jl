@@ -30,4 +30,3 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.TAGBOT_KEY }}
           branch: master
-          subdir: Plots
