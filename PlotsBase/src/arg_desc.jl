@@ -208,15 +208,16 @@ const _arg_desc = KW(
     :tick_direction => (Symbol, "Direction of the ticks. Choose from (`:in`, `:out`, `:none`)."),
     :showaxis => (Union{Bool, Symbol, AStr}, "Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`."),
     :limits_modifiers => (
-        Union{Symbol, Pair, Tuple}, """
+        Union{Symbol, NamedTuple, Tuple}, """
         How to modify the axis limits, applied left to right.
-        Choose from `:widen` (scale by the default factor of $(Axes.default_widen_factor[]), to avoid
-        cut-off markers and lines at the borders), `:round` (widen to the nearest round number) and
-        `:symmetric` (make the limits symmetric around zero), or a tuple of them such as
-        `(:widen, :round)`. `:widen` takes a factor, written `:widen => 1.2`.
+        A named tuple of modifiers and their settings, as in `(symmetric = true, widen = 1.2)`.
+        `:widen` scales by a factor (`true` uses the default of $(Axes.default_widen_factor[])) to keep
+        markers and lines off the borders, `:round` widens to the nearest round number, and
+        `:symmetric` makes the limits symmetric around zero.
+        A bare name switches a modifier on, so `:round` and `(:widen, :round)` are shorthand.
         Defaults to `:auto`, which widens unless limits were given explicitly or rounded.
-        `:none` applies nothing. Polar axes ignore this attribute.
-        In a recipe, parenthesize a pair: `limits_modifiers --> (:widen => 1.2)`.
+        `:none` applies nothing, and so does setting every modifier to `false`.
+        Polar axes ignore this attribute.
         See also `PlotsBase.scale_lims!` for scaling axis limits in an existing plot.""",
     ),
     :draw_arrow => (Bool, "Draw arrow at the end of the axis."),

@@ -175,18 +175,19 @@ end
         @test xl(xlimits_modifiers = (:widen, :symmetric)) == (-5.12, 5.12)
 
         # `:widen` takes a factor
-        @test xl(xlimits_modifiers = :widen => 1.2) ==
+        @test xl(xlimits_modifiers = (widen = 1.2,)) ==
             PlotsBase.Axes.scale_lims(1, 5, 1.2)
-        @test xl(xlimits_modifiers = (:symmetric, :widen => 1.2)) ==
+        @test xl(xlimits_modifiers = (symmetric = true, widen = 1.2)) ==
             PlotsBase.Axes.scale_lims(-5, 5, 1.2)
 
+        # a modifier can be switched off individually
+        @test xl(xlimits_modifiers = (widen = false,)) == (1, 5)
+        @test xl(xlimits_modifiers = (symmetric = true, widen = false)) == (-5, 5)
+
         # every spelling of "off"
-        for off in (:none, false, nothing, ())
+        for off in (:none, nothing, (), NamedTuple())
             @test xl(xlimits_modifiers = off) == (1, 5)
         end
-        # and the `widen` value space, which the deprecation shim relies on
-        @test xl(xlimits_modifiers = true) == default_widen(1, 5)
-        @test xl(xlimits_modifiers = 1.2) == PlotsBase.Axes.scale_lims(1, 5, 1.2)
 
         # letterless fans out to every axis
         pl = plot(1:5, limits_modifiers = :symmetric)
@@ -203,25 +204,13 @@ end
         @test PlotsBase.ylims(plot([1.05, 2.0, 2.95], ylims = :round)) == (1, 3)
         @test xl(xlims = :symmetric) == default_widen(-5, 5)
 
-        for bad in (:typo, (:widen, 1.2), :round => 2, [:widen, :round])
+        for bad in (:typo, (:widen, 1.2), (typo = true,), [:widen, :round])
             @test_logs (:warn, r"Invalid xlimits modifier") match_mode = :any xl(
                 xlimits_modifiers = bad,
             )
         end
     end
 
-    @testset "deprecated `widen`" begin
-        for (old, new) in ((false, :none), (true, :widen), (1.2, 1.2))
-            pl = @test_logs (:warn, r"`widen` is deprecated") match_mode = :any plot(
-                1:5; widen = old,
-            )
-            @test PlotsBase.xlims(pl) == PlotsBase.xlims(plot(1:5; limits_modifiers = new))
-        end
-        pl = @test_logs (:warn, r"`xwiden` is deprecated") match_mode = :any plot(
-            1:5; xwiden = false,
-        )
-        @test PlotsBase.xlims(pl) == (1, 5)
-    end
 
     @testset "#4379" begin
         for ylims in ((-5, :auto), [-5, :auto])

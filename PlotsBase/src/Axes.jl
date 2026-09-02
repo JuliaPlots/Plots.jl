@@ -224,15 +224,12 @@ end
 
 warn_invalid_modifier(letter, m) = @maxlog_warn """
 Invalid $(letter)limits modifier `$m`, ignored.
-Choose from $(_limits_modifier_names), a tuple of them, `:auto` or `:none`.
-`:widen` takes an optional factor, written `:widen => 1.2`.
+Choose from $(_limits_modifier_names), a named tuple such as `(symmetric = true, widen = 1.2)`,
+`:auto` or `:none`.
 """
 
 valid_limits_modifier(letter, m::Symbol) =
     m in _limits_modifier_names || (warn_invalid_modifier(letter, m); false)
-valid_limits_modifier(letter, m::Pair{Symbol}) =
-    # `:widen` is the only modifier taking an argument
-    (first(m) ≡ :widen && last(m) isa Real) || (warn_invalid_modifier(letter, m); false)
 valid_limits_modifier(letter, m) = (warn_invalid_modifier(letter, m); false)
 
 """
@@ -243,7 +240,7 @@ function auto_limits_modifiers(axis::Axis)
     lims = process_limits(axis[:lims], axis)
     (lims isa Tuple || lims ≡ :round) && return ()
     for sp in axis.sps, series in series_list(sp)
-        series.plotattributes[:seriestype] in _widen_seriestypes && return (:widen,)
+        series.plotattributes[:seriestype] in _widen_seriestypes && return (:widen => true,)
     end
     return ()
 end
@@ -256,9 +253,16 @@ Resolve `limits_modifiers` into the tuple of modifiers `axis_limits` folds over,
 right. Resolving an already resolved tuple returns it unchanged.
 """
 limits_modifiers(axis::Axis) = limits_modifiers(axis, axis[:limits_modifiers])
-limits_modifiers(axis::Axis, spec::Tuple) =
-    Tuple(m for m in spec if valid_limits_modifier(axis[:letter], m))
-limits_modifiers(axis::Axis, spec::Pair{Symbol}) = limits_modifiers(axis, (spec,))
+
+# `(symmetric = true, widen = 1.2)`: named tuples keep their order, so the chain reads left
+# to right, and a modifier that takes a setting carries it as its value
+limits_modifiers(axis::Axis, spec::NamedTuple) =
+    limits_modifiers(axis, Tuple(k => v for (k, v) in pairs(spec)))
+# a bare modifier name is shorthand for switching it on; resolving a resolved chain is a no-op
+limits_modifiers(axis::Axis, spec::Tuple) = Tuple(
+    p for p in map(m -> modifier_pair(axis[:letter], m), spec) if
+        p ≢ nothing && last(p) ≢ false
+)
 limits_modifiers(axis::Axis, spec::Symbol) =
 if spec ≡ :auto
     auto_limits_modifiers(axis)
@@ -267,22 +271,31 @@ elseif spec ≡ :none
 else
     limits_modifiers(axis, (spec,))
 end
-limits_modifiers(axis::Axis, spec::Bool) = spec ? (:widen,) : ()
-limits_modifiers(axis::Axis, spec::Real) = (:widen => spec,)
 limits_modifiers(::Axis, ::Nothing) = ()
 limits_modifiers(axis::Axis, spec) = (warn_invalid_modifier(axis[:letter], spec); ())
 
-apply_limits_modifier(amin, amax, m::Symbol, scale) =
-if m ≡ :widen
-    scale_lims(amin, amax, default_widen_factor[], scale)
-elseif m ≡ :round
-    round_limits(amin, amax, scale)
-else  # `:symmetric`
-    a = max(abs(amin), abs(amax))
-    (-a, a)
+"`:widen` takes a factor, the others are on or off"
+valid_limits_setting(letter, m::Symbol, v) =
+    (v isa Bool || (m ≡ :widen && v isa Real)) ||
+    (@maxlog_warn("Invalid setting `$v` for $(letter)limits modifier `$m`, ignored"); false)
+
+"normalize one entry of a chain to `modifier => setting`, or `nothing` if it is not valid"
+modifier_pair(letter, m::Symbol) = valid_limits_modifier(letter, m) ? m => true : nothing
+modifier_pair(letter, p::Pair{Symbol}) =
+    (valid_limits_modifier(letter, first(p)) && valid_limits_setting(letter, first(p), last(p))) ?
+    p : nothing
+modifier_pair(letter, m) = (warn_invalid_modifier(letter, m); nothing)
+
+function apply_limits_modifier(amin, amax, (m, v)::Pair{Symbol}, scale)
+    return if m ≡ :widen
+        scale_lims(amin, amax, v isa Bool ? default_widen_factor[] : v, scale)
+    elseif m ≡ :round
+        round_limits(amin, amax, scale)
+    else  # `:symmetric`
+        a = max(abs(amin), abs(amax))
+        (-a, a)
+    end
 end
-apply_limits_modifier(amin, amax, m::Pair{Symbol}, scale) =
-    scale_lims(amin, amax, last(m), scale)
 
 function round_limits(amin, amax, scale)
     base = get(_log_scale_bases, scale, 10.0)

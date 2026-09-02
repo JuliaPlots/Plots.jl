@@ -373,7 +373,6 @@ zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
 function Commons.preprocess_attributes!(plotattributes::AKW)
     Commons.replaceAliases!(plotattributes, Commons._keyAliases)
-    Commons.deprecate_widen!(plotattributes)
 
     # handle axis args common to all axis
     args = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :axis, ()))
