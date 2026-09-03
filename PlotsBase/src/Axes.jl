@@ -174,7 +174,7 @@ function Commons.axis_limits(
             amin, amax = 0, amax + 0.1abs(amax - amin)
         end
     elseif !isempty(chain)
-        for m in chain  # applied left to right
+        for m in pairs(chain)  # applied left to right
             amin, amax = apply_limits_modifier(amin, amax, m, axis[:scale])
         end
     elseif lims ≡ :round
@@ -238,53 +238,52 @@ or rounded, and only for series types that would otherwise clip at the border
 """
 function auto_limits_modifiers(axis::Axis)
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims ≡ :round) && return ()
+    (lims isa Tuple || lims ≡ :round) && return (;)
     for sp in axis.sps, series in series_list(sp)
-        series.plotattributes[:seriestype] in _widen_seriestypes && return (:widen => true,)
+        series.plotattributes[:seriestype] in _widen_seriestypes && return (widen = true,)
     end
-    return ()
+    return (;)
 end
 
 """
     limits_modifiers(axis)
     limits_modifiers(axis, spec)
 
-Resolve `limits_modifiers` into the tuple of modifiers `axis_limits` folds over, left to
-right. Resolving an already resolved tuple returns it unchanged.
+Resolve `limits_modifiers` into the named tuple of modifiers `axis_limits` folds over, left to
+right. Resolving an already resolved chain returns it unchanged.
 """
 limits_modifiers(axis::Axis) = limits_modifiers(axis, axis[:limits_modifiers])
 
 # `(symmetric = true, widen = 1.2)`: named tuples keep their order, so the chain reads left
-# to right, and a modifier that takes a setting carries it as its value
-limits_modifiers(axis::Axis, spec::NamedTuple) =
-    limits_modifiers(axis, Tuple(k => v for (k, v) in pairs(spec)))
-# a bare modifier name is shorthand for switching it on; resolving a resolved chain is a no-op
-limits_modifiers(axis::Axis, spec::Tuple) = Tuple(
-    p for p in map(m -> modifier_pair(axis[:letter], m), spec) if
-        p ≢ nothing && last(p) ≢ false
-)
+# to right, and a modifier that takes a setting carries it as its value. Resolving drops the
+# invalid and the switched off, so resolving a resolved chain is a no-op.
+function limits_modifiers(axis::Axis, spec::NamedTuple)
+    letter = axis[:letter]
+    keep = filter(keys(spec)) do m
+        valid_limits_modifier(letter, m) &&
+            valid_limits_setting(letter, m, spec[m]) &&
+            spec[m] ≢ false
+    end
+    return NamedTuple{keep}(spec)
+end
+# a bare modifier name is shorthand for switching it on
+limits_modifiers(axis::Axis, spec::Tuple{Vararg{Symbol}}) =
+    limits_modifiers(axis, NamedTuple{spec}(ntuple(_ -> true, length(spec))))
 limits_modifiers(axis::Axis, spec::Symbol) =
 if spec ≡ :auto
     auto_limits_modifiers(axis)
 elseif spec ≡ :none
-    ()
+    (;)
 else
     limits_modifiers(axis, (spec,))
 end
-limits_modifiers(::Axis, ::Nothing) = ()
-limits_modifiers(axis::Axis, spec) = (warn_invalid_modifier(axis[:letter], spec); ())
+limits_modifiers(::Axis, ::Nothing) = (;)
+limits_modifiers(axis::Axis, spec) = (warn_invalid_modifier(axis[:letter], spec); (;))
 
 "`:widen` takes a factor, the others are on or off"
 valid_limits_setting(letter, m::Symbol, v) =
     (v isa Bool || (m ≡ :widen && v isa Real)) ||
     (@maxlog_warn("Invalid setting `$v` for $(letter)limits modifier `$m`, ignored"); false)
-
-"normalize one entry of a chain to `modifier => setting`, or `nothing` if it is not valid"
-modifier_pair(letter, m::Symbol) = valid_limits_modifier(letter, m) ? m => true : nothing
-modifier_pair(letter, p::Pair{Symbol}) =
-    (valid_limits_modifier(letter, first(p)) && valid_limits_setting(letter, first(p), last(p))) ?
-    p : nothing
-modifier_pair(letter, m) = (warn_invalid_modifier(letter, m); nothing)
 
 function apply_limits_modifier(amin, amax, (m, v)::Pair{Symbol}, scale)
     return if m ≡ :widen
