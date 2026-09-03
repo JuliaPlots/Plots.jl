@@ -185,8 +185,8 @@ end
 
 needs_any_3d_axes(sp::Subplot) = any(
     RecipesPipeline.needs_3d_axes(
-            Commons._override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
-        ) for s in series_list(sp)
+        Commons._override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
+    ) for s in series_list(sp)
 )
 
 function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)

@@ -340,17 +340,17 @@ macro process_aliases(plotattributes, graph_aliases)
     attributes = getfield(__module__, graph_aliases) |> keys
     ex.args = [
         Expr(
-                :(=),
-                esc(sym),
-                :(
-                    $(esc(replacement_kwarg))(
-                        $(QuoteNode(sym)),
-                        $(esc(sym)),
-                        $(esc(plotattributes)),
-                        $(esc(graph_aliases)),
-                    )
-                ),
-            ) for sym in attributes
+            :(=),
+            esc(sym),
+            :(
+                $(esc(replacement_kwarg))(
+                    $(QuoteNode(sym)),
+                    $(esc(sym)),
+                    $(esc(plotattributes)),
+                    $(esc(graph_aliases)),
+                )
+            ),
+        ) for sym in attributes
     ]
     return ex
 end

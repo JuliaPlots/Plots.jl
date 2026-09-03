@@ -1138,17 +1138,17 @@ more details.
                 seriestype := :scatter
                 append!(
                     edge_label_array, (
-                            x[i],
-                            y[i],
-                            names[
-                                ifelse(
-                                    i % length(names) == 0,
-                                    length(names),
-                                    i % length(names),
-                                ),
-                            ],
-                            fontsize,
-                        ) for i in eachindex(x)
+                        x[i],
+                        y[i],
+                        names[
+                            ifelse(
+                                i % length(names) == 0,
+                                length(names),
+                                i % length(names),
+                            ),
+                        ],
+                        fontsize,
+                    ) for i in eachindex(x)
                 )
                 colorbar_entry --> false
                 markersize := 0
