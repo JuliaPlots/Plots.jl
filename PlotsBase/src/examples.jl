@@ -266,11 +266,11 @@ const _examples = PlotExample[
             closepct = rand(n)
             y = OHLC[
                 (
-                        openpct[i] * hgt[i] + bot[i],
-                        bot[i] + hgt[i],
-                        bot[i],
-                        closepct[i] * hgt[i] + bot[i],
-                    ) for i in 1:n
+                    openpct[i] * hgt[i] + bot[i],
+                    bot[i] + hgt[i],
+                    bot[i],
+                    closepct[i] * hgt[i] + bot[i],
+                ) for i in 1:n
             ]
             ohlc(y)
         end,
