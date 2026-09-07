@@ -478,6 +478,14 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
 
+    # validate the limits modifiers once here, so `axis_limits` only resolves `:auto`
+    for letter in (:x, :y, :z)
+        k = get_attr_symbol(letter, :limits_modifiers)
+        haskey(plotattributes, k) && (
+            plotattributes[k] = Axes.normalize_limits_modifiers(letter, plotattributes[k])
+        )
+    end
+
     # fonts
     for fontname in (
             :titlefont,

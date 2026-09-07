@@ -246,19 +246,15 @@ function auto_limits_modifiers(axis::Axis)
 end
 
 """
-    limits_modifiers(axis)
-    limits_modifiers(axis, spec)
+    normalize_limits_modifiers(letter, spec)
 
-Resolve `limits_modifiers` into the named tuple of modifiers `axis_limits` folds over, left to
-right. Resolving an already resolved chain returns it unchanged.
+Validate `spec` and put it in the canonical form: a named tuple of the modifiers that are
+switched on, in the order they should be applied, or `:auto`. Warns about, and drops,
+anything invalid. `preprocess_attributes!` runs this once so `axis_limits` does not have to.
 """
-limits_modifiers(axis::Axis) = limits_modifiers(axis, axis[:limits_modifiers])
-
 # `(symmetric = true, widen = 1.2)`: named tuples keep their order, so the chain reads left
-# to right, and a modifier that takes a setting carries it as its value. Resolving drops the
-# invalid and the switched off, so resolving a resolved chain is a no-op.
-function limits_modifiers(axis::Axis, spec::NamedTuple)
-    letter = axis[:letter]
+# to right, and a modifier that takes a setting carries it as its value
+function normalize_limits_modifiers(letter, spec::NamedTuple)
     keep = filter(keys(spec)) do m
         valid_limits_modifier(letter, m) &&
             valid_limits_setting(letter, m, spec[m]) &&
@@ -267,18 +263,35 @@ function limits_modifiers(axis::Axis, spec::NamedTuple)
     return NamedTuple{keep}(spec)
 end
 # a bare modifier name is shorthand for switching it on
-limits_modifiers(axis::Axis, spec::Tuple{Vararg{Symbol}}) =
-    limits_modifiers(axis, NamedTuple{spec}(ntuple(_ -> true, length(spec))))
-limits_modifiers(axis::Axis, spec::Symbol) =
+normalize_limits_modifiers(letter, spec::Tuple{Vararg{Symbol}}) =
+    normalize_limits_modifiers(letter, NamedTuple{spec}(ntuple(_ -> true, length(spec))))
+normalize_limits_modifiers(letter, spec::Symbol) =
 if spec ≡ :auto
-    auto_limits_modifiers(axis)
+    :auto  # resolved per axis, it depends on the limits and the series types
 elseif spec ≡ :none
     (;)
 else
-    limits_modifiers(axis, (spec,))
+    normalize_limits_modifiers(letter, (spec,))
 end
-limits_modifiers(::Axis, ::Nothing) = (;)
-limits_modifiers(axis::Axis, spec) = (warn_invalid_modifier(axis[:letter], spec); (;))
+normalize_limits_modifiers(::Any, ::Nothing) = (;)
+normalize_limits_modifiers(letter, spec) = (warn_invalid_modifier(letter, spec); (;))
+
+"""
+    limits_modifiers(axis)
+    limits_modifiers(axis, spec)
+
+The named tuple of modifiers `axis_limits` folds over, left to right. Only `:auto` needs
+resolving here, everything else was normalized by `preprocess_attributes!`.
+"""
+limits_modifiers(axis::Axis) = limits_modifiers(axis, axis[:limits_modifiers])
+# already normalized, which is the usual case
+limits_modifiers(::Axis, spec::NamedTuple) = spec
+limits_modifiers(axis::Axis, spec::Symbol) =
+    spec ≡ :auto ? auto_limits_modifiers(axis) :
+    limits_modifiers(axis, normalize_limits_modifiers(axis[:letter], spec))
+# set straight into the defaults, by a theme or `default`, so never preprocessed
+limits_modifiers(axis::Axis, spec) =
+    limits_modifiers(axis, normalize_limits_modifiers(axis[:letter], spec))
 
 "`:widen` takes a factor, the others are on or off"
 valid_limits_setting(letter, m::Symbol, v) =
