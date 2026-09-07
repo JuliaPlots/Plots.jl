@@ -170,7 +170,7 @@ const _arg_desc = KW(
         Force axis limits. Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example).
         `:round` widens the limit to the nearest round number, i.e. [0.1,3.6]=>[0.0,4.0].
         `:symmetric` sets the limits to be symmetric around zero.
-        Set `widen=true` to widen the specified limits (as occurs when lims are not specified).""",
+        See `limits_modifiers` for composing these, and for widening limits given explicitly.""",
     ),
     :ticks => (TicksType, "Tick values, (tickvalues, ticklabels), `:auto`/`true`, `:none`/`false`/`nothing` (ticks disabled), or `:native` (tells backend to calculate ticks by itself; good idea for interactive backends with mouse zooming)."),
     :scale => (Symbol, "Scale of the axis. Choose from $(Commons._all_scales)."),
@@ -207,13 +207,18 @@ const _arg_desc = KW(
     :minorgridlinewidth => (Real, "Width of the minor grid lines (in pixels)."),
     :tick_direction => (Symbol, "Direction of the ticks. Choose from (`:in`, `:out`, `:none`)."),
     :showaxis => (Union{Bool, Symbol, AStr}, "Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`."),
-    :widen => (
-        Union{Bool, Real, Symbol}, """
-        Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
-        If set to `true`, scale the axis limits by the default factor of $(Axes.default_widen_factor).
-        A different factor may be specified by setting `widen` to a number.
-        Defaults to `:auto`, which widens by the default factor unless limits were manually set.
-        See also the `scale_limits!` function for scaling axis limits in an existing plot.""",
+    :limits_modifiers => (
+        Union{Symbol, NamedTuple, Tuple}, """
+        How to modify the axis limits, applied left to right.
+        A named tuple of modifiers and their settings, as in `(symmetric = true, widen = 1.2)`.
+        `:widen` scales by a factor (`true` uses the default of $(Axes.default_widen_factor[])) to keep
+        markers and lines off the borders, `:round` widens to the nearest round number, and
+        `:symmetric` makes the limits symmetric around zero.
+        A bare name switches a modifier on, so `:round` and `(:widen, :round)` are shorthand.
+        Defaults to `:auto`, which widens unless limits were given explicitly or rounded.
+        `:none` applies nothing, and so does setting every modifier to `false`.
+        Polar axes ignore this attribute.
+        See also `PlotsBase.scale_lims!` for scaling axis limits in an existing plot.""",
     ),
     :draw_arrow => (Bool, "Draw arrow at the end of the axis."),
     :unitformat => (Union{Bool, Nothing, Symbol, Char, String, NTuple{<:Union{Char, String}}, Function}, """Check examples in https://docs.juliaplots.org/stable/generated/unitfulext_examples/#Unit-formatting"""),

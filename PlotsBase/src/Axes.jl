@@ -1,6 +1,6 @@
 module Axes
 
-export Axis, Extrema, tickfont, guidefont, widen_factor, scale_inverse_scale_func
+export Axis, Extrema, tickfont, guidefont, limits_modifiers, scale_inverse_scale_func
 export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide
 
 import ..PlotsBase: PlotsBase, Subplot, DefaultsDict
@@ -13,6 +13,9 @@ using ..Fonts
 using ..Dates
 
 const default_widen_factor = Ref(1.06)
+
+"modifiers accepted by the `limits_modifiers` axis attribute"
+const _limits_modifier_names = (:widen, :round, :symmetric)
 const _widen_seriestypes = (
     :line,
     :path,
@@ -129,7 +132,7 @@ end
 function Commons.axis_limits(
         sp,
         letter,
-        lims_factor = widen_factor(get_axis(sp, letter)),
+        modifiers = limits_modifiers(get_axis(sp, letter)),
         consider_aspect = true;
         expand_int_ticks = true,
     )
@@ -162,6 +165,7 @@ function Commons.axis_limits(
     if !isfinite(amin) && !isfinite(amax)
         amin, amax = zero(amin), one(amax)
     end
+    chain = limits_modifiers(axis, modifiers)
     if ispolar(axis.sps[1])
         if axis[:letter] ≡ :x
             amin, amax = 0, 2π
@@ -169,8 +173,10 @@ function Commons.axis_limits(
             # widen max radius so ticks dont overlap with theta axis
             amin, amax = 0, amax + 0.1abs(amax - amin)
         end
-    elseif lims_factor ≢ nothing
-        amin, amax = scale_lims(amin, amax, lims_factor, axis[:scale])
+    elseif !isempty(chain)
+        for m in pairs(chain)  # applied left to right
+            amin, amax = apply_limits_modifier(amin, amax, m, axis[:scale])
+        end
     elseif lims ≡ :round
         amin, amax = round_limits(amin, amax, axis[:scale])
     end
@@ -197,11 +203,11 @@ function Commons.axis_limits(
         dist = amax - amin
 
         factor = if letter ≡ :x
-            ydist, = axis_limits(sp, :y, widen_factor(sp[:yaxis]), false) |> collect |> diff
+            ydist, = axis_limits(sp, :y, limits_modifiers(sp[:yaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * ydist / dist
             axis_ratio / plot_ratio
         else
-            xdist, = axis_limits(sp, :x, widen_factor(sp[:xaxis]), false) |> collect |> diff
+            xdist, = axis_limits(sp, :x, limits_modifiers(sp[:xaxis]), false) |> collect |> diff
             axis_ratio = aspect_ratio * dist / xdist
             plot_ratio / axis_ratio
         end
@@ -216,25 +222,91 @@ function Commons.axis_limits(
     return amin, amax
 end
 
+warn_invalid_modifier(letter, m) = @maxlog_warn """
+Invalid $(letter)limits modifier `$m`, ignored.
+Choose from $(_limits_modifier_names), a named tuple such as `(symmetric = true, widen = 1.2)`,
+`:auto` or `:none`.
 """
-factor to widen axis limits by, or `nothing` if axis widening should be skipped
-"""
-function widen_factor(axis::Axis; factor = default_widen_factor[])
-    if (widen = axis[:widen]) isa Bool
-        return widen ? factor : nothing
-    elseif widen isa Number
-        return widen
-    else
-        widen ≡ :auto || @maxlog_warn "Invalid value specified for `widen`: $widen"
-    end
 
-    # automatic behavior: widen if limits aren't specified and series type is appropriate
+valid_limits_modifier(letter, m::Symbol) =
+    m in _limits_modifier_names || (warn_invalid_modifier(letter, m); false)
+valid_limits_modifier(letter, m) = (warn_invalid_modifier(letter, m); false)
+
+"""
+the chain implied by `limits_modifiers = :auto`: widen, unless limits were given explicitly
+or rounded, and only for series types that would otherwise clip at the border
+"""
+function auto_limits_modifiers(axis::Axis)
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims ≡ :round) && return
+    (lims isa Tuple || lims ≡ :round) && return (;)
     for sp in axis.sps, series in series_list(sp)
-        series.plotattributes[:seriestype] in _widen_seriestypes && return factor
+        series.plotattributes[:seriestype] in _widen_seriestypes && return (widen = true,)
     end
-    return nothing
+    return (;)
+end
+
+"""
+    normalize_limits_modifiers(letter, spec)
+
+Validate `spec` and put it in the canonical form: a named tuple of the modifiers that are
+switched on, in the order they should be applied, or `:auto`. Warns about, and drops,
+anything invalid. `preprocess_attributes!` runs this once so `axis_limits` does not have to.
+"""
+# `(symmetric = true, widen = 1.2)`: named tuples keep their order, so the chain reads left
+# to right, and a modifier that takes a setting carries it as its value
+function normalize_limits_modifiers(letter, spec::NamedTuple)
+    keep = filter(keys(spec)) do m
+        valid_limits_modifier(letter, m) &&
+            valid_limits_setting(letter, m, spec[m]) &&
+            spec[m] ≢ false
+    end
+    return NamedTuple{keep}(spec)
+end
+# a bare modifier name is shorthand for switching it on
+normalize_limits_modifiers(letter, spec::Tuple{Vararg{Symbol}}) =
+    normalize_limits_modifiers(letter, NamedTuple{spec}(ntuple(_ -> true, length(spec))))
+normalize_limits_modifiers(letter, spec::Symbol) =
+if spec ≡ :auto
+    :auto  # resolved per axis, it depends on the limits and the series types
+elseif spec ≡ :none
+    (;)
+else
+    normalize_limits_modifiers(letter, (spec,))
+end
+normalize_limits_modifiers(::Any, ::Nothing) = (;)
+normalize_limits_modifiers(letter, spec) = (warn_invalid_modifier(letter, spec); (;))
+
+"""
+    limits_modifiers(axis)
+    limits_modifiers(axis, spec)
+
+The named tuple of modifiers `axis_limits` folds over, left to right. Only `:auto` needs
+resolving here, everything else was normalized by `preprocess_attributes!`.
+"""
+limits_modifiers(axis::Axis) = limits_modifiers(axis, axis[:limits_modifiers])
+# already normalized, which is the usual case
+limits_modifiers(::Axis, spec::NamedTuple) = spec
+limits_modifiers(axis::Axis, spec::Symbol) =
+    spec ≡ :auto ? auto_limits_modifiers(axis) :
+    limits_modifiers(axis, normalize_limits_modifiers(axis[:letter], spec))
+# set straight into the defaults, by a theme or `default`, so never preprocessed
+limits_modifiers(axis::Axis, spec) =
+    limits_modifiers(axis, normalize_limits_modifiers(axis[:letter], spec))
+
+"`:widen` takes a factor, the others are on or off"
+valid_limits_setting(letter, m::Symbol, v) =
+    (v isa Bool || (m ≡ :widen && v isa Real)) ||
+    (@maxlog_warn("Invalid setting `$v` for $(letter)limits modifier `$m`, ignored"); false)
+
+function apply_limits_modifier(amin, amax, (m, v)::Pair{Symbol}, scale)
+    return if m ≡ :widen
+        scale_lims(amin, amax, v isa Bool ? default_widen_factor[] : v, scale)
+    elseif m ≡ :round
+        round_limits(amin, amax, scale)
+    else  # `:symmetric`
+        a = max(abs(amin), abs(amax))
+        (-a, a)
+    end
 end
 
 function round_limits(amin, amax, scale)

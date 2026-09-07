@@ -61,7 +61,7 @@ const _hdf5_attrs = PlotsBase.merge_with_base_supported(
         :titlefont,
         :window_title,
         :guide,
-        :widen,
+        :limits_modifiers,
         :lims,
         :ticks,
         :scale,

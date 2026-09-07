@@ -279,7 +279,7 @@ with(:gr) do
         @test plot([1, 2, 5], seriestype = :scatterpath) isa PlotsBase.Plot
         @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa PlotsBase.Plot
 
-        let pl = plot(1:2, -1:1, widen = false)
+        let pl = plot(1:2, -1:1, limits_modifiers = :none)
             PlotsBase.abline!([0, 3], [5, -5])
             @test xlims(pl) == (+1, +2)
             @test ylims(pl) == (-1, +1)

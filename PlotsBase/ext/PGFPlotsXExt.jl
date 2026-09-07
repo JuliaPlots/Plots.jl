@@ -66,7 +66,7 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :title,
         :window_title,
         :guide,
-        :widen,
+        :limits_modifiers,
         :lims,
         :ticks,
         :scale,

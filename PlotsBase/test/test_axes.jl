@@ -99,11 +99,11 @@ end
         @test all(amin .≤ ticks .≤ amax)
     end
 
-    # user limits win over the tick count, `widen = false` does not
+    # user limits win over the tick count, `limits_modifiers = :none` does not
     pl = plot(sin, -π, π; xticks = 5, xlims = (-3, 3))
     @test PlotsBase.xlims(pl) == (-3, 3)
 
-    pl = plot(sin, -π, π; xticks = 5, widen = false)
+    pl = plot(sin, -π, π; xticks = 5, limits_modifiers = :none)
     ticks, = PlotsBase.get_ticks(pl[1], :x)
     amin, amax = PlotsBase.xlims(pl)
     @test length(ticks) == 5 && all(amin .≤ ticks .≤ amax)
@@ -134,7 +134,7 @@ end
     default_widen(from, to) =
         PlotsBase.Axes.scale_lims(from, to, PlotsBase.Axes.default_widen_factor)
 
-    pl = plot(1:5, xlims = :symmetric, widen = false)
+    pl = plot(1:5, xlims = :symmetric, limits_modifiers = :none)
     @test PlotsBase.xlims(pl) == (-5, 5)
 
     pl = plot(1:3)
@@ -146,11 +146,11 @@ end
     for x in (1:3, -10:10), xlims in ((1, 5), [1, 5])
         pl = plot(x; xlims)
         @test PlotsBase.xlims(pl) == (1, 5)
-        pl = plot(x; xlims, widen = true)
+        pl = plot(x; xlims, limits_modifiers = :widen)
         @test PlotsBase.xlims(pl) == default_widen(1, 5)
     end
 
-    pl = plot(1:5, lims = :symmetric, widen = false)
+    pl = plot(1:5, lims = :symmetric, limits_modifiers = :none)
     @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5, 5)
 
     for xlims in (0, 0.0, false, true, plot())
@@ -162,22 +162,72 @@ end
         @test plims == default_widen(1, 5)
     end
 
+    @testset "limits modifiers" begin
+        # github.com/JuliaPlots/Plots.jl/issues/3556
+        xl(; kw...) = PlotsBase.xlims(plot(1:5; kw...))
+
+        @test xl() == default_widen(1, 5)                              # `:auto`
+        @test xl(xlimits_modifiers = :round) == (1, 5)
+        @test xl(xlimits_modifiers = (:widen, :round)) == (0, 6)
+
+        # applied left to right, so these two differ
+        @test xl(xlimits_modifiers = (:symmetric, :widen)) == default_widen(-5, 5)
+        @test xl(xlimits_modifiers = (:widen, :symmetric)) == (-5.12, 5.12)
+
+        # `:widen` takes a factor
+        @test xl(xlimits_modifiers = (widen = 1.2,)) ==
+            PlotsBase.Axes.scale_lims(1, 5, 1.2)
+        @test xl(xlimits_modifiers = (symmetric = true, widen = 1.2)) ==
+            PlotsBase.Axes.scale_lims(-5, 5, 1.2)
+
+        # a modifier can be switched off individually
+        @test xl(xlimits_modifiers = (widen = false,)) == (1, 5)
+        @test xl(xlimits_modifiers = (symmetric = true, widen = false)) == (-5, 5)
+
+        # every spelling of "off"
+        for off in (:none, nothing, (), NamedTuple())
+            @test xl(xlimits_modifiers = off) == (1, 5)
+        end
+
+        # letterless fans out to every axis
+        pl = plot(1:5, limits_modifiers = :symmetric)
+        @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5, 5)
+
+        # an explicit chain beats limits given by the user, `:auto` yields to them
+        @test PlotsBase.xlims(plot(1:5; xlims = (1, 5))) == (1, 5)
+        @test PlotsBase.xlims(
+            plot(1:5; xlims = (1, 5), xlimits_modifiers = :widen),
+        ) == default_widen(1, 5)
+
+        # `xlims = :round` and `:symmetric` keep working, and are not the same as the
+        # modifiers of the same name: they run before the degenerate span fixup
+        @test PlotsBase.ylims(plot([1.05, 2.0, 2.95], ylims = :round)) == (1, 3)
+        @test xl(xlims = :symmetric) == default_widen(-5, 5)
+
+        for bad in (:typo, (:widen, 1.2), (typo = true,), [:widen, :round])
+            @test_logs (:warn, r"Invalid xlimits modifier") match_mode = :any xl(
+                xlimits_modifiers = bad,
+            )
+        end
+    end
+
+
     @testset "#4379" begin
         for ylims in ((-5, :auto), [-5, :auto])
-            pl = plot([-2, 3], ylims = ylims, widen = false)
+            pl = plot([-2, 3], ylims = ylims, limits_modifiers = :none)
             @test PlotsBase.ylims(pl) == (-5.0, 3.0)
         end
         for ylims in ((:auto, 4), [:auto, 4])
-            pl = plot([-2, 3], ylims = ylims, widen = false)
+            pl = plot([-2, 3], ylims = ylims, limits_modifiers = :none)
             @test PlotsBase.ylims(pl) == (-2.0, 4.0)
         end
 
         for xlims in ((-3, :auto), [-3, :auto])
-            pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
+            pl = plot([-2, 3], [-1, 1], xlims = xlims, limits_modifiers = :none)
             @test PlotsBase.xlims(pl) == (-3.0, 3.0)
         end
         for xlims in ((:auto, 4), [:auto, 4])
-            pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
+            pl = plot([-2, 3], [-1, 1], xlims = xlims, limits_modifiers = :none)
             @test PlotsBase.xlims(pl) == (-2.0, 4.0)
         end
     end
