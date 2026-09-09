@@ -17,6 +17,9 @@
   The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work when setting attributes
 
 ### Fixed
+- `push!` and `append!` on a plot: extending a series whose data is a range no longer silently drops
+  the new points, an integer datum is no longer read as a series index, and `append!` accepts a
+  collection per coordinate, as in `append!(pl, xs, ys)` (#4825)
 - Log scale minor ticks are no longer duplicated, and no longer drawn on top of major ticks, when the
   major ticks are more than one decade apart (#5789)
 - `hline`, `vline`, `hspan`, `vspan` and their `!` forms accept a single position, so `hline(0.73)` no
