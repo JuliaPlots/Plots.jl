@@ -96,6 +96,41 @@
         append!(pl, 1, (1.5, 2.5))
     end
 
+    @testset "push! / append!" begin
+        # github.com/JuliaPlots/Plots.jl/issues/4825
+        y(pl, i = 1) = pl.series_list[i][:y]
+
+        # a range is immutable, so extending it has to replace it rather than drop the result
+        pl = plot(1:3)
+        append!(pl.series_list[1], [4, 5, 6])
+        @test y(pl) == 1:6
+
+        # an integer datum used to be read as the series index
+        pl = plot([1.0])
+        push!(pl, 4)
+        @test y(pl) == [1, 4]
+
+        # `append!` takes a collection per coordinate
+        pl = plot([1.0])
+        append!(pl, [4, 5, 6])
+        @test y(pl) == [1, 4, 5, 6]
+
+        pl = plot([1.0])
+        append!(pl, 1, [4, 5, 6])
+        @test y(pl) == [1, 4, 5, 6]
+
+        pl = plot([1.0])
+        append!(pl, [7, 8], [4, 5])
+        @test pl.series_list[1][:x] == [1, 7, 8]
+        @test y(pl) == [1, 4, 5]
+
+        # a second series is still reachable by index
+        pl = plot([[1.0], [2.0]])
+        append!(pl, 2, [5, 6])
+        @test y(pl, 1) == [1]
+        @test y(pl, 2) == [2, 5, 6]
+    end
+
     pl = scatter(1:2, 1:2)
     push!(pl, 2:3)
     pl = scatter(1:2, 1:2, 1:2)

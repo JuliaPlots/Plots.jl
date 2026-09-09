@@ -82,10 +82,19 @@ Base.iterate(plt::Plot) = iterate(plt.subplots)
 # -------------------------------------------------------
 # push/append for one series
 
+# the indexed methods take at least one datum, else `push!(plt, 4)` would read the `4` as a
+# series index and push nothing
 Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
-Base.push!(plt::Plot, i::Integer, args::Real...) = push!(plt.series_list[i], args...)
-Base.append!(plt::Plot, args::AbstractVector) = append!(plt, 1, args...)
-Base.append!(plt::Plot, i::Integer, args::Real...) = append!(plt.series_list[i], args...)
+Base.push!(plt::Plot, i::Integer, arg::Real, args::Real...) =
+    push!(plt.series_list[i], arg, args...)
+Base.append!(plt::Plot, args::Real...) = append!(plt, 1, args...)
+Base.append!(plt::Plot, i::Integer, arg::Real, args::Real...) =
+    append!(plt.series_list[i], arg, args...)
+
+# a collection per coordinate: `append!(plt, ys)` or `append!(plt, xs, ys)`
+Base.append!(plt::Plot, args::AbstractVector...) = append!(plt, 1, args...)
+Base.append!(plt::Plot, i::Integer, arg::AbstractVector, args::AbstractVector...) =
+    append!(plt.series_list[i], arg, args...)
 
 # tuples
 Base.push!(plt::Plot, t::Tuple) = push!(plt, 1, t...)
