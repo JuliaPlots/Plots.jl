@@ -30,6 +30,9 @@
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
 
 ## Breaking changes
+- `lims` takes limits only: `:auto`, or a two-element tuple or vector. `xlims = :round` and
+  `xlims = :symmetric` are now `xlimits_modifiers = (round = true,)` and `(symmetric = true,)`,
+  which also compose with `:widen` (#3556)
 - The `widen` axis attribute is replaced by `limits_modifiers`, which composes. It takes a named tuple
   of modifiers applied left to right, as in `xlimits_modifiers = (symmetric = true, widen = 1.2)`;
   `:widen`, `:round` and `:symmetric` are available, a bare name switches one on, and `:none` applies
