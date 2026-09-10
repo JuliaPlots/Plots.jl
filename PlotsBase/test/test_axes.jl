@@ -134,13 +134,13 @@ end
     default_widen(from, to) =
         PlotsBase.Axes.scale_lims(from, to, PlotsBase.Axes.default_widen_factor)
 
-    pl = plot(1:5, xlims = :symmetric, limits_modifiers = :none)
+    pl = plot(1:5, limits_modifiers = (symmetric = true,))
     @test PlotsBase.xlims(pl) == (-5, 5)
 
     pl = plot(1:3)
     @test PlotsBase.xlims(pl) == default_widen(1, 3)
 
-    pl = plot([1.05, 2.0, 2.95], ylims = :round)
+    pl = plot([1.05, 2.0, 2.95], ylimits_modifiers = (round = true,))
     @test PlotsBase.ylims(pl) == (1, 3)
 
     for x in (1:3, -10:10), xlims in ((1, 5), [1, 5])
@@ -150,7 +150,7 @@ end
         @test PlotsBase.xlims(pl) == default_widen(1, 5)
     end
 
-    pl = plot(1:5, lims = :symmetric, limits_modifiers = :none)
+    pl = plot(1:5, limits_modifiers = (symmetric = true,))
     @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5, 5)
 
     for xlims in (0, 0.0, false, true, plot())
@@ -199,10 +199,12 @@ end
             plot(1:5; xlims = (1, 5), xlimits_modifiers = :widen),
         ) == default_widen(1, 5)
 
-        # `xlims = :round` and `:symmetric` keep working, and are not the same as the
-        # modifiers of the same name: they run before the degenerate span fixup
-        @test PlotsBase.ylims(plot([1.05, 2.0, 2.95], ylims = :round)) == (1, 3)
-        @test xl(xlims = :symmetric) == default_widen(-5, 5)
+        # `lims` takes limits only now, rounding and symmetrizing are modifiers
+        for gone in (:round, :symmetric)
+            @test_logs (:warn, r"Invalid limits for x axis") match_mode = :any xl(
+                xlims = gone,
+            )
+        end
 
         for bad in (:typo, (:widen, 1.2), (typo = true,), [:widen, :round])
             @test_logs (:warn, r"Invalid xlimits modifier") match_mode = :any xl(

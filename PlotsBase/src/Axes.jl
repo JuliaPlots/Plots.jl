@@ -155,10 +155,6 @@ function Commons.axis_limits(
             lmax ≡ :auto || @maxlog_warn "Invalid max $(letter)limit" lmax
         end
     end
-    if lims ≡ :symmetric
-        amax = max(abs(amin), abs(amax))
-        amin = -amax
-    end
     if amax ≤ amin && isfinite(amin)
         amax = amin + 1.0
     end
@@ -173,12 +169,10 @@ function Commons.axis_limits(
             # widen max radius so ticks dont overlap with theta axis
             amin, amax = 0, amax + 0.1abs(amax - amin)
         end
-    elseif !isempty(chain)
+    else
         for m in pairs(chain)  # applied left to right
             amin, amax = apply_limits_modifier(amin, amax, m, axis[:scale])
         end
-    elseif lims ≡ :round
-        amin, amax = round_limits(amin, amax, axis[:scale])
     end
 
     if expand_int_ticks &&
@@ -238,7 +232,7 @@ or rounded, and only for series types that would otherwise clip at the border
 """
 function auto_limits_modifiers(axis::Axis)
     lims = process_limits(axis[:lims], axis)
-    (lims isa Tuple || lims ≡ :round) && return (;)
+    lims isa Tuple && return (;)
     for sp in axis.sps, series in series_list(sp)
         series.plotattributes[:seriestype] in _widen_seriestypes && return (widen = true,)
     end
@@ -319,14 +313,15 @@ end
 
 # NOTE: cannot use `NTuple` here ↓
 process_limits(lims::Tuple{<:Union{Symbol, Real}, <:Union{Symbol, Real}}, axis) = lims
-process_limits(lims::Symbol, axis) = lims
+process_limits(lims::Symbol, axis) = lims ≡ :auto ? lims : nothing
 process_limits(lims::AVec, axis) =
     length(lims) == 2 && all(map(x -> x isa Union{Symbol, Real}, lims)) ? Tuple(lims) :
     nothing
 process_limits(lims, axis) = nothing
 
 warn_invalid_limits(lims, letter) = @maxlog_warn """
-Invalid limits for $letter axis. Limits should be a symbol, or a two-element tuple or vector of numbers.
+Invalid limits for $letter axis. Limits should be `:auto`, or a two-element tuple or vector of numbers.
+Use `$(letter)limits_modifiers` to round or symmetrize them.
 $(letter)lims = $lims
 """
 function scale_lims(from, to, factor)
