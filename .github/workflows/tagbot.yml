@@ -22,7 +22,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
     runs-on: ubuntu-latest
     steps:
-      - uses: JuliaRegistries/TagBot@v1
+      - uses: BeastyBlacksmith/TagBot@fix/registry-stale-clone
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.TAGBOT_KEY }}
