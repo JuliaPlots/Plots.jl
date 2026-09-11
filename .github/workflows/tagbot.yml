@@ -22,9 +22,12 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
     runs-on: ubuntu-latest
     steps:
+      - name: Clone latest General registry
+        run: git clone --depth 1 https://github.com/JuliaRegistries/General.git /tmp/General
       - uses: JuliaRegistries/TagBot@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.TAGBOT_KEY }}
           branch: master
           subdir: Plots
+          registry: /tmp/General
