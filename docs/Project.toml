@@ -50,7 +50,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 DataFrames = "1"
-Dates =  "1"
+Dates =  "1, < 0.0.1"
 Documenter = "1"
 FileIO = "1"
 FreeType = "4"
