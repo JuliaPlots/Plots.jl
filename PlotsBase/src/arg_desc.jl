@@ -168,9 +168,8 @@ const _arg_desc = KW(
     :lims => (
         Union{NTuple{2, Real}, Symbol}, """
         Force axis limits. Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example).
-        `:round` widens the limit to the nearest round number, i.e. [0.1,3.6]=>[0.0,4.0].
-        `:symmetric` sets the limits to be symmetric around zero.
-        See `limits_modifiers` for composing these, and for widening limits given explicitly.""",
+        `:auto` leaves them to the data.
+        To round or symmetrize the limits, or to widen limits given explicitly, use `limits_modifiers`.""",
     ),
     :ticks => (TicksType, "Tick values, (tickvalues, ticklabels), `:auto`/`true`, `:none`/`false`/`nothing` (ticks disabled), or `:native` (tells backend to calculate ticks by itself; good idea for interactive backends with mouse zooming)."),
     :scale => (Symbol, "Scale of the axis. Choose from $(Commons._all_scales)."),
