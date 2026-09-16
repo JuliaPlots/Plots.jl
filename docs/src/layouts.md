@@ -53,7 +53,7 @@ l = @layout [
 plot(
     rand(10, 11);
     layout = l, legend = false, seriestype = [:bar :scatter :path],
-    title = ["($i)" for j in 1:1, i in 1:11], titleloc = :right, titlefont = font(8)
+    title = ["($i)" for j in 1:1, i in 1:11], titleloc = :right, title_font = font(8)
 )
 ```
 

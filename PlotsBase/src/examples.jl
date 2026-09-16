@@ -676,10 +676,10 @@ const _examples = PlotExample[
         "Setting defaults and font arguments",
         quote
             default(
-                titlefont = (20, "times"),
+                title_font = (20, "times"),
                 legendfontsize = 18,
-                guidefont = (18, :darkgreen),
-                tickfont = (12, :orange),
+                guide_font = (18, :darkgreen),
+                tick_font = (12, :orange),
                 guide = "x",
                 framestyle = :zerolines,
                 yminorgrid = true,
@@ -933,8 +933,8 @@ const _examples = PlotExample[
                 layout = 4,
                 xguide = "x guide",
                 yguide = "y guide",
-                xguidefonthalign = [:left :right :right :left],
-                yguidefontvalign = [:top :bottom :bottom :top],
+                xguide_font_halign = [:left :right :right :left],
+                yguide_font_valign = [:top :bottom :bottom :top],
                 xguideposition = :top,
                 yguideposition = [:right :left :right :left],
                 ymirror = [false true true false],
@@ -1051,7 +1051,7 @@ const _examples = PlotExample[
         "Annotations at discrete locations",
         quote
             x, y = ["a", "b", "c"], [1, 5, 15]
-            p = scatter(["a", "b"], ["q", "r"], ms = 8, legend = false, tickfontsize = 20)
+            p = scatter(["a", "b"], ["q", "r"], ms = 8, legend = false, tick_font_size = 20)
             annotate!(
                 ["a", "b"],
                 ["r", "q"],

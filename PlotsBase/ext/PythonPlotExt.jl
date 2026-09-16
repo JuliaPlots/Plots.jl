@@ -118,7 +118,7 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :bar_position,
         :title,
         :titlelocation,
-        :titlefont,
+        :title_font,
         :window_title,
         :guide,
         :guide_position,
@@ -128,18 +128,18 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :scale,
         :flip,
         :rotation,
-        :titlefontfamily,
-        :titlefontsize,
-        :titlefontcolor,
+        :title_font_family,
+        :title_font_size,
+        :title_font_color,
         :legend_font_family,
-        :legend_font_pointsize,
+        :legend_font_size,
         :legend_font_color,
-        :tickfontfamily,
-        :tickfontsize,
-        :tickfontcolor,
-        :guidefontfamily,
-        :guidefontsize,
-        :guidefontcolor,
+        :tick_font_family,
+        :tick_font_size,
+        :tick_font_color,
+        :guide_font_family,
+        :guide_font_size,
+        :guide_font_color,
         :grid,
         :gridalpha,
         :gridstyle,
@@ -172,14 +172,14 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :line_z,
         :fill,
         :fill_z,
-        :fontfamily,
-        :fontfamily_subplot,
+        :font_family,
+        :font_family_subplot,
         :legend_column,
         :legend_font,
         :legend_title,
         :legend_title_font_color,
         :legend_title_font_family,
-        :legend_title_font_pointsize,
+        :legend_title_font_size,
         :levels,
         :ribbon,
         :quiver,
@@ -1057,9 +1057,9 @@ function _py_set_axis_colors(sp, ax, a::Axis)
             axis = string(a[:letter]),
             which = "both",
             colors = tickcolor,
-            labelcolor = _py_color(a[:tickfontcolor]),
+            labelcolor = _py_color(a[:tick_font_color]),
         )
-        getproperty(ax, axis_sym).label.set_color(_py_color(a[:guidefontcolor]))
+        getproperty(ax, axis_sym).label.set_color(_py_color(a[:guide_font_color]))
     end
 end
 
@@ -1109,10 +1109,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 end
             )
             func.set_text(string(title))
-            func.set_fontsize(_py_thickness_scale(plt, sp[:titlefontsize]))
-            func.set_family(sp[:titlefontfamily])
-            func.set_math_fontfamily(_py_get_matching_math_font(sp[:titlefontfamily]))
-            func.set_color(_py_color(sp[:titlefontcolor]))
+            func.set_fontsize(_py_thickness_scale(plt, sp[:title_font_size]))
+            func.set_family(sp[:title_font_family])
+            func.set_math_fontfamily(_py_get_matching_math_font(sp[:title_font_family]))
+            func.set_color(_py_color(sp[:title_font_color]))
         end
 
         # add the colorbar legend
@@ -1348,10 +1348,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 pyaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
             elseif has_major_ticks
                 fontProperties = Dict(
-                    "math_fontfamily" => _py_get_matching_math_font(axis[:tickfontfamily]),
-                    "size" => _py_thickness_scale(plt, axis[:tickfontsize]),
-                    "rotation" => axis[:tickfontrotation],
-                    "family" => axis[:tickfontfamily],
+                    "math_fontfamily" => _py_get_matching_math_font(axis[:tick_font_family]),
+                    "size" => _py_thickness_scale(plt, axis[:tick_font_size]),
+                    "rotation" => axis[:tick_font_rotation],
+                    "family" => axis[:tick_font_family],
                 )
                 positions = getproperty(ax, get_axis(letter, :ticks))()
                 pyaxis.set_major_locator(mpl.ticker.FixedLocator(positions))
@@ -1374,16 +1374,16 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             end
 
             getproperty(ax, set_axis(letter, :label))(PlotsBase.get_guide(axis))
-            pyaxis.label.set_fontsize(_py_thickness_scale(plt, axis[:guidefontsize]))
-            pyaxis.label.set_family(axis[:guidefontfamily])
+            pyaxis.label.set_fontsize(_py_thickness_scale(plt, axis[:guide_font_size]))
+            pyaxis.label.set_family(axis[:guide_font_family])
             pyaxis.label.set_math_fontfamily(
-                _py_get_matching_math_font(axis[:guidefontfamily]),
+                _py_get_matching_math_font(axis[:guide_font_family]),
             )
 
             RecipesPipeline.is3d(sp) && pyaxis.set_rotate_label(false)
             axis[:flip] && getproperty(ax, Symbol(:invert_, letter, :axis))()
 
-            axis[:guidefontrotation] + if letter ≡ :y && !RecipesPipeline.is3d(sp)
+            axis[:guide_font_rotation] + if letter ≡ :y && !RecipesPipeline.is3d(sp)
                 90
             else
                 0
@@ -1650,7 +1650,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                 ),
                 linewidth = _py_thickness_scale(
                     plt,
-                    has_line * sp[:legend_font_pointsize] / 8,
+                    has_line * sp[:legend_font_size] / 8,
                 ),
                 linestyle = _py_linestyle(:path, get_linestyle(series)),
                 solid_capstyle = "butt",
@@ -1658,7 +1658,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                 dash_capstyle = "butt",
                 dash_joinstyle = "miter",
                 marker = _py_marker(_cycle(series[:markershape], 1)),
-                markersize = _py_thickness_scale(plt, 0.8sp[:legend_font_pointsize]),
+                markersize = _py_thickness_scale(plt, 0.8sp[:legend_font_size]),
                 markeredgecolor = _py_color(
                     single_color(get_markerstrokecolor(series)),
                     get_markerstrokealpha(series),
@@ -1669,7 +1669,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                 ),
                 markeredgewidth = _py_thickness_scale(
                     plt,
-                    0.8get_markerstrokewidth(series) * sp[:legend_font_pointsize] /
+                    0.8get_markerstrokewidth(series) * sp[:legend_font_size] /
                         first(series[:markersize]),
                 ),   # retain the markersize/markerstroke ratio from the markers on the plot
             ) |> push_h
@@ -1698,7 +1698,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
         loc = _py_legend_pos(leg),
         bbox_to_anchor = _py_legend_bbox(leg),
         scatterpoints = 1,
-        fontsize = _py_thickness_scale(plt, sp[:legend_font_pointsize]),
+        fontsize = _py_thickness_scale(plt, sp[:legend_font_size]),
         facecolor = _py_color(sp[:legend_background_color]),
         edgecolor = _py_color(sp[:legend_foreground_color]),
         framealpha = alpha(plot_color(sp[:legend_background_color])),
@@ -1714,7 +1714,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
             leg.get_title(),
             color = _py_color(sp[:legend_title_font_color]),
             family = sp[:legend_title_font_family],
-            fontsize = _py_thickness_scale(plt, sp[:legend_title_font_pointsize]),
+            fontsize = _py_thickness_scale(plt, sp[:legend_title_font_size]),
         )
     end
 
@@ -1723,7 +1723,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
             txt,
             color = _py_color(sp[:legend_font_color]),
             family = sp[:legend_font_family],
-            fontsize = _py_thickness_scale(plt, sp[:legend_font_pointsize]),
+            fontsize = _py_thickness_scale(plt, sp[:legend_font_size]),
         )
     end
     return nothing

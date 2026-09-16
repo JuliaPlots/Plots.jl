@@ -316,7 +316,7 @@ function tick_padding(sp::Subplot, axis::Axis)
     else
         vals, labs = ticks
         isempty(labs) && return 0mm
-        # ptsz = axis[:tickfont].pointsize * pt
+        # ptsz = axis[:tick_font].pointsize * pt
         longest_label = maximum(length(lab) for lab in labs)
 
         # generalize by "rotating" y labels
@@ -332,7 +332,7 @@ function tick_padding(sp::Subplot, axis::Axis)
         =#
 
         # get the height of the rotated label
-        text_size(longest_label, axis[:tickfontsize], rot)[2]
+        text_size(longest_label, axis[:tick_font_size], rot)[2]
     end
 end
 

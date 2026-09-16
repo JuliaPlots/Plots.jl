@@ -180,12 +180,12 @@ RecipesPipeline.preprocess_attributes!(::Plot, plotattributes::AKW) =
     Commons.preprocess_attributes!(plotattributes)
 
 plottitlefont(plt::Plot) = font(;
-    family = plt[:plot_titlefontfamily],
-    pointsize = plt[:plot_titlefontsize],
-    valign = plt[:plot_titlefontvalign],
-    halign = plt[:plot_titlefonthalign],
-    rotation = plt[:plot_titlefontrotation],
-    color = plt[:plot_titlefontcolor],
+    family = plt[:plot_title_font_family],
+    pointsize = plt[:plot_title_font_size],
+    valign = plt[:plot_title_font_valign],
+    halign = plt[:plot_title_font_halign],
+    rotation = plt[:plot_title_font_rotation],
+    color = plt[:plot_title_font_color],
 )
 
 _update_plot_object(plt::Plot) = nothing

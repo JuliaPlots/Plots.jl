@@ -1,4 +1,4 @@
-const PLOTSBASE_DEFAULTS = Dict(:theme => :wong2, :fontfamily => :palantino)
+const PLOTSBASE_DEFAULTS = Dict(:theme => :wong2, :font_family => :palantino)
 PlotsBase._plots_theme_defaults()
 
 @testset "Loading theme" begin
@@ -17,14 +17,14 @@ PlotsBase._plots_theme_defaults()
     @test pl[1][1][:fillrange] == 0
     @test_nowarn default(legendfont = font(5))
     pl = plot(1:5)
-    @test pl[1][:legend_font_pointsize] == 5
+    @test pl[1][:legend_font_size] == 5
     default()
 end
 
 @testset "Legend defaults" begin
     pl = plot()
     @test pl[1][:legend_font_family] == "sans-serif"
-    @test pl[1][:legend_font_pointsize] == 8
+    @test pl[1][:legend_font_size] == 8
     @test pl[1][:legend_font_halign] ≡ :hcenter
     @test pl[1][:legend_font_valign] ≡ :vcenter
     @test pl[1][:legend_font_rotation] == 0.0
@@ -32,7 +32,7 @@ end
     @test pl[1][:legend_position] ≡ :best
     @test pl[1][:legend_title] ≡ nothing
     @test pl[1][:legend_title_font_family] == "sans-serif"
-    @test pl[1][:legend_title_font_pointsize] == 11
+    @test pl[1][:legend_title_font_size] == 11
     @test pl[1][:legend_title_font_halign] ≡ :hcenter
     @test pl[1][:legend_title_font_valign] ≡ :vcenter
     @test pl[1][:legend_title_font_rotation] == 0.0
@@ -61,7 +61,7 @@ end
         foreground_color_legend = :green,
     )
     @test pl[1][:legend_font_family] == "serif"
-    @test pl[1][:legend_font_pointsize] == 12
+    @test pl[1][:legend_font_size] == 12
     @test pl[1][:legend_font_halign] ≡ :left
     @test pl[1][:legend_font_valign] ≡ :top
     @test pl[1][:legend_font_rotation] == 1.0
@@ -69,7 +69,7 @@ end
     @test pl[1][:legend_position] ≡ :outertopleft
     @test pl[1][:legend_title] == "The legend"
     @test pl[1][:legend_title_font_family] == "helvetica"
-    @test pl[1][:legend_title_font_pointsize] == 3
+    @test pl[1][:legend_title_font_size] == 3
     @test pl[1][:legend_title_font_halign] ≡ :right
     @test pl[1][:legend_title_font_valign] ≡ :bottom
     @test pl[1][:legend_title_font_rotation] == -5.2
@@ -79,7 +79,7 @@ end
         RGBA{Float64}(0.0, 0.5019607843137255, 0.0, 1.0)
 
     #remember settings
-    plot(legend_font_pointsize = 20)
+    plot(legend_font_size = 20)
     sp = plot!(label = "R")[1]
     @test PlotsBase.legendfont(sp).pointsize == 20
 
@@ -99,6 +99,6 @@ end
 
     # magic invocation
     @test_nowarn sp = plot(; legendfont = 12)[1]
-    @test sp[:legend_font_pointsize] == 12
+    @test sp[:legend_font_size] == 12
     @test PlotsBase.legendfont(sp).pointsize == 12
 end

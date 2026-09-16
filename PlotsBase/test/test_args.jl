@@ -54,10 +54,10 @@ end
 end
 
 @testset "Axis Attributes" begin
-    pl = @test_nowarn plot(; tickfont = font(10, "Times"))
+    pl = @test_nowarn plot(; tick_font = font(10, "Times"))
     for axis in (:xaxis, :yaxis, :zaxis)
-        @test pl[1][axis][:tickfontsize] == 10
-        @test pl[1][axis][:tickfontfamily] == "Times"
+        @test pl[1][axis][:tick_font_size] == 10
+        @test pl[1][axis][:tick_font_family] == "Times"
     end
 end
 
@@ -65,7 +65,7 @@ end
     pl = @test_nowarn plot(rand(3, 3))
     @test plot(pl, plot_title = "Test")[:plot_title] == "Test"
     @test plot(pl, title = "Test")[1][:title] == "Test"
-    @test plot(pl, xtickfontsize = 1)[1][:xaxis][:tickfontsize] == 1
+    @test plot(pl, xtick_font_size = 1)[1][:xaxis][:tick_font_size] == 1
     @test plot(pl, label = "Test")[1][1][:label] == "Test"
     @test plot(pl, label = "Test")[1][2][:label] == "Test"
     @test plot(pl, label = "Test")[1][3][:label] == "Test"

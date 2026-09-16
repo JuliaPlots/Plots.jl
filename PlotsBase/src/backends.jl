@@ -54,9 +54,9 @@ _series_updated(::Plot, ::Series) = nothing
 
 _before_layout_calcs(plt::Plot) = nothing
 
-title_padding(sp::Subplot) = isempty(sp[:title]) ? 0mm : sp[:titlefontsize] * pt + sp[:title_gap]
+title_padding(sp::Subplot) = isempty(sp[:title]) ? 0mm : sp[:title_font_size] * pt + sp[:title_gap]
 guide_padding(axis::Axis) =
-    isempty(PlotsBase.get_guide(axis)) ? 0mm : axis[:guidefontsize] * pt
+    isempty(PlotsBase.get_guide(axis)) ? 0mm : axis[:guide_font_size] * pt
 
 closeall(::AbstractBackend) = nothing
 

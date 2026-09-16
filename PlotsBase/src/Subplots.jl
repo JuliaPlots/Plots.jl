@@ -118,17 +118,17 @@ colorbartickfont(sp::Subplot) = font(;
 )
 
 titlefont(sp::Subplot) = font(;
-    family = sp[:titlefontfamily],
-    pointsize = sp[:titlefontsize],
-    valign = sp[:titlefontvalign],
-    halign = sp[:titlefonthalign],
-    rotation = sp[:titlefontrotation],
-    color = sp[:titlefontcolor],
+    family = sp[:title_font_family],
+    pointsize = sp[:title_font_size],
+    valign = sp[:title_font_valign],
+    halign = sp[:title_font_halign],
+    rotation = sp[:title_font_rotation],
+    color = sp[:title_font_color],
 )
 
 legendfont(sp::Subplot) = font(;
     family = sp[:legend_font_family],
-    pointsize = sp[:legend_font_pointsize],
+    pointsize = sp[:legend_font_size],
     valign = sp[:legend_font_valign],
     halign = sp[:legend_font_halign],
     rotation = sp[:legend_font_rotation],
@@ -137,7 +137,7 @@ legendfont(sp::Subplot) = font(;
 
 legendtitlefont(sp::Subplot) = font(;
     family = sp[:legend_title_font_family],
-    pointsize = sp[:legend_title_font_pointsize],
+    pointsize = sp[:legend_title_font_size],
     valign = sp[:legend_title_font_valign],
     halign = sp[:legend_title_font_halign],
     rotation = sp[:legend_title_font_rotation],
