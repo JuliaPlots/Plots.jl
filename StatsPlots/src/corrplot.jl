@@ -50,7 +50,7 @@ end
     legend := false
     foreground_color_border := nothing
     margin := 1mm
-    titlefont := font(11)
+    title_font := font(11)
     fillcolor --> PlotsBase.fg_color(plotattributes)
     linecolor --> PlotsBase.fg_color(plotattributes)
     markeralpha := 0.4

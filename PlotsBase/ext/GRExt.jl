@@ -25,12 +25,12 @@ PlotsBase.@extension_static GRBackend gr
 const _gr_attrs = PlotsBase.merge_with_base_supported(
     [
         :annotations,
-        :annotationrotation,
-        :annotationhalign,
-        :annotationfontsize,
-        :annotationfontfamily,
-        :annotationcolor,
-        :annotationvalign,
+        :annotation_font_rotation,
+        :annotation_font_halign,
+        :annotation_font_size,
+        :annotation_font_family,
+        :annotation_font_color,
+        :annotation_font_valign,
         :legend_background_color,
         :background_color_inside,
         :background_color_outside,
@@ -67,30 +67,30 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :ticks,
         :scale,
         :flip,
-        :titlefontfamily,
-        :titlefontsize,
-        :titlefonthalign,
-        :titlefontvalign,
-        :titlefontrotation,
-        :titlefontcolor,
+        :title_font_family,
+        :title_font_size,
+        :title_font_halign,
+        :title_font_valign,
+        :title_font_rotation,
+        :title_font_color,
         :legend_font_family,
-        :legend_font_pointsize,
+        :legend_font_size,
         :legend_font_halign,
         :legend_font_valign,
         :legend_font_rotation,
         :legend_font_color,
-        :tickfontfamily,
-        :tickfontsize,
-        :tickfonthalign,
-        :tickfontvalign,
-        :tickfontrotation,
-        :tickfontcolor,
-        :guidefontfamily,
-        :guidefontsize,
-        :guidefonthalign,
-        :guidefontvalign,
-        :guidefontrotation,
-        :guidefontcolor,
+        :tick_font_family,
+        :tick_font_size,
+        :tick_font_halign,
+        :tick_font_valign,
+        :tick_font_rotation,
+        :tick_font_color,
+        :guide_font_family,
+        :guide_font_size,
+        :guide_font_halign,
+        :guide_font_valign,
+        :guide_font_rotation,
+        :guide_font_color,
         :grid,
         :gridalpha,
         :gridstyle,
@@ -123,8 +123,8 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :clims,
         :fill,
         :fill_z,
-        :fontfamily,
-        :fontfamily_subplot,
+        :font_family,
+        :font_family_subplot,
         :line_z,
         :marker_z,
         :legend_column,
@@ -133,18 +133,18 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :legend_title_font_color,
         :legend_title_font_family,
         :legend_title_font_rotation,
-        :legend_title_font_pointsize,
-        :legend_title_font_valigm,
+        :legend_title_font_size,
+        :legend_title_font_valign,
         :levels,
         :line,
         :ribbon,
         :quiver,
         :overwrite_figure,
         :plot_title,
-        :plot_titlefontcolor,
-        :plot_titlefontfamily,
-        :plot_titlefontrotation,
-        :plot_titlefontsize,
+        :plot_title_font_color,
+        :plot_title_font_family,
+        :plot_title_font_rotation,
+        :plot_title_font_size,
         :plot_titlelocation,
         :plot_titlevspan,
         :polar,
@@ -169,10 +169,10 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :mirror,
         :rotation,
         :showaxis,
-        :tickfonthalign,
+        :tick_font_halign,
         :formatter,
         :mirror,
-        :guidefont,
+        :guide_font,
     ]
 )
 const _gr_seriestypes = [
@@ -1002,7 +1002,7 @@ gr_set_tickfont(sp, ax::Axis; kw...) = gr_set_font(
     tickfont(ax),
     sp;
     rotation = ax[:rotation],
-    color = ax[:tickfontcolor],
+    color = ax[:tick_font_color],
     kw...,
 )
 
@@ -1012,7 +1012,7 @@ function gr_set_tickfont(sp, letter::Symbol; kw...)
         tickfont(axis),
         sp;
         rotation = axis[:rotation],
-        color = axis[:tickfontcolor],
+        color = axis[:tick_font_color],
         kw...,
     )
 end
@@ -1341,7 +1341,7 @@ function gr_add_legend(sp, leg, viewport_area)
         gr_set_font(legendfont(sp), sp; halign = :left, valign = :center)
 
         lft, rgt, bot, top = -leg.space - leg.span, -leg.space, -0.4leg.dy, 0.4leg.dy
-        lfps = sp[:legend_font_pointsize]
+        lfps = sp[:legend_font_size]
 
         min_lw = DEFAULT_LINEWIDTH[] / gr_lw_clamp_factor[]
         max_lw = DEFAULT_LINEWIDTH[] * gr_lw_clamp_factor[]
@@ -1958,11 +1958,11 @@ function gr_label_axis(sp, letter, vp)
         mirror = ax[:mirror]
         GR.savestate()
         guide_position = ax[:guide_position]
-        rotation = float(ax[:guidefontrotation])  # github.com/JuliaPlots/Plots.jl/issues/3089
+        rotation = float(ax[:guide_font_rotation])  # github.com/JuliaPlots/Plots.jl/issues/3089
         if letter ≡ :x
             # default rotation = 0. should yield GR.setcharup(0, 1) i.e. 90°
-            xpos = xposition(vp, position(ax[:guidefonthalign]))
-            halign = alignment(ax[:guidefonthalign])
+            xpos = xposition(vp, position(ax[:guide_font_halign]))
+            halign = alignment(ax[:guide_font_halign])
             ypos, valign = if guide_position ≡ :top || (guide_position ≡ :auto && mirror)
                 vp.ymax + 0.015 + (mirror ? gr_axis_height(sp, ax) : 0.015), :top
             else
@@ -1970,8 +1970,8 @@ function gr_label_axis(sp, letter, vp)
             end
         else
             rotation += 90  # default rotation = 0. should yield GR.setcharup(-1, 0) i.e. 180°
-            ypos = yposition(vp, position(ax[:guidefontvalign]))
-            halign = alignment(ax[:guidefontvalign])
+            ypos = yposition(vp, position(ax[:guide_font_valign]))
+            halign = alignment(ax[:guide_font_valign])
             xpos, valign = if guide_position ≡ :right || (guide_position ≡ :auto && mirror)
                 vp.xmax + 0.03 + mirror * gr_axis_width(sp, ax), :bottom
             else
@@ -1998,7 +1998,7 @@ function gr_label_axis_3d(sp, letter)
             halign = (:left, :hcenter, :right)[sign(ax[:rotation]) + 2],
             valign = ax[:mirror] ? :bottom : :top,
             rotation = ax[:rotation],
-            # color = ax[:guidefontcolor],
+            # color = ax[:guide_font_color],
         )
         ag = 0.5(amin + amax)
         ng = ax[:mirror] ? n1 : n0
@@ -2038,8 +2038,8 @@ if (title = sp[:title]) |> !isempty
     else
         xposition(vp_plt, loc[1]),
             yposition(vp_plt, loc[2]),
-            sp[:titlefonthalign],
-            sp[:titlefontvalign]
+            sp[:title_font_halign],
+            sp[:title_font_valign]
     end
     gr_set_font(titlefont(sp), sp; halign, valign)
     gr_text(xpos, ypos, title)

@@ -164,12 +164,12 @@ annotations(anns) = Any[anns]
 annotations(::Nothing) = []
 
 _annotationfont(sp::Subplot) = font(;
-    family = sp[:annotationfontfamily],
-    pointsize = sp[:annotationfontsize],
-    halign = sp[:annotationhalign],
-    valign = sp[:annotationvalign],
-    rotation = sp[:annotationrotation],
-    color = sp[:annotationcolor],
+    family = sp[:annotation_font_family],
+    pointsize = sp[:annotation_font_size],
+    halign = sp[:annotation_font_halign],
+    valign = sp[:annotation_font_valign],
+    rotation = sp[:annotation_font_rotation],
+    color = sp[:annotation_font_color],
 )
 
 _annotation(sp::Subplot, font, lab, pos...; alphabet = "abcdefghijklmnopqrstuvwxyz") = (

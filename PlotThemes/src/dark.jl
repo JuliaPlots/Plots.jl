@@ -14,9 +14,9 @@ const _dark = [
     :fgtext => colorant"#FFFFFF",
     :fgguide => colorant"#FFFFFF",
     :fglegend => colorant"#FFFFFF",
-    :legendfontcolor => colorant"#FFFFFF",
-    :legendtitlefontcolor => colorant"#FFFFFF",
-    :titlefontcolor => colorant"#FFFFFF",
+    :legend_font_color => colorant"#FFFFFF",
+    :legend_title_font_color => colorant"#FFFFFF",
+    :title_font_color => colorant"#FFFFFF",
     :palette =>
         expand_palette(dark_bg, dark_palette; lchoices = [57], cchoices = [100]),
     :colorgradient => :fire,

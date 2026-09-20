@@ -360,8 +360,8 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scale_aliases, arg, arg)
     return if typeof(arg) <: Font
-        plotattributes[get_attr_symbol(letter, :tickfont)] = arg
-        plotattributes[get_attr_symbol(letter, :guidefont)] = arg
+        plotattributes[get_attr_symbol(letter, :tick_font)] = arg
+        plotattributes[get_attr_symbol(letter, :guide_font)] = arg
 
     elseif arg in _all_scales
         plotattributes[get_attr_symbol(letter, :scale)] = arg
@@ -492,21 +492,21 @@ Base.show(io::IO, axis::Axis) = Commons.dumpdict(io, axis.plotattributes, "Axis"
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 tickfont(ax::Axis) = font(;
-    family = ax[:tickfontfamily],
-    pointsize = ax[:tickfontsize],
-    valign = ax[:tickfontvalign],
-    halign = ax[:tickfonthalign],
-    rotation = ax[:tickfontrotation],
-    color = ax[:tickfontcolor],
+    family = ax[:tick_font_family],
+    pointsize = ax[:tick_font_size],
+    valign = ax[:tick_font_valign],
+    halign = ax[:tick_font_halign],
+    rotation = ax[:tick_font_rotation],
+    color = ax[:tick_font_color],
 )
 
 guidefont(ax::Axis) = font(;
-    family = ax[:guidefontfamily],
-    pointsize = ax[:guidefontsize],
-    valign = ax[:guidefontvalign],
-    halign = ax[:guidefonthalign],
-    rotation = ax[:guidefontrotation],
-    color = ax[:guidefontcolor],
+    family = ax[:guide_font_family],
+    pointsize = ax[:guide_font_size],
+    valign = ax[:guide_font_valign],
+    halign = ax[:guide_font_halign],
+    rotation = ax[:guide_font_rotation],
+    color = ax[:guide_font_color],
 )
 
 function _update_axis(
@@ -518,7 +518,7 @@ function _update_axis(
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
     for k in Commons._all_axis_attrs
-        # first get the args without the letter: `tickfont = font(10)`
+        # first get the args without the letter: `tick_font = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
         if haskey(plotattributes_in, k)
             kw[k] = PlotsBase.slice_arg(plotattributes_in[k], subplot_index)

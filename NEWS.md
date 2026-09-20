@@ -30,6 +30,15 @@
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
 
 ## Breaking changes
+- Every font attribute is now spelled `<name>_font_<property>`, so `titlefontsize` is
+  `title_font_size`, `xtickfontcolor` is `xtick_font_color`, `guidefontfamily` is
+  `guide_font_family`, `plot_titlefontsize` is `plot_title_font_size`, `fontfamily` is
+  `font_family` and `legend_font_pointsize` is `legend_font_size`. Annotations gain the
+  missing `font` segment, so `annotationhalign` is `annotation_font_halign`, and pick up
+  `annotation_font` as a magic attribute. The previous names remain aliases on the input
+  side, reading one back throws as it already did for the legend and colorbar fonts.
+  The underscored magic names `title_font`, `plot_title_font`, `tick_font` and `guide_font`
+  were silently ignored before and now work
 - `lims` takes limits only: `:auto`, or a two-element tuple or vector. `xlims = :round` and
   `xlims = :symmetric` are now `xlimits_modifiers = (round = true,)` and `(symmetric = true,)`,
   which also compose with `:widen` (#3556)

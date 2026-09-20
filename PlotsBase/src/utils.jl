@@ -436,7 +436,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
     # handle font args common to all axes
-    for fontname in (:tickfont, :guidefont)
+    for fontname in (:tick_font, :guide_font)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             for letter in (:x, :y, :z)
@@ -450,7 +450,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
     # handle individual axes font args
     for letter in (:x, :y, :z)
-        for fontname in (:tickfont, :guidefont)
+        for fontname in (:tick_font, :guide_font)
             args = RecipesPipeline.pop_kw!(
                 plotattributes,
                 get_attr_symbol(letter, fontname),
@@ -488,12 +488,13 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
 
     # fonts
     for fontname in (
-            :titlefont,
+            :title_font,
             :legend_title_font,
-            :plot_titlefont,
+            :plot_title_font,
             :colorbar_title_font,
             :colorbar_tick_font,
             :legend_font,
+            :annotation_font,
         )
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)

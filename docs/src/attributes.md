@@ -41,7 +41,7 @@ Some arguments encompass smart shorthands for setting many related arguments at 
 Pass in a `Tuple` of values.  Single values will be first wrapped in a `Tuple` before processing.
 
 ##### `axis` (and `xaxis` / `yaxis` / `zaxis`)
-Passing a tuple of settings to the `xaxis` argument will allow the quick definition of `xlabel`, `xlims`, `xticks`, `xscale`, `xflip`, and `xtickfont`.
+Passing a tuple of settings to the `xaxis` argument will allow the quick definition of `xlabel`, `xlims`, `xticks`, `xscale`, `xflip`, and `xtick_font`.
 The following are equivalent:
 ```julia
 plot(y; xaxis = ("my label", (0,10), 0:0.5:10, :log, :flip, font(20, "Courier")))
@@ -52,7 +52,7 @@ plot(y;
     xticks = 0:0.5:10,
     xscale = :log,
     xflip = true,
-    xtickfont = font(20, "Courier")
+    xtick_font = font(20, "Courier")
 )
 ```
 Note that `yaxis` and `zaxis` work similarly, and `axis` will apply to all.

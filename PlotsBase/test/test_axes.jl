@@ -277,7 +277,7 @@ end
     pl = plot(1:2, xtick = [1.25, 1.5, 1.75])
     @test pl[1][:xaxis][:ticks] == [1.25, 1.5, 1.75]
     pl = plot(1:2, xlabelfontsize = 4)
-    @test pl[1][:xaxis][:guidefontsize] == 4
+    @test pl[1][:xaxis][:guide_font_size] == 4
     pl = plot(1:2, xgα = 0.07)
     @test pl[1][:xaxis][:gridalpha] ≈ 0.07
     pl = plot(1:2, xgridls = :dashdot)
@@ -306,7 +306,7 @@ end
     pl = plot(1:2, tick = [1.25, 1.5, 1.75])
     @test compare(pl, :ticks, [1.25, 1.5, 1.75], ==)
     pl = plot(1:2, labelfontsize = 4)
-    @test compare(pl, :guidefontsize, 4, ==)
+    @test compare(pl, :guide_font_size, 4, ==)
     pl = plot(1:2, gα = 0.07)
     @test compare(pl, :gridalpha, 0.07, ≈)
     pl = plot(1:2, gridls = :dashdot)

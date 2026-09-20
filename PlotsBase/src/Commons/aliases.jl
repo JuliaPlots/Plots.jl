@@ -47,7 +47,7 @@ add_aliases(
     :fg_colour_legend,
     :foreground_color_legend,
 )
-add_aliases(:legend_font_pointsize, :legendfontsize)
+add_aliases(:legend_font_size, :legend_font_pointsize, :legendfontsize)
 add_aliases(
     :legend_title,
     :key_title,
@@ -57,8 +57,40 @@ add_aliases(
     :leg_title,
     :legtitle,
 )
-add_aliases(:legend_title_font_pointsize, :legendtitlefontsize)
+add_aliases(:legend_title_font_size, :legend_title_font_pointsize, :legendtitlefontsize)
 add_aliases(:plot_title, :suptitle, :subplot_grid_title, :sgtitle, :plot_grid_title)
+# fonts
+add_aliases(:font_family, :fontfamily)
+add_aliases(:font_family_subplot, :fontfamily_subplot)
+# keep the compact spellings working
+const _font_parts = (:family, :size, :halign, :valign, :rotation, :color)
+for (canonical, compact) in (
+        (:title_font, :titlefont),
+        (:plot_title_font, :plot_titlefont),
+        (:legend_title_font, :legend_titlefont),
+        (:colorbar_title_font, :colorbar_titlefont),
+        (:colorbar_tick_font, :colorbar_tickfont),
+    )
+    add_aliases(canonical, compact)
+    for part in _font_parts
+        add_aliases(Symbol(canonical, :_, part), Symbol(compact, part))
+    end
+end
+for part in _font_parts
+    add_axes_aliases(Symbol(:tick_font_, part), Symbol(:tickfont, part))
+    add_axes_aliases(Symbol(:guide_font_, part), Symbol(:guidefont, part))
+end
+for letter in ("", :x, :y, :z)
+    add_aliases(Symbol(letter, :tick_font), Symbol(letter, :tickfont))
+    add_aliases(Symbol(letter, :guide_font), Symbol(letter, :guidefont))
+end
+# annotations only ever spelled `font` on the family and the size
+add_aliases(:annotation_font, :annotationfont)
+add_aliases(:annotation_font_family, :annotationfontfamily)
+add_aliases(:annotation_font_size, :annotationfontsize)
+for part in (:halign, :valign, :rotation, :color)
+    add_aliases(Symbol(:annotation_font_, part), Symbol(:annotation, part))
+end
 # margin
 add_aliases(:left_margin, :leftmargin)
 
@@ -237,7 +269,7 @@ add_axes_aliases(:lims, :lim, :limit, :limits, :range)
 add_axes_aliases(:limits_modifiers, :limits_modifier, :lims_modifiers, :lims_modifier, :lim_mod, :lims_mod)
 add_axes_aliases(:ticks, :tick)
 add_axes_aliases(:rotation, :rot, :r)
-add_axes_aliases(:guidefontsize, :labelfontsize)
+add_axes_aliases(:guide_font_size, :labelfontsize)
 add_axes_aliases(:gridalpha, :ga, :galpha, :gα, :gridopacity, :gopacity)
 add_axes_aliases(
     :gridstyle,
@@ -335,7 +367,7 @@ add_aliases(:zguide, :zlabel, :zlab, :zl)
 add_aliases(:zlims, :zlim, :zlimit, :zlimits)
 add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
-add_aliases(:guidefontsize, :labelfontsize)
+add_aliases(:guide_font_size, :labelfontsize)
 add_aliases(
     :fill_z,
     :fillz,
@@ -435,16 +467,6 @@ add_aliases(
     :cbar_titlefont,
 )
 add_aliases(:colorbar_font_family, :colorbar_fontfamily)
-# keep the compact spellings of the colorbar font attributes working
-for (part, attr) in Iterators.product(
-        (:tick, :title),
-        (:family, :size, :halign, :valign, :rotation, :color),
-    )
-    add_aliases(
-        Symbol(:colorbar_, part, :_font_, attr),
-        Symbol(:colorbar_, part, :font, attr),
-    )
-end
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
 add_aliases(:smooth, :regression, :reg)
 add_aliases(:levels, :nlevels, :nlev, :levs)
