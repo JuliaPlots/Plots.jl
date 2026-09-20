@@ -79,6 +79,23 @@ end
     end
 end
 
+@testset "offset heatmap" begin
+    # github.com/JuliaPlots/Plots.jl/issues/4623
+    pl = heatmap(OffsetMatrix(rand(11, 11), -5:5, -5:5))
+    @test length(pl) == 1
+    @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5.5, 5.5)
+
+    # offset `x` and `y` vectors, given explicitly
+    pl = heatmap(OffsetArray(1:11, -5:5), OffsetArray(1:11, -5:5), rand(11, 11))
+    @test length(pl) == 1
+
+    # edges come from the values, so an offset vector matches its 1-based twin
+    @test PlotsBase.heatmap_edges(OffsetArray(1:11, -5:5)) ==
+        PlotsBase.heatmap_edges(1:11)
+    @test PlotsBase.heatmap_edges(OffsetArray([3.0], 7:7)) ==
+        PlotsBase.heatmap_edges([3.0])
+end
+
 # NOTE: the following test seems to trigger these deprecated warnings:
 # WARNING: importing deprecated binding Colors.RGB1 into PlotUtils.
 # WARNING: importing deprecated binding Colors.RGB1 into PlotsBase.
