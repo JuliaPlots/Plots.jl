@@ -824,10 +824,10 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         # GR implicitly uses the maximal z value as the highest level
         if last(levels) < z_max
             @maxlog_warn "GR: highest contour level less than maximal z value is not supported."
-            # replace levels, rather than assign to last(levels), to ensure type
-            # promotion in case levels is an integer array
-            pop!(levels)
-            push!(levels, z_max)
+            # rebuild rather than mutate: `levels` is the series' own vector, and it is a
+            # range when the user gave one. `vcat` also promotes integer levels to the
+            # type of `z_max`
+            levels = vcat(levels[begin:(end - 1)], z_max)
         end
         colors = gr_colorbar_colors(last(series), clims)
         for (from, to, color) in zip(levels[1:(end - 1)], levels[2:end], colors)

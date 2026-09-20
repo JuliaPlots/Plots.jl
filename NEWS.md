@@ -17,6 +17,8 @@
   The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work when setting attributes
 
 ### Fixed
+- GR backend: a contour `levels` range no longer errors when its highest level is below the data
+  maximum, and drawing no longer mutates the levels it was given (#4806)
 - Log scale minor ticks are no longer duplicated, and no longer drawn on top of major ticks, when the
   major ticks are more than one decade apart (#5789)
 - `hline`, `vline`, `hspan`, `vspan` and their `!` forms accept a single position, so `hline(0.73)` no
