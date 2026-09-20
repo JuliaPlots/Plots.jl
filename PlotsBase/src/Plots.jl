@@ -87,12 +87,15 @@ Base.iterate(plt::Plot) = iterate(plt.subplots)
 Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
 Base.push!(plt::Plot, i::Integer, arg::Real, args::Real...) =
     push!(plt.series_list[i], arg, args...)
-Base.append!(plt::Plot, args::Real...) = append!(plt, 1, args...)
+# the un-indexed `append!` also takes at least one datum, else the `Real` and the
+# `AbstractVector` method would both match `append!(plt)` and be ambiguous
+Base.append!(plt::Plot, arg::Real, args::Real...) = append!(plt, 1, arg, args...)
 Base.append!(plt::Plot, i::Integer, arg::Real, args::Real...) =
     append!(plt.series_list[i], arg, args...)
 
 # a collection per coordinate: `append!(plt, ys)` or `append!(plt, xs, ys)`
-Base.append!(plt::Plot, args::AbstractVector...) = append!(plt, 1, args...)
+Base.append!(plt::Plot, arg::AbstractVector, args::AbstractVector...) =
+    append!(plt, 1, arg, args...)
 Base.append!(plt::Plot, i::Integer, arg::AbstractVector, args::AbstractVector...) =
     append!(plt.series_list[i], arg, args...)
 
