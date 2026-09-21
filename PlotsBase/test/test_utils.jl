@@ -105,7 +105,7 @@
         append!(pl.series_list[1], [4, 5, 6])
         @test y(pl) == 1:6
 
-        # an integer datum used to be read as the series index
+        # an integer argument used to be read as the series index
         pl = plot([1.0])
         push!(pl, 4)
         @test y(pl) == [1, 4]
