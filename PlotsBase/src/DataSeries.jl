@@ -89,7 +89,9 @@ extend_series!(series::Series, xi, yi, zi) = (
 
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
-    d = extend_by_data!(series[letter], v)
+    # `extend_by_data!` can only extend in place when the data is mutable, a range has to
+    # be replaced by the vector it returns
+    series[letter] = d = extend_by_data!(series[letter], v)
     expand_extrema!(series[:subplot][Commons.get_attr_symbol(letter, :axis)], d)
     return d
 end
