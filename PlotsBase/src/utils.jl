@@ -199,14 +199,18 @@ end
 # -----------------------------------------------------------------------------
 
 function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
-    (n = length(v)) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
+    length(v) == 1 &&
+        return first(v) .+ [ispolar ? max(-first(v), -0.5) : -0.5, 0.5]
     isedges && return v
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
-    extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
-    extra_max = 0.5(v[n] - v[n - 1])
-    return vcat(vmin - extra_min, 0.5(v[1:(n - 1)] + v[2:n]), vmax + extra_max)
+    # index through `firstindex` / `lastindex`, `v` may be offset
+    lo, hi = firstindex(v), lastindex(v)
+    extra_min = ispolar ? min(v[lo], 0.5(v[lo + 1] - v[lo])) : 0.5(v[lo + 1] - v[lo])
+    extra_max = 0.5(v[hi] - v[hi - 1])
+    mids = [0.5(v[i] + v[i + 1]) for i in lo:(hi - 1)]
+    return vcat(vmin - extra_min, mids, vmax + extra_max)
 end
 
 _heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =

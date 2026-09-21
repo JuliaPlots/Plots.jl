@@ -17,6 +17,7 @@
   The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work when setting attributes
 
 ### Fixed
+- `heatmap` accepts an `OffsetArray` again: the edge computation assumed 1-based indices (#4623)
 - GR backend: a contour `levels` range no longer errors when its highest level is below the data
   maximum, and drawing no longer mutates the levels it was given (#4806)
 - Log scale minor ticks are no longer duplicated, and no longer drawn on top of major ticks, when the
