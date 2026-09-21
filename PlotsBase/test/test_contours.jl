@@ -61,3 +61,23 @@ end
         @test contour(x, y, z, levels = levels)[1][1].plotattributes[:levels] == levels
     end
 end
+
+@testset "contour levels given as a range" begin
+    # github.com/JuliaPlots/Plots.jl/issues/4806
+    z = [x^2 + y^2 for x in -5:5, y in -5:5]  # `maximum(z)` is 50, above every level below
+    with(:gr) do
+        for levels in (5:5:40, range(5, 40, length = 8), collect(5:5:40))
+            @test png(contourf(-5:5, -5:5, z; levels), tempname()) isa AbstractString
+        end
+    end
+end
+
+@testset "drawing does not mutate the given levels" begin
+    given = collect(5:5:40)
+    pl = contourf(-5:5, -5:5, [x^2 + y^2 for x in -5:5, y in -5:5]; levels = given)
+    with(:gr) do
+        png(pl, tempname())
+    end
+    @test given == 5:5:40
+    @test pl.series_list[1][:levels] == 5:5:40
+end
