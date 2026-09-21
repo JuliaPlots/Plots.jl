@@ -36,6 +36,10 @@ function animate end
 # can add their own definition of RecipesBase.is_key_supported(k::Symbol)
 function is_key_supported end
 
+# resolve an attribute alias to the name the backends actually read; downstream
+# packages add their own definition of RecipesBase.canonical_key(k::Symbol)
+canonical_key(key) = key
+
 function grid end
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
@@ -142,77 +146,129 @@ end
 # end
 # and we push this block onto the series_blocks list.
 # then at the end we push the main body onto the series list
-function process_recipe_body!(expr::Expr)
+# `$attr` reads a plot attribute, but `$` already means interpolation inside
+# quoted code, so the walk carries two flags:
+#   `quoted`  - we are inside `:( ... )` / `quote ... end`, where every `$` is
+#               Julia's own interpolation and nothing may be rewritten
+#   `dollars` - a `$` here is ours; cleared inside macro calls other than our
+#               `@series`, because macros quote implicitly (`@eval f(::$T) = 1`
+#               has no `Expr(:quote)` node at all)
+# `arrows` is the old `e.head != :call` guard, kept as a flag so that `$` reads
+# still work as call arguments without arrows being rewritten in `Dict(1 => 2)`.
+_macro_name(x::Symbol) = x
+_macro_name(x::GlobalRef) = x.name
+_macro_name(x::QuoteNode) = _macro_name(x.value)
+_macro_name(x::Expr) = x.head ≡ :. ? _macro_name(x.args[end]) : Symbol("")
+_macro_name(x) = Symbol("")
+
+function _attribute_read(e::Expr)
+    length(e.args) ≡ 1 && isa(e.args[1], Symbol) || error(
+        "In recipe: `\$` reads a plot attribute and must be followed by a literal " *
+            "attribute name, as in `\$markercolor`; got `$e`. " *
+            "To read a key computed at run time, index `plotattributes` directly.",
+    )
+    return :(plotattributes[$RecipesBase.canonical_key($(QuoteNode(e.args[1])))])
+end
+
+process_recipe_body!(expr::Expr) = (_walk!(expr, false, true, true); nothing)
+
+function _walk!(expr::Expr, quoted::Bool, dollars::Bool, arrows::Bool)
+    quoted |= expr.head ≡ :quote
+    expr.head ≡ :macrocall && (dollars = _macro_name(expr.args[1]) ≡ Symbol("@series"))
+    arrows &= expr.head ≢ :call
     for (i, e) in enumerate(expr.args)
-        if isa(e, Expr)
-            # process trailing flags, like:
-            #   a --> b, :quiet, :force
-            quiet, require, force = false, false, false
-            if _is_arrow_tuple(e)
-                for flag in e.args
-                    if _equals_symbol(flag, :quiet)
-                        quiet = true
-                    elseif _equals_symbol(flag, :require)
-                        require = true
-                    elseif _equals_symbol(flag, :force)
-                        force = true
-                    end
-                end
-                e = e.args[1]
-            end
+        expr.args[i] = _node!(e, quoted, dollars, arrows)
+    end
+    return expr
+end
 
-            # the unused operator `:=` will mean force: `x := 5` is equivalent to `x --> 5, force`
-            # note: this means "x is defined as 5"
-            if e.head ≡ :(:=)
+# Symbol, literal, QuoteNode, LineNumberNode, nothing: nothing to rewrite
+_node!(e, quoted::Bool, dollars::Bool, arrows::Bool) = e
+
+function _node!(e::Expr, quoted::Bool, dollars::Bool, arrows::Bool)
+    # `$attr` reads a plot attribute, but only where the `$` is ours
+    !quoted && dollars && e.head ≡ :$ && return _attribute_read(e)
+
+    # process trailing flags, like:
+    #   a --> b, :quiet, :force
+    quiet, require, force = false, false, false
+    if arrows && _is_arrow_tuple(e)
+        for flag in e.args
+            if _equals_symbol(flag, :quiet)
+                quiet = true
+            elseif _equals_symbol(flag, :require)
+                require = true
+            elseif _equals_symbol(flag, :force)
                 force = true
-                e.head = :(-->)
-            end
-
-            # we are going to recursively swap out `a --> b, flags...` commands
-            # note: this means "x may become 5"
-            if e.head ≡ :(-->)
-                k, v = e.args
-                if isa(k, Symbol)
-                    k = QuoteNode(k)
-                end
-
-                set_expr = if force
-                    # forced override user settings
-                    :(plotattributes[$k] = $v)
-                else
-                    # if the user has set this keyword, use theirs
-                    :($RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$k] = $v))
-                end
-
-                expr.args[i] = if quiet
-                    # quietly ignore keywords which are not supported
-                    :($RecipesBase.is_key_supported($k) ? $set_expr : nothing)
-                elseif require
-                    # error when not supported by the backend
-                    :(
-                        $RecipesBase.is_key_supported($k) ? $set_expr :
-                            error(
-                                "In recipe: required keyword ",
-                                $k,
-                                " is not supported by backend $(backend_name())",
-                            )
-                    )
-                else
-                    set_expr
-                end
-
-            elseif e.head ≡ :return
-                # To allow `return` in recipes just extract the returned arguments.
-                expr.args[i] = first(e.args)
-
-            elseif e.head ≢ :call
-                # we want to recursively replace the arrows, but not inside function calls
-                # as this might include things like Dict(1=>2)
-                process_recipe_body!(e)
             end
         end
+        e = e.args[1]
     end
-    return
+
+    # the unused operator `:=` will mean force: `x := 5` is equivalent to `x --> 5, force`
+    # note: this means "x is defined as 5"
+    if arrows && e.head ≡ :(:=)
+        force = true
+        e = Expr(:(-->), e.args...)
+    end
+
+    # we are going to recursively swap out `a --> b, flags...` commands
+    # note: this means "x may become 5"
+    if arrows && e.head ≡ :(-->)
+        k, v = e.args
+        # only the value is walked; the key is spliced exactly as written, so
+        # `:($key) := v` keeps its quote, and generated code is never re-walked
+        v = _node!(v, quoted, dollars, false)
+        if isa(k, Symbol)
+            k = QuoteNode(k)
+        end
+
+        set_expr = if force
+            # forced override user settings
+            :(plotattributes[$k] = $v)
+        else
+            # if the user has set this keyword, use theirs
+            :($RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$k] = $v))
+        end
+
+        return if quiet
+            # quietly ignore keywords which are not supported
+            :($RecipesBase.is_key_supported($k) ? $set_expr : nothing)
+        elseif require
+            # error when not supported by the backend
+            :(
+                $RecipesBase.is_key_supported($k) ? $set_expr :
+                    error(
+                        "In recipe: required keyword ",
+                        $k,
+                        " is not supported by backend $(backend_name())",
+                    )
+            )
+        else
+            set_expr
+        end
+
+    elseif arrows && e.head ≡ :return
+        # To allow `return` in recipes just extract the returned arguments,
+        # then reconsider them: `return $attr` is still an attribute read
+        return _node!(first(e.args), quoted, dollars, arrows)
+
+    elseif arrows && !quoted && e.head ≡ :call && length(e.args) ≡ 3 && e.args[1] ≡ :(<--)
+        # `target <-- :attr` reads an attribute into `target`
+        return Expr(
+            :(=),
+            _node!(e.args[2], quoted, dollars, false),
+            :(
+                plotattributes[
+                    $RecipesBase.canonical_key(
+                        $(_node!(e.args[3], quoted, dollars, false)),
+                    ),
+                ]
+            ),
+        )
+    end
+
+    return _walk!(e, quoted, dollars, arrows)
 end
 
 # --------------------------------------------------------------------------
