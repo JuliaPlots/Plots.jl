@@ -448,7 +448,7 @@ end
 end
 
 @testset "UnitfulString" begin
-    str = Base.get_extension(PlotsBase, :UnitfulExt).UnitfulString("mass", u"kg")
+    str = PlotsBase.extension(:UnitfulExt).UnitfulString("mass", u"kg")
     @test pointer(str) isa Ptr
     @test pointer(str, 1) isa Ptr
     @test isvalid(str, 1)
