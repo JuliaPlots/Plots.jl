@@ -4,6 +4,10 @@
 ## Unreleased
 
 ### Features
+- `getattr(obj, attr)` reads an attribute back off a `Plot`, `Subplot`, `Axis` or `Series`,
+  resolving aliases (#4900). The object sets the scope, and one value comes back as itself
+  where several come back as a row matrix. Asking an `Axis` for another letter's attribute,
+  or for a magic attribute, is an error that names what to ask for instead
 - GR backend: Add support for `colorbar_ticks` to customize tick positions and labels on colorbars (#3560)
 - New colorbar attributes `colorbar_border_color`, `colorbar_border_width`, `colorbar_tick_color`,
   `colorbar_tick_line_width`, `colorbar_width` and `colorbar_height`, supported by the `gr`,

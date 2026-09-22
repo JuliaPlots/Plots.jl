@@ -101,3 +101,90 @@ function plotattr(attrtype::Symbol, attribute::Symbol)
         isempty(def) ? "" : ", defaults to `$def`.",
     )
 end
+
+"""
+    getattr(obj, attr::Symbol)
+
+Read the attribute `attr` off a `Plot`, `Subplot`, `Axis` or `Series`, resolving aliases, so
+`getattr(pl, :c)` and `getattr(pl, :seriescolor)` ask the same question.
+
+`obj` sets the scope: a `Plot` answers for all of its subplots and series, a `Subplot` for
+itself and its own series, an `Axis` for its subplot with its letter implied, and a `Series`
+for itself. One value comes back as itself, several as a row matrix, the shape `plot` takes
+them in.
+
+```julia
+julia> pl = plot(rand(5, 2); layout = 2, title = ["A" "B"], linestyle = :dash);
+
+julia> getattr(pl, :title)
+1×2 Matrix{String}:
+ "A"  "B"
+
+julia> getattr(pl[1], :title)
+"A"
+
+julia> getattr(pl[1][:yaxis], :lims)
+:auto
+```
+"""
+getattr(plt::Plot, attr::Symbol) = _getattr(plt, plt.subplots, plt.series_list, attr)
+getattr(sp::Subplot, attr::Symbol) = _getattr(sp.plt, [sp], sp.series_list, attr)
+getattr(series::Series, attr::Symbol) =
+    _getattr(series[:subplot].plt, [series[:subplot]], [series], attr)
+function getattr(axis::Axis, attr::Symbol)
+    sps = axis.sps
+    series = mapreduce(sp -> sp.series_list, vcat, sps; init = Series[])
+    return _getattr(first(sps).plt, sps, series, attr; letter = axis[:letter])
+end
+
+_one_or_row(f, xs) = length(xs) == 1 ? f(only(xs)) : permutedims(map(f, xs))
+
+function _getattr(plt::Plot, subplots, series_list, attr::Symbol; letter = nothing)
+    attr = get(Commons._keyAliases, attr, attr)
+    _check_not_magic(attr, attr)
+
+    attr ∈ Commons._all_plot_attrs && return plt[attr]
+    attr ∈ Commons._all_subplot_attrs &&
+        return _one_or_row(sp -> sp[attr], subplots)
+
+    if attr ∈ Commons._lettered_all_axis_attrs
+        l, base = Symbol(first(string(attr))), Symbol(chop(string(attr), head = 1, tail = 0))
+        _check_not_magic(base, attr)
+        letter ≡ nothing ||
+            letter ≡ l ||
+            throw(
+            ArgumentError(
+                "`$attr` asks the $l axis, this is the $letter axis. Use `$base` or `$(Symbol(letter, base))`.",
+            ),
+        )
+        return _one_or_row(sp -> sp[get_attr_symbol(l, :axis)][base], subplots)
+    elseif attr ∈ Commons._all_axis_attrs
+        letter ≡ nothing ||
+            return _one_or_row(sp -> sp[get_attr_symbol(letter, :axis)][attr], subplots)
+        # no letter to go on, so answer for every axis at once
+        return _one_or_row(subplots) do sp
+            NamedTuple(l => sp[get_attr_symbol(l, :axis)][attr] for l in (:x, :y, :z))
+        end
+    end
+
+    attr ∈ Commons._all_series_attrs &&
+        return _one_or_row(series -> series[attr], series_list)
+
+    # a name Plots does not know is kept in `extra_kwargs`, at whichever level took it
+    for (objects, key) in (
+            ([plt], :extra_plot_kwargs),
+            (subplots, :extra_kwargs),
+            (series_list, :extra_kwargs),
+        )
+        hits = filter(obj -> haskey(obj[key], attr), objects)
+        isempty(hits) || return _one_or_row(obj -> obj[key][attr], hits)
+    end
+    throw(ArgumentError("There is no attribute named `$attr`"))
+end
+
+_check_not_magic(attr::Symbol, asked::Symbol) =
+    attr ∈ Commons._all_magic_attrs && throw(
+    ArgumentError(
+        "`$asked` is a magic attribute: it expands into others and is never stored itself. Ask for one of those, e.g. `linestyle` rather than `line`.",
+    ),
+)
