@@ -25,6 +25,24 @@ plotattr("size")  # specific attribute example
 !!! note
     Do not forget to enclose the attribute you are attempting to use with double quotes!
 
+`plotattr` describes an attribute, `getattr` reads it back off a plot you already have.
+The object you ask sets the scope: a `Plot` answers for all of its subplots and series, a
+`Subplot` for itself and its own series, an `Axis` for its subplot with its letter implied,
+and a `Series` for itself. One value comes back as itself, several as a row matrix, the
+shape `plot` takes them in.
+
+```@repl attr
+pl = plot(rand(5, 2); layout = 2, title = ["A" "B"], linestyle = :dash);
+getattr(pl, :title)
+getattr(pl[1], :title)
+getattr(pl, :linestyle)
+getattr(pl[1][:yaxis], :lims)
+```
+
+Aliases are resolved, so `getattr(pl, :c)` and `getattr(pl, :seriescolor)` ask the same
+question. Magic attributes expand into others and are never stored, so asking for one is an
+error that names what to ask for instead.
+
 ---
 
 ### [Aliases](@id aliases)
