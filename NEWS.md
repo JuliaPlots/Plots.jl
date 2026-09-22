@@ -22,6 +22,9 @@
   where it is left untouched
 
 ### Fixed
+- `yformatter` formats the y axis for `vline`, `vspan` and the histograms, where it used to
+  be moved to the x axis (#5762). A formatter the data carries, as a `Date` vector does,
+  still follows the data to whichever axis draws it
 - `plotattr` looks up a lettered axis attribute, so `plotattr("xlims")` and `plotattr("ylabel")`
   describe `lims` and `guide` instead of erroring
 - `PlotsBase` no longer reaches into its extensions through `Base.get_extension` (#5191).

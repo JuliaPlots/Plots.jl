@@ -145,6 +145,11 @@ for st in (:hline, :vline, :hspan, :vspan)
     @eval RecipesPipeline.takes_positions(::Type{Val{Symbol($(string(st)))}}) = true
 end
 
+# these read their data from `y` but draw it against the x axis
+for st in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
+    @eval RecipesPipeline.treats_y_as_x(::Type{Val{Symbol($(string(st)))}}) = true
+end
+
 # ---------------------------------------------------------------------------
 # path and scatter
 
