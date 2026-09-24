@@ -22,6 +22,9 @@
   where it is left untouched
 
 ### Fixed
+- A recipe keyword without a default is required, as it is for a function: `@recipe function f(r; ε_max)`
+  now defines the recipe instead of failing with `FieldError: type Symbol has no field args`, and
+  plotting it without `ε_max` throws `UndefKeywordError` (#5114)
 - `plotattr` looks up a lettered axis attribute, so `plotattr("xlims")` and `plotattr("ylabel")`
   describe `lims` and `guide` instead of erroring
 - `PlotsBase` no longer reaches into its extensions through `Base.get_extension` (#5191).

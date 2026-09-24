@@ -115,7 +115,12 @@ function create_kw_body(func_signature::Expr)
     arg1 = args[1]
     if isa(arg1, Expr) && arg1.head ≡ :parameters
         for kwpair in arg1.args
-            k, v = kwpair.args
+            Meta.isexpr(kwpair, :...) && error(
+                "`$kwpair` is not supported in a recipe signature, the keywords are in `plotattributes`",
+            )
+            # a keyword without a default is required, as it is for a function
+            required = !Meta.isexpr(kwpair, :kw)
+            k, v = required ? (kwpair, nothing) : kwpair.args
             if isa(k, Expr) && k.head ≡ :(::)
                 k = k.args[1]
                 @warn """
@@ -123,7 +128,13 @@ function create_kw_body(func_signature::Expr)
                 Type information has been discarded
                 """
             end
-            push!(kw_body.args, :($k = get!(plotattributes, $(QuoteNode(k)), $v)))
+            key = QuoteNode(k)
+            value = if required
+                :(get(() -> throw(UndefKeywordError($key)), plotattributes, $key))
+            else
+                :(get!(plotattributes, $key, $v))
+            end
+            push!(kw_body.args, :($k = $value))
             push!(
                 cleanup_body.args,
                 :(
