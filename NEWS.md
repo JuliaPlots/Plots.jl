@@ -22,6 +22,8 @@
   where it is left untouched
 
 ### Fixed
+- `plotattr` looks up a lettered axis attribute, so `plotattr("xlims")` and `plotattr("ylabel")`
+  describe `lims` and `guide` instead of erroring
 - `heatmap` accepts an `OffsetArray` again: the edge computation assumed 1-based indices (#4623)
 - GR backend: a contour `levels` range no longer errors when its highest level is below the data
   maximum, and drawing no longer mutates the levels it was given (#4806)

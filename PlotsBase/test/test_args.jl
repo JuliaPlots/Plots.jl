@@ -145,3 +145,28 @@ end
     @test p3[1][:yaxis][:formatter] ≡ :plain
     @test p3[1][:xaxis][:formatter] ≡ :plain
 end
+
+@testset "plotattr" begin
+    printed(attr) = mktemp() do path, io
+        redirect_stdout(() -> plotattr(attr), io)
+        close(io)
+        read(path, String)
+    end
+
+    # a lettered axis attribute is documented under its unlettered name
+    for (attr, canonical) in (
+            "xlims" => "lims",
+            "ylabel" => "guide",
+            "xticks" => "ticks",
+            "x_ticks" => "ticks",
+            "zscale" => "scale",
+            "xtickfontsize" => "tick_font_size",
+        )
+        out = printed(attr)
+        @test startswith(out, ":$canonical\n")
+        @test occursin("`Axis` attribute", out)
+    end
+    @test printed("lims") == printed("xlims")
+    @test startswith(printed("linewidth"), ":linewidth\n")
+    @test_throws ErrorException printed("nothere")
+end
