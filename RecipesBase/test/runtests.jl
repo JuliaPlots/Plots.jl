@@ -9,7 +9,7 @@ const KW = Dict{Symbol, Any}
 
 RB.is_key_supported(k::Symbol) = true
 
-for t in map(i -> Symbol(:T, i), 1:7)
+for t in map(i -> Symbol(:T, i), 1:8)
     @eval struct $t end
 end
 
@@ -167,6 +167,29 @@ end
         end
 
         check_apply_recipe(T5, KW(:customcolor => :red))
+    end
+
+    # github.com/JuliaPlots/Plots.jl/issues/5114
+    @testset "required keyword" begin
+        RB.@recipe function plot(t::T8, n::Integer = 1; offset, scale = 2)
+            customcolor --> :red
+            scale .* rand(StableRNG(1), 10, n) .+ offset
+        end
+
+        plotattributes = KW(:offset => 1)
+        data_list = RB.apply_recipe(plotattributes, T8(), 2)
+        @test only(data_list).args == (2 .* rand(StableRNG(1), 10, 2) .+ 1,)
+        @test plotattributes[:customcolor] ≡ :red
+
+        # a keyword without a default is required, as it is for a function
+        @test_throws UndefKeywordError(:offset) RB.apply_recipe(KW(), T8(), 2)
+
+        # the keywords are in `plotattributes` already, so there is nothing to splat
+        @test_throws "is not supported in a recipe signature" @eval RB.@recipe function plot(
+                t::T8, n::Integer, m::Integer; kw...,
+            )
+            1
+        end
     end
 end  # @testset "@recipe"
 
