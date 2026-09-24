@@ -168,6 +168,17 @@ takes_positions(plotattributes::AbstractDict) =
     takes_positions(get(plotattributes, :seriestype, :path))
 
 """
+    treats_y_as_x(::Type{Val{:myseriestype}})
+
+Returns `true` if `myseriestype` reads its data from the `y` argument but draws it against
+the x axis, as `vline` and the histograms do.
+"""
+treats_y_as_x(st) = false
+treats_y_as_x(st::Symbol) = treats_y_as_x(Val{st})
+treats_y_as_x(plotattributes::AbstractDict) =
+    treats_y_as_x(get(plotattributes, :seriestype, :path))
+
+"""
     is_surface(::Type{Val{:myseriestype}})
 
 Returns `true` if `myseriestype` represents a surface series, `false` otherwise.

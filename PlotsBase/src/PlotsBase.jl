@@ -45,6 +45,7 @@ import RecipesPipeline:
     dateformatter,
     timeformatter,
     needs_3d_axes,
+    treats_y_as_x,
     DefaultsDict,
     explicitkeys,
     scale_func,

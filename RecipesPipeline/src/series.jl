@@ -132,7 +132,10 @@ struct SliceIt end
         x = x.data
     end
     if typeof(y) <: Formatted
-        yformatter := y.formatter
+        # a formatter attached to the data follows the data, which `vline` and the
+        # histograms draw against the x axis
+        letter = treats_y_as_x(plotattributes) ? :x : :y
+        plotattributes[Symbol(letter, :formatter)] = y.formatter
         y = y.data
     end
     if typeof(z) <: Formatted

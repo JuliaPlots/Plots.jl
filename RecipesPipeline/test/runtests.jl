@@ -168,6 +168,29 @@ end
     @test_throws ErrorException _series_data_vector(0.73, pa)
 end
 
+@testset "treats_y_as_x" begin
+    import RecipesPipeline: SliceIt, Formatted
+
+    # nothing opts in here, the series types that do live in `PlotsBase`
+    for st in (:path, :scatter, :bar, :heatmap)
+        @test !treats_y_as_x(st)
+    end
+    @test !treats_y_as_x(Dict{Symbol, Any}())  # defaults to `:path`
+
+    RecipesPipeline.treats_y_as_x(::Type{Val{:along_x}}) = true
+    @test treats_y_as_x(:along_x)
+    @test treats_y_as_x(Dict{Symbol, Any}(:seriestype => :along_x))
+
+    # a formatter the `y` data carries follows it to the axis it is drawn against
+    fmt(v) = string(v)
+    for (st, key) in ((:path, :yformatter), (:along_x, :xformatter))
+        pa = Dict{Symbol, Any}(:seriestype => st)
+        RecipesBase.apply_recipe(pa, SliceIt, nothing, Formatted([1.0, 2.0], fmt), nothing)
+        @test pa[key] ≡ fmt
+        @test !haskey(pa, key ≡ :xformatter ? :yformatter : :xformatter)
+    end
+end
+
 @testset "unzip" begin
     x, y, z = unzip([(1.0, 2.0, 3.0), (1.0, 2.0, 3.0)])
     @test all(x .== 1.0) && all(y .== 2.0) && all(z .== 3.0)

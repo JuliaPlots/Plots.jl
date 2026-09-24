@@ -356,6 +356,44 @@ end
     @test pl[1][:yaxis][:formatter] ≡ :none
 end
 
+@testset "formatters" begin
+    # github.com/JuliaPlots/Plots.jl/issues/5762
+    fmt(v) = "$v!"
+    axis(pl, letter) = pl[1][PlotsBase.Commons.get_attr_symbol(letter, :axis)][:formatter]
+
+    # `vline` and the histograms read their data from `y` but draw it against the x axis,
+    # which used to send a `yformatter` there too
+    for st in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist, :path, :hline)
+        pl = plot(randn(20); seriestype = st, yformatter = fmt)
+        @test axis(pl, :y) ≡ fmt
+        @test axis(pl, :x) ≡ :auto
+
+        pl = plot(randn(20); seriestype = st, xformatter = fmt)
+        @test axis(pl, :x) ≡ fmt
+        @test axis(pl, :y) ≡ :auto
+    end
+
+    # a formatter the data carries follows the data, wherever it is drawn
+    dates = Date(2020, 1, 1) .+ Day.(0:40)
+    for (st, letter) in
+        ((:vline, :x), (:vspan, :x), (:histogram, :x), (:stephist, :x), (:hline, :y))
+        pl = plot(dates; seriestype = st)
+        @test axis(pl, letter) ≡ RecipesPipeline.dateformatter
+        @test axis(pl, letter ≡ :x ? :y : :x) ≡ :auto
+    end
+    @test axis(plot(dates, 1:41), :x) ≡ RecipesPipeline.dateformatter
+    @test axis(plot(1:41, dates), :y) ≡ RecipesPipeline.dateformatter
+
+    # the two are independent
+    pl = histogram(dates; yformatter = fmt)
+    @test axis(pl, :x) ≡ RecipesPipeline.dateformatter
+    @test axis(pl, :y) ≡ fmt
+
+    pl = histogram(randn(100); yformatter = v -> "$v \$")
+    sp = pl[1]
+    @test PlotsBase.get_ticks(sp, sp[:yaxis])[2] |> first |> endswith(" \$")
+end
+
 @testset "minor ticks" begin
     # `minorticks = n` asks for `n` minor ticks between two major ticks
     for minorticks in (:auto, :none, nothing, false, true, 0, 1, 2, 3, 4, 5)

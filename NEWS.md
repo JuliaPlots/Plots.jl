@@ -22,6 +22,9 @@
   where it is left untouched
 
 ### Fixed
+- `yformatter` formats the y axis for `vline`, `vspan` and the histograms, where it used to
+  be moved to the x axis (#5762). A formatter the data carries, as a `Date` vector does,
+  still follows the data to whichever axis draws it
 - A recipe keyword without a default is required, as it is for a function: `@recipe function f(r; ε_max)`
   now defines the recipe instead of failing with `FieldError: type Symbol has no field args`, and
   plotting it without `ε_max` throws `UndefKeywordError` (#5114)
