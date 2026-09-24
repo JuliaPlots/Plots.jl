@@ -24,6 +24,10 @@
 ### Fixed
 - `plotattr` looks up a lettered axis attribute, so `plotattr("xlims")` and `plotattr("ylabel")`
   describe `lims` and `guide` instead of erroring
+- `PlotsBase` no longer reaches into its extensions through `Base.get_extension` (#5191).
+  An extension registers itself with `PlotsBase.register_extension` from its `__init__`,
+  which the backend ones get from `@extension_static`, and `PlotsBase.extension(name)`
+  reads it back
 - `heatmap` accepts an `OffsetArray` again: the edge computation assumed 1-based indices (#4623)
 - GR backend: a contour `levels` range no longer errors when its highest level is below the data
   maximum, and drawing no longer mutates the levels it was given (#4806)
