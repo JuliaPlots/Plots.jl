@@ -69,6 +69,9 @@ end
 function plotattr(attribute::AbstractString)
     attribute = Symbol(attribute)
     attribute = get(Commons._keyAliases, attribute, attribute)
+    # `xlims` is documented as `lims`, the letter only picks the axis
+    attribute ∈ Commons._lettered_all_axis_attrs &&
+        (attribute = Symbol(chop(string(attribute), head = 1, tail = 0)))
     for (k, v) in _attribute_defaults
         attribute ∈ keys(v) && return plotattr(k, attribute)
     end
