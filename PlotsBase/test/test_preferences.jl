@@ -9,15 +9,15 @@ withenv("PLOTSBASE_DEFAULT_BACKEND" => "test_invalid_backend") do
 end
 @test_logs (:error, r"Unsupported backend.*") backend(:test_invalid_backend)
 
-@test PlotsBase.default_backend() == Base.get_extension(PlotsBase, :GRExt).GRBackend()
+@test PlotsBase.default_backend() == PlotsBase.backend_instance(:gr)
 
 withenv("PLOTSBASE_DEFAULT_BACKEND" => "unicodeplots") do
     @test_logs (:info, r".*environment variable") PlotsBase.diagnostics(devnull)
     @test PlotsBase.default_backend() ==
-        Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlotsBackend()
+        PlotsBase.backend_instance(:unicodeplots)
 end
 
-@test PlotsBase.default_backend() == Base.get_extension(PlotsBase, :GRExt).GRBackend()
+@test PlotsBase.default_backend() == PlotsBase.backend_instance(:gr)
 @test PlotsBase.backend_package_name() ≡ :GR
 @test PlotsBase.backend_name() ≡ :gr
 
@@ -50,7 +50,7 @@ const DEBUG = false
         unicodeplots()
         res = @testset "[subtest] preferences UnicodePlots" begin
             @test_logs (:info, r".*Preferences") PlotsBase.diagnostics(io)
-            @test backend() == Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlotsBackend()
+            @test backend() == PlotsBase.backend_instance(:unicodeplots)
         end
         exit(res.n_passed == 2 ? 0 : 123)
         """,

@@ -1,5 +1,5 @@
 import HDF5
-const HDF5 = Base.get_extension(PlotsBase, :HDF5Ext).HDF5
+const HDF5 = PlotsBase.get_backend_module(:HDF5)[1].HDF5
 
 @testset "HDF5_Plots" begin
     fname = tempname() * ".hdf5"

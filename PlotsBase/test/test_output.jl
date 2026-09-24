@@ -41,7 +41,7 @@ end
 
 with(:unicodeplots) do
     @test_save :txt
-    UnicodePlots = Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlots
+    UnicodePlots = PlotsBase.get_backend_module(:UnicodePlots)[1].UnicodePlots
     if UnicodePlots.get_font_face() ≢ nothing
         @test_save :png
     end

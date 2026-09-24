@@ -1,5 +1,5 @@
 using Test, PlotsBase, Unitful, LaTeXStrings
-const PGFPlotsX = Base.get_extension(PlotsBase, :PGFPlotsXExt).PGFPlotsX
+const PGFPlotsX = PlotsBase.get_backend_module(:PGFPlotsX)[1].PGFPlotsX
 
 function create_plot(args...; kwargs...)
     pl = plot(args...; kwargs...)

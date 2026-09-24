@@ -20,9 +20,21 @@ _display(::Plot{NoneBackend}) =
 
 const _backendSymbol = Dict{DataType, Symbol}(NoneBackend => :none)
 const _backendType = Dict{Symbol, DataType}(:none => NoneBackend)
+const _extensionModule = Dict{Symbol, Module}()
 const _backend_packages = (unicodeplots = :UnicodePlots, pythonplot = :PythonPlot, pgfplotsx = :PGFPlotsX, plotlyjs = :PlotlyJS, gaston = :Gaston, plotly = nothing, none = nothing, hdf5 = :HDF5, gr = :GR)
 const _supported_backends = keys(_backend_packages)
 const _initialized_backends = Set([:none])
+
+"""
+    register_extension(mod::Module)
+
+Record an extension module so `PlotsBase` can reach into it by name. An extension calls this
+from its `__init__`; the backend ones get it from `@extension_static`.
+"""
+register_extension(mod::Module) = _extensionModule[nameof(mod)] = mod
+
+"the registered extension module named `name`, or `nothing` if it is not loaded"
+extension(name::Symbol) = get(_extensionModule, name, nothing)
 
 function _check_installed(pkg::Union{Module, AbstractString, Symbol}; warn = true)
     name = Symbol(lowercase(string(pkg)))
@@ -114,7 +126,7 @@ else
 end
 
 function get_backend_module(pkg_name::Symbol)
-    ext = Base.get_extension(@__MODULE__, Symbol("$(pkg_name)Ext"))
+    ext = extension(Symbol(pkg_name, :Ext))
     concrete_backend = if ext ≡ nothing
         @error "Extension $pkg_name is not loaded yet, run `import $pkg_name` to load it"
         nothing
@@ -190,6 +202,7 @@ macro extension_static(be_type, be)
         function __init__()
             PlotsBase._backendType[$be_sym] = $be_type
             PlotsBase._backendSymbol[$be_type] = $be_sym
+            PlotsBase.register_extension(@__MODULE__)
             push!(PlotsBase._initialized_backends, $be_sym)
             ccall(:jl_generating_output, Cint, ()) == 1 && return
             PlotsBase.extension_init($be_type())  # runtime init, incompatible with precompilation
