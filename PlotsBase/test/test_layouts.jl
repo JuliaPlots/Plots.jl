@@ -151,7 +151,28 @@ end
     plot(map(plot, 1:4)..., layout = (:, 2))
 end
 
+# github.com/JuliaPlots/Plots.jl/issues/5092
+struct LinkedDates end
+@recipe function f(::LinkedDates)
+    link --> :x
+    layout --> (2, 1)
+    days = Date(2020, 1, 1) .+ Day.(0:4)
+    @series begin
+        subplot := 1
+        days, 1:5
+    end
+    @series begin
+        subplot := 2
+        days[1:3], 1:3
+    end
+end
+
 @testset "Link" begin
     plot(map(plot, 1:4)..., link = :all)
     plot(map(plot, 1:4)..., link = :square)
+
+    # set by a recipe, with data that goes through a type recipe
+    pl = plot(LinkedDates())
+    @test PlotsBase.xlims(pl[1]) == PlotsBase.xlims(pl[2])
+    @test PlotsBase.ylims(pl[1]) != PlotsBase.ylims(pl[2])
 end
