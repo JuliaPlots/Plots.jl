@@ -53,6 +53,9 @@
         @test getattr(pl, :sizes) == getattr(pl, :size)
         @test getattr(pl[3][:xaxis], :xlabel) == getattr(pl[3][:xaxis], :guide)
         @test getattr(pl[1], :legend_position) ≡ :best  # added to the defaults by `@add_attributes`
+        # `link` is a plot attribute and an axis one, a letter picks the axis
+        @test getattr(pl, :link) ≡ :none
+        @test getattr(pl[1], :xlink) == getattr(pl[1][:xaxis], :link) == []
         @test_throws ArgumentError getattr(pl, :nothere)
         @test_throws ArgumentError getattr(pl[1], :nothere)
         @test_throws ArgumentError getattr(pl[1][1], :nothere)
@@ -126,8 +129,6 @@
         )
         # the series' own subplot and its processed group are state rather than input
         attrs = setdiff(attrs, (:subplot, :group))
-        # github.com/JuliaPlots/Plots.jl/issues/5092, the stored `:none` link is not accepted
-        links = (:xlink, :ylink, :zlink)
         # these do not take a row of values, one per series or per subplot, yet
         rows = (
             :arrow,
@@ -151,12 +152,8 @@
         one(; kw...) = plot([1.0, 3.0, 2.0]; kw...)
         two(; kw...) = plot([1.0 2.0; 3.0 1.0; 2.0 3.0]; layout = 2, title = ["A" "B"], kw...)
         for attr in attrs
-            if attr in links
-                @test_broken roundtrips(one, attr)
-            else
-                @test roundtrips(one, attr)
-            end
-            if attr in links || attr in rows
+            @test roundtrips(one, attr)
+            if attr in rows
                 @test_broken roundtrips(two, attr)
             else
                 @test roundtrips(two, attr)
