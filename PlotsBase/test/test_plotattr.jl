@@ -52,12 +52,116 @@
         @test getattr(pl, :c) == getattr(pl, :seriescolor)
         @test getattr(pl, :sizes) == getattr(pl, :size)
         @test getattr(pl[3][:xaxis], :xlabel) == getattr(pl[3][:xaxis], :guide)
-        for magic in (:line, :tick_font, :xtick_font)
-            @test_throws ArgumentError getattr(pl, magic)
-        end
+        @test getattr(pl[1], :legend_position) ≡ :best  # added to the defaults by `@add_attributes`
         @test_throws ArgumentError getattr(pl, :nothere)
         @test_throws ArgumentError getattr(pl[1], :nothere)
         @test_throws ArgumentError getattr(pl[1][1], :nothere)
+    end
+
+    @testset "magic attributes" begin
+        # read back as the attributes they set
+        series = pl[1][1]
+        @test getattr(series, :line) == (
+            linestyle = :dash,
+            linewidth = 5,
+            linecolor = series[:linecolor],
+            linealpha = nothing,
+            arrow = nothing,
+        )
+        @test getattr(pl, :line).linewidth == permutedims(fill(5, 6))
+        @test getattr(pl[1][:xaxis], :tick_font) == getattr(pl[1], :xtick_font)
+        @test getattr(pl[2], :xaxis).lims == (0, Inf)
+        # `grid` is magic but also stored, so it is read as the stored value
+        @test getattr(pl[1], :xgrid) ≡ true
+        # built from its parts, the stored `legend_font` does not follow them
+        @test getattr(plot(1:3; legend_font_size = 13), :legend_font).legend_font_size == 13
+
+        # and a named tuple of them sets them
+        sp = plot(1:3; line = (linewidth = 4, lc = :red), xaxis = (guide = "x", flip = true))[1]
+        @test sp[1][:linewidth] == 4
+        @test sp[1][:linecolor] == PlotsBase.RGBA(1, 0, 0, 1)
+        @test sp[:xaxis][:guide] == "x"
+        @test sp[:xaxis][:flip] && !sp[:yaxis][:flip]
+        @test_logs (:warn, r"not one of the attributes `line` sets") plot(
+            1:3;
+            line = (markersize = 3,),
+        )
+    end
+
+    @testset "an axis attribute per axis" begin
+        # asked without a letter it is answered per axis, and it takes that back
+        sp = plot(1:3; lims = (x = (0, 5), y = (1, 2)), grid = (x = false, y = true))[1]
+        @test PlotsBase.xlims(sp) == (0, 5) && PlotsBase.ylims(sp) == (1, 2)
+        @test !sp[:xaxis][:grid] && sp[:yaxis][:grid]
+        @test getattr(sp, :grid) == (x = false, y = true, z = true)
+        # an explicit letter still wins
+        @test PlotsBase.xlims(plot(1:3; lims = (x = (0, 5),), xlims = (0, 9))) == (0, 9)
+    end
+
+    @testset "round trip" begin
+        # what `getattr` returns is valid input for the same attribute and reads back the same
+        C = PlotsBase.Commons
+        same(a, b) = isequal(a, b)
+        same(a::PlotsBase.Colorant, b::PlotsBase.Colorant) =
+            PlotsBase.RGBA{Float64}(a) == PlotsBase.RGBA{Float64}(b)  # may come back as `RGBA`
+        same(a::NamedTuple, b::NamedTuple) =
+            keys(a) == keys(b) && all(k -> same(a[k], b[k]), keys(a))
+        same(a::AbstractArray, b::AbstractArray) =
+            size(a) == size(b) && all(splat(same), zip(a, b))
+        function roundtrips(mk, attr)
+            value = getattr(mk(), attr)
+            logs, back = Test.collect_test_logs(min_level = Base.CoreLogging.Warn) do
+                getattr(mk(; (attr => value,)...), attr)
+            end
+            return isempty(logs) && same(value, back)
+        end
+
+        attrs = union(
+            keys(C._plot_defaults),
+            keys(C._subplot_defaults),
+            keys(C._series_defaults),
+            keys(C._axis_defaults),
+            C._lettered_all_axis_attrs,
+            C._all_magic_attrs,
+        )
+        # the series' own subplot and its processed group are state rather than input
+        attrs = setdiff(attrs, (:subplot, :group))
+        # github.com/JuliaPlots/Plots.jl/issues/5092, the stored `:none` link is not accepted
+        links = (:xlink, :ylink, :zlink)
+        # these do not take a row of values, one per series or per subplot, yet
+        rows = (
+            :arrow,
+            :line,
+            :levels,
+            :smooth,
+            :permute,
+            :xerror,
+            :yerror,
+            :zerror,
+            :series_annotations,
+            :limits_modifiers,
+            :xlimits_modifiers,
+            :ylimits_modifiers,
+            :zlimits_modifiers,
+            :minorgrid,
+            :xminorgrid,
+            :yminorgrid,
+            :zminorgrid,
+        )
+        one(; kw...) = plot([1.0, 3.0, 2.0]; kw...)
+        two(; kw...) = plot([1.0 2.0; 3.0 1.0; 2.0 3.0]; layout = 2, title = ["A" "B"], kw...)
+        for attr in attrs
+            if attr in links
+                @test_broken roundtrips(one, attr)
+            else
+                @test roundtrips(one, attr)
+            end
+            if attr in links || attr in rows
+                @test_broken roundtrips(two, attr)
+            else
+                @test roundtrips(two, attr)
+            end
+        end
     end
 
     # a linked axis belongs to several subplots, so it answers for all of them

@@ -63,7 +63,6 @@ add_aliases(:plot_title, :suptitle, :subplot_grid_title, :sgtitle, :plot_grid_ti
 add_aliases(:font_family, :fontfamily)
 add_aliases(:font_family_subplot, :fontfamily_subplot)
 # keep the compact spellings working
-const _font_parts = (:family, :size, :halign, :valign, :rotation, :color)
 for (canonical, compact) in (
         (:title_font, :titlefont),
         (:plot_title_font, :plot_titlefont),

@@ -371,9 +371,47 @@ xlims(sp_idx::Int = 1) = xlims(current(), sp_idx)
 ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
+# `(x = ..., y = ...)` sets each axis on its own, and a row of them does so per subplot,
+# which is how `getattr` answers for an axis attribute asked without a letter
+_is_per_axis(v) = v isa NamedTuple && !isempty(v) && keys(v) ⊆ (:x, :y, :z)
+_is_per_axis(v::AbstractArray) = !isempty(v) && all(_is_per_axis, v)
+_for_axis(v::NamedTuple, letter) = haskey(v, letter) ? Some(v[letter]) : nothing
+_for_axis(v::AbstractArray, letter) =
+    all(nt -> haskey(nt, letter), v) ? Some(map(nt -> nt[letter], v)) : nothing
+
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
 function Commons.preprocess_attributes!(plotattributes::AKW)
     Commons.replaceAliases!(plotattributes, Commons._keyAliases)
+
+    # a named tuple for a magic attribute sets the attributes it names, as `getattr` reads them
+    for k in collect(keys(plotattributes))
+        (v = plotattributes[k]) isa NamedTuple || continue
+        letter, base = if k ∈ Commons._lettered_all_axis_attrs
+            Symbol(first(string(k))), Symbol(chop(string(k), head = 1, tail = 0))
+        else
+            nothing, k
+        end
+        (components = get(Commons._magic_components, base, nothing)) ≡ nothing && continue
+        delete!(plotattributes, k)
+        for (c, cv) in pairs(v)
+            c = get(Commons._keyAliases, c, c)
+            if c ∈ components
+                plotattributes[letter ≡ nothing ? c : get_attr_symbol(letter, c)] = cv
+            else
+                @maxlog_warn "`$c` is not one of the attributes `$k` sets, ignored."
+            end
+        end
+    end
+    for k in Commons._axis_attrs
+        v = get(plotattributes, k, nothing)
+        _is_per_axis(v) || continue
+        delete!(plotattributes, k)
+        for letter in (:x, :y, :z)
+            lk = get_attr_symbol(letter, k)
+            haskey(plotattributes, lk) && continue
+            (val = _for_axis(v, letter)) ≡ nothing || (plotattributes[lk] = something(val))
+        end
+    end
 
     # handle axis args common to all axis
     args = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :axis, ()))
