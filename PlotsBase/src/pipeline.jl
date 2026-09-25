@@ -40,7 +40,9 @@ function RecipesPipeline.preprocess_axis_attrs!(plt::Plot, plotattributes, lette
     return RecipesPipeline.preprocess_axis_attrs!(plt, plotattributes)
 end
 
-RecipesPipeline.is_axis_attribute(plt::Plot, attr) = Commons.is_axis_attr_noletter(attr) # in src/args.jl
+# `link` without a letter is the plot attribute, lettering it would hand `:x` to every axis
+RecipesPipeline.is_axis_attribute(plt::Plot, attr) =
+    attr ≢ :link && Commons.is_axis_attr_noletter(attr)
 
 RecipesPipeline.is_subplot_attribute(plt::Plot, attr) = Commons.is_subplot_attrs(attr) # in src/args.jl
 

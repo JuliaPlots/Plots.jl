@@ -22,6 +22,8 @@
   where it is left untouched
 
 ### Fixed
+- A recipe setting `link --> :x` no longer fails with `MethodError: no method matching iterate(::Symbol)`
+  when its data goes through a type recipe, as `Date`s do (#5092)
 - `yformatter` formats the y axis for `vline`, `vspan` and the histograms, where it used to
   be moved to the x axis (#5762). A formatter the data carries, as a `Date` vector does,
   still follows the data to whichever axis draws it
