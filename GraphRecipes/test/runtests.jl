@@ -93,6 +93,16 @@ end
         end
     end
 
+    # github.com/JuliaPlots/Plots.jl/issues/5196
+    @testset "no edges" begin
+        nodes(pl) = only(s for s in pl.series_list if s[:seriestype] ≡ :scatter)[:x]
+        @test isempty(nodes(graphplot(SimpleGraph())))
+        for n in (1, 2, 5)
+            @test length(nodes(graphplot(SimpleGraph(n)))) == n
+            @test all(isfinite, nodes(graphplot(SimpleGraph(n))))
+        end
+    end
+
     @testset "180" begin
         rng = StableRNG(1)
         mat = Symmetric(sparse(rand(rng, 0:1, 8, 8)))

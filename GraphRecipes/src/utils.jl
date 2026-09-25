@@ -372,9 +372,12 @@ ignorenan_extrema(x) = Base.extrema(x)
 ignorenan_extrema(x::AbstractArray{F}) where {F <: AbstractFloat} = NaNMath.extrema(x)
 # From Plots/src/components.jl
 function extrema_plus_buffer(v, buffmult = 0.2)
+    isempty(v) && return (-buffmult, buffmult)  # an empty graph
     vmin, vmax = extrema(v)
     vdiff = vmax - vmin
     zero_buffer = vdiff == 0 ? 1.0 : 0.0
     buffer = (vdiff + zero_buffer) * buffmult
     return vmin - buffer, vmax + buffer
 end
+
+_width((lo, hi)) = hi > lo ? hi - lo : one(hi)  # a single node has no extent to scale by
