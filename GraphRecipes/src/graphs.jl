@@ -189,7 +189,7 @@ function estimate_distance(adjmat::AbstractMatrix)
             cnt += 1
         end
     end
-    avg = cnt > 0 ? tot / cnt : 1.0
+    avg = tot > 0 ? tot / cnt : 1.0  # without edges only the zero diagonal is finite
     for (i, d) in enumerate(dists)
         if d > 1.0e10
             dists[i] = 3avg
@@ -491,10 +491,10 @@ more details.
         xlims = ignorenan_extrema(x)
         if method != :chorddiagram && numnothing > 0
             x .-= mean(x)
-            x /= (xlims[2] - xlims[1])
+            x /= _width(xlims)
             y .-= mean(y)
             ylims = ignorenan_extrema(y)
-            y /= (ylims[2] - ylims[1])
+            y /= _width(ylims)
         end
         xlims --> extrema_plus_buffer(x, axis_buffer[1])
         ylims --> extrema_plus_buffer(y, axis_buffer[2])
@@ -502,7 +502,7 @@ more details.
             if method != :chorddiagram && numnothing > 0
                 zlims = ignorenan_extrema(z)
                 z .-= mean(z)
-                z /= (zlims[2] - zlims[1])
+                z /= _width(zlims)
             end
             zlims --> extrema_plus_buffer(z, axis_buffer[3])
         end
