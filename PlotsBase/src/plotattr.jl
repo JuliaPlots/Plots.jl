@@ -148,6 +148,11 @@ function _getattr(plt::Plot, subplots, series_list, attr::Symbol; letter = nothi
             c in Commons._magic_components[attr]
     )
 
+    # with a letter to go on this is the axis, which matters for `link`, also a plot attribute
+    letter ≡ nothing ||
+        !haskey(_axis_defaults, attr) ||
+        return _one_or_row(sp -> sp[get_attr_symbol(letter, :axis)][attr], subplots)
+
     # the defaults rather than the `_*_attrs` sets, which miss what `@add_attributes` adds later
     haskey(_plot_defaults, attr) && return plt[attr]
     haskey(_subplot_defaults, attr) && return _one_or_row(sp -> sp[attr], subplots)
@@ -163,8 +168,6 @@ function _getattr(plt::Plot, subplots, series_list, attr::Symbol; letter = nothi
         )
         return _getattr(plt, subplots, series_list, base; letter = l)
     elseif haskey(_axis_defaults, attr)
-        letter ≡ nothing ||
-            return _one_or_row(sp -> sp[get_attr_symbol(letter, :axis)][attr], subplots)
         # no letter to go on, so answer for every axis at once
         return _one_or_row(subplots) do sp
             NamedTuple(l => sp[get_attr_symbol(l, :axis)][attr] for l in (:x, :y, :z))
