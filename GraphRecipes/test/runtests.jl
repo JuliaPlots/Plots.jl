@@ -103,6 +103,16 @@ end
         end
     end
 
+    @testset "stress" begin
+        # summed over every pair of nodes, where it used to loop over the axes of `X`
+        X = ([0.0, 1.0, 3.0], [0.0, 0.0, 0.0])
+        @test GraphRecipes.stress(X, ones(3, 3), ones(3, 3)) == 0 + 4 + 1
+        # which meant two nodes in 3D read out of bounds
+        g = SimpleGraph(2)
+        add_edge!(g, 1, 2)
+        @test graphplot(g; dim = 3) isa PlotsBase.Plot
+    end
+
     @testset "180" begin
         rng = StableRNG(1)
         mat = Symmetric(sparse(rand(rng, 0:1, 8, 8)))
