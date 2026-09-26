@@ -268,6 +268,9 @@ else
     normalize_limits_modifiers(letter, (spec,))
 end
 normalize_limits_modifiers(::Any, ::Nothing) = (;)
+# a row gives each subplot its own, as for the other axis attributes
+normalize_limits_modifiers(letter, spec::AbstractMatrix) =
+    map(s -> normalize_limits_modifiers(letter, s), spec)
 normalize_limits_modifiers(letter, spec) = (warn_invalid_modifier(letter, spec); (;))
 
 """
