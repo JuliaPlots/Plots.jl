@@ -22,6 +22,8 @@
   where it is left untouched
 
 ### Fixed
+- A vector of vectors whose element type does not say so, such as `Any[y1, y2]`, goes through the
+  type recipes of its elements, so `Date`s and Unitful values with `missing` plot as they do in `[y1, y2]` (#5035)
 - A recipe setting `link --> :x` no longer fails with `MethodError: no method matching iterate(::Symbol)`
   when its data goes through a type recipe, as `Date`s do (#5092)
 - `yformatter` formats the y axis for `vline`, `vspan` and the histograms, where it used to

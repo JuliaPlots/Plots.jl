@@ -28,6 +28,9 @@ end
 # This sort of recipe should return a pair of functions... one to convert to number,
 # and one to format tick values.
 function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
+    # `Any[y1, y2]` is a vector of vectors too, its element type just does not say so
+    v isa AVec && !isempty(v) && all(x -> x isa AVec, v) &&
+        return _apply_type_recipe(plotattributes, AbstractVector[v...], letter)
     plt = plotattributes[:plot_object]
     preprocess_axis_attrs!(plt, plotattributes, letter)
     # First we try to apply an array type recipe.
