@@ -4,6 +4,14 @@
 ## Unreleased
 
 ### Features
+- `getattr(obj, attr)` returns the value of an attribute of a `Plot`, `Subplot`, `Axis` or
+  `Series`, resolving aliases (#4900). The object sets the scope, and one value comes back as
+  itself where several come back as a row matrix. A magic attribute comes back as a named
+  tuple of the attributes it sets, and what comes back is valid input for the same attribute.
+  Asking an `Axis` for another letter's attribute is an error
+- A magic attribute takes a named tuple of the attributes it sets, as in
+  `line = (linewidth = 2, linecolor = :red)`, and an axis attribute takes one value per axis,
+  as in `lims = (x = (0, 1), y = :auto)`
 - GR backend: Add support for `colorbar_ticks` to customize tick positions and labels on colorbars (#3560)
 - New colorbar attributes `colorbar_border_color`, `colorbar_border_width`, `colorbar_tick_color`,
   `colorbar_tick_line_width`, `colorbar_width` and `colorbar_height`, supported by the `gr`,
@@ -22,6 +30,7 @@
   where it is left untouched
 
 ### Fixed
+- `xaxis = :red` and other axis colours no longer fail with ``UndefVarError: `handleColors!` not defined``
 - A recipe setting `link --> :x` no longer fails with `MethodError: no method matching iterate(::Symbol)`
   when its data goes through a type recipe, as `Date`s do (#5092)
 - `yformatter` formats the y axis for `vline`, `vspan` and the histograms, where it used to

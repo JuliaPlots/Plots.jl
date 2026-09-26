@@ -393,7 +393,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     elseif typeof(arg) <: Function
         plotattributes[get_attr_symbol(letter, :formatter)] = arg
 
-    elseif !handleColors!(
+    elseif !Commons.handle_colors!(
             plotattributes,
             arg,
             get_attr_symbol(letter, :foreground_color_axis),
