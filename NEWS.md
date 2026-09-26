@@ -22,6 +22,8 @@
   where it is left untouched
 
 ### Fixed
+- A vector of vectors whose element type does not say so, such as `Any[y1, y2]`, goes through the
+  type recipes of its elements, so `Date`s and Unitful values with `missing` plot as they do in `[y1, y2]` (#5035)
 - `smooth` and the error bars take a row with one per series: `smooth = [true false]` no longer fails with
   a `TypeError`, and `yerror = [nothing 0.5]` draws error bars on the second series alone instead of failing
 - `xlimits_modifiers` and the other lettered forms take a row with one per subplot, as in
