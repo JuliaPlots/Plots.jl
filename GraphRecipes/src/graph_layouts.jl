@@ -190,7 +190,7 @@ norm_ij(X, i, j) = sqrt(sum(Float64[(v[i] - v[j])^2 for v in X]))
 stress(X, dist, w, i, j) = w[i, j] * (norm_ij(X, i, j) - dist[i, j])^2
 function stress(X, dist, w)
     tot = 0.0
-    for i in 1:size(X, 1), j in 1:(i - 1)
+    for i in eachindex(first(X)), j in 1:(i - 1)  # every pair of nodes, `X` holds one vector per axis
         tot += stress(X, dist, w, i, j)
     end
     return tot
