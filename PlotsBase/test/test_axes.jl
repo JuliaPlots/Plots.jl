@@ -193,6 +193,13 @@ end
         pl = plot(1:5, limits_modifiers = :symmetric)
         @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5, 5)
 
+        # a row gives each subplot its own
+        for kw in ((; ylimits_modifiers = [:symmetric :none]), (; limits_modifiers = [:symmetric :none]))
+            pl = plot([1 2; 3 1; 2 3]; layout = 2, kw...)
+            @test PlotsBase.ylims(pl[1]) == (-3, 3)
+            @test PlotsBase.ylims(pl[2]) == (1, 3)
+        end
+
         # an explicit chain beats limits given by the user, `:auto` yields to them
         @test PlotsBase.xlims(plot(1:5; xlims = (1, 5))) == (1, 5)
         @test PlotsBase.xlims(

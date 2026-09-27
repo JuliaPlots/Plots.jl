@@ -22,6 +22,8 @@
   where it is left untouched
 
 ### Fixed
+- `xlimits_modifiers` and the other lettered forms take a row with one per subplot, as in
+  `ylimits_modifiers = [:symmetric :none]`, where the whole row used to be rejected as invalid
 - A recipe setting `link --> :x` no longer fails with `MethodError: no method matching iterate(::Symbol)`
   when its data goes through a type recipe, as `Date`s do (#5092)
 - `yformatter` formats the y axis for `vline`, `vspan` and the histograms, where it used to
