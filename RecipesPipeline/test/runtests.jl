@@ -107,6 +107,12 @@ end
 
     @test _apply_type_recipe(plotattributes, Test1.([1, 2, 3]), :x) == [2.0, 3.0, 4.0]
     @test _apply_type_recipe(plotattributes, [Test1.([1, 2, 3])], :x) == [[2.0, 3.0, 4.0]]
+    # the element type need not say it is a vector of vectors
+    @test _apply_type_recipe(plotattributes, Any[Test1.([1, 2, 3]), Test1.([4])], :x) ==
+        [[2.0, 3.0, 4.0], [5.0]]
+    res = _apply_type_recipe(plotattributes, Any[[Dates.Date(2001)], [Dates.Date(2002)]], :x)
+    @test typeof(res) <: Formatted
+    @test res.data == [[Dates.value(Dates.Date(2001))], [Dates.value(Dates.Date(2002))]]
 
     struct Test2 <: Number
         val::Float64
