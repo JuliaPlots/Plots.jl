@@ -25,6 +25,16 @@ end
     @test plot(pl[1][1])[1][1][:primary] == true
     @test plot(pl[1][2])[1][1][:primary] == false
     @test isequal(plot(pl[1][2])[1][1][:y], pl[1][2][:y])
+
+    # a row of smoothing or error bars gives each series its own
+    added(pl) = [s[:series_plotindex] for s in pl.series_list if !s[:primary]]
+    y = [1 3; 2 1; 4 2]
+    @test added(plot(y; smooth = [true false])) == [1]
+    @test added(plot(y; smooth = [false true])) == [2]
+    @test added(plot(y; smooth = true)) == [1, 2]
+    @test added(plot(y; yerror = [nothing 0.5])) == [2]
+    @test added(plot(y; xerror = [0.5 nothing])) == [1]
+    @test added(plot(y; yerror = [0.5 1])) == [1, 2]
 end
 @testset "lens!" begin
     pl = plot(1:5)
