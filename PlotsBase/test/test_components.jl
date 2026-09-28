@@ -114,6 +114,16 @@ end
     end
 end
 
+@testset "Arrows" begin
+    arrows(pl) = [s[:arrow] for s in pl.series_list]
+    y = [1 3; 2 1; 4 2]
+    @test arrows(plot(y; arrow = true)) == [arrow(), arrow()]
+    @test arrows(plot(y; arrow = (:closed, :both))) == [arrow(:closed, :both), arrow(:closed, :both)]
+    # a row gives each series its own, where it used to be skipped and draw both
+    @test arrows(plot(y; arrow = [true false])) == [arrow(), nothing]
+    @test arrows(plot(y; arrow = [:none arrow(:closed)])) == [nothing, arrow(:closed)]
+end
+
 @testset "Text" begin
     t = PlotsBase.PlotText("foo")
     @test length(t) == 3

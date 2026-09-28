@@ -22,6 +22,8 @@
   where it is left untouched
 
 ### Fixed
+- `arrow` takes a row with one per series: `arrow = [true false]` draws an arrow on the first series
+  alone, where the row used to be skipped with a warning and both series got one
 - `smooth` and the error bars take a row with one per series: `smooth = [true false]` no longer fails with
   a `TypeError`, and `yerror = [nothing 0.5]` draws error bars on the second series alone instead of failing
 - `xlimits_modifiers` and the other lettered forms take a row with one per subplot, as in
