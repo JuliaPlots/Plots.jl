@@ -22,6 +22,8 @@
   where it is left untouched
 
 ### Fixed
+- `smooth` and the error bars take a row with one per series: `smooth = [true false]` no longer fails with
+  a `TypeError`, and `yerror = [nothing 0.5]` draws error bars on the second series alone instead of failing
 - `xlimits_modifiers` and the other lettered forms take a row with one per subplot, as in
   `ylimits_modifiers = [:symmetric :none]`, where the whole row used to be rejected as invalid
 - A recipe setting `link --> :x` no longer fails with `MethodError: no method matching iterate(::Symbol)`

@@ -100,7 +100,8 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     errors = (:xerror, :yerror, :zerror)
     return if st ∉ errors
         for esym in errors
-            if get(kw, esym, nothing) ≢ nothing
+            # a row gives each series its own, so ask about this series' one
+            if slice_arg(get(kw, esym, nothing), series_idx(kw_list, kw)) ≢ nothing
                 # we make a copy of the KW and apply an errorbar recipe
                 errkw = copy(kw)
                 errkw[:seriestype] = esym
@@ -114,7 +115,7 @@ end
 
 function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
     # handle smoothing by adding a new series
-    return if get(kw, :smooth, false)
+    return if slice_arg(get(kw, :smooth, false), series_idx(kw_list, kw))
         x, y = kw[:x], kw[:y]
         β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
         sx = [ignorenan_minimum(x), ignorenan_maximum(x)]
