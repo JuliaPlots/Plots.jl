@@ -536,15 +536,9 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # convert into strokes and brushes
     if haskey(plotattributes, :arrow)
         a = plotattributes[:arrow]
-        plotattributes[:arrow] = if a == true
-            arrow()
-        elseif a in (false, nothing, :none)
-            nothing
-        elseif !(typeof(a) <: Arrow || typeof(a) <: AbstractArray{Arrow})
-            arrow(wraptuple(a)...)
-        else
-            a
-        end
+        # a row gives each series its own
+        plotattributes[:arrow] =
+            a isa AbstractMatrix ? map(Arrows._to_arrow, a) : Arrows._to_arrow(a)
     end
 
     # legends - defaults are set in `src/components.jl` (see `@add_attributes`)

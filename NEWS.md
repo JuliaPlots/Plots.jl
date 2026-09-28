@@ -22,6 +22,8 @@
   where it is left untouched
 
 ### Fixed
+- `arrow` takes a row with one per series: `arrow = [true false]` draws an arrow on the first series
+  alone, where the row used to be skipped with a warning and both series got one
 - A vector of vectors whose element type does not say so, such as `Any[y1, y2]`, goes through the
   type recipes of its elements, so `Date`s and Unitful values with `missing` plot as they do in `[y1, y2]` (#5035)
 - `smooth` and the error bars take a row with one per series: `smooth = [true false]` no longer fails with
