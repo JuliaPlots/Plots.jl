@@ -591,6 +591,40 @@ const _magic_series_attrs = [:line, :marker, :fill]
 const _all_magic_attrs =
     Set(union(_magic_axis_attrs, _magic_series_attrs, _magic_subplot_attrs))
 
+const _font_parts = (:family, :size, :halign, :valign, :rotation, :color)
+_font_components(name) = [Symbol(name, :_, part) for part in _font_parts]
+# what each magic attribute sets, so `getattr` can read it back and a named tuple can set it
+const _magic_components = Dict{Symbol, Vector{Symbol}}(
+    :line => [:linestyle, :linewidth, :linecolor, :linealpha, :arrow],
+    :marker => [
+        :markershape,
+        :markersize,
+        :markercolor,
+        :markeralpha,
+        :markerstrokewidth,
+        :markerstrokecolor,
+        :markerstrokealpha,
+        :markerstrokestyle,
+    ],
+    :fill => [:fillrange, :fillcolor, :fillalpha, :fillstyle],
+    :axis => [
+        :guide,
+        :lims,
+        :ticks,
+        :scale,
+        :flip,
+        :rotation,
+        :formatter,
+        :showaxis,
+        :foreground_color_axis,
+        _font_components(:tick_font)...,
+        _font_components(:guide_font)...,
+    ],
+)
+for name in union(_magic_axis_attrs, _magic_subplot_attrs)
+    endswith(string(name), "_font") && (_magic_components[name] = _font_components(name))
+end
+
 const _all_axis_attrs = union(_axis_attrs, _magic_axis_attrs)
 const _lettered_all_axis_attrs =
     Set([Symbol(letter, kw) for letter in (:x, :y, :z) for kw in _all_axis_attrs])
@@ -600,6 +634,14 @@ const _all_plot_attrs = _plot_attrs
 
 const _all_attrs =
     union(_lettered_all_axis_attrs, _all_subplot_attrs, _all_series_attrs, _all_plot_attrs)
+
+# `@add_attributes` adds its attributes after the sets above are built, so it registers them too
+function _register_attr!(level::Symbol, key::Symbol)
+    push!(getfield(@__MODULE__, Symbol(:_, level, :_attrs)), key)
+    push!(getfield(@__MODULE__, Symbol(:_all_, level, :_attrs)), key)
+    push!(_all_attrs, key)
+    return nothing
+end
 
 const _deprecated_attributes = Dict{Symbol, Symbol}()
 
@@ -1222,6 +1264,7 @@ macro add_attributes(level, expr, match_table)
                 Expr(:ref, Expr(:call, getfield, PlotsBase, field), QuoteNode(exp_key)),
                 value,
             ),
+            :($_register_attr!($(QuoteNode(level)), $(QuoteNode(exp_key)))),
             :($add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
             :(
                 $add_aliases(

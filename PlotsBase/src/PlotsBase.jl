@@ -122,6 +122,7 @@ export
     coords,
 
     plotattr,
+    getattr,
     scalefontsizes,
     resetfontsizes
 
