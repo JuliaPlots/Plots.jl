@@ -52,7 +52,9 @@
         @test getattr(pl, :c) == getattr(pl, :seriescolor)
         @test getattr(pl, :sizes) == getattr(pl, :size)
         @test getattr(pl[3][:xaxis], :xlabel) == getattr(pl[3][:xaxis], :guide)
-        @test getattr(pl[1], :legend_position) ≡ :best  # added to the defaults by `@add_attributes`
+        # defined through `@add_attributes`, after the attribute sets are built
+        @test getattr(pl[1], :legend_position) ≡ :best
+        @test PlotsBase.Commons.is_subplot_attrs(:legend_position)
         # `link` is a plot attribute and an axis one, a letter picks the axis
         @test getattr(pl, :link) ≡ :none
         @test getattr(pl[1], :xlink) == getattr(pl[1][:xaxis], :link) == []

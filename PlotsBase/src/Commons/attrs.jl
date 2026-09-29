@@ -635,6 +635,14 @@ const _all_plot_attrs = _plot_attrs
 const _all_attrs =
     union(_lettered_all_axis_attrs, _all_subplot_attrs, _all_series_attrs, _all_plot_attrs)
 
+# `@add_attributes` adds its attributes after the sets above are built, so it registers them too
+function _register_attr!(level::Symbol, key::Symbol)
+    push!(getfield(@__MODULE__, Symbol(:_, level, :_attrs)), key)
+    push!(getfield(@__MODULE__, Symbol(:_all_, level, :_attrs)), key)
+    push!(_all_attrs, key)
+    return nothing
+end
+
 const _deprecated_attributes = Dict{Symbol, Symbol}()
 
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
@@ -1256,6 +1264,7 @@ macro add_attributes(level, expr, match_table)
                 Expr(:ref, Expr(:call, getfield, PlotsBase, field), QuoteNode(exp_key)),
                 value,
             ),
+            :($_register_attr!($(QuoteNode(level)), $(QuoteNode(exp_key)))),
             :($add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
             :(
                 $add_aliases(

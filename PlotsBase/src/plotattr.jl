@@ -106,12 +106,12 @@ end
     getattr(obj, attr::Symbol)
 
 Return the value of attribute `attr` of a `Plot`, `Subplot`, `Axis` or `Series`, resolving aliases, so
-`getattr(pl, :c)` and `getattr(pl, :seriescolor)` ask the same question.
+`getattr(pl, :c)` and `getattr(pl, :seriescolor)` are equivalent.
 
-`obj` sets the scope: a `Plot` answers for all of its subplots and series, a `Subplot` for
+`obj` sets the scope: a `Plot` returns attributes for all of its subplots and series, a `Subplot` for
 itself and its own series, an `Axis` for its subplot with its letter implied, and a `Series`
-for itself. One value comes back as itself, several as a row matrix, the shape `plot` takes
-them in. A magic attribute such as `line` comes back as a named tuple of the attributes it
+for itself. One value comes back as itself, several as a row matrix.
+A magic attribute such as `line` comes back as a named tuple of the attributes it
 sets. Whatever comes back is valid input for the same attribute.
 
 ```julia
@@ -150,12 +150,11 @@ function _getattr(plt::Plot, subplots, series_list, attr::Symbol; letter = nothi
 
     # with a letter to go on this is the axis, which matters for `link`, also a plot attribute
     letter ≡ nothing ||
-        !haskey(_axis_defaults, attr) ||
+        attr ∉ Commons._axis_attrs ||
         return _one_or_row(sp -> sp[get_attr_symbol(letter, :axis)][attr], subplots)
 
-    # the defaults rather than the `_*_attrs` sets, which miss what `@add_attributes` adds later
-    haskey(_plot_defaults, attr) && return plt[attr]
-    haskey(_subplot_defaults, attr) && return _one_or_row(sp -> sp[attr], subplots)
+    attr ∈ Commons._plot_attrs && return plt[attr]
+    attr ∈ Commons._subplot_attrs && return _one_or_row(sp -> sp[attr], subplots)
 
     if attr ∈ Commons._lettered_all_axis_attrs
         l, base = Symbol(first(string(attr))), Symbol(chop(string(attr), head = 1, tail = 0))
@@ -167,14 +166,14 @@ function _getattr(plt::Plot, subplots, series_list, attr::Symbol; letter = nothi
             ),
         )
         return _getattr(plt, subplots, series_list, base; letter = l)
-    elseif haskey(_axis_defaults, attr)
+    elseif attr ∈ Commons._axis_attrs
         # no letter to go on, so answer for every axis at once
         return _one_or_row(subplots) do sp
             NamedTuple(l => sp[get_attr_symbol(l, :axis)][attr] for l in (:x, :y, :z))
         end
     end
 
-    haskey(_series_defaults, attr) && return _one_or_row(series -> series[attr], series_list)
+    attr ∈ Commons._series_attrs && return _one_or_row(series -> series[attr], series_list)
 
     # a name Plots does not know is kept in `extra_kwargs`, at whichever level took it
     for (objects, key) in (
