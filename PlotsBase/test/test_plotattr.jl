@@ -131,8 +131,6 @@
         attrs = setdiff(attrs, (:subplot, :group))
         # these do not take a row of values, one per series or per subplot, yet
         rows = (
-            :arrow,
-            :line,
             :levels,
             :permute,
             :series_annotations,
