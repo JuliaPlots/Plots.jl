@@ -1617,28 +1617,35 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
             has_fs = !isnothing(fs)
 
             # line (and potentially solid fill)
-            mpl.patches.Patch(
+            patch = mpl.patches.Patch(
                 edgecolor = _py_color(single_color(lc), la),
                 facecolor = _py_color(single_color(fc), has_fs ? 0 : fa),
                 linewidth = _py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                 linestyle = _py_linestyle(series[:seriestype], ls),
                 capstyle = "butt",
-            ) |> push_h
+            )
 
             # plot two handles on top of each other by passing in a tuple
             # matplotlib.org/stable/tutorials/intermediate/legend_guide.html
 
             # hatched fill
             # hatch color/alpha are controlled by edge (not face) color/alpha
-            has_fs &&
-                mpl.patches.Patch(
-                edgecolor = _py_color(single_color(fc), fa),
-                facecolor = _py_color(single_color(fc), 0), # don't fill with solid background
-                hatch = _py_fillstyle(fs),
-                linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
-                linestyle = _py_linestyle(series[:seriestype], ls),
-                capstyle = "butt",
-            ) |> push_h
+            has_fs && (
+                patch = PythonCall.pytuple(
+                    (
+                        patch,
+                        mpl.patches.Patch(
+                            edgecolor = _py_color(single_color(fc), fa),
+                            facecolor = _py_color(single_color(fc), 0), # don't fill with solid background
+                            hatch = _py_fillstyle(fs),
+                            linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
+                            linestyle = _py_linestyle(series[:seriestype], ls),
+                            capstyle = "butt",
+                        ),
+                    ),
+                )
+            )
+            push_h(patch)
         elseif series[:seriestype] ∈ _py_legend_series
             has_line = get_linewidth(series) > 0
             PythonPlot.pyplot.Line2D(
@@ -1683,18 +1690,12 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
     isempty(handles) && return
 
     leg = PlotsBase.legend_angle(leg)
-    ncol = if (lc = sp[:legend_column]) < 0
-        nseries
-    elseif lc > 1
-        lc == nseries ||
-            @maxlog_warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
-        nseries
-    else
-        1
-    end
+    ncol = PlotsBase.legend_ncols(sp, nseries)
+    # matplotlib fills a column before the next, reordered to read row by row as in GR
+    order = reduce(vcat, (i:ncol:nseries for i in 1:ncol))
     leg = ax.legend(
-        handles,
-        labels;
+        handles[order],
+        labels[order];
         loc = _py_legend_pos(leg),
         bbox_to_anchor = _py_legend_bbox(leg),
         scatterpoints = 1,

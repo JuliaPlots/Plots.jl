@@ -371,6 +371,35 @@ with(:gr) do
             plot(1:2, legend_columns = 10, label = :auto),
             tempname(),
         )
+
+        # the same columns in every backend
+        ncols(c) = PlotsBase.legend_ncols(plot(1:2; legend_column = c)[1], 5)
+        @test ncols(1) == 1
+        @test ncols(2) == 2
+        @test ncols(-1) == 5
+        @test (@test_logs (:warn, r"larger than") ncols(9)) == 5
+        @test (@test_logs (:warn, r"undefined behaviour") ncols(0)) == 1
+        @test (@test_logs (:warn, r"undefined behaviour") ncols(-3)) == 1
+        @test_logs (:warn, r"undefined behaviour") png(
+            plot(rand(2, 3); legend_column = -3, label = :auto),
+            tempname(),
+        )
+
+        haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+            texts(pl) = (
+                PlotsBase.prepare_output(pl);
+                [string(t.get_text()) for t in pl[1].o.get_legend().get_texts()]
+            )
+            # handed over a column at a time, so matplotlib's columns read row by row as in GR
+            pl = plot(rand(2, 5); label = ["a" "b" "c" "d" "e"], legend_column = 2)
+            @test texts(pl) == ["a", "c", "e", "b", "d"]
+            # a hatched fill is one entry, which used to push the entries after it out of step
+            pl = plot([1, 2]; fillrange = 0, fillstyle = :/, label = "hatched")
+            plot!(pl, [2, 1]; label = "plain")
+            @test texts(pl) == ["hatched", "plain"]
+            handles = collect(pl[1].o.get_legend().legend_handles)
+            @test string(handles[2].__class__.__name__) == "Line2D"
+        end
     end
 
     @testset "cycling" begin

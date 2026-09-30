@@ -4,6 +4,8 @@
 ## Unreleased
 
 ### Features
+- PythonPlot backend: `legend_column` takes any number of columns, filled row by row as in GR, where it
+  used to put every entry in one row for anything above `1` (#4678)
 - `getattr(obj, attr)` returns the value of an attribute of a `Plot`, `Subplot`, `Axis` or
   `Series`, resolving aliases (#4900). The object sets the scope, and one value comes back as
   itself where several come back as a row matrix. A magic attribute comes back as a named
@@ -30,6 +32,9 @@
   where it is left untouched
 
 ### Fixed
+- PythonPlot backend: a hatched fill takes one legend entry, where it used to push the entries after it out of
+  step with their labels
+- GR backend: `legend_column` below `-1` falls back to one column with a warning, as `0` does
 - `xaxis = :red` and other axis colours no longer fail with ``UndefVarError: `handleColors!` not defined``
 - `arrow` takes a row with one per series: `arrow = [true false]` draws an arrow on the first series
   alone, where the row used to be skipped with a warning and both series got one

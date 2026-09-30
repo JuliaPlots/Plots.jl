@@ -110,7 +110,7 @@ const _arg_desc = KW(
         Show the legend ? Can also be a (x,y) tuple or Symbol (legend position) or angle (angle,in-out) tuple. Bottom left corner of legend is placed at (x,y).
         Choose from (`:none`, `:best`, `:inline`, `:inside`, `:legend`) or any valid combination of `:(outer ?)(top/bottom ?)(right/left ?)`, i.e.: `:top`, `:topright`, `:outerleft`, `:outerbottomright` ... (note: only some may be supported in each backend).""",
     ),
-    :legend_column => (Integer, "Number of columns in the legend. `-1` stands for maximum number of columns (horizontal legend)."),
+    :legend_column => (Integer, "Number of columns in the legend, filled row by row. `-1` puts every entry in one row (horizontal legend)."),
     :legend_title_font => (Font, "Font of the legend title."),
     :legend_font_family => (Union{AStr, Symbol}, "Font family of legend entries."),
     :legend_font_size => (Integer, "Font pointsize of legend entries."),
