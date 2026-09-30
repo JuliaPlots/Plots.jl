@@ -1129,6 +1129,9 @@ function check_contour_levels(levels)
             throw
     end
 end
+# a row holds one per series, a matrix one column of levels per series
+check_contour_levels(levels::AMat) =
+    foreach(check_contour_levels, size(levels, 1) == 1 ? levels : eachcol(levels))
 
 # -----------------------------------------------------------------------------
 
