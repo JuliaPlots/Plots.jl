@@ -1536,17 +1536,11 @@ function gr_get_legend_geometry(vp, sp)
     # deal with layout
     column_layout = if legend_column == -1
         (1, has_title + nseries)
-    elseif legend_column > nseries && nseries != 0 # catch plot_title here
-        @maxlog_warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
-        (1 + has_title, nseries)
-    elseif legend_column == 0
-        @maxlog_warn "n° of legend_column=$legend_column. Assuming vertical layout."
-        vertical = true
-        (has_title + nseries, 1)
     else
-        (ceil(Int64, nseries / legend_column) + has_title, legend_column)
+        ncols = PlotsBase.legend_ncols(sp, nseries)
+        vertical |= legend_column < 1  # `0` and below `-1` fall back to one column
+        (ceil(Int64, nseries / ncols) + has_title, ncols)
     end
-    #println(column_layout)
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 

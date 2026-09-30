@@ -1302,6 +1302,24 @@ const _examples = PlotExample[
             )
         end,
     ),
+    PlotExample( # 69
+        "Legend columns",
+        "`legend_column` sets the number of columns in the legend, which are filled row by row. `-1` puts every entry in one row.",
+        quote
+            plot(
+                (
+                    plot(
+                        rand(5, 5);
+                        label = ["a" "b" "c" "d" "e"],
+                        legend_column = c,
+                        title = "legend_column = $c",
+                    ) for c in (1, 2, 3, -1)
+                )...;
+                layout = 4,
+                size = (1_000, 700),
+            )
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
