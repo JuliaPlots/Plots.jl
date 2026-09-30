@@ -128,6 +128,7 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :line_z,
         :marker_z,
         :legend_column,
+        :legend_order,
         :legend_font,
         :legend_title,
         :legend_title_font_color,
@@ -1348,7 +1349,7 @@ function gr_add_legend(sp, leg, viewport_area)
 
         nentry = 1
 
-        for series in series_list(sp)
+        for series in PlotsBase.legend_series_list(sp)
             should_add_to_legend(series) || continue
             st = series[:seriestype]
             clims = gr_clims(sp, series)

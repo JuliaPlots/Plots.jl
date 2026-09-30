@@ -120,6 +120,12 @@ Sys.isunix() && with(:plotly) do
         @test logged[:colorbar][:tickvals] ≈ [-2, -1, 0]
     end
 
+    @testset "Legend order" begin
+        traceorder(pl) = PlotsBase.plotly_layout(pl)[:legend][:traceorder]
+        @test traceorder(plot(1:5)) == "normal"
+        @test traceorder(plot(1:5, legend_order = :reversed)) == "reversed"
+    end
+
     @testset "Extra kwargs" begin
         pl = plot(1:5, test = "me")
         @test PlotsBase.plotly_series(pl)[1][:test] == "me"

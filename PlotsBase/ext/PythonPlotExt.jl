@@ -175,6 +175,7 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :font_family,
         :font_family_subplot,
         :legend_column,
+        :legend_order,
         :legend_font,
         :legend_title,
         :legend_title_font_color,
@@ -1602,7 +1603,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
     push_h(x) = push!(handles, x)
 
     nseries = 0
-    for series in series_list(sp)
+    for series in PlotsBase.legend_series_list(sp)
         should_add_to_legend(series) || continue
         clims = get_clims(sp, series)
         nseries += 1

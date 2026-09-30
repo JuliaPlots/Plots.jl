@@ -6,6 +6,7 @@
     font::Font = font(8)
     title_font::Font = font(11)
     column = 1
+    order = :normal
 end :match = (
     :legend_font_family,
     :legend_font_color,
@@ -87,6 +88,10 @@ function legend_ncols(sp, n)
         c
     end
 end
+
+"The series of `sp` in the order its legend lists them, see `legend_order`."
+legend_series_list(sp) =
+    sp[:legend_order] ≡ :reversed ? reverse(series_list(sp)) : series_list(sp)
 
 Commons._initial_sp_fontsizes[:legend_font_size] =
     _subplot_defaults[:legend_font_size]

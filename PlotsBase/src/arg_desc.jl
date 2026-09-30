@@ -111,6 +111,7 @@ const _arg_desc = KW(
         Choose from (`:none`, `:best`, `:inline`, `:inside`, `:legend`) or any valid combination of `:(outer ?)(top/bottom ?)(right/left ?)`, i.e.: `:top`, `:topright`, `:outerleft`, `:outerbottomright` ... (note: only some may be supported in each backend).""",
     ),
     :legend_column => (Integer, "Number of columns in the legend, filled row by row. `-1` puts every entry in one row (horizontal legend)."),
+    :legend_order => (Symbol, "Order of the legend entries: `:normal` follows the series, `:reversed` goes from the last series to the first, which suits a stack such as `areaplot` whose first series is at the bottom."),
     :legend_title_font => (Font, "Font of the legend title."),
     :legend_font_family => (Union{AStr, Symbol}, "Font family of legend entries."),
     :legend_font_size => (Integer, "Font pointsize of legend entries."),
