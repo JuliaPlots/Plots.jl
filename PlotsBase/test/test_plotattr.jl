@@ -136,10 +136,6 @@
             :levels,
             :permute,
             :series_annotations,
-            :minorgrid,
-            :xminorgrid,
-            :yminorgrid,
-            :zminorgrid,
         )
         one(; kw...) = plot([1.0, 3.0, 2.0]; kw...)
         two(; kw...) = plot([1.0 2.0; 3.0 1.0; 2.0 3.0]; layout = 2, title = ["A" "B"], kw...)

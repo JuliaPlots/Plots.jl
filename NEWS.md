@@ -32,6 +32,8 @@
   where it is left untouched
 
 ### Fixed
+- `grid` and `minorgrid` take a row with one per subplot, as in `xgrid = [true false]` or `grid = [:x :y]`,
+  where a row of flags used to be read as line widths and left the grid on everywhere
 - PythonPlot backend: a hatched fill takes one legend entry, where it used to push the entries after it out of
   step with their labels
 - GR backend: `legend_column` below `-1` falls back to one column with a warning, as `0` does

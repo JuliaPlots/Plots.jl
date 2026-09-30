@@ -330,6 +330,19 @@ end
     @test compare(pl, :tick_direction, :out, ===)
 end
 
+@testset "Grid per subplot" begin
+    grids(pl, g = :grid, l = :x) = [pl[i][Symbol(l, :axis)][g] for i in 1:2]
+    y = [1 2; 3 1; 2 3]
+    @test grids(plot(y; layout = 2, xgrid = [true false])) == [true, false]
+    @test grids(plot(y; layout = 2, xgrid = [true false]), :gridlinewidth) ==
+        fill(default(:gridlinewidth), 2)
+    @test grids(plot(y; layout = 2, grid = [false true]), :grid, :y) == [false, true]
+    @test grids(plot(y; layout = 2, grid = [:x :y])) == [true, false]
+    @test grids(plot(y; layout = 2, grid = [:x :y]), :grid, :y) == [false, true]
+    @test grids(plot(y; layout = 2, xminorgrid = [true false]), :minorgrid) == [true, false]
+    @test grids(plot(y; layout = 2, xgrid = [2 3]), :gridlinewidth) == [2, 3]
+end
+
 @testset "scale_lims!" begin
     let pl = plot(1:2)
         xl, yl = xlims(pl), ylims(pl)

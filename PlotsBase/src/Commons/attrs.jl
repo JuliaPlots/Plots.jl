@@ -941,6 +941,10 @@ function process_grid_attr!(plotattributes::AKW, arg, letter)
     return if arg in _all_grid_attrs || isa(arg, Bool)
         plotattributes[get_attr_symbol(letter, :grid)] = hasgrid(arg, letter)
 
+        # a row switches it per subplot, where the numbers below would read `true` as a width
+    elseif arg isa AbstractMatrix && all(a -> a in _all_grid_attrs || a isa Bool, arg)
+        plotattributes[get_attr_symbol(letter, :grid)] = map(a -> hasgrid(a, letter), arg)
+
     elseif all_styles(arg)
         plotattributes[get_attr_symbol(letter, :gridstyle)] = arg
 
@@ -977,6 +981,10 @@ end
 function process_minor_grid_attr!(plotattributes::AKW, arg, letter)
     return if arg in _all_grid_attrs || isa(arg, Bool)
         plotattributes[get_attr_symbol(letter, :minorgrid)] = hasgrid(arg, letter)
+
+        # a row switches it per subplot, where the numbers below would read `true` as a width
+    elseif arg isa AbstractMatrix && all(a -> a in _all_grid_attrs || a isa Bool, arg)
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = map(a -> hasgrid(a, letter), arg)
 
     elseif all_styles(arg)
         plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg
