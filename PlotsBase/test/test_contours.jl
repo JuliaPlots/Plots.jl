@@ -6,6 +6,8 @@
         @test_throws ArgumentError check_contour_levels(1.0)
         @test_throws ArgumentError check_contour_levels((1, 2, 3))
         @test_throws ArgumentError check_contour_levels(-3)
+        @test check_contour_levels([3 6]) ≡ nothing
+        @test_throws ArgumentError check_contour_levels([3 -1])
     end
 end
 
@@ -59,6 +61,11 @@ end
     @testset "Set of levels" begin
         levels = [-1, 0.25, 0, 0.25, 1]
         @test contour(x, y, z, levels = levels)[1][1].plotattributes[:levels] == levels
+    end
+
+    @testset "One per series" begin
+        pl = contour(x, y, [z, 2z], levels = [3 6])
+        @test [s[:levels] for s in pl[1].series_list] == [3, 6]
     end
 end
 

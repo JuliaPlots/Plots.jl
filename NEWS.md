@@ -32,6 +32,8 @@
   where it is left untouched
 
 ### Fixed
+- `levels` takes a row with one per series, as in `levels = [3 6]`, where it used to fail with
+  `the levels keyword argument must be an integer or AbstractVector`
 - `grid` and `minorgrid` take a row with one per subplot, as in `xgrid = [true false]` or `grid = [:x :y]`,
   where a row of flags used to be read as line widths and left the grid on everywhere
 - PythonPlot backend: a hatched fill takes one legend entry, where it used to push the entries after it out of
