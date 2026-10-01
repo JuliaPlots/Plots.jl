@@ -121,9 +121,13 @@ Sys.isunix() && with(:plotly) do
     end
 
     @testset "Legend order" begin
-        traceorder(pl) = PlotsBase.plotly_layout(pl)[:legend][:traceorder]
-        @test traceorder(plot(1:5)) == "normal"
-        @test traceorder(plot(1:5, legend_order = :reversed)) == "reversed"
+        function ranks(order)
+            pl = plot(rand(2, 3), label = :auto, legend_order = order)
+            return [get(s, :legendrank, nothing) for s in PlotsBase.plotly_series(pl)]
+        end
+        @test ranks(:normal) == fill(nothing, 3)
+        @test ranks(:reversed) == [3, 2, 1]
+        @test ranks([2, 3, 1]) == [3, 1, 2]
     end
 
     @testset "Extra kwargs" begin

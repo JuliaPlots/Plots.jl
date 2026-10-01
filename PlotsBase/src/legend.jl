@@ -89,9 +89,21 @@ function legend_ncols(sp, n)
     end
 end
 
-"The series of `sp` in the order its legend lists them, see `legend_order`."
-legend_series_list(sp) =
-    sp[:legend_order] ≡ :reversed ? reverse(series_list(sp)) : series_list(sp)
+"""
+    legend_series_list(sp)
+
+The series in the legend of `sp`, in the order of `sp[:legend_order]`: `:normal`, `:reversed`,
+or a permutation of the entries such as `[3, 1, 2]`.
+"""
+function legend_series_list(sp)
+    series = filter(should_add_to_legend, series_list(sp))
+    (order = sp[:legend_order]) ≡ :normal && return series
+    order ≡ :reversed && return reverse(series)
+    order isa AVec{<:Integer} && length(order) == length(series) && isperm(order) &&
+        return series[order]
+    @maxlog_warn "legend_order=$order is not a permutation of the $(length(series)) legend entries. Assuming `:normal`."
+    return series
+end
 
 Commons._initial_sp_fontsizes[:legend_font_size] =
     _subplot_defaults[:legend_font_size]

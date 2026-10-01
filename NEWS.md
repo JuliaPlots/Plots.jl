@@ -4,9 +4,10 @@
 ## Unreleased
 
 ### Features
-- `legend_order = :reversed` lists the legend entries from the last series to the first, which suits a
-  stack such as `areaplot` whose first series is at the bottom (#5029). Supported by the `gr`,
-  `pythonplot`, `plotly`/`plotlyjs` and `pgfplotsx` backends
+- `legend_order` sets the order of the legend entries: `:reversed` lists them from the last series to the
+  first, which suits a stack such as `areaplot` whose first series is at the bottom (#5029), and a
+  permutation such as `[3, 1, 2]` gives any other order. Supported by the `gr`, `pythonplot` and
+  `plotly`/`plotlyjs` backends, and by `pgfplotsx` for `:reversed`
 - PythonPlot backend: `legend_column` takes any number of columns, filled row by row as in GR, where it
   used to put every entry in one row for anything above `1` (#4678)
 - `getattr(obj, attr)` returns the value of an attribute of a `Plot`, `Subplot`, `Axis` or

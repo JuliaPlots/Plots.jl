@@ -1604,7 +1604,6 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
 
     nseries = 0
     for series in PlotsBase.legend_series_list(sp)
-        should_add_to_legend(series) || continue
         clims = get_clims(sp, series)
         nseries += 1
         # add a line/marker and a label

@@ -385,10 +385,16 @@ with(:gr) do
             tempname(),
         )
 
-        labels(pl) = [s[:label] for s in PlotsBase.legend_series_list(pl[1])]
-        @test labels(plot(rand(2, 3); label = ["a" "b" "c"])) == ["a", "b", "c"]
-        @test labels(plot(rand(2, 3); label = ["a" "b" "c"], legend_order = :reversed)) ==
-            ["c", "b", "a"]
+        function labels(order; label = ["a" "b" "c"])
+            sp = plot(rand(2, 3); label, legend_order = order)[1]
+            return [s[:label] for s in PlotsBase.legend_series_list(sp)]
+        end
+        @test labels(:normal) == ["a", "b", "c"]
+        @test labels(:reversed) == ["c", "b", "a"]
+        @test labels([2, 3, 1]) == ["b", "c", "a"]
+        # the numbers count the entries, so a series without one is skipped
+        @test labels([2, 1]; label = ["a" "" "c"]) == ["c", "a"]
+        @test (@test_logs (:warn, r"not a permutation") labels([1, 1, 2])) == ["a", "b", "c"]
 
         haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
             texts(pl) = (

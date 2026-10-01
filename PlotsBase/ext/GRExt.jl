@@ -1350,7 +1350,6 @@ function gr_add_legend(sp, leg, viewport_area)
         nentry = 1
 
         for series in PlotsBase.legend_series_list(sp)
-            should_add_to_legend(series) || continue
             st = series[:seriestype]
             clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
