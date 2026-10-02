@@ -85,6 +85,9 @@
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
 
 ## Breaking changes
+- `boxplot`, `violin` and `density` are defined by StatsPlots, next to their recipes, so they need
+  `using StatsPlots` (#2001). PlotsBase no longer warns that they moved, and `:density` is no longer one
+  of its own series types, so `line = :density` does not pick it
 - Every font attribute is now spelled `<name>_font_<property>`, so `titlefontsize` is
   `title_font_size`, `xtickfontcolor` is `xtick_font_color`, `guidefontfamily` is
   `guide_font_family`, `plot_titlefontsize` is `plot_title_font_size`, `fontfamily` is

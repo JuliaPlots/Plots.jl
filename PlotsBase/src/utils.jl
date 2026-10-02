@@ -599,16 +599,6 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     if haskey(plotattributes, :levels)
         Commons.check_contour_levels(plotattributes[:levels])
     end
-
-    # warnings for moved recipes
-    st = get(plotattributes, :seriestype, :path)
-    if st in (:boxplot, :violin, :density) &&
-            !haskey(
-            Base.loaded_modules,
-            Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
-        )
-        @maxlog_warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
-    end
     return nothing
 end
 
