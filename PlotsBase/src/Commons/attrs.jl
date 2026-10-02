@@ -70,7 +70,6 @@ const _all_seriestypes = vcat(
         :bins2d,
         :histogram2d,
         :histogram3d,
-        :density,
         :bar,
         :hline,
         :vline,
