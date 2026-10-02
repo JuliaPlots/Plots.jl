@@ -132,10 +132,7 @@
         # the series' own subplot and its processed group are state rather than input
         attrs = setdiff(attrs, (:subplot, :group))
         # these do not take a row of values, one per series or per subplot, yet
-        rows = (
-            :permute,
-            :series_annotations,
-        )
+        rows = (:permute,)
         one(; kw...) = plot([1.0, 3.0, 2.0]; kw...)
         two(; kw...) = plot([1.0 2.0; 3.0 1.0; 2.0 3.0]; layout = 2, title = ["A" "B"], kw...)
         for attr in attrs

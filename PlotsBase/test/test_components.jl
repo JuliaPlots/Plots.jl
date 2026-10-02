@@ -460,6 +460,15 @@ end
 
     @test_throws ArgumentError plot(ones(2, 2), series_annotations = [([1],) 2; 3 4])
 
+    # `nothing` leaves a series without annotations, which also reads back
+    let pl = plot(ones(3, 2), series_annotations = permutedims(Any[nothing, ["a", "b", "c"]]))
+        back = plot(ones(3, 2), series_annotations = getattr(pl, :series_annotations))
+        for p in (pl, back)
+            @test series_anns(p, 1) ≡ nothing
+            @test ann_strings(series_anns(p, 2)) == ["a", "b", "c"]
+        end
+    end
+
     pl = plot([1, 2], annotations = (1.5, 2, text("foo", :left)))
     x, y, txt = only(pl.subplots[end][:annotations])
     @test (x, y) == (1.5, 2)

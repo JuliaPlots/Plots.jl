@@ -36,6 +36,8 @@
   where it is left untouched
 
 ### Fixed
+- A row of `series_annotations` takes `nothing` for a series without any, as in
+  `permutedims([nothing, ["a", "b"]])`, where that series used to be labelled `nothing`
 - `levels` takes a row with one per series, as in `levels = [3 6]`, where it used to fail with
   `the levels keyword argument must be an integer or AbstractVector`
 - `grid` and `minorgrid` take a row with one per subplot, as in `xgrid = [true false]` or `grid = [:x :y]`,

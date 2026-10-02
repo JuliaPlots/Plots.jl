@@ -56,7 +56,7 @@ end
 
 function series_annotations(anns::AMat, outer_attrs...)
     # Types that represent annotations for an entire series
-    whole_series = Union{AVec, Tuple{AVec, Vararg{Any}}}
+    whole_series = Union{AVec, Tuple{AVec, Vararg{Any}}, SeriesAnnotations}
 
     # whole_series types can only be in a row vector
     if size(anns, 1) > 1
@@ -68,7 +68,10 @@ function series_annotations(anns::AMat, outer_attrs...)
     end
 
     ann_vec = map(eachcol(anns)) do col
+        # a series without annotations, or with ones already converted
+        all(isnothing, col) && return nothing
         ann = first(col) isa whole_series ? first(col) : col
+        ann isa SeriesAnnotations && return ann
 
         # Override arguments from outer tuple with args from inner tuple
         strs, inner_attrs = Iterators.peel(wraptuple(ann))
