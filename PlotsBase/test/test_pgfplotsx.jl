@@ -39,6 +39,11 @@ with(:pgfplotsx) do
         @test haskey(series[3].options.dict, "forget plot")
         @test haskey(series[4].options.dict, "forget plot")
         @test !haskey(series[5].options.dict, "forget plot")
+        reversed(pl) = haskey(first(get_pgf_axes(pl)).options.dict, "reverse legend")
+        @test !reversed(plot(rand(5, 2)))
+        @test reversed(plot(rand(5, 2), legend_order = :reversed))
+        pl = plot(rand(5, 2), legend_order = [2, 1])
+        @test_logs (:warn, r"can only reverse") get_pgf_axes(pl)
     end
 
     @testset "3D docs example" begin

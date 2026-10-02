@@ -120,6 +120,16 @@ Sys.isunix() && with(:plotly) do
         @test logged[:colorbar][:tickvals] ≈ [-2, -1, 0]
     end
 
+    @testset "Legend order" begin
+        function ranks(order)
+            pl = plot(rand(2, 3), label = :auto, legend_order = order)
+            return [get(s, :legendrank, nothing) for s in PlotsBase.plotly_series(pl)]
+        end
+        @test ranks(:normal) == fill(nothing, 3)
+        @test ranks(:reversed) == [3, 2, 1]
+        @test ranks([2, 3, 1]) == [3, 1, 2]
+    end
+
     @testset "Extra kwargs" begin
         pl = plot(1:5, test = "me")
         @test PlotsBase.plotly_series(pl)[1][:test] == "me"

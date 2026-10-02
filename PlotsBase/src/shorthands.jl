@@ -543,7 +543,8 @@ Adds ax+b... straight line over the current plot, without changing the axis limi
     areaplot([x,] y)
     areaplot!([x,] y)
 
-Draw a stacked area plot of the matrix y.
+Draw a stacked area plot of the matrix y, with its first column at the bottom.
+`legend_order = :reversed` lists the legend the same way up.
 # Examples
 ```julia-repl
 julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], fillalpha = [0.2 0.3 0.4])

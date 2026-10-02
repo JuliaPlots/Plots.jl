@@ -6,6 +6,7 @@
     font::Font = font(8)
     title_font::Font = font(11)
     column = 1
+    order = :normal
 end :match = (
     :legend_font_family,
     :legend_font_color,
@@ -86,6 +87,22 @@ function legend_ncols(sp, n)
     else
         c
     end
+end
+
+"""
+    legend_series_list(sp)
+
+The series in the legend of `sp`, in the order of `sp[:legend_order]`: `:normal`, `:reversed`,
+or a permutation of the entries such as `[3, 1, 2]`.
+"""
+function legend_series_list(sp)
+    series = filter(should_add_to_legend, series_list(sp))
+    (order = sp[:legend_order]) ≡ :normal && return series
+    order ≡ :reversed && return reverse(series)
+    order isa AVec{<:Integer} && length(order) == length(series) && isperm(order) &&
+        return series[order]
+    @maxlog_warn "legend_order=$order is not a permutation of the $(length(series)) legend entries. Assuming `:normal`."
+    return series
 end
 
 Commons._initial_sp_fontsizes[:legend_font_size] =

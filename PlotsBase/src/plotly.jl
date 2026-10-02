@@ -73,6 +73,7 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :title_font_valign,
         :title_font_color,
         :legend_column,
+        :legend_order,
         :legend_font,
         :legend_font_family,
         :legend_font_size,
@@ -579,6 +580,15 @@ function plotly_layout(plt::Plot)
         PlotsBase.recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
 end
 
+# plotly lists the legend by rank, so any order but `:normal` ranks the entries
+function plotly_legendrank!(plotattributes_out::KW, series::Series)
+    sp = series[:subplot]
+    sp[:legend_order] ≡ :normal && return nothing
+    rank = findfirst(s -> s ≡ series, PlotsBase.legend_series_list(sp))
+    rank ≡ nothing || (plotattributes_out[:legendrank] = rank)
+    return nothing
+end
+
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
     plotattributes_out[:showlegend] = sp[:legend_position] ≢ :none
     legend_position = plotly_legend_pos(sp[:legend_position])
@@ -819,6 +829,7 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:yaxis] = "y$(y_idx)"
     end
     plotattributes_out[:showlegend] = should_add_to_legend(series)
+    plotly_legendrank!(plotattributes_out, series)
 
     if st ≡ :straightline
         x, y = PlotsBase.straightline_data(series, 100)
@@ -1116,6 +1127,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
             )
         end
         plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
+        plotly_legendrank!(plotattributes_out, series)
         plotly_polar!(plotattributes_out, series)
         plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], i))
         plotattributes_outs[k] = merge(plotattributes_out, series[:extra_kwargs])

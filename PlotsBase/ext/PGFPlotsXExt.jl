@@ -127,6 +127,7 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :marker_z,
         :levels,
         :legend_column,
+        :legend_order,
         :legend_title,
         :legend_title_font_color,
         :legend_title_font_size,
@@ -428,6 +429,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             )
             sp_w > 0mm && push!(axis_opt, "width" => string(sp_w - (rpad + lpad)))
             sp_h > 0mm && push!(axis_opt, "height" => string(sp_h - (tpad + bpad)))
+            if (order = sp[:legend_order]) ≡ :reversed
+                push!(axis_opt, "reverse legend" => nothing)
+            elseif order isa AVec
+                @maxlog_warn "pgfplotsx can only reverse the legend, ignoring legend_order=$order"
+            end
             for letter in (:x, :y, :z)
                 if letter ≢ :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
