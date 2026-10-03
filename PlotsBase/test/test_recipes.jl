@@ -187,3 +187,19 @@ with(:gr) do
         @test histogram(1:10) isa Plot
     end
 end
+
+@testset "Histograms on log axes" begin
+    # the bins are spaced evenly in the log, github.com/JuliaPlots/Plots.jl/pull/2208
+    x = 10 .^ range(0, 3, length = 200)
+    evenlog(v) = allequal(round.(diff(log10.(v)), digits = 9))
+    @test evenlog(PlotsBase._make_hist((x,), 10; scales = (:log10,)).edges[1])
+    pl = histogram(x; xscale = :log10)
+    @test all(isfinite, xlims(pl)) && first(xlims(pl)) > 0
+    @test evenlog(histogram2d(x, reverse(x); xscale = :log10, yscale = :log10)[1][1][:x])
+    h = PlotsBase._make_hist((x,), 10; normed = :pdf, scales = (:log10,))
+    @test sum(h.weights .* diff(h.edges[1])) ≈ 1
+    # what the axis cannot show is dropped along with its weight, as NaNs are
+    weights = [5, 5, 1, 1, 1]
+    @test sum(PlotsBase._make_hist(([-1, 0, 1, 10, 100],), 3; weights, scales = (:log10,)).weights) == 3
+    @test sum(PlotsBase._make_hist(([1, NaN, 2, 3],), 3; weights = ones(4)).weights) == 3
+end
