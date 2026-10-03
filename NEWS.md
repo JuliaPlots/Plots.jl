@@ -36,6 +36,8 @@
   where it is left untouched
 
 ### Fixed
+- GR backend: colors come out right after a session has drawn more than about 900 of them, where they
+  used to come out wrong, for example after a few `zcolor` plots with different gradients (#5215)
 - GR backend: titles, axis labels and tick labels get the room they need in plots that are not square,
   where they used to be cut off in wide or tall ones such as `size = (800, 300)` (#4064). The default
   plot is wide too, so it gets a little more room above and below its text

@@ -272,6 +272,17 @@ with(:gr) do
         )
     end
 
+    @testset "colors once GR has handed out its color indices" begin
+        # github.com/JuliaPlots/Plots.jl/issues/5215
+        many = [RGB(i % 10 / 9, i ÷ 10 % 10 / 9, i ÷ 100 / 9) for i in 0:999]
+        show(IOBuffer(), MIME("image/png"), scatter(1:1000; mc = many, msw = 0))
+        c = RGB(0.123, 0.456, 0.789)
+        fn = tempname() * ".png"
+        png(plot(Shape([0, 1, 1, 0], [0, 0, 1, 1]); fc = c, lw = 0, axis = false, grid = false), fn)
+        px = load(fn)[end ÷ 2, end ÷ 2]
+        @test all(f -> abs(f(px) - f(c)) ≤ 1 / 255, (red, green, blue))
+    end
+
     @testset "recipes" begin
         @test PlotsBase.seriestype_supported(:path) ≡ :native
 
