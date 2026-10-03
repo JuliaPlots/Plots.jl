@@ -78,6 +78,14 @@ end
     @test yticks(pl2) == xticks(pl1)
     @test filter(isfinite, pl1[1][1][:x]) == filter(isfinite, pl2[1][1][:y])
     @test filter(isfinite, pl1[1][1][:y]) == filter(isfinite, pl2[1][1][:x])
+    # and the same limits, github.com/JuliaPlots/Plots.jl/issues/5009
+    function swapped(f)
+        a, b = f(), f(permute = (:x, :y))
+        return xlims(b) == ylims(a) && ylims(b) == xlims(a)
+    end
+    @test swapped((; kw...) -> bar(["a", "b", "c"], [1, 2, 3]; kw...))
+    @test swapped((; kw...) -> histogram([1, 2, 2, 3, 3, 3]; kw...))
+    @test swapped((; kw...) -> bar([1, 2, 3], [1, 10, 100]; yscale = :log10, kw...))
 end
 
 @testset "@add_attributes" begin

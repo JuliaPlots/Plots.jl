@@ -418,6 +418,14 @@ end
 
 # ---------------------------------------------------------------------------
 
+_permuted(letter, perm) =
+    perm ≡ :none ? letter : letter ≡ perm[1] ? perm[2] : letter ≡ perm[2] ? perm[1] : letter
+_scale(plotattributes, letter) = get(
+    plotattributes,
+    get_attr_symbol(_permuted(letter, get(plotattributes, :permute, :none)), :scale),
+    :identity,
+)
+
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)  # COV_EXCL_LINE
     if typeof(y) <: NamedTuple
@@ -428,10 +436,12 @@ end
         x = plotnames
         y = values_y
     end
-    ylimits_modifiers --> :none
+    # `permute` swaps x and y after this recipe, so the axes set up here swap with them
+    perm = get(plotattributes, :permute, :none)
+    get_attr_symbol(_permuted(:y, perm), :limits_modifiers) --> :none
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
-    axis = plotattributes[:subplot][:xaxis]
+    axis = plotattributes[:subplot][get_attr_symbol(_permuted(:x, perm), :axis)]
     cv = map(xi -> discrete_value!(plotattributes, :x, xi)[1], procx)
     procx = if nx == ny
         cv
@@ -579,15 +589,13 @@ function _preprocess_binbarlike_weights(
 end
 
 function _preprocess_barlike(plotattributes, x, y)
-    xscale = get(plotattributes, :xscale, :identity)
-    yscale = get(plotattributes, :yscale, :identity)
+    xscale, yscale = _scale(plotattributes, :x), _scale(plotattributes, :y)
     weights, baseline = _preprocess_binbarlike_weights(float(eltype(y)), y, yscale)
     return x, weights, xscale, yscale, baseline
 end
 
 function _preprocess_binlike(plotattributes, x, y)
-    xscale = get(plotattributes, :xscale, :identity)
-    yscale = get(plotattributes, :yscale, :identity)
+    xscale, yscale = _scale(plotattributes, :x), _scale(plotattributes, :y)
     T = float(promote_type(eltype(x), eltype(y)))
     edge = T.(x)
     weights, baseline = _preprocess_binbarlike_weights(T, y, yscale)
