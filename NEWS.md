@@ -38,6 +38,9 @@
 ### Fixed
 - GR backend: colors come out right after a session has drawn more than about 900 of them, where they
   used to come out wrong, for example after a few `zcolor` plots with different gradients (#5215)
+- GR backend: titles, axis labels and tick labels get the room they need in plots that are not square,
+  where they used to be cut off in wide or tall ones such as `size = (800, 300)` (#4064). The default
+  plot is wide too, so it gets a little more room above and below its text
 - A row of `series_annotations` takes `nothing` for a series without any, as in
   `permutedims([nothing, ["a", "b"]])`, where that series used to be labelled `nothing`
 - `levels` takes a row with one per series, as in `levels = [3 6]`, where it used to fail with

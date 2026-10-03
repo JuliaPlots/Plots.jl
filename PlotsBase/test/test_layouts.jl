@@ -81,6 +81,16 @@ end
     show(devnull, pl)
 end
 
+@testset "Text room in wide and tall plots" begin
+    # github.com/JuliaPlots/Plots.jl/issues/4064, GR scales text with the larger side only
+    function minpad(size)
+        pl = plot(1:3; title = "t", xlabel = "x", ylabel = "y", size)
+        PlotsBase.prepare_output(pl)
+        return pl[1].minpad
+    end
+    @test minpad((600, 600)) == minpad((600, 200)) == minpad((200, 600))
+end
+
 @testset "Coverage" begin
     pl = plot(map(plot, 1:4)..., layout = (2, 2))
 
