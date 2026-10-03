@@ -36,6 +36,8 @@
   where it is left untouched
 
 ### Fixed
+- GR backend: colors come out right after a session has drawn more than about 900 of them, where they
+  used to come out wrong, for example after a few `zcolor` plots with different gradients (#5215)
 - A row of `series_annotations` takes `nothing` for a series without any, as in
   `permutedims([nothing, ["a", "b"]])`, where that series used to be labelled `nothing`
 - `levels` takes a row with one per series, as in `levels = [3 6]`, where it used to fail with

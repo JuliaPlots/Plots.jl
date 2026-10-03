@@ -342,9 +342,33 @@ end
 set_RGBA_alpha(alpha, c::RGBA) = RGBA(red(c), green(c), blue(c), alpha)
 set_RGBA_alpha(alpha::Nothing, c::RGBA) = c
 
+# GR hands out its 900 color indices (80 to 979) once per session and answers with its nearest
+# color after that, so a color it lacks then takes an index the current plot does not draw with
+const gr_plot_colors = BitSet()
+const gr_recycled_color = Ref(979)
+
+gr_byte(x) = clamp(floor(Int, 255float(x) + 0.5), 0, 255)
+gr_rgb(c) = gr_byte(red(c)) | gr_byte(green(c)) << 8 | gr_byte(blue(c)) << 16
+
 function gr_getcolorind(c)
     gr_set_transparency(float(alpha(c)))
-    return convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
+    ind = convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
+    if GR.inqcolor(ind) != gr_rgb(c)
+        ind = gr_recycle_color()
+        GR.setcolorrep(ind, red(c), green(c), blue(c))
+    end
+    80 ≤ ind ≤ 979 && push!(gr_plot_colors, ind)
+    return ind
+end
+
+function gr_recycle_color()
+    issubset(80:979, gr_plot_colors) && empty!(gr_plot_colors)
+    ind = gr_recycled_color[]
+    while true
+        ind = ind == 979 ? 80 : ind + 1
+        ind in gr_plot_colors || break
+    end
+    return gr_recycled_color[] = ind
 end
 
 gr_set_linecolor(c) = GR.setlinecolorind(gr_getcolorind(_cycle(c, 1)))
@@ -965,7 +989,7 @@ gr_set_gradient(series::Series) =
 
 # this is our new display func... set up the viewport_canvas, compute bounding boxes, and display each subplot
 function gr_display(plt::Plot, dpi_factor = 1, display = true)
-    display && GR.clearws()
+    display && (GR.clearws(); empty!(gr_plot_colors))
 
     # collect some monitor/display sizes in meters and pixels
     dsp_width_meters, dsp_height_meters, dsp_width_px, dsp_height_px = GR.inqdspsize()
