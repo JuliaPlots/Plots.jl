@@ -228,6 +228,7 @@ end
     rng = StableRNG(1337)
     pl = marginalhist(rand(rng, 100), rand(rng, 100))
     @test show(devnull, pl) isa Nothing
+    @test first(xlims(pl[3])) == 0  # the right histogram lies along y
 end
 
 @testset "marginalscatter" begin
@@ -309,6 +310,9 @@ end
 
     pl = cornerplot(M)
     @test show(devnull, pl) isa Nothing
+    # the histograms in the right column lie along y, github.com/JuliaPlots/Plots.jl/issues/5007
+    right = filter(sp -> any(s -> s[:permute] ≢ :none, sp.series_list), pl.subplots)
+    @test length(right) == 4 && all(sp -> first(xlims(sp)) == 0, right)
 end
 
 @testset "boxplot / dotplot / violin" begin
