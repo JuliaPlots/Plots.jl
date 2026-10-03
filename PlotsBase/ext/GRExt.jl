@@ -2360,6 +2360,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
     w, h = length(x) - 1, length(y) - 1
     sp = series[:subplot]
     if !ispolar(series) &&
+            x isa AbstractVector &&
             PlotsBase.is_uniformly_spaced(x) &&
             PlotsBase.is_uniformly_spaced(y)
         # For uniformly spaced data use GR.drawimage, which can be
@@ -2397,6 +2398,19 @@ function gr_draw_heatmap(series, x, y, z, clims)
             GR.setwindow(-rad_max, rad_max, -rad_max, rad_max)  # square ar
             # nonuniformpolarcellarray(θ, ρ, nx, ny, color)
             GR.nonuniformpolarcellarray(rad2deg.(x), y, w, h, rgba)
+        elseif x isa AbstractMatrix  # a curvilinear grid, with the corners of each cell
+            GR.setfillintstyle(GR.INTSTYLE_SOLID)
+            GR.setlinetype(GR.LINETYPE_SOLID)
+            GR.setlinewidth(1)
+            for j in axes(rgba, 2), i in axes(rgba, 1)
+                corners = ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1), (i, j))
+                xs, ys = [x[c...] for c in corners], [y[c...] for c in corners]
+                GR.setfillcolorind(Int(rgba[i, j]))
+                GR.fillarea(xs, ys)
+                # outlined in its own color, so no seams show between neighbours
+                GR.setlinecolorind(Int(rgba[i, j]))
+                GR.polyline(xs, ys)
+            end
         else
             GR.nonuniformcellarray(x, y, w, h, rgba)
         end

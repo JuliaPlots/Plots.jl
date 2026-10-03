@@ -260,7 +260,16 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
             data = plotattributes[letter]
             axis = sp[get_attr_symbol(letter, :axis)]
             scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
-            expand_extrema!(axis, PlotsBase.heatmap_edges(data, scale))
+            edges = if data isa RecipesPipeline.Surface  # a curvilinear grid
+                PlotsBase.backend_name(sp.plt.backend) in (:gr, :pythonplot) ||
+                    "only the gr and pythonplot backends draw heatmaps with `x` and `y` as matrices" |>
+                    ArgumentError |>
+                    throw
+                PlotsBase.heatmap_corners(data.surf, scale, size(plotattributes[:z].surf))
+            else
+                PlotsBase.heatmap_edges(data, scale)
+            end
+            expand_extrema!(axis, vec(edges))
         end
     end
 end

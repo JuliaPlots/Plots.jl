@@ -4,6 +4,8 @@
 ## Unreleased
 
 ### Features
+- `heatmap` takes `x` and `y` as matrices, for a curvilinear grid: the centers of the cells, the size of `z`, or
+  their corners, one more along both sides. Drawn by the `gr` and `pythonplot` backends (#4298)
 - `legend_order` sets the order of the legend entries: `:reversed` lists them from the last series to the
   first, which suits a stack such as `areaplot` whose first series is at the bottom (#5029), and a
   permutation such as `[3, 1, 2]` gives any other order. Supported by the `gr`, `pythonplot` and

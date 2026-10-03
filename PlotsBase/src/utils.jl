@@ -253,6 +253,41 @@ function heatmap_edges(
     )
 end
 
+# halfway between neighbours, and as far again past the first and last
+function _cell_edges(v::AVec)
+    length(v) == 1 && return [first(v) - 0.5, first(v) + 0.5]
+    mids = (v[begin:(end - 1)] .+ v[(begin + 1):end]) ./ 2
+    return vcat(2first(v) - first(mids), mids, 2last(v) - last(mids))
+end
+
+"the corners of the cells of a heatmap on a curvilinear grid, from their centers"
+function heatmap_corners(v::AMat, scale::Symbol = :identity)
+    f, invf = scale_inverse_scale_func(scale)
+    return invf.(mapslices(_cell_edges, mapslices(_cell_edges, f.(v); dims = 2); dims = 1))
+end
+
+# a matrix gives the centers of the cells, the size of `z`, or their corners, one more along both sides
+function heatmap_corners(v::AMat, scale::Symbol, z_size::NTuple{2, Int})
+    sizes = (z_size, reverse(z_size))
+    size(v) in sizes && return heatmap_corners(v, scale)
+    size(v) .- 1 in sizes && return v
+    return "x and y matrices must have the size of z, for the centers of the cells, or one more along both sides, for their corners" |>
+        ArgumentError |>
+        throw
+end
+
+function heatmap_edges(
+        x::AMat,
+        xscale::Symbol,
+        y::AMat,
+        yscale::Symbol,
+        z_size::NTuple{2, Int},
+        ::Bool = false,
+    )
+    size(x) == size(y) || throw(ArgumentError("x and y matrices must have the same size"))
+    return heatmap_corners(x, xscale, z_size), heatmap_corners(y, yscale, z_size)
+end
+
 is_uniformly_spaced(v; tol = 1.0e-6) =
 let dv = diff(v)
     maximum(dv) - minimum(dv) < tol * mean(abs.(dv))

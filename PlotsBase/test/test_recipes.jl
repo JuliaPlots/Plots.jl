@@ -187,3 +187,22 @@ with(:gr) do
         @test histogram(1:10) isa Plot
     end
 end
+
+@testset "Heatmaps on a curvilinear grid" begin
+    # `x` and `y` as matrices, github.com/JuliaPlots/Plots.jl/pull/4298
+    x = [Float64(i) for j in 1:3, i in 1:4]
+    y = [j + i / 2 for j in 1:3, i in 1:4]
+    z = reshape(1.0:12.0, 3, 4)
+    corners = PlotsBase.heatmap_corners
+    for pl in (heatmap(x, y, z), heatmap(corners(x), corners(y), z))  # centers, corners
+        @test xlims(pl) == (0.5, 4.5) && ylims(pl) == (0.75, 5.75)
+        @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
+    end
+    @test_throws ArgumentError heatmap(x[:, 1:2], y[:, 1:2], z)
+    with(:plotly) do
+        @test_throws ArgumentError heatmap(x, y, z)
+    end
+    haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+        @test show(IOBuffer(), MIME("image/png"), heatmap(x, y, z)) isa Nothing
+    end
+end

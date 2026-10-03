@@ -613,7 +613,7 @@ function PlotsBase.expand_extrema!(
     ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
     return ex
 end
-function PlotsBase.expand_extrema!(axis::Axis, v::AVec{N}) where {N <: Number}
+function PlotsBase.expand_extrema!(axis::Axis, v::AbstractArray{N}) where {N <: Number}
     ex = axis[:extrema]::Extrema
     foreach(vi -> expand_extrema!(ex, vi), v)
     return ex
