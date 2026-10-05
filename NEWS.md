@@ -40,6 +40,9 @@
   start at 0, the bars no longer run into the ends of their axis and log scales work (#5009, #4949)
 - StatsPlots: the side histograms of `marginalhist` and `cornerplot` lie along y again, where they stood
   upright since `orientation` was removed (#5007)
+- Histograms on a log axis are binned evenly in the log, as in `histogram(x; xscale = :log10)`, where the bins
+  used to be linear and a 1D histogram lost its axes. Values the axis cannot show are left out like NaNs, and
+  a NaN with `weights` no longer throws
 - GR backend: colors come out right after a session has drawn more than about 900 of them, where they
   used to come out wrong, for example after a few `zcolor` plots with different gradients (#5215)
 - GR backend: titles, axis labels and tick labels get the room they need in plots that are not square,
