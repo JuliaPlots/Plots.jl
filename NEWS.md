@@ -36,6 +36,10 @@
   where it is left untouched
 
 ### Fixed
+- Bars and histograms with `permute = (:x, :y)` get the limits of the plot without it, swapped, so the counts
+  start at 0, the bars no longer run into the ends of their axis and log scales work (#5009, #4949)
+- StatsPlots: the side histograms of `marginalhist` and `cornerplot` lie along y again, where they stood
+  upright since `orientation` was removed (#5007)
 - Histograms on a log axis are binned evenly in the log, as in `histogram(x; xscale = :log10)`, where the bins
   used to be linear and a 1D histogram lost its axes. Values the axis cannot show are left out like NaNs, and
   a NaN with `weights` no longer throws
