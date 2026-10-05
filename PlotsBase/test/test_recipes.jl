@@ -205,6 +205,7 @@ end
     haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
         @test show(IOBuffer(), MIME("image/png"), heatmap(x, y, z)) isa Nothing
     end
+end
 
 @testset "Histograms on log axes" begin
     # the bins are spaced evenly in the log, github.com/JuliaPlots/Plots.jl/pull/2208
