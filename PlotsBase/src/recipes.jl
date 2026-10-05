@@ -418,6 +418,14 @@ end
 
 # ---------------------------------------------------------------------------
 
+_permuted(letter, perm) =
+    perm ≡ :none ? letter : letter ≡ perm[1] ? perm[2] : letter ≡ perm[2] ? perm[1] : letter
+_scale(plotattributes, letter) = get(
+    plotattributes,
+    get_attr_symbol(_permuted(letter, get(plotattributes, :permute, :none)), :scale),
+    :identity,
+)
+
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)  # COV_EXCL_LINE
     if typeof(y) <: NamedTuple
@@ -428,10 +436,12 @@ end
         x = plotnames
         y = values_y
     end
-    ylimits_modifiers --> :none
+    # `permute` swaps x and y after this recipe, so the axes set up here swap with them
+    perm = get(plotattributes, :permute, :none)
+    get_attr_symbol(_permuted(:y, perm), :limits_modifiers) --> :none
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
-    axis = plotattributes[:subplot][:xaxis]
+    axis = plotattributes[:subplot][get_attr_symbol(_permuted(:x, perm), :axis)]
     cv = map(xi -> discrete_value!(plotattributes, :x, xi)[1], procx)
     procx = if nx == ny
         cv
@@ -487,7 +497,7 @@ end
     # widen limits out a bit
     expand_extrema!(
         axis,
-        Axes.scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor),
+        Axes.scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor, xscale),
     )
 
     # draw the bar shapes
@@ -548,6 +558,12 @@ RecipesPipeline.is_surface(::Type{Val{:hexbin}}) = true
 # Histograms
 
 _bin_centers(v::AVec) = (@view(v[1:(end - 1)]) + @view(v[2:end])) / 2
+_bin_centers(v::AVec, scale::Symbol) =
+if scale in _log_scales
+    RecipesPipeline.inverse_scale_func(scale).(_bin_centers(RecipesPipeline.scale_func(scale).(v)))
+else
+    _bin_centers(v)
+end
 
 _is_positive(x) = (x > 0) && !(x ≈ 0)
 
@@ -579,15 +595,13 @@ function _preprocess_binbarlike_weights(
 end
 
 function _preprocess_barlike(plotattributes, x, y)
-    xscale = get(plotattributes, :xscale, :identity)
-    yscale = get(plotattributes, :yscale, :identity)
+    xscale, yscale = _scale(plotattributes, :x), _scale(plotattributes, :y)
     weights, baseline = _preprocess_binbarlike_weights(float(eltype(y)), y, yscale)
     return x, weights, xscale, yscale, baseline
 end
 
 function _preprocess_binlike(plotattributes, x, y)
-    xscale = get(plotattributes, :xscale, :identity)
-    yscale = get(plotattributes, :yscale, :identity)
+    xscale, yscale = _scale(plotattributes, :x), _scale(plotattributes, :y)
     T = float(promote_type(eltype(x), eltype(y)))
     edge = T.(x)
     weights, baseline = _preprocess_binbarlike_weights(T, y, yscale)
@@ -780,22 +794,22 @@ _hist_edges(
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
-_invertedindex(v, not) = [j for (i, j) in enumerate(v) if !(i ∈ not)]
-
-_filternans(vs::NTuple{1, AbstractVector}) = filter!.(isfinite, vs)
-_filternans(vs::NTuple{1, AbstractRange}) = filter!.(isfinite, collect.(vs))
-function _filternans(vs::NTuple{N, AbstractVector}) where {N}
-    nots = union(Set.(findall.(!isfinite, vs))...)
-    return _invertedindex.(vs, Ref(nots))
-end
+_scaled_binning(binning::AbstractVector, f) = f.(binning)
+_scaled_binning(binning, f) = binning
 
 function _make_hist(
         vs::NTuple{N, AbstractVector},
         binning;
         normed = false,
         weights = nothing,
+        scales = ntuple(_ -> :identity, N),
     ) where {N}
-    localvs = _filternans(vs)
+    # on a log axis the bins are spaced evenly in the log, and values it cannot show are dropped like NaNs
+    fs = map(s -> s in _log_scales ? RecipesPipeline.scale_func(s) : identity, scales)
+    tvs = map((f, v) -> f.(v), fs, vs)
+    keep = reduce((a, b) -> a .& b, map(v -> isfinite.(v), tvs))
+    localvs = map(v -> v[keep], tvs)
+    binning = map(_scaled_binning, binning isa Tuple ? binning : map(_ -> binning, fs), fs)
     edges = _hist_edges(localvs, binning)
     h = float(
         weights ≡ nothing ?
@@ -803,11 +817,15 @@ function _make_hist(
             StatsBase.fit(
                 StatsBase.Histogram,
                 localvs,
-                StatsBase.Weights(weights),
+                StatsBase.Weights(weights[keep]),
                 edges,
                 closed = :left,
             ),
     )
+    if any(s -> s in _log_scales, scales)
+        invs = map(s -> s in _log_scales ? RecipesPipeline.inverse_scale_func(s) : identity, scales)
+        h = StatsBase.Histogram(map((f, e) -> f.(e), invs, h.edges), h.weights, h.closed, h.isdensity)
+    end
     return LinearAlgebra.normalize!(h, mode = _hist_norm_mode(normed))
 end
 
@@ -825,6 +843,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
+        scales = (get(plotattributes, :xscale, :identity),),
     )
     x := h.edges[1]
     y := h.weights
@@ -839,6 +858,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
+        scales = (get(plotattributes, :xscale, :identity),),
     )
     x := h.edges[1]
     y := h.weights
@@ -853,6 +873,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
+        scales = (get(plotattributes, :xscale, :identity),),
     )
     x := h.edges[1]
     y := h.weights
@@ -907,8 +928,8 @@ end
         end
     end
 
-    x := PlotsBase._bin_centers(edge_x)
-    y := PlotsBase._bin_centers(edge_y)
+    x := _bin_centers(edge_x, get(plotattributes, :xscale, :identity))
+    y := _bin_centers(edge_y, get(plotattributes, :yscale, :identity))
     z := Surface(permutedims(float_weights))
     seriestype := :heatmap
     ()
@@ -921,6 +942,7 @@ PlotsBase.@deps bins2d heatmap
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
+        scales = (get(plotattributes, :xscale, :identity), get(plotattributes, :yscale, :identity)),
     )
     x := h.edges[1]
     y := h.edges[2]
