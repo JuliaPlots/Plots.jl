@@ -956,18 +956,17 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k
-            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3, Int}}
-                # 1-based indexing
-                i, j, k =
-                    broadcast(i -> [inds[i] - 1 for inds in series[:connections]], (1, 2, 3))
-                plotattributes_out[:i] = i
-                plotattributes_out[:j] = j
-                plotattributes_out[:k] = k
+            elseif series[:connections] isa AbstractVector{<:NTuple{N, Integer}} where {N}
+                # 1-based indexing, polygons split into triangles fanning out from their first corner
+                tris = [(c[1], c[n], c[n + 1]) .- 1 for c in series[:connections] for n in 2:(length(c) - 1)]
+                plotattributes_out[:i] = getindex.(tris, 1)
+                plotattributes_out[:j] = getindex.(tris, 2)
+                plotattributes_out[:k] = getindex.(tris, 3)
             else
                 throw(
                     ArgumentError(
                         "Argument connections has to be either a tuple of three arrays (0-based indexing)
-                         or an AbstractVector{NTuple{3,Int}} (1-based indexing).",
+                         or an AbstractVector of tuples (1-based indexing).",
                     ),
                 )
             end

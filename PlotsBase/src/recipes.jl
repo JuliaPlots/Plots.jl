@@ -571,7 +571,7 @@ _positive_else_nan(::Type{T}, x::Real) where {T} = _is_positive(x) ? T(x) : T(Na
 
 _scale_adjusted_values(
     ::Type{T},
-    V::AbstractVector,
+    V::AbstractArray,
     scale::Symbol,
 ) where {T <: AbstractFloat} = scale in _log_scales ? _positive_else_nan.(T, V) : T.(V)
 
@@ -951,6 +951,41 @@ PlotsBase.@deps bins2d heatmap
     ()
 end
 @deps histogram2d bins2d
+
+# a box for each bin of a two dimensional histogram, its top and four sides
+@recipe function f(::Type{Val{:histogram3d}}, x, y, z)  # COV_EXCL_LINE
+    h = _make_hist(
+        (x, y),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+        scales = (_scale(plotattributes, :x), _scale(plotattributes, :y)),
+    )
+    (ex, ey), T = h.edges, float(eltype(h.weights))
+    w, baseline = _preprocess_binbarlike_weights(T, h.weights, _scale(plotattributes, :z))
+    xs, ys, zs, faces = T[], T[], T[], NTuple{4, Int}[]
+    for j in axes(w, 2), i in axes(w, 1)
+        w[i, j] > baseline || continue
+        cx = (ex[i], ex[i + 1], ex[i + 1], ex[i], ex[i], ex[i + 1], ex[i + 1], ex[i])
+        cy = (ey[j], ey[j], ey[j + 1], ey[j + 1], ey[j], ey[j], ey[j + 1], ey[j + 1])
+        cz = (baseline, baseline, baseline, baseline, w[i, j], w[i, j], w[i, j], w[i, j])
+        # corners of their own, so each face stays flat where the backend smooths shared ones
+        for f in ((5, 6, 7, 8), (1, 2, 6, 5), (2, 3, 7, 6), (3, 4, 8, 7), (4, 1, 5, 8))
+            push!(faces, length(xs) .+ (1, 2, 3, 4))
+            append!(xs, getindex.(Ref(cx), f))
+            append!(ys, getindex.(Ref(cy), f))
+            append!(zs, getindex.(Ref(cz), f))
+        end
+    end
+    x := xs
+    y := ys
+    z := zs
+    connections := faces
+    linecolor --> :black
+    seriestype := :mesh3d
+    ()
+end
+@deps histogram3d mesh3d
 
 @recipe function f(h::StatsBase.Histogram{T, 2, E}) where {T, E}  # COV_EXCL_LINE
     seriestype --> :bins2d

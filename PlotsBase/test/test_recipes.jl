@@ -222,3 +222,24 @@ end
     @test sum(PlotsBase._make_hist(([-1, 0, 1, 10, 100],), 3; weights, scales = (:log10,)).weights) == 3
     @test sum(PlotsBase._make_hist(([1, NaN, 2, 3],), 3; weights = ones(4)).weights) == 3
 end
+
+@testset "histogram3d" begin
+    # a box for each bin that is not empty, github.com/JuliaPlots/Plots.jl/pull/3507
+    x, y = [1, 1, 1, 2], [1, 1, 2, 2]
+    pl = histogram3d(x, y; bins = 2)
+    s = pl[1][1]
+    @test s[:seriestype] ≡ :mesh3d
+    @test length(s[:connections]) == 5 * 3  # a top and four sides each
+    @test maximum(s[:z]) == 2
+    @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
+    @test minimum(histogram3d(x, y; bins = 2, zscale = :log10)[1][1][:z]) > 0
+    with(:plotly) do
+        @test length(PlotsBase.plotly_series(pl)[1][:i]) == 2 * 5 * 3  # two triangles a face
+    end
+    haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+        @test show(IOBuffer(), MIME("image/png"), histogram3d(x, y; bins = 2)) isa Nothing
+    end
+    # the connections as a vector of tuples, 1-based
+    pl = mesh3d([0, 1, 2, 0], [0, 0, 1, 2], [0, 2, 0, 1]; connections = [(1, 2, 3), (1, 3, 4), (1, 4, 2), (2, 3, 4)])
+    @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
+end

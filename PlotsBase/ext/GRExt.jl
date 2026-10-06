@@ -2303,7 +2303,7 @@ function gr_draw_surface(series, x, y, z, clims)
         if series[:connections] isa AbstractVector{<:AbstractVector{<:Integer}}
             # Combination of any polygon types
             cns = map(cns -> [length(cns), cns...], series[:connections])
-        elseif series[:connections] isa AbstractVector{NTuple{N, <:Integer}} where {N}
+        elseif series[:connections] isa AbstractVector{<:NTuple{N, Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             N = length(series[:connections][1])
             cns = map(cns -> [N, cns...], series[:connections])

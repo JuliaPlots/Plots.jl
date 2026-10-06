@@ -781,7 +781,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         polygons = if cns isa AbstractVector{<:AbstractVector{<:Integer}}
             # Combination of any polygon types
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
-        elseif cns isa AbstractVector{NTuple{N, <:Integer}} where {N}
+        elseif cns isa AbstractVector{<:NTuple{N, Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
         elseif cns isa NTuple{3, <:AbstractVector{<:Integer}}
