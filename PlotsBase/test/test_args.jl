@@ -86,6 +86,7 @@ end
     @test swapped((; kw...) -> bar(["a", "b", "c"], [1, 2, 3]; kw...))
     @test swapped((; kw...) -> histogram([1, 2, 2, 3, 3, 3]; kw...))
     @test swapped((; kw...) -> bar([1, 2, 3], [1, 10, 100]; yscale = :log10, kw...))
+    @test swapped((; kw...) -> histogram(10 .^ range(0, 3, length = 100); xscale = :log10, kw...))
 end
 
 @testset "@add_attributes" begin
