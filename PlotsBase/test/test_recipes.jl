@@ -227,14 +227,16 @@ end
     # a box for each bin that is not empty, github.com/JuliaPlots/Plots.jl/pull/3507
     x, y = [1, 1, 1, 2], [1, 1, 2, 2]
     pl = histogram3d(x, y; bins = 2)
-    s = pl[1][1]
-    @test s[:seriestype] ≡ :mesh3d
-    @test length(s[:connections]) == 5 * 3  # a top and four sides each
-    @test maximum(s[:z]) == 2
+    boxes = pl[1].series_list
+    @test length(boxes) == 3 && all(s -> s[:seriestype] ≡ :mesh3d, boxes)
+    @test all(s -> length(s[:connections]) == 5, boxes)  # a top and four sides
+    @test count(s -> s[:primary], boxes) == 1
+    # drawn from the back, which is large y for the default camera
+    @test [maximum(s[:z]) for s in boxes] == [1, 1, 2]
     @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
-    @test minimum(histogram3d(x, y; bins = 2, zscale = :log10)[1][1][:z]) > 0
+    @test minimum(s -> minimum(s[:z]), histogram3d(x, y; bins = 2, zscale = :log10)[1].series_list) > 0
     with(:plotly) do
-        @test length(PlotsBase.plotly_series(pl)[1][:i]) == 2 * 5 * 3  # two triangles a face
+        @test all(s -> length(s[:i]) == 2 * 5, PlotsBase.plotly_series(pl))  # two triangles a face
     end
     haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
         @test show(IOBuffer(), MIME("image/png"), histogram3d(x, y; bins = 2)) isa Nothing

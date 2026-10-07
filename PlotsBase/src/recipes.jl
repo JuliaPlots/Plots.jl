@@ -963,27 +963,32 @@ end
     )
     (ex, ey), T = h.edges, float(eltype(h.weights))
     w, baseline = _preprocess_binbarlike_weights(T, h.weights, _scale(plotattributes, :z))
-    xs, ys, zs, faces = T[], T[], T[], NTuple{4, Int}[]
-    for j in axes(w, 2), i in axes(w, 1)
-        w[i, j] > baseline || continue
+    # each box is a mesh of its own, drawn from the back: a mesh sorts its faces by their
+    # middles, which brings the sides of a tall box in front of a low box before it
+    sp = plotattributes[:subplot]
+    fx, fy = RecipesPipeline.scale_func.((_scale(plotattributes, :x), _scale(plotattributes, :y)))
+    az = first(sp[:camera])
+    ax = sind(az) * (sp[:xaxis][:flip] ? -1 : 1) / (fx(last(ex)) - fx(first(ex)))
+    ay = -cosd(az) * (sp[:yaxis][:flip] ? -1 : 1) / (fy(last(ey)) - fy(first(ey)))
+    nearness((i, j)) = ax * (fx(ex[i]) + fx(ex[i + 1])) + ay * (fy(ey[j]) + fy(ey[j + 1]))
+    bins = sort!([(i, j) for j in axes(w, 2) for i in axes(w, 1) if w[i, j] > baseline], by = nearness)
+    for (n, (i, j)) in enumerate(bins)
         cx = (ex[i], ex[i + 1], ex[i + 1], ex[i], ex[i], ex[i + 1], ex[i + 1], ex[i])
         cy = (ey[j], ey[j], ey[j + 1], ey[j + 1], ey[j], ey[j], ey[j + 1], ey[j + 1])
         cz = (baseline, baseline, baseline, baseline, w[i, j], w[i, j], w[i, j], w[i, j])
         # corners of their own, so each face stays flat where the backend smooths shared ones
-        for f in ((5, 6, 7, 8), (1, 2, 6, 5), (2, 3, 7, 6), (3, 4, 8, 7), (4, 1, 5, 8))
-            push!(faces, length(xs) .+ (1, 2, 3, 4))
-            append!(xs, getindex.(Ref(cx), f))
-            append!(ys, getindex.(Ref(cy), f))
-            append!(zs, getindex.(Ref(cz), f))
+        faces = ((5, 6, 7, 8), (1, 2, 6, 5), (2, 3, 7, 6), (3, 4, 8, 7), (4, 1, 5, 8))
+        @series begin
+            primary := n == 1
+            x := [cx[k] for f in faces for k in f]
+            y := [cy[k] for f in faces for k in f]
+            z := [cz[k] for f in faces for k in f]
+            connections := [4(m - 1) .+ (1, 2, 3, 4) for m in eachindex(faces)]
+            linecolor --> :black
+            seriestype := :mesh3d
+            ()
         end
     end
-    x := xs
-    y := ys
-    z := zs
-    connections := faces
-    linecolor --> :black
-    seriestype := :mesh3d
-    ()
 end
 @deps histogram3d mesh3d
 
