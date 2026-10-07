@@ -21,6 +21,17 @@ PlotsBase._plots_theme_defaults()
     default()
 end
 
+@testset "a row given to default" begin
+    # one value per series or subplot, as when given to the plot, github.com/JuliaPlots/Plots.jl/issues/3496
+    default(label = ["a" "b"], markersize = [2 6], title = ["A" "B"], xlims = [(0, 1) (0, 2)])
+    pl = scatter(rand(3, 2); layout = 2)
+    @test [s[:label] for s in pl.series_list] == ["a", "b"]
+    @test [s[:markersize] for s in pl.series_list] == [2, 6]
+    @test [sp[:title] for sp in pl.subplots] == ["A", "B"]
+    @test [sp[:xaxis][:lims] for sp in pl.subplots] == [(0, 1), (0, 2)]
+    default()
+end
+
 @testset "Legend defaults" begin
     pl = plot()
     @test pl[1][:legend_font_family] == "sans-serif"

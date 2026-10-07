@@ -38,6 +38,9 @@
   where it is left untouched
 
 ### Fixed
+- A row given to `default` holds one value per series or subplot, as one given to the plot does:
+  `default(label = ["a" "b"])` labels the series `a` and `b`, where each used to get the whole row (#3496).
+  The same goes for subplot and axis attributes, such as `default(title = ["A" "B"])`
 - Bars and histograms with `permute = (:x, :y)` get the limits of the plot without it, swapped, so the counts
   start at 0, the bars no longer run into the ends of their axis and log scales work (#5009, #4949)
 - StatsPlots: the side histograms of `marginalhist` and `cornerplot` lie along y again, where they stood

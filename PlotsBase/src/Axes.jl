@@ -533,6 +533,9 @@ function _update_axis(
         if haskey(plotattributes_in, lk)
             kw[k] = PlotsBase.slice_arg(plotattributes_in[lk], subplot_index)
         end
+        # and a row given to `default`
+        haskey(kw, k) || (v = get(axis.plotattributes, k, nothing)) isa AbstractMatrix &&
+            (kw[k] = PlotsBase.slice_arg(v, subplot_index))
     end
 
     # update the axis
