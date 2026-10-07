@@ -886,6 +886,10 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array, Array, Array})
     return X, Y, Z
 end
 
+# other polygons are split into triangles fanning out from their first corner
+mesh3d_triangles(x, y, z, cns::AbstractVector{<:NTuple{N, Integer}}) where {N} =
+    mesh3d_triangles(x, y, z, [Int.((c[1], c[n], c[n + 1])) for c in cns for n in 2:(N - 1)])
+
 function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3, Int}})
     X = zeros(eltype(x), 4length(cns))
     Y = zeros(eltype(y), 4length(cns))

@@ -239,6 +239,8 @@ end
     haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
         @test show(IOBuffer(), MIME("image/png"), histogram3d(x, y; bins = 2)) isa Nothing
     end
+    # backends that draw triangles get two for a quadrilateral
+    @test length(first(PlotsBase.mesh3d_triangles(1:4, 1:4, 1:4, [(1, 2, 3, 4)]))) == 2 * 4
     # the connections as a vector of tuples, 1-based
     pl = mesh3d([0, 1, 2, 0], [0, 0, 1, 2], [0, 2, 0, 1]; connections = [(1, 2, 3), (1, 3, 4), (1, 4, 2), (2, 3, 4)])
     @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing

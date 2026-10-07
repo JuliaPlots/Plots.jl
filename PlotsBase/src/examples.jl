@@ -1320,13 +1320,20 @@ const _examples = PlotExample[
             )
         end,
     ),
+    PlotExample( # 70
+        "3D histogram",
+        "`histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane.",
+        quote
+            histogram3d(randn(10_000), randn(10_000), bins = 15)
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [02, 31]
 _backend_skips = Dict(
     :none => Int[],
-    :hdf5 => Int[47],
+    :hdf5 => Int[47, 70],
     :pythonplot => Int[],
     :gr => Int[],
     :plotlyjs => [
@@ -1351,6 +1358,7 @@ _backend_skips = Dict(
         51,  # image with custom axes
         56,  # custom bar plot
         62,  # fillstyle unsupported
+        70,  # mesh3d with polygons other than triangles
     ],
     :unicodeplots => [
         05,  # limits issue
