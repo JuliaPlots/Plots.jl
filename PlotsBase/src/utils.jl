@@ -172,11 +172,8 @@ function slice_arg!(
         remove_pair::Bool,
     )
     v = get(plotattributes_in, k, plotattributes_out[k])
-    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ Commons._plot_attrs
-        slice_arg(v, idx)
-    else
-        v
-    end
+    # a row given to `default` is sliced like one given to the plot
+    plotattributes_out[k] = k ∉ Commons._plot_attrs ? slice_arg(v, idx) : v
     remove_pair && RecipesPipeline.reset_kw!(plotattributes_in, k)
     return nothing
 end
@@ -188,8 +185,11 @@ function _slice_series_attrs!(
         commandIndex::Int,
     )
     for k in keys(_series_defaults)
-        haskey(plotattributes, k) &&
+        if haskey(plotattributes, k)
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
+        elseif (v = _series_defaults[k]) isa AMat  # a row given to `default`
+            plotattributes[k] = slice_arg(v, commandIndex)
+        end
     end
     return plotattributes
 end
