@@ -235,11 +235,17 @@ end
     @test [maximum(s[:z]) for s in boxes] == [1, 1, 2]
     @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
     @test minimum(s -> minimum(s[:z]), histogram3d(x, y; bins = 2, zscale = :log10)[1].series_list) > 0
+    # a gradient colors the boxes by their height
+    @test all(s -> s[:fill_z] ≡ nothing, boxes)
+    zpl = histogram3d(x, y; bins = 2, color = :viridis)
+    @test [s[:fill_z] for s in zpl[1].series_list] == [fill(1, 5), fill(1, 5), fill(2, 5)]
+    @test show(IOBuffer(), MIME("image/png"), zpl) isa Nothing
     with(:plotly) do
         @test all(s -> length(s[:i]) == 2 * 5, PlotsBase.plotly_series(pl))  # two triangles a face
+        @test all(s -> length(s[:intensity]) == 2 * 5, PlotsBase.plotly_series(zpl))
     end
     haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
-        @test show(IOBuffer(), MIME("image/png"), histogram3d(x, y; bins = 2)) isa Nothing
+        @test show(IOBuffer(), MIME("image/png"), histogram3d(x, y; bins = 2, color = :viridis)) isa Nothing
     end
     # backends that draw triangles get two for a quadrilateral
     @test length(first(PlotsBase.mesh3d_triangles(1:4, 1:4, 1:4, [(1, 2, 3, 4)]))) == 2 * 4

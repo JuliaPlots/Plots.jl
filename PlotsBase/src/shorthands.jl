@@ -118,6 +118,7 @@ julia> histogram2d(randn(10_000),randn(10_000))
     histogram3d!(x, y)
 
 Plot a two-dimensional histogram as boxes standing on the x-y plane, as tall as their bins.
+The boxes are colored by their height when `color` is a gradient.
 
 # Arguments
 - `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`)
@@ -126,7 +127,7 @@ Plot a two-dimensional histogram as boxes standing on the x-y plane, as tall as 
 
 # Example
 ```julia-repl
-julia> histogram3d(randn(10_000), randn(10_000), bins = 15)
+julia> histogram3d(randn(10_000), randn(10_000), bins = 15, color = :viridis)
 ```
 """
 @shorthands histogram3d

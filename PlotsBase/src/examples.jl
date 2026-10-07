@@ -1322,9 +1322,9 @@ const _examples = PlotExample[
     ),
     PlotExample( # 70
         "3D histogram",
-        "`histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane.",
+        "`histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, colored by their height when `color` is a gradient.",
         quote
-            histogram3d(randn(10_000), randn(10_000), bins = 15)
+            histogram3d(randn(10_000), randn(10_000), bins = 15, color = :viridis)
         end,
     ),
 ]

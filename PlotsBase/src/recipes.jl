@@ -972,6 +972,9 @@ end
     ay = -cosd(az) * (sp[:yaxis][:flip] ? -1 : 1) / (fy(last(ey)) - fy(first(ey)))
     nearness((i, j)) = ax * (fx(ex[i]) + fx(ex[i + 1])) + ay * (fy(ey[j]) + fy(ey[j + 1]))
     bins = sort!([(i, j) for j in axes(w, 2) for i in axes(w, 1) if w[i, j] > baseline], by = nearness)
+    # a gradient colors the boxes by their height
+    c = plotattributes[:fillcolor] ≡ :match ? plotattributes[:seriescolor] : plotattributes[:fillcolor]
+    by_height = get_series_color(c, sp, 1, :mesh3d) isa ColorGradient
     for (n, (i, j)) in enumerate(bins)
         cx = (ex[i], ex[i + 1], ex[i + 1], ex[i], ex[i], ex[i + 1], ex[i + 1], ex[i])
         cy = (ey[j], ey[j], ey[j + 1], ey[j + 1], ey[j], ey[j], ey[j + 1], ey[j + 1])
@@ -984,6 +987,7 @@ end
             y := [cy[k] for f in faces for k in f]
             z := [cz[k] for f in faces for k in f]
             connections := [4(m - 1) .+ (1, 2, 3, 4) for m in eachindex(faces)]
+            by_height && (fill_z := fill(w[i, j], length(faces)))
             linecolor --> :black
             seriestype := :mesh3d
             ()

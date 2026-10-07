@@ -810,7 +810,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             polygons;
             linewidths,
             edgecolors,
-            facecolors,
+            facecolors = _py_color(map(i -> get_fillcolor(series, clims, i), eachindex(polygons))),
             zorder,
             alpha,
         ) |>

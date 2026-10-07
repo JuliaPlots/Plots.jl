@@ -2321,13 +2321,8 @@ function gr_draw_surface(series, x, y, z, clims)
                 ArgumentError |>
                 throw
         end
-        facecolor = if series[:fillcolor] isa AbstractArray
-            series[:fillcolor]
-        else
-            fill(series[:fillcolor], length(cns))
-        end
         fillalpha = get_fillalpha(series)
-        facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
+        facecolor = map(i -> set_RGBA_alpha(fillalpha, get_fillcolor(series, clims, i)), eachindex(cns))
         GR.setborderwidth(get_linewidth(series))
         GR.setbordercolorind(gr_getcolorind(get_linecolor(series)))
         GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))

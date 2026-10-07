@@ -5,7 +5,8 @@
 
 ### Features
 - `histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, binned as in `histogram2d`
-  (#3507). Drawn by the `gr`, `pythonplot`, `plotly`/`plotlyjs` and `unicodeplots` backends
+  (#3507), and colored by their height when `color` is a gradient. Drawn by the `gr`, `pythonplot`,
+  `plotly`/`plotlyjs` and `unicodeplots` backends
 - `heatmap` takes `x` and `y` as matrices, for a curvilinear grid: the centers of the cells, the size of `z`, or
   their corners, one more along both sides. Drawn by the `gr` and `pythonplot` backends (#4298)
 - `legend_order` sets the order of the legend entries: `:reversed` lists them from the last series to the
@@ -41,7 +42,8 @@
 
 ### Fixed
 - GR and PythonPlot backends: `mesh3d` takes `connections` as a vector of tuples, as its example says, where it
-  used to throw, and Plotly, UnicodePlots and Gaston split polygons other than triangles into triangles
+  used to throw, and Plotly, UnicodePlots and Gaston split polygons other than triangles into triangles. `fill_z`
+  colors each polygon of a `mesh3d` in GR, PythonPlot and Plotly, where it was ignored
 - PythonPlot backend: `aspect_ratio = :equal` gives the axes of a 3D plot equal units, sizing the box by their
   spans as Plotly does, where it drew a cube (#1949). GR keeps its cube, but no longer shrinks a 3D plot by
   the 2D aspect correction
