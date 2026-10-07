@@ -417,12 +417,7 @@ function plotly_scene_aspect(sp::Subplot)
         # equal units on every axis: size the box by the axis spans themselves, measured
         # in the same scale `plotly_axis` reports the range in, so that a `:log10` axis is
         # compared by decades rather than by its raw data span
-        spans = map((:x, :y, :z)) do letter
-            axis = sp[get_attr_symbol(letter, :axis)]
-            scale = RecipesPipeline.scale_func(axis[:scale])
-            amin, amax = axis_limits(sp, letter)
-            scale(amax) - scale(amin)
-        end
+        spans = axis_spans(sp)
         manual((spans ./ maximum(spans))...)
     else
         # `:none` (i.e. the `:auto` default) and numeric ratios, which have no meaning for

@@ -38,6 +38,9 @@
   where it is left untouched
 
 ### Fixed
+- PythonPlot backend: `aspect_ratio = :equal` gives the axes of a 3D plot equal units, sizing the box by their
+  spans as Plotly does, where it drew a cube (#1949). GR keeps its cube, but no longer shrinks a 3D plot by
+  the 2D aspect correction
 - A row given to `default` holds one value per series or subplot, as one given to the plot does:
   `default(label = ["a" "b"])` labels the series `a` and `b`, where each used to get the whole row (#3496).
   The same goes for subplot and axis attributes, such as `default(title = ["A" "B"])`
