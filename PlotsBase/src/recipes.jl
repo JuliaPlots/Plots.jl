@@ -843,7 +843,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
-        scales = (get(plotattributes, :xscale, :identity),),
+        scales = (_scale(plotattributes, :x),),
     )
     x := h.edges[1]
     y := h.weights
@@ -858,7 +858,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
-        scales = (get(plotattributes, :xscale, :identity),),
+        scales = (_scale(plotattributes, :x),),
     )
     x := h.edges[1]
     y := h.weights
@@ -873,7 +873,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
-        scales = (get(plotattributes, :xscale, :identity),),
+        scales = (_scale(plotattributes, :x),),
     )
     x := h.edges[1]
     y := h.weights
@@ -928,8 +928,8 @@ end
         end
     end
 
-    x := _bin_centers(edge_x, get(plotattributes, :xscale, :identity))
-    y := _bin_centers(edge_y, get(plotattributes, :yscale, :identity))
+    x := _bin_centers(edge_x, _scale(plotattributes, :x))
+    y := _bin_centers(edge_y, _scale(plotattributes, :y))
     z := Surface(permutedims(float_weights))
     seriestype := :heatmap
     ()
@@ -942,7 +942,7 @@ PlotsBase.@deps bins2d heatmap
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
-        scales = (get(plotattributes, :xscale, :identity), get(plotattributes, :yscale, :identity)),
+        scales = (_scale(plotattributes, :x), _scale(plotattributes, :y)),
     )
     x := h.edges[1]
     y := h.edges[2]
