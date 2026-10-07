@@ -1,7 +1,7 @@
 module Axes
 
 export Axis, Extrema, tickfont, guidefont, limits_modifiers, scale_inverse_scale_func
-export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide
+export sort_3d_axes, axes_letters, process_axis_arg!, has_ticks, get_axis, get_guide, axis_spans
 
 import ..PlotsBase: PlotsBase, Subplot, DefaultsDict
 using Latexify: latexify
@@ -214,6 +214,15 @@ function Commons.axis_limits(
     end
 
     return amin, amax
+end
+
+"the extent of each axis of a 3D subplot, in the scale it is drawn in"
+function axis_spans(sp)
+    return map((:x, :y, :z)) do letter
+        f, = scale_inverse_scale_func(get_axis(sp, letter)[:scale])
+        amin, amax = axis_limits(sp, letter)
+        f(amax) - f(amin)
+    end
 end
 
 warn_invalid_modifier(letter, m) = @maxlog_warn """

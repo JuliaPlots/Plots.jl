@@ -1459,8 +1459,8 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             if RecipesPipeline.is3d(sp)
                 if ratio ≡ :auto
                     nothing
-                elseif ratio ≡ :equal
-                    ax.set_box_aspect((1, 1, 1))
+                elseif ratio ≡ :equal  # equal units, the box sized by the axis spans
+                    ax.set_box_aspect(axis_spans(sp))
                 else
                     ax.set_box_aspect(ratio)
                 end

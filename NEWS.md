@@ -38,6 +38,9 @@
   where it is left untouched
 
 ### Fixed
+- PythonPlot backend: `aspect_ratio = :equal` gives the axes of a 3D plot equal units, sizing the box by their
+  spans as Plotly does, where it drew a cube (#1949). GR keeps its cube, but no longer shrinks a 3D plot by
+  the 2D aspect correction
 - Bars and histograms with `permute = (:x, :y)` get the limits of the plot without it, swapped, so the counts
   start at 0, the bars no longer run into the ends of their axis and log scales work (#5009, #4949)
 - StatsPlots: the side histograms of `marginalhist` and `cornerplot` lie along y again, where they stood

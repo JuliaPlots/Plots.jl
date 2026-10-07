@@ -261,6 +261,24 @@ end
             @test PlotsBase.zlims(pl) == (0, 10)
         end
     end
+
+    @testset "#1949 - `aspect_ratio = :equal` in 3D" begin
+        x, y = range(0, 10, length = 10), range(0, 1, length = 10)
+        pl = surface(x, y, [xi * yi for xi in x, yi in y], aspect_ratio = :equal)
+        # GR's 3D box stays a cube, but the 2D correction no longer shrinks it
+        GRExt = Base.get_extension(PlotsBase, :GRExt)
+        vp = GRExt.GRViewport(0.1, 0.9, 0.1, 0.9)
+        GRExt.gr_update_viewport_ratio!(vp, pl[1])
+        @test (vp.xmin, vp.xmax, vp.ymin, vp.ymax) == (0.1, 0.9, 0.1, 0.9)
+        # PythonPlot sizes the box by the axis spans, for equal units as in plotly
+        haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+            pl = surface(x, y, [xi * yi for xi in x, yi in y], aspect_ratio = :equal)
+            PlotsBase.prepare_output(pl)
+            box = PythonPlot.pyconvert(Vector{Float64}, pl[1].o.get_box_aspect())
+            spans = collect(PlotsBase.Axes.axis_spans(pl[1]))
+            @test box ./ box[1] ≈ spans ./ spans[1]
+        end
+    end
 end
 
 @testset "Twinx" begin

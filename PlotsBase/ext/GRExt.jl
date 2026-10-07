@@ -1659,7 +1659,7 @@ function gr_update_viewport_legend!(vp, sp, leg)
 end
 
 gr_update_viewport_ratio!(vp, sp) =
-if (ratio = get_aspect_ratio(sp)) ≢ :none
+if (ratio = get_aspect_ratio(sp)) ≢ :none && !gr_is3d(sp)
     ratio ≡ :equal && (ratio = 1)
     x_min, x_max, y_min, y_max = gr_xy_axislims(sp)
     viewport_ratio = width(vp) / height(vp)
