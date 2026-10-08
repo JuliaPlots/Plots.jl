@@ -118,7 +118,8 @@ julia> histogram2d(randn(10_000),randn(10_000))
     histogram3d!(x, y)
 
 Plot a two-dimensional histogram as boxes standing on the x-y plane, as tall as their bins.
-The boxes are colored by their height when `color` is a gradient.
+The boxes are colored by their height when `color` is a gradient. Attributes given as a vector, such as
+`fillcolor`, take a value for each bin, running along x first.
 
 # Arguments
 - `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`)

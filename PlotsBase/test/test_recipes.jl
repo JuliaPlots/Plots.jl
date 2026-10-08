@@ -240,6 +240,9 @@ end
     zpl = histogram3d(x, y; bins = 2, color = :viridis)
     @test [s[:fill_z] for s in zpl[1].series_list] == [fill(1, 5), fill(1, 5), fill(2, 5)]
     @test show(IOBuffer(), MIME("image/png"), zpl) isa Nothing
+    # a vector gives each bin a color of its own, running along x first
+    cpl = histogram3d(x, y; bins = ([1, 1.5, 2.5], [1, 1.5, 2.5]), fillcolor = [:red, :green, :blue, :black])
+    @test [s[:fillcolor] for s in cpl[1].series_list] == PlotsBase.plot_color.([:blue, :black, :red])
     with(:plotly) do
         @test all(s -> length(s[:i]) == 2 * 5, PlotsBase.plotly_series(pl))  # two triangles a face
         @test all(s -> length(s[:intensity]) == 2 * 5, PlotsBase.plotly_series(zpl))

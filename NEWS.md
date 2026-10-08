@@ -5,8 +5,8 @@
 
 ### Features
 - `histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, binned as in `histogram2d`
-  (#3507), and colored by their height when `color` is a gradient. Drawn by the `gr`, `pythonplot`,
-  `plotly`/`plotlyjs` and `unicodeplots` backends
+  (#3507), and colored by their height when `color` is a gradient, or bin by bin from a vector. Drawn by the
+  `gr`, `pythonplot`, `plotly`/`plotlyjs` and `unicodeplots` backends
 - `heatmap` takes `x` and `y` as matrices, for a curvilinear grid: the centers of the cells, the size of `z`, or
   their corners, one more along both sides. Drawn by the `gr` and `pythonplot` backends (#4298)
 - `legend_order` sets the order of the legend entries: `:reversed` lists them from the last series to the

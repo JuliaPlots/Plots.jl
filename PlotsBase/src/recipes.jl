@@ -982,6 +982,11 @@ end
         # corners of their own, so each face stays flat where the backend smooths shared ones
         faces = ((5, 6, 7, 8), (1, 2, 6, 5), (2, 3, 7, 6), (3, 4, 8, 7), (4, 1, 5, 8))
         @series begin
+            # a vector gives each bin a value of its own, running along x first
+            for attr in _segmenting_vector_attributes
+                v = plotattributes[attr]
+                v isa AVec && (plotattributes[attr] = _cycle(v, LinearIndices(w)[i, j]))
+            end
             primary := n == 1
             x := [cx[k] for f in faces for k in f]
             y := [cy[k] for f in faces for k in f]
