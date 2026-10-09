@@ -268,8 +268,8 @@ function _update_subplot_attrs(
 
     Subplots._update_subplot_colors(sp)
     Subplots._update_margins(sp)
-    cbar_update_keys = :clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry
-    any(haskey.(Ref(plotattributes_in), cbar_update_keys)) && Colorbars._update_subplot_colorbars(sp)
+    # new series update the colorbar as they are added, but new `clims` apply to those already there
+    haskey(plotattributes_in, :clims) && Colorbars._update_subplot_colorbars(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
