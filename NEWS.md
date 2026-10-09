@@ -41,6 +41,8 @@
   where it is left untouched
 
 ### Fixed
+- `warn_on_unsupported` given to a plot holds for its series, so `false` silences the warnings on unsupported
+  attributes, series types and markers, where only `default(warn_on_unsupported = false)` did
 - GR and PythonPlot backends: `mesh3d` takes `connections` as a vector of tuples, as its example says, where it
   used to throw, and Plotly, UnicodePlots and Gaston split polygons other than triangles into triangles. `fill_z`
   colors each polygon of a `mesh3d` in GR, PythonPlot and Plotly, where it was ignored
