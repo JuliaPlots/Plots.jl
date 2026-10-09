@@ -134,6 +134,13 @@ end
     ()
 end
 
+@testset "warn_on_unsupported" begin
+    # given to a plot, it holds for its series too
+    delete!(get!(Set{Symbol}, PlotsBase._already_warned, :gr), :markerstrokestyle)
+    @test_logs plot(1:2, markerstrokestyle = :dash, warn_on_unsupported = false)
+    @test_logs (:warn, r"markerstrokestyle not supported") plot(1:2, markerstrokestyle = :dash)
+end
+
 @testset "margin" begin
     # github.com/JuliaPlots/Plots.jl/issues/4522
     @test show(devnull, matrixheatmap(reshape(1:12, 3, 4))) isa Nothing

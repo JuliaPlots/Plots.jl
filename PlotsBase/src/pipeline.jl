@@ -50,7 +50,7 @@ RecipesPipeline.is_subplot_attribute(plt::Plot, attr) = Commons.is_subplot_attrs
 
 function RecipesPipeline.process_userrecipe!(plt::Plot, kw_list, kw)
     _preprocess_userrecipe(kw)
-    warn_on_unsupported_scales(plt.backend, kw)
+    warn_on_unsupported_scales(plt, kw)
     # add the plot index
     plt.n += 1
     kw[:series_plotindex] = plt.n
@@ -417,7 +417,7 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
 end
 
 function _add_the_series(plt, sp, plotattributes)
-    extra_kwargs = warn_on_unsupported_attrs(plt.backend, plotattributes)
+    extra_kwargs = warn_on_unsupported_attrs(plt, plotattributes)
     if (kw = plt[:extra_kwargs]) isa AbstractDict
         plt[:extra_plot_kwargs] = get(kw, :plot, KW())
         sp[:extra_kwargs] = get(kw, :subplot, KW())
@@ -431,7 +431,7 @@ function _add_the_series(plt, sp, plotattributes)
     else
         throw(ArgumentError("Unsupported type for extra keyword arguments"))
     end
-    warn_on_unsupported(plt.backend, plotattributes)
+    warn_on_unsupported(plt, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
     if (z_order = plotattributes[:z_order]) ≡ :front
