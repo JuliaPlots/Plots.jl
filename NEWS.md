@@ -4,6 +4,8 @@
 ## Unreleased
 
 ### Features
+- A keyword that is neither an attribute nor used by the backend warns that it is ignored, so a typo no longer
+  goes unnoticed (#4861). PGFPlotsX, Plotly and HDF5 pass every keyword on, so they take them all
 - `histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, binned as in `histogram2d`
   (#3507), and colored by their height when `color` is a gradient, or bin by bin from a vector. Drawn by the
   `gr`, `pythonplot`, `plotly`/`plotlyjs` and `unicodeplots` backends

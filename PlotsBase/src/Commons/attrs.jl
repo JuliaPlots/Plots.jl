@@ -559,6 +559,7 @@ const _suppress_warnings = Set{Symbol}(
         :x_extrema,
         :y_extrema,
         :z_extrema,
+        :clims_calculated,
     ]
 )
 

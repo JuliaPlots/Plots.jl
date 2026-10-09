@@ -53,6 +53,14 @@ end
     @test sp[2][:seriescolor] == cgrad(default(:palette))[2]
 end
 
+@testset "Extra keyword arguments" begin
+    # warns on a keyword that neither Plots nor GR uses
+    @test_logs (:warn, r"unknown_kwarg is neither an attribute") plot(1:2, unknown_kwarg = 1)
+    @test_logs plot(1:2, nx = 2)
+    # not on the internal keys `lens!` copies along with a series
+    @test_logs lens!(plot(1:3), [1, 2], [1, 2], inset = (1, bbox(0.5, 0.5, 0.3, 0.3)))
+end
+
 @testset "Axis Attributes" begin
     pl = @test_nowarn plot(; tick_font = font(10, "Times"))
     for axis in (:xaxis, :yaxis, :zaxis)
