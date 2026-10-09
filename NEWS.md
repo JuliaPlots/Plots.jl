@@ -41,8 +41,6 @@
   where it is left untouched
 
 ### Fixed
-- Adding a series no longer finds the color limits of every series in its subplot again, which made plots of many
-  large series slow: 100 heatmaps of 512×512 take 0.2 s, where they took 4.8 s (#4520)
 - GR and PythonPlot backends: `mesh3d` takes `connections` as a vector of tuples, as its example says, where it
   used to throw, and Plotly, UnicodePlots and Gaston split polygons other than triangles into triangles. `fill_z`
   colors each polygon of a `mesh3d` in GR, PythonPlot and Plotly, where it was ignored
@@ -113,6 +111,8 @@
 - PGFPlotsX backend: the colorbar now shows custom tick labels, from either `colorbar_ticks` pairs or `colorbar_formatter`
 - PythonPlot backend: colorbar tick labels honor `colorbar_tick_font_rotation`, colorbar tick marks point outward
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
+- Adding a series no longer finds the color limits of every series in its subplot again, which made plots of many
+  large series slow: 100 heatmaps of 512×512 take 0.2 s, where they took 4.8 s (#4520)
 
 ## Breaking changes
 - `boxplot`, `violin` and `density` are defined by StatsPlots, next to their recipes, so they need
