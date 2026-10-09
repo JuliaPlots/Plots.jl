@@ -53,13 +53,6 @@ end
     @test sp[2][:seriescolor] == cgrad(default(:palette))[2]
 end
 
-@testset "warn_on_unsupported" begin
-    # given to a plot, it holds for its series too
-    delete!(get!(Set{Symbol}, PlotsBase._already_warned, :gr), :markerstrokestyle)
-    @test_logs plot(1:2, markerstrokestyle = :dash, warn_on_unsupported = false)
-    @test_logs (:warn, r"markerstrokestyle not supported") plot(1:2, markerstrokestyle = :dash)
-end
-
 @testset "Axis Attributes" begin
     pl = @test_nowarn plot(; tick_font = font(10, "Times"))
     for axis in (:xaxis, :yaxis, :zaxis)
@@ -139,6 +132,13 @@ end
     y := axes(mat, 1)
     z := Surface(mat)
     ()
+end
+
+@testset "warn_on_unsupported" begin
+    # given to a plot, it holds for its series too
+    delete!(get!(Set{Symbol}, PlotsBase._already_warned, :gr), :markerstrokestyle)
+    @test_logs plot(1:2, markerstrokestyle = :dash, warn_on_unsupported = false)
+    @test_logs (:warn, r"markerstrokestyle not supported") plot(1:2, markerstrokestyle = :dash)
 end
 
 @testset "margin" begin
