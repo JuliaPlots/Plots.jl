@@ -114,6 +114,26 @@ julia> histogram2d(randn(10_000),randn(10_000))
 @shorthands histogram2d
 
 """
+    histogram3d(x, y)
+    histogram3d!(x, y)
+
+Plot a two-dimensional histogram as boxes standing on the x-y plane, as tall as their bins.
+The boxes are colored by their height when `color` is a gradient. Attributes given as a vector, such as
+`fillcolor`, take a value for each bin, running along x first.
+
+# Arguments
+- `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`)
+- `weights`: Vector of weights for the values in `x`. Each entry of x contributes
+             its weight to the height of its bin.
+
+# Example
+```julia-repl
+julia> histogram3d(randn(10_000), randn(10_000), bins = 15, color = :viridis)
+```
+"""
+@shorthands histogram3d
+
+"""
     heatmap(x,y,z)
     heatmap!(x,y,z)
 

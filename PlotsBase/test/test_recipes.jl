@@ -222,3 +222,37 @@ end
     @test sum(PlotsBase._make_hist(([-1, 0, 1, 10, 100],), 3; weights, scales = (:log10,)).weights) == 3
     @test sum(PlotsBase._make_hist(([1, NaN, 2, 3],), 3; weights = ones(4)).weights) == 3
 end
+
+@testset "histogram3d" begin
+    # a box for each bin that is not empty, github.com/JuliaPlots/Plots.jl/pull/3507
+    x, y = [1, 1, 1, 2], [1, 1, 2, 2]
+    pl = histogram3d(x, y; bins = 2)
+    boxes = pl[1].series_list
+    @test length(boxes) == 3 && all(s -> s[:seriestype] ≡ :mesh3d, boxes)
+    @test all(s -> length(s[:connections]) == 5, boxes)  # a top and four sides
+    @test count(s -> s[:primary], boxes) == 1
+    # drawn from the back, which is large y for the default camera
+    @test [maximum(s[:z]) for s in boxes] == [1, 1, 2]
+    @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
+    @test minimum(s -> minimum(s[:z]), histogram3d(x, y; bins = 2, zscale = :log10)[1].series_list) > 0
+    # a gradient colors the boxes by their height
+    @test all(s -> s[:fill_z] ≡ nothing, boxes)
+    zpl = histogram3d(x, y; bins = 2, color = :viridis)
+    @test [s[:fill_z] for s in zpl[1].series_list] == [fill(1, 5), fill(1, 5), fill(2, 5)]
+    @test show(IOBuffer(), MIME("image/png"), zpl) isa Nothing
+    # a vector gives each bin a color of its own, running along x first
+    cpl = histogram3d(x, y; bins = ([1, 1.5, 2.5], [1, 1.5, 2.5]), fillcolor = [:red, :green, :blue, :black])
+    @test [s[:fillcolor] for s in cpl[1].series_list] == PlotsBase.plot_color.([:blue, :black, :red])
+    with(:plotly) do
+        @test all(s -> length(s[:i]) == 2 * 5, PlotsBase.plotly_series(pl))  # two triangles a face
+        @test all(s -> length(s[:intensity]) == 2 * 5, PlotsBase.plotly_series(zpl))
+    end
+    haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+        @test show(IOBuffer(), MIME("image/png"), histogram3d(x, y; bins = 2, color = :viridis)) isa Nothing
+    end
+    # backends that draw triangles get two for a quadrilateral
+    @test length(first(PlotsBase.mesh3d_triangles(1:4, 1:4, 1:4, [(1, 2, 3, 4)]))) == 2 * 4
+    # the connections as a vector of tuples, 1-based
+    pl = mesh3d([0, 1, 2, 0], [0, 0, 1, 2], [0, 2, 0, 1]; connections = [(1, 2, 3), (1, 3, 4), (1, 4, 2), (2, 3, 4)])
+    @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
+end

@@ -2303,7 +2303,7 @@ function gr_draw_surface(series, x, y, z, clims)
         if series[:connections] isa AbstractVector{<:AbstractVector{<:Integer}}
             # Combination of any polygon types
             cns = map(cns -> [length(cns), cns...], series[:connections])
-        elseif series[:connections] isa AbstractVector{NTuple{N, <:Integer}} where {N}
+        elseif series[:connections] isa AbstractVector{<:NTuple{N, Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             N = length(series[:connections][1])
             cns = map(cns -> [N, cns...], series[:connections])
@@ -2321,13 +2321,8 @@ function gr_draw_surface(series, x, y, z, clims)
                 ArgumentError |>
                 throw
         end
-        facecolor = if series[:fillcolor] isa AbstractArray
-            series[:fillcolor]
-        else
-            fill(series[:fillcolor], length(cns))
-        end
         fillalpha = get_fillalpha(series)
-        facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
+        facecolor = map(i -> set_RGBA_alpha(fillalpha, get_fillcolor(series, clims, i)), eachindex(cns))
         GR.setborderwidth(get_linewidth(series))
         GR.setbordercolorind(gr_getcolorind(get_linecolor(series)))
         GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))

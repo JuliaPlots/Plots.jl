@@ -571,7 +571,7 @@ _positive_else_nan(::Type{T}, x::Real) where {T} = _is_positive(x) ? T(x) : T(Na
 
 _scale_adjusted_values(
     ::Type{T},
-    V::AbstractVector,
+    V::AbstractArray,
     scale::Symbol,
 ) where {T <: AbstractFloat} = scale in _log_scales ? _positive_else_nan.(T, V) : T.(V)
 
@@ -951,6 +951,55 @@ PlotsBase.@deps bins2d heatmap
     ()
 end
 @deps histogram2d bins2d
+
+# a box for each bin of a two dimensional histogram, its top and four sides
+@recipe function f(::Type{Val{:histogram3d}}, x, y, z)  # COV_EXCL_LINE
+    h = _make_hist(
+        (x, y),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+        scales = (_scale(plotattributes, :x), _scale(plotattributes, :y)),
+    )
+    (ex, ey), T = h.edges, float(eltype(h.weights))
+    w, baseline = _preprocess_binbarlike_weights(T, h.weights, _scale(plotattributes, :z))
+    # each box is a mesh of its own, drawn from the back: a mesh sorts its faces by their
+    # middles, which brings the sides of a tall box in front of a low box before it
+    sp = plotattributes[:subplot]
+    fx, fy = RecipesPipeline.scale_func.((_scale(plotattributes, :x), _scale(plotattributes, :y)))
+    az = first(sp[:camera])
+    ax = sind(az) * (sp[:xaxis][:flip] ? -1 : 1) / (fx(last(ex)) - fx(first(ex)))
+    ay = -cosd(az) * (sp[:yaxis][:flip] ? -1 : 1) / (fy(last(ey)) - fy(first(ey)))
+    nearness((i, j)) = ax * (fx(ex[i]) + fx(ex[i + 1])) + ay * (fy(ey[j]) + fy(ey[j + 1]))
+    bins = sort!([(i, j) for j in axes(w, 2) for i in axes(w, 1) if w[i, j] > baseline], by = nearness)
+    # a gradient colors the boxes by their height
+    c = plotattributes[:fillcolor] ≡ :match ? plotattributes[:seriescolor] : plotattributes[:fillcolor]
+    by_height = get_series_color(c, sp, 1, :mesh3d) isa ColorGradient
+    for (n, (i, j)) in enumerate(bins)
+        cx = (ex[i], ex[i + 1], ex[i + 1], ex[i], ex[i], ex[i + 1], ex[i + 1], ex[i])
+        cy = (ey[j], ey[j], ey[j + 1], ey[j + 1], ey[j], ey[j], ey[j + 1], ey[j + 1])
+        cz = (baseline, baseline, baseline, baseline, w[i, j], w[i, j], w[i, j], w[i, j])
+        # corners of their own, so each face stays flat where the backend smooths shared ones
+        faces = ((5, 6, 7, 8), (1, 2, 6, 5), (2, 3, 7, 6), (3, 4, 8, 7), (4, 1, 5, 8))
+        @series begin
+            # a vector gives each bin a value of its own, running along x first
+            for attr in _segmenting_vector_attributes
+                v = plotattributes[attr]
+                v isa AVec && (plotattributes[attr] = _cycle(v, LinearIndices(w)[i, j]))
+            end
+            primary := n == 1
+            x := [cx[k] for f in faces for k in f]
+            y := [cy[k] for f in faces for k in f]
+            z := [cz[k] for f in faces for k in f]
+            connections := [4(m - 1) .+ (1, 2, 3, 4) for m in eachindex(faces)]
+            by_height && (fill_z := fill(w[i, j], length(faces)))
+            linecolor --> :black
+            seriestype := :mesh3d
+            ()
+        end
+    end
+end
+@deps histogram3d mesh3d
 
 @recipe function f(h::StatsBase.Histogram{T, 2, E}) where {T, E}  # COV_EXCL_LINE
     seriestype --> :bins2d

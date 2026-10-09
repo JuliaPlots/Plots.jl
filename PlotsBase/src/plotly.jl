@@ -941,6 +941,7 @@ function plotly_series(plt::Plot, series::Series)
     elseif st ≡ :mesh3d
         plotattributes_out[:type] = "mesh3d"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
+        fill_z = series[:fill_z]
 
         if series[:connections] ≢ nothing
             if typeof(series[:connections]) <: Tuple{Array, Array, Array}
@@ -956,29 +957,34 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k
-            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3, Int}}
-                # 1-based indexing
-                i, j, k =
-                    broadcast(i -> [inds[i] - 1 for inds in series[:connections]], (1, 2, 3))
-                plotattributes_out[:i] = i
-                plotattributes_out[:j] = j
-                plotattributes_out[:k] = k
+            elseif series[:connections] isa AbstractVector{<:NTuple{N, Integer}} where {N}
+                # 1-based indexing, polygons split into triangles fanning out from their first corner
+                cns = series[:connections]
+                tris = [(c[1], c[n], c[n + 1]) .- 1 for c in cns for n in 2:(length(c) - 1)]
+                plotattributes_out[:i] = getindex.(tris, 1)
+                plotattributes_out[:j] = getindex.(tris, 2)
+                plotattributes_out[:k] = getindex.(tris, 3)
+                fill_z ≡ nothing || (fill_z = [fill_z[m] for (m, c) in enumerate(cns) for n in 3:length(c)])
             else
                 throw(
                     ArgumentError(
                         "Argument connections has to be either a tuple of three arrays (0-based indexing)
-                         or an AbstractVector{NTuple{3,Int}} (1-based indexing).",
+                         or an AbstractVector of tuples (1-based indexing).",
                     ),
                 )
             end
         end
         plotattributes_out[:colorscale] =
             plotly_colorscale(series[:fillcolor], series[:fillalpha])
-        plotattributes_out[:color] =
-            rgba_string(plot_color(series[:fillcolor], series[:fillalpha]))
         plotattributes_out[:opacity] = series[:fillalpha]
-        if series[:fill_z] ≢ nothing
-            plotattributes_out[:surfacecolor] = handle_surface(series[:fill_z])
+        if fill_z ≡ nothing
+            plotattributes_out[:color] =
+                rgba_string(plot_color(series[:fillcolor], series[:fillalpha]))
+        else
+            # a value for each triangle
+            plotattributes_out[:intensity] = fill_z
+            plotattributes_out[:intensitymode] = "cell"
+            plotattributes_out[:cmin], plotattributes_out[:cmax] = clims
         end
         plotattributes_out[:showscale] = hascolorbar(sp)
     else
