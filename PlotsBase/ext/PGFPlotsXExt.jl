@@ -211,6 +211,8 @@ const _pgfplotsx_markers = [
 ]
 const _pgfplotsx_scales = [:identity, :ln, :log2, :log10]
 PlotsBase.is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
+# any other keyword goes on to pgfplots
+PlotsBase.is_extra_kwarg_supported(::PGFPlotsXBackend, k) = true
 
 # additional constants
 const _pgfplotsx_series_ids = KW()

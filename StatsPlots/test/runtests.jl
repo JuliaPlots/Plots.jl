@@ -247,9 +247,9 @@ end
 
 @testset "violin" begin
     y = [i * randn(StableRNG(1337), 100) for i in 1:4]
-    violin(y, median = true)
+    violin(y, show_median = true)
     violin(y, quantiles = [0.1, 0.5, 0.9], linecolor = :white, linewidth = 3)
-    violin(y, quantiles = 3, mean = true)
+    violin(y, quantiles = 3, show_mean = true)
 end
 
 @testset "violin df" begin

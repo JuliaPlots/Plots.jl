@@ -165,9 +165,6 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
         # We should draw the plot horizontally!
         xsegs, ysegs = ysegs, xsegs
         outliers_x, outliers_y = outliers_y, outliers_x
-
-        # Now reset the orientation, so that the axes limits are set correctly.
-        orientation := default(:orientation)
     end
 
     @series begin

@@ -213,6 +213,9 @@ end
 
 should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
 
+# whether the backend reads `k`, a keyword that is not an attribute, from `extra_kwargs`
+is_extra_kwarg_supported(::AbstractBackend, k) = false
+
 const _already_warned = Dict{Symbol, Set{Symbol}}()
 function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
     _to_warn = Set{Symbol}()
@@ -224,6 +227,7 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
         k in Commons._suppress_warnings && continue
         if ismissing(default(k))
             extra_kwargs[k] = pop_kw!(plotattributes, k)
+            is_extra_kwarg_supported(pkg, k) || k in already_warned || push!(_to_warn, k)
         elseif plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)
         end
@@ -238,6 +242,8 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
                 Keyword argument `$k` is deprecated.
                 Please use `$(Commons._deprecated_attributes[k])` instead.
                 """
+            elseif haskey(extra_kwargs, k)
+                @maxlog_warn "Keyword argument $k is neither an attribute nor used by $pkg, so it is ignored."
             else
                 @maxlog_warn "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
             end
