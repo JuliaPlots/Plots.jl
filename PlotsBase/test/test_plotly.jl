@@ -130,6 +130,15 @@ Sys.isunix() && with(:plotly) do
         @test ranks([2, 3, 1]) == [3, 1, 2]
     end
 
+    @testset "Margins" begin
+        # the subplots are laid out with their margins, and plotly adds nothing of its own
+        pl = plot(1:3; axis = false, ticks = false)
+        PlotsBase.prepare_output(pl)
+        lay = PlotsBase.plotly_layout(pl)
+        @test all(==(0), values(lay[:margin]))
+        @test lay[:xaxis][:ticks] == "" && !lay[:xaxis][:automargin]
+    end
+
     @testset "Extra kwargs" begin
         pl = plot(1:5, test = "me")
         @test PlotsBase.plotly_series(pl)[1][:test] == "me"
