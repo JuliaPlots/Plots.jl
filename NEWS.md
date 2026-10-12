@@ -4,6 +4,9 @@
 ## Unreleased
 
 ### Features
+- `savefig` takes `overwrite = false` to throw rather than replace a file that exists (#3001). Its default is the
+  scoped value `PlotsBase.SAVEFIG_OVERWRITE`, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes
+  that the default within the block
 - `histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, binned as in `histogram2d`
   (#3507), and colored by their height when `color` is a gradient, or bin by bin from a vector. Drawn by the
   `gr`, `pythonplot`, `plotly`/`plotlyjs` and `unicodeplots` backends

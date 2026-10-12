@@ -645,7 +645,10 @@ with(:gr, size=(400,400), type=:histogram) do
   plot(rand(10))
 end
 ```
+A scoped value of PlotsBase, such as `SAVEFIG_OVERWRITE`, is set with a pair: `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end`.
 """
+with(f::Function, p::Pair{<:ScopedValue}, ps::Pair{<:ScopedValue}...) = Base.ScopedValues.with(f, p, ps...)
+
 function with(f::Function, args...; scalefonts = nothing, kw...)
     new_defs = KW(kw)
 

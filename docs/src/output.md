@@ -27,6 +27,9 @@ savefig(filename_string)  # save the most recent fig as filename_string (such as
 savefig(plot_ref, filename_string)  # save the fig referenced by plot_ref as filename_string (such as "output.png")
 ```
 
+`savefig` replaces a file that exists. With `overwrite = false` it throws instead, and
+`with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes that the default within the block.
+
 In addition, `Plots` exports the convenience function `png(filename::AbstractString)`.
 Other functions such as `PlotsBase.pdf` or `PlotsBase.svg` remain unexported, since they might conflict with exports from other packages.
 In this case the string fn containing the filename does not need a file extension.
