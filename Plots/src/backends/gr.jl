@@ -416,9 +416,12 @@ end
 
 gr_set_fill(c) = (gr_set_fillcolor(c); GR.setfillintstyle(GR.INTSTYLE_SOLID); nothing)
 
-# this stores the conversion from a font pointsize to "percentage of window height"
+# this stores the conversion from a font pointsize to "percentage of the larger window side"
 # (which is what GR uses). `s` can be a Series, Subplot or Plot
 gr_point_mult(s) = 1.5get_thickness_scaling(s) * px / pt / maximum(get_size(s))
+
+# the length of one GR normalized unit, along either side
+gr_unit(s) = maximum(get_size(s)) * px
 
 # set the font attributes.
 function gr_set_font(
@@ -797,7 +800,7 @@ end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
-    width, height = sp_size = get_size(sp)
+    unit = gr_unit(sp)
 
     # Add margin given by the user
     padding = (
@@ -811,7 +814,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     if (title = sp[:title]) != ""
         gr_set_font(titlefont(sp), sp)
         l = last(gr_text_size(title))
-        padding.top[] += 1mm + height * l * px
+        padding.top[] += 1mm + l * unit
     end
 
     xaxis, yaxis, zaxis = axes = sp[:xaxis], sp[:yaxis], sp[:zaxis]
@@ -830,7 +833,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
                 valign = ax[:mirror] ? :bottom : :top,
             )
             l = 0.01 + last(gr_get_ticks_size(tc, rot))
-            m = max(m, 1mm + height * l * px)
+            m = max(m, 1mm + l * unit)
         end
         if m > 0mm
             (xaxis[:mirror] || yaxis[:mirror]) && (padding.top[] += m)
@@ -846,7 +849,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
                 valign = (:top, :vcenter, :bottom)[sign(rot) + 2],
             )
             l = 0.01 + first(gr_get_ticks_size(zticks, rot))
-            padding[zaxis[:mirror] ? :right : :left][] += 1mm + width * l * px
+            padding[zaxis[:mirror] ? :right : :left][] += 1mm + l * unit
         end
 
         # Add margin for x or y label
@@ -855,7 +858,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             (guide = Plots.get_guide(ax) == "") && continue
             gr_set_font(guidefont(ax), sp)
             l = last(gr_text_size(guide))
-            m = max(m, 1mm + height * l * px)
+            m = max(m, 1mm + l * unit)
         end
         if m > 0mm
             # NOTE: `xaxis` arbitrary here ?
@@ -865,7 +868,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         if (guide = Plots.get_guide(zaxis)) != ""
             gr_set_font(guidefont(zaxis), sp)
             l = last(gr_text_size(guide))
-            padding[mirrored(zaxis, :right) ? :right : :left][] += 1mm + height * l * px  # NOTE:  why `height` here ?
+            padding[mirrored(zaxis, :right) ? :right : :left][] += 1mm + l * unit
         end
     else
         # Add margin for x/y ticks & labels
@@ -876,12 +879,12 @@ function _update_min_padding!(sp::Subplot{GRBackend})
                 gr_set_tickfont(sp, ax)
                 ts = gr_get_ticks_size(tc, ax[:rotation])
                 l = 0.01 + (isy ? first(ts) : last(ts))
-                padding[ax[:mirror] ? a : b][] += 1mm + sp_size[isy ? 1 : 2] * l * px
+                padding[ax[:mirror] ? a : b][] += 1mm + l * unit
             end
             if (guide = Plots.get_guide(ax)) != ""
                 gr_set_font(guidefont(ax), sp)
                 l = last(gr_text_size(guide))
-                padding[mirrored(ax, a) ? a : b][] += 1mm + height * l * px  # NOTE: using `height` is arbitrary
+                padding[mirrored(ax, a) ? a : b][] += 1mm + l * unit
             end
         end
     end
@@ -889,7 +892,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         padding.right[] += @static if false
             sz = gr_text_size(title)
             l = is_horizontal(title) ? first(sz) : last(sz)
-            l * width * px
+            l * unit
         else
             4mm
         end
