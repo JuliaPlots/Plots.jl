@@ -4,9 +4,6 @@
 ## Unreleased
 
 ### Features
-- `savefig` takes `overwrite = false` to throw rather than replace a file that exists (#3001). Its default is the
-  scoped value `PlotsBase.SAVEFIG_OVERWRITE`, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes
-  that the default within the block
 - `histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, binned as in `histogram2d`
   (#3507), and colored by their height when `color` is a gradient, or bin by bin from a vector. Drawn by the
   `gr`, `pythonplot`, `plotly`/`plotlyjs` and `unicodeplots` backends
@@ -42,6 +39,9 @@
   not break the recipe. `target <-- :attr` is the same read in assignment position.
   `$` keeps its usual meaning inside quoted code (`:( ... )`, `quote ... end`, `@eval` and other macros),
   where it is left untouched
+- `savefig` takes `overwrite = false` to throw rather than replace a file that exists (#3001). Its default is the
+  scoped value `PlotsBase.SAVEFIG_OVERWRITE`, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes
+  that the default within the block
 
 ### Fixed
 - GR and PythonPlot backends: `mesh3d` takes `connections` as a vector of tuples, as its example says, where it
