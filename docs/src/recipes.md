@@ -288,7 +288,7 @@ Marginal histograms are a visualization comparing two variables.  The main plot 
 
     # right histogram
     @series begin
-        orientation := :h
+        permute := (:x, :y)
         subplot := 3
         y
     end
@@ -387,7 +387,7 @@ Now we create two more series, one for each histogram.
 
     # right histogram
     @series begin
-        orientation := :h
+        permute := (:x, :y)
         subplot := 3
         y
     end

@@ -161,12 +161,6 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
         )
     end
 
-    if !isvertical(plotattributes)
-        # We should draw the plot horizontally!
-        xsegs, ysegs = ysegs, xsegs
-        outliers_x, outliers_y = outliers_y, outliers_x
-    end
-
     @series begin
         # To prevent linecolor equal to fillcolor (It makes the median visible)
         if plotattributes[:linecolor] == plotattributes[:fillcolor]

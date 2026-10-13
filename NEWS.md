@@ -141,6 +141,8 @@
 - Reading a colorbar font attribute back by its old name now throws, as it already does for the legend fonts:
   use `sp[:colorbar_title_font_size]` rather than `sp[:colorbar_titlefontsize]`.
   The old names remain aliases on the input side, so passing them to `plot` keeps working.
+- StatsPlots: `boxplot`, `density`, `cdensity` and `dendrogram` lie on their side with `permute = (:x, :y)`, as any
+  series does, where they read `orientation`, which v2 removed
 
 ---
 

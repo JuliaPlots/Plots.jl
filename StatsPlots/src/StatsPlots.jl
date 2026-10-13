@@ -25,12 +25,6 @@ import KernelDensity
 
 export dataviewer
 
-# `orientation` is not an attribute, so it is taken out once read
-isvertical(plotattributes) =
-let val = pop_kw!(plotattributes, :orientation, missing)
-    val ≡ missing || val in (:vertical, :v)
-end
-
 include("corrplot.jl")
 include("cornerplot.jl")
 include("distributions.jl")

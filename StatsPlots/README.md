@@ -448,7 +448,7 @@ nrows=length(hc_row.order)
 rowlabels=(1:16)[hc_row.order]
 ncols=length(hc_col.order)
 collabels=(1:7)[hc_col.order]
-l = grid(2,2,heights=[0.2,0.8,0.2,0.8],widths=[0.8,0.2,0.8,0.2])
+l = grid(2,2,heights=[0.2,0.8],widths=[0.8,0.2])
 plot(
 	layout = l,
 	plot(hc_col,xticks=false),
@@ -462,7 +462,7 @@ plot(
 		xrotation=90,
 		colorbar=false
 	),
-	plot(hc_row,yticks=false,xrotation=90,orientation=:horizontal,xlim=(0,1))
+	plot(hc_row,xticks=false,yrotation=90,permute=(:x,:y),ylim=(0,1))
 )
 
 ```

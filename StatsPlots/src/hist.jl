@@ -9,11 +9,8 @@
         trim = false,
         bandwidth = KernelDensity.default_bandwidth(y),
     )
-    newx, newy =
+    newy, newx =
         violin_coords(y, trim = trim, wts = plotattributes[:weights], bandwidth = bandwidth)
-    if isvertical(plotattributes)
-        newx, newy = newy, newx
-    end
     x := newx
     y := newy
     seriestype := :path
@@ -63,12 +60,8 @@ julia> density(randn(100_000))
         npoints = 200,
         bandwidth = KernelDensity.default_bandwidth(y),
     )
-    newx, newy =
+    newy, newx =
         violin_coords(y, trim = trim, wts = plotattributes[:weights], bandwidth = bandwidth)
-
-    if isvertical(plotattributes)
-        newx, newy = newy, newx
-    end
 
     newy = cumsum(float(yi) for yi in newy)
     newy ./= newy[end]
