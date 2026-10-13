@@ -8,6 +8,7 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
 end
 
 using Base.Meta
+using Base.ScopedValues: ScopedValue
 
 import PrecompileTools
 import TableOperations

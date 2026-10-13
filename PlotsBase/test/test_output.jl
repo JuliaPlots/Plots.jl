@@ -121,6 +121,16 @@ end
     end
 end
 
+@testset "overwrite" begin
+    pl, fn = plot(1:2), tempname() * ".png"
+    @test savefig(pl, fn) == fn
+    @test savefig(pl, fn) == fn
+    @test_throws ArgumentError savefig(pl, fn; overwrite = false)
+    @test_throws ArgumentError savefig(pl, first(splitext(fn)); overwrite = false)  # with the extension added
+    @test_throws ArgumentError with(() -> savefig(pl, fn), PlotsBase.SAVEFIG_OVERWRITE => false)
+    @test with(() -> savefig(pl, fn; overwrite = true), PlotsBase.SAVEFIG_OVERWRITE => false) == fn
+end
+
 @testset "size error handling" begin
     plt = plot(size = ())
     @test_throws ArgumentError savefig(plt, tempname())

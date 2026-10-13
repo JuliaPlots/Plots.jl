@@ -129,14 +129,22 @@ function addExtension(fp, ext::AbstractString)
     return get(_extension_map, oldext, oldext) == ext ? fp : joinpath(dn, string(fn, ".", ext))
 end
 
+# read during precompilation, so that a change of the preference recompiles, as for `DEFAULT_BACKEND`
+const SAVEFIG_OVERWRITE = ScopedValue(Preferences.load_preference(PlotsBase, "savefig_overwrite", true))
+
 """
-    savefig([plot,] filename)
+    savefig([plot,] filename; overwrite = PlotsBase.SAVEFIG_OVERWRITE[])
 
 Save a Plot (the current plot if `plot` is not passed) to file. The file
 type is inferred from the file extension. All backends support png and pdf
 file types, some also support svg, ps, eps, html and tex.
+
+With `overwrite = false` a file that exists is left alone and an error is thrown.
+`SAVEFIG_OVERWRITE` is a scoped value, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end`
+makes that the default within the block. Its own default is the `savefig_overwrite` preference,
+so `Preferences.set_preferences!(PlotsBase, "savefig_overwrite" => false)` makes it `false` after a restart.
 """
-function savefig(plt::Plot, fn) # fn might be an `AbstractString` or an `AbstractPath` from `FilePaths.jl`
+function savefig(plt::Plot, fn; overwrite = SAVEFIG_OVERWRITE[]) # fn might be an `AbstractString` or an `AbstractPath` from `FilePaths.jl`
     fn = abspath(expanduser(fn))
 
     # get the extension
@@ -147,12 +155,15 @@ function savefig(plt::Plot, fn) # fn might be an `AbstractString` or an `Abstrac
     # save it
     if haskey(_savemap, ext)
         func = _savemap[ext]
+        # the file the save function writes, with the extension it adds
+        path = addExtension(fn, get(_extension_map, ext, ext))
+        overwrite || !isfile(path) || throw(ArgumentError("'$path' exists, pass `overwrite = true` to replace it"))
         return func(plt, fn)
     else
         error("Invalid file extension: ", fn)
     end
 end
-savefig(fn) = savefig(current(), fn)
+savefig(fn; kw...) = savefig(current(), fn; kw...)
 
 # ---------------------------------------------------------
 

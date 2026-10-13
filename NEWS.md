@@ -39,6 +39,9 @@
   not break the recipe. `target <-- :attr` is the same read in assignment position.
   `$` keeps its usual meaning inside quoted code (`:( ... )`, `quote ... end`, `@eval` and other macros),
   where it is left untouched
+- `savefig` takes `overwrite = false` to throw rather than replace a file that exists (#3001). Its default is the
+  scoped value `PlotsBase.SAVEFIG_OVERWRITE`, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes
+  that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
 
 ### Fixed
 - Plotly backend: `aspect_ratio` holds at whatever size plotly draws the plot, such as a browser window, a
