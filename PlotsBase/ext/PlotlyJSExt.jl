@@ -17,6 +17,7 @@ function PlotsBase.extension_init(::PlotlyJSBackend)
 end
 
 PlotsBase.@extension_static PlotlyJSBackend plotlyjs
+PlotsBase.is_extra_kwarg_supported(::PlotlyJSBackend, k) = true
 
 const _plotlyjs_attrs = PlotsBase.Plotly._plotly_attrs
 const _plotlyjs_seriestypes = PlotsBase.Plotly._plotly_seriestypes

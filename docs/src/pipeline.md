@@ -28,13 +28,12 @@ plot(
     marker = (10, 0.5, [:none :+ :none]),
     color = [:steelblue :orangered :green],
     fill = 0.5,
-    orientation = [:v :v :h],
     title = "My title",
 )
 ```
 
 In this example, we have an input matrix, and we'd like to plot three series on top of each other, one for each column of data.
-We create a row vector (1x3 matrix) of symbols to assign different visualization types for each series, set the orientation of the histogram, and set
+We create a row vector (1x3 matrix) of symbols to assign different visualization types for each series, and set
 alpha values.
 
 For comparison's sake, this is somewhat similar to the following calls in `PythonPlot`:
@@ -53,7 +52,6 @@ PythonPlot.plot(x, y[:,1], alpha = 0.5, "steelblue", linewidth = 4)
 PythonPlot.scatter(x, y[:,2], alpha = 0.5, marker = "+", s = 100, c="orangered")
 PythonPlot.hist(
     y[:,3],
-    orientation = "horizontal",
     alpha = 0.5,
     density = true,
     bins=30,

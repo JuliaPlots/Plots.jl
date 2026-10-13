@@ -4,6 +4,8 @@
 ## Unreleased
 
 ### Features
+- A keyword that is neither an attribute nor used by the backend warns that it is ignored, so a typo no longer
+  goes unnoticed (#4861). PGFPlotsX, Plotly and HDF5 pass every keyword on, so they take them all
 - `histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, binned as in `histogram2d`
   (#3507), and colored by their height when `color` is a gradient, or bin by bin from a vector. Drawn by the
   `gr`, `pythonplot`, `plotly`/`plotlyjs` and `unicodeplots` backends
@@ -151,6 +153,8 @@
 - Reading a colorbar font attribute back by its old name now throws, as it already does for the legend fonts:
   use `sp[:colorbar_title_font_size]` rather than `sp[:colorbar_titlefontsize]`.
   The old names remain aliases on the input side, so passing them to `plot` keeps working.
+- StatsPlots: `boxplot`, `density`, `cdensity` and `dendrogram` lie on their side with `permute = (:x, :y)`, as any
+  series does, where they read `orientation`, which v2 removed
 
 ---
 

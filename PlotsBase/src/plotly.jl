@@ -29,6 +29,8 @@ PlotsBase._backendSymbol[PlotlyBackend] = :plotly
 push!(PlotsBase._initialized_backends, :plotly)
 
 eval(PlotsBase.backend_defines(:PlotlyBackend, :plotly))
+# any other keyword goes on to the plotly trace or layout
+PlotsBase.is_extra_kwarg_supported(::PlotlyBackend, k) = true
 
 const _plotly_attrs = PlotsBase.merge_with_base_supported(
     [

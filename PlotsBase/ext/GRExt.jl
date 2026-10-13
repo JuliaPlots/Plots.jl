@@ -196,6 +196,8 @@ const _gr_markers = vcat(Commons._all_markers, :pixel)
 const _gr_scales = [:identity, :ln, :log2, :log10]
 
 PlotsBase.is_marker_supported(::GRBackend, shape::Shape) = true
+PlotsBase.is_extra_kwarg_supported(::GRBackend, k) =
+    k in (:legend_hfactor, :legend_wfactor, :nx, :ny, :display_option)
 
 # https://github.com/jheinen/GR.jl - significant contributions by @jheinen
 

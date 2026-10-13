@@ -231,6 +231,7 @@ const _pythonplot_scales = [:identity, :ln, :log2, :log10]
 # github.com/stevengj/PythonPlot.jl
 
 PlotsBase.is_marker_supported(::PythonPlotBackend, shape::Shape) = true
+PlotsBase.is_extra_kwarg_supported(::PythonPlotBackend, k) = k in (:mincnt, :edgecolors)
 
 _py_handle_surface(v) = v
 _py_handle_surface(z::Surface) = z.surf

@@ -527,6 +527,8 @@ end
 # Implement PlotsBase.jl backend interface for HDF5Backend
 
 PlotsBase.is_marker_supported(::HDF5Backend, shape::Shape) = true
+# kept in the file, for the backend that reads it back
+PlotsBase.is_extra_kwarg_supported(::HDF5Backend, k) = true
 
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{HDF5Backend}) end
