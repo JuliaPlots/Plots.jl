@@ -374,6 +374,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "draw opacity" => alpha(cstr),
                 ),
                 "show background rectangle" => nothing,
+                "tight background" => nothing,
             )
         end
 

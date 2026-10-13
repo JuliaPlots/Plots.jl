@@ -115,6 +115,9 @@
   large series slow: 100 heatmaps of 512×512 take 0.2 s, where they took 4.8 s (#4520)
 
 ## Breaking changes
+- `margin` is the whole border of a subplot, so `margin = 0mm` leaves none, where GR added 2mm and Plotly 20px
+  above and below of their own (#3942). The default is 3mm, which is what GR drew, so plots without a margin
+  look the same there, and the backends agree on what a margin is
 - `boxplot`, `violin` and `density` are defined by StatsPlots, next to their recipes, so they need
   `using StatsPlots` (#2001). PlotsBase no longer warns that they moved, and `:density` is no longer one
   of its own series types, so `line = :density` does not pick it

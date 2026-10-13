@@ -330,6 +330,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         :zeroline => framestyle ≡ :zerolines,
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
         :showline => framestyle in (:box, :axes) && axis[:showaxis],
+        :automargin => false,
         :linecolor => rgba_string(plot_color(axis[:foreground_color_axis])),
         :ticks =>
             axis[:tick_direction] ≡ :out ? "outside" :
@@ -369,6 +370,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
             end
         end
     else
+        ax[:ticks] = ""
         ax[:showticklabels] = false
         ax[:showgrid] = false
     end
@@ -432,7 +434,8 @@ function plotly_layout(plt::Plot)
     w, h = plt[:size]
     plotattributes_out[:width], plotattributes_out[:height] = w, h
     plotattributes_out[:paper_bgcolor] = rgba_string(plt[:background_color_outside])
-    plotattributes_out[:margin] = KW(:l => 0, :b => 20, :r => 0, :t => 20)
+    # the subplots are laid out with their margins, so the paper needs none of its own
+    plotattributes_out[:margin] = KW(:l => 0, :b => 0, :r => 0, :t => 0)
 
     plotattributes_out[:annotations] = KW[]
 

@@ -1128,12 +1128,12 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
     unit = gr_unit(sp)
 
-    # add margin given by the user
+    # the margin given by the user, nothing else, so `0mm` leaves no border
     padding = (
-        left = Ref(2mm + sp[:left_margin]),
-        top = Ref(2mm + sp[:top_margin]),
-        right = Ref(2mm + sp[:right_margin]),
-        bottom = Ref(2mm + sp[:bottom_margin]),
+        left = Ref(sp[:left_margin]),
+        top = Ref(sp[:top_margin]),
+        right = Ref(sp[:right_margin]),
+        bottom = Ref(sp[:bottom_margin]),
     )
 
     # add margin for title

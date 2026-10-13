@@ -91,6 +91,18 @@ end
     @test minpad((600, 600)) == minpad((600, 200)) == minpad((200, 600))
 end
 
+@testset "Margins" begin
+    # the margin is the whole border, github.com/JuliaPlots/Plots.jl/pull/3942
+    function minpad(margin)
+        pl = plot(1:3; widen = false, axis = false, ticks = false, legend = false, margin)
+        PlotsBase.prepare_output(pl)
+        return pl[1].minpad
+    end
+    mm = PlotsBase.mm
+    @test minpad(0mm) == (0mm, 0mm, 0mm, 0mm)
+    @test minpad(5mm) == (5mm, 5mm, 5mm, 5mm)
+end
+
 @testset "Coverage" begin
     pl = plot(map(plot, 1:4)..., layout = (2, 2))
 
