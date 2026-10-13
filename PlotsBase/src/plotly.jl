@@ -301,6 +301,16 @@ function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
     return pcts
 end
 
+# the domain and ranges give the ratio only at the size of the plot, so plotly keeps it at
+# the size it is drawn, by shrinking the domain as the ranges and their ticks are fixed
+function plotly_aspect_ratio!(xax, yax, sp, x_idx)
+    (ar = get_aspect_ratio(sp)) ≡ :none && return
+    sp[:xaxis][:scale] ≡ sp[:yaxis][:scale] ≡ :identity || return
+    yax[:scaleanchor], yax[:scaleratio] = "x$x_idx", ar ≡ :equal ? 1 : ar
+    xax[:constrain] = yax[:constrain] = "domain"
+    return
+end
+
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot)
     figw, figh = sp.plt[:size]
@@ -511,12 +521,13 @@ function plotly_layout(plt::Plot)
                     ),
                 )
             else
-                plotattributes_out[Symbol("xaxis$(x_idx)")] =
-                    plotly_axis(sp[:xaxis], sp, string("y", y_idx), x_domain)
+                xax = plotly_axis(sp[:xaxis], sp, string("y", y_idx), x_domain)
+                plotattributes_out[Symbol("xaxis$(x_idx)")] = xax
                 # don't allow yaxis to be reupdated/reanchored in a linked subplot
                 if spidx == y_idx
-                    plotattributes_out[Symbol("yaxis$(y_idx)")] =
-                        plotly_axis(sp[:yaxis], sp, string("x", x_idx), y_domain)
+                    yax = plotly_axis(sp[:yaxis], sp, string("x", x_idx), y_domain)
+                    plotly_aspect_ratio!(xax, yax, sp, x_idx)
+                    plotattributes_out[Symbol("yaxis$(y_idx)")] = yax
                 end
             end
         end
