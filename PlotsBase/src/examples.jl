@@ -1289,7 +1289,7 @@ const _examples = PlotExample[
         :(using PlotsBase.Commons),
         quote
             cbar_heatmap(; kw...) =
-                heatmap(rand(10, 10); ticks = :none, right_margin = 8mm, kw...)
+                heatmap(rand(10, 10); ticks = :none, margin = 0mm, kw...)
             plot(
                 cbar_heatmap(title = "border color", colorbar_border_color = :red),
                 cbar_heatmap(title = "border width", colorbar_border_width = 3),
