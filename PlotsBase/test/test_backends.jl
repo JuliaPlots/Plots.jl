@@ -22,6 +22,7 @@ end
         # lets just make sure it runs without error
         pl = plot(rand(10))
         @test show(io, pl) isa Nothing
+        @test !pl[:warn_on_unsupported]  # unless the plot asks for the warnings
 
         pl = bar(randn(10))
         @test show(io, pl) isa Nothing

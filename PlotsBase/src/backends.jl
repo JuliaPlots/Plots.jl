@@ -214,7 +214,8 @@ end
 should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
 
 const _already_warned = Dict{Symbol, Set{Symbol}}()
-function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
+function warn_on_unsupported_attrs(plt::Plot, plotattributes)
+    pkg = plt.backend
     _to_warn = Set{Symbol}()
     bend = backend_name(pkg)
     already_warned = get!(() -> Set{Symbol}(), _already_warned, bend)
@@ -229,8 +230,7 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
         end
     end
 
-    if !isempty(_to_warn) &&
-            get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
+    if !isempty(_to_warn) && get(plotattributes, :warn_on_unsupported, plt[:warn_on_unsupported])
         for k in sort!(collect(_to_warn))
             push!(already_warned, k)
             if k in keys(Commons._deprecated_attributes)
@@ -246,8 +246,9 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
     return extra_kwargs
 end
 
-function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
-    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
+function warn_on_unsupported(plt::Plot, plotattributes)
+    pkg = plt.backend
+    get(plotattributes, :warn_on_unsupported, plt[:warn_on_unsupported]) || return
     is_seriestype_supported(pkg, plotattributes[:seriestype]) ||
         @maxlog_warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
     is_style_supported(pkg, plotattributes[:linestyle]) ||
@@ -257,8 +258,9 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
     return nothing
 end
 
-function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
-    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
+function warn_on_unsupported_scales(plt::Plot, plotattributes::AKW)
+    pkg = plt.backend
+    get(plotattributes, :warn_on_unsupported, plt[:warn_on_unsupported]) || return
     for k in (:xscale, :yscale, :zscale, :scale)
         haskey(plotattributes, k) || continue
         v = plotattributes[k]

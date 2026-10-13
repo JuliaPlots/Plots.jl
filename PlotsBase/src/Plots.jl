@@ -39,7 +39,11 @@ mutable struct Plot{T <: AbstractBackend} <: AbstractPlot{T}
         return new{typeof(be)}(
             be,
             0,
-            DefaultsDict(KW(), PlotsBase._plot_defaults),
+            # some backends do not warn on unsupported attributes, unless the plot asks
+            DefaultsDict(
+                KW(:warn_on_unsupported => PlotsBase.should_warn_on_unsupported(be)),
+                PlotsBase._plot_defaults,
+            ),
             Series[],
             nothing,
             Subplot[],
