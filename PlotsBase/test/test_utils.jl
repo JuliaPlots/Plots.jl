@@ -22,6 +22,14 @@
     @test PlotsBase.Colorbars.process_clims(nothing) ==
         PlotsBase.Colorbars.process_clims(missing) ==
         PlotsBase.Colorbars.process_clims(:auto)
+    # a series finds its color limits as it is added, not again for every series after it
+    nfound = Ref(0)
+    found(z) = (nfound[] += 1; extrema(z))
+    pl = heatmap([1 2; 3 4], clims = found)
+    foreach(i -> heatmap!(pl, i .+ [1 2; 3 4]), 1:9)
+    @test nfound[] == 10
+    @test PlotsBase.get_clims(pl[1]) == (1, 13)
+    @test PlotsBase.get_clims(plot!(pl, clims = (0, 5))[1]) == (0, 5)
 
     @test (==)(
         PlotsBase.texmath2unicode(
