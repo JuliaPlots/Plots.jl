@@ -146,6 +146,18 @@ Sys.isunix() && with(:plotly) do
         @test PlotsBase.plotly_layout(pl)[:test] == "me"
     end
 
+    @testset "Aspect ratio" begin
+        # plotly keeps it at the size it draws the plot, github.com/JuliaPlots/Plots.jl/issues/4891
+        yaxis(pl, k = :yaxis) = PlotsBase.plotly_layout(pl)[k]
+        ax = yaxis(plot(1:3, aspect_ratio = 2))
+        @test ax[:scaleanchor] == "x" && ax[:scaleratio] == 2 && ax[:constrain] == "domain"
+        @test yaxis(plot(1:3, aspect_ratio = :equal))[:scaleratio] == 1
+        @test !haskey(yaxis(plot(1:3)), :scaleanchor)
+        @test !haskey(yaxis(plot(1:3, aspect_ratio = :equal, yscale = :log10)), :scaleanchor)
+        pl = plot(plot(1:3), plot(1:3, aspect_ratio = :equal), layout = 2)
+        @test !haskey(yaxis(pl, :yaxis1), :scaleanchor) && yaxis(pl, :yaxis2)[:scaleanchor] == "x2"
+    end
+
     @testset "3D scene aspect" begin
         scene(pl) = PlotsBase.plotly_layout(pl)[:scene]
 

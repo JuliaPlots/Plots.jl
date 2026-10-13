@@ -41,6 +41,8 @@
   where it is left untouched
 
 ### Fixed
+- Plotly backend: `aspect_ratio` holds at whatever size plotly draws the plot, such as a browser window, a
+  notebook or the VS Code plot pane, where it held only at `size`. The axes shrink to keep it (#4891)
 - `warn_on_unsupported` given to a plot holds for its series, so `false` silences the warnings on unsupported
   attributes, series types and markers, where only `default(warn_on_unsupported = false)` did
 - GR and PythonPlot backends: `mesh3d` takes `connections` as a vector of tuples, as its example says, where it
