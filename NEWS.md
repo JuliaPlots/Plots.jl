@@ -41,7 +41,7 @@
   where it is left untouched
 - `savefig` takes `overwrite = false` to throw rather than replace a file that exists (#3001). Its default is the
   scoped value `PlotsBase.SAVEFIG_OVERWRITE`, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes
-  that the default within the block
+  that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
 
 ### Fixed
 - GR and PythonPlot backends: `mesh3d` takes `connections` as a vector of tuples, as its example says, where it

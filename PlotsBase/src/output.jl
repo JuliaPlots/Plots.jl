@@ -129,7 +129,8 @@ function addExtension(fp, ext::AbstractString)
     return get(_extension_map, oldext, oldext) == ext ? fp : joinpath(dn, string(fn, ".", ext))
 end
 
-const SAVEFIG_OVERWRITE = ScopedValue(true)
+# read during precompilation, so that a change of the preference recompiles, as for `DEFAULT_BACKEND`
+const SAVEFIG_OVERWRITE = ScopedValue(Preferences.load_preference(PlotsBase, "savefig_overwrite", true))
 
 """
     savefig([plot,] filename; overwrite = PlotsBase.SAVEFIG_OVERWRITE[])
@@ -140,7 +141,8 @@ file types, some also support svg, ps, eps, html and tex.
 
 With `overwrite = false` a file that exists is left alone and an error is thrown.
 `SAVEFIG_OVERWRITE` is a scoped value, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end`
-makes that the default within the block.
+makes that the default within the block. Its own default is the `savefig_overwrite` preference,
+so `Preferences.set_preferences!(PlotsBase, "savefig_overwrite" => false)` makes it `false` after a restart.
 """
 function savefig(plt::Plot, fn; overwrite = SAVEFIG_OVERWRITE[]) # fn might be an `AbstractString` or an `AbstractPath` from `FilePaths.jl`
     fn = abspath(expanduser(fn))

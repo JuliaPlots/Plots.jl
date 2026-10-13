@@ -29,6 +29,7 @@ savefig(plot_ref, filename_string)  # save the fig referenced by plot_ref as fil
 
 `savefig` replaces a file that exists. With `overwrite = false` it throws instead, and
 `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes that the default within the block.
+`Preferences.set_preferences!(PlotsBase, "savefig_overwrite" => false)` makes it the default everywhere, after a restart.
 
 In addition, `Plots` exports the convenience function `png(filename::AbstractString)`.
 Other functions such as `PlotsBase.pdf` or `PlotsBase.svg` remain unexported, since they might conflict with exports from other packages.

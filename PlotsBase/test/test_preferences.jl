@@ -34,6 +34,7 @@ const DEBUG = false
 @testset "persistent backend - restart" begin
     # this test mimics a restart, which is needed after a preferences change
     PlotsBase.set_default_backend!(:unicodeplots)
+    set_preferences!(PlotsBase, "savefig_overwrite" => false; force = true)
     script = tempname()
     dn = pkgdir(PlotsBase) |> escape_string
     write(
@@ -51,12 +52,14 @@ const DEBUG = false
         res = @testset "[subtest] preferences UnicodePlots" begin
             @test_logs (:info, r".*Preferences") PlotsBase.diagnostics(io)
             @test backend() == PlotsBase.backend_instance(:unicodeplots)
+            @test !PlotsBase.SAVEFIG_OVERWRITE[]
         end
-        exit(res.n_passed == 2 ? 0 : 123)
+        exit(res.n_passed == 3 ? 0 : 123)
         """,
     )
     DEBUG && print(read(script, String))
     @test run(```$(Base.julia_cmd()) $script```) |> success
+    delete_preferences!(PlotsBase, "savefig_overwrite"; force = true)
 end
 
 (!is_pkgeval() && is_latest("release")) && for pkg in TEST_PACKAGES
