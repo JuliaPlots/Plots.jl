@@ -46,6 +46,8 @@
   that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
 
 ### Fixed
+- Log axes put minor ticks all the way to their limits when the major ticks are several decades apart, where
+  those more than a decade beyond the outer major ticks were missing (#4652)
 - Plotly backend: `aspect_ratio` holds at whatever size plotly draws the plot, such as a browser window, a
   notebook or the VS Code plot pane, where it held only at `size`. The axes shrink to keep it (#4891)
 - `warn_on_unsupported` given to a plot holds for its series, so `false` silences the warnings on unsupported
