@@ -83,6 +83,7 @@ jobs:
             using Pkg
             include(joinpath(@__DIR__, "ci", "matplotlib.jl"))
             Pkg.instantiate(; workspace = true)
+            include(joinpath(@__DIR__, "ci", "builds.jl"))
             Pkg.precompile()  # // precompilation
           '
 
