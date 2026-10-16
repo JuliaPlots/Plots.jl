@@ -66,8 +66,13 @@ is_pkgeval() || @testset "PlotlyJS" begin
         @test backend() == PlotlyJSExt.PlotlyJSBackend()
         pl = plot(rand(10))
         @test pl isa Plot
-        # electron can take longer to start on windows runners than `Blink` waits for it
-        (is_ci() && Sys.iswindows()) || display(pl)
+        # electron can take longer to start than `Blink` waits for it, the second time less
+        try
+            display(pl)
+        catch
+            sleep(10)
+            display(pl)
+        end
     end
 end
 
