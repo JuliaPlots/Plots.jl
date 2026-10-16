@@ -145,6 +145,11 @@ for st in (:hline, :vline, :hspan, :vspan)
     @eval RecipesPipeline.takes_positions(::Type{Val{Symbol($(string(st)))}}) = true
 end
 
+# these read their data from `y` but draw it against the x axis
+for st in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
+    @eval RecipesPipeline.treats_y_as_x(::Type{Val{Symbol($(string(st)))}}) = true
+end
+
 # ---------------------------------------------------------------------------
 # path and scatter
 
@@ -413,6 +418,14 @@ end
 
 # ---------------------------------------------------------------------------
 
+_permuted(letter, perm) =
+    perm ≡ :none ? letter : letter ≡ perm[1] ? perm[2] : letter ≡ perm[2] ? perm[1] : letter
+_scale(plotattributes, letter) = get(
+    plotattributes,
+    get_attr_symbol(_permuted(letter, get(plotattributes, :permute, :none)), :scale),
+    :identity,
+)
+
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)  # COV_EXCL_LINE
     if typeof(y) <: NamedTuple
@@ -423,10 +436,12 @@ end
         x = plotnames
         y = values_y
     end
-    ywiden --> false
+    # `permute` swaps x and y after this recipe, so the axes set up here swap with them
+    perm = get(plotattributes, :permute, :none)
+    get_attr_symbol(_permuted(:y, perm), :limits_modifiers) --> :none
     procx, procy, xscale, yscale, _ = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
-    axis = plotattributes[:subplot][:xaxis]
+    axis = plotattributes[:subplot][get_attr_symbol(_permuted(:x, perm), :axis)]
     cv = map(xi -> discrete_value!(plotattributes, :x, xi)[1], procx)
     procx = if nx == ny
         cv
@@ -482,7 +497,7 @@ end
     # widen limits out a bit
     expand_extrema!(
         axis,
-        Axes.scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor),
+        Axes.scale_lims(ignorenan_extrema(xseg.pts)..., Axes.default_widen_factor, xscale),
     )
 
     # draw the bar shapes
@@ -529,7 +544,7 @@ end
     z := nothing
     seriestype := :shape
     label := ""
-    widen --> false
+    limits_modifiers --> :none
     ()
 end
 @deps plots_heatmap shape
@@ -543,6 +558,12 @@ RecipesPipeline.is_surface(::Type{Val{:hexbin}}) = true
 # Histograms
 
 _bin_centers(v::AVec) = (@view(v[1:(end - 1)]) + @view(v[2:end])) / 2
+_bin_centers(v::AVec, scale::Symbol) =
+if scale in _log_scales
+    RecipesPipeline.inverse_scale_func(scale).(_bin_centers(RecipesPipeline.scale_func(scale).(v)))
+else
+    _bin_centers(v)
+end
 
 _is_positive(x) = (x > 0) && !(x ≈ 0)
 
@@ -550,7 +571,7 @@ _positive_else_nan(::Type{T}, x::Real) where {T} = _is_positive(x) ? T(x) : T(Na
 
 _scale_adjusted_values(
     ::Type{T},
-    V::AbstractVector,
+    V::AbstractArray,
     scale::Symbol,
 ) where {T <: AbstractFloat} = scale in _log_scales ? _positive_else_nan.(T, V) : T.(V)
 
@@ -574,15 +595,13 @@ function _preprocess_binbarlike_weights(
 end
 
 function _preprocess_barlike(plotattributes, x, y)
-    xscale = get(plotattributes, :xscale, :identity)
-    yscale = get(plotattributes, :yscale, :identity)
+    xscale, yscale = _scale(plotattributes, :x), _scale(plotattributes, :y)
     weights, baseline = _preprocess_binbarlike_weights(float(eltype(y)), y, yscale)
     return x, weights, xscale, yscale, baseline
 end
 
 function _preprocess_binlike(plotattributes, x, y)
-    xscale = get(plotattributes, :xscale, :identity)
-    yscale = get(plotattributes, :yscale, :identity)
+    xscale, yscale = _scale(plotattributes, :x), _scale(plotattributes, :y)
     T = float(promote_type(eltype(x), eltype(y)))
     edge = T.(x)
     weights, baseline = _preprocess_binbarlike_weights(T, y, yscale)
@@ -775,22 +794,22 @@ _hist_edges(
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
-_invertedindex(v, not) = [j for (i, j) in enumerate(v) if !(i ∈ not)]
-
-_filternans(vs::NTuple{1, AbstractVector}) = filter!.(isfinite, vs)
-_filternans(vs::NTuple{1, AbstractRange}) = filter!.(isfinite, collect.(vs))
-function _filternans(vs::NTuple{N, AbstractVector}) where {N}
-    nots = union(Set.(findall.(!isfinite, vs))...)
-    return _invertedindex.(vs, Ref(nots))
-end
+_scaled_binning(binning::AbstractVector, f) = f.(binning)
+_scaled_binning(binning, f) = binning
 
 function _make_hist(
         vs::NTuple{N, AbstractVector},
         binning;
         normed = false,
         weights = nothing,
+        scales = ntuple(_ -> :identity, N),
     ) where {N}
-    localvs = _filternans(vs)
+    # on a log axis the bins are spaced evenly in the log, and values it cannot show are dropped like NaNs
+    fs = map(s -> s in _log_scales ? RecipesPipeline.scale_func(s) : identity, scales)
+    tvs = map((f, v) -> f.(v), fs, vs)
+    keep = reduce((a, b) -> a .& b, map(v -> isfinite.(v), tvs))
+    localvs = map(v -> v[keep], tvs)
+    binning = map(_scaled_binning, binning isa Tuple ? binning : map(_ -> binning, fs), fs)
     edges = _hist_edges(localvs, binning)
     h = float(
         weights ≡ nothing ?
@@ -798,11 +817,15 @@ function _make_hist(
             StatsBase.fit(
                 StatsBase.Histogram,
                 localvs,
-                StatsBase.Weights(weights),
+                StatsBase.Weights(weights[keep]),
                 edges,
                 closed = :left,
             ),
     )
+    if any(s -> s in _log_scales, scales)
+        invs = map(s -> s in _log_scales ? RecipesPipeline.inverse_scale_func(s) : identity, scales)
+        h = StatsBase.Histogram(map((f, e) -> f.(e), invs, h.edges), h.weights, h.closed, h.isdensity)
+    end
     return LinearAlgebra.normalize!(h, mode = _hist_norm_mode(normed))
 end
 
@@ -820,6 +843,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
+        scales = (_scale(plotattributes, :x),),
     )
     x := h.edges[1]
     y := h.weights
@@ -834,6 +858,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
+        scales = (_scale(plotattributes, :x),),
     )
     x := h.edges[1]
     y := h.weights
@@ -848,6 +873,7 @@ end
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
+        scales = (_scale(plotattributes, :x),),
     )
     x := h.edges[1]
     y := h.weights
@@ -902,8 +928,8 @@ end
         end
     end
 
-    x := PlotsBase._bin_centers(edge_x)
-    y := PlotsBase._bin_centers(edge_y)
+    x := _bin_centers(edge_x, _scale(plotattributes, :x))
+    y := _bin_centers(edge_y, _scale(plotattributes, :y))
     z := Surface(permutedims(float_weights))
     seriestype := :heatmap
     ()
@@ -916,6 +942,7 @@ PlotsBase.@deps bins2d heatmap
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
+        scales = (_scale(plotattributes, :x), _scale(plotattributes, :y)),
     )
     x := h.edges[1]
     y := h.edges[2]
@@ -924,6 +951,55 @@ PlotsBase.@deps bins2d heatmap
     ()
 end
 @deps histogram2d bins2d
+
+# a box for each bin of a two dimensional histogram, its top and four sides
+@recipe function f(::Type{Val{:histogram3d}}, x, y, z)  # COV_EXCL_LINE
+    h = _make_hist(
+        (x, y),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+        scales = (_scale(plotattributes, :x), _scale(plotattributes, :y)),
+    )
+    (ex, ey), T = h.edges, float(eltype(h.weights))
+    w, baseline = _preprocess_binbarlike_weights(T, h.weights, _scale(plotattributes, :z))
+    # each box is a mesh of its own, drawn from the back: a mesh sorts its faces by their
+    # middles, which brings the sides of a tall box in front of a low box before it
+    sp = plotattributes[:subplot]
+    fx, fy = RecipesPipeline.scale_func.((_scale(plotattributes, :x), _scale(plotattributes, :y)))
+    az = first(sp[:camera])
+    ax = sind(az) * (sp[:xaxis][:flip] ? -1 : 1) / (fx(last(ex)) - fx(first(ex)))
+    ay = -cosd(az) * (sp[:yaxis][:flip] ? -1 : 1) / (fy(last(ey)) - fy(first(ey)))
+    nearness((i, j)) = ax * (fx(ex[i]) + fx(ex[i + 1])) + ay * (fy(ey[j]) + fy(ey[j + 1]))
+    bins = sort!([(i, j) for j in axes(w, 2) for i in axes(w, 1) if w[i, j] > baseline], by = nearness)
+    # a gradient colors the boxes by their height
+    c = plotattributes[:fillcolor] ≡ :match ? plotattributes[:seriescolor] : plotattributes[:fillcolor]
+    by_height = get_series_color(c, sp, 1, :mesh3d) isa ColorGradient
+    for (n, (i, j)) in enumerate(bins)
+        cx = (ex[i], ex[i + 1], ex[i + 1], ex[i], ex[i], ex[i + 1], ex[i + 1], ex[i])
+        cy = (ey[j], ey[j], ey[j + 1], ey[j + 1], ey[j], ey[j], ey[j + 1], ey[j + 1])
+        cz = (baseline, baseline, baseline, baseline, w[i, j], w[i, j], w[i, j], w[i, j])
+        # corners of their own, so each face stays flat where the backend smooths shared ones
+        faces = ((5, 6, 7, 8), (1, 2, 6, 5), (2, 3, 7, 6), (3, 4, 8, 7), (4, 1, 5, 8))
+        @series begin
+            # a vector gives each bin a value of its own, running along x first
+            for attr in _segmenting_vector_attributes
+                v = plotattributes[attr]
+                v isa AVec && (plotattributes[attr] = _cycle(v, LinearIndices(w)[i, j]))
+            end
+            primary := n == 1
+            x := [cx[k] for f in faces for k in f]
+            y := [cy[k] for f in faces for k in f]
+            z := [cz[k] for f in faces for k in f]
+            connections := [4(m - 1) .+ (1, 2, 3, 4) for m in eachindex(faces)]
+            by_height && (fill_z := fill(w[i, j], length(faces)))
+            linecolor --> :black
+            seriestype := :mesh3d
+            ()
+        end
+    end
+end
+@deps histogram3d mesh3d
 
 @recipe function f(h::StatsBase.Histogram{T, 2, E}) where {T, E}  # COV_EXCL_LINE
     seriestype --> :bins2d
@@ -1535,7 +1611,7 @@ end
     rs, cs, zs = PlotsBase.find_nnz(z.surf)
     xlims := ignorenan_extrema(cs)
     ylims := ignorenan_extrema(rs)
-    widen --> true
+    limits_modifiers --> :widen
 
     markershape --> :circle
     markersize --> 1

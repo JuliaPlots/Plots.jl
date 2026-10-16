@@ -25,6 +25,16 @@ end
     @test plot(pl[1][1])[1][1][:primary] == true
     @test plot(pl[1][2])[1][1][:primary] == false
     @test isequal(plot(pl[1][2])[1][1][:y], pl[1][2][:y])
+
+    # a row of smoothing or error bars gives each series its own
+    added(pl) = [s[:series_plotindex] for s in pl.series_list if !s[:primary]]
+    y = [1 3; 2 1; 4 2]
+    @test added(plot(y; smooth = [true false])) == [1]
+    @test added(plot(y; smooth = [false true])) == [2]
+    @test added(plot(y; smooth = true)) == [1, 2]
+    @test added(plot(y; yerror = [nothing 0.5])) == [2]
+    @test added(plot(y; xerror = [0.5 nothing])) == [1]
+    @test added(plot(y; yerror = [0.5 1])) == [1, 2]
 end
 @testset "lens!" begin
     pl = plot(1:5)
@@ -34,20 +44,20 @@ end
 end
 
 @testset "vline, vspan" begin
-    vl = vline([1], widen = false)
+    vl = vline([1], limits_modifiers = :none)
     @test PlotsBase.xlims(vl) == (1, 2)
     @test PlotsBase.ylims(vl) == (1, 2)
-    vl = vline([1], xlims = (0, 2), widen = false)
+    vl = vline([1], xlims = (0, 2), limits_modifiers = :none)
     @test PlotsBase.xlims(vl) == (0, 2)
-    vl = vline([1], ylims = (-3, 5), widen = false)
+    vl = vline([1], ylims = (-3, 5), limits_modifiers = :none)
     @test PlotsBase.ylims(vl) == (-3, 5)
 
-    vsp = vspan([1, 3], widen = false)
+    vsp = vspan([1, 3], limits_modifiers = :none)
     @test PlotsBase.xlims(vsp) == (1, 3)
     @test PlotsBase.ylims(vsp) == (0, 1) # TODO: might be problematic on log-scales
-    vsp = vspan([1, 3], xlims = (-2, 5), widen = false)
+    vsp = vspan([1, 3], xlims = (-2, 5), limits_modifiers = :none)
     @test PlotsBase.xlims(vsp) == (-2, 5)
-    vsp = vspan([1, 3], ylims = (-2, 5), widen = false)
+    vsp = vspan([1, 3], ylims = (-2, 5), limits_modifiers = :none)
     @test PlotsBase.ylims(vsp) == (-2, 5)
 end
 
@@ -77,6 +87,23 @@ end
         plt = plot(data)
         length(plt) == 1
     end
+end
+
+@testset "offset heatmap" begin
+    # github.com/JuliaPlots/Plots.jl/issues/4623
+    pl = heatmap(OffsetMatrix(rand(11, 11), -5:5, -5:5))
+    @test length(pl) == 1
+    @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5.5, 5.5)
+
+    # offset `x` and `y` vectors, given explicitly
+    pl = heatmap(OffsetArray(1:11, -5:5), OffsetArray(1:11, -5:5), rand(11, 11))
+    @test length(pl) == 1
+
+    # edges come from the values, so an offset vector matches its 1-based twin
+    @test PlotsBase.heatmap_edges(OffsetArray(1:11, -5:5)) ==
+        PlotsBase.heatmap_edges(1:11)
+    @test PlotsBase.heatmap_edges(OffsetArray([3.0], 7:7)) ==
+        PlotsBase.heatmap_edges([3.0])
 end
 
 # NOTE: the following test seems to trigger these deprecated warnings:
@@ -159,4 +186,73 @@ with(:gr) do
     @testset "histogram range" begin
         @test histogram(1:10) isa Plot
     end
+end
+
+@testset "Heatmaps on a curvilinear grid" begin
+    # `x` and `y` as matrices, github.com/JuliaPlots/Plots.jl/pull/4298
+    x = [Float64(i) for j in 1:3, i in 1:4]
+    y = [j + i / 2 for j in 1:3, i in 1:4]
+    z = reshape(1.0:12.0, 3, 4)
+    corners = PlotsBase.heatmap_corners
+    for pl in (heatmap(x, y, z), heatmap(corners(x), corners(y), z))  # centers, corners
+        @test xlims(pl) == (0.5, 4.5) && ylims(pl) == (0.75, 5.75)
+        @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
+    end
+    @test_throws ArgumentError heatmap(x[:, 1:2], y[:, 1:2], z)
+    with(:plotly) do
+        @test_throws ArgumentError heatmap(x, y, z)
+    end
+    haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+        @test show(IOBuffer(), MIME("image/png"), heatmap(x, y, z)) isa Nothing
+    end
+end
+
+@testset "Histograms on log axes" begin
+    # the bins are spaced evenly in the log, github.com/JuliaPlots/Plots.jl/pull/2208
+    x = 10 .^ range(0, 3, length = 200)
+    evenlog(v) = allequal(round.(diff(log10.(v)), digits = 9))
+    @test evenlog(PlotsBase._make_hist((x,), 10; scales = (:log10,)).edges[1])
+    pl = histogram(x; xscale = :log10)
+    @test all(isfinite, xlims(pl)) && first(xlims(pl)) > 0
+    @test evenlog(histogram2d(x, reverse(x); xscale = :log10, yscale = :log10)[1][1][:x])
+    h = PlotsBase._make_hist((x,), 10; normed = :pdf, scales = (:log10,))
+    @test sum(h.weights .* diff(h.edges[1])) ≈ 1
+    # what the axis cannot show is dropped along with its weight, as NaNs are
+    weights = [5, 5, 1, 1, 1]
+    @test sum(PlotsBase._make_hist(([-1, 0, 1, 10, 100],), 3; weights, scales = (:log10,)).weights) == 3
+    @test sum(PlotsBase._make_hist(([1, NaN, 2, 3],), 3; weights = ones(4)).weights) == 3
+end
+
+@testset "histogram3d" begin
+    # a box for each bin that is not empty, github.com/JuliaPlots/Plots.jl/pull/3507
+    x, y = [1, 1, 1, 2], [1, 1, 2, 2]
+    pl = histogram3d(x, y; bins = 2)
+    boxes = pl[1].series_list
+    @test length(boxes) == 3 && all(s -> s[:seriestype] ≡ :mesh3d, boxes)
+    @test all(s -> length(s[:connections]) == 5, boxes)  # a top and four sides
+    @test count(s -> s[:primary], boxes) == 1
+    # drawn from the back, which is large y for the default camera
+    @test [maximum(s[:z]) for s in boxes] == [1, 1, 2]
+    @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
+    @test minimum(s -> minimum(s[:z]), histogram3d(x, y; bins = 2, zscale = :log10)[1].series_list) > 0
+    # a gradient colors the boxes by their height
+    @test all(s -> s[:fill_z] ≡ nothing, boxes)
+    zpl = histogram3d(x, y; bins = 2, color = :viridis)
+    @test [s[:fill_z] for s in zpl[1].series_list] == [fill(1, 5), fill(1, 5), fill(2, 5)]
+    @test show(IOBuffer(), MIME("image/png"), zpl) isa Nothing
+    # a vector gives each bin a color of its own, running along x first
+    cpl = histogram3d(x, y; bins = ([1, 1.5, 2.5], [1, 1.5, 2.5]), fillcolor = [:red, :green, :blue, :black])
+    @test [s[:fillcolor] for s in cpl[1].series_list] == PlotsBase.plot_color.([:blue, :black, :red])
+    with(:plotly) do
+        @test all(s -> length(s[:i]) == 2 * 5, PlotsBase.plotly_series(pl))  # two triangles a face
+        @test all(s -> length(s[:intensity]) == 2 * 5, PlotsBase.plotly_series(zpl))
+    end
+    haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+        @test show(IOBuffer(), MIME("image/png"), histogram3d(x, y; bins = 2, color = :viridis)) isa Nothing
+    end
+    # backends that draw triangles get two for a quadrilateral
+    @test length(first(PlotsBase.mesh3d_triangles(1:4, 1:4, 1:4, [(1, 2, 3, 4)]))) == 2 * 4
+    # the connections as a vector of tuples, 1-based
+    pl = mesh3d([0, 1, 2, 0], [0, 0, 1, 2], [0, 2, 0, 1]; connections = [(1, 2, 3), (1, 3, 4), (1, 4, 2), (2, 3, 4)])
+    @test show(IOBuffer(), MIME("image/png"), pl) isa Nothing
 end

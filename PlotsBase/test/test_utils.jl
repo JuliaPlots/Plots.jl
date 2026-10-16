@@ -22,6 +22,14 @@
     @test PlotsBase.Colorbars.process_clims(nothing) ==
         PlotsBase.Colorbars.process_clims(missing) ==
         PlotsBase.Colorbars.process_clims(:auto)
+    # a series finds its color limits as it is added, not again for every series after it
+    nfound = Ref(0)
+    found(z) = (nfound[] += 1; extrema(z))
+    pl = heatmap([1 2; 3 4], clims = found)
+    foreach(i -> heatmap!(pl, i .+ [1 2; 3 4]), 1:9)
+    @test nfound[] == 10
+    @test PlotsBase.get_clims(pl[1]) == (1, 13)
+    @test PlotsBase.get_clims(plot!(pl, clims = (0, 5))[1]) == (0, 5)
 
     @test (==)(
         PlotsBase.texmath2unicode(
@@ -94,6 +102,41 @@
         push!(pl, 1, (1.5, 2.5))
         append!(pl, (1.5, 2.5))
         append!(pl, 1, (1.5, 2.5))
+    end
+
+    @testset "push! / append!" begin
+        # github.com/JuliaPlots/Plots.jl/issues/4825
+        y(pl, i = 1) = pl.series_list[i][:y]
+
+        # a range is immutable, so extending it has to replace it rather than drop the result
+        pl = plot(1:3)
+        append!(pl.series_list[1], [4, 5, 6])
+        @test y(pl) == 1:6
+
+        # an integer argument used to be read as the series index
+        pl = plot([1.0])
+        push!(pl, 4)
+        @test y(pl) == [1, 4]
+
+        # `append!` takes a collection per coordinate
+        pl = plot([1.0])
+        append!(pl, [4, 5, 6])
+        @test y(pl) == [1, 4, 5, 6]
+
+        pl = plot([1.0])
+        append!(pl, 1, [4, 5, 6])
+        @test y(pl) == [1, 4, 5, 6]
+
+        pl = plot([1.0])
+        append!(pl, [7, 8], [4, 5])
+        @test pl.series_list[1][:x] == [1, 7, 8]
+        @test y(pl) == [1, 4, 5]
+
+        # a second series is still reachable by index
+        pl = plot([[1.0], [2.0]])
+        append!(pl, 2, [5, 6])
+        @test y(pl, 1) == [1]
+        @test y(pl, 2) == [2, 5, 6]
     end
 
     pl = scatter(1:2, 1:2)

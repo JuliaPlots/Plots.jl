@@ -20,9 +20,9 @@ const _dracula = [
     :fgtext => dracula_fg,
     :fgguide => dracula_fg,
     :fglegend => dracula_fg,
-    :legendfontcolor => dracula_fg,
-    :legendtitlefontcolor => dracula_fg,
-    :titlefontcolor => dracula_fg,
+    :legend_font_color => dracula_fg,
+    :legend_title_font_color => dracula_fg,
+    :title_font_color => dracula_fg,
     :palette => expand_palette(dracula_bg, dracula_palette),
     :colorgradient => :viridis,
 ] |> Dict |> PlotTheme

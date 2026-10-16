@@ -114,6 +114,16 @@ end
     end
 end
 
+@testset "Arrows" begin
+    arrows(pl) = [s[:arrow] for s in pl.series_list]
+    y = [1 3; 2 1; 4 2]
+    @test arrows(plot(y; arrow = true)) == [arrow(), arrow()]
+    @test arrows(plot(y; arrow = (:closed, :both))) == [arrow(:closed, :both), arrow(:closed, :both)]
+    # a row gives each series its own, where it used to be skipped and draw both
+    @test arrows(plot(y; arrow = [true false])) == [arrow(), nothing]
+    @test arrows(plot(y; arrow = [:none arrow(:closed)])) == [nothing, arrow(:closed)]
+end
+
 @testset "Text" begin
     t = PlotsBase.PlotText("foo")
     @test length(t) == 3
@@ -252,15 +262,15 @@ end
 @testset "Fonts" begin
     @testset "Scaling" begin
         sizesToCheck = [
-            :titlefontsize,
+            :title_font_size,
             :legendfontsize,
             :legendtitlefontsize,
-            :xtickfontsize,
-            :ytickfontsize,
-            :ztickfontsize,
-            :xguidefontsize,
-            :yguidefontsize,
-            :zguidefontsize,
+            :xtick_font_size,
+            :ytick_font_size,
+            :ztick_font_size,
+            :xguide_font_size,
+            :yguide_font_size,
+            :zguide_font_size,
         ]
         # get initial font sizes
         initialSizes = [PlotsBase.default(s) for s in sizesToCheck]
@@ -279,6 +289,90 @@ end
         finalSizes = [PlotsBase.default(s) for s in sizesToCheck]
 
         @test finalSizes == initialSizes
+    end
+
+    @testset "Names" begin
+        # the canonical names are fully underscored, the compact spellings are aliases
+        for (canonical, alias) in (
+                (:font_family, :fontfamily),
+                (:font_family_subplot, :fontfamily_subplot),
+                (:title_font, :titlefont),
+                (:title_font_size, :titlefontsize),
+                (:plot_title_font_color, :plot_titlefontcolor),
+                (:xtick_font, :xtickfont),
+                (:ytick_font_rotation, :ytickfontrotation),
+                (:zguide_font_family, :zguidefontfamily),
+                (:legend_font_size, :legend_font_pointsize),
+                (:legend_title_font_size, :legendtitlefontsize),
+                (:annotation_font_size, :annotationfontsize),
+                (:annotation_font_halign, :annotationhalign),
+            )
+            @test alias ∈ PlotsBase.Commons.aliases(canonical)
+        end
+
+        pl = plot(
+            1:3;
+            title_font_size = 21,
+            xtick_font_size = 22,
+            yguide_font_size = 23,
+            plot_title_font_size = 24,
+            annotation_font_size = 25,
+            legend_font_size = 26,
+            legend_title_font_size = 27,
+            font_family = "serif",
+        )
+        sp = pl[1]
+        @test sp[:title_font_size] == 21
+        @test sp[:xaxis][:tick_font_size] == 22
+        @test sp[:yaxis][:guide_font_size] == 23
+        @test pl[:plot_title_font_size] == 24
+        @test sp[:annotation_font_size] == 25
+        @test sp[:legend_font_size] == 26
+        @test sp[:legend_title_font_size] == 27
+        @test pl[:font_family] == "serif"
+
+        pl = plot(
+            1:3;
+            titlefontsize = 31,
+            xtickfontsize = 32,
+            ylabelfontsize = 33,
+            plot_titlefontsize = 34,
+            annotationfontsize = 35,
+            legendfontsize = 36,
+            legendtitlefontsize = 37,
+            fontfamily = "mono",
+        )
+        sp = pl[1]
+        @test sp[:title_font_size] == 31
+        @test sp[:xaxis][:tick_font_size] == 32
+        @test sp[:yaxis][:guide_font_size] == 33
+        @test pl[:plot_title_font_size] == 34
+        @test sp[:annotation_font_size] == 35
+        @test sp[:legend_font_size] == 36
+        @test sp[:legend_title_font_size] == 37
+        @test pl[:font_family] == "mono"
+
+        # the magic names take both spellings, where the underscored ones used to be ignored
+        for (magic, compact) in (
+                (:title_font, :titlefont),
+                (:plot_title_font, :plot_titlefont),
+                (:annotation_font, :annotationfont),
+                (:tick_font, :tickfont),
+                (:guide_font, :guidefont),
+            )
+            for name in (magic, compact)
+                pl = plot(1:3; (name => font(19, :red),)...)
+                got = Symbol(magic, :_size)
+                value = if got in (:tick_font_size, :guide_font_size)
+                    pl[1][:xaxis][got]
+                elseif got ≡ :plot_title_font_size
+                    pl[got]
+                else
+                    pl[1][got]
+                end
+                @test value == 19
+            end
+        end
     end
 end
 
@@ -365,6 +459,15 @@ end
     end
 
     @test_throws ArgumentError plot(ones(2, 2), series_annotations = [([1],) 2; 3 4])
+
+    # `nothing` leaves a series without annotations, which also reads back
+    let pl = plot(ones(3, 2), series_annotations = permutedims(Any[nothing, ["a", "b", "c"]]))
+        back = plot(ones(3, 2), series_annotations = getattr(pl, :series_annotations))
+        for p in (pl, back)
+            @test series_anns(p, 1) ≡ nothing
+            @test ann_strings(series_anns(p, 2)) == ["a", "b", "c"]
+        end
+    end
 
     pl = plot([1, 2], annotations = (1.5, 2, text("foo", :left)))
     x, y, txt = only(pl.subplots[end][:annotations])

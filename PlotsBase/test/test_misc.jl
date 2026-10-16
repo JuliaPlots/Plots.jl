@@ -272,6 +272,17 @@ with(:gr) do
         )
     end
 
+    @testset "colors once GR has handed out its color indices" begin
+        # github.com/JuliaPlots/Plots.jl/issues/5215
+        many = [RGB(i % 10 / 9, i ÷ 10 % 10 / 9, i ÷ 100 / 9) for i in 0:999]
+        show(IOBuffer(), MIME("image/png"), scatter(1:1000; mc = many, msw = 0))
+        c = RGB(0.123, 0.456, 0.789)
+        fn = tempname() * ".png"
+        png(plot(Shape([0, 1, 1, 0], [0, 0, 1, 1]); fc = c, lw = 0, axis = false, grid = false), fn)
+        px = load(fn)[end ÷ 2, end ÷ 2]
+        @test all(f -> abs(f(px) - f(c)) ≤ 1 / 255, (red, green, blue))
+    end
+
     @testset "recipes" begin
         @test PlotsBase.seriestype_supported(:path) ≡ :native
 
@@ -279,7 +290,7 @@ with(:gr) do
         @test plot([1, 2, 5], seriestype = :scatterpath) isa PlotsBase.Plot
         @test plot(1:2, 1:2, 1:2, seriestype = :scatter3d) isa PlotsBase.Plot
 
-        let pl = plot(1:2, -1:1, widen = false)
+        let pl = plot(1:2, -1:1, limits_modifiers = :none)
             PlotsBase.abline!([0, 3], [5, -5])
             @test xlims(pl) == (+1, +2)
             @test ylims(pl) == (-1, +1)
@@ -371,6 +382,48 @@ with(:gr) do
             plot(1:2, legend_columns = 10, label = :auto),
             tempname(),
         )
+
+        # the same columns in every backend
+        ncols(c) = PlotsBase.legend_ncols(plot(1:2; legend_column = c)[1], 5)
+        @test ncols(1) == 1
+        @test ncols(2) == 2
+        @test ncols(-1) == 5
+        @test (@test_logs (:warn, r"larger than") ncols(9)) == 5
+        @test (@test_logs (:warn, r"undefined behaviour") ncols(0)) == 1
+        @test (@test_logs (:warn, r"undefined behaviour") ncols(-3)) == 1
+        @test_logs (:warn, r"undefined behaviour") png(
+            plot(rand(2, 3); legend_column = -3, label = :auto),
+            tempname(),
+        )
+
+        function labels(order; label = ["a" "b" "c"])
+            sp = plot(rand(2, 3); label, legend_order = order)[1]
+            return [s[:label] for s in PlotsBase.legend_series_list(sp)]
+        end
+        @test labels(:normal) == ["a", "b", "c"]
+        @test labels(:reversed) == ["c", "b", "a"]
+        @test labels([2, 3, 1]) == ["b", "c", "a"]
+        # the numbers count the entries, so a series without one is skipped
+        @test labels([2, 1]; label = ["a" "" "c"]) == ["c", "a"]
+        @test (@test_logs (:warn, r"not a permutation") labels([1, 1, 2])) == ["a", "b", "c"]
+
+        haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+            texts(pl) = (
+                PlotsBase.prepare_output(pl);
+                [string(t.get_text()) for t in pl[1].o.get_legend().get_texts()]
+            )
+            # handed over a column at a time, so matplotlib's columns read row by row as in GR
+            pl = plot(rand(2, 5); label = ["a" "b" "c" "d" "e"], legend_column = 2)
+            @test texts(pl) == ["a", "c", "e", "b", "d"]
+            pl = plot(rand(2, 3); label = ["a" "b" "c"], legend_order = :reversed)
+            @test texts(pl) == ["c", "b", "a"]
+            # a hatched fill is one entry, which used to push the entries after it out of step
+            pl = plot([1, 2]; fillrange = 0, fillstyle = :/, label = "hatched")
+            plot!(pl, [2, 1]; label = "plain")
+            @test texts(pl) == ["hatched", "plain"]
+            handles = collect(pl[1].o.get_legend().legend_handles)
+            @test string(handles[2].__class__.__name__) == "Line2D"
+        end
     end
 
     @testset "cycling" begin

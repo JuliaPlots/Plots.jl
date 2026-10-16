@@ -107,6 +107,12 @@ end
 
     @test _apply_type_recipe(plotattributes, Test1.([1, 2, 3]), :x) == [2.0, 3.0, 4.0]
     @test _apply_type_recipe(plotattributes, [Test1.([1, 2, 3])], :x) == [[2.0, 3.0, 4.0]]
+    # the element type need not say it is a vector of vectors
+    @test _apply_type_recipe(plotattributes, Any[Test1.([1, 2, 3]), Test1.([4])], :x) ==
+        [[2.0, 3.0, 4.0], [5.0]]
+    res = _apply_type_recipe(plotattributes, Any[[Dates.Date(2001)], [Dates.Date(2002)]], :x)
+    @test typeof(res) <: Formatted
+    @test res.data == [[Dates.value(Dates.Date(2001))], [Dates.value(Dates.Date(2002))]]
 
     struct Test2 <: Number
         val::Float64
@@ -166,6 +172,29 @@ end
     pa = Dict{Symbol, Any}(:seriestype => :path)
     @test _series_data_vector(3, pa) == [zeros(0) for _ in 1:3]
     @test_throws ErrorException _series_data_vector(0.73, pa)
+end
+
+@testset "treats_y_as_x" begin
+    import RecipesPipeline: SliceIt, Formatted
+
+    # nothing opts in here, the series types that do live in `PlotsBase`
+    for st in (:path, :scatter, :bar, :heatmap)
+        @test !treats_y_as_x(st)
+    end
+    @test !treats_y_as_x(Dict{Symbol, Any}())  # defaults to `:path`
+
+    RecipesPipeline.treats_y_as_x(::Type{Val{:along_x}}) = true
+    @test treats_y_as_x(:along_x)
+    @test treats_y_as_x(Dict{Symbol, Any}(:seriestype => :along_x))
+
+    # a formatter the `y` data carries follows it to the axis it is drawn against
+    fmt(v) = string(v)
+    for (st, key) in ((:path, :yformatter), (:along_x, :xformatter))
+        pa = Dict{Symbol, Any}(:seriestype => st)
+        RecipesBase.apply_recipe(pa, SliceIt, nothing, Formatted([1.0, 2.0], fmt), nothing)
+        @test pa[key] ≡ fmt
+        @test !haskey(pa, key ≡ :xformatter ? :yformatter : :xformatter)
+    end
 end
 
 @testset "unzip" begin

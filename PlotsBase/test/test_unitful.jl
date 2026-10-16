@@ -373,6 +373,13 @@ end
     y = [1.0 * u"s", 2.0 * u"s", missing, missing, missing]
     pl = plot(x, y)
     @test yguide(pl, 1) == "s"
+
+    # github.com/JuliaPlots/Plots.jl/issues/5035, a vector of vectors with an abstract eltype
+    y1 = fill(32.0u"°C", 5)
+    y2 = vcat(fill(missing, 2), fill(22.0u"°C", 3))
+    pl = plot(Any[y1, y2])
+    @test yseries(pl, 1) == yseries(plot([y1, y2]), 1)
+    @test isequal(yseries(pl, 2), yseries(plot([y1, y2]), 2))
 end
 
 @testset "Errors" begin
@@ -448,7 +455,7 @@ end
 end
 
 @testset "UnitfulString" begin
-    str = Base.get_extension(PlotsBase, :UnitfulExt).UnitfulString("mass", u"kg")
+    str = PlotsBase.extension(:UnitfulExt).UnitfulString("mass", u"kg")
     @test pointer(str) isa Ptr
     @test pointer(str, 1) isa Ptr
     @test isvalid(str, 1)

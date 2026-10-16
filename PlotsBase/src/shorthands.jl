@@ -114,34 +114,24 @@ julia> histogram2d(randn(10_000),randn(10_000))
 @shorthands histogram2d
 
 """
-    density(x)
-    density!(x)
+    histogram3d(x, y)
+    histogram3d!(x, y)
 
-Make a line plot of a kernel density estimate of x. The smoothness of the density plot is defined from `bandwidth` (real positive number).
+Plot a two-dimensional histogram as boxes standing on the x-y plane, as tall as their bins.
+The boxes are colored by their height when `color` is a gradient. Attributes given as a vector, such as
+`fillcolor`, take a value for each bin, running along x first.
 
 # Arguments
-- `x`: AbstractVector of samples for probability density estimation
-
-# Keyword arguments
-- `trim`::Bool: enables cutting off the distribution tails.
-- `bandwidth`::Number: a low bandwidth induces under-smoothing, whilst a high bandwidth induces over-smoothing.
-
-# Examples
-```julia-repl
-julia> density(randn(100), bandwidth = -0.01, trim = false)
-output : ERROR: Bandwidth must be positive
-
-julia> density(randn(100), bandwidth = 0.1, trim = false)  # a curve with extremity and under-smoothing
-julia> density(randn(100), bandwidth = 10, trim = true)  # a curve without extremity and over-smoothing
-```
+- `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`)
+- `weights`: Vector of weights for the values in `x`. Each entry of x contributes
+             its weight to the height of its bin.
 
 # Example
 ```julia-repl
-julia> using StatsPlots
-julia> density(randn(100_000))
+julia> histogram3d(randn(10_000), randn(10_000), bins = 15, color = :viridis)
 ```
 """
-@shorthands density
+@shorthands histogram3d
 
 """
     heatmap(x,y,z)
@@ -371,40 +361,6 @@ plot(x,y,z,seriestype=:mesh3d;connections=(i,j,k))
 @shorthands mesh3d
 
 """
-    boxplot(x, y)
-    boxplot!(x, y)
-
-Make a box and whisker plot.
-
-# Keyword arguments
-- `notch`: Bool. Notch the box plot? (false)
-- `whisker_range`: Real. Whiskers extend `whisker_range`*IQR below the first quartile
-           and above the third quartile. Values outside this range are shown as outliers (1.5)
-- `outliers`: Bool. Show outliers? (true)
-- `whisker_width`: Real or Symbol. Length of whiskers; the options are `:match` to match the box width, `:half`, or a number to indicate the total length. (:half)
-
-# Example
-```julia-repl
-julia> using StatsPlots
-julia> boxplot(repeat([1,2,3],outer=100),randn(300))
-```
-"""
-@shorthands boxplot
-
-"""
-    violin(x,y,z)
-    violin!(x,y,z)
-
-Make a violin plot.
-
-# Example
-```julia-repl
-julia> violin(repeat([1,2,3],outer=100),randn(300))
-```
-"""
-@shorthands violin
-
-"""
     quiver(x,y,quiver=(u,v))
     quiver!(x,y,quiver=(u,v))
 
@@ -543,7 +499,8 @@ Adds ax+b... straight line over the current plot, without changing the axis limi
     areaplot([x,] y)
     areaplot!([x,] y)
 
-Draw a stacked area plot of the matrix y.
+Draw a stacked area plot of the matrix y, with its first column at the bottom.
+`legend_order = :reversed` lists the legend the same way up.
 # Examples
 ```julia-repl
 julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], fillalpha = [0.2 0.3 0.4])

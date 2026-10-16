@@ -1,3 +1,18 @@
+@testset "extension registry" begin
+    # github.com/JuliaPlots/Plots.jl/issues/5191
+    for pkg in TEST_PACKAGES
+        ext, concrete = PlotsBase.get_backend_module(pkg)
+        @test ext ≡ PlotsBase.extension(Symbol(pkg, :Ext))
+        @test nameof(ext) ≡ Symbol(pkg, :Ext)
+        @test concrete ≡ typeof(PlotsBase.backend_instance(Symbol(lowercase(string(pkg)))))
+    end
+    # a non backend extension registers itself the same way
+    @test nameof(PlotsBase.extension(:UnitfulExt)) ≡ :UnitfulExt
+    @test PlotsBase.extension(:NotAnExt) ≡ nothing
+    @test (@test_logs (:error, r"is not loaded yet") PlotsBase.get_backend_module(:NotAPkg)) ≡
+        (nothing, nothing)
+end
+
 @testset "UnicodePlots" begin
     with(:unicodeplots) do
         @test backend() == PlotsBase.backend_instance(:unicodeplots)
@@ -7,6 +22,7 @@
         # lets just make sure it runs without error
         pl = plot(rand(10))
         @test show(io, pl) isa Nothing
+        @test !pl[:warn_on_unsupported]  # unless the plot asks for the warnings
 
         pl = bar(randn(10))
         @test show(io, pl) isa Nothing
@@ -46,7 +62,7 @@ end
 
 is_pkgeval() || @testset "PlotlyJS" begin
     with(:plotlyjs) do
-        PlotlyJSExt = Base.get_extension(PlotsBase, :PlotlyJSExt)
+        PlotlyJSExt = PlotsBase.get_backend_module(:PlotlyJS)[1]
         @test backend() == PlotlyJSExt.PlotlyJSBackend()
         pl = plot(rand(10))
         @test pl isa Plot

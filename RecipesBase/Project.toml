@@ -1,7 +1,7 @@
 name = "RecipesBase"
 uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 author = ["Tom Breloff (@tbreloff)"]
-version = "1.3.4"
+version = "1.4.0"
 
 [deps]
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"

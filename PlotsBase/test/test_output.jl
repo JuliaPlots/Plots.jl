@@ -41,7 +41,7 @@ end
 
 with(:unicodeplots) do
     @test_save :txt
-    UnicodePlots = Base.get_extension(PlotsBase, :UnicodePlotsExt).UnicodePlots
+    UnicodePlots = PlotsBase.get_backend_module(:UnicodePlots)[1].UnicodePlots
     if UnicodePlots.get_font_face() ≢ nothing
         @test_save :png
     end
@@ -119,6 +119,16 @@ end
             @test length(io.data) > 10
         end
     end
+end
+
+@testset "overwrite" begin
+    pl, fn = plot(1:2), tempname() * ".png"
+    @test savefig(pl, fn) == fn
+    @test savefig(pl, fn) == fn
+    @test_throws ArgumentError savefig(pl, fn; overwrite = false)
+    @test_throws ArgumentError savefig(pl, first(splitext(fn)); overwrite = false)  # with the extension added
+    @test_throws ArgumentError with(() -> savefig(pl, fn), PlotsBase.SAVEFIG_OVERWRITE => false)
+    @test with(() -> savefig(pl, fn; overwrite = true), PlotsBase.SAVEFIG_OVERWRITE => false) == fn
 end
 
 @testset "size error handling" begin

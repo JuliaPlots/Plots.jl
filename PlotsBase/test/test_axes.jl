@@ -99,11 +99,11 @@ end
         @test all(amin .≤ ticks .≤ amax)
     end
 
-    # user limits win over the tick count, `widen = false` does not
+    # user limits win over the tick count, `limits_modifiers = :none` does not
     pl = plot(sin, -π, π; xticks = 5, xlims = (-3, 3))
     @test PlotsBase.xlims(pl) == (-3, 3)
 
-    pl = plot(sin, -π, π; xticks = 5, widen = false)
+    pl = plot(sin, -π, π; xticks = 5, limits_modifiers = :none)
     ticks, = PlotsBase.get_ticks(pl[1], :x)
     amin, amax = PlotsBase.xlims(pl)
     @test length(ticks) == 5 && all(amin .≤ ticks .≤ amax)
@@ -134,23 +134,23 @@ end
     default_widen(from, to) =
         PlotsBase.Axes.scale_lims(from, to, PlotsBase.Axes.default_widen_factor)
 
-    pl = plot(1:5, xlims = :symmetric, widen = false)
+    pl = plot(1:5, limits_modifiers = (symmetric = true,))
     @test PlotsBase.xlims(pl) == (-5, 5)
 
     pl = plot(1:3)
     @test PlotsBase.xlims(pl) == default_widen(1, 3)
 
-    pl = plot([1.05, 2.0, 2.95], ylims = :round)
+    pl = plot([1.05, 2.0, 2.95], ylimits_modifiers = (round = true,))
     @test PlotsBase.ylims(pl) == (1, 3)
 
     for x in (1:3, -10:10), xlims in ((1, 5), [1, 5])
         pl = plot(x; xlims)
         @test PlotsBase.xlims(pl) == (1, 5)
-        pl = plot(x; xlims, widen = true)
+        pl = plot(x; xlims, limits_modifiers = :widen)
         @test PlotsBase.xlims(pl) == default_widen(1, 5)
     end
 
-    pl = plot(1:5, lims = :symmetric, widen = false)
+    pl = plot(1:5, limits_modifiers = (symmetric = true,))
     @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5, 5)
 
     for xlims in (0, 0.0, false, true, plot())
@@ -162,22 +162,81 @@ end
         @test plims == default_widen(1, 5)
     end
 
+    @testset "limits modifiers" begin
+        # github.com/JuliaPlots/Plots.jl/issues/3556
+        xl(; kw...) = PlotsBase.xlims(plot(1:5; kw...))
+
+        @test xl() == default_widen(1, 5)                              # `:auto`
+        @test xl(xlimits_modifiers = :round) == (1, 5)
+        @test xl(xlimits_modifiers = (:widen, :round)) == (0, 6)
+
+        # applied left to right, so these two differ
+        @test xl(xlimits_modifiers = (:symmetric, :widen)) == default_widen(-5, 5)
+        @test xl(xlimits_modifiers = (:widen, :symmetric)) == (-5.12, 5.12)
+
+        # `:widen` takes a factor
+        @test xl(xlimits_modifiers = (widen = 1.2,)) ==
+            PlotsBase.Axes.scale_lims(1, 5, 1.2)
+        @test xl(xlimits_modifiers = (symmetric = true, widen = 1.2)) ==
+            PlotsBase.Axes.scale_lims(-5, 5, 1.2)
+
+        # a modifier can be switched off individually
+        @test xl(xlimits_modifiers = (widen = false,)) == (1, 5)
+        @test xl(xlimits_modifiers = (symmetric = true, widen = false)) == (-5, 5)
+
+        # every spelling of "off"
+        for off in (:none, nothing, (), NamedTuple())
+            @test xl(xlimits_modifiers = off) == (1, 5)
+        end
+
+        # letterless fans out to every axis
+        pl = plot(1:5, limits_modifiers = :symmetric)
+        @test PlotsBase.xlims(pl) == PlotsBase.ylims(pl) == (-5, 5)
+
+        # a row gives each subplot its own
+        for kw in ((; ylimits_modifiers = [:symmetric :none]), (; limits_modifiers = [:symmetric :none]))
+            pl = plot([1 2; 3 1; 2 3]; layout = 2, kw...)
+            @test PlotsBase.ylims(pl[1]) == (-3, 3)
+            @test PlotsBase.ylims(pl[2]) == (1, 3)
+        end
+
+        # an explicit chain beats limits given by the user, `:auto` yields to them
+        @test PlotsBase.xlims(plot(1:5; xlims = (1, 5))) == (1, 5)
+        @test PlotsBase.xlims(
+            plot(1:5; xlims = (1, 5), xlimits_modifiers = :widen),
+        ) == default_widen(1, 5)
+
+        # `lims` takes limits only now, rounding and symmetrizing are modifiers
+        for gone in (:round, :symmetric)
+            @test_logs (:warn, r"Invalid limits for x axis") match_mode = :any xl(
+                xlims = gone,
+            )
+        end
+
+        for bad in (:typo, (:widen, 1.2), (typo = true,), [:widen, :round])
+            @test_logs (:warn, r"Invalid xlimits modifier") match_mode = :any xl(
+                xlimits_modifiers = bad,
+            )
+        end
+    end
+
+
     @testset "#4379" begin
         for ylims in ((-5, :auto), [-5, :auto])
-            pl = plot([-2, 3], ylims = ylims, widen = false)
+            pl = plot([-2, 3], ylims = ylims, limits_modifiers = :none)
             @test PlotsBase.ylims(pl) == (-5.0, 3.0)
         end
         for ylims in ((:auto, 4), [:auto, 4])
-            pl = plot([-2, 3], ylims = ylims, widen = false)
+            pl = plot([-2, 3], ylims = ylims, limits_modifiers = :none)
             @test PlotsBase.ylims(pl) == (-2.0, 4.0)
         end
 
         for xlims in ((-3, :auto), [-3, :auto])
-            pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
+            pl = plot([-2, 3], [-1, 1], xlims = xlims, limits_modifiers = :none)
             @test PlotsBase.xlims(pl) == (-3.0, 3.0)
         end
         for xlims in ((:auto, 4), [:auto, 4])
-            pl = plot([-2, 3], [-1, 1], xlims = xlims, widen = false)
+            pl = plot([-2, 3], [-1, 1], xlims = xlims, limits_modifiers = :none)
             @test PlotsBase.xlims(pl) == (-2.0, 4.0)
         end
     end
@@ -200,6 +259,24 @@ end
             @test PlotsBase.xlims(pl) == (0, 10)
             @test PlotsBase.ylims(pl) == (0, 1)
             @test PlotsBase.zlims(pl) == (0, 10)
+        end
+    end
+
+    @testset "#1949 - `aspect_ratio = :equal` in 3D" begin
+        x, y = range(0, 10, length = 10), range(0, 1, length = 10)
+        pl = surface(x, y, [xi * yi for xi in x, yi in y], aspect_ratio = :equal)
+        # GR's 3D box stays a cube, but the 2D correction no longer shrinks it
+        GRExt = Base.get_extension(PlotsBase, :GRExt)
+        vp = GRExt.GRViewport(0.1, 0.9, 0.1, 0.9)
+        GRExt.gr_update_viewport_ratio!(vp, pl[1])
+        @test (vp.xmin, vp.xmax, vp.ymin, vp.ymax) == (0.1, 0.9, 0.1, 0.9)
+        # PythonPlot sizes the box by the axis spans, for equal units as in plotly
+        haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+            pl = surface(x, y, [xi * yi for xi in x, yi in y], aspect_ratio = :equal)
+            PlotsBase.prepare_output(pl)
+            box = PythonPlot.pyconvert(Vector{Float64}, pl[1].o.get_box_aspect())
+            spans = collect(PlotsBase.Axes.axis_spans(pl[1]))
+            @test box ./ box[1] ≈ spans ./ spans[1]
         end
     end
 end
@@ -225,7 +302,7 @@ end
     pl = plot(1:2, xtick = [1.25, 1.5, 1.75])
     @test pl[1][:xaxis][:ticks] == [1.25, 1.5, 1.75]
     pl = plot(1:2, xlabelfontsize = 4)
-    @test pl[1][:xaxis][:guidefontsize] == 4
+    @test pl[1][:xaxis][:guide_font_size] == 4
     pl = plot(1:2, xgα = 0.07)
     @test pl[1][:xaxis][:gridalpha] ≈ 0.07
     pl = plot(1:2, xgridls = :dashdot)
@@ -254,7 +331,7 @@ end
     pl = plot(1:2, tick = [1.25, 1.5, 1.75])
     @test compare(pl, :ticks, [1.25, 1.5, 1.75], ==)
     pl = plot(1:2, labelfontsize = 4)
-    @test compare(pl, :guidefontsize, 4, ==)
+    @test compare(pl, :guide_font_size, 4, ==)
     pl = plot(1:2, gα = 0.07)
     @test compare(pl, :gridalpha, 0.07, ≈)
     pl = plot(1:2, gridls = :dashdot)
@@ -269,6 +346,19 @@ end
     @test compare(pl, :minorgridlinewidth, 0.01, ≈)
     pl = plot(1:2, tickor = :out)
     @test compare(pl, :tick_direction, :out, ===)
+end
+
+@testset "Grid per subplot" begin
+    grids(pl, g = :grid, l = :x) = [pl[i][Symbol(l, :axis)][g] for i in 1:2]
+    y = [1 2; 3 1; 2 3]
+    @test grids(plot(y; layout = 2, xgrid = [true false])) == [true, false]
+    @test grids(plot(y; layout = 2, xgrid = [true false]), :gridlinewidth) ==
+        fill(default(:gridlinewidth), 2)
+    @test grids(plot(y; layout = 2, grid = [false true]), :grid, :y) == [false, true]
+    @test grids(plot(y; layout = 2, grid = [:x :y])) == [true, false]
+    @test grids(plot(y; layout = 2, grid = [:x :y]), :grid, :y) == [false, true]
+    @test grids(plot(y; layout = 2, xminorgrid = [true false]), :minorgrid) == [true, false]
+    @test grids(plot(y; layout = 2, xgrid = [2 3]), :gridlinewidth) == [2, 3]
 end
 
 @testset "scale_lims!" begin
@@ -302,6 +392,44 @@ end
     # github.com/JuliaPlots/Plots.jl/issues/4475
     pl = plot(100:100:300, hcat([1, 2, 4], [-1, -2, -4]); yformatter = :none)
     @test pl[1][:yaxis][:formatter] ≡ :none
+end
+
+@testset "formatters" begin
+    # github.com/JuliaPlots/Plots.jl/issues/5762
+    fmt(v) = "$v!"
+    axis(pl, letter) = pl[1][PlotsBase.Commons.get_attr_symbol(letter, :axis)][:formatter]
+
+    # `vline` and the histograms read their data from `y` but draw it against the x axis,
+    # which used to send a `yformatter` there too
+    for st in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist, :path, :hline)
+        pl = plot(randn(20); seriestype = st, yformatter = fmt)
+        @test axis(pl, :y) ≡ fmt
+        @test axis(pl, :x) ≡ :auto
+
+        pl = plot(randn(20); seriestype = st, xformatter = fmt)
+        @test axis(pl, :x) ≡ fmt
+        @test axis(pl, :y) ≡ :auto
+    end
+
+    # a formatter the data carries follows the data, wherever it is drawn
+    dates = Date(2020, 1, 1) .+ Day.(0:40)
+    for (st, letter) in
+        ((:vline, :x), (:vspan, :x), (:histogram, :x), (:stephist, :x), (:hline, :y))
+        pl = plot(dates; seriestype = st)
+        @test axis(pl, letter) ≡ RecipesPipeline.dateformatter
+        @test axis(pl, letter ≡ :x ? :y : :x) ≡ :auto
+    end
+    @test axis(plot(dates, 1:41), :x) ≡ RecipesPipeline.dateformatter
+    @test axis(plot(1:41, dates), :y) ≡ RecipesPipeline.dateformatter
+
+    # the two are independent
+    pl = histogram(dates; yformatter = fmt)
+    @test axis(pl, :x) ≡ RecipesPipeline.dateformatter
+    @test axis(pl, :y) ≡ fmt
+
+    pl = histogram(randn(100); yformatter = v -> "$v \$")
+    sp = pl[1]
+    @test PlotsBase.get_ticks(sp, sp[:yaxis])[2] |> first |> endswith(" \$")
 end
 
 @testset "minor ticks" begin

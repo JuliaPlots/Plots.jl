@@ -5,9 +5,6 @@ else
     tempdir()
 end
 
-treats_y_as_x(seriestype) =
-    seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
-
 function replace_image_with_heatmap(z::AbstractMatrix{<:Colorant})
     n, m = size(z)
     colors = palette(vec(z))
@@ -175,11 +172,8 @@ function slice_arg!(
         remove_pair::Bool,
     )
     v = get(plotattributes_in, k, plotattributes_out[k])
-    plotattributes_out[k] = if haskey(plotattributes_in, k) && k ∉ Commons._plot_attrs
-        slice_arg(v, idx)
-    else
-        v
-    end
+    # a row given to `default` is sliced like one given to the plot
+    plotattributes_out[k] = k ∉ Commons._plot_attrs ? slice_arg(v, idx) : v
     remove_pair && RecipesPipeline.reset_kw!(plotattributes_in, k)
     return nothing
 end
@@ -191,22 +185,29 @@ function _slice_series_attrs!(
         commandIndex::Int,
     )
     for k in keys(_series_defaults)
-        haskey(plotattributes, k) &&
+        if haskey(plotattributes, k)
             slice_arg!(plotattributes, plotattributes, k, commandIndex, false)
+        elseif (v = _series_defaults[k]) isa AMat  # a row given to `default`
+            plotattributes[k] = slice_arg(v, commandIndex)
+        end
     end
     return plotattributes
 end
 # -----------------------------------------------------------------------------
 
 function __heatmap_edges(v::AVec, isedges::Bool, ispolar::Bool)
-    (n = length(v)) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
+    length(v) == 1 &&
+        return first(v) .+ [ispolar ? max(-first(v), -0.5) : -0.5, 0.5]
     isedges && return v
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
-    extra_min = ispolar ? min(v[1], 0.5(v[2] - v[1])) : 0.5(v[2] - v[1])
-    extra_max = 0.5(v[n] - v[n - 1])
-    return vcat(vmin - extra_min, 0.5(v[1:(n - 1)] + v[2:n]), vmax + extra_max)
+    # index through `firstindex` / `lastindex`, `v` may be offset
+    lo, hi = firstindex(v), lastindex(v)
+    extra_min = ispolar ? min(v[lo], 0.5(v[lo + 1] - v[lo])) : 0.5(v[lo + 1] - v[lo])
+    extra_max = 0.5(v[hi] - v[hi - 1])
+    mids = [0.5(v[i] + v[i + 1]) for i in lo:(hi - 1)]
+    return vcat(vmin - extra_min, mids, vmax + extra_max)
 end
 
 _heatmap_edges(::Val{true}, v::AVec, ::Symbol, isedges::Bool, ispolar::Bool) =
@@ -250,6 +251,41 @@ function heatmap_edges(
         _heatmap_edges(Val(xscale ≡ :identity), x, xscale, isedges, false),
         _heatmap_edges(Val(yscale ≡ :identity), y, yscale, isedges, ispolar),  # special handle for `r` in polar plots
     )
+end
+
+# halfway between neighbours, and as far again past the first and last
+function _cell_edges(v::AVec)
+    length(v) == 1 && return [first(v) - 0.5, first(v) + 0.5]
+    mids = (v[begin:(end - 1)] .+ v[(begin + 1):end]) ./ 2
+    return vcat(2first(v) - first(mids), mids, 2last(v) - last(mids))
+end
+
+"the corners of the cells of a heatmap on a curvilinear grid, from their centers"
+function heatmap_corners(v::AMat, scale::Symbol = :identity)
+    f, invf = scale_inverse_scale_func(scale)
+    return invf.(mapslices(_cell_edges, mapslices(_cell_edges, f.(v); dims = 2); dims = 1))
+end
+
+# a matrix gives the centers of the cells, the size of `z`, or their corners, one more along both sides
+function heatmap_corners(v::AMat, scale::Symbol, z_size::NTuple{2, Int})
+    sizes = (z_size, reverse(z_size))
+    size(v) in sizes && return heatmap_corners(v, scale)
+    size(v) .- 1 in sizes && return v
+    return "x and y matrices must have the size of z, for the centers of the cells, or one more along both sides, for their corners" |>
+        ArgumentError |>
+        throw
+end
+
+function heatmap_edges(
+        x::AMat,
+        xscale::Symbol,
+        y::AMat,
+        yscale::Symbol,
+        z_size::NTuple{2, Int},
+        ::Bool = false,
+    )
+    size(x) == size(y) || throw(ArgumentError("x and y matrices must have the same size"))
+    return heatmap_corners(x, xscale, z_size), heatmap_corners(y, yscale, z_size)
 end
 
 is_uniformly_spaced(v; tol = 1.0e-6) =
@@ -370,9 +406,47 @@ xlims(sp_idx::Int = 1) = xlims(current(), sp_idx)
 ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
+# `(x = ..., y = ...)` sets each axis on its own, and a row of them does so per subplot,
+# which is how `getattr` answers for an axis attribute asked without a letter
+_is_per_axis(v) = v isa NamedTuple && !isempty(v) && keys(v) ⊆ (:x, :y, :z)
+_is_per_axis(v::AbstractArray) = !isempty(v) && all(_is_per_axis, v)
+_for_axis(v::NamedTuple, letter) = haskey(v, letter) ? Some(v[letter]) : nothing
+_for_axis(v::AbstractArray, letter) =
+    all(nt -> haskey(nt, letter), v) ? Some(map(nt -> nt[letter], v)) : nothing
+
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
 function Commons.preprocess_attributes!(plotattributes::AKW)
     Commons.replaceAliases!(plotattributes, Commons._keyAliases)
+
+    # a named tuple for a magic attribute sets the attributes it names, as `getattr` reads them
+    for k in collect(keys(plotattributes))
+        (v = plotattributes[k]) isa NamedTuple || continue
+        letter, base = if k ∈ Commons._lettered_all_axis_attrs
+            Symbol(first(string(k))), Symbol(chop(string(k), head = 1, tail = 0))
+        else
+            nothing, k
+        end
+        (components = get(Commons._magic_components, base, nothing)) ≡ nothing && continue
+        delete!(plotattributes, k)
+        for (c, cv) in pairs(v)
+            c = get(Commons._keyAliases, c, c)
+            if c ∈ components
+                plotattributes[letter ≡ nothing ? c : get_attr_symbol(letter, c)] = cv
+            else
+                @maxlog_warn "`$c` is not one of the attributes `$k` sets, ignored."
+            end
+        end
+    end
+    for k in Commons._axis_attrs
+        v = get(plotattributes, k, nothing)
+        _is_per_axis(v) || continue
+        delete!(plotattributes, k)
+        for letter in (:x, :y, :z)
+            lk = get_attr_symbol(letter, k)
+            haskey(plotattributes, lk) && continue
+            (val = _for_axis(v, letter)) ≡ nothing || (plotattributes[lk] = something(val))
+        end
+    end
 
     # handle axis args common to all axis
     args = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :axis, ()))
@@ -391,17 +465,6 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
                 process_axis_arg!(plotattributes, arg, letter)
             end
         end
-    end
-
-    # vline and others accesses the y argument but actually maps it to the x axis.
-    # Hence, we have to take care of formatters
-    if treats_y_as_x(get(plotattributes, :seriestype, :path))
-        xformatter = get(plotattributes, :xformatter, :auto)
-        yformatter = get(plotattributes, :yformatter, :auto)
-        yformatter ≢ :auto && (plotattributes[:xformatter] = yformatter)
-        xformatter ≡ :auto &&
-            haskey(plotattributes, :yformatter) &&
-            pop!(plotattributes, :yformatter)
     end
 
     # handle grid args common to all axes
@@ -436,7 +499,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
     # handle font args common to all axes
-    for fontname in (:tickfont, :guidefont)
+    for fontname in (:tick_font, :guide_font)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             for letter in (:x, :y, :z)
@@ -450,7 +513,7 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     end
     # handle individual axes font args
     for letter in (:x, :y, :z)
-        for fontname in (:tickfont, :guidefont)
+        for fontname in (:tick_font, :guide_font)
             args = RecipesPipeline.pop_kw!(
                 plotattributes,
                 get_attr_symbol(letter, fontname),
@@ -478,14 +541,23 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
         end
     end
 
+    # validate the limits modifiers once here, so `axis_limits` only resolves `:auto`
+    for letter in (:x, :y, :z)
+        k = get_attr_symbol(letter, :limits_modifiers)
+        haskey(plotattributes, k) && (
+            plotattributes[k] = Axes.normalize_limits_modifiers(letter, plotattributes[k])
+        )
+    end
+
     # fonts
     for fontname in (
-            :titlefont,
+            :title_font,
             :legend_title_font,
-            :plot_titlefont,
+            :plot_title_font,
             :colorbar_title_font,
             :colorbar_tick_font,
             :legend_font,
+            :annotation_font,
         )
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
@@ -537,15 +609,9 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     # convert into strokes and brushes
     if haskey(plotattributes, :arrow)
         a = plotattributes[:arrow]
-        plotattributes[:arrow] = if a == true
-            arrow()
-        elseif a in (false, nothing, :none)
-            nothing
-        elseif !(typeof(a) <: Arrow || typeof(a) <: AbstractArray{Arrow})
-            arrow(wraptuple(a)...)
-        else
-            a
-        end
+        # a row gives each series its own
+        plotattributes[:arrow] =
+            a isa AbstractMatrix ? map(Arrows._to_arrow, a) : Arrows._to_arrow(a)
     end
 
     # legends - defaults are set in `src/components.jl` (see `@add_attributes`)
@@ -568,16 +634,6 @@ function Commons.preprocess_attributes!(plotattributes::AKW)
     if haskey(plotattributes, :levels)
         Commons.check_contour_levels(plotattributes[:levels])
     end
-
-    # warnings for moved recipes
-    st = get(plotattributes, :seriestype, :path)
-    if st in (:boxplot, :violin, :density) &&
-            !haskey(
-            Base.loaded_modules,
-            Base.PkgId(Base.UUID("f3b207a7-027a-5e70-b257-86293d7955fd"), "StatsPlots"),
-        )
-        @maxlog_warn "seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`"
-    end
     return nothing
 end
 
@@ -589,7 +645,10 @@ with(:gr, size=(400,400), type=:histogram) do
   plot(rand(10))
 end
 ```
+A scoped value of PlotsBase, such as `SAVEFIG_OVERWRITE`, is set with a pair: `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end`.
 """
+with(f::Function, p::Pair{<:ScopedValue}, ps::Pair{<:ScopedValue}...) = Base.ScopedValues.with(f, p, ps...)
+
 function with(f::Function, args...; scalefonts = nothing, kw...)
     new_defs = KW(kw)
 
@@ -829,6 +888,10 @@ function mesh3d_triangles(x, y, z, cns::Tuple{Array, Array, Array})
     end
     return X, Y, Z
 end
+
+# other polygons are split into triangles fanning out from their first corner
+mesh3d_triangles(x, y, z, cns::AbstractVector{<:NTuple{N, Integer}}) where {N} =
+    mesh3d_triangles(x, y, z, [Int.((c[1], c[n], c[n + 1])) for c in cns for n in 2:(N - 1)])
 
 function mesh3d_triangles(x, y, z, cns::AbstractVector{NTuple{3, Int}})
     X = zeros(eltype(x), 4length(cns))

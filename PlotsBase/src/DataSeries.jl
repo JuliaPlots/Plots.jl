@@ -89,7 +89,9 @@ extend_series!(series::Series, xi, yi, zi) = (
 
 function extend_series_data!(series::Series, v, letter)
     copy_series!(series, letter)
-    d = extend_by_data!(series[letter], v)
+    # `extend_by_data!` can only extend in place when the data is mutable, a range has to
+    # be replaced by the vector it returns
+    series[letter] = d = extend_by_data!(series[letter], v)
     expand_extrema!(series[:subplot][Commons.get_attr_symbol(letter, :axis)], d)
     return d
 end
@@ -276,11 +278,11 @@ function series_segments(series::Series, seriestype::Symbol = :path; check = fal
     segments = if has_attribute_segments(series)
         (
             if seriestype ≡ :shape
-                    (SeriesSegment(segment, j),)
+                (SeriesSegment(segment, j),)
             elseif seriestype in (:scatter, :scatter3d)
-                    (SeriesSegment(i:i, i) for i in segment)
+                (SeriesSegment(i:i, i) for i in segment)
             else
-                    (SeriesSegment(i:(i + 1), i) for i in first(segment):(last(segment) - 1))
+                (SeriesSegment(i:(i + 1), i) for i in first(segment):(last(segment) - 1))
             end for (j, segment) in enumerate(nan_segments)
         ) |> Iterators.flatten
     else

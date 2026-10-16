@@ -62,7 +62,7 @@
 
     # right histogram
     @series begin
-        orientation := :h
+        permute := (:x, :y)
         subplot := 3
         left_margin --> 0mm
         bins := edges2

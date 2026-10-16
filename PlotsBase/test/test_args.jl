@@ -53,11 +53,19 @@ end
     @test sp[2][:seriescolor] == cgrad(default(:palette))[2]
 end
 
+@testset "Extra keyword arguments" begin
+    # warns on a keyword that neither Plots nor GR uses
+    @test_logs (:warn, r"unknown_kwarg is neither an attribute") plot(1:2, unknown_kwarg = 1)
+    @test_logs plot(1:2, nx = 2)
+    # not on the internal keys `lens!` copies along with a series
+    @test_logs lens!(plot(1:3), [1, 2], [1, 2], inset = (1, bbox(0.5, 0.5, 0.3, 0.3)))
+end
+
 @testset "Axis Attributes" begin
-    pl = @test_nowarn plot(; tickfont = font(10, "Times"))
+    pl = @test_nowarn plot(; tick_font = font(10, "Times"))
     for axis in (:xaxis, :yaxis, :zaxis)
-        @test pl[1][axis][:tickfontsize] == 10
-        @test pl[1][axis][:tickfontfamily] == "Times"
+        @test pl[1][axis][:tick_font_size] == 10
+        @test pl[1][axis][:tick_font_family] == "Times"
     end
 end
 
@@ -65,7 +73,7 @@ end
     pl = @test_nowarn plot(rand(3, 3))
     @test plot(pl, plot_title = "Test")[:plot_title] == "Test"
     @test plot(pl, title = "Test")[1][:title] == "Test"
-    @test plot(pl, xtickfontsize = 1)[1][:xaxis][:tickfontsize] == 1
+    @test plot(pl, xtick_font_size = 1)[1][:xaxis][:tick_font_size] == 1
     @test plot(pl, label = "Test")[1][1][:label] == "Test"
     @test plot(pl, label = "Test")[1][2][:label] == "Test"
     @test plot(pl, label = "Test")[1][3][:label] == "Test"
@@ -78,6 +86,15 @@ end
     @test yticks(pl2) == xticks(pl1)
     @test filter(isfinite, pl1[1][1][:x]) == filter(isfinite, pl2[1][1][:y])
     @test filter(isfinite, pl1[1][1][:y]) == filter(isfinite, pl2[1][1][:x])
+    # and the same limits, github.com/JuliaPlots/Plots.jl/issues/5009
+    function swapped(f)
+        a, b = f(), f(permute = (:x, :y))
+        return xlims(b) == ylims(a) && ylims(b) == xlims(a)
+    end
+    @test swapped((; kw...) -> bar(["a", "b", "c"], [1, 2, 3]; kw...))
+    @test swapped((; kw...) -> histogram([1, 2, 2, 3, 3, 3]; kw...))
+    @test swapped((; kw...) -> bar([1, 2, 3], [1, 10, 100]; yscale = :log10, kw...))
+    @test swapped((; kw...) -> histogram(10 .^ range(0, 3, length = 100); xscale = :log10, kw...))
 end
 
 @testset "@add_attributes" begin
@@ -125,6 +142,13 @@ end
     ()
 end
 
+@testset "warn_on_unsupported" begin
+    # given to a plot, it holds for its series too
+    delete!(get!(Set{Symbol}, PlotsBase._already_warned, :gr), :markerstrokestyle)
+    @test_logs plot(1:2, markerstrokestyle = :dash, warn_on_unsupported = false)
+    @test_logs (:warn, r"markerstrokestyle not supported") plot(1:2, markerstrokestyle = :dash)
+end
+
 @testset "margin" begin
     # github.com/JuliaPlots/Plots.jl/issues/4522
     @test show(devnull, matrixheatmap(reshape(1:12, 3, 4))) isa Nothing
@@ -144,4 +168,29 @@ end
     vline!(p3, [10^6], xformatter = :plain)
     @test p3[1][:yaxis][:formatter] ≡ :plain
     @test p3[1][:xaxis][:formatter] ≡ :plain
+end
+
+@testset "plotattr" begin
+    printed(attr) = mktemp() do path, io
+        redirect_stdout(() -> plotattr(attr), io)
+        close(io)
+        read(path, String)
+    end
+
+    # a lettered axis attribute is documented under its unlettered name
+    for (attr, canonical) in (
+            "xlims" => "lims",
+            "ylabel" => "guide",
+            "xticks" => "ticks",
+            "x_ticks" => "ticks",
+            "zscale" => "scale",
+            "xtickfontsize" => "tick_font_size",
+        )
+        out = printed(attr)
+        @test startswith(out, ":$canonical\n")
+        @test occursin("`Axis` attribute", out)
+    end
+    @test printed("lims") == printed("xlims")
+    @test startswith(printed("linewidth"), ":linewidth\n")
+    @test_throws ErrorException printed("nothere")
 end

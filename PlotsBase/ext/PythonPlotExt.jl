@@ -118,28 +118,28 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :bar_position,
         :title,
         :titlelocation,
-        :titlefont,
+        :title_font,
         :window_title,
         :guide,
         :guide_position,
-        :widen,
+        :limits_modifiers,
         :lims,
         :ticks,
         :scale,
         :flip,
         :rotation,
-        :titlefontfamily,
-        :titlefontsize,
-        :titlefontcolor,
+        :title_font_family,
+        :title_font_size,
+        :title_font_color,
         :legend_font_family,
-        :legend_font_pointsize,
+        :legend_font_size,
         :legend_font_color,
-        :tickfontfamily,
-        :tickfontsize,
-        :tickfontcolor,
-        :guidefontfamily,
-        :guidefontsize,
-        :guidefontcolor,
+        :tick_font_family,
+        :tick_font_size,
+        :tick_font_color,
+        :guide_font_family,
+        :guide_font_size,
+        :guide_font_color,
         :grid,
         :gridalpha,
         :gridstyle,
@@ -172,14 +172,15 @@ const _pythonplot_attrs = PlotsBase.merge_with_base_supported(
         :line_z,
         :fill,
         :fill_z,
-        :fontfamily,
-        :fontfamily_subplot,
+        :font_family,
+        :font_family_subplot,
         :legend_column,
+        :legend_order,
         :legend_font,
         :legend_title,
         :legend_title_font_color,
         :legend_title_font_family,
-        :legend_title_font_pointsize,
+        :legend_title_font_size,
         :levels,
         :ribbon,
         :quiver,
@@ -230,6 +231,7 @@ const _pythonplot_scales = [:identity, :ln, :log2, :log10]
 # github.com/stevengj/PythonPlot.jl
 
 PlotsBase.is_marker_supported(::PythonPlotBackend, shape::Shape) = true
+PlotsBase.is_extra_kwarg_supported(::PythonPlotBackend, k) = k in (:mincnt, :edgecolors)
 
 _py_handle_surface(v) = v
 _py_handle_surface(z::Surface) = z.surf
@@ -780,7 +782,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         polygons = if cns isa AbstractVector{<:AbstractVector{<:Integer}}
             # Combination of any polygon types
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
-        elseif cns isa AbstractVector{NTuple{N, <:Integer}} where {N}
+        elseif cns isa AbstractVector{<:NTuple{N, Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
         elseif cns isa NTuple{3, <:AbstractVector{<:Integer}}
@@ -809,7 +811,7 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
             polygons;
             linewidths,
             edgecolors,
-            facecolors,
+            facecolors = _py_color(map(i -> get_fillcolor(series, clims, i), eachindex(polygons))),
             zorder,
             alpha,
         ) |>
@@ -1057,9 +1059,9 @@ function _py_set_axis_colors(sp, ax, a::Axis)
             axis = string(a[:letter]),
             which = "both",
             colors = tickcolor,
-            labelcolor = _py_color(a[:tickfontcolor]),
+            labelcolor = _py_color(a[:tick_font_color]),
         )
-        getproperty(ax, axis_sym).label.set_color(_py_color(a[:guidefontcolor]))
+        getproperty(ax, axis_sym).label.set_color(_py_color(a[:guide_font_color]))
     end
 end
 
@@ -1109,10 +1111,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 end
             )
             func.set_text(string(title))
-            func.set_fontsize(_py_thickness_scale(plt, sp[:titlefontsize]))
-            func.set_family(sp[:titlefontfamily])
-            func.set_math_fontfamily(_py_get_matching_math_font(sp[:titlefontfamily]))
-            func.set_color(_py_color(sp[:titlefontcolor]))
+            func.set_fontsize(_py_thickness_scale(plt, sp[:title_font_size]))
+            func.set_family(sp[:title_font_family])
+            func.set_math_fontfamily(_py_get_matching_math_font(sp[:title_font_family]))
+            func.set_color(_py_color(sp[:title_font_color]))
         end
 
         # add the colorbar legend
@@ -1348,10 +1350,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 pyaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
             elseif has_major_ticks
                 fontProperties = Dict(
-                    "math_fontfamily" => _py_get_matching_math_font(axis[:tickfontfamily]),
-                    "size" => _py_thickness_scale(plt, axis[:tickfontsize]),
-                    "rotation" => axis[:tickfontrotation],
-                    "family" => axis[:tickfontfamily],
+                    "math_fontfamily" => _py_get_matching_math_font(axis[:tick_font_family]),
+                    "size" => _py_thickness_scale(plt, axis[:tick_font_size]),
+                    "rotation" => axis[:tick_font_rotation],
+                    "family" => axis[:tick_font_family],
                 )
                 positions = getproperty(ax, get_axis(letter, :ticks))()
                 pyaxis.set_major_locator(mpl.ticker.FixedLocator(positions))
@@ -1374,16 +1376,16 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             end
 
             getproperty(ax, set_axis(letter, :label))(PlotsBase.get_guide(axis))
-            pyaxis.label.set_fontsize(_py_thickness_scale(plt, axis[:guidefontsize]))
-            pyaxis.label.set_family(axis[:guidefontfamily])
+            pyaxis.label.set_fontsize(_py_thickness_scale(plt, axis[:guide_font_size]))
+            pyaxis.label.set_family(axis[:guide_font_family])
             pyaxis.label.set_math_fontfamily(
-                _py_get_matching_math_font(axis[:guidefontfamily]),
+                _py_get_matching_math_font(axis[:guide_font_family]),
             )
 
             RecipesPipeline.is3d(sp) && pyaxis.set_rotate_label(false)
             axis[:flip] && getproperty(ax, Symbol(:invert_, letter, :axis))()
 
-            axis[:guidefontrotation] + if letter ≡ :y && !RecipesPipeline.is3d(sp)
+            axis[:guide_font_rotation] + if letter ≡ :y && !RecipesPipeline.is3d(sp)
                 90
             else
                 0
@@ -1458,8 +1460,8 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             if RecipesPipeline.is3d(sp)
                 if ratio ≡ :auto
                     nothing
-                elseif ratio ≡ :equal
-                    ax.set_box_aspect((1, 1, 1))
+                elseif ratio ≡ :equal  # equal units, the box sized by the axis spans
+                    ax.set_box_aspect(axis_spans(sp))
                 else
                     ax.set_box_aspect(ratio)
                 end
@@ -1602,8 +1604,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
     push_h(x) = push!(handles, x)
 
     nseries = 0
-    for series in series_list(sp)
-        should_add_to_legend(series) || continue
+    for series in PlotsBase.legend_series_list(sp)
         clims = get_clims(sp, series)
         nseries += 1
         # add a line/marker and a label
@@ -1617,28 +1618,35 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
             has_fs = !isnothing(fs)
 
             # line (and potentially solid fill)
-            mpl.patches.Patch(
+            patch = mpl.patches.Patch(
                 edgecolor = _py_color(single_color(lc), la),
                 facecolor = _py_color(single_color(fc), has_fs ? 0 : fa),
                 linewidth = _py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                 linestyle = _py_linestyle(series[:seriestype], ls),
                 capstyle = "butt",
-            ) |> push_h
+            )
 
             # plot two handles on top of each other by passing in a tuple
             # matplotlib.org/stable/tutorials/intermediate/legend_guide.html
 
             # hatched fill
             # hatch color/alpha are controlled by edge (not face) color/alpha
-            has_fs &&
-                mpl.patches.Patch(
-                edgecolor = _py_color(single_color(fc), fa),
-                facecolor = _py_color(single_color(fc), 0), # don't fill with solid background
-                hatch = _py_fillstyle(fs),
-                linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
-                linestyle = _py_linestyle(series[:seriestype], ls),
-                capstyle = "butt",
-            ) |> push_h
+            has_fs && (
+                patch = PythonCall.pytuple(
+                    (
+                        patch,
+                        mpl.patches.Patch(
+                            edgecolor = _py_color(single_color(fc), fa),
+                            facecolor = _py_color(single_color(fc), 0), # don't fill with solid background
+                            hatch = _py_fillstyle(fs),
+                            linewidth = 0, # don't replot shape outline (doesn't affect hatch linewidth)
+                            linestyle = _py_linestyle(series[:seriestype], ls),
+                            capstyle = "butt",
+                        ),
+                    ),
+                )
+            )
+            push_h(patch)
         elseif series[:seriestype] ∈ _py_legend_series
             has_line = get_linewidth(series) > 0
             PythonPlot.pyplot.Line2D(
@@ -1650,7 +1658,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                 ),
                 linewidth = _py_thickness_scale(
                     plt,
-                    has_line * sp[:legend_font_pointsize] / 8,
+                    has_line * sp[:legend_font_size] / 8,
                 ),
                 linestyle = _py_linestyle(:path, get_linestyle(series)),
                 solid_capstyle = "butt",
@@ -1658,7 +1666,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                 dash_capstyle = "butt",
                 dash_joinstyle = "miter",
                 marker = _py_marker(_cycle(series[:markershape], 1)),
-                markersize = _py_thickness_scale(plt, 0.8sp[:legend_font_pointsize]),
+                markersize = _py_thickness_scale(plt, 0.8sp[:legend_font_size]),
                 markeredgecolor = _py_color(
                     single_color(get_markerstrokecolor(series)),
                     get_markerstrokealpha(series),
@@ -1669,7 +1677,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
                 ),
                 markeredgewidth = _py_thickness_scale(
                     plt,
-                    0.8get_markerstrokewidth(series) * sp[:legend_font_pointsize] /
+                    0.8get_markerstrokewidth(series) * sp[:legend_font_size] /
                         first(series[:markersize]),
                 ),   # retain the markersize/markerstroke ratio from the markers on the plot
             ) |> push_h
@@ -1683,22 +1691,16 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
     isempty(handles) && return
 
     leg = PlotsBase.legend_angle(leg)
-    ncol = if (lc = sp[:legend_column]) < 0
-        nseries
-    elseif lc > 1
-        lc == nseries ||
-            @maxlog_warn "n° of legend_column=$lc is not compatible with n° of series=$nseries"
-        nseries
-    else
-        1
-    end
+    ncol = PlotsBase.legend_ncols(sp, nseries)
+    # matplotlib fills a column before the next, reordered to read row by row as in GR
+    order = reduce(vcat, (i:ncol:nseries for i in 1:ncol))
     leg = ax.legend(
-        handles,
-        labels;
+        handles[order],
+        labels[order];
         loc = _py_legend_pos(leg),
         bbox_to_anchor = _py_legend_bbox(leg),
         scatterpoints = 1,
-        fontsize = _py_thickness_scale(plt, sp[:legend_font_pointsize]),
+        fontsize = _py_thickness_scale(plt, sp[:legend_font_size]),
         facecolor = _py_color(sp[:legend_background_color]),
         edgecolor = _py_color(sp[:legend_foreground_color]),
         framealpha = alpha(plot_color(sp[:legend_background_color])),
@@ -1714,7 +1716,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
             leg.get_title(),
             color = _py_color(sp[:legend_title_font_color]),
             family = sp[:legend_title_font_family],
-            fontsize = _py_thickness_scale(plt, sp[:legend_title_font_pointsize]),
+            fontsize = _py_thickness_scale(plt, sp[:legend_title_font_size]),
         )
     end
 
@@ -1723,7 +1725,7 @@ function _py_add_legend(plt::Plot, sp::Subplot, ax)
             txt,
             color = _py_color(sp[:legend_font_color]),
             family = sp[:legend_font_family],
-            fontsize = _py_thickness_scale(plt, sp[:legend_font_pointsize]),
+            fontsize = _py_thickness_scale(plt, sp[:legend_font_size]),
         )
     end
     return nothing

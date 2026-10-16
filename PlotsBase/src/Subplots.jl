@@ -118,17 +118,17 @@ colorbartickfont(sp::Subplot) = font(;
 )
 
 titlefont(sp::Subplot) = font(;
-    family = sp[:titlefontfamily],
-    pointsize = sp[:titlefontsize],
-    valign = sp[:titlefontvalign],
-    halign = sp[:titlefonthalign],
-    rotation = sp[:titlefontrotation],
-    color = sp[:titlefontcolor],
+    family = sp[:title_font_family],
+    pointsize = sp[:title_font_size],
+    valign = sp[:title_font_valign],
+    halign = sp[:title_font_halign],
+    rotation = sp[:title_font_rotation],
+    color = sp[:title_font_color],
 )
 
 legendfont(sp::Subplot) = font(;
     family = sp[:legend_font_family],
-    pointsize = sp[:legend_font_pointsize],
+    pointsize = sp[:legend_font_size],
     valign = sp[:legend_font_valign],
     halign = sp[:legend_font_halign],
     rotation = sp[:legend_font_rotation],
@@ -137,7 +137,7 @@ legendfont(sp::Subplot) = font(;
 
 legendtitlefont(sp::Subplot) = font(;
     family = sp[:legend_title_font_family],
-    pointsize = sp[:legend_title_font_pointsize],
+    pointsize = sp[:legend_title_font_size],
     valign = sp[:legend_title_font_valign],
     halign = sp[:legend_title_font_halign],
     rotation = sp[:legend_title_font_rotation],
@@ -185,8 +185,8 @@ end
 
 needs_any_3d_axes(sp::Subplot) = any(
     RecipesPipeline.needs_3d_axes(
-            Commons._override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
-        ) for s in series_list(sp)
+        Commons._override_seriestype_check(s.plotattributes, s.plotattributes[:seriestype]),
+    ) for s in series_list(sp)
 )
 
 function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
@@ -260,7 +260,16 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
             data = plotattributes[letter]
             axis = sp[get_attr_symbol(letter, :axis)]
             scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
-            expand_extrema!(axis, PlotsBase.heatmap_edges(data, scale))
+            edges = if data isa RecipesPipeline.Surface  # a curvilinear grid
+                PlotsBase.backend_name(sp.plt.backend) in (:gr, :pythonplot) ||
+                    "only the gr and pythonplot backends draw heatmaps with `x` and `y` as matrices" |>
+                    ArgumentError |>
+                    throw
+                PlotsBase.heatmap_corners(data.surf, scale, size(plotattributes[:z].surf))
+            else
+                PlotsBase.heatmap_edges(data, scale)
+            end
+            expand_extrema!(axis, vec(edges))
         end
     end
 end

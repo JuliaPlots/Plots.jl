@@ -20,9 +20,21 @@ _display(::Plot{NoneBackend}) =
 
 const _backendSymbol = Dict{DataType, Symbol}(NoneBackend => :none)
 const _backendType = Dict{Symbol, DataType}(:none => NoneBackend)
+const _extensionModule = Dict{Symbol, Module}()
 const _backend_packages = (unicodeplots = :UnicodePlots, pythonplot = :PythonPlot, pgfplotsx = :PGFPlotsX, plotlyjs = :PlotlyJS, gaston = :Gaston, plotly = nothing, none = nothing, hdf5 = :HDF5, gr = :GR)
 const _supported_backends = keys(_backend_packages)
 const _initialized_backends = Set([:none])
+
+"""
+    register_extension(mod::Module)
+
+Record an extension module so `PlotsBase` can reach into it by name. An extension calls this
+from its `__init__`; the backend ones get it from `@extension_static`.
+"""
+register_extension(mod::Module) = _extensionModule[nameof(mod)] = mod
+
+"the registered extension module named `name`, or `nothing` if it is not loaded"
+extension(name::Symbol) = get(_extensionModule, name, nothing)
 
 function _check_installed(pkg::Union{Module, AbstractString, Symbol}; warn = true)
     name = Symbol(lowercase(string(pkg)))
@@ -54,9 +66,9 @@ _series_updated(::Plot, ::Series) = nothing
 
 _before_layout_calcs(plt::Plot) = nothing
 
-title_padding(sp::Subplot) = isempty(sp[:title]) ? 0mm : sp[:titlefontsize] * pt + sp[:title_gap]
+title_padding(sp::Subplot) = isempty(sp[:title]) ? 0mm : sp[:title_font_size] * pt + sp[:title_gap]
 guide_padding(axis::Axis) =
-    isempty(PlotsBase.get_guide(axis)) ? 0mm : axis[:guidefontsize] * pt
+    isempty(PlotsBase.get_guide(axis)) ? 0mm : axis[:guide_font_size] * pt
 
 closeall(::AbstractBackend) = nothing
 
@@ -114,7 +126,7 @@ else
 end
 
 function get_backend_module(pkg_name::Symbol)
-    ext = Base.get_extension(@__MODULE__, Symbol("$(pkg_name)Ext"))
+    ext = extension(Symbol(pkg_name, :Ext))
     concrete_backend = if ext ≡ nothing
         @error "Extension $pkg_name is not loaded yet, run `import $pkg_name` to load it"
         nothing
@@ -190,6 +202,7 @@ macro extension_static(be_type, be)
         function __init__()
             PlotsBase._backendType[$be_sym] = $be_type
             PlotsBase._backendSymbol[$be_type] = $be_sym
+            PlotsBase.register_extension(@__MODULE__)
             push!(PlotsBase._initialized_backends, $be_sym)
             ccall(:jl_generating_output, Cint, ()) == 1 && return
             PlotsBase.extension_init($be_type())  # runtime init, incompatible with precompilation
@@ -200,8 +213,12 @@ end
 
 should_warn_on_unsupported(::AbstractBackend) = _plot_defaults[:warn_on_unsupported]
 
+# whether the backend reads `k`, a keyword that is not an attribute, from `extra_kwargs`
+is_extra_kwarg_supported(::AbstractBackend, k) = false
+
 const _already_warned = Dict{Symbol, Set{Symbol}}()
-function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
+function warn_on_unsupported_attrs(plt::Plot, plotattributes)
+    pkg = plt.backend
     _to_warn = Set{Symbol}()
     bend = backend_name(pkg)
     already_warned = get!(() -> Set{Symbol}(), _already_warned, bend)
@@ -211,13 +228,13 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
         k in Commons._suppress_warnings && continue
         if ismissing(default(k))
             extra_kwargs[k] = pop_kw!(plotattributes, k)
+            is_extra_kwarg_supported(pkg, k) || k in already_warned || push!(_to_warn, k)
         elseif plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)
         end
     end
 
-    if !isempty(_to_warn) &&
-            get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg))
+    if !isempty(_to_warn) && get(plotattributes, :warn_on_unsupported, plt[:warn_on_unsupported])
         for k in sort!(collect(_to_warn))
             push!(already_warned, k)
             if k in keys(Commons._deprecated_attributes)
@@ -225,6 +242,8 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
                 Keyword argument `$k` is deprecated.
                 Please use `$(Commons._deprecated_attributes[k])` instead.
                 """
+            elseif haskey(extra_kwargs, k)
+                @maxlog_warn "Keyword argument $k is neither an attribute nor used by $pkg, so it is ignored."
             else
                 @maxlog_warn "Keyword argument $k not supported with $pkg.  Choose from: $(join(supported_attrs(pkg), ", "))"
             end
@@ -233,8 +252,9 @@ function warn_on_unsupported_attrs(pkg::AbstractBackend, plotattributes)
     return extra_kwargs
 end
 
-function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
-    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
+function warn_on_unsupported(plt::Plot, plotattributes)
+    pkg = plt.backend
+    get(plotattributes, :warn_on_unsupported, plt[:warn_on_unsupported]) || return
     is_seriestype_supported(pkg, plotattributes[:seriestype]) ||
         @maxlog_warn "seriestype $(plotattributes[:seriestype]) is unsupported with $pkg. Choose from: $(supported_seriestypes(pkg))"
     is_style_supported(pkg, plotattributes[:linestyle]) ||
@@ -244,8 +264,9 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
     return nothing
 end
 
-function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
-    get(plotattributes, :warn_on_unsupported, should_warn_on_unsupported(pkg)) || return
+function warn_on_unsupported_scales(plt::Plot, plotattributes::AKW)
+    pkg = plt.backend
+    get(plotattributes, :warn_on_unsupported, plt[:warn_on_unsupported]) || return
     for k in (:xscale, :yscale, :zscale, :scale)
         haskey(plotattributes, k) || continue
         v = plotattributes[k]

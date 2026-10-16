@@ -105,6 +105,7 @@ else
         "defaults",
         "dates",
         "axes",
+        "plotattr",
         "layouts",
         "contours",
         "components",

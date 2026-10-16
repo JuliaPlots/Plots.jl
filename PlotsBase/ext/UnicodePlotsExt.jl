@@ -25,7 +25,7 @@ const _unicodeplots_attrs = PlotsBase.merge_with_base_supported(
         :annotations,
         :bins,
         :guide,
-        :widen,
+        :limits_modifiers,
         :grid,
         :label,
         :layout,

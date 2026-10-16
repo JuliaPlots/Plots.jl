@@ -40,7 +40,9 @@ function RecipesPipeline.preprocess_axis_attrs!(plt::Plot, plotattributes, lette
     return RecipesPipeline.preprocess_axis_attrs!(plt, plotattributes)
 end
 
-RecipesPipeline.is_axis_attribute(plt::Plot, attr) = Commons.is_axis_attr_noletter(attr) # in src/args.jl
+# `link` without a letter is the plot attribute, lettering it would hand `:x` to every axis
+RecipesPipeline.is_axis_attribute(plt::Plot, attr) =
+    attr ≢ :link && Commons.is_axis_attr_noletter(attr)
 
 RecipesPipeline.is_subplot_attribute(plt::Plot, attr) = Commons.is_subplot_attrs(attr) # in src/args.jl
 
@@ -48,7 +50,7 @@ RecipesPipeline.is_subplot_attribute(plt::Plot, attr) = Commons.is_subplot_attrs
 
 function RecipesPipeline.process_userrecipe!(plt::Plot, kw_list, kw)
     _preprocess_userrecipe(kw)
-    warn_on_unsupported_scales(plt.backend, kw)
+    warn_on_unsupported_scales(plt, kw)
     # add the plot index
     plt.n += 1
     kw[:series_plotindex] = plt.n
@@ -98,7 +100,8 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     errors = (:xerror, :yerror, :zerror)
     return if st ∉ errors
         for esym in errors
-            if get(kw, esym, nothing) ≢ nothing
+            # a row gives each series its own, so ask about this series' one
+            if slice_arg(get(kw, esym, nothing), series_idx(kw_list, kw)) ≢ nothing
                 # we make a copy of the KW and apply an errorbar recipe
                 errkw = copy(kw)
                 errkw[:seriestype] = esym
@@ -112,7 +115,7 @@ end
 
 function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
     # handle smoothing by adding a new series
-    return if get(kw, :smooth, false)
+    return if slice_arg(get(kw, :smooth, false), series_idx(kw_list, kw))
         x, y = kw[:x], kw[:y]
         β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
         sx = [ignorenan_minimum(x), ignorenan_maximum(x)]
@@ -414,7 +417,7 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
 end
 
 function _add_the_series(plt, sp, plotattributes)
-    extra_kwargs = warn_on_unsupported_attrs(plt.backend, plotattributes)
+    extra_kwargs = warn_on_unsupported_attrs(plt, plotattributes)
     if (kw = plt[:extra_kwargs]) isa AbstractDict
         plt[:extra_plot_kwargs] = get(kw, :plot, KW())
         sp[:extra_kwargs] = get(kw, :subplot, KW())
@@ -428,7 +431,7 @@ function _add_the_series(plt, sp, plotattributes)
     else
         throw(ArgumentError("Unsupported type for extra keyword arguments"))
     end
-    warn_on_unsupported(plt.backend, plotattributes)
+    warn_on_unsupported(plt, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
     if (z_order = plotattributes[:z_order]) ≡ :front

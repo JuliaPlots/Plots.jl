@@ -120,11 +120,42 @@ Sys.isunix() && with(:plotly) do
         @test logged[:colorbar][:tickvals] ≈ [-2, -1, 0]
     end
 
+    @testset "Legend order" begin
+        function ranks(order)
+            pl = plot(rand(2, 3), label = :auto, legend_order = order)
+            return [get(s, :legendrank, nothing) for s in PlotsBase.plotly_series(pl)]
+        end
+        @test ranks(:normal) == fill(nothing, 3)
+        @test ranks(:reversed) == [3, 2, 1]
+        @test ranks([2, 3, 1]) == [3, 1, 2]
+    end
+
+    @testset "Margins" begin
+        # the subplots are laid out with their margins, and plotly adds nothing of its own
+        pl = plot(1:3; axis = false, ticks = false)
+        PlotsBase.prepare_output(pl)
+        lay = PlotsBase.plotly_layout(pl)
+        @test all(==(0), values(lay[:margin]))
+        @test lay[:xaxis][:ticks] == "" && !lay[:xaxis][:automargin]
+    end
+
     @testset "Extra kwargs" begin
         pl = plot(1:5, test = "me")
         @test PlotsBase.plotly_series(pl)[1][:test] == "me"
         pl = plot(1:5, test = "me", extra_kwargs = :plot)
         @test PlotsBase.plotly_layout(pl)[:test] == "me"
+    end
+
+    @testset "Aspect ratio" begin
+        # plotly keeps it at the size it draws the plot, github.com/JuliaPlots/Plots.jl/issues/4891
+        yaxis(pl, k = :yaxis) = PlotsBase.plotly_layout(pl)[k]
+        ax = yaxis(plot(1:3, aspect_ratio = 2))
+        @test ax[:scaleanchor] == "x" && ax[:scaleratio] == 2 && ax[:constrain] == "domain"
+        @test yaxis(plot(1:3, aspect_ratio = :equal))[:scaleratio] == 1
+        @test !haskey(yaxis(plot(1:3)), :scaleanchor)
+        @test !haskey(yaxis(plot(1:3, aspect_ratio = :equal, yscale = :log10)), :scaleanchor)
+        pl = plot(plot(1:3), plot(1:3, aspect_ratio = :equal), layout = 2)
+        @test !haskey(yaxis(pl, :yaxis1), :scaleanchor) && yaxis(pl, :yaxis2)[:scaleanchor] == "x2"
     end
 
     @testset "3D scene aspect" begin

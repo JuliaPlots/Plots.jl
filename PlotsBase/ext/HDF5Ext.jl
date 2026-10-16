@@ -58,17 +58,17 @@ const _hdf5_attrs = PlotsBase.merge_with_base_supported(
         :bar_position,
         :title,
         :titlelocation,
-        :titlefont,
+        :title_font,
         :window_title,
         :guide,
-        :widen,
+        :limits_modifiers,
         :lims,
         :ticks,
         :scale,
         :flip,
         :rotation,
-        :tickfont,
-        :guidefont,
+        :tick_font,
+        :guide_font,
         :legendfont,
         :grid,
         :legend,
@@ -527,6 +527,8 @@ end
 # Implement PlotsBase.jl backend interface for HDF5Backend
 
 PlotsBase.is_marker_supported(::HDF5Backend, shape::Shape) = true
+# kept in the file, for the backend that reads it back
+PlotsBase.is_extra_kwarg_supported(::HDF5Backend, k) = true
 
 # Create the window/figure for this backend.
 function PlotsBase._create_backend_figure(plt::Plot{HDF5Backend}) end

@@ -30,11 +30,11 @@ PlotsBase.@extension_static PGFPlotsXBackend pgfplotsx
 const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
     [
         :annotations,
-        :annotationrotation,
-        :annotationhalign,
-        :annotationfontsize,
-        :annotationfontfamily,
-        :annotationcolor,
+        :annotation_font_rotation,
+        :annotation_font_halign,
+        :annotation_font_size,
+        :annotation_font_family,
+        :annotation_font_color,
         :legend_background_color,
         :background_color_inside,
         :background_color_outside,
@@ -66,35 +66,35 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :title,
         :window_title,
         :guide,
-        :widen,
+        :limits_modifiers,
         :lims,
         :ticks,
         :scale,
         :flip,
-        :titlefontfamily,
-        :titlefontsize,
-        :titlefonthalign,
-        :titlefontvalign,
-        :titlefontrotation,
-        :titlefontcolor,
+        :title_font_family,
+        :title_font_size,
+        :title_font_halign,
+        :title_font_valign,
+        :title_font_rotation,
+        :title_font_color,
         :legend_font_family,
-        :legend_font_pointsize,
+        :legend_font_size,
         :legend_font_halign,
         :legend_font_valign,
         :legend_font_rotation,
         :legend_font_color,
-        :tickfontfamily,
-        :tickfontsize,
-        :tickfonthalign,
-        :tickfontvalign,
-        :tickfontrotation,
-        :tickfontcolor,
-        :guidefontfamily,
-        :guidefontsize,
-        :guidefonthalign,
-        :guidefontvalign,
-        :guidefontrotation,
-        :guidefontcolor,
+        :tick_font_family,
+        :tick_font_size,
+        :tick_font_halign,
+        :tick_font_valign,
+        :tick_font_rotation,
+        :tick_font_color,
+        :guide_font_family,
+        :guide_font_size,
+        :guide_font_halign,
+        :guide_font_valign,
+        :guide_font_rotation,
+        :guide_font_color,
         :grid,
         :gridalpha,
         :gridstyle,
@@ -127,18 +127,19 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :marker_z,
         :levels,
         :legend_column,
+        :legend_order,
         :legend_title,
         :legend_title_font_color,
-        :legend_title_font_pointsize,
+        :legend_title_font_size,
         :ribbon,
         :quiver,
         :orientation,
         :overwrite_figure,
         :polar,
         :plot_title,
-        :plot_titlefontcolor,
-        :plot_titlefontrotation,
-        :plot_titlefontsize,
+        :plot_title_font_color,
+        :plot_title_font_rotation,
+        :plot_title_font_size,
         :plot_titlevspan,
         :aspect_ratio,
         :normalize,
@@ -163,7 +164,7 @@ const _pgfplotsx_attrs = PlotsBase.merge_with_base_supported(
         :mirror,
         :rotation,
         :showaxis,
-        :tickfontrotation,
+        :tick_font_rotation,
         :draw_arrow,
     ]
 )
@@ -210,6 +211,8 @@ const _pgfplotsx_markers = [
 ]
 const _pgfplotsx_scales = [:identity, :ln, :log2, :log10]
 PlotsBase.is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
+# any other keyword goes on to pgfplots
+PlotsBase.is_extra_kwarg_supported(::PGFPlotsXBackend, k) = true
 
 # additional constants
 const _pgfplotsx_series_ids = KW()
@@ -373,6 +376,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "draw opacity" => alpha(cstr),
                 ),
                 "show background rectangle" => nothing,
+                "tight background" => nothing,
             )
         end
 
@@ -400,7 +404,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             bpad = bottompad(sp) + sp[:bottom_margin]
             dx += lpad
             dy += tpad
-            title_cstr = plot_color(sp[:titlefontcolor])
+            title_cstr = plot_color(sp[:title_font_color])
             bgc_inside = plot_color(sp[:background_color_inside])
             update_clims(sp)
             cbar_min, cbar_max = pgfx_colorbar_limits(sp)
@@ -412,11 +416,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "title" => sp[:title],
                 "title style" => Options(
                     pgfx_get_title_pos(sp[:titlelocation])...,
-                    "font" => pgfx_font(sp[:titlefontsize], pgfx_thickness_scaling(sp)),
+                    "font" => pgfx_font(sp[:title_font_size], pgfx_thickness_scaling(sp)),
                     "color" => title_cstr,
                     "draw opacity" => alpha(title_cstr),
-                    "rotate" => sp[:titlefontrotation],
-                    "align" => pgfx_halign(sp[:titlefonthalign]),
+                    "rotate" => sp[:title_font_rotation],
+                    "align" => pgfx_halign(sp[:title_font_halign]),
                 ),
                 "legend style" => pgfx_get_legend_style(sp),
                 "axis background/.style" =>
@@ -428,6 +432,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             )
             sp_w > 0mm && push!(axis_opt, "width" => string(sp_w - (rpad + lpad)))
             sp_h > 0mm && push!(axis_opt, "height" => string(sp_h - (tpad + bpad)))
+            if (order = sp[:legend_order]) ≡ :reversed
+                push!(axis_opt, "reverse legend" => nothing)
+            elseif order isa AVec
+                @maxlog_warn "pgfplotsx can only reverse the legend, ignoring legend_order=$order"
+            end
             for letter in (:x, :y, :z)
                 if letter ≢ :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
@@ -1113,7 +1122,7 @@ function pgfx_get_legend_style(sp)
             "fill" => cstr,
             "fill opacity" => alpha(cstr),
             "text opacity" => alpha(plot_color(sp[:legend_font_color])),
-            "font" => pgfx_font(sp[:legend_font_pointsize], pgfx_thickness_scaling(sp)),
+            "font" => pgfx_font(sp[:legend_font_size], pgfx_thickness_scaling(sp)),
             "text" => plot_color(sp[:legend_font_color]),
             "cells" => Options(
                 "anchor" => get(
@@ -1145,12 +1154,12 @@ pgfx_get_title_pos(s::Symbol) = get(
 )
 
 function pgfx_get_ticklabel_style(sp, axis)
-    cstr = plot_color(axis[:tickfontcolor])
+    cstr = plot_color(axis[:tick_font_color])
     opt = Options(
-        "font" => pgfx_font(axis[:tickfontsize], pgfx_thickness_scaling(sp)),
+        "font" => pgfx_font(axis[:tick_font_size], pgfx_thickness_scaling(sp)),
         "color" => cstr,
         "draw opacity" => alpha(cstr),
-        "rotate" => axis[:tickfontrotation],
+        "rotate" => axis[:tick_font_rotation],
     )
     # aligning rotated tick labels to ticks
     if RecipesPipeline.is3d(sp)
@@ -1520,17 +1529,17 @@ function pgfx_axis!(opt::Options, sp::Subplot, letter)
     end
 
     # add label font
-    cstr = plot_color(axis[:guidefontcolor])
+    cstr = plot_color(axis[:guide_font_color])
     push!(
         opt,
         "$(letter)label style" => Options(
             labelpos => nothing,
-            "at" => "{(ticklabel cs:$(get((left = 0, right = 1), axis[:guidefonthalign], 0.5)))}",
+            "at" => "{(ticklabel cs:$(get((left = 0, right = 1), axis[:guide_font_halign], 0.5)))}",
             "anchor" => "near ticklabel",
-            "font" => pgfx_font(axis[:guidefontsize], pgfx_thickness_scaling(sp)),
+            "font" => pgfx_font(axis[:guide_font_size], pgfx_thickness_scaling(sp)),
             "color" => cstr,
             "draw opacity" => alpha(cstr),
-            "rotate" => axis[:guidefontrotation],
+            "rotate" => axis[:guide_font_rotation],
         ),
     )
 

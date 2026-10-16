@@ -48,7 +48,7 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
     legend := false
     foreground_color_border := nothing
     margin --> 1mm
-    titlefont --> font(11)
+    title_font --> font(11)
     fillcolor --> PlotsBase.fg_color(plotattributes)
     linecolor --> PlotsBase.fg_color(plotattributes)
     grid --> true
@@ -68,7 +68,7 @@ recipetype(::Val{:cornerplot}, args...) = CornerPlot(args)
     for i in 1:N
         compact && i == 1 && continue
         @series begin
-            orientation := :h
+            permute := (:x, :y)
             seriestype := :histogram
             subplot := indices[i + 1 - k, n]
             grid := false

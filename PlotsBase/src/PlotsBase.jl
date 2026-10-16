@@ -8,6 +8,7 @@ if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@max_m
 end
 
 using Base.Meta
+using Base.ScopedValues: ScopedValue
 
 import PrecompileTools
 import TableOperations
@@ -45,6 +46,7 @@ import RecipesPipeline:
     dateformatter,
     timeformatter,
     needs_3d_axes,
+    treats_y_as_x,
     DefaultsDict,
     explicitkeys,
     scale_func,
@@ -121,6 +123,7 @@ export
     coords,
 
     plotattr,
+    getattr,
     scalefontsizes,
     resetfontsizes
 

@@ -92,6 +92,16 @@ jobs:
           JULIA_CONDAPKG_ENV: ${{ runner.temp }}/condaenv
           JULIA_CONDAPKG_OFFLINE: true  # consume the shared env, do not re-resolve it
         run: |
+          # use the shared env as is: the `CondaPkg` lock, taken by every process loading `PythonCall`
+          # while precompiling, throws `EACCES` on windows when another process frees it at that moment
+          export JULIA_CONDAPKG_BACKEND=Null CONDA_PREFIX="$JULIA_CONDAPKG_ENV"
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            export JULIA_PYTHONCALL_EXE="$JULIA_CONDAPKG_ENV/python.exe"
+            env=$(cygpath -u "$JULIA_CONDAPKG_ENV")  # what `CondaPkg.activate!` puts on the path
+            export PATH="$env:$env/Library/mingw-w64/bin:$env/Library/usr/bin:$env/Library/bin:$env/Scripts:$env/bin:$PATH"
+          else
+            export JULIA_PYTHONCALL_EXE="$JULIA_CONDAPKG_ENV/bin/python"
+          fi
           cmd=(${{ env.JULIA_PROJECT_CMD }} --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
             cmd=(xvfb-run ${cmd[@]})

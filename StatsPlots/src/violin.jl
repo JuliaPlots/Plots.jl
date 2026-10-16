@@ -169,6 +169,19 @@ get_quantiles(n::Int) = range(0, 1, length = n + 2)[2:(end - 1)]
 end
 PlotsBase.@deps violin shape
 
+"""
+    violin(x,y,z)
+    violin!(x,y,z)
+
+Make a violin plot.
+
+# Example
+```julia-repl
+julia> violin(repeat([1,2,3],outer=100),randn(300))
+```
+"""
+@shorthands violin
+
 # ------------------------------------------------------------------------------
 # Grouped Violin
 

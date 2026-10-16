@@ -25,12 +25,12 @@ PlotsBase.@extension_static GRBackend gr
 const _gr_attrs = PlotsBase.merge_with_base_supported(
     [
         :annotations,
-        :annotationrotation,
-        :annotationhalign,
-        :annotationfontsize,
-        :annotationfontfamily,
-        :annotationcolor,
-        :annotationvalign,
+        :annotation_font_rotation,
+        :annotation_font_halign,
+        :annotation_font_size,
+        :annotation_font_family,
+        :annotation_font_color,
+        :annotation_font_valign,
         :legend_background_color,
         :background_color_inside,
         :background_color_outside,
@@ -62,35 +62,35 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :title,
         :window_title,
         :guide,
-        :widen,
+        :limits_modifiers,
         :lims,
         :ticks,
         :scale,
         :flip,
-        :titlefontfamily,
-        :titlefontsize,
-        :titlefonthalign,
-        :titlefontvalign,
-        :titlefontrotation,
-        :titlefontcolor,
+        :title_font_family,
+        :title_font_size,
+        :title_font_halign,
+        :title_font_valign,
+        :title_font_rotation,
+        :title_font_color,
         :legend_font_family,
-        :legend_font_pointsize,
+        :legend_font_size,
         :legend_font_halign,
         :legend_font_valign,
         :legend_font_rotation,
         :legend_font_color,
-        :tickfontfamily,
-        :tickfontsize,
-        :tickfonthalign,
-        :tickfontvalign,
-        :tickfontrotation,
-        :tickfontcolor,
-        :guidefontfamily,
-        :guidefontsize,
-        :guidefonthalign,
-        :guidefontvalign,
-        :guidefontrotation,
-        :guidefontcolor,
+        :tick_font_family,
+        :tick_font_size,
+        :tick_font_halign,
+        :tick_font_valign,
+        :tick_font_rotation,
+        :tick_font_color,
+        :guide_font_family,
+        :guide_font_size,
+        :guide_font_halign,
+        :guide_font_valign,
+        :guide_font_rotation,
+        :guide_font_color,
         :grid,
         :gridalpha,
         :gridstyle,
@@ -123,28 +123,29 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :clims,
         :fill,
         :fill_z,
-        :fontfamily,
-        :fontfamily_subplot,
+        :font_family,
+        :font_family_subplot,
         :line_z,
         :marker_z,
         :legend_column,
+        :legend_order,
         :legend_font,
         :legend_title,
         :legend_title_font_color,
         :legend_title_font_family,
         :legend_title_font_rotation,
-        :legend_title_font_pointsize,
-        :legend_title_font_valigm,
+        :legend_title_font_size,
+        :legend_title_font_valign,
         :levels,
         :line,
         :ribbon,
         :quiver,
         :overwrite_figure,
         :plot_title,
-        :plot_titlefontcolor,
-        :plot_titlefontfamily,
-        :plot_titlefontrotation,
-        :plot_titlefontsize,
+        :plot_title_font_color,
+        :plot_title_font_family,
+        :plot_title_font_rotation,
+        :plot_title_font_size,
         :plot_titlelocation,
         :plot_titlevspan,
         :polar,
@@ -169,10 +170,10 @@ const _gr_attrs = PlotsBase.merge_with_base_supported(
         :mirror,
         :rotation,
         :showaxis,
-        :tickfonthalign,
+        :tick_font_halign,
         :formatter,
         :mirror,
-        :guidefont,
+        :guide_font,
     ]
 )
 const _gr_seriestypes = [
@@ -195,6 +196,8 @@ const _gr_markers = vcat(Commons._all_markers, :pixel)
 const _gr_scales = [:identity, :ln, :log2, :log10]
 
 PlotsBase.is_marker_supported(::GRBackend, shape::Shape) = true
+PlotsBase.is_extra_kwarg_supported(::GRBackend, k) =
+    k in (:legend_hfactor, :legend_wfactor, :nx, :ny, :display_option)
 
 # https://github.com/jheinen/GR.jl - significant contributions by @jheinen
 
@@ -341,9 +344,33 @@ end
 set_RGBA_alpha(alpha, c::RGBA) = RGBA(red(c), green(c), blue(c), alpha)
 set_RGBA_alpha(alpha::Nothing, c::RGBA) = c
 
+# GR hands out its 900 color indices (80 to 979) once per session and answers with its nearest
+# color after that, so a color it lacks then takes an index the current plot does not draw with
+const gr_plot_colors = BitSet()
+const gr_recycled_color = Ref(979)
+
+gr_byte(x) = clamp(floor(Int, 255float(x) + 0.5), 0, 255)
+gr_rgb(c) = gr_byte(red(c)) | gr_byte(green(c)) << 8 | gr_byte(blue(c)) << 16
+
 function gr_getcolorind(c)
     gr_set_transparency(float(alpha(c)))
-    return convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
+    ind = convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
+    if GR.inqcolor(ind) != gr_rgb(c)
+        ind = gr_recycle_color()
+        GR.setcolorrep(ind, red(c), green(c), blue(c))
+    end
+    80 ≤ ind ≤ 979 && push!(gr_plot_colors, ind)
+    return ind
+end
+
+function gr_recycle_color()
+    issubset(80:979, gr_plot_colors) && empty!(gr_plot_colors)
+    ind = gr_recycled_color[]
+    while true
+        ind = ind == 979 ? 80 : ind + 1
+        ind in gr_plot_colors || break
+    end
+    return gr_recycled_color[] = ind
 end
 
 gr_set_linecolor(c) = GR.setlinecolorind(gr_getcolorind(_cycle(c, 1)))
@@ -633,9 +660,12 @@ end
 
 gr_set_fill(c) = (gr_set_fillcolor(c); GR.setfillintstyle(GR.INTSTYLE_SOLID); nothing)
 
-# this stores the conversion from a font pointsize to "percentage of window height"
+# this stores the conversion from a font pointsize to "percentage of the larger window side"
 # (which is what GR uses). `s` can be a Series, Subplot or Plot
 gr_point_mult(s) = 1.5get_thickness_scaling(s) * px / pt / maximum(get_size(s))
+
+# the length of one GR normalized unit, along either side
+gr_unit(s) = maximum(get_size(s)) * px
 
 # set the font attributes.
 function gr_set_font(
@@ -824,10 +854,10 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
         # GR implicitly uses the maximal z value as the highest level
         if last(levels) < z_max
             @maxlog_warn "GR: highest contour level less than maximal z value is not supported."
-            # replace levels, rather than assign to last(levels), to ensure type
-            # promotion in case levels is an integer array
-            pop!(levels)
-            push!(levels, z_max)
+            # rebuild rather than mutate: `levels` is the series' own vector, and it is a
+            # range when the user gave one. `vcat` also promotes integer levels to the
+            # type of `z_max`
+            levels = vcat(levels[begin:(end - 1)], z_max)
         end
         colors = gr_colorbar_colors(last(series), clims)
         for (from, to, color) in zip(levels[1:(end - 1)], levels[2:end], colors)
@@ -964,7 +994,7 @@ gr_set_gradient(series::Series) =
 
 # this is our new display func... set up the viewport_canvas, compute bounding boxes, and display each subplot
 function gr_display(plt::Plot, dpi_factor = 1, display = true)
-    display && GR.clearws()
+    display && (GR.clearws(); empty!(gr_plot_colors))
 
     # collect some monitor/display sizes in meters and pixels
     dsp_width_meters, dsp_height_meters, dsp_width_px, dsp_height_px = GR.inqdspsize()
@@ -1002,7 +1032,7 @@ gr_set_tickfont(sp, ax::Axis; kw...) = gr_set_font(
     tickfont(ax),
     sp;
     rotation = ax[:rotation],
-    color = ax[:tickfontcolor],
+    color = ax[:tick_font_color],
     kw...,
 )
 
@@ -1012,7 +1042,7 @@ function gr_set_tickfont(sp, letter::Symbol; kw...)
         tickfont(axis),
         sp;
         rotation = axis[:rotation],
-        color = axis[:tickfontcolor],
+        color = axis[:tick_font_color],
         kw...,
     )
 end
@@ -1098,21 +1128,21 @@ end
 
 function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
-    width, height = sp_size = get_size(sp)
+    unit = gr_unit(sp)
 
-    # add margin given by the user
+    # the margin given by the user, nothing else, so `0mm` leaves no border
     padding = (
-        left = Ref(2mm + sp[:left_margin]),
-        top = Ref(2mm + sp[:top_margin]),
-        right = Ref(2mm + sp[:right_margin]),
-        bottom = Ref(2mm + sp[:bottom_margin]),
+        left = Ref(sp[:left_margin]),
+        top = Ref(sp[:top_margin]),
+        right = Ref(sp[:right_margin]),
+        bottom = Ref(sp[:bottom_margin]),
     )
 
     # add margin for title
     if (title = sp[:title]) |> !isempty
         gr_set_font(titlefont(sp), sp)
         l = last(gr_text_size(title))
-        padding.top[] += sp[:title_gap] + height * l * px
+        padding.top[] += sp[:title_gap] + l * unit
     end
 
     xaxis, yaxis, zaxis = axes = sp[:xaxis], sp[:yaxis], sp[:zaxis]
@@ -1131,7 +1161,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
                 valign = ax[:mirror] ? :bottom : :top,
             )
             l = 0.01 + last(gr_get_ticks_size(tc, rot))
-            m = max(m, 1mm + height * l * px)
+            m = max(m, 1mm + l * unit)
         end
         if m > 0mm
             (xaxis[:mirror] || yaxis[:mirror]) && (padding.top[] += m)
@@ -1147,7 +1177,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
                 valign = (:top, :vcenter, :bottom)[sign(rot) + 2],
             )
             l = 0.01 + first(gr_get_ticks_size(zticks, rot))
-            padding[zaxis[:mirror] ? :right : :left][] += 1mm + width * l * px
+            padding[zaxis[:mirror] ? :right : :left][] += 1mm + l * unit
         end
 
         # add margin for x or y label
@@ -1156,7 +1186,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
             (guide = PlotsBase.get_guide(ax)) |> isempty && continue
             gr_set_font(guidefont(ax), sp)
             l = last(gr_text_size(guide))
-            m = max(m, 1mm + height * l * px)
+            m = max(m, 1mm + l * unit)
         end
         if m > 0mm
             # NOTE: `xaxis` arbitrary here ?
@@ -1166,7 +1196,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
         if (guide = PlotsBase.get_guide(zaxis)) |> !isempty
             gr_set_font(guidefont(zaxis), sp)
             l = last(gr_text_size(guide))
-            padding[mirrored(zaxis, :right) ? :right : :left][] += 1mm + height * l * px  # NOTE: why `height` here ?
+            padding[mirrored(zaxis, :right) ? :right : :left][] += 1mm + l * unit
         end
     else
         # Add margin for x/y ticks & labels
@@ -1177,12 +1207,12 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
                 gr_set_tickfont(sp, ax)
                 ts = gr_get_ticks_size(tc, ax[:rotation])
                 l = 0.01 + (isy ? first(ts) : last(ts))
-                padding[ax[:mirror] ? a : b][] += 1mm + sp_size[isy ? 1 : 2] * l * px
+                padding[ax[:mirror] ? a : b][] += 1mm + l * unit
             end
             if (guide = PlotsBase.get_guide(ax)) |> !isempty
                 gr_set_font(guidefont(ax), sp)
                 l = last(gr_text_size(guide))
-                padding[mirrored(ax, a) ? a : b][] += 1mm + height * l * px  # NOTE: using `height` is arbitrary
+                padding[mirrored(ax, a) ? a : b][] += 1mm + l * unit
             end
         end
     end
@@ -1190,7 +1220,7 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
         padding.right[] += @static if false
             sz = gr_text_size(title)
             l = is_horizontal(title) ? first(sz) : last(sz)
-            l * width * px
+            l * unit
         else
             4mm
         end
@@ -1341,15 +1371,14 @@ function gr_add_legend(sp, leg, viewport_area)
         gr_set_font(legendfont(sp), sp; halign = :left, valign = :center)
 
         lft, rgt, bot, top = -leg.space - leg.span, -leg.space, -0.4leg.dy, 0.4leg.dy
-        lfps = sp[:legend_font_pointsize]
+        lfps = sp[:legend_font_size]
 
         min_lw = DEFAULT_LINEWIDTH[] / gr_lw_clamp_factor[]
         max_lw = DEFAULT_LINEWIDTH[] * gr_lw_clamp_factor[]
 
         nentry = 1
 
-        for series in series_list(sp)
-            should_add_to_legend(series) || continue
+        for series in PlotsBase.legend_series_list(sp)
             st = series[:seriestype]
             clims = gr_clims(sp, series)
             lc = get_linecolor(series, clims)
@@ -1536,17 +1565,11 @@ function gr_get_legend_geometry(vp, sp)
     # deal with layout
     column_layout = if legend_column == -1
         (1, has_title + nseries)
-    elseif legend_column > nseries && nseries != 0 # catch plot_title here
-        @maxlog_warn "n° of legend_column=$legend_column is larger than n° of series=$nseries"
-        (1 + has_title, nseries)
-    elseif legend_column == 0
-        @maxlog_warn "n° of legend_column=$legend_column. Assuming vertical layout."
-        vertical = true
-        (has_title + nseries, 1)
     else
-        (ceil(Int64, nseries / legend_column) + has_title, legend_column)
+        ncols = PlotsBase.legend_ncols(sp, nseries)
+        vertical |= legend_column < 1  # `0` and below `-1` fall back to one column
+        (ceil(Int64, nseries / ncols) + has_title, ncols)
     end
-    #println(column_layout)
 
     base_factor = width(vp) / 45  # determines legend box base width (arbitrarily based on `width`)
 
@@ -1638,7 +1661,7 @@ function gr_update_viewport_legend!(vp, sp, leg)
 end
 
 gr_update_viewport_ratio!(vp, sp) =
-if (ratio = get_aspect_ratio(sp)) ≢ :none
+if (ratio = get_aspect_ratio(sp)) ≢ :none && !gr_is3d(sp)
     ratio ≡ :equal && (ratio = 1)
     x_min, x_max, y_min, y_max = gr_xy_axislims(sp)
     viewport_ratio = width(vp) / height(vp)
@@ -1958,11 +1981,11 @@ function gr_label_axis(sp, letter, vp)
         mirror = ax[:mirror]
         GR.savestate()
         guide_position = ax[:guide_position]
-        rotation = float(ax[:guidefontrotation])  # github.com/JuliaPlots/Plots.jl/issues/3089
+        rotation = float(ax[:guide_font_rotation])  # github.com/JuliaPlots/Plots.jl/issues/3089
         if letter ≡ :x
             # default rotation = 0. should yield GR.setcharup(0, 1) i.e. 90°
-            xpos = xposition(vp, position(ax[:guidefonthalign]))
-            halign = alignment(ax[:guidefonthalign])
+            xpos = xposition(vp, position(ax[:guide_font_halign]))
+            halign = alignment(ax[:guide_font_halign])
             ypos, valign = if guide_position ≡ :top || (guide_position ≡ :auto && mirror)
                 vp.ymax + 0.015 + (mirror ? gr_axis_height(sp, ax) : 0.015), :top
             else
@@ -1970,8 +1993,8 @@ function gr_label_axis(sp, letter, vp)
             end
         else
             rotation += 90  # default rotation = 0. should yield GR.setcharup(-1, 0) i.e. 180°
-            ypos = yposition(vp, position(ax[:guidefontvalign]))
-            halign = alignment(ax[:guidefontvalign])
+            ypos = yposition(vp, position(ax[:guide_font_valign]))
+            halign = alignment(ax[:guide_font_valign])
             xpos, valign = if guide_position ≡ :right || (guide_position ≡ :auto && mirror)
                 vp.xmax + 0.03 + mirror * gr_axis_width(sp, ax), :bottom
             else
@@ -1998,7 +2021,7 @@ function gr_label_axis_3d(sp, letter)
             halign = (:left, :hcenter, :right)[sign(ax[:rotation]) + 2],
             valign = ax[:mirror] ? :bottom : :top,
             rotation = ax[:rotation],
-            # color = ax[:guidefontcolor],
+            # color = ax[:guide_font_color],
         )
         ag = 0.5(amin + amax)
         ng = ax[:mirror] ? n1 : n0
@@ -2022,7 +2045,7 @@ end
 gr_add_title(sp, vp_plt, vp_sp) =
 if (title = sp[:title]) |> !isempty
     GR.savestate()
-    title_gap_ndc = sp[:title_gap] / (get_size(sp)[2] * px)
+    title_gap_ndc = sp[:title_gap] / gr_unit(sp)
     # anchor above a top x-axis (own mirror, or a twin overlaid on this subplot) to avoid overlapping its ticks
     top_axis =
         mirrored(sp[:xaxis], :top) ||
@@ -2038,8 +2061,8 @@ if (title = sp[:title]) |> !isempty
     else
         xposition(vp_plt, loc[1]),
             yposition(vp_plt, loc[2]),
-            sp[:titlefonthalign],
-            sp[:titlefontvalign]
+            sp[:title_font_halign],
+            sp[:title_font_valign]
     end
     gr_set_font(titlefont(sp), sp; halign, valign)
     gr_text(xpos, ypos, title)
@@ -2282,7 +2305,7 @@ function gr_draw_surface(series, x, y, z, clims)
         if series[:connections] isa AbstractVector{<:AbstractVector{<:Integer}}
             # Combination of any polygon types
             cns = map(cns -> [length(cns), cns...], series[:connections])
-        elseif series[:connections] isa AbstractVector{NTuple{N, <:Integer}} where {N}
+        elseif series[:connections] isa AbstractVector{<:NTuple{N, Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             N = length(series[:connections][1])
             cns = map(cns -> [N, cns...], series[:connections])
@@ -2300,13 +2323,8 @@ function gr_draw_surface(series, x, y, z, clims)
                 ArgumentError |>
                 throw
         end
-        facecolor = if series[:fillcolor] isa AbstractArray
-            series[:fillcolor]
-        else
-            fill(series[:fillcolor], length(cns))
-        end
         fillalpha = get_fillalpha(series)
-        facecolor = map(fc -> set_RGBA_alpha(fillalpha, fc), facecolor)
+        facecolor = map(i -> set_RGBA_alpha(fillalpha, get_fillcolor(series, clims, i)), eachindex(cns))
         GR.setborderwidth(get_linewidth(series))
         GR.setbordercolorind(gr_getcolorind(get_linecolor(series)))
         GR.polygonmesh3d(x, y, z, vcat(cns...), signed.(gr_color.(facecolor)))
@@ -2339,6 +2357,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
     w, h = length(x) - 1, length(y) - 1
     sp = series[:subplot]
     if !ispolar(series) &&
+            x isa AbstractVector &&
             PlotsBase.is_uniformly_spaced(x) &&
             PlotsBase.is_uniformly_spaced(y)
         # For uniformly spaced data use GR.drawimage, which can be
@@ -2376,6 +2395,19 @@ function gr_draw_heatmap(series, x, y, z, clims)
             GR.setwindow(-rad_max, rad_max, -rad_max, rad_max)  # square ar
             # nonuniformpolarcellarray(θ, ρ, nx, ny, color)
             GR.nonuniformpolarcellarray(rad2deg.(x), y, w, h, rgba)
+        elseif x isa AbstractMatrix  # a curvilinear grid, with the corners of each cell
+            GR.setfillintstyle(GR.INTSTYLE_SOLID)
+            GR.setlinetype(GR.LINETYPE_SOLID)
+            GR.setlinewidth(1)
+            for j in axes(rgba, 2), i in axes(rgba, 1)
+                corners = ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1), (i, j))
+                xs, ys = [x[c...] for c in corners], [y[c...] for c in corners]
+                GR.setfillcolorind(Int(rgba[i, j]))
+                GR.fillarea(xs, ys)
+                # outlined in its own color, so no seams show between neighbours
+                GR.setlinecolorind(Int(rgba[i, j]))
+                GR.polyline(xs, ys)
+            end
         else
             GR.nonuniformcellarray(x, y, w, h, rgba)
         end

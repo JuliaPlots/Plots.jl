@@ -70,7 +70,6 @@ const _all_seriestypes = vcat(
         :bins2d,
         :histogram2d,
         :histogram3d,
-        :density,
         :bar,
         :hline,
         :vline,
@@ -387,18 +386,18 @@ const _series_defaults = KW(
 const _plot_defaults = KW(
     :plot_title => "",
     :plot_titleindex => 0,
-    :plot_titlefontsize => 16,
+    :plot_title_font_size => 16,
     :plot_titlelocation => :center,           # also :left or :right
-    :plot_titlefontfamily => :match,
-    :plot_titlefonthalign => :hcenter,
-    :plot_titlefontvalign => :vcenter,
-    :plot_titlefontrotation => 0.0,
-    :plot_titlefontcolor => :match,
+    :plot_title_font_family => :match,
+    :plot_title_font_halign => :hcenter,
+    :plot_title_font_valign => :vcenter,
+    :plot_title_font_rotation => 0.0,
+    :plot_title_font_color => :match,
     :plot_titlevspan => 0.05,              # vertical span of the plot title, here 5%
     :background_color => colorant"white",   # default for all backgrounds,
     :background_color_outside => :match,            # background outside grid,
     :foreground_color => :auto,             # default for all foregrounds, and title color,
-    :fontfamily => "sans-serif",
+    :font_family => "sans-serif",
     :size => (600, 400),
     :pos => (0, 0),
     :window_title => "Plots.jl",
@@ -421,13 +420,13 @@ const _plot_defaults = KW(
 const _subplot_defaults = KW(
     :title => "",
     :titlelocation => :center,           # also :left or :right
-    :fontfamily_subplot => :match,
-    :titlefontfamily => :match,
-    :titlefontsize => 14,
-    :titlefonthalign => :hcenter,
-    :titlefontvalign => :vcenter,
-    :titlefontrotation => 0.0,
-    :titlefontcolor => :match,
+    :font_family_subplot => :match,
+    :title_font_family => :match,
+    :title_font_size => 14,
+    :title_font_halign => :hcenter,
+    :title_font_valign => :vcenter,
+    :title_font_rotation => 0.0,
+    :title_font_color => :match,
     :title_gap => 1mm,
     :background_color_subplot => :match,            # default for other bg colors... match takes plot default
     :background_color_inside => :match,            # background inside grid
@@ -455,16 +454,16 @@ const _subplot_defaults = KW(
     :colorbar_width => :auto,
     :colorbar_height => :auto,
     :annotations => [],                # annotation tuples... list of (x,y,annotation)
-    :annotationfontfamily => :match,
-    :annotationfontsize => 14,
-    :annotationhalign => :hcenter,
-    :annotationvalign => :vcenter,
-    :annotationrotation => 0.0,
-    :annotationcolor => :match,
+    :annotation_font_family => :match,
+    :annotation_font_size => 14,
+    :annotation_font_halign => :hcenter,
+    :annotation_font_valign => :vcenter,
+    :annotation_font_rotation => 0.0,
+    :annotation_font_color => :match,
     :projection => :none,             # can also be :polar or :3d
     :projection_type => :auto,        # can also be :ortho(graphic) or :persp(ective)
     :aspect_ratio => :auto,           # choose from :none or :equal
-    :margin => 1mm,
+    :margin => 3mm,
     :left_margin => :match,
     :top_margin => :match,
     :right_margin => :match,
@@ -492,18 +491,18 @@ const _axis_defaults = KW(
     :rotation => 0,
     :flip => false,
     :link => [],
-    :tickfontfamily => :match,
-    :tickfontsize => 8,
-    :tickfonthalign => :hcenter,
-    :tickfontvalign => :vcenter,
-    :tickfontrotation => 0.0,
-    :tickfontcolor => :match,
-    :guidefontfamily => :match,
-    :guidefontsize => 11,
-    :guidefonthalign => :hcenter,
-    :guidefontvalign => :vcenter,
-    :guidefontrotation => 0.0,
-    :guidefontcolor => :match,
+    :tick_font_family => :match,
+    :tick_font_size => 8,
+    :tick_font_halign => :hcenter,
+    :tick_font_valign => :vcenter,
+    :tick_font_rotation => 0.0,
+    :tick_font_color => :match,
+    :guide_font_family => :match,
+    :guide_font_size => 11,
+    :guide_font_halign => :hcenter,
+    :guide_font_valign => :vcenter,
+    :guide_font_rotation => 0.0,
+    :guide_font_color => :match,
     :foreground_color_axis => :match,            # axis border/tick colors,
     :foreground_color_border => :match,            # plot area border/spines,
     :foreground_color_text => :match,            # tick text color,
@@ -524,7 +523,7 @@ const _axis_defaults = KW(
     :minorticks => :auto,
     :minorgrid => false,
     :showaxis => true,
-    :widen => :auto,
+    :limits_modifiers => :auto,
     :draw_arrow => false,
     :unitformat => :round,
     :unit => nothing,
@@ -560,6 +559,7 @@ const _suppress_warnings = Set{Symbol}(
         :x_extrema,
         :y_extrema,
         :z_extrema,
+        :clims_calculated,
     ]
 )
 
@@ -577,7 +577,7 @@ const _series_attrs = Set(keys(_series_defaults))
 const _subplot_attrs = Set(keys(_subplot_defaults))
 const _plot_attrs = Set(keys(_plot_defaults))
 
-const _magic_axis_attrs = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
+const _magic_axis_attrs = [:axis, :tick_font, :guide_font, :grid, :minorgrid]
 const _magic_subplot_attrs = [
     :title_font,
     :legend_font,
@@ -585,10 +585,45 @@ const _magic_subplot_attrs = [
     :plot_title_font,
     :colorbar_title_font,
     :colorbar_tick_font,
+    :annotation_font,
 ]
 const _magic_series_attrs = [:line, :marker, :fill]
 const _all_magic_attrs =
     Set(union(_magic_axis_attrs, _magic_series_attrs, _magic_subplot_attrs))
+
+const _font_parts = (:family, :size, :halign, :valign, :rotation, :color)
+_font_components(name) = [Symbol(name, :_, part) for part in _font_parts]
+# what each magic attribute sets, so `getattr` can read it back and a named tuple can set it
+const _magic_components = Dict{Symbol, Vector{Symbol}}(
+    :line => [:linestyle, :linewidth, :linecolor, :linealpha, :arrow],
+    :marker => [
+        :markershape,
+        :markersize,
+        :markercolor,
+        :markeralpha,
+        :markerstrokewidth,
+        :markerstrokecolor,
+        :markerstrokealpha,
+        :markerstrokestyle,
+    ],
+    :fill => [:fillrange, :fillcolor, :fillalpha, :fillstyle],
+    :axis => [
+        :guide,
+        :lims,
+        :ticks,
+        :scale,
+        :flip,
+        :rotation,
+        :formatter,
+        :showaxis,
+        :foreground_color_axis,
+        _font_components(:tick_font)...,
+        _font_components(:guide_font)...,
+    ],
+)
+for name in union(_magic_axis_attrs, _magic_subplot_attrs)
+    endswith(string(name), "_font") && (_magic_components[name] = _font_components(name))
+end
 
 const _all_axis_attrs = union(_axis_attrs, _magic_axis_attrs)
 const _lettered_all_axis_attrs =
@@ -600,7 +635,16 @@ const _all_plot_attrs = _plot_attrs
 const _all_attrs =
     union(_lettered_all_axis_attrs, _all_subplot_attrs, _all_series_attrs, _all_plot_attrs)
 
+# `@add_attributes` adds its attributes after the sets above are built, so it registers them too
+function _register_attr!(level::Symbol, key::Symbol)
+    push!(getfield(@__MODULE__, Symbol(:_, level, :_attrs)), key)
+    push!(getfield(@__MODULE__, Symbol(:_all_, level, :_attrs)), key)
+    push!(_all_attrs, key)
+    return nothing
+end
+
 const _deprecated_attributes = Dict{Symbol, Symbol}()
+
 const _all_defaults = KW[_series_defaults, _plot_defaults, _subplot_defaults]
 
 const _initial_defaults = deepcopy(_all_defaults)
@@ -608,18 +652,18 @@ const _initial_axis_defaults = deepcopy(_axis_defaults)
 
 # to be able to reset font sizes to initial values
 const _initial_plt_fontsizes =
-    Dict(:plot_titlefontsize => _plot_defaults[:plot_titlefontsize])
+    Dict(:plot_title_font_size => _plot_defaults[:plot_title_font_size])
 
 const _initial_sp_fontsizes = Dict(
-    :titlefontsize => _subplot_defaults[:titlefontsize],
-    :annotationfontsize => _subplot_defaults[:annotationfontsize],
+    :title_font_size => _subplot_defaults[:title_font_size],
+    :annotation_font_size => _subplot_defaults[:annotation_font_size],
     :colorbar_tick_font_size => _subplot_defaults[:colorbar_tick_font_size],
     :colorbar_title_font_size => _subplot_defaults[:colorbar_title_font_size],
 )
 
 const _initial_ax_fontsizes = Dict(
-    :tickfontsize => _axis_defaults[:tickfontsize],
-    :guidefontsize => _axis_defaults[:guidefontsize],
+    :tick_font_size => _axis_defaults[:tick_font_size],
+    :guide_font_size => _axis_defaults[:guide_font_size],
 )
 
 const _initial_fontsizes =
@@ -682,6 +726,7 @@ is_axis_attrs(k) = Symbol(chop(string(k); head = 1, tail = 0)) in _all_axis_attr
 is_axis_attr_noletter(k) = k in _all_axis_attrs
 
 RecipesBase.is_key_supported(k::Symbol) = PlotsBase.is_attr_supported(k)
+RecipesBase.canonical_key(k::Symbol) = get(_keyAliases, k, k)
 
 # -----------------------------------------------------------------------------
 include("aliases.jl")
@@ -896,6 +941,10 @@ function process_grid_attr!(plotattributes::AKW, arg, letter)
     return if arg in _all_grid_attrs || isa(arg, Bool)
         plotattributes[get_attr_symbol(letter, :grid)] = hasgrid(arg, letter)
 
+        # a row switches it per subplot, where the numbers below would read `true` as a width
+    elseif arg isa AbstractMatrix && all(a -> a in _all_grid_attrs || a isa Bool, arg)
+        plotattributes[get_attr_symbol(letter, :grid)] = map(a -> hasgrid(a, letter), arg)
+
     elseif all_styles(arg)
         plotattributes[get_attr_symbol(letter, :gridstyle)] = arg
 
@@ -932,6 +981,10 @@ end
 function process_minor_grid_attr!(plotattributes::AKW, arg, letter)
     return if arg in _all_grid_attrs || isa(arg, Bool)
         plotattributes[get_attr_symbol(letter, :minorgrid)] = hasgrid(arg, letter)
+
+        # a row switches it per subplot, where the numbers below would read `true` as a width
+    elseif arg isa AbstractMatrix && all(a -> a in _all_grid_attrs || a isa Bool, arg)
+        plotattributes[get_attr_symbol(letter, :minorgrid)] = map(a -> hasgrid(a, letter), arg)
 
     elseif all_styles(arg)
         plotattributes[get_attr_symbol(letter, :minorgridstyle)] = arg
@@ -974,19 +1027,10 @@ end
 
 @attributes function process_font_attr!(plotattributes::AKW, fontname::Symbol, arg)
     T = typeof(arg)
-    if fontname in (:legend_font, :colorbar_title_font, :colorbar_tick_font)
-        # TODO: this is necessary while old and new font names coexist and should be standard after the transition
-        fontname = Symbol(fontname, :_)
-    end
+    fontname = Symbol(fontname, :_)
     if T <: PlotsBase.Font
         Symbol(fontname, :family) --> arg.family
-
-        # TODO: this is necessary in the transition from old fontsize to new font_pointsize and should be removed when it is completed
-        if in(Symbol(fontname, :size), _all_attrs)
-            Symbol(fontname, :size) --> arg.pointsize
-        else
-            Symbol(fontname, :pointsize) --> arg.pointsize
-        end
+        Symbol(fontname, :size) --> arg.pointsize
         Symbol(fontname, :halign) --> arg.halign
         Symbol(fontname, :valign) --> arg.valign
         Symbol(fontname, :rotation) --> arg.rotation
@@ -1007,11 +1051,7 @@ end
             Symbol(fontname, :family) --> string(arg)
         end
     elseif typeof(arg) <: Integer
-        if in(Symbol(fontname, :size), _all_attrs)
-            Symbol(fontname, :size) --> arg
-        else
-            Symbol(fontname, :pointsize) --> arg
-        end
+        Symbol(fontname, :size) --> arg
     elseif typeof(arg) <: Real
         Symbol(fontname, :rotation) --> convert(Float64, arg)
     else
@@ -1089,6 +1129,9 @@ function check_contour_levels(levels)
             throw
     end
 end
+# a row holds one per series, a matrix one column of levels per series
+check_contour_levels(levels::AMat) =
+    foreach(check_contour_levels, size(levels, 1) == 1 ? levels : eachcol(levels))
 
 # -----------------------------------------------------------------------------
 
@@ -1103,25 +1146,25 @@ const _match_map = Dict(
     :top_margin => :margin,
     :right_margin => :margin,
     :bottom_margin => :margin,
-    :titlefontfamily => :fontfamily_subplot,
-    :titlefontcolor => :foreground_color_subplot,
-    :legend_font_family => :fontfamily_subplot,
+    :title_font_family => :font_family_subplot,
+    :title_font_color => :foreground_color_subplot,
+    :legend_font_family => :font_family_subplot,
     :legend_font_color => :foreground_color_subplot,
-    :legend_title_font_family => :fontfamily_subplot,
+    :legend_title_font_family => :font_family_subplot,
     :legend_title_font_color => :foreground_color_subplot,
-    :colorbar_font_family => :fontfamily_subplot,
-    :colorbar_title_font_family => :fontfamily_subplot,
+    :colorbar_font_family => :font_family_subplot,
+    :colorbar_title_font_family => :font_family_subplot,
     :colorbar_title_font_color => :foreground_color_subplot,
-    :colorbar_tick_font_family => :fontfamily_subplot,
+    :colorbar_tick_font_family => :font_family_subplot,
     :colorbar_tick_font_color => :foreground_color_subplot,
     :colorbar_border_color => :foreground_color_subplot,
     :colorbar_tick_color => :foreground_color_subplot,
-    :plot_titlefontfamily => :fontfamily,
-    :plot_titlefontcolor => :foreground_color,
-    :tickfontcolor => :foreground_color_text,
-    :guidefontcolor => :foreground_color_guide,
-    :annotationfontfamily => :fontfamily_subplot,
-    :annotationcolor => :foreground_color_subplot,
+    :plot_title_font_family => :font_family,
+    :plot_title_font_color => :foreground_color,
+    :tick_font_color => :foreground_color_text,
+    :guide_font_color => :foreground_color_guide,
+    :annotation_font_family => :font_family_subplot,
+    :annotation_font_color => :foreground_color_subplot,
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
@@ -1134,9 +1177,9 @@ const _match_map2 = Dict(
     :foreground_color_minor_grid => :foreground_color_subplot,
     :foreground_color_guide => :foreground_color_subplot,
     :foreground_color_text => :foreground_color_subplot,
-    :fontfamily_subplot => :fontfamily,
-    :tickfontfamily => :fontfamily_subplot,
-    :guidefontfamily => :fontfamily_subplot,
+    :font_family_subplot => :font_family,
+    :tick_font_family => :font_family_subplot,
+    :guide_font_family => :font_family_subplot,
 )
 
 # -----------------------------------------------------------------------------
@@ -1232,6 +1275,7 @@ macro add_attributes(level, expr, match_table)
                 Expr(:ref, Expr(:call, getfield, PlotsBase, field), QuoteNode(exp_key)),
                 value,
             ),
+            :($_register_attr!($(QuoteNode(level)), $(QuoteNode(exp_key)))),
             :($add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))),
             :(
                 $add_aliases(
@@ -1270,7 +1314,9 @@ function _splitdef!(blk, key_dict)
                     type = lhs.args[2]
                     if @isdefined type
                         for field in fieldnames(getproperty(PlotsBase, type))
-                            key_dict[Symbol(var, "_", field)] =
+                            # `Font.pointsize` spells the attribute `<name>_font_size`
+                            name = field ≡ :pointsize ? :size : field
+                            key_dict[Symbol(var, "_", name)] =
                                 :(getfield($(ei.args[2]), $(QuoteNode(field))))
                         end
                     end

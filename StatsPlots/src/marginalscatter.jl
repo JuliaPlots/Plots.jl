@@ -60,7 +60,6 @@
 
     # right scatter
     @series begin
-        orientation := :h
         showaxis := :y
         subplot := 3
         left_margin --> 0mm

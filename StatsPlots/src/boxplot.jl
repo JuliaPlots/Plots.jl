@@ -161,15 +161,6 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
         )
     end
 
-    if !isvertical(plotattributes)
-        # We should draw the plot horizontally!
-        xsegs, ysegs = ysegs, xsegs
-        outliers_x, outliers_y = outliers_y, outliers_x
-
-        # Now reset the orientation, so that the axes limits are set correctly.
-        orientation := default(:orientation)
-    end
-
     @series begin
         # To prevent linecolor equal to fillcolor (It makes the median visible)
         if plotattributes[:linecolor] == plotattributes[:fillcolor]
@@ -212,6 +203,27 @@ notch_width(q2, q4, N) = 1.58 * (q4 - q2) / sqrt(N)
 end
 
 PlotsBase.@deps boxplot shape scatter
+
+"""
+    boxplot(x, y)
+    boxplot!(x, y)
+
+Make a box and whisker plot.
+
+# Keyword arguments
+- `notch`: Bool. Notch the box plot? (false)
+- `whisker_range`: Real. Whiskers extend `whisker_range`*IQR below the first quartile
+           and above the third quartile. Values outside this range are shown as outliers (1.5)
+- `outliers`: Bool. Show outliers? (true)
+- `whisker_width`: Real or Symbol. Length of whiskers; the options are `:match` to match the box width, `:half`, or a number to indicate the total length. (:half)
+
+# Example
+```julia-repl
+julia> using StatsPlots
+julia> boxplot(repeat([1,2,3],outer=100),randn(300))
+```
+"""
+@shorthands boxplot
 
 # ------------------------------------------------------------------------------
 # Grouped Boxplot

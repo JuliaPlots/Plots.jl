@@ -23,6 +23,8 @@ using LaTeXStrings
 import PlotsBase.Axes: format_unit_label
 import RecipesBase
 
+__init__() = PlotsBase.register_extension(@__MODULE__)
+
 const MissingOrQuantity = Union{Missing, <:Quantity, <:LogScaled}
 
 #==========

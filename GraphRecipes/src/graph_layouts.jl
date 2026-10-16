@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-infer_size_from(args...) = maximum(maximum.(args))
+infer_size_from(args...) = maximum(Iterators.flatten(args); init = 0)  # 0 without edges
 
 # see: http://www.research.att.com/export/sites/att_labs/groups/infovis/res/legacy_papers/DBLP-journals-camwa-Koren05.pdf
 # also: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.3.2055&rep=rep1&type=pdf
@@ -190,7 +190,7 @@ norm_ij(X, i, j) = sqrt(sum(Float64[(v[i] - v[j])^2 for v in X]))
 stress(X, dist, w, i, j) = w[i, j] * (norm_ij(X, i, j) - dist[i, j])^2
 function stress(X, dist, w)
     tot = 0.0
-    for i in 1:size(X, 1), j in 1:(i - 1)
+    for i in eachindex(first(X)), j in 1:(i - 1)  # every pair of nodes, `X` holds one vector per axis
         tot += stress(X, dist, w, i, j)
     end
     return tot
@@ -210,8 +210,9 @@ function by_axis_local_stress_graph(
         maxiter = 1000,
         kw...,
     )
-    adjmat = make_symmetric(adjmat)
     n = length(node_weights)
+    n < 2 && return dim == 2 ? (x, y, nothing) : (x, y, z)  # nothing to place a node against
+    adjmat = make_symmetric(adjmat)
 
     # graph-theoretical distance between node i and j (i.e. shortest path distance)
     # TODO: calculate a real distance

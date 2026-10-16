@@ -85,18 +85,18 @@ const _arg_desc = KW(
         Specify for which element extra keyword args are collected or a KW (Dict{Symbol,Any}) to pass a map of extra keyword args which may be specific to a backend. Choose from (`:plot`, `:subplot`, `:series`), defaults to `:series`.
         Example: `pgfplotsx(); scatter(1:5, extra_kwargs=Dict(:subplot=>Dict("axis line shift" => "10pt"))`.""",
     ),
-    :fontfamily => (Union{AStr, Symbol}, "Default font family for title, legend entries, tick labels and guides."),
+    :font_family => (Union{AStr, Symbol}, "Default font family for title, legend entries, tick labels and guides."),
     :warn_on_unsupported => (Bool, "Warn on unsupported attributes, series types and marker shapes."),
 
     # subplot args
     :title => (AStr, "Subplot title."),
     :titlelocation => (Symbol, "Position of subplot title. Choose from (`:left`, `:center`, `:right`)."),
-    :titlefontfamily => (Union{AStr, Symbol}, "Font family of subplot title."),
-    :titlefontsize => (Integer, "Font pointsize of subplot title."),
-    :titlefonthalign => (Symbol, "Font horizontal alignment of subplot title. Choose from (:hcenter, :left, :right, :center)."),
-    :titlefontvalign => (Symbol, "Font vertical alignment of subplot title. Choose from (:vcenter, :top, :bottom, :center)."),
-    :titlefontrotation => (Real, "Font rotation of subplot title."),
-    :titlefontcolor => (ColorType, "Color Type. Font color of subplot title."),
+    :title_font_family => (Union{AStr, Symbol}, "Font family of subplot title."),
+    :title_font_size => (Integer, "Font pointsize of subplot title."),
+    :title_font_halign => (Symbol, "Font horizontal alignment of subplot title. Choose from (:hcenter, :left, :right, :center)."),
+    :title_font_valign => (Symbol, "Font vertical alignment of subplot title. Choose from (:vcenter, :top, :bottom, :center)."),
+    :title_font_rotation => (Real, "Font rotation of subplot title."),
+    :title_font_color => (ColorType, "Color Type. Font color of subplot title."),
     :title_gap => (Real, "Extra vertical space between the subplot title and the plot frame (e.g. `1mm`, `5pt`)."),
     :background_color_subplot => (ColorType, "Base background color of the subplot (`:match` matches `:background_color`)."),
     :legend_background_color => (ColorType, "Background color of the legend (`:match` matches :background_color_subplot`)."),
@@ -110,17 +110,18 @@ const _arg_desc = KW(
         Show the legend ? Can also be a (x,y) tuple or Symbol (legend position) or angle (angle,in-out) tuple. Bottom left corner of legend is placed at (x,y).
         Choose from (`:none`, `:best`, `:inline`, `:inside`, `:legend`) or any valid combination of `:(outer ?)(top/bottom ?)(right/left ?)`, i.e.: `:top`, `:topright`, `:outerleft`, `:outerbottomright` ... (note: only some may be supported in each backend).""",
     ),
-    :legend_column => (Integer, "Number of columns in the legend. `-1` stands for maximum number of columns (horizontal legend)."),
+    :legend_column => (Integer, "Number of columns in the legend, filled row by row. `-1` puts every entry in one row (horizontal legend)."),
+    :legend_order => (Union{Symbol, AVec{<:Integer}}, "Order of the legend entries: `:normal` follows the series and `:reversed` goes from the last to the first, which suits a stack such as `areaplot` whose first series is at the bottom. A permutation of the entries such as `[3, 1, 2]` gives any other order (not supported by pgfplotsx)."),
     :legend_title_font => (Font, "Font of the legend title."),
     :legend_font_family => (Union{AStr, Symbol}, "Font family of legend entries."),
-    :legend_font_pointsize => (Integer, "Font pointsize of legend entries."),
+    :legend_font_size => (Integer, "Font pointsize of legend entries."),
     :legend_font_halign => (Symbol, "Font horizontal alignment of legend entries. Choose from (:hcenter, :left, :right, :center)."),
     :legend_font_valign => (Symbol, "Font vertical alignment of legend entries. Choose from (:vcenter, :top, :bottom, :center)."),
     :legend_font_rotation => (Real, "Font rotation of legend entries."),
     :legend_title_font_color => (ColorType, "Font color of legend entries."),
     :legend_title => (AStr, "Legend title."),
     :legend_title_font_family => (Union{AStr, Symbol}, "Font family of the legend title."),
-    :legend_title_font_pointsize => (Integer, "Font pointsize the legend title."),
+    :legend_title_font_size => (Integer, "Font pointsize the legend title."),
     :legend_title_font_halign => (Symbol, "Font horizontal alignment of the legend title. Choose from (:hcenter, :left, :right, :center)."),
     :legend_title_font_valign => (Symbol, "Font vertical alignment of the legend title. Choose from (:vcenter, :top, :bottom, :center)."),
     :legend_title_font_rotation => (Real, "Font rotation of the legend title."),
@@ -141,18 +142,17 @@ const _arg_desc = KW(
     :colorbar_width => (Union{Real, Symbol}, "Width of the colorbar, as a fraction of the plot area width, or `:auto` for the backend default."),
     :colorbar_height => (Union{Real, Symbol}, "Height of the colorbar, as a fraction of the plot area height, or `:auto` for the backend default."),
     :legend_font => (Font, "Font of legend items."),
-    :legend_titlefont => (Font, "Font of the legend title."),
     :annotations => (Union{AVec{Tuple}, Tuple{Real, Real, Union{AStr, PlotText, Tuple}}}, "(x,y,text) tuple(s), where text can be String, PlotText (created with `text(args...)`), or a tuple of arguments to `text` (e.g., `(\"Label\", 8, :red, :top)`). Add one-off text annotations at the (x,y) coordinates."),
-    :annotationfontfamily => (Union{AStr, Symbol}, "Font family of annotations."),
-    :annotationfontsize => (Integer, "Font pointsize of annotations."),
-    :annotationhalign => (Symbol, "horizontal alignment of annotations. Choose from (:hcenter, :left, :right, :center)."),
-    :annotationvalign => (Symbol, "Vertical alignment of annotations. Choose from (:vcenter, :top, :bottom, :center)."),
-    :annotationrotation => (Real, "Rotation of annotations in degrees."),
-    :annotationcolor => (ColorType, "Annotations color."),
+    :annotation_font_family => (Union{AStr, Symbol}, "Font family of annotations."),
+    :annotation_font_size => (Integer, "Font pointsize of annotations."),
+    :annotation_font_halign => (Symbol, "horizontal alignment of annotations. Choose from (:hcenter, :left, :right, :center)."),
+    :annotation_font_valign => (Symbol, "Vertical alignment of annotations. Choose from (:vcenter, :top, :bottom, :center)."),
+    :annotation_font_rotation => (Real, "Rotation of annotations in degrees."),
+    :annotation_font_color => (ColorType, "Annotations color."),
     :projection => (Union{AStr, Symbol}, "`3d` or `polar`."),
     :projection_type => (Symbol, "3d plots projection type: :auto (backend dependent), :persp(ective), :ortho(graphic)."),
     :aspect_ratio => (Union{Symbol, Real}, "Plot area is resized so that 1 y-unit is the same size as `aspect_ratio` x-units. With `:none`, images inherit aspect ratio of the plot area. Use `:equal` for unit aspect ratio."),
-    :margin => (Union{Tuple, Real}, "Number multiplied by `mm`, `px`, etc... or Tuple `(0, :mm)`. Base for individual margins... not directly used. Specifies the extra padding around subplots."),
+    :margin => (Union{Tuple, Real}, "Number multiplied by `mm`, `px`, etc... or Tuple `(0, :mm)`. Base for individual margins... not directly used. Specifies the padding around subplots, outside their ticks, guides and title, so `0mm` leaves no border."),
     :left_margin => (Union{Tuple, Real, Symbol}, "Specifies the extra padding to the left of the subplot (`:match` matches `:margin`)."),
     :top_margin => (Union{Tuple, Real, Symbol}, "Specifies the extra padding on the top of the subplot (`:match` matches `:margin`)."),
     :right_margin => (Union{Tuple, Real, Symbol}, "Specifies the extra padding to the right of the subplot (`:match` matches `:margin`)."),
@@ -168,27 +168,26 @@ const _arg_desc = KW(
     :lims => (
         Union{NTuple{2, Real}, Symbol}, """
         Force axis limits. Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example).
-        `:round` widens the limit to the nearest round number, i.e. [0.1,3.6]=>[0.0,4.0].
-        `:symmetric` sets the limits to be symmetric around zero.
-        Set `widen=true` to widen the specified limits (as occurs when lims are not specified).""",
+        `:auto` leaves them to the data.
+        To round or symmetrize the limits, or to widen limits given explicitly, use `limits_modifiers`.""",
     ),
     :ticks => (TicksType, "Tick values, (tickvalues, ticklabels), `:auto`/`true`, `:none`/`false`/`nothing` (ticks disabled), or `:native` (tells backend to calculate ticks by itself; good idea for interactive backends with mouse zooming)."),
     :scale => (Symbol, "Scale of the axis. Choose from $(Commons._all_scales)."),
     :rotation => (Real, "Degrees rotation of tick labels."),
     :flip => (Bool, "Should we flip (reverse) the axis ?"),
     :formatter => (Union{Symbol, Function}, "Choose from (:scientific, :plain or :auto), or a method which converts a number to a string for tick labeling."),
-    :tickfontfamily => (Union{AStr, Symbol}, "Font family of tick labels."),
-    :tickfontsize => (Integer, "Font pointsize of tick labels."),
-    :tickfonthalign => (Symbol, "Font horizontal alignment of tick labels. Choose from (:hcenter, :left, :right, :center)."),
-    :tickfontvalign => (Symbol, "Font vertical alignment of tick labels. Choose from (:vcenter, :top, :bottom, :center)."),
-    :tickfontrotation => (Real, "Font rotation of tick labels."),
-    :tickfontcolor => (ColorType, "Font color of tick labels."),
-    :guidefontfamily => (Union{AStr, Symbol}, "Font family of axes guides."),
-    :guidefontsize => (Integer, "Font pointsize of axes guides."),
-    :guidefonthalign => (Symbol, "Font horizontal alignment of axes guides. Choose from (:hcenter, :left, :right, :center)."),
-    :guidefontvalign => (Symbol, "Font vertical alignment of axes guides. Choose from (:vcenter, :top, :bottom, :center)."),
-    :guidefontrotation => (Real, "Font rotation of axes guides."),
-    :guidefontcolor => (ColorType, "Font color of axes guides."),
+    :tick_font_family => (Union{AStr, Symbol}, "Font family of tick labels."),
+    :tick_font_size => (Integer, "Font pointsize of tick labels."),
+    :tick_font_halign => (Symbol, "Font horizontal alignment of tick labels. Choose from (:hcenter, :left, :right, :center)."),
+    :tick_font_valign => (Symbol, "Font vertical alignment of tick labels. Choose from (:vcenter, :top, :bottom, :center)."),
+    :tick_font_rotation => (Real, "Font rotation of tick labels."),
+    :tick_font_color => (ColorType, "Font color of tick labels."),
+    :guide_font_family => (Union{AStr, Symbol}, "Font family of axes guides."),
+    :guide_font_size => (Integer, "Font pointsize of axes guides."),
+    :guide_font_halign => (Symbol, "Font horizontal alignment of axes guides. Choose from (:hcenter, :left, :right, :center)."),
+    :guide_font_valign => (Symbol, "Font vertical alignment of axes guides. Choose from (:vcenter, :top, :bottom, :center)."),
+    :guide_font_rotation => (Real, "Font rotation of axes guides."),
+    :guide_font_color => (ColorType, "Font color of axes guides."),
     :foreground_color_axis => (ColorType, "Color of axis ticks (`:match` matches `:foreground_color_subplot`)."),
     :foreground_color_border => (ColorType, "Color of plot area border/spines (`:match` matches `:foreground_color_subplot`)."),
     :foreground_color_text => (ColorType, "Color of tick labels (`:match` matches `:foreground_color_subplot`)."),
@@ -207,13 +206,18 @@ const _arg_desc = KW(
     :minorgridlinewidth => (Real, "Width of the minor grid lines (in pixels)."),
     :tick_direction => (Symbol, "Direction of the ticks. Choose from (`:in`, `:out`, `:none`)."),
     :showaxis => (Union{Bool, Symbol, AStr}, "Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`."),
-    :widen => (
-        Union{Bool, Real, Symbol}, """
-        Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders.
-        If set to `true`, scale the axis limits by the default factor of $(Axes.default_widen_factor).
-        A different factor may be specified by setting `widen` to a number.
-        Defaults to `:auto`, which widens by the default factor unless limits were manually set.
-        See also the `scale_limits!` function for scaling axis limits in an existing plot.""",
+    :limits_modifiers => (
+        Union{Symbol, NamedTuple, Tuple}, """
+        How to modify the axis limits, applied left to right.
+        A named tuple of modifiers and their settings, as in `(symmetric = true, widen = 1.2)`.
+        `:widen` scales by a factor (`true` uses the default of $(Axes.default_widen_factor[])) to keep
+        markers and lines off the borders, `:round` widens to the nearest round number, and
+        `:symmetric` makes the limits symmetric around zero.
+        A bare name switches a modifier on, so `:round` and `(:widen, :round)` are shorthand.
+        Defaults to `:auto`, which widens unless limits were given explicitly or rounded.
+        `:none` applies nothing, and so does setting every modifier to `false`.
+        Polar axes ignore this attribute.
+        See also `PlotsBase.scale_lims!` for scaling axis limits in an existing plot.""",
     ),
     :draw_arrow => (Bool, "Draw arrow at the end of the axis."),
     :unitformat => (Union{Bool, Nothing, Symbol, Char, String, NTuple{<:Union{Char, String}}, Function}, """Check examples in https://docs.juliaplots.org/stable/generated/unitfulext_examples/#Unit-formatting"""),

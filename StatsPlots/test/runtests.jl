@@ -62,7 +62,7 @@ end # testset
     ]
     clustering = hclust(wiki_example, linkage = :complete)
 
-    xs, ys = StatsPlots.treepositions(clustering, true, :vertical)
+    xs, ys = StatsPlots.treepositions(clustering, true)
 
     @test xs == [
         2.0 1.0 4.0 1.75
@@ -228,6 +228,7 @@ end
     rng = StableRNG(1337)
     pl = marginalhist(rand(rng, 100), rand(rng, 100))
     @test show(devnull, pl) isa Nothing
+    @test first(xlims(pl[3])) == 0  # the right histogram lies along y
 end
 
 @testset "marginalscatter" begin
@@ -246,9 +247,9 @@ end
 
 @testset "violin" begin
     y = [i * randn(StableRNG(1337), 100) for i in 1:4]
-    violin(y, median = true)
+    violin(y, show_median = true)
     violin(y, quantiles = [0.1, 0.5, 0.9], linecolor = :white, linewidth = 3)
-    violin(y, quantiles = 3, mean = true)
+    violin(y, quantiles = 3, show_mean = true)
 end
 
 @testset "violin df" begin
@@ -289,6 +290,19 @@ end
     @test show(devnull, pl) isa Nothing
 end
 
+@testset "permute" begin
+    # on their side with `permute`, as any series, where `orientation` is no attribute
+    y = randn(StableRNG(1337), 100)
+    D = rand(StableRNG(1337), 10, 10)
+    hc = hclust(D + D', linkage = :single)
+    for f in (kw -> density(y; kw...), kw -> boxplot(y; kw...), kw -> plot(hc; kw...))
+        s, sp = f((;))[1][1], f((; permute = (:x, :y)))[1][1]
+        @test isequal(sp[:x], s[:y]) && isequal(sp[:y], s[:x])
+    end
+    pl = @test_logs (:warn, r"orientation is neither") density(y; orientation = :h)
+    @test pl[1][1][:x] == density(y)[1][1][:x]
+end
+
 @testset "covellipse" begin
     pl = covellipse([0, 2], [2 1; 1 4]; n_std = 2, showaxes = true, label = "cov1")
     @test show(devnull, pl) isa Nothing
@@ -309,6 +323,9 @@ end
 
     pl = cornerplot(M)
     @test show(devnull, pl) isa Nothing
+    # the histograms in the right column lie along y, github.com/JuliaPlots/Plots.jl/issues/5007
+    right = filter(sp -> any(s -> s[:permute] ≢ :none, sp.series_list), pl.subplots)
+    @test length(right) == 4 && all(sp -> first(xlims(sp)) == 0, right)
 end
 
 @testset "boxplot / dotplot / violin" begin

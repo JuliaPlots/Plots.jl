@@ -25,11 +25,6 @@ import KernelDensity
 
 export dataviewer
 
-isvertical(plotattributes) =
-let val = get(plotattributes, :orientation, missing)
-    val ≡ missing || val in (:vertical, :v)
-end
-
 include("corrplot.jl")
 include("cornerplot.jl")
 include("distributions.jl")

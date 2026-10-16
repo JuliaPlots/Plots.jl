@@ -46,6 +46,18 @@ function arrow(args...)
     return Arrow(style, side, headlength, headwidth)
 end
 
+"the `arrow` attribute as given, as an `Arrow` or `nothing`"
+_to_arrow(a) =
+if a == true
+    arrow()
+elseif a in (false, nothing, :none)
+    nothing
+elseif !(typeof(a) <: Arrow || typeof(a) <: AbstractArray{Arrow})
+    arrow(wraptuple(a)...)
+else
+    a
+end
+
 # allow for do-block notation which gets called on every valid start/end pair which
 # we need to draw an arrow
 function add_arrows(func::Function, x::AVec, y::AVec)

@@ -54,16 +54,12 @@ function update_clims(
         op = process_clims(sp[:clims]),
     )::Tuple{Float64, Float64}
     zmin, zmax = Commons.get_clims(sp)
-    old_zmin, old_zmax = zmin, zmax
     if series[:colorbar_entry]::Bool
         zmin, zmax = _update_clims(zmin, zmax, update_clims(series, op)...)
     else
         update_clims(series, op)
     end
-    isnan(zmin) && isnan(old_zmin) && isnan(zmax) && isnan(old_zmax) ||
-        zmin == old_zmin && zmax == old_zmax ||
-        update_clims(sp)
-    return zmin ≤ zmax ? (zmin, zmax) : (NaN, NaN)
+    return sp[:clims_calculated] = zmin ≤ zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 """

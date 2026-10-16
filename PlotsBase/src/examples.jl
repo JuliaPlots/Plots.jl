@@ -266,11 +266,11 @@ const _examples = PlotExample[
             closepct = rand(n)
             y = OHLC[
                 (
-                        openpct[i] * hgt[i] + bot[i],
-                        bot[i] + hgt[i],
-                        bot[i],
-                        closepct[i] * hgt[i] + bot[i],
-                    ) for i in 1:n
+                    openpct[i] * hgt[i] + bot[i],
+                    bot[i] + hgt[i],
+                    bot[i],
+                    closepct[i] * hgt[i] + bot[i],
+                ) for i in 1:n
             ]
             ohlc(y)
         end,
@@ -676,10 +676,10 @@ const _examples = PlotExample[
         "Setting defaults and font arguments",
         quote
             default(
-                titlefont = (20, "times"),
+                title_font = (20, "times"),
                 legendfontsize = 18,
-                guidefont = (18, :darkgreen),
-                tickfont = (12, :orange),
+                guide_font = (18, :darkgreen),
+                tick_font = (12, :orange),
                 guide = "x",
                 framestyle = :zerolines,
                 yminorgrid = true,
@@ -933,8 +933,8 @@ const _examples = PlotExample[
                 layout = 4,
                 xguide = "x guide",
                 yguide = "y guide",
-                xguidefonthalign = [:left :right :right :left],
-                yguidefontvalign = [:top :bottom :bottom :top],
+                xguide_font_halign = [:left :right :right :left],
+                yguide_font_valign = [:top :bottom :bottom :top],
                 xguideposition = :top,
                 yguideposition = [:right :left :right :left],
                 ymirror = [false true true false],
@@ -1051,7 +1051,7 @@ const _examples = PlotExample[
         "Annotations at discrete locations",
         quote
             x, y = ["a", "b", "c"], [1, 5, 15]
-            p = scatter(["a", "b"], ["q", "r"], ms = 8, legend = false, tickfontsize = 20)
+            p = scatter(["a", "b"], ["q", "r"], ms = 8, legend = false, tick_font_size = 20)
             annotate!(
                 ["a", "b"],
                 ["r", "q"],
@@ -1289,7 +1289,7 @@ const _examples = PlotExample[
         :(using PlotsBase.Commons),
         quote
             cbar_heatmap(; kw...) =
-                heatmap(rand(10, 10); ticks = :none, right_margin = 8mm, kw...)
+                heatmap(rand(10, 10); ticks = :none, margin = 0mm, kw...)
             plot(
                 cbar_heatmap(title = "border color", colorbar_border_color = :red),
                 cbar_heatmap(title = "border width", colorbar_border_width = 3),
@@ -1302,13 +1302,38 @@ const _examples = PlotExample[
             )
         end,
     ),
+    PlotExample( # 69
+        "Legend columns",
+        "`legend_column` sets the number of columns in the legend, which are filled row by row. `-1` puts every entry in one row.",
+        quote
+            plot(
+                (
+                    plot(
+                        rand(5, 5);
+                        label = ["a" "b" "c" "d" "e"],
+                        legend_column = c,
+                        title = "legend_column = $c",
+                    ) for c in (1, 2, 3, -1)
+                )...;
+                layout = 4,
+                size = (1_000, 700),
+            )
+        end,
+    ),
+    PlotExample( # 70
+        "3D histogram",
+        "`histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, colored by their height when `color` is a gradient.",
+        quote
+            histogram3d(randn(10_000), randn(10_000), bins = 15, color = :viridis)
+        end,
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [02, 31]
 _backend_skips = Dict(
     :none => Int[],
-    :hdf5 => Int[47],
+    :hdf5 => Int[47, 70],
     :pythonplot => Int[],
     :gr => Int[],
     :plotlyjs => [
@@ -1333,6 +1358,7 @@ _backend_skips = Dict(
         51,  # image with custom axes
         56,  # custom bar plot
         62,  # fillstyle unsupported
+        70,  # mesh3d with polygons other than triangles
     ],
     :unicodeplots => [
         05,  # limits issue

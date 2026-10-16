@@ -1,5 +1,5 @@
 using Test, PlotsBase, Unitful, LaTeXStrings
-const PGFPlotsX = Base.get_extension(PlotsBase, :PGFPlotsXExt).PGFPlotsX
+const PGFPlotsX = PlotsBase.get_backend_module(:PGFPlotsX)[1].PGFPlotsX
 
 function create_plot(args...; kwargs...)
     pl = plot(args...; kwargs...)
@@ -39,6 +39,11 @@ with(:pgfplotsx) do
         @test haskey(series[3].options.dict, "forget plot")
         @test haskey(series[4].options.dict, "forget plot")
         @test !haskey(series[5].options.dict, "forget plot")
+        reversed(pl) = haskey(first(get_pgf_axes(pl)).options.dict, "reverse legend")
+        @test !reversed(plot(rand(5, 2)))
+        @test reversed(plot(rand(5, 2), legend_order = :reversed))
+        pl = plot(rand(5, 2), legend_order = [2, 1])
+        @test_logs (:warn, r"can only reverse") get_pgf_axes(pl)
     end
 
     @testset "3D docs example" begin
@@ -473,17 +478,17 @@ with(:pgfplotsx) do
     end
 
     @testset "Titlefonts" begin
-        pl = plot(1:5, title = "Test me", titlefont = (2, :left))
+        pl = plot(1:5, title = "Test me", title_font = (2, :left))
         @test pl[1][:title] == "Test me"
-        @test pl[1][:titlefontsize] == 2
-        @test pl[1][:titlefonthalign] ≡ :left
+        @test pl[1][:title_font_size] == 2
+        @test pl[1][:title_font_halign] ≡ :left
         ax_opt = first(get_pgf_axes(pl)).options
         @test ax_opt["title"] == "Test me"
         @test(haskey(ax_opt.dict, "title style")) isa Test.Pass
-        pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
+        pl = plot(1:5, plot_title = "Test me", plot_title_font = (2, :left))
         @test pl[:plot_title] == "Test me"
-        @test pl[:plot_titlefontsize] == 2
-        @test pl[:plot_titlefonthalign] ≡ :left
+        @test pl[:plot_title_font_size] == 2
+        @test pl[:plot_title_font_halign] ≡ :left
         pl = heatmap(
             rand(3, 3),
             colorbar_title = "Test me",

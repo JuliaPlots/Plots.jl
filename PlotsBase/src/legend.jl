@@ -6,6 +6,7 @@
     font::Font = font(8)
     title_font::Font = font(11)
     column = 1
+    order = :normal
 end :match = (
     :legend_font_family,
     :legend_font_color,
@@ -69,11 +70,46 @@ legend_angle(leg::Symbol) = get(
     (45, :inner),
 )
 
-Commons._initial_sp_fontsizes[:legend_font_pointsize] =
-    _subplot_defaults[:legend_font_pointsize]
-Commons._initial_sp_fontsizes[:legend_title_font_pointsize] =
-    _subplot_defaults[:legend_title_font_pointsize]
-Commons._initial_fontsizes[:legend_font_pointsize] =
-    _subplot_defaults[:legend_font_pointsize]
-Commons._initial_fontsizes[:legend_title_font_pointsize] =
-    _subplot_defaults[:legend_title_font_pointsize]
+"""
+    legend_ncols(sp, n)
+
+The number of columns of a legend with `n` entries, from `sp[:legend_column]`: `-1` puts every
+entry in one row, more columns than entries is one row, and `0` or below `-1` is one column.
+"""
+function legend_ncols(sp, n)
+    (c = sp[:legend_column]) == -1 && return max(n, 1)
+    return if c > n > 0
+        @maxlog_warn "n° of legend_column=$c is larger than n° of series=$n"
+        n
+    elseif c < 1
+        @maxlog_warn "n° of legend_column=$c has undefined behaviour. Assuming vertical layout."
+        1
+    else
+        c
+    end
+end
+
+"""
+    legend_series_list(sp)
+
+The series in the legend of `sp`, in the order of `sp[:legend_order]`: `:normal`, `:reversed`,
+or a permutation of the entries such as `[3, 1, 2]`.
+"""
+function legend_series_list(sp)
+    series = filter(should_add_to_legend, series_list(sp))
+    (order = sp[:legend_order]) ≡ :normal && return series
+    order ≡ :reversed && return reverse(series)
+    order isa AVec{<:Integer} && length(order) == length(series) && isperm(order) &&
+        return series[order]
+    @maxlog_warn "legend_order=$order is not a permutation of the $(length(series)) legend entries. Assuming `:normal`."
+    return series
+end
+
+Commons._initial_sp_fontsizes[:legend_font_size] =
+    _subplot_defaults[:legend_font_size]
+Commons._initial_sp_fontsizes[:legend_title_font_size] =
+    _subplot_defaults[:legend_title_font_size]
+Commons._initial_fontsizes[:legend_font_size] =
+    _subplot_defaults[:legend_font_size]
+Commons._initial_fontsizes[:legend_title_font_size] =
+    _subplot_defaults[:legend_title_font_size]

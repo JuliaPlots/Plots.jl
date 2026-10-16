@@ -29,6 +29,8 @@ PlotsBase._backendSymbol[PlotlyBackend] = :plotly
 push!(PlotsBase._initialized_backends, :plotly)
 
 eval(PlotsBase.backend_defines(:PlotlyBackend, :plotly))
+# any other keyword goes on to the plotly trace or layout
+PlotsBase.is_extra_kwarg_supported(::PlotlyBackend, k) = true
 
 const _plotly_attrs = PlotsBase.merge_with_base_supported(
     [
@@ -62,43 +64,44 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :fillrange,
         :fillcolor,
         :fillalpha,
-        :fontfamily,
-        :fontfamily_subplot,
+        :font_family,
+        :font_family_subplot,
         :bins,
         :title,
         :titlelocation,
-        :titlefontfamily,
-        :titlefontsize,
-        :titlefonthalign,
-        :titlefontvalign,
-        :titlefontcolor,
+        :title_font_family,
+        :title_font_size,
+        :title_font_halign,
+        :title_font_valign,
+        :title_font_color,
         :legend_column,
+        :legend_order,
         :legend_font,
         :legend_font_family,
-        :legend_font_pointsize,
+        :legend_font_size,
         :legend_font_color,
         :legend_title,
         :legend_title_font_color,
         :legend_title_font_family,
-        :legend_title_font_pointsize,
-        :tickfontfamily,
-        :tickfontsize,
-        :tickfontcolor,
-        :guidefontfamily,
-        :guidefontsize,
-        :guidefontcolor,
+        :legend_title_font_size,
+        :tick_font_family,
+        :tick_font_size,
+        :tick_font_color,
+        :guide_font_family,
+        :guide_font_size,
+        :guide_font_color,
         :window_title,
         :arrow,
         :guide,
-        :widen,
+        :limits_modifiers,
         :lims,
         :line,
         :ticks,
         :scale,
         :flip,
         :rotation,
-        :tickfont,
-        :guidefont,
+        :tick_font,
+        :guide_font,
         :legendfont,
         :grid,
         :gridalpha,
@@ -134,9 +137,9 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         # :overwrite_figure,
         :polar,
         :plot_title,
-        :plot_titlefontcolor,
-        :plot_titlefontfamily,
-        :plot_titlefontsize,
+        :plot_title_font_color,
+        :plot_title_font_family,
+        :plot_title_font_size,
         :plot_titlelocation,
         :plot_titlevspan,
         :normalize,
@@ -154,12 +157,12 @@ const _plotly_attrs = PlotsBase.merge_with_base_supported(
         :connections,
         :xformatter,
         :xshowaxis,
-        :xguidefont,
+        :xguide_font,
         :yformatter,
         :yshowaxis,
-        :yguidefont,
+        :yguide_font,
         :zformatter,
-        :zguidefont,
+        :zguide_font,
     ]
 )
 
@@ -300,6 +303,16 @@ function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
     return pcts
 end
 
+# the domain and ranges give the ratio only at the size of the plot, so plotly keeps it at
+# the size it is drawn, by shrinking the domain as the ranges and their ticks are fixed
+function plotly_aspect_ratio!(xax, yax, sp, x_idx)
+    (ar = get_aspect_ratio(sp)) ≡ :none && return
+    sp[:xaxis][:scale] ≡ sp[:yaxis][:scale] ≡ :identity || return
+    yax[:scaleanchor], yax[:scaleratio] = "x$x_idx", ar ≡ :equal ? 1 : ar
+    xax[:constrain] = yax[:constrain] = "domain"
+    return
+end
+
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot)
     figw, figh = sp.plt[:size]
@@ -329,6 +342,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         :zeroline => framestyle ≡ :zerolines,
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
         :showline => framestyle in (:box, :axes) && axis[:showaxis],
+        :automargin => false,
         :linecolor => rgba_string(plot_color(axis[:foreground_color_axis])),
         :ticks =>
             axis[:tick_direction] ≡ :out ? "outside" :
@@ -368,6 +382,7 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
             end
         end
     else
+        ax[:ticks] = ""
         ax[:showticklabels] = false
         ax[:showgrid] = false
     end
@@ -416,12 +431,7 @@ function plotly_scene_aspect(sp::Subplot)
         # equal units on every axis: size the box by the axis spans themselves, measured
         # in the same scale `plotly_axis` reports the range in, so that a `:log10` axis is
         # compared by decades rather than by its raw data span
-        spans = map((:x, :y, :z)) do letter
-            axis = sp[get_attr_symbol(letter, :axis)]
-            scale = RecipesPipeline.scale_func(axis[:scale])
-            amin, amax = axis_limits(sp, letter)
-            scale(amax) - scale(amin)
-        end
+        spans = axis_spans(sp)
         manual((spans ./ maximum(spans))...)
     else
         # `:none` (i.e. the `:auto` default) and numeric ratios, which have no meaning for
@@ -436,7 +446,8 @@ function plotly_layout(plt::Plot)
     w, h = plt[:size]
     plotattributes_out[:width], plotattributes_out[:height] = w, h
     plotattributes_out[:paper_bgcolor] = rgba_string(plt[:background_color_outside])
-    plotattributes_out[:margin] = KW(:l => 0, :b => 20, :r => 0, :t => 20)
+    # the subplots are laid out with their margins, so the paper needs none of its own
+    plotattributes_out[:margin] = KW(:l => 0, :b => 0, :r => 0, :t => 0)
 
     plotattributes_out[:annotations] = KW[]
 
@@ -463,7 +474,7 @@ function plotly_layout(plt::Plot)
                 xmm = left(bb) + tpos[1] * width(bb)
                 # inverting to make consistent with GR
                 ymm = bottom(bb) - tpos[2] * height(bb)
-                halign, valign = sp[:titlefonthalign], sp[:titlefontvalign]
+                halign, valign = sp[:title_font_halign], sp[:title_font_valign]
             end
             titlex, titley = xy_mm_to_pcts(xmm, ymm, w * px, h * px)
             title_font = font(titlefont(sp), halign = halign, valign = valign)
@@ -512,12 +523,13 @@ function plotly_layout(plt::Plot)
                     ),
                 )
             else
-                plotattributes_out[Symbol("xaxis$(x_idx)")] =
-                    plotly_axis(sp[:xaxis], sp, string("y", y_idx), x_domain)
+                xax = plotly_axis(sp[:xaxis], sp, string("y", y_idx), x_domain)
+                plotattributes_out[Symbol("xaxis$(x_idx)")] = xax
                 # don't allow yaxis to be reupdated/reanchored in a linked subplot
                 if spidx == y_idx
-                    plotattributes_out[Symbol("yaxis$(y_idx)")] =
-                        plotly_axis(sp[:yaxis], sp, string("x", x_idx), y_domain)
+                    yax = plotly_axis(sp[:yaxis], sp, string("x", x_idx), y_domain)
+                    plotly_aspect_ratio!(xax, yax, sp, x_idx)
+                    plotattributes_out[Symbol("yaxis$(y_idx)")] = yax
                 end
             end
         end
@@ -577,6 +589,15 @@ function plotly_layout(plt::Plot)
 
     return plotattributes_out =
         PlotsBase.recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
+end
+
+# plotly lists the legend by rank, so any order but `:normal` ranks the entries
+function plotly_legendrank!(plotattributes_out::KW, series::Series)
+    sp = series[:subplot]
+    sp[:legend_order] ≡ :normal && return nothing
+    rank = findfirst(s -> s ≡ series, PlotsBase.legend_series_list(sp))
+    rank ≡ nothing || (plotattributes_out[:legendrank] = rank)
+    return nothing
 end
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
@@ -819,6 +840,7 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:yaxis] = "y$(y_idx)"
     end
     plotattributes_out[:showlegend] = should_add_to_legend(series)
+    plotly_legendrank!(plotattributes_out, series)
 
     if st ≡ :straightline
         x, y = PlotsBase.straightline_data(series, 100)
@@ -935,6 +957,7 @@ function plotly_series(plt::Plot, series::Series)
     elseif st ≡ :mesh3d
         plotattributes_out[:type] = "mesh3d"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
+        fill_z = series[:fill_z]
 
         if series[:connections] ≢ nothing
             if typeof(series[:connections]) <: Tuple{Array, Array, Array}
@@ -950,29 +973,34 @@ function plotly_series(plt::Plot, series::Series)
                 plotattributes_out[:i] = i
                 plotattributes_out[:j] = j
                 plotattributes_out[:k] = k
-            elseif typeof(series[:connections]) <: AbstractVector{NTuple{3, Int}}
-                # 1-based indexing
-                i, j, k =
-                    broadcast(i -> [inds[i] - 1 for inds in series[:connections]], (1, 2, 3))
-                plotattributes_out[:i] = i
-                plotattributes_out[:j] = j
-                plotattributes_out[:k] = k
+            elseif series[:connections] isa AbstractVector{<:NTuple{N, Integer}} where {N}
+                # 1-based indexing, polygons split into triangles fanning out from their first corner
+                cns = series[:connections]
+                tris = [(c[1], c[n], c[n + 1]) .- 1 for c in cns for n in 2:(length(c) - 1)]
+                plotattributes_out[:i] = getindex.(tris, 1)
+                plotattributes_out[:j] = getindex.(tris, 2)
+                plotattributes_out[:k] = getindex.(tris, 3)
+                fill_z ≡ nothing || (fill_z = [fill_z[m] for (m, c) in enumerate(cns) for n in 3:length(c)])
             else
                 throw(
                     ArgumentError(
                         "Argument connections has to be either a tuple of three arrays (0-based indexing)
-                         or an AbstractVector{NTuple{3,Int}} (1-based indexing).",
+                         or an AbstractVector of tuples (1-based indexing).",
                     ),
                 )
             end
         end
         plotattributes_out[:colorscale] =
             plotly_colorscale(series[:fillcolor], series[:fillalpha])
-        plotattributes_out[:color] =
-            rgba_string(plot_color(series[:fillcolor], series[:fillalpha]))
         plotattributes_out[:opacity] = series[:fillalpha]
-        if series[:fill_z] ≢ nothing
-            plotattributes_out[:surfacecolor] = handle_surface(series[:fill_z])
+        if fill_z ≡ nothing
+            plotattributes_out[:color] =
+                rgba_string(plot_color(series[:fillcolor], series[:fillalpha]))
+        else
+            # a value for each triangle
+            plotattributes_out[:intensity] = fill_z
+            plotattributes_out[:intensitymode] = "cell"
+            plotattributes_out[:cmin], plotattributes_out[:cmax] = clims
         end
         plotattributes_out[:showscale] = hascolorbar(sp)
     else
@@ -1116,6 +1144,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
             )
         end
         plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
+        plotly_legendrank!(plotattributes_out, series)
         plotly_polar!(plotattributes_out, series)
         plotly_adjust_hover_label!(plotattributes_out, _cycle(series[:hover], i))
         plotattributes_outs[k] = merge(plotattributes_out, series[:extra_kwargs])

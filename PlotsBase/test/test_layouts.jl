@@ -81,6 +81,28 @@ end
     show(devnull, pl)
 end
 
+@testset "Text room in wide and tall plots" begin
+    # github.com/JuliaPlots/Plots.jl/issues/4064, GR scales text with the larger side only
+    function minpad(size)
+        pl = plot(1:3; title = "t", xlabel = "x", ylabel = "y", size)
+        PlotsBase.prepare_output(pl)
+        return pl[1].minpad
+    end
+    @test minpad((600, 600)) == minpad((600, 200)) == minpad((200, 600))
+end
+
+@testset "Margins" begin
+    # the margin is the whole border, github.com/JuliaPlots/Plots.jl/pull/3942
+    function minpad(margin)
+        pl = plot(1:3; widen = false, axis = false, ticks = false, legend = false, margin)
+        PlotsBase.prepare_output(pl)
+        return pl[1].minpad
+    end
+    mm = PlotsBase.mm
+    @test minpad(0mm) == (0mm, 0mm, 0mm, 0mm)
+    @test minpad(5mm) == (5mm, 5mm, 5mm, 5mm)
+end
+
 @testset "Coverage" begin
     pl = plot(map(plot, 1:4)..., layout = (2, 2))
 
@@ -109,7 +131,6 @@ end
     show(io, pl[1])
 
     @test PlotsBase.getplot(pl) == pl
-    @test PlotsBase.getattr(pl) == pl.attr
     @test PlotsBase.backend_object(pl) == pl.o
     @test occursin("Plot", string(pl))
     print(io, pl)
@@ -151,7 +172,28 @@ end
     plot(map(plot, 1:4)..., layout = (:, 2))
 end
 
+# github.com/JuliaPlots/Plots.jl/issues/5092
+struct LinkedDates end
+@recipe function f(::LinkedDates)
+    link --> :x
+    layout --> (2, 1)
+    days = Date(2020, 1, 1) .+ Day.(0:4)
+    @series begin
+        subplot := 1
+        days, 1:5
+    end
+    @series begin
+        subplot := 2
+        days[1:3], 1:3
+    end
+end
+
 @testset "Link" begin
     plot(map(plot, 1:4)..., link = :all)
     plot(map(plot, 1:4)..., link = :square)
+
+    # set by a recipe, with data that goes through a type recipe
+    pl = plot(LinkedDates())
+    @test PlotsBase.xlims(pl[1]) == PlotsBase.xlims(pl[2])
+    @test PlotsBase.ylims(pl[1]) != PlotsBase.ylims(pl[2])
 end

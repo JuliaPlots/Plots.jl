@@ -4,6 +4,27 @@
 ## Unreleased
 
 ### Features
+- A keyword that is neither an attribute nor used by the backend warns that it is ignored, so a typo no longer
+  goes unnoticed (#4861). PGFPlotsX, Plotly and HDF5 pass every keyword on, so they take them all
+- `histogram3d` draws a two-dimensional histogram as boxes standing on the x-y plane, binned as in `histogram2d`
+  (#3507), and colored by their height when `color` is a gradient, or bin by bin from a vector. Drawn by the
+  `gr`, `pythonplot`, `plotly`/`plotlyjs` and `unicodeplots` backends
+- `heatmap` takes `x` and `y` as matrices, for a curvilinear grid: the centers of the cells, the size of `z`, or
+  their corners, one more along both sides. Drawn by the `gr` and `pythonplot` backends (#4298)
+- `legend_order` sets the order of the legend entries: `:reversed` lists them from the last series to the
+  first, which suits a stack such as `areaplot` whose first series is at the bottom (#5029), and a
+  permutation such as `[3, 1, 2]` gives any other order. Supported by the `gr`, `pythonplot` and
+  `plotly`/`plotlyjs` backends, and by `pgfplotsx` for `:reversed`
+- PythonPlot backend: `legend_column` takes any number of columns, filled row by row as in GR, where it
+  used to put every entry in one row for anything above `1` (#4678)
+- `getattr(obj, attr)` returns the value of an attribute of a `Plot`, `Subplot`, `Axis` or
+  `Series`, resolving aliases (#4900). The object sets the scope, and one value comes back as
+  itself where several come back as a row matrix. A magic attribute comes back as a named
+  tuple of the attributes it sets, and what comes back is valid input for the same attribute.
+  Asking an `Axis` for another letter's attribute is an error
+- A magic attribute takes a named tuple of the attributes it sets, as in
+  `line = (linewidth = 2, linecolor = :red)`, and an axis attribute takes one value per axis,
+  as in `lims = (x = (0, 1), y = :auto)`
 - GR backend: Add support for `colorbar_ticks` to customize tick positions and labels on colorbars (#3560)
 - New colorbar attributes `colorbar_border_color`, `colorbar_border_width`, `colorbar_tick_color`,
   `colorbar_tick_line_width`, `colorbar_width` and `colorbar_height`, supported by the `gr`,
@@ -15,8 +36,79 @@
   `colorbar_title_font`, `colorbar_tick_font`, `colorbar_font_family` and the per-attribute names
   `colorbar_<title|tick>_font_<family|size|halign|valign|rotation|color>`.
   The previous spellings (`colorbar_titlefont`, `colorbar_tickfontsize`, `colorbar_fontfamily`, ...) still work when setting attributes
+- Recipes can read an attribute without hard-coding its canonical name: `$attr` inside a `@recipe` body
+  expands to a lookup through `RecipesBase.canonical_key`, so aliases resolve and an internal rename does
+  not break the recipe. `target <-- :attr` is the same read in assignment position.
+  `$` keeps its usual meaning inside quoted code (`:( ... )`, `quote ... end`, `@eval` and other macros),
+  where it is left untouched
+- `savefig` takes `overwrite = false` to throw rather than replace a file that exists (#3001). Its default is the
+  scoped value `PlotsBase.SAVEFIG_OVERWRITE`, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes
+  that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
 
 ### Fixed
+- Plotly backend: `aspect_ratio` holds at whatever size plotly draws the plot, such as a browser window, a
+  notebook or the VS Code plot pane, where it held only at `size`. The axes shrink to keep it (#4891)
+- `warn_on_unsupported` given to a plot holds for its series, so `false` silences the warnings on unsupported
+  attributes, series types and markers, where only `default(warn_on_unsupported = false)` did
+- GR and PythonPlot backends: `mesh3d` takes `connections` as a vector of tuples, as its example says, where it
+  used to throw, and Plotly, UnicodePlots and Gaston split polygons other than triangles into triangles. `fill_z`
+  colors each polygon of a `mesh3d` in GR, PythonPlot and Plotly, where it was ignored
+- PythonPlot backend: `aspect_ratio = :equal` gives the axes of a 3D plot equal units, sizing the box by their
+  spans as Plotly does, where it drew a cube (#1949). GR keeps its cube, but no longer shrinks a 3D plot by
+  the 2D aspect correction
+- A row given to `default` holds one value per series or subplot, as one given to the plot does:
+  `default(label = ["a" "b"])` labels the series `a` and `b`, where each used to get the whole row (#3496).
+  The same goes for subplot and axis attributes, such as `default(title = ["A" "B"])`
+- Bars and histograms with `permute = (:x, :y)` get the limits of the plot without it, swapped, so the counts
+  start at 0, the bars no longer run into the ends of their axis and log scales work (#5009, #4949)
+- StatsPlots: the side histograms of `marginalhist` and `cornerplot` lie along y again, where they stood
+  upright since `orientation` was removed (#5007)
+- Histograms on a log axis are binned evenly in the log, as in `histogram(x; xscale = :log10)`, where the bins
+  used to be linear and a 1D histogram lost its axes. Values the axis cannot show are left out like NaNs, and
+  a NaN with `weights` no longer throws
+- GR backend: colors come out right after a session has drawn more than about 900 of them, where they
+  used to come out wrong, for example after a few `zcolor` plots with different gradients (#5215)
+- GR backend: titles, axis labels and tick labels get the room they need in plots that are not square,
+  where they used to be cut off in wide or tall ones such as `size = (800, 300)` (#4064). The default
+  plot is wide too, so it gets a little more room above and below its text
+- A row of `series_annotations` takes `nothing` for a series without any, as in
+  `permutedims([nothing, ["a", "b"]])`, where that series used to be labelled `nothing`
+- `levels` takes a row with one per series, as in `levels = [3 6]`, where it used to fail with
+  `the levels keyword argument must be an integer or AbstractVector`
+- `grid` and `minorgrid` take a row with one per subplot, as in `xgrid = [true false]` or `grid = [:x :y]`,
+  where a row of flags used to be read as line widths and left the grid on everywhere
+- PythonPlot backend: a hatched fill takes one legend entry, where it used to push the entries after it out of
+  step with their labels
+- GR backend: `legend_column` below `-1` falls back to one column with a warning, as `0` does
+- `xaxis = :red` and other axis colours no longer fail with ``UndefVarError: `handleColors!` not defined``
+- `arrow` takes a row with one per series: `arrow = [true false]` draws an arrow on the first series
+  alone, where the row used to be skipped with a warning and both series got one
+- A vector of vectors whose element type does not say so, such as `Any[y1, y2]`, goes through the
+  type recipes of its elements, so `Date`s and Unitful values with `missing` plot as they do in `[y1, y2]` (#5035)
+- `smooth` and the error bars take a row with one per series: `smooth = [true false]` no longer fails with
+  a `TypeError`, and `yerror = [nothing 0.5]` draws error bars on the second series alone instead of failing
+- `xlimits_modifiers` and the other lettered forms take a row with one per subplot, as in
+  `ylimits_modifiers = [:symmetric :none]`, where the whole row used to be rejected as invalid
+- A recipe setting `link --> :x` no longer fails with `MethodError: no method matching iterate(::Symbol)`
+  when its data goes through a type recipe, as `Date`s do (#5092)
+- `yformatter` formats the y axis for `vline`, `vspan` and the histograms, where it used to
+  be moved to the x axis (#5762). A formatter the data carries, as a `Date` vector does,
+  still follows the data to whichever axis draws it
+- A recipe keyword without a default is required, as it is for a function: `@recipe function f(r; ε_max)`
+  now defines the recipe instead of failing with `FieldError: type Symbol has no field args`, and
+  plotting it without `ε_max` throws `UndefKeywordError` (#5114)
+- `plotattr` looks up a lettered axis attribute, so `plotattr("xlims")` and `plotattr("ylabel")`
+  describe `lims` and `guide` instead of erroring
+- `PlotsBase` no longer reaches into its extensions through `Base.get_extension` (#5191).
+  An extension registers itself with `PlotsBase.register_extension` from its `__init__`,
+  which the backend ones get from `@extension_static`, and `PlotsBase.extension(name)`
+  reads it back
+- `heatmap` accepts an `OffsetArray` again: the edge computation assumed 1-based indices (#4623)
+- GR backend: a contour `levels` range no longer errors when its highest level is below the data
+  maximum, and drawing no longer mutates the levels it was given (#4806)
+- `push!` and `append!` on a plot: extending a series whose data is a range no longer silently drops
+  the new points, an integer argument is no longer read as a series index, and `append!` accepts a
+  collection per coordinate, as in `append!(pl, xs, ys)` (#4825)
 - Log scale minor ticks are no longer duplicated, and no longer drawn on top of major ticks, when the
   major ticks are more than one decade apart (#5789)
 - `hline`, `vline`, `hspan`, `vspan` and their `!` forms accept a single position, so `hline(0.73)` no
@@ -28,8 +120,32 @@
 - PGFPlotsX backend: the colorbar now shows custom tick labels, from either `colorbar_ticks` pairs or `colorbar_formatter`
 - PythonPlot backend: colorbar tick labels honor `colorbar_tick_font_rotation`, colorbar tick marks point outward
   as with the other backends, and `colorbar_scale` now maps the colors, not just the tick labels
+- Adding a series no longer finds the color limits of every series in its subplot again, which made plots of many
+  large series slow: 100 heatmaps of 512×512 take 0.2 s, where they took 4.8 s (#4520)
 
 ## Breaking changes
+- `margin` is the whole border of a subplot, so `margin = 0mm` leaves none, where GR added 2mm and Plotly 20px
+  above and below of their own (#3942). The default is 3mm, which is what GR drew, so plots without a margin
+  look the same there, and the backends agree on what a margin is
+- `boxplot`, `violin` and `density` are defined by StatsPlots, next to their recipes, so they need
+  `using StatsPlots` (#2001). PlotsBase no longer warns that they moved, and `:density` is no longer one
+  of its own series types, so `line = :density` does not pick it
+- Every font attribute is now spelled `<name>_font_<property>`, so `titlefontsize` is
+  `title_font_size`, `xtickfontcolor` is `xtick_font_color`, `guidefontfamily` is
+  `guide_font_family`, `plot_titlefontsize` is `plot_title_font_size`, `fontfamily` is
+  `font_family` and `legend_font_pointsize` is `legend_font_size`. Annotations gain the
+  missing `font` segment, so `annotationhalign` is `annotation_font_halign`, and pick up
+  `annotation_font` as a magic attribute. The previous names remain aliases on the input
+  side, reading one back throws as it already did for the legend and colorbar fonts.
+  The underscored magic names `title_font`, `plot_title_font`, `tick_font` and `guide_font`
+  were silently ignored before and now work
+- `lims` takes limits only: `:auto`, or a two-element tuple or vector. `xlims = :round` and
+  `xlims = :symmetric` are now `xlimits_modifiers = (round = true,)` and `(symmetric = true,)`,
+  which also compose with `:widen` (#3556)
+- The `widen` axis attribute is replaced by `limits_modifiers`, which composes. It takes a named tuple
+  of modifiers applied left to right, as in `xlimits_modifiers = (symmetric = true, widen = 1.2)`;
+  `:widen`, `:round` and `:symmetric` are available, a bare name switches one on, and `:none` applies
+  nothing. The default `:auto` behaves as `widen = :auto` did (#3556)
 - `minorticks` now counts minor ticks, not minor intervals, matching its name and its documentation.
   `minorticks = n` draws `n` ticks between two major ticks, where it used to draw `n - 1`.
   Passing `n + 1` where you passed `n` restores the old spacing; `:auto` and `true` are unchanged.
@@ -37,6 +153,8 @@
 - Reading a colorbar font attribute back by its old name now throws, as it already does for the legend fonts:
   use `sp[:colorbar_title_font_size]` rather than `sp[:colorbar_titlefontsize]`.
   The old names remain aliases on the input side, so passing them to `plot` keeps working.
+- StatsPlots: `boxplot`, `density`, `cdensity` and `dendrogram` lie on their side with `permute = (:x, :y)`, as any
+  series does, where they read `orientation`, which v2 removed
 
 ---
 

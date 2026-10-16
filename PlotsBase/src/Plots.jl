@@ -39,7 +39,11 @@ mutable struct Plot{T <: AbstractBackend} <: AbstractPlot{T}
         return new{typeof(be)}(
             be,
             0,
-            DefaultsDict(KW(), PlotsBase._plot_defaults),
+            # some backends do not warn on unsupported attributes, unless the plot asks
+            DefaultsDict(
+                KW(:warn_on_unsupported => PlotsBase.should_warn_on_unsupported(be)),
+                PlotsBase._plot_defaults,
+            ),
             Series[],
             nothing,
             Subplot[],
@@ -82,10 +86,22 @@ Base.iterate(plt::Plot) = iterate(plt.subplots)
 # -------------------------------------------------------
 # push/append for one series
 
+# the indexed methods take at least one argument, else `push!(plt, 4)` would read the `4` as a
+# series index and push nothing
 Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
-Base.push!(plt::Plot, i::Integer, args::Real...) = push!(plt.series_list[i], args...)
-Base.append!(plt::Plot, args::AbstractVector) = append!(plt, 1, args...)
-Base.append!(plt::Plot, i::Integer, args::Real...) = append!(plt.series_list[i], args...)
+Base.push!(plt::Plot, i::Integer, arg::Real, args::Real...) =
+    push!(plt.series_list[i], arg, args...)
+# the un-indexed `append!` also takes at least one argument, else the `Real` and the
+# `AbstractVector` method would both match `append!(plt)` and be ambiguous
+Base.append!(plt::Plot, arg::Real, args::Real...) = append!(plt, 1, arg, args...)
+Base.append!(plt::Plot, i::Integer, arg::Real, args::Real...) =
+    append!(plt.series_list[i], arg, args...)
+
+# a collection per coordinate: `append!(plt, ys)` or `append!(plt, xs, ys)`
+Base.append!(plt::Plot, arg::AbstractVector, args::AbstractVector...) =
+    append!(plt, 1, arg, args...)
+Base.append!(plt::Plot, i::Integer, arg::AbstractVector, args::AbstractVector...) =
+    append!(plt.series_list[i], arg, args...)
 
 # tuples
 Base.push!(plt::Plot, t::Tuple) = push!(plt, 1, t...)
@@ -180,12 +196,12 @@ RecipesPipeline.preprocess_attributes!(::Plot, plotattributes::AKW) =
     Commons.preprocess_attributes!(plotattributes)
 
 plottitlefont(plt::Plot) = font(;
-    family = plt[:plot_titlefontfamily],
-    pointsize = plt[:plot_titlefontsize],
-    valign = plt[:plot_titlefontvalign],
-    halign = plt[:plot_titlefonthalign],
-    rotation = plt[:plot_titlefontrotation],
-    color = plt[:plot_titlefontcolor],
+    family = plt[:plot_title_font_family],
+    pointsize = plt[:plot_title_font_size],
+    valign = plt[:plot_title_font_valign],
+    halign = plt[:plot_title_font_halign],
+    rotation = plt[:plot_title_font_rotation],
+    color = plt[:plot_title_font_color],
 )
 
 _update_plot_object(plt::Plot) = nothing
@@ -256,8 +272,8 @@ function _update_subplot_attrs(
 
     Subplots._update_subplot_colors(sp)
     Subplots._update_margins(sp)
-    cbar_update_keys = :clims, :colorbar, :seriestype, :marker_z, :line_z, :fill_z, :colorbar_entry
-    any(haskey.(Ref(plotattributes_in), cbar_update_keys)) && Colorbars._update_subplot_colorbars(sp)
+    # new series update the colorbar as they are added, but new `clims` apply to those already there
+    haskey(plotattributes_in, :clims) && Colorbars._update_subplot_colorbars(sp)
 
     lims_warned = false
     for letter in (:x, :y, :z)
