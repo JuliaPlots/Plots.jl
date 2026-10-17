@@ -51,7 +51,6 @@ end
     foreground_color_border := nothing
     margin := 1mm
     title_font := font(11)
-    fillcolor --> PlotsBase.fg_color(plotattributes)
     linecolor --> PlotsBase.fg_color(plotattributes)
     markeralpha := 0.4
     grad = cgrad(get(plotattributes, :markercolor, :RdYlBu))
@@ -67,6 +66,7 @@ end
                 title := title
             end
             seriestype := :histogram
+            fillcolor --> PlotsBase.fg_color(plotattributes)
             subplot := indices[i, i]
             grid := false
             xformatter --> ((i == n) ? :auto : (x -> ""))

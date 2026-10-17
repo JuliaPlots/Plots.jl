@@ -320,6 +320,9 @@ end
     @. M[:, 3] -= 0.7M[:, 1]^2 + 2
     pl = corrplot(M; label = ["x$i" for i in 1:4])
     @test show(devnull, pl) isa Nothing
+    # the 2d histograms keep their gradient, only the histograms take the foreground color
+    @test pl[2][1][:fillcolor] isa PlotsBase.ColorGradient
+    @test pl[1][1][:fillcolor] == PlotsBase.plot_color(:black)
 
     pl = cornerplot(M)
     @test show(devnull, pl) isa Nothing
