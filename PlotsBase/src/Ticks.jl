@@ -77,7 +77,7 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
     # add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
     if (log_scaled = scale ∈ _log_scales)
         sub = round(Int, log(base, ticks[2] / ticks[1]))
-        ticks = [ticks[1] / base; ticks; ticks[end] * base]
+        ticks = [ticks[1] * (ticks[1] / ticks[2]); ticks; ticks[end] * (ticks[end] / ticks[end - 1])]
     else
         sub = 1  # unused
         ratio = length(ticks) > 2 ? (ticks[3] - ticks[2]) / (ticks[2] - ticks[1]) : 1
@@ -93,9 +93,8 @@ function get_minor_ticks(sp, axis, ticks_and_labels)
         hi = ticks[i]
         (isfinite(lo) && isfinite(hi) && hi > lo) || continue
         if log_scaled
-            # a pair can span several decades, and the phantom pairs added above span
-            # exactly one, so the count has to be taken per pair rather than once for
-            # the whole axis
+            # a pair can span several decades, not all pairs the same, so the count has
+            # to be taken per pair rather than once for the whole axis
             for e in 1:round(Int, log(base, hi / lo))
                 lo_ = lo * base^(e - 1)
                 hi_ = lo_ * base

@@ -494,6 +494,9 @@ end
         _, mt = minors((1, 1000), [1, 10, 100, 1000]; yminorticks = n)
         @test count(x -> 1 < x < 10, mt) == n
     end
+    # they reach the limits beyond the outer majors, however many decades apart, #4652
+    _, mt = minors((1.0e4, 2.0e10), [1.0e6, 1.0e9])
+    @test all(t -> any(m -> m ≈ t, mt), (2.0e4, 1.0e5, 1.0e10, 2.0e10))
 end
 
 @testset "axis guides (labels)" begin
