@@ -48,6 +48,8 @@
 ### Fixed
 - Log axes put minor ticks all the way to their limits when the major ticks are several decades apart, where
   those more than a decade beyond the outer major ticks were missing (#4652)
+- StatsPlots: the 2d histograms of `corrplot` show their color gradient again, where they were solid black, and only
+  the histograms on the diagonal take the foreground color (#5443)
 - Plotly backend: `aspect_ratio` holds at whatever size plotly draws the plot, such as a browser window, a
   notebook or the VS Code plot pane, where it held only at `size`. The axes shrink to keep it (#4891)
 - `warn_on_unsupported` given to a plot holds for its series, so `false` silences the warnings on unsupported
