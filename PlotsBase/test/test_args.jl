@@ -168,6 +168,10 @@ end
     vline!(p3, [10^6], xformatter = :plain)
     @test p3[1][:yaxis][:formatter] ≡ :plain
     @test p3[1][:xaxis][:formatter] ≡ :plain
+    # a function labels the categories of a discrete axis too, github.com/JuliaPlots/Plots.jl/issues/4817
+    labels(pl) = last(PlotsBase.get_ticks(pl[1], pl[1][:xaxis]))
+    @test labels(plot(["a", "b"], 1:2, xformatter = uppercase)) == ["A", "B"]
+    @test labels(plot(["a", "b"], 1:2)) == ["a", "b"]
 end
 
 @testset "plotattr" begin

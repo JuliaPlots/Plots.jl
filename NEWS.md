@@ -46,6 +46,8 @@
   that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
 
 ### Fixed
+- A formatter given as a function labels the categories of a discrete axis too, as for strings, where it was
+  ignored (#4817)
 - Log axes put minor ticks all the way to their limits when the major ticks are several decades apart, where
   those more than a decade beyond the outer major ticks were missing (#4652)
 - StatsPlots: the 2d histograms of `corrplot` show their color gradient again, where they were solid black, and only
