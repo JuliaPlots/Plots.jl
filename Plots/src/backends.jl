@@ -15,6 +15,9 @@ const _backend_packages = Dict{Symbol, Symbol}()
 const _initialized_backends = Set{Symbol}()
 const _backends = Symbol[]
 
+# Track whether plotly.jl has been included to avoid duplicate method definitions
+const _plotly_included = Ref(false)
+
 function _check_installed(backend::Union{Module, AbstractString, Symbol}; warn = true)
     sym = Symbol(lowercase(string(backend)))
     if warn && !haskey(_backend_packages, sym)
@@ -571,7 +574,10 @@ _post_imports(::PlotlyBackend) = @eval begin
     const PlotlyKaleido = Main.PlotlyKaleido
     # FIXME: in Plots `2.0`, `plotly` backend should be re-named to `plotlybase`
     # so that we can trigger include on `@require` instead of this
-    PLOTS_DEFAULT_BACKEND == "plotly" || include(_path(:plotly))
+    if PLOTS_DEFAULT_BACKEND != "plotly" && !Main.Plots._plotly_included[]
+        include(_path(:plotly))
+        Main.Plots._plotly_included[] = true
+    end
     include(_path(:plotlybase))
 end
 function _initialize_backend(pkg::PlotlyBackend)
@@ -595,7 +601,11 @@ function _initialize_backend(pkg::PlotlyBackend)
         # NOTE: `plotly` is special in the way that it does not require dependencies for displaying a plot
         # as a result, we cannot rely on the `@require` mechanism for loading glue code
         # this is why it must be done here.
-        PLOTS_DEFAULT_BACKEND == "plotly" || @eval include(_path(:plotly))
+        # Only include plotly.jl if not already included
+        if PLOTS_DEFAULT_BACKEND != "plotly" && !Main.Plots._plotly_included[]
+            @eval include(_path(:plotly))
+            Main.Plots._plotly_included[] = true
+        end
     end
     return @static if isdefined(Base.Experimental, :register_error_hint)
         Base.Experimental.register_error_hint(MethodError) do io, exc, argtypes, kwargs
