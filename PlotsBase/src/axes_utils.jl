@@ -66,30 +66,34 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     return unscaled_ticks, labels
 end
 
-Commons.get_ticks(ticks::Symbol, cvals::T, dvals, args...) where {T} =
+# a formatter given as a function labels the discrete values too
+discrete_labels(dvals, formatter::Function) = map(string ∘ formatter, dvals)
+discrete_labels(dvals, formatter) = string.(dvals)
+
+Commons.get_ticks(ticks::Symbol, cvals::T, dvals, alims, scale, formatter) where {T} =
 if ticks ≡ :none
     T[], String[]
 elseif !isempty(dvals)
     n = length(dvals)
     if ticks ≡ :all || n < 16
-        cvals, string.(dvals)
+        cvals, discrete_labels(dvals, formatter)
     else
         Δ = ceil(Int, n / 10)
         rng = Δ:Δ:n
-        cvals[rng], string.(dvals[rng])
+        cvals[rng], discrete_labels(dvals[rng], formatter)
     end
 else
-    optimal_ticks_and_labels(nothing, args...)
+    optimal_ticks_and_labels(nothing, alims, scale, formatter)
 end
 
 Commons.get_ticks(ticks::AVec, cvals, dvals, args...) =
     optimal_ticks_and_labels(ticks, args...)
-Commons.get_ticks(ticks::Int, cvals, dvals, args...) =
+Commons.get_ticks(ticks::Int, cvals, dvals, alims, scale, formatter) =
 if isempty(dvals)
-    optimal_ticks_and_labels(ticks, args...)
+    optimal_ticks_and_labels(ticks, alims, scale, formatter)
 else
     rng = round.(Int, range(1, stop = length(dvals), length = ticks))
-    cvals[rng], string.(dvals[rng])
+    cvals[rng], discrete_labels(dvals[rng], formatter)
 end
 
 get_labels(formatter::Symbol, scaled_ticks, scale) =
