@@ -46,6 +46,8 @@
   that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
 
 ### Fixed
+- A matrix of complex numbers plots each column as a series in the complex plane, as a vector does, where it threw
+  (#4989)
 - A formatter given as a function labels the categories of a discrete axis too, as for strings, where it was
   ignored (#4817)
 - Log axes put minor ticks all the way to their limits when the major ticks are several decades apart, where
