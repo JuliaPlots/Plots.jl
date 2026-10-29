@@ -9,6 +9,23 @@ Sys.isunix() && with(:plotly) do
         @test !haskey(PlotsBase.plotly_series(pl)[1], :zmax)
     end
 
+    @testset "Shape outlines (#4603)" begin
+        for width in (0, 2)
+            pl = histogram(
+                1:4; bins = 0:2:4, linecolor = :red, linewidth = width,
+                linestyle = :dash, markerstrokewidth = 0,
+            )
+            trace = first(PlotsBase.plotly_series(pl))
+            @test trace[:line][:color] == PlotsBase.rgba_string(PlotsBase.plot_color(:red))
+            @test trace[:line][:width] == width
+            @test trace[:line][:dash] == "dash"
+        end
+        for seriestype in (:scatter, :path)
+            pl = plot(1:3; seriestype, markershape = :circle, markerstrokewidth = 0)
+            @test all(t -> t[:marker][:line][:width] == 0, PlotsBase.plotly_series(pl))
+        end
+    end
+
     @testset "Contours" begin
         x = (-2π):0.1:(2π)
         y = (-π):0.1:π

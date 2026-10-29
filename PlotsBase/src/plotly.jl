@@ -1134,15 +1134,13 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
                 ),
             ),
         )
-        if series[:markerstrokewidth] > 0
-            plotattributes_out[:line] = KW(
-                :color => rgba_string(
-                    plot_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
-                ),
-                :width => get_linewidth(series, i),
-                :dash => string(get_linestyle(series, i)),
-            )
-        end
+        plotattributes_out[:line] = KW(
+            :color => rgba_string(
+                plot_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
+            ),
+            :width => get_linewidth(series, i),
+            :dash => string(get_linestyle(series, i)),
+        )
         plotattributes_out[:showlegend] = k == 1 ? should_add_to_legend(series) : false
         plotly_legendrank!(plotattributes_out, series)
         plotly_polar!(plotattributes_out, series)
