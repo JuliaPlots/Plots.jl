@@ -11,12 +11,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: "JuliaPlots/PlotReferenceImages.jl"
           token: ${{ secrets.PLOTS_REFIMAGES_TOKEN }}
           path: PlotReferenceImages
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: Plots
       - uses: julia-actions/setup-julia@latest
