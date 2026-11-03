@@ -30,6 +30,7 @@ unicodeplots()
 pgfplotsx()
 plotlyjs()
 hdf5()
+pythonplot()
 gr()
 
 is_auto() = Plots.bool_env("VISUAL_REGRESSION_TESTS_AUTO", "false")
