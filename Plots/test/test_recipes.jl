@@ -27,6 +27,14 @@ end
     end
 end
 
+@testset "complex numbers" begin
+    # each column of a complex matrix is a series in the complex plane, #4989
+    pl = plot([[1 + 0.5im, 0.5 + 1im] [2 + 2im, 3 + 3im]])
+    @test length(pl[1].series_list) == 2
+    @test pl[1][2][:x] == [2, 3] && pl[1][2][:y] == [2, 3]
+    @test pl[1][:xaxis][:guide] == "Re(x)"
+end
+
 @testset "lens!" begin
     pl = plot(1:5)
     lens!(pl, [1, 2], [1, 2], inset = (1, bbox(0.0, 0.0, 0.2, 0.2)), colorbar = false)

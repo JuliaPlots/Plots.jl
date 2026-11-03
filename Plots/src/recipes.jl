@@ -1565,7 +1565,8 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Complex Numbers
 
-@recipe function f(A::AbstractArray{Complex{T}}) where {T <: Number}  # COV_EXCL_LINE
+# a vector or matrix, as the recipe for any matrix would take a complex one
+@recipe function f(A::AbstractVecOrMat{Complex{T}}) where {T <: Number}  # COV_EXCL_LINE
     xguide --> "Re(x)"
     yguide --> "Im(x)"
     real.(A), imag.(A)
