@@ -315,6 +315,14 @@ with(:gr) do
             fillcolor = [:blue, :red, :green, :yellow],
             fillalpha = 0.5,
         )
+        haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+            # a path for each triangle, its three corners and the one closing it
+            for connections in ((i, j, k), [[1, 2, 3], [1, 3, 4], [1, 4, 2], [2, 3, 4]])
+                pl = mesh3d(x, y, z; connections)
+                show(IOBuffer(), MIME("image/png"), pl)
+                @test [length(p.vertices) for p in only(pl[1][1][:serieshandle]).get_paths()] == fill(4, 4)
+            end
+        end
 
         # github.com/JuliaPlots/Plots.jl/pull/3835#issue-1002117649
         p0 = [0.0, 0.0, 0.0]
