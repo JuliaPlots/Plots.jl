@@ -256,20 +256,27 @@ function PlotsBase.expand_extrema!(sp::Subplot, plotattributes::AKW)
 
     # expand for heatmaps
     return if plotattributes[:seriestype] ≡ :heatmap
-        for letter in (:x, :y)
-            data = plotattributes[letter]
-            axis = sp[get_attr_symbol(letter, :axis)]
-            scale = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
-            edges = if data isa RecipesPipeline.Surface  # a curvilinear grid
-                PlotsBase.backend_name(sp.plt.backend) in (:gr, :pythonplot) ||
-                    "only the gr and pythonplot backends draw heatmaps with `x` and `y` as matrices" |>
-                    ArgumentError |>
-                    throw
-                PlotsBase.heatmap_corners(data.surf, scale, size(plotattributes[:z].surf))
-            else
-                PlotsBase.heatmap_edges(data, scale)
+        scale(letter) = get(plotattributes, get_attr_symbol(letter, :scale), :identity)
+        x, y, z = plotattributes[:x], plotattributes[:y], plotattributes[:z]
+        if x isa AVec && y isa AVec && z isa RecipesPipeline.Surface
+            # throws for `x` and `y` fitting `z` neither as the centers of its cells nor as their edges
+            xe, ye = PlotsBase.heatmap_edges(x, scale(:x), y, scale(:y), size(z.surf))
+            expand_extrema!(sp[:xaxis], xe)
+            expand_extrema!(sp[:yaxis], ye)
+        else
+            for letter in (:x, :y)
+                data = plotattributes[letter]
+                edges = if data isa RecipesPipeline.Surface  # a curvilinear grid
+                    PlotsBase.backend_name(sp.plt.backend) in (:gr, :pythonplot) ||
+                        "only the gr and pythonplot backends draw heatmaps with `x` and `y` as matrices" |>
+                        ArgumentError |>
+                        throw
+                    PlotsBase.heatmap_corners(data.surf, scale(letter), size(z.surf))
+                else
+                    PlotsBase.heatmap_edges(data, scale(letter))
+                end
+                expand_extrema!(sp[get_attr_symbol(letter, :axis)], vec(edges))
             end
-            expand_extrema!(axis, vec(edges))
         end
     end
 end

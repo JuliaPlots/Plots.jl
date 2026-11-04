@@ -215,6 +215,20 @@ end
     end
 end
 
+@testset "Heatmap sizes" begin
+    # `x` and `y` give the centers of the cells or their edges, github.com/JuliaPlots/Plots.jl/issues/4874
+    z = [1 2 3; 4 5 6]
+    pl = heatmap(1:3, 1:2, z)
+    @test xlims(pl) == (0.5, 3.5) && ylims(pl) == (0.5, 2.5)
+    pl = heatmap(0:3, 0:2, z)
+    @test xlims(pl) == (0, 3) && ylims(pl) == (0, 2)
+    # swapped, they fit neither
+    @test_throws ArgumentError heatmap(1:2, 1:3, z)
+    with(:plotly) do
+        @test_throws ArgumentError heatmap(1:2, 1:3, z)
+    end
+end
+
 @testset "Histograms on log axes" begin
     # the bins are spaced evenly in the log, github.com/JuliaPlots/Plots.jl/pull/2208
     x = 10 .^ range(0, 3, length = 200)
