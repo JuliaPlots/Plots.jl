@@ -46,6 +46,8 @@
   that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
 
 ### Fixed
+- `markershape = :auto` no longer picks both `:+` and `:cross` (or both `:x` and `:xcross`), which are drawn
+  alike, so the markers of successive series stay distinct (#5005)
 - `mesh3d` with PythonPlot draws each face, where triangles given as `(i, j, k)` came out as one polygon, or
   threw with matplotlib 3.11, and connections given as vectors threw
 - A matrix of complex numbers plots each column as a series in the complex plane, as a vector does, where it threw

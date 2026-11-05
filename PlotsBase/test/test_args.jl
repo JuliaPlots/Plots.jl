@@ -31,6 +31,15 @@ foo = Foo(x, sin.(x))
     ) ≡ :diamond
 end
 
+@testset "Automatic marker shapes" begin
+    # `:+` is drawn like `:cross` and `:x` like `:xcross`: `:auto` must not cycle through both of a pair
+    n = length(PlotsBase.supported_markers())  # more series than shapes, so one full cycle is covered
+    shapes = [s[:markershape] for s in plot(rand(5, n), markershape = :auto)[1].series_list]
+    @test !(:+ in shapes && :cross in shapes)
+    @test !(:x in shapes && :xcross in shapes)
+    @test plot(foo, markershape = :auto)[1][1][:markershape] ≡ (backend_name() === :gr ? :+ : :circle)
+end
+
 @testset "Subplot Attributes" begin
     let pl = plot(rand(4, 4), layout = 2)
         @test pl[1].primary_series_count == 2

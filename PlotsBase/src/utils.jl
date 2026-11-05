@@ -68,7 +68,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
         plotattributes,
         :markershape,
         Commons._marker_aliases,
-        supported_markers(pkg),
+        Commons.autopick_marker_options(supported_markers(pkg)),
         plotIndex,
     )
 

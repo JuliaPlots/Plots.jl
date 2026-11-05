@@ -2,6 +2,15 @@ autopick_ignore_none_auto(arr::AVec, idx::Integer) =
     _cycle(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
+# `:+` is drawn like `:cross` and `:x` like `:xcross` (GR, PGFPlotsX, Gaston), so
+# `markershape = :auto` must not cycle through both spellings of a pair.
+function autopick_marker_options(options::AVec)
+    return filter(
+        m -> !(m ≡ :cross && :+ in options) && !(m ≡ :xcross && :x in options),
+        options,
+    )
+end
+
 function aliases_and_autopick(
         plotattributes::AKW,
         sym::Symbol,
