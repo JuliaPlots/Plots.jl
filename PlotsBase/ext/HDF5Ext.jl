@@ -322,6 +322,7 @@ end
 _write_typed(grp::Group, name::String, v::Tuple) = _write_typed(grp, name, v, eltype(v))
 
 _write_typed(grp::Group, name::String, v::Dict) = nothing
+_write_typed(grp::Group, name::String, v::RecipesPipeline.Formatted) = nothing
 
 function _write_typed(grp::Group, name::String, d::DefaultsDict) # Typically for plot attributes
     _write(grp, name, d)

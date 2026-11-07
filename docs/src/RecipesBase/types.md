@@ -213,8 +213,9 @@ minutes_since_midnight(mt) = 60 * mt.h + mt.m
 # convert the minutes passed since midnight to a nice string showing `MyTime`
 formatter(n) = time_string(MyTime(divrem(n, 60)...))
 
-# define the recipe (it must return two functions)
-@recipe f(::Type{MyTime}, mt::MyTime) = (minutes_since_midnight, formatter)
+# define the recipe, it returns two functions and optionally a third one, from the numbers back to `MyTime`
+@recipe f(::Type{MyTime}, mt::MyTime) =
+    (minutes_since_midnight, formatter, n -> MyTime(divrem(n, 60)...))
 ```
 Now we can plot vectors of `MyTime` automatically with the correct tick labelling.
 `DateTime`s and `Char`s are implemented with such a type recipe in Plots for example.
@@ -224,6 +225,10 @@ times = MyTime.(0:23, rand(0:59, 24))
 vals = log.(1:24)
 
 plot(times, vals)
+```
+With the third function, a formatter of the user's is called with `MyTime`s.
+```@example types
+plot(times, vals; xformatter = mt -> string(mt.h, "h"))
 ```
 Again everything composes nicely.
 ```@example types
