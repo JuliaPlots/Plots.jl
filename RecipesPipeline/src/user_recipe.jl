@@ -199,7 +199,7 @@ end
 if is3d(plotattributes)
     mat = fmt.data
     n, m = axes(mat)
-    m, n, Formatted(Surface(mat), fmt.formatter)
+    m, n, Formatted(Surface(mat), fmt.formatter, fmt.inverse)
 else
     nothing, fmt, nothing
 end

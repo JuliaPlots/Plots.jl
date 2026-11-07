@@ -9,8 +9,21 @@ const _label_func_tex = Dict{Symbol, Function}(
 )
 labelfunc_tex(scale::Symbol) = get(_label_func_tex, scale, convert_sci_unicode)
 
+# a function of the user's is called with the values as they were given, `Date`s say,
+# while the ticks are placed as the formatter of their type would
+struct TypedFormatter{F <: Function} <: Function
+    formatter::F
+    type::Formatted
+end
+(f::TypedFormatter)(x) = f.formatter(f.type.inverse(x))
+
+typed_formatter(formatter::Function, type::Formatted) =
+    formatter ≡ type.formatter ? formatter : TypedFormatter(formatter, type)
+typed_formatter(formatter, type) = formatter
+
 function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     amin, amax = alims
+    typeformatter = formatter isa TypedFormatter ? formatter.type.formatter : formatter
 
     # scale the limits
     sf, invsf, noop = scale_inverse_scale_func(scale)
@@ -24,7 +37,7 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
 
     if ticks ≡ nothing && noop
-        if formatter == RecipesPipeline.dateformatter
+        if typeformatter == RecipesPipeline.dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
             # limits, which resulted from converting the Date type to integers,
@@ -34,10 +47,12 @@ function optimal_ticks_and_labels(ticks, alims, scale, formatter)
             ticks, labels =
                 optimize_datetime_ticks(864.0e5 * amin, 864.0e5 * amax; k_min = 2, k_max = 4)
             # Now the ticks are converted back to floats corresponding to Dates.
-            return ticks / 864.0e5, labels
-        elseif formatter == RecipesPipeline.datetimeformatter
-            return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
+            ticks /= 864.0e5
+        elseif typeformatter == RecipesPipeline.datetimeformatter
+            ticks, labels = optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
         end
+        ticks ≡ nothing ||
+            return ticks, formatter isa TypedFormatter ? get_labels(formatter, ticks, scale) : labels
     end
 
     # get a list of well-laid-out ticks

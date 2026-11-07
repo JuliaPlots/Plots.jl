@@ -125,7 +125,9 @@ Base.eltype(vol::Volume{T}) where {T} = T
 struct Formatted{T}
     data::T
     formatter::Function
+    inverse::Function  # from the numbers back to the values as they were given
 end
+Formatted(data, formatter) = Formatted(data, formatter, identity)
 
 # -------------------------------
 # ## 3D seriestypes

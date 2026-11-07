@@ -10,7 +10,7 @@ for letter in (:x, :y, :z)
         # allow the underscore version too: `xguide` or `x_guide`
         add_aliases(letter_keyword, Symbol(letter, "_", keyword))
     end
-    for keyword in (_magic_axis_attrs..., :(_discrete_indices))
+    for keyword in (_magic_axis_attrs..., :(_discrete_indices), :(_formatted))
         _attrsymbolcache[letter][keyword] = Symbol(letter, keyword)
     end
 end
