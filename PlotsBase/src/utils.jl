@@ -235,15 +235,13 @@ function heatmap_edges(
         ispolar::Bool = false,
     )
     nx, ny = length(x), length(y)
-    # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
-    # the correct check, since (4, 3) != (3, 4) and a misleading plot is produced.
-    ismidpoints = prod(z_size) == (ny * nx)
+    ismidpoints = z_size == (ny, nx)
     isedges = z_size == (ny - 1, nx - 1)
     (ismidpoints || isedges) ||
         """
     Length of x & y does not match the size of z.
     Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
-    or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).
+    or `size(z) == (length(y) - 1, length(x) - 1)` (x & y define edges).
     """ |>
         ArgumentError |>
         throw

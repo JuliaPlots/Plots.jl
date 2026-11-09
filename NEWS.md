@@ -46,6 +46,9 @@
   that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
 
 ### Fixed
+- A heatmap throws when `x` and `y` fit `z` neither as the centers of its cells nor as their edges, on all
+  backends, where swapping them was drawn as a different picture, and the axes end at the edges when they are
+  given, where they went half a cell beyond (#4874)
 - `mesh3d` with PythonPlot draws each face, where triangles given as `(i, j, k)` came out as one polygon, or
   threw with matplotlib 3.11, and connections given as vectors threw
 - A matrix of complex numbers plots each column as a series in the complex plane, as a vector does, where it threw
