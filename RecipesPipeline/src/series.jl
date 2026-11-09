@@ -120,6 +120,13 @@ end
 # ensure we dispatch to the slicer
 struct SliceIt end
 
+# the axis keeps the formatter of the type, its default, and the inverse to call a
+# user provided formatter with the values as they were given
+function _unformat!(plotattributes, letter, f::Formatted)
+    plotattributes[Symbol(letter, :_formatted)] = Formatted(nothing, f.formatter, f.inverse)
+    return f.data
+end
+
 # The `SliceIt` recipe finishes user and type recipe processing.
 # It splits processed data into individual series data, stores in copied `plotattributes`
 # for each series and returns no arguments.
@@ -127,21 +134,12 @@ struct SliceIt end
     @nospecialize
     nice_error = (x isa AbstractVector) && (y isa AbstractMatrix) # only check in the trivial case
     # handle data with formatting attached
-    if typeof(x) <: Formatted
-        xformatter := x.formatter
-        x = x.data
-    end
-    if typeof(y) <: Formatted
-        # a formatter attached to the data follows the data, which `vline` and the
-        # histograms draw against the x axis
-        letter = treats_y_as_x(plotattributes) ? :x : :y
-        plotattributes[Symbol(letter, :formatter)] = y.formatter
-        y = y.data
-    end
-    if typeof(z) <: Formatted
-        zformatter := z.formatter
-        z = z.data
-    end
+    typeof(x) <: Formatted && (x = _unformat!(plotattributes, :x, x))
+    # a formatter attached to the data follows the data, which `vline` and the
+    # histograms draw against the x axis
+    typeof(y) <: Formatted &&
+        (y = _unformat!(plotattributes, treats_y_as_x(plotattributes) ? :x : :y, y))
+    typeof(z) <: Formatted && (z = _unformat!(plotattributes, :z, z))
 
     xs = _series_data_vector(x, plotattributes)
     ys = _series_data_vector(y, plotattributes)

@@ -44,6 +44,9 @@
 - `savefig` takes `overwrite = false` to throw rather than replace a file that exists (#3001). Its default is the
   scoped value `PlotsBase.SAVEFIG_OVERWRITE`, so `with(PlotsBase.SAVEFIG_OVERWRITE => false) do ... end` makes
   that the default within the block, and the `savefig_overwrite` preference of PlotsBase everywhere
+- A formatter given as a function labels an axis of dates and times too, called with the values as they were
+  given, `Date`s, `DateTime`s, `Time`s or periods, where the formatter of their type replaced it (#4817). The
+  ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
 - A heatmap throws when `x` and `y` fit `z` neither as the centers of its cells nor as their edges, on all

@@ -93,6 +93,8 @@ end
     @test typeof(res) <: Formatted
     @test res.data == [Dates.value(Dates.Date(2001))]
     @test res.formatter(Dates.value(Dates.Date(2001))) == "2001-01-01"
+    @test res.inverse(Dates.value(Dates.Date(2001))) == Dates.Date(2001)
+    @test res.inverse(Dates.value(Dates.Date(2001)) + 0.5) == Dates.DateTime(2001, 1, 1, 12)
 
     res = _apply_type_recipe(plotattributes, [[Dates.Date(2001)]], :x)
     @test typeof(res) <: Formatted
@@ -189,11 +191,11 @@ end
 
     # a formatter the `y` data carries follows it to the axis it is drawn against
     fmt(v) = string(v)
-    for (st, key) in ((:path, :yformatter), (:along_x, :xformatter))
+    for (st, key) in ((:path, :y_formatted), (:along_x, :x_formatted))
         pa = Dict{Symbol, Any}(:seriestype => st)
         RecipesBase.apply_recipe(pa, SliceIt, nothing, Formatted([1.0, 2.0], fmt), nothing)
-        @test pa[key] ≡ fmt
-        @test !haskey(pa, key ≡ :xformatter ? :yformatter : :xformatter)
+        @test pa[key].formatter ≡ fmt
+        @test !haskey(pa, key ≡ :x_formatted ? :y_formatted : :x_formatted)
     end
 end
 

@@ -26,7 +26,7 @@ end
 
 # Handle type recipes when the recipe is defined on the elements.
 # This sort of recipe should return a pair of functions... one to convert to number,
-# and one to format tick values.
+# and one to format tick values, and optionally a third to convert the numbers back.
 function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     # `Any[y1, y2]` does not say it holds vectors, narrowing its element type lets dispatch tell
     eltype(v) ≡ Any && (w = identity.(v)) isa AVec{<:AVec} &&
@@ -46,9 +46,9 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
         warn_on_recipe_aliases!(plt, plotattributes, :type, x)
         postprocess_axis_attrs!(plt, plotattributes, letter)
-        return if length(args) == 2 && all(arg -> arg isa Function, args)
-            numfunc, formatter = args
-            Formatted(map(numfunc, v), formatter)
+        return if length(args) in (2, 3) && all(arg -> arg isa Function, args)
+            numfunc, fmt... = args
+            Formatted(map(numfunc, v), fmt...)
         else
             v
         end
@@ -91,9 +91,9 @@ function _apply_type_recipe(plotattributes, v::AVec{<:AVec}, letter)
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
         warn_on_recipe_aliases!(plt, plotattributes, :type, x)
         postprocess_axis_attrs!(plt, plotattributes, letter)
-        return if length(args) == 2 && all(arg -> arg isa Function, args)
-            numfunc, formatter = args
-            Formatted(map(u -> map(numfunc, u), v), formatter)
+        return if length(args) in (2, 3) && all(arg -> arg isa Function, args)
+            numfunc, fmt... = args
+            Formatted(map(u -> map(numfunc, u), v), fmt...)
         else
             v
         end
@@ -112,7 +112,7 @@ _apply_type_recipe(
 function _apply_type_recipe(plotattributes, v::Surface, letter)
     ret = _apply_type_recipe(plotattributes, v.surf, letter)
     return if typeof(ret) <: Formatted
-        Formatted(Surface(ret.data), ret.formatter)
+        Formatted(Surface(ret.data), ret.formatter, ret.inverse)
     else
         Surface(ret)
     end

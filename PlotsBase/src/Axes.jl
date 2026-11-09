@@ -52,6 +52,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
         :discrete_map => Dict(),   # map discrete values to discrete indices
         :continuous_values => zeros(0),
         :discrete_values => [],
+        :formatted => nothing,  # the formatter and inverse of the type the data was given in
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
@@ -549,6 +550,12 @@ function _update_axis(
 
     # update the axis
     PlotsBase.attr!(axis; kw...)
+    if (f = get(plotattributes_in, get_attr_symbol(letter, :(_formatted)), nothing)) ≢ nothing
+        axis[:formatted] = f
+        # the formatter of the type is the default
+        PlotsBase.is_explicit(axis.plotattributes, :formatter) && axis[:formatter] ≢ :auto ||
+            (axis[:formatter] = f.formatter)
+    end
     return nothing
 end
 
@@ -588,6 +595,7 @@ function Commons.get_ticks(
             cvals = axis[:continuous_values]
             # NOTE: unexpanded, see `expand_limits_to_ticks`
             alims = axis_limits(sp, axis[:letter]; expand_int_ticks = false)
+            formatter = PlotsBase.typed_formatter(formatter, axis[:formatted])
             Commons.get_ticks(ticks, cvals, dvals, alims, axis[:scale], formatter)
         end
     end

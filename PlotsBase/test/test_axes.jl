@@ -427,6 +427,18 @@ end
     @test axis(pl, :x) ≡ RecipesPipeline.dateformatter
     @test axis(pl, :y) ≡ fmt
 
+    # a user provided function is called with the dates, on the ticks of the dates
+    xtks(pl) = PlotsBase.get_ticks(pl[1], pl[1][:xaxis])
+    ticks = first(xtks(plot(dates, 1:41)))
+    md(d) = Dates.format(d, "u d")
+    for pl in (
+            plot(dates, 1:41; xformatter = md),
+            plot!(plot(dates, 1:41); xformatter = md),
+            vline!(plot(dates, 1:41; xformatter = md), [dates[10]]),
+        )
+        @test xtks(pl) == (ticks, ["Dec 31", "Jan 11", "Jan 22", "Feb 2"])
+    end
+
     pl = histogram(randn(100); yformatter = v -> "$v \$")
     sp = pl[1]
     @test PlotsBase.get_ticks(sp, sp[:yaxis])[2] |> first |> endswith(" \$")
