@@ -9,7 +9,7 @@ const _label_func_tex = Dict{Symbol, Function}(
 )
 labelfunc_tex(scale::Symbol) = get(_label_func_tex, scale, convert_sci_unicode)
 
-# a function of the user's is called with the values as they were given, `Date`s say,
+# a user provided function is called with the values as they were given, e.g. `Date`s,
 # while the ticks are placed as the formatter of their type would
 struct TypedFormatter{F <: Function} <: Function
     formatter::F

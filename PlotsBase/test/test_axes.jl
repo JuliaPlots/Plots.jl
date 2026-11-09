@@ -427,7 +427,7 @@ end
     @test axis(pl, :x) ≡ RecipesPipeline.dateformatter
     @test axis(pl, :y) ≡ fmt
 
-    # a function of the user's is called with the dates, on the ticks of the dates
+    # a user provided function is called with the dates, on the ticks of the dates
     xtks(pl) = PlotsBase.get_ticks(pl[1], pl[1][:xaxis])
     ticks = first(xtks(plot(dates, 1:41)))
     md(d) = Dates.format(d, "u d")

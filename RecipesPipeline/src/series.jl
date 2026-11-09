@@ -120,8 +120,8 @@ end
 # ensure we dispatch to the slicer
 struct SliceIt end
 
-# the axis keeps the formatter of the type, its default, and the inverse to call a formatter
-# of the user's with the values as they were given
+# the axis keeps the formatter of the type, its default, and the inverse to call a
+# user provided formatter with the values as they were given
 function _unformat!(plotattributes, letter, f::Formatted)
     plotattributes[Symbol(letter, :_formatted)] = Formatted(nothing, f.formatter, f.inverse)
     return f.data
