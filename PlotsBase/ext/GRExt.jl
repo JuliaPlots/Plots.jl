@@ -402,6 +402,17 @@ gr_set_projectiontype(sp) = GR.setprojectiontype(gr_projections[sp[:projection_t
 
 # --------------------------------------------------------------------------------------
 
+# `GR.drawarrow` draws without the flip and the log of the axes, so it is given the
+# coordinates with them applied and the scale turned off
+function gr_drawarrow(x1, y1, x2, y2)
+    scale = Int(GR.inqscale())
+    (x1, y1), (x2, y2) = GR.wctondc(x1, y1), GR.wctondc(x2, y2)
+    GR.setscale(0)
+    GR.drawarrow(GR.ndctowc(x1, y1)..., GR.ndctowc(x2, y2)...)
+    GR.setscale(scale)
+    return
+end
+
 # draw line segments, splitting x/y into contiguous/finite segments
 # note: this can be used for shapes by passing func `GR.fillarea`
 function gr_polyline(
@@ -440,11 +451,11 @@ function gr_polyline(
             func(x[istart:iend], y[istart:iend])
             if draw_head
                 gr_set_arrowstyle(arrowstyle)
-                GR.drawarrow(x[iend - 1], y[iend - 1], x[iend], y[iend])
+                gr_drawarrow(x[iend - 1], y[iend - 1], x[iend], y[iend])
             end
             if draw_tail
                 gr_set_arrowstyle(arrowstyle)
-                GR.drawarrow(x[istart + 1], y[istart + 1], x[istart], y[istart])
+                gr_drawarrow(x[istart + 1], y[istart + 1], x[istart], y[istart])
             end
         else
             break
