@@ -542,29 +542,18 @@ function _py_add_series(plt::Plot{PythonPlotBackend}, series::Series)
         ) |> push_h
     elseif st === :mesh3d
         cns = series[:connections]
+        # a face is a tuple of its corners, as matplotlib takes the length of a Julia
+        # matrix for its number of corners and can't convert a vector of vectors
         polygons = if cns isa AbstractVector{<:AbstractVector{<:Integer}}
             # Combination of any polygon types
-            map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
+            map(inds -> Tuple(map(i -> [x[i], y[i], z[i]], inds)), cns)
         elseif cns isa AbstractVector{NTuple{N, <:Integer}} where {N}
             # Only N-gons - connections have to be 1-based (indexing)
             map(inds -> map(i -> [x[i], y[i], z[i]], inds), cns)
         elseif cns isa NTuple{3, <:AbstractVector{<:Integer}}
             # Only triangles - connections have to be 0-based (indexing)
             X, Y, Z = mesh3d_triangles(x, y, z, cns)
-            ntris = length(cns[1])
-            polys = sizehint!(Matrix{eltype(x)}[], ntris)
-            for n in 1:ntris
-                m = 4(n - 1) + 1
-                push!(
-                    polys,
-                    [
-                        X[m + 0] Y[m + 0] Z[m + 0]
-                        X[m + 1] Y[m + 1] Z[m + 1]
-                        X[m + 2] Y[m + 2] Z[m + 2]
-                    ],
-                )
-            end
-            polys
+            map(m -> ntuple(k -> [X[m + k], Y[m + k], Z[m + k]], 3), 0:4:(length(X) - 1))
         else
             "Unsupported `:connections` type $(typeof(series[:connections])) for seriestype=$st" |>
                 ArgumentError |>
