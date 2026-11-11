@@ -291,6 +291,33 @@ end
     @test twpl[:bottom_margin] == 2PlotsBase.cm
 end
 
+@testset "GR twins keep the plot area of their subplot (#5763)" begin
+    with(:gr) do
+        GRExt = Base.get_extension(PlotsBase, :GRExt)
+        canvas = GRExt.GRViewport(0.0, 1.0, 0.0, 2 / 3)
+        function vp(sp)
+            v = first(GRExt.gr_plotarea_viewport(sp, 600PlotsBase.px, 400PlotsBase.px, canvas))
+            return v.xmin, v.xmax, v.ymin, v.ymax
+        end
+        function twinned(twin, kw = (;), twin_kw = (;))
+            pl = scatter(1:3; kw...)
+            plot!(twin(pl), 1:3; twin_kw...)
+            PlotsBase.prepare_output(pl)
+            return pl
+        end
+        for kw in ((; zcolor = 1:3), (; legend = :outerright), (; aspect_ratio = :equal))
+            pl = twinned(twiny, kw)
+            @test vp(pl[2]) == vp(pl[1])
+        end
+        # the colorbar of a twin narrows both, and goes beyond the y axis of the twin
+        pl = twinned(twinx, (;), (; line_z = 1:3))
+        @test vp(pl[2]) == vp(pl[1])
+        @test vp(pl[1])[2] < vp(twinned(twinx)[1])[2]
+        @test GRExt.gr_right_axes_width(pl[1]) > 0
+        @test GRExt.gr_right_axes_width(scatter(1:3; zcolor = 1:3)[1]) == 0
+    end
+end
+
 @testset "Axis-aliases" begin
     @test haskey(PlotsBase.Commons._keyAliases, :xguideposition)
     @test haskey(PlotsBase.Commons._keyAliases, :x_guide_position)
