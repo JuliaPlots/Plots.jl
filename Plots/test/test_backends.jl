@@ -204,6 +204,17 @@ push!(blacklist, 50)  # NOTE:  remove when github.com/jheinen/GR.jl/issues/507 i
     end
 end
 
+@testset "GR arrows on flipped and log axes (#5744)" begin
+    Plots.with(:gr) do
+        function points(x; kw...)
+            pl = plot(x, [1, 10]; arrow = :both, framestyle = :none, ticks = false, legend = false, xlims = (1, 10), kw...)
+            return [m[1] for m in eachmatch(r"points=\"([^\"]*)\"", sprint(show, MIME("image/svg+xml"), pl))]
+        end
+        @test points([2, 10]; xflip = true) == points([9, 1])
+        @test points([√10, 10]; xscale = :log10) == points([5.5, 10])
+    end
+end
+
 is_pkgeval() || @testset "PlotlyJS" begin
     Plots.with(:plotlyjs) do
         @test backend() == Plots.PlotlyJSBackend()
