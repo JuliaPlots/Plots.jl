@@ -717,9 +717,24 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vp
         vp_canvas.ymax * (1 - bottom(bb) / h),
         vp_canvas.ymax * (1 - top(bb) / h),
     )
-    hascolorbar(sp) && (viewport.xmax -= gr_cbar_reserved_width(sp, width(viewport)))
+    twins = gr_twins(sp)
+    if (i = findfirst(hascolorbar, twins)) ≢ nothing
+        viewport.xmax -= gr_cbar_reserved_width(twins[i], width(viewport)) + gr_right_axes_width(sp)
+    end
     return viewport
 end
+
+gr_is_twin(sp) = sp.parent isa Subplot && sp[:relative_bbox] == bbox(0, 0, 1, 1)
+
+# a subplot and its twins, which share the plot area and the room for a colorbar
+function gr_twins(sp)
+    gr_is_twin(sp) && (sp = sp.parent)
+    return [sp; filter(s -> s.parent ≡ sp && gr_is_twin(s), sp.plt.inset_subplots)]
+end
+
+# the y axes on the right of the plot area come before the colorbar
+gr_right_axes_width(sp) =
+    maximum(s -> s[:yaxis][:mirror] ? 0.02 + gr_axis_width(s, s[:yaxis]) : 0.0, gr_twins(sp))
 
 # change so we're focused on the viewport area
 
@@ -757,7 +772,7 @@ function gr_set_viewport_cmap(sp::Subplot, vp::GRViewport)
         half = 0.5h * height(vp)
         ycenter(vp) - half, ycenter(vp) + half
     end
-    x_min = vp.xmax + offset
+    x_min = vp.xmax + offset + gr_right_axes_width(sp)
     args = x_min, x_min + gr_cbar_thickness(sp, width(vp)), y_min, y_max
     GR.setviewport(args...)
     return GRViewport(args...)
@@ -964,7 +979,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, vp::GRViewport)
     gr_set_font(title.font, sp; halign = :center, valign = :top)
     # shift the title by the extra thickness requested through `colorbar_width`
     extra_width = gr_cbar_thickness(sp, width(vp)) - gr_cbar_width[]
-    gr_text(vp.xmax + 0.1 + extra_width, ycenter(vp), title.str)
+    gr_text(vp.xmax + 0.1 + extra_width + gr_right_axes_width(sp), ycenter(vp), title.str)
 
     GR.restorestate()
     return nothing
@@ -1274,17 +1289,26 @@ function gr_viewport_bbox(vp, sp, color, lw = 1)
     return nothing
 end
 
+# the plot area as drawn, narrowed by the colorbar, the legend and the aspect ratio, and for
+# a twin that of the subplot it overlays
+function gr_plotarea_viewport(sp, w, h, vp_canvas)
+    if gr_is_twin(sp)
+        vp = first(gr_plotarea_viewport(sp.parent, w, h, vp_canvas))
+        return vp, gr_get_legend_geometry(vp, sp)
+    end
+    vp = gr_viewport_from_bbox(sp, plotarea(sp), w, h, vp_canvas)
+    leg = gr_get_legend_geometry(vp, sp)
+    gr_update_viewport_legend!(vp, sp, leg)
+    gr_update_viewport_ratio!(vp, sp)
+    return vp, leg
+end
+
 function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
     PlotsBase._update_min_padding!(sp)
 
     # the viewports for this subplot and the whole plot
     vp_sp = gr_viewport_from_bbox(sp, bbox(sp), w, h, vp_canvas)
-    vp_plt = gr_viewport_from_bbox(sp, plotarea(sp), w, h, vp_canvas)
-
-    # update plot viewport
-    leg = gr_get_legend_geometry(vp_plt, sp)
-    gr_update_viewport_legend!(vp_plt, sp, leg)
-    gr_update_viewport_ratio!(vp_plt, sp)
+    vp_plt, leg = gr_plotarea_viewport(sp, w, h, vp_canvas)
 
     # fill in the plot area background
     gr_fill_plotarea(sp, vp_plt)

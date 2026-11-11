@@ -49,6 +49,9 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- GR backend: the axes of `twinx` and `twiny` line up with those of their subplot when a colorbar, an outer legend
+  or the aspect ratio narrows it, and a colorbar comes after the y axis on the right, of a twin or mirrored, where
+  it covered its labels (#5763)
 - GR backend: arrows follow their line on flipped and log axes, where they were drawn as on a plain axis (#5744)
 - A heatmap throws when `x` and `y` fit `z` neither as the centers of its cells nor as their edges, on all
   backends, where swapping them was drawn as a different picture, and the axes end at the edges when they are
