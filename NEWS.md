@@ -49,6 +49,7 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- GR backend: arrows follow their line on flipped and log axes, where they were drawn as on a plain axis (#5744)
 - A heatmap throws when `x` and `y` fit `z` neither as the centers of its cells nor as their edges, on all
   backends, where swapping them was drawn as a different picture, and the axes end at the edges when they are
   given, where they went half a cell beyond (#4874)
