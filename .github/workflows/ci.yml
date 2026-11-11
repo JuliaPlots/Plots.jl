@@ -88,6 +88,9 @@ jobs:
 
       - name: test Plots stack
         timeout-minutes: 90
+        env:
+          JULIA_CONDAPKG_ENV: ${{ runner.temp }}/condaenv
+          JULIA_CONDAPKG_OFFLINE: true  # consume the shared env, do not re-resolve it
         run: |
           # use the shared env as is: the `CondaPkg` lock, taken by every process loading `PythonCall`
           # while precompiling, throws `EACCES` on windows when another process frees it at that moment
