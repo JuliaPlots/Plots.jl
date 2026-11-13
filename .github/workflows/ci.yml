@@ -102,7 +102,7 @@ jobs:
           else
             # For Linux and macOS, ensure the conda environment exists
             # First, let CondaPkg create the environment if needed
-            ${{ env.JULIA_PROJECT_CMD }} -e 'using CondaPkg; CondaPkg.activate!("$JULIA_CONDAPKG_ENV"); CondaPkg.resolve()'
+            ${{ env.JULIA_PROJECT_CMD }} -e 'using CondaPkg; CondaPkg.activate!(ENV["JULIA_CONDAPKG_ENV"]); CondaPkg.resolve()'
             
             # Now set the Python executable path
             if [ -f "$JULIA_CONDAPKG_ENV/bin/python" ]; then
