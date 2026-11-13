@@ -100,7 +100,17 @@ jobs:
             env=$(cygpath -u "$JULIA_CONDAPKG_ENV")  # what `CondaPkg.activate!` puts on the path
             export PATH="$env:$env/Library/mingw-w64/bin:$env/Library/usr/bin:$env/Library/bin:$env/Scripts:$env/bin:$PATH"
           else
-            export JULIA_PYTHONCALL_EXE="$JULIA_CONDAPKG_ENV/bin/python"
+            # For Linux and macOS, ensure the conda environment exists
+            # First, let CondaPkg create the environment if needed
+            ${{ env.JULIA_PROJECT_CMD }} -e 'using CondaPkg; CondaPkg.activate!("$JULIA_CONDAPKG_ENV"); CondaPkg.resolve()'
+            
+            # Now set the Python executable path
+            if [ -f "$JULIA_CONDAPKG_ENV/bin/python" ]; then
+              export JULIA_PYTHONCALL_EXE="$JULIA_CONDAPKG_ENV/bin/python"
+            else
+              echo "ERROR: Python not found in conda environment at $JULIA_CONDAPKG_ENV"
+              exit 1
+            fi
           fi
           cmd=(${{ env.JULIA_PROJECT_CMD }} --depwarn=yes)
           if [ "$RUNNER_OS" == "Linux" ]; then
