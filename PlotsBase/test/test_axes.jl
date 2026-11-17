@@ -318,6 +318,29 @@ end
     end
 end
 
+@testset "PythonPlot twins keep the plot area of their subplot" begin
+    haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+        PythonPlotExt = Base.get_extension(PlotsBase, :PythonPlotExt)
+        box(sp) = PythonPlot.pyconvert(Vector{Float64}, sp.o.get_position(original = false).bounds)
+        function twinned(twin, kw = (;), twin_kw = (;))
+            p = scatter(1:3; kw...)
+            plot!(twin(p), 1:3; twin_kw...)
+            PlotsBase.prepare_output(p)
+            return p
+        end
+        for kw in ((; zcolor = 1:3), (; aspect_ratio = :equal))
+            pl = twinned(twiny, kw)
+            @test box(pl[2]) == box(pl[1])
+        end
+        # the colorbar of a twin narrows both, and goes beyond the y axis of the twin
+        pl = twinned(twinx, (;), (; line_z = 1:3))
+        @test box(pl[2]) == box(pl[1])
+        cbar = PythonPlotExt._py_bbox(pl[2].attr[:cbar_ax])
+        @test PlotsBase.left(cbar) > PlotsBase.right(PythonPlotExt._py_bbox_axis(pl[2].o, :y))
+        @test box(pl[1])[3] < box(twinned(twinx)[1])[3]
+    end
+end
+
 @testset "Axis-aliases" begin
     @test haskey(PlotsBase.Commons._keyAliases, :xguideposition)
     @test haskey(PlotsBase.Commons._keyAliases, :x_guide_position)

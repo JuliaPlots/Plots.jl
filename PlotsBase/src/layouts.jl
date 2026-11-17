@@ -449,3 +449,11 @@ Adds a new, empty subplot overlaid on top of `sp`, with a mirrored x-axis and li
 """
 twiny(sp::Subplot) = twin(sp, :y)
 twiny(plt::Plot = current()) = twiny(first(plt))
+
+istwin(sp) = sp.parent isa Subplot && sp[:relative_bbox] == bbox(0, 0, 1, 1)
+
+# a subplot and its twins, which share the plot area and the room for a colorbar
+function twins(sp)
+    istwin(sp) && (sp = sp.parent)
+    return [sp; filter(s -> s.parent ≡ sp && istwin(s), sp.plt.inset_subplots)]
+end
