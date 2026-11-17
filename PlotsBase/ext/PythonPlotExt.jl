@@ -1077,6 +1077,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
     foreach(series -> _py_add_series(plt, series), plt.series_list)
 
     # update subplots
+    dividers = IdDict()
     for sp in plt.subplots
         (ax = sp.o) ≡ nothing && continue
         xaxis, yaxis = sp[:xaxis], sp[:yaxis]
@@ -1151,8 +1152,9 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 cax = fig.add_axes([0.9, 0.1, 0.03, 0.8]; label)
                 fig.colorbar(handle; cax, kw...)
             else
-                # divider approach works only with 2d plots
-                divider = mpl_toolkits.axes_grid1.make_axes_locatable(ax)
+                # divider approach works only with 2d plots, a subplot and its twins share one
+                base = first(PlotsBase.twins(sp)).o
+                divider = get!(() -> mpl_toolkits.axes_grid1.make_axes_locatable(base), dividers, base)
                 pos, pad, orientation = if cb_sym ≡ :left
                     cb_sym, "5%", "vertical"
                 elseif cb_sym ≡ :top
@@ -1160,7 +1162,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
                 elseif cb_sym ≡ :bottom
                     cb_sym, "5%", "horizontal"
                 else  # :right or :best
-                    :right, "2.5%", "vertical"
+                    # widened in `_update_min_padding!` by the y axes on the right
+                    Size = mpl_toolkits.axes_grid1.axes_size
+                    sp.attr[:cbar_pad] = Size.Fixed(0)
+                    :right, Size.from_any("2.5%", fraction_ref = Size.AxesX(base)) + sp.attr[:cbar_pad], "vertical"
                 end
                 # thickness of the bar, `5%` is a reasonable value for most usecases
                 thickness =
@@ -1472,6 +1477,10 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
         # this sets the bg color inside the grid
         ax.set_facecolor(_py_color(sp[:background_color_inside]))
 
+        # a twin takes the plot area of its subplot as drawn, narrowed by a colorbar or the aspect ratio
+        PlotsBase.istwin(sp) &&
+            ax.set_axes_locator(PythonCall.pyfunc((_, _) -> sp.parent.o.get_position(original = false)))
+
         # link axes
         x_ax_link, y_ax_link = xaxis.sps[1].o, yaxis.sps[1].o
         if Bool(ax != x_ax_link)  # twinx
@@ -1509,6 +1518,11 @@ function PlotsBase._update_min_padding!(sp::Subplot{PythonPlotBackend})
             _py_bbox_legend(ax),
         )
         expand_padding!(padding, bb, plotbb)
+    end
+    if haskey(sp.attr, :cbar_pad)
+        sp.attr[:cbar_pad].fixed_size = maximum(PlotsBase.twins(sp)) do s
+            max(0mm, right(_py_bbox_axis(s.o, :y)) - right(_py_bbox(s.o))) / px / sp.plt[:dpi]
+        end
     end
     if haskey(sp.attr, :cbar_ax) # Treat colorbar the same way
         cbar_ax = sp.attr[:cbar_handle].ax

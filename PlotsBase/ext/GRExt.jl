@@ -717,24 +717,16 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vp
         vp_canvas.ymax * (1 - bottom(bb) / h),
         vp_canvas.ymax * (1 - top(bb) / h),
     )
-    twins = gr_twins(sp)
+    twins = PlotsBase.twins(sp)
     if (i = findfirst(hascolorbar, twins)) ≢ nothing
         viewport.xmax -= gr_cbar_reserved_width(twins[i], width(viewport)) + gr_right_axes_width(sp)
     end
     return viewport
 end
 
-gr_is_twin(sp) = sp.parent isa Subplot && sp[:relative_bbox] == bbox(0, 0, 1, 1)
-
-# a subplot and its twins, which share the plot area and the room for a colorbar
-function gr_twins(sp)
-    gr_is_twin(sp) && (sp = sp.parent)
-    return [sp; filter(s -> s.parent ≡ sp && gr_is_twin(s), sp.plt.inset_subplots)]
-end
-
 # the y axes on the right of the plot area come before the colorbar
 gr_right_axes_width(sp) =
-    maximum(s -> s[:yaxis][:mirror] ? 0.02 + gr_axis_width(s, s[:yaxis]) : 0.0, gr_twins(sp))
+    maximum(s -> s[:yaxis][:mirror] ? 0.02 + gr_axis_width(s, s[:yaxis]) : 0.0, PlotsBase.twins(sp))
 
 # change so we're focused on the viewport area
 
@@ -1292,7 +1284,7 @@ end
 # the plot area as drawn, narrowed by the colorbar, the legend and the aspect ratio, and for
 # a twin that of the subplot it overlays
 function gr_plotarea_viewport(sp, w, h, vp_canvas)
-    if gr_is_twin(sp)
+    if PlotsBase.istwin(sp)
         vp = first(gr_plotarea_viewport(sp.parent, w, h, vp_canvas))
         return vp, gr_get_legend_geometry(vp, sp)
     end
