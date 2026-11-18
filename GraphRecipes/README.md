@@ -47,6 +47,6 @@ graphplot(g,
 ![](assets/readme_julia_logo_pun.png)
 
 
-This repo maintains a collection of recipes for graph analysis, and is a reduced and refactored version of the previous PlotRecipes. It uses the powerful machinery of [Plots](https://github.com/JuliPlots/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/Plots.jl/tree/master/RecipesBase) to turn simple transformations into flexible visualizations.
+This repo maintains a collection of recipes for graph analysis, and is a reduced and refactored version of the previous PlotRecipes. It uses the powerful machinery of [Plots](https://github.com/JuliaPlots/Plots.jl) and [RecipesBase](https://github.com/JuliaPlots/Plots.jl/tree/master/RecipesBase) to turn simple transformations into flexible visualizations.
 
 Original author: Thomas Breloff (@tbreloff)
