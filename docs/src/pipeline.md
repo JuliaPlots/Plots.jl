@@ -80,7 +80,7 @@ Afterwards, there are some arguments which are simplified and compressed, such a
 Plots will rarely ask you to pre-process your own inputs.  You have a Julia array? Great.  DataFrame? No problem.  Surface function? You got it.
 
 During this step, Plots will translate your input data (within the context of the plot type and other inputs) into a list of sliced and/or expanded representations,
-where each item represents the data for one plot series.  Under the hood, it makes heavy use of [multiple dispatch](https://docs.julialang.org/en/release-0.4/manual/methods/) and [recipes](@ref recipes).
+where each item represents the data for one plot series.  Under the hood, it makes heavy use of [multiple dispatch](https://docs.julialang.org/en/v1/manual/methods/) and [recipes](@ref recipes).
 
 Inputs are recursively processed until a matching recipe is found.  This means you can make modular and hierarchical recipes which are processed just like anything built into Plots.
 
