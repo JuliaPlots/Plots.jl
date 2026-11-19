@@ -104,7 +104,6 @@ jobs:
             # First, let CondaPkg create the environment if needed
             ${{ env.JULIA_PROJECT_CMD }} -e '
               using CondaPkg
-              CondaPkg.activate!("'"$CONDA_ENV"'")
               CondaPkg.resolve()
             '
             # Now set the Python executable path
