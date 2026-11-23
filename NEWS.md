@@ -49,6 +49,8 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- An error bar takes the values of its data point from a vector attribute such as `linecolor` or `seriesalpha`,
+  where it took them from the wrong points, giving all error bars one color or swapping their alphas (#5097)
 - PythonPlot backend: the axes of `twinx` and `twiny` line up with those of their subplot when a colorbar or the
   aspect ratio narrows it, and a colorbar comes after the y axis on the right, of a twin or mirrored, where it
   covered its labels (#5763)
