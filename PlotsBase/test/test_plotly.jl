@@ -106,6 +106,14 @@ Sys.isunix() && with(:plotly) do
         # setting the border color alone is enough to request a border
         @test cbar(heatmap(rand(10, 10); colorbar_border_color = :red))[:outlinewidth] == 1
 
+        # a scatter trace takes its colorbar from the marker (#4942)
+        pl = scatter(rand(5); marker_z = rand(5), colorbar_title = "z")
+        PlotsBase.prepare_output(pl)
+        marker = last(PlotsBase.plotly_series(pl))[:marker]
+        @test marker[:showscale]
+        @test marker[:colorbar][:title][:text] == "z"
+        @test marker[:colorbar][:x] == last(PlotsBase.Plotly.plotly_domain(pl[1])[1])
+
         cb = cbar(heatmap(rand(10, 10); colorbar_ticks = ([0.2, 0.8], ["lo", "hi"])))
         @test cb[:tickmode] == "array"
         @test cb[:tickvals] == [0.2, 0.8]

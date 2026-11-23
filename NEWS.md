@@ -49,6 +49,8 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- Plotly backend: the colorbar of `marker_z`, `line_z` and `fill_z` sits next to its subplot with its title and
+  ticks, where Plotly put it at the right edge of the figure, one on top of the other in a layout (#4942)
 - PythonPlot backend: the axes of `twinx` and `twiny` line up with those of their subplot when a colorbar or the
   aspect ratio narrows it, and a colorbar comes after the y axis on the right, of a twin or mirrored, where it
   covered its labels (#5763)
