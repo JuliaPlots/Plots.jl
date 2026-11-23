@@ -49,6 +49,8 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- PGFPlotsX backend: each bar or shape of a series takes its own value of a vector `fillcolor` or `fillalpha`, where
+  they all took the first (#5278)
 - PythonPlot backend: the axes of `twinx` and `twiny` line up with those of their subplot when a colorbar or the
   aspect ratio narrows it, and a colorbar comes after the y axis on the right, of a twin or mirrored, where it
   covered its labels (#5763)
