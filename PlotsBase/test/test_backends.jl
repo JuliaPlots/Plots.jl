@@ -112,6 +112,18 @@ end
     end
 end
 
+@testset "GR arrows on 3d paths (#4953)" begin
+    with(:gr) do
+        function points(; kw...)
+            pl = plot([0, 1, 2], [0, 1, 0], [0, 1, 2]; framestyle = :none, ticks = false, grid = false, legend = false, kw...)
+            return [m[1] for m in eachmatch(r"points=\"([^\"]*)\"", sprint(show, MIME("image/svg+xml"), pl))]
+        end
+        path = only(points())
+        # the tip of the head is the end of the path
+        @test any(p -> occursin(last(split(path)), p), setdiff(points(arrow = true), [path]))
+    end
+end
+
 @userplot CBarDemo
 @recipe function f(cb::CBarDemo)
     seriestype := :heatmap
