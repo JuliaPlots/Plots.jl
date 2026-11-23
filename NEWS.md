@@ -49,6 +49,9 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- `markershape = :auto` and `linestyle = :auto` cycle through the shapes and styles in their usual order, starting
+  from `:circle` and `:solid`, where they went alphabetically and gave `:+` and `:cross`, which look alike, to the
+  first and third series (#5005)
 - PythonPlot backend: the axes of `twinx` and `twiny` line up with those of their subplot when a colorbar or the
   aspect ratio narrows it, and a colorbar comes after the y axis on the right, of a twin or mirrored, where it
   covered its labels (#5763)

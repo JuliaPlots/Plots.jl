@@ -61,14 +61,14 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
         plotattributes,
         :linestyle,
         Commons._styleAliases,
-        supported_styles(pkg),
+        filter(s -> is_style_supported(pkg, s), Commons._all_styles),
         plotIndex,
     )
     Commons.aliases_and_autopick(
         plotattributes,
         :markershape,
         Commons._marker_aliases,
-        supported_markers(pkg),
+        filter(m -> is_marker_supported(pkg, m), Commons._all_markers),
         plotIndex,
     )
 
