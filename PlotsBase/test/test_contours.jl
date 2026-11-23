@@ -88,3 +88,12 @@ end
     @test given == 5:5:40
     @test pl.series_list[1][:levels] == 5:5:40
 end
+
+@testset "GR contour of scattered points (#5042)" begin
+    x, y = 10rand(100), 10rand(100)
+    with(:gr) do
+        for f in (contour, contourf)
+            @test png(f(x, y, sin.(x) .* cos.(y)), tempname()) isa AbstractString
+        end
+    end
+end

@@ -2293,6 +2293,8 @@ function gr_draw_contour(series, x, y, z, clims)
     GR.setspace(clims[1], clims[2], 0, 90)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
     gr_set_transparency(get_fillalpha(series))
+    # scattered points, gridded as for a surface
+    length(x) == length(y) == length(z) && ((x, y, z) = GR.gridit(x, y, z, 200, 200))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] ≢ nothing
         GR.contourf(x, y, h, z, Int(series[:contour_labels] == true))
