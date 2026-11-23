@@ -1243,6 +1243,11 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
             4mm
         end
     end
+    if hascolorbar(sp) && _has_ticks(sp[:colorbar_ticks])
+        gr_set_font(colorbartickfont(sp), sp)
+        l = first(gr_get_ticks_size(get_colorbar_ticks(sp), 0))
+        padding.right[] += max(0, 0.01 + l - gr_cbar_label_space[]) * unit
+    end
 
     return sp.minpad = (
         dpi * padding.left[],

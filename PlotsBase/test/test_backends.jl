@@ -101,6 +101,17 @@ end
     end
 end
 
+@testset "GR keeps room for the tick labels of a colorbar (#4946)" begin
+    with(:gr) do
+        function pad(z)
+            pl = heatmap(z; size = (800, 200))
+            PlotsBase.prepare_output(pl)
+            return pl[1].minpad[3]
+        end
+        @test pad([-0.0004 0.0004]) > pad([0 1])
+    end
+end
+
 @testset "GR arrows on flipped and log axes (#5744)" begin
     with(:gr) do
         function points(x; kw...)
