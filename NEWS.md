@@ -50,6 +50,7 @@
 
 ### Fixed
 - GR backend: `arrow` draws the heads of a 3d path, and of a 3d `quiver`, which it left out (#4953)
+- GR backend: the grid and the ticks of a polar heatmap are drawn over it, where the heatmap hid them (#5759)
 - PythonPlot backend: the axes of `twinx` and `twiny` line up with those of their subplot when a colorbar or the
   aspect ratio narrows it, and a colorbar comes after the y axis on the right, of a twin or mirrored, where it
   covered its labels (#5763)

@@ -523,6 +523,9 @@ if x isa Real && y isa Real && isfinite(x) && isfinite(y)
     end
 end
 
+# a polar heatmap fills the circle, so its grid and ticks are drawn after it
+gr_polar_heatmap(sp) = ispolar(sp) && any(s -> s[:seriestype] ≡ :heatmap, series_list(sp))
+
 function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     GR.savestate()
     xaxis = sp[:xaxis]
@@ -1329,6 +1332,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
         gr_update_colorbar!(cbar, series)
     end
 
+    if gr_polar_heatmap(sp)
+        gr_set_viewport_polar(vp_plt)
+        gr_polaraxes(axis_limits(sp, :y)..., sp)
+    end
+
     # draw the colorbar
     hascolorbar(sp) && gr_draw_colorbar(cbar, sp, vp_plt)
 
@@ -1769,7 +1777,7 @@ function gr_draw_axes(sp, vp)
         r = gr_set_viewport_polar(vp)
         # rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
         rmin, rmax = axis_limits(sp, :y)
-        gr_polaraxes(rmin, rmax, sp)
+        gr_polar_heatmap(sp) || gr_polaraxes(rmin, rmax, sp)
     elseif sp[:framestyle] ≢ :none
         foreach(letter -> gr_draw_axis_minorgrid(sp, letter, vp), (:x, :y))
         foreach(letter -> gr_draw_axis_grid(sp, letter, vp), (:x, :y))
