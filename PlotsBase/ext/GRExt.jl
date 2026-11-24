@@ -1246,6 +1246,11 @@ function PlotsBase._update_min_padding!(sp::Subplot{GRBackend})
             4mm
         end
     end
+    if hascolorbar(sp) && _has_ticks(sp[:colorbar_ticks])
+        gr_set_font(colorbartickfont(sp), sp)
+        l = first(gr_get_ticks_size(get_colorbar_ticks(sp), 0))
+        padding.right[] += max(0, 0.01 + l - gr_cbar_label_space[]) * unit
+    end
 
     return sp.minpad = (
         dpi * padding.left[],
@@ -2213,15 +2218,23 @@ function gr_draw_segments(series, x, y, z, fillrange, clims)
         (lc = get_linecolor(series, clims, i)) |> gr_set_fillcolor
         gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
         gr_set_transparency(lc, get_linealpha(series, i))
+        arrow = series[:arrow] isa Arrow ? series[:arrow] : Arrow(:none, :simple, 1.0, 1.0)
+        arrowside, arrowstyle, arrowsize =
+            arrow.side, arrow.style, (arrow.headlength + arrow.headwidth) / 2
         if is3d
             GR.polyline3d(x[rng], y[rng], z[rng])
+            # `GR.drawarrow` is 2d, so it takes the path as projected onto the canvas, where
+            # the window is `-1..1` as for the labels of the axes
+            if arrowside ≢ :none
+                w = GR.wc3towc.(x[rng], y[rng], z[rng])
+                window, scale = GR.inqwindow(), Int(GR.inqscale())
+                GR.setwindow(-1, 1, -1, 1)
+                GR.setscale(0)
+                gr_polyline(first.(w), getindex.(w, 2), (_, _) -> nothing; arrowside, arrowstyle, arrowsize)
+                GR.setwindow(window...)
+                GR.setscale(scale)
+            end
         elseif is2d
-            arrow =
-                series[:arrow] isa Arrow ? series[:arrow] : Arrow(:none, :simple, 1.0, 1.0)
-
-            arrowside, arrowstyle, arrowsize =
-                arrow.side, arrow.style, (arrow.headlength + arrow.headwidth) / 2
-
             gr_polyline(x[rng], y[rng]; arrowside, arrowstyle, arrowsize)
         end
     end
