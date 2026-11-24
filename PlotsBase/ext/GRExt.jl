@@ -808,14 +808,14 @@ function gr_contour_levels(series::Series, clims)
 end
 
 function gr_colorbar_colors(series::Series, clims)
-    colors = if iscontour(series)
+    colors = if isfilledcontour(series)
+        # GR.contourf spreads the colors evenly over the bands, whatever their levels
+        n = length(gr_contour_levels(series, clims))
+        step = n > 1 ? 255 / (n - 1) : 0.0
+        [1_000 + floor(Int, step * i) for i in 0:(n - 1)]
+    elseif iscontour(series)
         levels = gr_contour_levels(series, clims)
-        zrange = if isfilledcontour(series)
-            ignorenan_extrema(levels)  # GR.contourf uses a color range according to supplied levels
-        else
-            clims  # GR.contour uses a color range according to data range
-        end
-        @. 1_000 + 255 * (levels - zrange[1]) / (zrange[2] - zrange[1])
+        @. 1_000 + 255 * (levels - clims[1]) / (clims[2] - clims[1])  # GR.contour uses a color range according to data range
     else
         1_000:1_255  # 256 values
     end
@@ -2311,6 +2311,8 @@ function gr_draw_contour(series, x, y, z, clims)
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] ≢ nothing
+        # GR leaves what is below the lowest level blank, so values below `clims` take its color
+        series[:levels] isa Integer && (h[1] = min(h[1], ignorenan_minimum(z)))
         GR.contourf(x, y, h, z, Int(series[:contour_labels] == true))
     else
         black = plot_color(:black)
