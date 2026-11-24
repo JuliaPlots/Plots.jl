@@ -51,6 +51,10 @@
 ### Fixed
 - PythonPlot backend: the frame of a colorbar takes `colorbar_border_color`, which follows `foreground_color`, where
   it stayed black unless a border width was set (#5030)
+- GR backend: the colorbar of `contourf` has the colors of its bands when the levels are not evenly spaced, where it
+  took them from the values of the levels (#4950), and values below `clims` take the lowest color, as those above
+  take the highest, where they were left blank (#5043)
+- GR backend: the grid and the ticks of a polar heatmap are drawn over it, where the heatmap hid them (#5759)
 - PythonPlot backend: the axes of `twinx` and `twiny` line up with those of their subplot when a colorbar or the
   aspect ratio narrows it, and a colorbar comes after the y axis on the right, of a twin or mirrored, where it
   covered its labels (#5763)
