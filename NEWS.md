@@ -49,6 +49,8 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- Plotly backend: the colorbar of `marker_z`, `line_z` and `fill_z` sits next to its subplot with its title and
+  ticks, where Plotly put it at the right edge of the figure, one on top of the other in a layout (#4942)
 - GR backend: the margin on the right of a colorbar grows with its tick labels, which ran off the plot when wider than
   the fixed space kept for them, as on a wide plot or with long negative values (#4946)
 - GR backend: `arrow` draws the heads of a 3d path, and of a 3d `quiver`, which it left out (#4953)
