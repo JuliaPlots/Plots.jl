@@ -1354,6 +1354,8 @@ function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symb
         :cmax => cmax,
         :colorscale => plotly_colorscale(series[Symbol("$(sym)color")], 1),
         :showscale => hascolorbar(series[:subplot]),
+        # plotly takes the colorbar of a scatter trace from its marker
+        :colorbar => plotattributes_base[:colorbar],
     )
     return plotattributes_out
 end
