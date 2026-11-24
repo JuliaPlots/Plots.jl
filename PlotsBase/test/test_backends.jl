@@ -123,6 +123,14 @@ end
     end
 end
 
+@testset "GR draws the polar axes over a polar heatmap (#5759)" begin
+    with(:gr) do
+        pl = heatmap(range(0, 2π, 10), 0:5, rand(6, 10); projection = :polar, colorbar = false)
+        svg = sprint(show, MIME("image/svg+xml"), pl)
+        @test first(findlast("<polyline", svg)) > first(findfirst("<image", svg))
+    end
+end
+
 @userplot CBarDemo
 @recipe function f(cb::CBarDemo)
     seriestype := :heatmap

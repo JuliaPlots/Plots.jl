@@ -523,6 +523,9 @@ if x isa Real && y isa Real && isfinite(x) && isfinite(y)
     end
 end
 
+# a polar heatmap fills the circle, so its grid and ticks are drawn after it
+gr_polar_heatmap(sp) = ispolar(sp) && any(s -> s[:seriestype] ≡ :heatmap, series_list(sp))
+
 function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     GR.savestate()
     xaxis = sp[:xaxis]
@@ -805,14 +808,14 @@ function gr_contour_levels(series::Series, clims)
 end
 
 function gr_colorbar_colors(series::Series, clims)
-    colors = if iscontour(series)
+    colors = if isfilledcontour(series)
+        # GR.contourf spreads the colors evenly over the bands, whatever their levels
+        n = length(gr_contour_levels(series, clims))
+        step = n > 1 ? 255 / (n - 1) : 0.0
+        [1_000 + floor(Int, step * i) for i in 0:(n - 1)]
+    elseif iscontour(series)
         levels = gr_contour_levels(series, clims)
-        zrange = if isfilledcontour(series)
-            ignorenan_extrema(levels)  # GR.contourf uses a color range according to supplied levels
-        else
-            clims  # GR.contour uses a color range according to data range
-        end
-        @. 1_000 + 255 * (levels - zrange[1]) / (zrange[2] - zrange[1])
+        @. 1_000 + 255 * (levels - clims[1]) / (clims[2] - clims[1])  # GR.contour uses a color range according to data range
     else
         1_000:1_255  # 256 values
     end
@@ -1334,6 +1337,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, vp_canvas::GRViewport)
         gr_update_colorbar!(cbar, series)
     end
 
+    if gr_polar_heatmap(sp)
+        gr_set_viewport_polar(vp_plt)
+        gr_polaraxes(axis_limits(sp, :y)..., sp)
+    end
+
     # draw the colorbar
     hascolorbar(sp) && gr_draw_colorbar(cbar, sp, vp_plt)
 
@@ -1774,7 +1782,7 @@ function gr_draw_axes(sp, vp)
         r = gr_set_viewport_polar(vp)
         # rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
         rmin, rmax = axis_limits(sp, :y)
-        gr_polaraxes(rmin, rmax, sp)
+        gr_polar_heatmap(sp) || gr_polaraxes(rmin, rmax, sp)
     elseif sp[:framestyle] ≢ :none
         foreach(letter -> gr_draw_axis_minorgrid(sp, letter, vp), (:x, :y))
         foreach(letter -> gr_draw_axis_grid(sp, letter, vp), (:x, :y))
@@ -2300,6 +2308,8 @@ function gr_draw_contour(series, x, y, z, clims)
     gr_set_transparency(get_fillalpha(series))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] ≢ nothing
+        # GR leaves what is below the lowest level blank, so values below `clims` take its color
+        series[:levels] isa Integer && (h[1] = min(h[1], ignorenan_minimum(z)))
         GR.contourf(x, y, h, z, Int(series[:contour_labels] == true))
     else
         black = plot_color(:black)
