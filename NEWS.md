@@ -49,6 +49,7 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- GR backend: `arrow` draws the heads of a 3d path, and of a 3d `quiver`, which it left out (#4953)
 - GR backend: the colorbar of `contourf` has the colors of its bands when the levels are not evenly spaced, where it
   took them from the values of the levels (#4950), and values below `clims` take the lowest color, as those above
   take the highest, where they were left blank (#5043)
