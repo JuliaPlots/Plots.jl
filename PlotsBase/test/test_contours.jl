@@ -88,3 +88,18 @@ end
     @test given == 5:5:40
     @test pl.series_list[1][:levels] == 5:5:40
 end
+
+@testset "GR colors of contourf" begin
+    z = reshape(1.0:100, 10, 10)
+    with(:gr) do
+        # github.com/JuliaPlots/Plots.jl/issues/4950
+        GRExt = Base.get_extension(PlotsBase, :GRExt)
+        pl = contourf(1:10, 1:10, z; levels = [0, 20, 30, 45, 100])
+        @test GRExt.gr_colorbar_colors(pl[1][1], (1, 100)) == [1_000, 1_085, 1_170, 1_255]
+        # github.com/JuliaPlots/Plots.jl/issues/5043
+        fn = tempname() * ".png"
+        png(contourf(1:10, 1:10, z; clims = (20, 80), axis = false, grid = false, colorbar = false), fn)
+        px = load(fn)[end ÷ 2, end ÷ 8]
+        @test all(f -> f(px) < 0.1, (red, green, blue))
+    end
+end
