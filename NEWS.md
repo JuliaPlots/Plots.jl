@@ -52,6 +52,10 @@
 - `markershape = :auto` and `linestyle = :auto` cycle through the shapes and styles in their usual order, starting
   from `:circle` and `:solid`, where they went alphabetically and gave `:+` and `:cross`, which look alike, to the
   first and third series (#5005)
+- GR backend: the colorbar of `contourf` has the colors of its bands when the levels are not evenly spaced, where it
+  took them from the values of the levels (#4950), and values below `clims` take the lowest color, as those above
+  take the highest, where they were left blank (#5043)
+- GR backend: the grid and the ticks of a polar heatmap are drawn over it, where the heatmap hid them (#5759)
 - PythonPlot backend: the axes of `twinx` and `twiny` line up with those of their subplot when a colorbar or the
   aspect ratio narrows it, and a colorbar comes after the y axis on the right, of a twin or mirrored, where it
   covered its labels (#5763)
