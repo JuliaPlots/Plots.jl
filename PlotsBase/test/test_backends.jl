@@ -101,6 +101,26 @@ end
     end
 end
 
+@testset "PythonPlot colorbar border takes the foreground color (#5030)" begin
+    haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+        pl = heatmap(rand(3, 3); foreground_color = :red)
+        PlotsBase.prepare_output(pl)
+        outline = pl[1].attr[:cbar_handle].outline.get_edgecolor()
+        @test PythonPlot.pyconvert(Vector{Float64}, outline) == [1, 0, 0, 1]
+    end
+end
+
+@testset "GR keeps room for the tick labels of a colorbar (#4946)" begin
+    with(:gr) do
+        function pad(z)
+            pl = heatmap(z; size = (800, 200))
+            PlotsBase.prepare_output(pl)
+            return pl[1].minpad[3]
+        end
+        @test pad([-0.0004 0.0004]) > pad([0 1])
+    end
+end
+
 @testset "GR arrows on flipped and log axes (#5744)" begin
     with(:gr) do
         function points(x; kw...)
@@ -112,6 +132,17 @@ end
     end
 end
 
+@testset "GR arrows on 3d paths (#4953)" begin
+    with(:gr) do
+        function points(; kw...)
+            pl = plot([0, 1, 2], [0, 1, 0], [0, 1, 2]; framestyle = :none, ticks = false, grid = false, legend = false, kw...)
+            return [m[1] for m in eachmatch(r"points=\"([^\"]*)\"", sprint(show, MIME("image/svg+xml"), pl))]
+        end
+        path = only(points())
+        # the tip of the head is the end of the path
+        @test any(p -> occursin(last(split(path)), p), setdiff(points(arrow = true), [path]))
+    end
+end
 @testset "GR draws the polar axes over a polar heatmap (#5759)" begin
     with(:gr) do
         pl = heatmap(range(0, 2π, 10), 0:5, rand(6, 10); projection = :polar, colorbar = false)
