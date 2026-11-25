@@ -184,6 +184,11 @@ with(:pgfplotsx) do
             ylim = (0, 1),
             leg = false,
         ) isa PlotsBase.Plot
+
+        # a bar or shape of its own color for each value (#5278)
+        pl = bar(1:3, color = [:red, :green, :blue])
+        shapes = filter(x -> x isa PGFPlotsX.Plot && haskey(x.options.dict, "fill"), first(get_pgf_axes(pl)).contents)
+        @test [s.options["fill"] for s in shapes] == PlotsBase.plot_color.([:red, :green, :blue])
     end
 
     @testset "Histogram 2D" begin

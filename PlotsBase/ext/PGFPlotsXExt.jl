@@ -674,6 +674,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     for (k, segment) in enumerate(segments)
         i, rng = segment.attr_index, segment.range
         segment_opt = pgfx_linestyle(opt, i)
+        series[:seriestype] ≡ :shape && (segment_opt = merge(segment_opt, pgfx_fillstyle(opt, i)))
         if opt[:markershape] ≢ :none
             if (marker = _cycle(opt[:markershape], i)) isa Shape
                 scale_factor = 0.00125
@@ -939,7 +940,7 @@ function pgfx_add_series!(::Val{:quiver}, axis, series_opt, series, series_func,
 end
 
 function pgfx_add_series!(::Val{:shape}, axis, series_opt, series, series_func, opt)
-    series_opt = merge(push!(series_opt, "area legend" => nothing), pgfx_fillstyle(opt))
+    push!(series_opt, "area legend" => nothing)
     return pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
 end
 
