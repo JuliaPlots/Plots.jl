@@ -107,7 +107,7 @@ end
         PlotsBase.prepare_output(pl)
         outline = pl[1].attr[:cbar_handle].outline.get_edgecolor()
         @test PythonPlot.pyconvert(Vector{Float64}, outline) == [1, 0, 0, 1]
-   end
+    end
 end
 
 @testset "GR keeps room for the tick labels of a colorbar (#4946)" begin
