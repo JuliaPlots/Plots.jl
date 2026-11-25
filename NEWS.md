@@ -49,6 +49,8 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- PythonPlot backend: the frame of a colorbar takes `colorbar_border_color`, which follows `foreground_color`, where
+  it stayed black unless a border width was set (#5030)
 - PGFPlotsX backend: each bar or shape of a series takes its own value of a vector `fillcolor` or `fillalpha`, where
   they all took the first (#5278)
 - Plotly backend: the colorbar of `marker_z`, `line_z` and `fill_z` sits next to its subplot with its title and

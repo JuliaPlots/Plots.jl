@@ -101,6 +101,15 @@ end
     end
 end
 
+@testset "PythonPlot colorbar border takes the foreground color (#5030)" begin
+    haskey(TEST_BACKENDS, :PythonPlot) && with(:pythonplot) do
+        pl = heatmap(rand(3, 3); foreground_color = :red)
+        PlotsBase.prepare_output(pl)
+        outline = pl[1].attr[:cbar_handle].outline.get_edgecolor()
+        @test PythonPlot.pyconvert(Vector{Float64}, outline) == [1, 0, 0, 1]
+    end
+end
+
 @testset "GR keeps room for the tick labels of a colorbar (#4946)" begin
     with(:gr) do
         function pad(z)
