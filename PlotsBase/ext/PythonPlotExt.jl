@@ -1241,7 +1241,7 @@ function PlotsBase._before_layout_calcs(plt::Plot{PythonPlotBackend})
             cbar.outline.set_linewidth(
                 _py_thickness_scale(plt, border_width ≡ :auto ? 1 : border_width),
             )
-            border_width ≡ :auto || cbar.outline.set_edgecolor(_py_color(border_color))
+            cbar.outline.set_edgecolor(_py_color(border_color))
 
             sp.attr[:cbar_handle] = cbar
             sp.attr[:cbar_ax] = cax
