@@ -3,8 +3,9 @@ module Plotly
 
 export PlotlyBackend, plotly_show_js, plotly_series, plotly_layout, html_head, html_body
 
-import RecipesPipeline
+import RecipesPipeline: RecipesPipeline, datetimeformatter, dateformatter, timeformatter
 import Statistics
+import Dates
 import UUIDs
 import JSON
 
