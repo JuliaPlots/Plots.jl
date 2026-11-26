@@ -62,6 +62,10 @@ if Sys.isunix()
         @test_save :png
         @test_save :svg
         @test_save :html
+
+        pl = plot(1:2)
+        @test startswith(sprint(io -> PlotsBase.pdf(pl, io)), "%PDF")
+        @test startswith(sprint(io -> PlotsBase.svg(pl, io)), "<svg")
     end
 end
 
