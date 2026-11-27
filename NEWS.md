@@ -51,6 +51,9 @@
 ### Fixed
 - GR backend: `contour` and `contourf` take `x`, `y` and `z` as vectors of scattered points, gridded as for a
   `surface` unless they already lie on a grid, where they threw (#5042)
+- `markershape = :auto` and `linestyle = :auto` cycle through the shapes and styles in their usual order, starting
+  from `:circle` and `:solid`, where they went alphabetically and gave `:+` and `:cross`, which look alike, to the
+  first and third series (#5005)
 - PythonPlot backend: the frame of a colorbar takes `colorbar_border_color`, which follows `foreground_color`, where
   it stayed black unless a border width was set (#5030)
 - PGFPlotsX backend: each bar or shape of a series takes its own value of a vector `fillcolor` or `fillalpha`, where

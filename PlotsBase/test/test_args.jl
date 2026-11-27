@@ -19,7 +19,7 @@ x = collect(0.0:10.0)
 foo = Foo(x, sin.(x))
 
 @testset "Magic attributes" begin
-    @test plot(foo)[1][1][:markershape] ≡ (backend_name() === :gr ? :+ : :circle)
+    @test plot(foo)[1][1][:markershape] ≡ :circle
     @test plot(foo, markershape = :diamond)[1][1][:markershape] ≡ :diamond
     @test plot(foo, marker = :diamond)[1][1][:markershape] ≡ :diamond
     @test (
@@ -51,6 +51,11 @@ end
     @test sp[2][:series_index] == 2
     @test sp[1][:seriescolor] == cgrad(default(:palette))[1]
     @test sp[2][:seriescolor] == cgrad(default(:palette))[2]
+
+    # github.com/JuliaPlots/Plots.jl/issues/5005
+    pl = plot(rand(3, 5), markershape = :auto, linestyle = :auto)
+    @test getindex.(pl.series_list, :markershape) == [:circle, :rect, :diamond, :hexagon, :cross]
+    @test getindex.(pl.series_list, :linestyle) == [:solid, :dash, :dot, :dashdot, :dashdotdot]
 end
 
 @testset "Extra keyword arguments" begin
