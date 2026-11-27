@@ -51,6 +51,9 @@
 ### Fixed
 - An error bar takes the values of its data point from a vector attribute such as `linecolor` or `seriesalpha`,
   where it took them from the wrong points, giving all error bars one color or swapping their alphas (#5097)
+- `markershape = :auto` and `linestyle = :auto` cycle through the shapes and styles in their usual order, starting
+  from `:circle` and `:solid`, where they went alphabetically and gave `:+` and `:cross`, which look alike, to the
+  first and third series (#5005)
 - PythonPlot backend: the frame of a colorbar takes `colorbar_border_color`, which follows `foreground_color`, where
   it stayed black unless a border width was set (#5030)
 - PGFPlotsX backend: each bar or shape of a series takes its own value of a vector `fillcolor` or `fillalpha`, where
