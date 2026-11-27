@@ -250,6 +250,14 @@ Sys.isunix() && with(:plotly) do
         @test !haskey(PlotsBase.plotly_layout(plot(1:3, aspect_ratio = :equal)), :scene)
     end
 
+    @testset "Native ticks" begin
+        @test PlotsBase.plotly_series(plot(1:3; ticks = :native))[1][:x] == 1:3
+        pl = plot(Dates.Date(2020):Dates.Day(1):Dates.Date(2020, 1, 3), 1:3; ticks = :native)
+        @test all(startswith.(PlotsBase.plotly_series(pl)[1][:x], ["2020-01-0$i" for i in 1:3]))
+        pl = plot(Dates.Time(1):Dates.Hour(1):Dates.Time(3), 1:3; ticks = :native)
+        @test all(endswith.(PlotsBase.plotly_series(pl)[1][:x], ["0$i:00:00" for i in 1:3]))
+    end
+
     @testset "Requirejs" begin
         pl = plot(sin, 0, 2pi)
         io = PipeBuffer()
