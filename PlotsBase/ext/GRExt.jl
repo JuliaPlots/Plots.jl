@@ -2309,11 +2309,23 @@ function gr_draw_shapes(series, clims)
     return
 end
 
+# scattered points are interpolated onto a grid, points already on a grid are only sorted onto it
+function gr_gridit(x, y, z, nx = 200, ny = 200)
+    xs, ys = sort(unique(x)), sort(unique(y))
+    length(xs) * length(ys) == length(z) && allunique(zip(x, y)) || return GR.gridit(x, y, z, nx, ny)
+    zs = Matrix{Float64}(undef, length(xs), length(ys))
+    for (xi, yi, zi) in zip(x, y, z)
+        zs[searchsortedfirst(xs, xi), searchsortedfirst(ys, yi)] = zi
+    end
+    return xs, ys, vec(zs)
+end
+
 function gr_draw_contour(series, x, y, z, clims)
     GR.setprojectiontype(0)
     GR.setspace(clims[1], clims[2], 0, 90)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
     gr_set_transparency(get_fillalpha(series))
+    length(x) == length(y) == length(z) && ((x, y, z) = gr_gridit(x, y, z))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] ≢ nothing
         # GR leaves what is below the lowest level blank, so values below `clims` take its color
@@ -2338,7 +2350,7 @@ function gr_draw_surface(series, x, y, z, clims)
             # NOTE: setting nx = 0 or ny = 0 disables GR.gridit interpolation
             nx, ny = get(e_kwargs, :nx, 200), get(e_kwargs, :ny, 200)
             if length(x) == length(y) == length(z) && nx > 0 && ny > 0
-                x, y, z = GR.gridit(x, y, z, nx, ny)
+                x, y, z = gr_gridit(x, y, z, nx, ny)
             end
             d_opt = get(e_kwargs, :display_option, GR.OPTION_COLORED_MESH)
             if (!isnothing(fillalpha) && fillalpha < 1) || alpha(first(fillcolor)) < 1
