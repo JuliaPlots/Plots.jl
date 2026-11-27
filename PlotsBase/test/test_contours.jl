@@ -95,6 +95,10 @@ end
         for f in (contour, contourf)
             @test png(f(x, y, sin.(x) .* cos.(y)), tempname()) isa AbstractString
         end
+        # points on a grid are kept, in any order
+        GRExt = Base.get_extension(PlotsBase, :GRExt)
+        x, y = repeat(1:4, outer = 3), repeat(1:3, inner = 4)
+        @test GRExt.gr_gridit(reverse(x), reverse(y), reverse(x + 10y)) == (1:4, 1:3, x + 10y)
     end
 end
 

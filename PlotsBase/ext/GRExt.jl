@@ -2309,13 +2309,23 @@ function gr_draw_shapes(series, clims)
     return
 end
 
+# scattered points, gridded as for a surface, where points already on a grid are only sorted onto it
+function gr_gridit(x, y, z)
+    xs, ys = sort(unique(x)), sort(unique(y))
+    length(xs) * length(ys) == length(z) && allunique(zip(x, y)) || return GR.gridit(x, y, z, 200, 200)
+    zs = Matrix{Float64}(undef, length(xs), length(ys))
+    for (xi, yi, zi) in zip(x, y, z)
+        zs[searchsortedfirst(xs, xi), searchsortedfirst(ys, yi)] = zi
+    end
+    return xs, ys, vec(zs)
+end
+
 function gr_draw_contour(series, x, y, z, clims)
     GR.setprojectiontype(0)
     GR.setspace(clims[1], clims[2], 0, 90)
     gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
     gr_set_transparency(get_fillalpha(series))
-    # scattered points, gridded as for a surface
-    length(x) == length(y) == length(z) && ((x, y, z) = GR.gridit(x, y, z, 200, 200))
+    length(x) == length(y) == length(z) && ((x, y, z) = gr_gridit(x, y, z))
     h = gr_contour_levels(series, clims)
     if series[:fillrange] ≢ nothing
         # GR leaves what is below the lowest level blank, so values below `clims` take its color

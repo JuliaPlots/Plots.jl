@@ -50,7 +50,7 @@
 
 ### Fixed
 - GR backend: `contour` and `contourf` take `x`, `y` and `z` as vectors of scattered points, gridded as for a
-  `surface`, where they threw (#5042)
+  `surface` unless they already lie on a grid, where they threw (#5042)
 - PythonPlot backend: the frame of a colorbar takes `colorbar_border_color`, which follows `foreground_color`, where
   it stayed black unless a border width was set (#5030)
 - PGFPlotsX backend: each bar or shape of a series takes its own value of a vector `fillcolor` or `fillalpha`, where
