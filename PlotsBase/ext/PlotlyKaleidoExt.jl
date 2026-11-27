@@ -20,7 +20,7 @@ for (mime, fmt) in (
     @eval PlotsBase._show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend}) =
         PlotlyKaleido.savefig(
         io,
-        sprint(io -> PlotsBase.plotly_show_js(io, plt)),
+        Dict(:data => PlotsBase.plotly_series(plt), :layout => PlotsBase.plotly_layout(plt)),
         height = plt[:size][2],
         width = plt[:size][1],
         format = $fmt,
