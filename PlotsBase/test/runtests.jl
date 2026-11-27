@@ -47,7 +47,6 @@ using Dates
 using Test
 
 const broken_examples = Int[]  # NOTE: unexpected pass is a failure
-Sys.isapple() && push!(broken_examples, 50)  # FIXME: https://github.com/jheinen/GR.jl/issues/550
 
 const skipped_examples = Int[]  # NOTE: won't error, regardless of the test output
 push!(skipped_examples, 62)  # TODO: remove when new GR release is out and lands through CI (compat issues)

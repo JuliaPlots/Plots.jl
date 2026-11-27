@@ -49,8 +49,8 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
-- GR backend: `contour` and `contourf` take `x`, `y` and `z` as vectors of scattered points, gridded as for a
-  `surface` unless they already lie on a grid, where they threw (#5042)
+- GR backend: `contour` and `contourf` take `x`, `y` and `z` as vectors of scattered points, where they threw, and
+  `surface` keeps points that already lie on a grid instead of interpolating them (#5042)
 - `markershape = :auto` and `linestyle = :auto` cycle through the shapes and styles in their usual order, starting
   from `:circle` and `:solid`, where they went alphabetically and gave `:+` and `:cross`, which look alike, to the
   first and third series (#5005)
