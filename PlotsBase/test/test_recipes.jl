@@ -35,6 +35,12 @@ end
     @test added(plot(y; yerror = [nothing 0.5])) == [2]
     @test added(plot(y; xerror = [0.5 nothing])) == [1]
     @test added(plot(y; yerror = [0.5 1])) == [1, 2]
+
+    # an error bar takes the values of its data point (#5097)
+    eb = plot(1:3; yerror = 1, linecolor = [:red, :green, :blue], seriesalpha = [0.2, 0.6, 1])[1][2]
+    idx = [s.attr_index for s in PlotsBase.DataSeries.series_segments(eb)]
+    @test PlotsBase._cycle.(Ref(eb[:linecolor]), idx) == PlotsBase.plot_color.([:red, :green, :blue])
+    @test PlotsBase._cycle.(Ref(eb[:linealpha]), idx) == [0.2, 0.6, 1]
 end
 @testset "complex numbers" begin
     # each column of a complex matrix is a series in the complex plane, #4989

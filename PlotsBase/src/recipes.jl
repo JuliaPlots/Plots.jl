@@ -1219,6 +1219,15 @@ function error_coords(errorbar, errordata, otherdata...)
     return (ed, od...)
 end
 
+# an errorbar takes three points, a NaN and its two ends, so give it the value of its data point
+function error_attributes!(plotattributes, n)
+    for attr in _segmenting_vector_attributes
+        (v = get(plotattributes, attr, nothing)) isa AVec || continue
+        plotattributes[attr] = [_cycle(v, i) for i in 1:n for _ in 1:3]
+    end
+    return
+end
+
 # clamp non-NaN values in an array to Base.eps(Float64) for log-scale plots
 clamp_to_eps!(ary) = (replace!(x -> x ≤ 0.0 ? Base.eps(Float64) : x, ary); nothing)
 
@@ -1231,6 +1240,7 @@ clamp_to_eps!(ary) = (replace!(x -> x ≤ 0.0 ? Base.eps(Float64) : x, ary); not
     Commons.error_style!(plotattributes)
     markershape := :vline
     xerr = error_zipit(plotattributes[:xerror])
+    error_attributes!(plotattributes, length(x))
     if z ≡ nothing
         plotattributes[:x], plotattributes[:y] = error_coords(xerr, x, y)
     else
@@ -1248,6 +1258,7 @@ end
     Commons.error_style!(plotattributes)
     markershape := :hline
     yerr = error_zipit(plotattributes[:yerror])
+    error_attributes!(plotattributes, length(y))
     if z ≡ nothing
         plotattributes[:y], plotattributes[:x] = error_coords(yerr, y, x)
     else
@@ -1266,6 +1277,7 @@ end
     markershape := :hline
     if z ≢ nothing
         zerr = error_zipit(plotattributes[:zerror])
+        error_attributes!(plotattributes, length(z))
         plotattributes[:z], plotattributes[:x], plotattributes[:y] =
             error_coords(zerr, z, x, y)
     end

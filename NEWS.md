@@ -49,6 +49,8 @@
   ticks stay on round dates. A type recipe hands the numbers back as its type with a third function
 
 ### Fixed
+- An error bar takes the values of its data point from a vector attribute such as `linecolor` or `seriesalpha`,
+  where it took them from the wrong points, giving all error bars one color or swapping their alphas (#5097)
 - `markershape = :auto` and `linestyle = :auto` cycle through the shapes and styles in their usual order, starting
   from `:circle` and `:solid`, where they went alphabetically and gave `:+` and `:cross`, which look alike, to the
   first and third series (#5005)
